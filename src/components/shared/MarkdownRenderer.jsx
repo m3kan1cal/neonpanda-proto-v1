@@ -107,7 +107,7 @@ export const MarkdownRenderer = ({ content, className = "" }) => {
             }
             return (
               <li className="flex items-start space-x-3">
-                <span className="text-white flex-shrink-0 font-bold">•</span>
+                <span className="text-white shrink-0 font-bold">•</span>
                 <span className="flex-1 leading-normal">{children}</span>
               </li>
             );

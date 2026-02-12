@@ -298,9 +298,18 @@ ANALYSIS FRAMEWORK:
 - question: User is asking for advice, guidance, or information
 - progress_check: User is discussing progress, results, or performance
 - acknowledgment: Simple responses like "ok", "thanks", "got it"
+- cancel_request: User wants to cancel or stop an active process (e.g., "cancel log", "stop logging", "cancel workout", "never mind the log", "don't log that", "cancel", "stop")
 - general: General conversation, motivation, or other topics
 
 NOTE: Program design requests should be classified as "question" - the AI can help with program design in regular conversations.
+
+CANCEL DETECTION: If the message contains cancel/stop language related to workout logging or any active process, classify as "cancel_request" - NOT "acknowledgment". Examples:
+- "Cancel log" → cancel_request
+- "Cancel workout log" → cancel_request
+- "Stop logging" → cancel_request
+- "Don't log that" → cancel_request
+- "Never mind" → cancel_request (when in context of an active process)
+- "Forget it" → cancel_request (when in context of an active process)
 
 === CONTEXTUAL UPDATES DECISION ===
 Skip contextual updates for:
@@ -361,6 +370,12 @@ STRICT CRITERIA - ALL THREE must be met:
   - "Log this workout:", "Track this:", "Record my workout:"
   - "Add this to my log:", "Save this workout:", "Document this session:"
   AVOID: Questions, discussions, experiences, feelings, commentary
+
+CANCEL/NEGATIVE SIGNALS - ALWAYS override workout detection:
+If the message contains ANY cancel or stop language, ALWAYS set isWorkoutLog=false regardless of other criteria:
+  - "cancel log", "cancel workout", "stop logging", "don't log", "cancel"
+  - "never mind", "forget it", "stop", "abort"
+  - These are NOT workout logs. They are cancel requests. Set isWorkoutLog=false and confidence=0.0
 
 Workout Types (must match workout schema):
 - strength: Weightlifting, powerlifting, bodybuilding, resistance training

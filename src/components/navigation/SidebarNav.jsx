@@ -890,7 +890,7 @@ const SidebarNav = () => {
               {/* Avatar - using UserAvatar component */}
               <div
                 className={`
-                flex-shrink-0
+                shrink-0
                 ${isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10"}
               `}
               >

@@ -58,19 +58,19 @@ function PrivacyPolicy() {
               </h3>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Account Information:</strong> Name, email address, password, and profile details</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Fitness Information:</strong> Goals, preferences, equipment, injury history, and training experience</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Workout Data:</strong> Exercise logs, performance metrics, and progress tracking</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Communications:</strong> Messages with your AI coach, feedback, and support requests</span>
                 </li>
               </ul>
@@ -82,15 +82,15 @@ function PrivacyPolicy() {
               </h3>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-cyan">Usage Data:</strong> How you interact with our platform, features used, and session duration</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-cyan">Device Information:</strong> IP address, browser type, operating system, and device identifiers</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-cyan">Performance Data:</strong> App performance, error reports, and system diagnostics</span>
                 </li>
               </ul>
@@ -109,27 +109,27 @@ function PrivacyPolicy() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Personalize your AI coach's behavior and recommendations</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Generate custom workout programs and track your progress</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Provide analytics and insights about your fitness journey</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Improve our AI models and platform functionality using explainable, responsible methods</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Communicate with you about your account and our services</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Ensure platform security and prevent unauthorized access</span>
                 </li>
               </ul>
@@ -148,19 +148,19 @@ function PrivacyPolicy() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Service Providers:</strong> Trusted third parties who help us operate our platform (cloud hosting, analytics, customer support)</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Legal Requirements:</strong> When required by law, court order, or to protect our rights and safety</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets (with user notification)</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Aggregated Data:</strong> De-identified, aggregated data for research and platform improvement</span>
                 </li>
               </ul>
@@ -179,19 +179,19 @@ function PrivacyPolicy() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Encryption in transit and at rest using AES-256 standards</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Regular security audits and penetration testing</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Access controls and authentication requirements for our team</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Data stored in secure, compliant cloud infrastructure</span>
                 </li>
               </ul>
@@ -210,23 +210,23 @@ function PrivacyPolicy() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Decision Explanations:</strong> Every AI recommendation comes with clear reasoning you can understand</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Data Usage Visibility:</strong> You can see exactly how your data influences your coach's behavior</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Learning Transparency:</strong> Track how your AI coach adapts and learns from your interactions</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Bias Prevention:</strong> Regular audits ensure our AI systems treat all users fairly and without discrimination</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Control Mechanisms:</strong> Adjust or override any AI decision that doesn't feel right for your situation</span>
                 </li>
               </ul>
@@ -245,31 +245,31 @@ function PrivacyPolicy() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Access:</strong> Request a copy of the personal information we hold about you</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Correction:</strong> Request correction of inaccurate or incomplete information</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Deletion:</strong> Request deletion of your personal information (subject to certain limitations)</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Portability:</strong> Request a portable copy of your data in a structured format</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Opt-out:</strong> Unsubscribe from marketing communications at any time</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">AI Transparency:</strong> Request detailed explanations of any AI decision affecting your experience</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Algorithm Control:</strong> Adjust how AI systems learn from your data and make recommendations</span>
                 </li>
               </ul>
@@ -291,15 +291,15 @@ function PrivacyPolicy() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Essential Cookies:</strong> Required for platform functionality and security</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Analytics Cookies:</strong> Help us understand how users interact with our platform</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Preference Cookies:</strong> Remember your settings and personalization choices</span>
                 </li>
               </ul>

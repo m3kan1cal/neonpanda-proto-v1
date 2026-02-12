@@ -242,7 +242,7 @@ function FAQs() {
                   {faq.question}
                 </h3>
                 <div
-                  className={`ml-4 flex-shrink-0 transition-transform duration-200 ${
+                  className={`ml-4 shrink-0 transition-transform duration-200 ${
                     openFAQ === index ? "rotate-180" : ""
                   } text-synthwave-neon-pink`}
                 >

@@ -97,7 +97,7 @@ export default function PhaseTimeline({ program }) {
       {/* Section Header */}
       <div className="flex items-start space-x-3 mb-6">
         <div
-          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}
+          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
         ></div>
         <h3 className="font-russo font-bold text-white text-lg uppercase">
           Phase Timeline
@@ -268,7 +268,7 @@ export default function PhaseTimeline({ program }) {
                   </p>
                 </div>
 
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   {status === "current" && (
                     <span className={`${badgePatterns.pinkBorder} uppercase`}>
                       Current

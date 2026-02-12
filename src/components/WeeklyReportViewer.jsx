@@ -106,7 +106,7 @@ function WeeklyReportViewerV2({
             }}
           >
             <div className="flex items-start gap-3 flex-1">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Raw Report Data
               </h3>
@@ -166,7 +166,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Coach Analysis & Insights
                   </h3>
@@ -235,7 +235,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Volume Breakdown
                   </h3>
@@ -385,7 +385,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Actionable Insights
                   </h3>
@@ -458,7 +458,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Performance Markers
                   </h3>
@@ -552,7 +552,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Coaching Synthesis
                   </h3>
@@ -621,7 +621,7 @@ function WeeklyReportViewerV2({
               }}
             >
               <div className="flex items-start gap-3 flex-1">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   Analysis Metadata
                 </h3>
@@ -688,7 +688,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Movement Analysis
                   </h3>
@@ -782,7 +782,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Training Intelligence
                   </h3>
@@ -866,7 +866,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Weekly Progression
                   </h3>
@@ -964,7 +964,7 @@ function WeeklyReportViewerV2({
                 }}
               >
                 <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-russo font-bold text-white text-lg uppercase">
                     Fatigue Management
                   </h3>

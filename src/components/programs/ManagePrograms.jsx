@@ -895,7 +895,7 @@ function ManagePrograms() {
           {/* Program Name - Either editable or static */}
           <div className="flex items-start space-x-3 mb-4">
             <div
-              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}
+              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
             ></div>
             {editingProgramId === program.programId ? (
               <InlineEditField
@@ -1243,7 +1243,7 @@ function ManagePrograms() {
                 <div className="flex-1">
                   {/* Program name skeleton */}
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
+                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
 
@@ -1289,7 +1289,7 @@ function ManagePrograms() {
                   className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}
                 >
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full flex-shrink-0 mt-2"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full shrink-0 mt-2"></div>
                     <div className="flex-1">
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
@@ -1329,7 +1329,7 @@ function ManagePrograms() {
                   <div className="flex-1">
                     {/* Program name skeleton */}
                     <div className="flex items-start space-x-3 mb-4">
-                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
+                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 
@@ -1624,7 +1624,7 @@ function ManagePrograms() {
                     {/* Session Header */}
                     <div className="flex items-start space-x-3 mb-4">
                       <div
-                        className={`w-3 h-3 ${dotColor} rounded-full flex-shrink-0 mt-2`}
+                        className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
                       ></div>
                       <div className="flex-1">
                         <h3 className="font-russo font-bold text-white text-lg uppercase">

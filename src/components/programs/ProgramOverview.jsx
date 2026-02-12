@@ -162,7 +162,7 @@ export default function ProgramOverview({
       {/* Section Header */}
       <div className="flex items-start gap-3 mb-4">
         <div
-          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} flex-shrink-0 mt-2`}
+          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
         ></div>
         <h3 className="font-russo font-bold text-white text-lg uppercase">
           Program Overview

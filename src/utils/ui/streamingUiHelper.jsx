@@ -146,7 +146,7 @@ export function ContextualUpdateIndicator({ content, avatarLabel = "C" }) {
         </div>
       </div>
       <div className={streamingPatterns.avatarRow}>
-        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+        <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
           {avatarLabel}
         </div>
       </div>

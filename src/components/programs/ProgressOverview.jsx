@@ -61,7 +61,7 @@ export default function ProgressOverview({ program }) {
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
-        <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}></div>
+        <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}></div>
         <h3 className="font-russo font-bold text-white text-lg uppercase">
           Progress Overview
         </h3>

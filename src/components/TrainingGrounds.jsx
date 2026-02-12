@@ -839,7 +839,7 @@ function TrainingGrounds() {
             // User has no programs at all - show empty state
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
-                <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   Training Programs
                 </h3>
@@ -897,7 +897,7 @@ function TrainingGrounds() {
           {/* Conversations Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Conversations
               </h3>
@@ -1013,7 +1013,7 @@ function TrainingGrounds() {
           {/* Workout History Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Workout History
               </h3>
@@ -1030,7 +1030,7 @@ function TrainingGrounds() {
           {/* Reports & Insights Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Reports & Insights
               </h3>
@@ -1147,7 +1147,7 @@ function TrainingGrounds() {
           {/* Messages & Notifications Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Messages & Notifications
               </h3>

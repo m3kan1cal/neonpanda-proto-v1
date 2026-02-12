@@ -27,8 +27,10 @@ import {
   createEmptyWorkoutTodoList,
   getCollectedDataSummary,
   getTodoProgress,
+  hasSubstantialProgress,
 } from "./todo-list-utils";
 import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from "./types";
+import { handleGoodbyeAutoComplete } from "./goodbye-utils";
 
 /**
  * Start a new workout collection session when insufficient data is detected
@@ -235,6 +237,16 @@ export async function* handleWorkoutCreatorFlow(
     // Yield metadata event to inform UI we're still in workout_log mode
     yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
     console.info("📋 Metadata event sent: mode=workout_log (session continue)");
+
+    // GOODBYE GUARD: If the user sends a closing/goodbye message and we have
+    // substantial data, auto-complete the session rather than losing the data.
+    const goodbyeResult = yield* handleGoodbyeAutoComplete({
+      params,
+      conversationData,
+      fullWorkoutSession,
+      workoutSession,
+    });
+    if (goodbyeResult.handled) return;
 
     // Prepare user context from conversation data
     const userContext = {

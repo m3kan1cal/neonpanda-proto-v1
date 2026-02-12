@@ -490,38 +490,73 @@ async function* processCoachConversationAsync(
     conversationData.existingConversation.workoutCreatorSession;
 
   if (workoutSession) {
-    console.info(
-      "🏋️ Workout collection session in progress - continuing multi-turn flow",
-    );
-
-    // Track message count before handling
-    const messageCountBefore =
-      conversationData.existingConversation.messages.length;
-
-    const businessLogicParams = { ...params, ...conversationData };
-    yield* handleWorkoutCreatorFlow(
-      businessLogicParams,
-      conversationData,
-      workoutSession,
-    );
-
-    // Check if session was cancelled (topic change) vs completed successfully
-    // Cancellation: session deleted, no messages added, should re-process
-    // Completion: session deleted, messages added, should NOT re-process
-    const sessionWasCleared =
-      !conversationData.existingConversation.workoutCreatorSession;
-    const messagesWereAdded =
-      conversationData.existingConversation.messages.length >
-      messageCountBefore;
-
-    if (sessionWasCleared && !messagesWereAdded) {
+    // Check for explicit cancel intent from the Smart Router
+    if (routerAnalysis.userIntent === "cancel_request") {
       console.info(
-        "🔀 Workout session was cancelled - re-processing message as normal conversation",
+        "🚫 Cancel request detected by router - clearing workout session immediately",
       );
-      // Don't return - fall through to normal conversation processing below
+
+      // Clear the workout session and reset mode back to CHAT
+      delete conversationData.existingConversation.workoutCreatorSession;
+      conversationData.existingConversation.mode = CONVERSATION_MODES.CHAT;
+
+      // Save the conversation without the session
+      await saveCoachConversation(conversationData.existingConversation);
+
+      // Yield cancel event
+      yield formatCompleteEvent({
+        messageId: `msg_${Date.now()}_cancelled`,
+        type: "session_cancelled",
+        fullMessage: "",
+        aiResponse: "",
+        isComplete: false,
+        mode: CONVERSATION_MODES.CHAT,
+        workoutCreatorSession: null,
+        metadata: {
+          sessionCancelled: true,
+          reason: "cancel_request",
+        },
+      });
+
+      console.info(
+        "✅ Workout session cancelled via cancel_request - re-processing as normal conversation",
+      );
+
+      // Fall through to normal conversation processing below
     } else {
-      return; // Exit early - handled the workout collection flow normally (completed or in-progress)
-    }
+      console.info(
+        "🏋️ Workout collection session in progress - continuing multi-turn flow",
+      );
+
+      // Track message count before handling
+      const messageCountBefore =
+        conversationData.existingConversation.messages.length;
+
+      const businessLogicParams = { ...params, ...conversationData };
+      yield* handleWorkoutCreatorFlow(
+        businessLogicParams,
+        conversationData,
+        workoutSession,
+      );
+
+      // Check if session was cancelled (topic change) vs completed successfully
+      // Cancellation: session deleted, no messages added, should re-process
+      // Completion: session deleted, messages added, should NOT re-process
+      const sessionWasCleared =
+        !conversationData.existingConversation.workoutCreatorSession;
+      const messagesWereAdded =
+        conversationData.existingConversation.messages.length >
+        messageCountBefore;
+
+      if (sessionWasCleared && !messagesWereAdded) {
+        console.info(
+          "🔀 Workout session was cancelled - re-processing message as normal conversation",
+        );
+        // Don't return - fall through to normal conversation processing below
+      } else {
+        return; // Exit early - handled the workout collection flow normally (completed or in-progress)
+      }
+    } // end else (non-cancel path)
   }
 
   // ============================================================================
@@ -577,9 +612,11 @@ async function* processCoachConversationAsync(
 
   // Determine what processing is needed
   // NEW: Also check for workout_logging intent to support multi-turn collection
+  // IMPORTANT: cancel_request should NEVER trigger workout processing
   const needsWorkout =
-    routerAnalysis.workoutDetection.isWorkoutLog ||
-    routerAnalysis.userIntent === "workout_logging";
+    routerAnalysis.userIntent !== "cancel_request" &&
+    (routerAnalysis.workoutDetection.isWorkoutLog ||
+      routerAnalysis.userIntent === "workout_logging");
   const needsMemory =
     routerAnalysis.memoryProcessing.needsRetrieval ||
     routerAnalysis.memoryProcessing.isMemoryRequest;

@@ -269,7 +269,7 @@ function LandingPage() {
               <div className="challenge-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -305,7 +305,7 @@ function LandingPage() {
               <div className="solution-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -393,7 +393,7 @@ function LandingPage() {
               <div className="challenge-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -429,7 +429,7 @@ function LandingPage() {
               <div className="solution-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -516,7 +516,7 @@ function LandingPage() {
               <div className="challenge-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="none"
@@ -558,7 +558,7 @@ function LandingPage() {
               <div className="solution-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -646,7 +646,7 @@ function LandingPage() {
               <div className="challenge-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -683,7 +683,7 @@ function LandingPage() {
               <div className="solution-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="currentColor"
@@ -765,7 +765,7 @@ function LandingPage() {
               <div className="challenge-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="none"
@@ -809,7 +809,7 @@ function LandingPage() {
               <div className="solution-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -897,7 +897,7 @@ function LandingPage() {
               <div className="challenge-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="none"
@@ -939,7 +939,7 @@ function LandingPage() {
               <div className="solution-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -1027,7 +1027,7 @@ function LandingPage() {
               <div className="challenge-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -1063,7 +1063,7 @@ function LandingPage() {
               <div className="solution-card relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"

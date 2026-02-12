@@ -113,7 +113,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
                 key={index}
                 className="flex items-center gap-2 font-rajdhani text-synthwave-text-secondary text-sm"
               >
-                <div className="text-synthwave-neon-pink flex-shrink-0">
+                <div className="text-synthwave-neon-pink shrink-0">
                   <CheckIcon />
                 </div>
                 {feature}

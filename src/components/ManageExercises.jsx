@@ -327,11 +327,12 @@ function ManageExercises() {
     return (
       <div
         key={exercise.exerciseName}
-        className={`${containerPatterns.cardMedium} p-6 mb-6`}
+        className={`${containerPatterns.cardMedium} p-6 mb-6 cursor-pointer`}
+        onClick={() => toggleExerciseCollapse(exercise.exerciseName)}
       >
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
           <h3 className="font-russo font-bold text-white text-lg uppercase flex-1">
             {exercise.displayName || exercise.exerciseName}
           </h3>
@@ -357,7 +358,10 @@ function ManageExercises() {
 
         {/* Expand/Collapse Button */}
         <button
-          onClick={() => toggleExerciseCollapse(exercise.exerciseName)}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExerciseCollapse(exercise.exerciseName);
+          }}
           className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
         >
           <span>{isCollapsed ? "View Sessions" : "Hide Sessions"}</span>
@@ -548,7 +552,7 @@ function ManageExercises() {
                         </span>
                       </div>
                       <svg
-                        className="w-4 h-4 text-synthwave-text-muted flex-shrink-0"
+                        className="w-4 h-4 text-synthwave-text-muted shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -657,14 +661,19 @@ function ManageExercises() {
                   className={`${containerPatterns.cardMedium} p-6 mb-6`}
                 >
                   <div className="flex items-start gap-3 mb-2">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
                   <div className="flex flex-wrap gap-4 mb-4">
                     <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                   </div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28 mb-4"></div>
+                  {/* Badge skeletons */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -677,7 +686,7 @@ function ManageExercises() {
                     className={`${containerPatterns.cardMedium} p-6 mb-6`}
                   >
                     <div className="flex items-start gap-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
                     <div className="flex flex-wrap gap-4 mb-4">
@@ -685,7 +694,12 @@ function ManageExercises() {
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                     </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28 mb-4"></div>
+                    {/* Badge skeletons */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -696,7 +710,7 @@ function ManageExercises() {
                     className={`${containerPatterns.cardMedium} p-6 mb-6`}
                   >
                     <div className="flex items-start gap-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
                     <div className="flex flex-wrap gap-4 mb-4">
@@ -704,7 +718,12 @@ function ManageExercises() {
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                     </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28 mb-4"></div>
+                    {/* Badge skeletons */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
                   </div>
                 ))}
               </div>

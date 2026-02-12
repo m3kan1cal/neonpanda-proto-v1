@@ -436,7 +436,7 @@ function Technology() {
 
                 <ul className="space-y-3 text-synthwave-text-secondary font-rajdhani text-lg ml-6">
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -450,7 +450,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -463,7 +463,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -476,7 +476,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -490,7 +490,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -502,7 +502,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -514,7 +514,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -803,7 +803,7 @@ function Technology() {
                   </p>
                   <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -815,7 +815,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -827,7 +827,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -839,7 +839,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -882,7 +882,7 @@ function Technology() {
                   </p>
                   <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -894,7 +894,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -906,7 +906,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -918,7 +918,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -930,7 +930,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -942,7 +942,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -954,7 +954,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -1020,7 +1020,7 @@ function Technology() {
                 <div className="md:col-span-2">
                   <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-purple mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -1032,7 +1032,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-purple mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -1044,7 +1044,7 @@ function Technology() {
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">
+                      <span className="text-synthwave-neon-purple mt-1 shrink-0">
                         •
                       </span>
                       <span>
@@ -1102,7 +1102,7 @@ function Technology() {
                 </p>
                 <ol className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       1.
                     </span>
                     <span>
@@ -1114,7 +1114,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       2.
                     </span>
                     <span>
@@ -1126,7 +1126,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       3.
                     </span>
                     <span>
@@ -1137,7 +1137,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       4.
                     </span>
                     <span>
@@ -1149,7 +1149,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       5.
                     </span>
                     <span>
@@ -1161,7 +1161,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       6.
                     </span>
                     <span>
@@ -1190,7 +1190,7 @@ function Technology() {
                 </p>
                 <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -1203,7 +1203,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -1216,7 +1216,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -1245,7 +1245,7 @@ function Technology() {
                 </p>
                 <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-purple mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -1257,7 +1257,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-purple mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -1269,7 +1269,7 @@ function Technology() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-purple mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -1335,7 +1335,7 @@ function Technology() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 font-rajdhani">
                   <div className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <div>
@@ -1350,7 +1350,7 @@ function Technology() {
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <div>
@@ -1365,7 +1365,7 @@ function Technology() {
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <div>
@@ -1382,7 +1382,7 @@ function Technology() {
                 </div>
                 <div className="space-y-4 font-rajdhani">
                   <div className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <div>
@@ -1397,7 +1397,7 @@ function Technology() {
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <div>
@@ -1412,7 +1412,7 @@ function Technology() {
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <div>

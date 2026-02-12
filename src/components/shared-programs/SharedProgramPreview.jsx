@@ -563,7 +563,7 @@ function SharedProgramPreview() {
                       {/* Phase header */}
                       <div className="flex items-center gap-3 mb-4">
                         <div
-                          className={`w-10 h-10 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center flex-shrink-0`}
+                          className={`w-10 h-10 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center shrink-0`}
                         >
                           <span
                             className={`font-inter font-bold ${colors.text}`}

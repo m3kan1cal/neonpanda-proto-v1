@@ -46,8 +46,17 @@ function TodaysWorkoutRow({
               <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
               <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
               <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
-              <div className="h-[3px] bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
-              <div className="flex-1 min-h-[16px]"></div>
+              <div className="h-[6px] bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
+              <div className="space-y-1.5 pt-1">
+                {[1].map((j) => (
+                  <div key={j} className="flex items-center gap-2">
+                    <div className="w-5 h-5 min-w-[20px] rounded-md bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
+                    <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-3 w-8 bg-synthwave-text-muted/20 rounded animate-pulse shrink-0"></div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1 min-h-[4px]"></div>
               <div className="h-12 bg-synthwave-text-muted/20 rounded-[10px] animate-pulse w-full"></div>
             </div>
           </div>
@@ -189,7 +198,7 @@ function TodaysWorkoutRow({
                 {/* Program label */}
                 <div className="flex items-center gap-2">
                   <svg
-                    className="w-3.5 h-3.5 text-synthwave-text-muted/40 flex-shrink-0"
+                    className="w-3.5 h-3.5 text-synthwave-text-muted/40 shrink-0"
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -269,7 +278,7 @@ function TodaysWorkoutRow({
               {/* Program label */}
               <div className="flex items-center gap-2">
                 <svg
-                  className="w-3.5 h-3.5 text-synthwave-neon-cyan flex-shrink-0 drop-shadow-[0_0_6px_#00ffff]"
+                  className="w-3.5 h-3.5 text-synthwave-neon-cyan shrink-0 drop-shadow-[0_0_6px_#00ffff]"
                   fill="currentColor"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -328,7 +337,7 @@ function TodaysWorkoutRow({
                       {template.name}
                     </span>
                     {template.estimatedDuration && (
-                      <span className="font-rajdhani text-xs text-white/30 flex-shrink-0">
+                      <span className="font-rajdhani text-xs text-white/30 shrink-0">
                         ~{template.estimatedDuration}min
                       </span>
                     )}

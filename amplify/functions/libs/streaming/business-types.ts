@@ -89,6 +89,7 @@ export interface SmartRequestRouter {
     | "question"
     | "progress_check"
     | "acknowledgment"
+    | "cancel_request"
     | "general";
   showContextualUpdates: boolean;
 

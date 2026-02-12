@@ -170,7 +170,7 @@ const MessageItem = memo(
           >
             {/* Avatar for AI messages (left side) */}
             {message.type === "ai" && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <div className={avatarPatterns.aiSmall}>
                   {coachName?.charAt(0) || "C"}
                 </div>
@@ -211,7 +211,7 @@ const MessageItem = memo(
 
             {/* Avatar for user messages (right side) */}
             {message.type === "user" && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <UserAvatar
                   email={userEmail}
                   username={userDisplayName}
@@ -932,7 +932,7 @@ function ProgramDesigner() {
                       className={`flex items-end gap-2 ${i % 2 === 1 ? "flex-row-reverse" : "flex-row"}`}
                     >
                       {/* Avatar skeleton */}
-                      <div className="flex-shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                      <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
 
                       {/* Message bubble skeleton */}
                       <div
@@ -1349,7 +1349,7 @@ function ProgramDesigner() {
                       </div>
                       <div className="flex items-start gap-2 px-2 mt-2">
                         <div
-                          className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
+                          className={`shrink-0 ${avatarPatterns.aiSmall}`}
                         >
                           {agentState.coach?.name?.charAt(0) || "C"}
                         </div>
@@ -1379,7 +1379,7 @@ function ProgramDesigner() {
               className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-synthwave-neon-purple/10 border-2 border-synthwave-neon-purple flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-synthwave-neon-purple/10 border-2 border-synthwave-neon-purple flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-synthwave-neon-purple"
                     fill="none"
@@ -1410,7 +1410,7 @@ function ProgramDesigner() {
                     `/training-grounds/programs?userId=${userId}&coachId=${coachId}`,
                   )
                 }
-                className={`${buttonPatterns.secondarySmall} flex-shrink-0`}
+                className={`${buttonPatterns.secondarySmall} shrink-0`}
               >
                 View Programs
               </button>
@@ -1520,7 +1520,7 @@ function ProgramDesigner() {
             <div className="text-center">
               {/* Header with inline icon */}
               <div className="flex items-center justify-center space-x-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center shrink-0">
                   <svg
                     className="w-4 h-4 text-synthwave-neon-cyan"
                     fill="none"
@@ -1552,7 +1552,7 @@ function ProgramDesigner() {
                 <div className="space-y-2">
                   <div className="flex items-start space-x-2">
                     <svg
-                      className="w-5 h-5 text-synthwave-neon-purple flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-synthwave-neon-purple shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1570,7 +1570,7 @@ function ProgramDesigner() {
                   </div>
                   <div className="flex items-start space-x-2">
                     <svg
-                      className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-synthwave-neon-pink shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1588,7 +1588,7 @@ function ProgramDesigner() {
                   </div>
                   <div className="flex items-start space-x-2">
                     <svg
-                      className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-synthwave-neon-cyan shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

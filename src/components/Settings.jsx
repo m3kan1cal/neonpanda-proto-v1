@@ -673,7 +673,7 @@ function Settings() {
                         {/* EarlyPanda Column */}
                         <div className={containerPatterns.mediumGlass}>
                           <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0 w-16 h-16 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center text-synthwave-neon-cyan">
+                            <div className="shrink-0 w-16 h-16 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center text-synthwave-neon-cyan">
                               <ClockIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -767,7 +767,7 @@ function Settings() {
                         {/* ElectricPanda Column */}
                         <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-purple/20">
                           <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple rounded-xl flex items-center justify-center text-white">
+                            <div className="shrink-0 w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple rounded-xl flex items-center justify-center text-white">
                               <LightningIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -835,7 +835,7 @@ function Settings() {
                                     {subscription?.cancelAtPeriodEnd && (
                                       <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                                         <div className="flex items-start gap-2">
-                                          <div className="text-yellow-500 mt-0.5 flex-shrink-0">
+                                          <div className="text-yellow-500 mt-0.5 shrink-0">
                                             <InfoIcon />
                                           </div>
                                           <div className="flex-1">
@@ -992,7 +992,7 @@ function Settings() {
                       disabled
                     />
                     <div className="flex items-start space-x-2 -mt-4 mb-6">
-                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                      <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                         <InfoIcon />
                       </div>
                       <p
@@ -1010,7 +1010,7 @@ function Settings() {
                       disabled
                     />
                     <div className="flex items-start space-x-2 -mt-4 mb-6">
-                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                      <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                         <InfoIcon />
                       </div>
                       <p
@@ -1204,7 +1204,7 @@ function Settings() {
                         </optgroup>
                       </select>
                       <div className="flex items-start space-x-2 mt-2">
-                        <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                        <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                           <InfoIcon />
                         </div>
                         <p
@@ -1237,7 +1237,7 @@ function Settings() {
                         <option value="metric">Metric (kg, km, m)</option>
                       </select>
                       <div className="flex items-start space-x-2 mt-2">
-                        <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                        <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                           <InfoIcon />
                         </div>
                         <p
@@ -1477,7 +1477,7 @@ function Settings() {
                     </div>
 
                     <div className="flex items-start space-x-2 mt-4">
-                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                      <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                         <InfoIcon />
                       </div>
                       <p
@@ -1540,7 +1540,7 @@ function Settings() {
 
                     <div className="mt-3 mb-4 space-y-2">
                       <div className="flex items-start space-x-2">
-                        <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                        <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                           <InfoIcon />
                         </div>
                         <p
@@ -1635,7 +1635,7 @@ function Settings() {
                       Delete Account
                     </button>
                     <div className="flex items-start space-x-2 mt-3">
-                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                      <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                         <InfoIcon />
                       </div>
                       <p className="font-rajdhani text-sm text-synthwave-text-secondary">

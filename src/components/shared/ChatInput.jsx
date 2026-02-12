@@ -1333,7 +1333,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled={isTyping}
-                className="w-12 h-12 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-2xl shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                className="w-12 h-12 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-2xl shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
               >
                 {isTyping ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1350,7 +1350,7 @@ function ChatInput({
                 onTouchStart={handleStartRecording}
                 onTouchEnd={handleStopRecording}
                 disabled={isTyping}
-                className={`w-12 h-12 rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center flex-shrink-0 ${
+                className={`w-12 h-12 rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
                   isRecording
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
@@ -1362,7 +1362,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled
-                className="w-12 h-12 bg-synthwave-bg-primary/30 text-synthwave-text-muted rounded-2xl shadow-lg flex items-center justify-center flex-shrink-0 opacity-50 cursor-not-allowed"
+                className="w-12 h-12 bg-synthwave-bg-primary/30 text-synthwave-text-muted rounded-2xl shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
               >
                 <SendIcon />
               </button>
@@ -1514,7 +1514,7 @@ function ChatInput({
           <div className="absolute bottom-full mb-4 left-1/2 transform -translate-x-1/2 z-50">
             <div className="bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 flex flex-col w-96 h-[480px]">
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 flex-shrink-0">
+              <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 shrink-0">
                 <h3 className="font-russo font-bold text-white text-sm uppercase">
                   {tipsTitle}
                 </h3>

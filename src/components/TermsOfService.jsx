@@ -74,23 +74,23 @@ function TermsOfService() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Personalized AI fitness coaches with customizable personalities and expertise</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Custom workout programming and exercise recommendations</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Progress tracking, analytics, and performance insights</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Conversational coaching interactions and support</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Memory and preference storage for personalized experiences</span>
                 </li>
               </ul>
@@ -109,19 +109,19 @@ function TermsOfService() {
               </h3>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>You must be at least 13 years old to create an account</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>You must provide accurate and complete registration information</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>You are responsible for maintaining the security of your account credentials</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>One person may not maintain multiple accounts</span>
                 </li>
               </ul>
@@ -147,27 +147,27 @@ function TermsOfService() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Use the service for any illegal or unauthorized purpose</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Attempt to gain unauthorized access to our systems or other users' accounts</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Interfere with or disrupt our services or servers</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Upload malicious code, viruses, or harmful content</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Share your account credentials with others</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Reverse engineer, decompile, or attempt to extract our source code</span>
                 </li>
               </ul>
@@ -187,19 +187,19 @@ function TermsOfService() {
                 </p>
                 <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                     <span>Our AI coaches provide fitness guidance, not medical advice</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                     <span>Consult healthcare professionals before starting any fitness program</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                     <span>Stop exercising and seek medical attention if you experience pain or discomfort</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                     <span>You exercise at your own risk and assume full responsibility for your safety</span>
                   </li>
                 </ul>
@@ -219,19 +219,19 @@ function TermsOfService() {
               </h3>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Subscription fees are charged in advance on a recurring basis</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>You can cancel your subscription at any time through your account settings</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Cancellations take effect at the end of your current billing period</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>No refunds for partial months or unused portions of your subscription</span>
                 </li>
               </ul>
@@ -261,19 +261,19 @@ function TermsOfService() {
               </h3>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Right to Explanation:</strong> Understand why any AI recommendation was made for your specific situation</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Right to Control:</strong> Adjust or override any AI decision that doesn't align with your preferences</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Right to Transparency:</strong> See how your data influences your AI coach's behavior and learning</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Right to Fair Treatment:</strong> Our AI systems are regularly audited for bias and discrimination</span>
                 </li>
               </ul>
@@ -283,19 +283,19 @@ function TermsOfService() {
               </h3>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>All AI decisions include clear, understandable explanations</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Regular bias audits and fairness assessments of our AI systems</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Transparent data usage with clear visibility into how your information shapes your experience</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Human oversight and the ability to escalate AI decisions to human review</span>
                 </li>
               </ul>
@@ -353,15 +353,15 @@ function TermsOfService() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Modify, suspend, or discontinue any part of our service at any time</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Perform maintenance that may temporarily interrupt service</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Update our Terms of Service with reasonable notice to users</span>
                 </li>
               </ul>
@@ -401,15 +401,15 @@ function TermsOfService() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span>Your access to NeonPanda will be immediately revoked</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span>You may request a copy of your data within 30 days</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-purple mt-1 flex-shrink-0">•</span>
+                  <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span>We may delete your account and data after a reasonable period</span>
                 </li>
               </ul>

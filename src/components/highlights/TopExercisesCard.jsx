@@ -33,7 +33,7 @@ export default function TopExercisesCard({
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
-          <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+          <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
           <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -59,7 +59,7 @@ export default function TopExercisesCard({
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
       <div className="flex items-start space-x-3 mb-4">
-        <span className="text-synthwave-neon-cyan flex-shrink-0 mt-1.5">
+        <span className="text-synthwave-neon-cyan shrink-0 mt-1.5">
           <WeightPlateIconTiny className="w-5 h-5" />
         </span>
         <h3 className="font-russo font-bold text-white text-lg uppercase">

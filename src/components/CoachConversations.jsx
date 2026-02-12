@@ -171,7 +171,7 @@ const MessageItem = memo(
           >
             {/* Avatar for AI messages (left side) */}
             {message.type === "ai" && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <div className={avatarPatterns.aiSmall}>
                   {coachName?.charAt(0) || "C"}
                 </div>
@@ -204,7 +204,7 @@ const MessageItem = memo(
 
             {/* Avatar for user messages (right side) */}
             {message.type === "user" && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <UserAvatar
                   email={userEmail}
                   username={userDisplayName}
@@ -1121,7 +1121,7 @@ function CoachConversations() {
                       className={`flex items-end gap-2 ${i % 2 === 1 ? "flex-row-reverse" : "flex-row"}`}
                     >
                       {/* Avatar skeleton */}
-                      <div className="flex-shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                      <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
 
                       {/* Message bubble skeleton */}
                       <div
@@ -1539,7 +1539,7 @@ function CoachConversations() {
                         </div>
                         <div className="flex items-start gap-2 px-2 mt-2">
                           <div
-                            className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
+                            className={`shrink-0 ${avatarPatterns.aiSmall}`}
                           >
                             {coachConversationAgentState.coach?.name?.charAt(
                               0,

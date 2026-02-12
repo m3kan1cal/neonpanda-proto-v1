@@ -662,23 +662,27 @@ EXTRACTION GUIDELINES:
 
 8.6. PR (PERSONAL RECORD) DETECTION:
    - EXPLICIT PR INDICATORS:
-     * "a PR for me" → pr_achievements: [{pr_type: "1rm", exercise: "...", new_best: weight, unit: "lbs"}]
-     * "a first for me" → pr_achievements: [{pr_type: "1rm", exercise: "...", new_best: value, unit: "lbs"}]
-     * "first time doing X" → pr_achievements: [{pr_type: "1rm", exercise: "X", new_best: value, unit: "lbs"}]
+     * "a PR for me" → extract as PR achievement with appropriate pr_type and unit
+     * "a first for me" → extract as PR achievement with appropriate pr_type and unit
+     * "first time doing X" → extract as PR achievement
      * "personal best", "new record", "PR" → extract as PR achievement
-     * "heaviest I've done", "never done X before" → extract as PR achievement
+     * "longest run", "fastest pace", "most reps", "heaviest weight" → extract with matching pr_type
+     * "never done X before" → extract as PR achievement
    - PR ACHIEVEMENT STRUCTURE:
-     * pr_type: "1rm" | "volume_pr" | "distance_pr" | "pace_pr" | "workout_time"
+     * pr_type: "1rm" (heaviest weight) | "volume_pr" (most reps/total volume) | "distance_pr" (longest distance) | "pace_pr" (fastest pace) | "workout_time" (fastest completion)
      * exercise: normalized exercise name
      * new_best: numeric value achieved
-     * unit: appropriate unit (lbs, kg, mi, km, min, sec)
-     * context: any context about the PR (e.g., "first time with 30lb kettlebells")
+     * unit: match to pr_type → 1rm: lbs/kg, volume_pr: reps, distance_pr: mi/km, pace_pr: min/mi or min/km, workout_time: min/sec
+     * context: any additional context about the PR
    - USER QUESTIONS ABOUT PRs:
      * "does that make it a PR by default?" → Yes, first time at a new weight/movement = PR
      * When user asks about PR status, confirm and extract as PR achievement
    - EXAMPLES:
      * "deadlift 205 - a PR for me" → pr_achievements: [{pr_type: "1rm", exercise: "deadlift", new_best: 205, unit: "lbs"}]
-     * "double KB swings with 30 pounds - a first for me" → pr_achievements: [{pr_type: "1rm", exercise: "double_kettlebell_swing", new_best: 30, unit: "lbs", context: "First time at this weight"}]
+     * "ran 5 miles - my longest distance yet" → pr_achievements: [{pr_type: "distance_pr", exercise: "running", new_best: 5, unit: "mi"}]
+     * "finished the workout in 24 minutes - new best time" → pr_achievements: [{pr_type: "workout_time", exercise: "workout", new_best: 24, unit: "min"}]
+     * "8 minute mile pace - personal best" → pr_achievements: [{pr_type: "pace_pr", exercise: "running", new_best: 8, unit: "min/mi"}]
+     * "100 total pull-ups - never done that many before" → pr_achievements: [{pr_type: "volume_pr", exercise: "pull_up", new_best: 100, unit: "reps"}]
 
 8.7. WEARABLE DEVICE DATA EXTRACTION (Apple Watch, Garmin, Fitbit, etc.):
    - CALORIE DATA:
