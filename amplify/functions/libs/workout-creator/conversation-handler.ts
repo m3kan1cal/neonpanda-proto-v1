@@ -156,7 +156,7 @@ export async function* handleTodoListConversation(
     // A message under 5 characters that doesn't contain explicit finish language
     // should NEVER trigger session completion (e.g., "Um", "Hm", "?")
     const EXPLICIT_FINISH_PATTERNS =
-      /\b(done|skip|finish|log it|that'?s (all|it)|i'?m done|just log|save it|yes|yep|yeah|yea|nah|nope|ok|no)\b/i;
+      /\b(done|skip|finish|log it|that'?s (all|it)|i'?m done|just log|save it|yes|yep|yeah|yea|nah|nope|okay?|no)\b/i;
     if (
       extractionResult.userWantsToFinish &&
       userResponse.trim().length < 5 &&

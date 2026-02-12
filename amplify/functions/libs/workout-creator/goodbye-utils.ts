@@ -22,7 +22,7 @@ import type { WorkoutCreatorSession } from "./types";
 
 /** Patterns that indicate a closing/goodbye message */
 export const GOODBYE_PATTERNS =
-  /^\s*(thanks|thank you|thx|bye|goodbye|see you|later|ttyl|talk later|peace|cheers|gotta go|good night|goodnight|take care|have a good|heading out|peace out)\b/i;
+  /^\s*(thanks|thank you|thx|bye|goodbye|see you|ttyl|talk later|peace|cheers|gotta go|good night|goodnight|take care|have a good|heading out|peace out)\s*[.!?]?\s*$/i;
 
 /**
  * Check if the user's message is a closing/goodbye message
