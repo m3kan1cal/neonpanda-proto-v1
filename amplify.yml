@@ -8,7 +8,7 @@ applications:
             - nvm install 22
             - nvm use 22
             - node -v
-            - npm install --cache .npm --prefer-offline
+            - npm install --cache .npm --prefer-offline --legacy-peer-deps
 
             # Set the environment variables
             - echo "DYNAMODB_TABLE_NAME=$DYNAMODB_TABLE_NAME" >> .env
