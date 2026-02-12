@@ -15,6 +15,7 @@ import { getAllPrograms } from "../utils/apis/programApi";
 import { querySharedPrograms } from "../utils/apis/sharedProgramApi";
 import { isValidUserId } from "../utils/apis/apiConfig";
 import CoachAgent from "../utils/agents/CoachAgent";
+import { logger } from "../utils/logger";
 
 const NavigationContext = createContext(null);
 
@@ -101,7 +102,7 @@ export const NavigationProvider = ({ children }) => {
         const data = await getCoachesCount(userId);
         setCoachesCount(data.totalCount || 0);
       } catch (error) {
-        console.warn(
+        logger.warn(
           "NavigationContext: Failed to fetch coaches count:",
           error,
         );
@@ -124,7 +125,7 @@ export const NavigationProvider = ({ children }) => {
         const data = await getExercisesCount(userId);
         setExercisesCount(data.count || 0);
       } catch (error) {
-        console.warn(
+        logger.warn(
           "NavigationContext: Failed to fetch exercises count:",
           error,
         );
@@ -148,7 +149,7 @@ export const NavigationProvider = ({ children }) => {
         // querySharedPrograms returns an object with sharedPrograms array
         setSharedProgramsCount(data.sharedPrograms?.length || 0);
       } catch (error) {
-        console.warn(
+        logger.warn(
           "NavigationContext: Failed to fetch shared programs count:",
           error,
         );
@@ -188,15 +189,15 @@ export const NavigationProvider = ({ children }) => {
             totalMessages: 0,
           })),
           getMemories(userId).catch((err) => {
-            console.warn("NavigationContext: Failed to fetch memories:", err);
+            logger.warn("NavigationContext: Failed to fetch memories:", err);
             return [];
           }),
           getWeeklyReports(userId, { coachId }).catch((err) => {
-            console.warn("NavigationContext: Failed to fetch reports:", err);
+            logger.warn("NavigationContext: Failed to fetch reports:", err);
             return { items: [] };
           }),
           getAllPrograms(userId, { includeArchived: false }).catch((err) => {
-            console.warn(
+            logger.warn(
               "NavigationContext: Failed to fetch training programs:",
               err,
             );
@@ -247,7 +248,7 @@ export const NavigationProvider = ({ children }) => {
           programs: programsCount,
         });
       } catch (error) {
-        console.error("NavigationContext: Error fetching item counts:", error);
+        logger.error("NavigationContext: Error fetching item counts:", error);
       }
     };
 

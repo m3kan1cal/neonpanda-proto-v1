@@ -11,6 +11,7 @@ import {
 import { withThroughputScaling } from "./throughput-scaling";
 import { getTableName } from "../functions/libs/branch-naming";
 import { deepMerge } from "../functions/libs/object-utils";
+import { logger } from "../functions/libs/logger";
 import {
   DynamoDBItem,
   ContactFormAttributes,
@@ -85,15 +86,12 @@ export function serializeForDynamoDB(obj: any): any {
     // Log undefined values only if there are many (filters out common cases like optional fields)
     // Single undefined values (like optional 'notes' fields) are expected and don't need logging
     if (undefinedKeys.length > 3) {
-      console.warn(
-        "⚠️ Found many undefined values in DynamoDB serialization:",
-        {
-          undefinedCount: undefinedKeys.length,
-          undefinedKeys: undefinedKeys.slice(0, 5), // Only log first 5 to avoid noise
-          objectType: obj.constructor?.name || "Object",
-          totalKeys: Object.keys(obj).length,
-        },
-      );
+      logger.warn("⚠️ Found many undefined values in DynamoDB serialization:", {
+        undefinedCount: undefinedKeys.length,
+        undefinedKeys: undefinedKeys.slice(0, 5), // Only log first 5 to avoid noise
+        objectType: obj.constructor?.name || "Object",
+        totalKeys: Object.keys(obj).length,
+      });
     }
 
     return serialized;
@@ -168,7 +166,7 @@ export async function saveToDynamoDB<T>(
 
       // Warn if approaching DynamoDB size limit
       if (itemSizeBytes > 350000) {
-        console.warn(
+        logger.warn(
           `⚠️ Large item approaching DynamoDB limit: ${itemSizeKB}KB (400KB max)`,
           {
             entityType: item.entityType,
@@ -208,7 +206,7 @@ export async function saveToDynamoDB<T>(
         },
       };
 
-      console.error(`❌ Error saving ${item.entityType} data to DynamoDB:`, {
+      logger.error(`❌ Error saving ${item.entityType} data to DynamoDB:`, {
         ...errorResult,
         errorStack: error instanceof Error ? error.stack : "No stack",
         pk: item.pk,
@@ -233,7 +231,7 @@ export async function saveToDynamoDBWithResult<T>(
 
     // Explicit success verification
     if (!result.success) {
-      console.error("🚨 DynamoDB save reported success=false:", result);
+      logger.error("🚨 DynamoDB save reported success=false:", result);
       throw new Error(
         `Save operation failed: ${result.errorDetails?.message || "Unknown error"}`,
       );
@@ -241,7 +239,7 @@ export async function saveToDynamoDBWithResult<T>(
 
     // Additional checks for suspicious results
     if (!result.httpStatusCode || result.httpStatusCode !== 200) {
-      console.warn(
+      logger.warn(
         "⚠️ DynamoDB save completed but with unexpected status code:",
         result,
       );
@@ -249,7 +247,7 @@ export async function saveToDynamoDBWithResult<T>(
 
     return result;
   } catch (error) {
-    console.error("🚨 Exception during DynamoDB save operation:", error);
+    logger.error("🚨 Exception during DynamoDB save operation:", error);
     throw error;
   }
 }
@@ -282,7 +280,7 @@ export async function loadFromDynamoDB<T>(
     }
 
     if (entityType) {
-      console.info(`${entityType} data loaded from DynamoDB successfully`);
+      logger.info(`${entityType} data loaded from DynamoDB successfully`);
     }
 
     // Deserialize the item to convert ISO strings back to Date objects
@@ -341,7 +339,7 @@ export async function queryFromDynamoDB<T>(
     } while (lastEvaluatedKey);
 
     if (entityType) {
-      console.info(`${entityType} data queried from DynamoDB successfully`, {
+      logger.info(`${entityType} data queried from DynamoDB successfully`, {
         totalItems: allItems.length,
         pagesRead: pageCount,
       });
@@ -377,13 +375,13 @@ export async function deleteFromDynamoDB(
       await docClient.send(command);
 
       if (entityType) {
-        console.info(`${entityType} deleted from DynamoDB successfully`);
+        logger.info(`${entityType} deleted from DynamoDB successfully`);
       }
     } catch (error: any) {
       if (error.name === "ConditionalCheckFailedException") {
         throw new Error(`${entityType || "Item"} not found: ${pk}/${sk}`);
       }
-      console.error(
+      logger.error(
         `Error deleting ${entityType || "item"} from DynamoDB:`,
         error,
       );

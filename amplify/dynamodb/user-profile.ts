@@ -10,6 +10,7 @@ import {
   DynamoDBItem,
 } from "./core";
 import { UserProfile } from "../functions/libs/user/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // USER PROFILE OPERATIONS
@@ -39,7 +40,7 @@ export async function saveUserProfile(userProfile: UserProfile): Promise<void> {
   };
 
   await saveToDynamoDB(itemWithGsi);
-  console.info("User profile saved successfully:", {
+  logger.info("User profile saved successfully:", {
     userId: userProfile.userId,
     email: userProfile.email,
     username: userProfile.username,
@@ -77,7 +78,7 @@ export async function getUserProfileByEmail(
   const operationName = `Query user profile by email: ${email}`;
 
   return withThroughputScaling(async () => {
-    console.info(`Querying user profile by email: ${email}`);
+    logger.info(`Querying user profile by email: ${email}`);
 
     const command = new QueryCommand({
       TableName: tableName,
@@ -94,12 +95,12 @@ export async function getUserProfileByEmail(
     const items = (result.Items || []) as DynamoDBItem<UserProfile>[];
 
     if (items.length === 0) {
-      console.info(`No user profile found for email: ${email}`);
+      logger.info(`No user profile found for email: ${email}`);
       return null;
     }
 
     if (items.length > 1) {
-      console.warn(`⚠️ Multiple user profiles found for email: ${email}`, {
+      logger.warn(`⚠️ Multiple user profiles found for email: ${email}`, {
         count: items.length,
         userIds: items.map((item) => item.attributes.userId),
       });
@@ -111,7 +112,7 @@ export async function getUserProfileByEmail(
       createdAt: new Date(item.createdAt),
       updatedAt: new Date(item.updatedAt),
     };
-    console.info(`User profile found for email: ${email}`, {
+    logger.info(`User profile found for email: ${email}`, {
       userId: profile.userId,
       username: profile.username,
     });
@@ -130,7 +131,7 @@ export async function getUserProfileByUsername(
   const operationName = `Query user profile by username: ${username}`;
 
   return withThroughputScaling(async () => {
-    console.info(`Querying user profile by username: ${username}`);
+    logger.info(`Querying user profile by username: ${username}`);
 
     const command = new QueryCommand({
       TableName: tableName,
@@ -147,12 +148,12 @@ export async function getUserProfileByUsername(
     const items = (result.Items || []) as DynamoDBItem<UserProfile>[];
 
     if (items.length === 0) {
-      console.info(`No user profile found for username: ${username}`);
+      logger.info(`No user profile found for username: ${username}`);
       return null;
     }
 
     if (items.length > 1) {
-      console.warn(
+      logger.warn(
         `⚠️ Multiple user profiles found for username: ${username}`,
         {
           count: items.length,
@@ -167,7 +168,7 @@ export async function getUserProfileByUsername(
       createdAt: new Date(item.createdAt),
       updatedAt: new Date(item.updatedAt),
     };
-    console.info(`User profile found for username: ${username}`, {
+    logger.info(`User profile found for username: ${username}`, {
       userId: profile.userId,
       email: profile.email,
     });
@@ -212,7 +213,7 @@ export async function updateUserProfile(
 
   await saveToDynamoDB(updatedItem, true /* requireExists */);
 
-  console.info("User profile updated successfully:", {
+  logger.info("User profile updated successfully:", {
     userId,
     updateFields: Object.keys(updates),
   });

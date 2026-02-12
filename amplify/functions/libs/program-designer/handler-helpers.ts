@@ -32,6 +32,7 @@ import { generateProgramId } from "../id-utils";
 import { saveSessionAndTriggerProgramGeneration } from "./session-management";
 import { BuildProgramEvent } from "../program/types";
 import { ProgramDesignerSession } from "./types";
+import { logger } from "../logger";
 
 /**
  * Start a new program design collection session
@@ -41,7 +42,7 @@ export async function* startProgramDesignCollection(
   params: ValidationParams,
   conversationData: ConversationData,
 ): AsyncGenerator<string, void, unknown> {
-  console.info("🏗️ Starting new program design collection session");
+  logger.info("🏗️ Starting new program design collection session");
 
   try {
     // Create new program designer session
@@ -59,7 +60,7 @@ export async function* startProgramDesignCollection(
       imageS3Keys: params.imageS3Keys || [], // Store images for session (matches workout creator pattern)
     };
 
-    console.info("🆕 NEW PROGRAM SESSION CREATED:", {
+    logger.info("🆕 NEW PROGRAM SESSION CREATED:", {
       sessionId: programSession.sessionId,
       userId: programSession.userId,
       hasImages: (params.imageS3Keys?.length || 0) > 0,
@@ -74,7 +75,7 @@ export async function* startProgramDesignCollection(
     // ✅ FIX: Yield metadata event FIRST to inform UI we're in program_design mode
     // This ensures purple bubble styling applies immediately, not just after refresh
     yield formatMetadataEvent({ mode: CONVERSATION_MODES.PROGRAM_DESIGN });
-    console.info("📋 Metadata event sent: mode=program_design (session start)");
+    logger.info("📋 Metadata event sent: mode=program_design (session start)");
 
     // CRITICAL: Metadata event MUST be sent before AI response starts streaming
     // This allows frontend to apply purple styling to the first AI message bubble
@@ -114,7 +115,7 @@ export async function* startProgramDesignCollection(
     if (processedResponse) {
       // 🐛 DEBUG: Log session state after handler completes (matches workout creator pattern)
       const progress = getTodoProgress(programSession.todoList);
-      console.info(
+      logger.info(
         "📊 SESSION STATE AFTER HANDLER (startProgramDesignCollection):",
         {
           sessionId: programSession.sessionId,
@@ -136,7 +137,7 @@ export async function* startProgramDesignCollection(
             percentage: processedResponse.progressDetails.percentage,
           },
         });
-        console.info("📊 Progress metadata sent:", {
+        logger.info("📊 Progress metadata sent:", {
           completed: processedResponse.progressDetails.completed,
           total: processedResponse.progressDetails.total,
           percentage: processedResponse.progressDetails.percentage,
@@ -146,13 +147,13 @@ export async function* startProgramDesignCollection(
 
     // Check if session was cancelled (topic change detected)
     if (processedResponse?.sessionCancelled) {
-      console.info("🔀 Topic change detected - soft-deleting program session");
+      logger.info("🔀 Topic change detected - soft-deleting program session");
 
       // Soft-delete the session (keep for audit trail and future auto-resume)
       programSession.isDeleted = true;
       programSession.completedAt = new Date(); // Mark when it was abandoned
       await saveProgramDesignerSession(programSession);
-      console.info("🗑️ Program session soft-deleted:", {
+      logger.info("🗑️ Program session soft-deleted:", {
         sessionId: programSession.sessionId,
         turnCount: programSession.turnCount,
         reason: "topic_change",
@@ -177,7 +178,7 @@ export async function* startProgramDesignCollection(
         },
       });
 
-      console.info(
+      logger.info(
         "✅ Program session cancelled - message will be re-processed",
       );
       return;
@@ -245,9 +246,9 @@ export async function* startProgramDesignCollection(
       },
     });
 
-    console.info("✅ Program design collection session started");
+    logger.info("✅ Program design collection session started");
   } catch (error) {
-    console.error("❌ Error starting program design session:", error);
+    logger.error("❌ Error starting program design session:", error);
     throw error;
   }
 }
@@ -262,11 +263,11 @@ export async function* handleProgramDesignerFlow(
   conversationData: ConversationData,
   programSession: ProgramDesignerSession, // Session passed from main handler
 ): AsyncGenerator<string, void, unknown> {
-  console.info("🏗️ BUILD MODE detected - using todo-list conversation flow");
+  logger.info("🏗️ BUILD MODE detected - using todo-list conversation flow");
 
   // 🐛 DEBUG: Log existing session state before handler (matches workout creator pattern)
   const initialProgress = getTodoProgress(programSession.todoList);
-  console.info("🔄 CONTINUING PROGRAM SESSION:", {
+  logger.info("🔄 CONTINUING PROGRAM SESSION:", {
     sessionId: programSession.sessionId,
     userId: programSession.userId,
     turnCount: programSession.turnCount || 0,
@@ -282,7 +283,7 @@ export async function* handleProgramDesignerFlow(
   // This prevents race conditions where additionalConsiderations might be set
   // but isComplete hasn't been persisted yet
   if (!programSession.isComplete) {
-    console.info("✨ Todo list not complete - using conversational flow");
+    logger.info("✨ Todo list not complete - using conversational flow");
 
     // Prepare user context from conversation data (matches workout creator pattern)
     const userContext = {
@@ -311,7 +312,7 @@ export async function* handleProgramDesignerFlow(
         percentage: currentProgress.requiredPercentage,
       },
     });
-    console.info("📊 Progress metadata sent (BEFORE chunks):", {
+    logger.info("📊 Progress metadata sent (BEFORE chunks):", {
       completed: currentProgress.requiredCompleted,
       total: currentProgress.requiredTotal,
       percentage: currentProgress.requiredPercentage,
@@ -342,7 +343,7 @@ export async function* handleProgramDesignerFlow(
     if (processedResponse) {
       // 🐛 DEBUG: Log session state after handler completes (matches workout creator pattern)
       const finalProgress = getTodoProgress(programSession.todoList);
-      console.info(
+      logger.info(
         "📊 SESSION STATE AFTER HANDLER (handleProgramDesignerFlow):",
         {
           sessionId: programSession.sessionId,
@@ -372,13 +373,13 @@ export async function* handleProgramDesignerFlow(
 
     // Check if session was cancelled (topic change detected)
     if (processedResponse?.sessionCancelled) {
-      console.info("🔀 Topic change detected - soft-deleting program session");
+      logger.info("🔀 Topic change detected - soft-deleting program session");
 
       // Soft-delete the session (keep for audit trail and future auto-resume)
       programSession.isDeleted = true;
       programSession.completedAt = new Date(); // Mark when it was abandoned
       await saveProgramDesignerSession(programSession);
-      console.info("🗑️ Program session soft-deleted:", {
+      logger.info("🗑️ Program session soft-deleted:", {
         sessionId: programSession.sessionId,
         turnCount: programSession.turnCount,
         reason: "topic_change",
@@ -398,7 +399,7 @@ export async function* handleProgramDesignerFlow(
         },
       });
 
-      console.info("✅ Program session cancelled - session soft-deleted");
+      logger.info("✅ Program session cancelled - session soft-deleted");
       return;
     }
 
@@ -419,7 +420,7 @@ export async function* handleProgramDesignerFlow(
               percentage: updatedProgress.percentage,
             },
           });
-          console.info("📊 Progress metadata updated (AFTER processing):", {
+          logger.info("📊 Progress metadata updated (AFTER processing):", {
             completed: updatedProgress.completed,
             total: updatedProgress.total,
             percentage: updatedProgress.percentage,
@@ -432,7 +433,7 @@ export async function* handleProgramDesignerFlow(
 
       // If complete, trigger program creation and clear session (matches workout creator pattern)
       if (processedResponse.isComplete) {
-        console.info(
+        logger.info(
           "🎉 Program collection complete - triggering build-program",
         );
 
@@ -466,16 +467,16 @@ export async function* handleProgramDesignerFlow(
         );
 
         if (result.alreadyGenerating) {
-          console.info(
+          logger.info(
             "⏭️ Program generation already in progress - skipped duplicate trigger",
           );
         } else if (result.programId) {
-          console.info(
+          logger.info(
             "⏭️ Program already exists - skipped duplicate trigger:",
             { programId: result.programId },
           );
         } else {
-          console.info(
+          logger.info(
             "✅ Program generation triggered with idempotency protection",
           );
         }
@@ -484,7 +485,7 @@ export async function* handleProgramDesignerFlow(
         programSession.lastActivity = new Date();
         await saveProgramDesignerSession(programSession);
 
-        console.info("✅ Session saved with updated conversation history:", {
+        logger.info("✅ Session saved with updated conversation history:", {
           sessionId: programSession.sessionId,
           conversationHistoryLength: programSession.conversationHistory.length,
           turnCount: programSession.turnCount,
@@ -509,10 +510,10 @@ export async function* handleProgramDesignerFlow(
         },
       });
 
-      console.info("✅ Program collection flow completed");
+      logger.info("✅ Program collection flow completed");
     }
   } else {
-    console.info(
+    logger.info(
       "✅ Program session marked as complete - likely already generating",
     );
 
@@ -521,14 +522,14 @@ export async function* handleProgramDesignerFlow(
       programSession.isDeleted = true;
       programSession.completedAt = programSession.completedAt || new Date();
       await saveProgramDesignerSession(programSession);
-      console.info("🗑️ Program session soft-deleted (marked complete):", {
+      logger.info("🗑️ Program session soft-deleted (marked complete):", {
         sessionId: programSession.sessionId,
         turnCount: programSession.turnCount,
         generationStatus: programSession.programGeneration?.status,
       });
     }
 
-    console.info(
+    logger.info(
       "✅ Program session already marked complete - no further processing needed",
     );
     // Don't yield anything - session already processed

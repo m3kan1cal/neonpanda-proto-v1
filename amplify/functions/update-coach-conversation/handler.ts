@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateCoachConversation } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { CONVERSATION_MODES } from '../libs/coach-conversation/types';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -73,7 +74,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     updateData
   );
 
-  console.info('Conversation metadata updated successfully:', {
+  logger.info('Conversation metadata updated successfully:', {
     conversationId,
     coachId,
     userId,

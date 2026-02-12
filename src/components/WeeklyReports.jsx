@@ -18,6 +18,7 @@ import WeeklyReportViewer from "./WeeklyReportViewer";
 import ReportAgent from "../utils/agents/ReportAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
+import { logger } from "../utils/logger";
 import {
   MetricsIcon,
   CheckIcon,
@@ -124,7 +125,7 @@ function WeeklyReports() {
         );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
       }
     };
 

@@ -2,6 +2,7 @@ import { CloudWatchLogsEvent, CloudWatchLogsDecodedData } from 'aws-lambda';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { gunzipSync } from 'zlib';
 import { sendErrorAlert } from '../libs/webhook-helpers';
+import { logger } from "../libs/logger";
 
 const snsClient = new SNSClient({});
 
@@ -16,7 +17,7 @@ export const handler = async (event: CloudWatchLogsEvent) => {
     const decompressed = gunzipSync(compressed);
     const logData: CloudWatchLogsDecodedData = JSON.parse(decompressed.toString());
 
-    console.info('Processing CloudWatch logs:', {
+    logger.info('Processing CloudWatch logs:', {
       logGroup: logData.logGroup,
       logStream: logData.logStream,
       messageType: logData.messageType,
@@ -27,7 +28,7 @@ export const handler = async (event: CloudWatchLogsEvent) => {
     const errorEvents = logData.logEvents;
 
     if (errorEvents.length === 0) {
-      console.info('No error/warning events found, skipping SNS notification');
+      logger.info('No error/warning events found, skipping SNS notification');
       return;
     }
 
@@ -61,7 +62,7 @@ export const handler = async (event: CloudWatchLogsEvent) => {
 
     await snsClient.send(publishCommand);
 
-    console.info('Successfully forwarded error logs to SNS:', {
+    logger.info('Successfully forwarded error logs to SNS:', {
       functionName,
       errorCount: errorEvents.length,
       snsTopicArn
@@ -71,7 +72,7 @@ export const handler = async (event: CloudWatchLogsEvent) => {
     await sendErrorAlert(subject, messageBody);
 
   } catch (error) {
-    console.error('Error processing CloudWatch logs:', error);
+    logger.error('Error processing CloudWatch logs:', error);
     throw error;
   }
 };

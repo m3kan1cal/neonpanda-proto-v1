@@ -6,6 +6,7 @@ import AuthLayout from "./AuthLayout";
 import AuthInput from "./AuthInput";
 import AuthButton from "./AuthButton";
 import AuthErrorMessage from "./AuthErrorMessage";
+import { logger } from "../../utils/logger";
 
 const LoginForm = ({
   onSwitchToRegister,
@@ -22,9 +23,9 @@ const LoginForm = ({
   // Add global error handler for unhandled promise rejections
   useEffect(() => {
     const handleUnhandledRejection = (event) => {
-      console.error("Unhandled promise rejection:", event.reason);
+      logger.error("Unhandled promise rejection:", event.reason);
       if (event.reason && event.reason.name === "UserNotConfirmedException") {
-        console.info("Caught UserNotConfirmedException in global handler");
+        logger.info("Caught UserNotConfirmedException in global handler");
         setShowVerificationOption(true);
         setGlobalError(
           "Account not confirmed. Please verify your email address to continue."
@@ -86,19 +87,19 @@ const LoginForm = ({
     setIsSubmitting(true);
 
     try {
-      console.info("About to call signIn with email:", formData.email.trim());
+      logger.info("About to call signIn with email:", formData.email.trim());
       const result = await signIn(formData.email.trim(), formData.password);
-      console.info("SignIn result:", result);
-      console.info("SignIn result type:", typeof result);
-      console.info("SignIn result keys:", Object.keys(result || {}));
-      console.info("SignIn result JSON:", JSON.stringify(result, null, 2));
+      logger.info("SignIn result:", result);
+      logger.info("SignIn result type:", typeof result);
+      logger.info("SignIn result keys:", Object.keys(result || {}));
+      logger.info("SignIn result JSON:", JSON.stringify(result, null, 2));
       // Navigation will be handled by the AuthProvider state change
     } catch (error) {
-      console.error("LoginForm sign in error:", error);
-      console.error("LoginForm error name:", error.name);
-      console.error("LoginForm error message:", error.message);
-      console.error("LoginForm error __type:", error.__type);
-      console.error(
+      logger.error("LoginForm sign in error:", error);
+      logger.error("LoginForm error name:", error.name);
+      logger.error("LoginForm error message:", error.message);
+      logger.error("LoginForm error __type:", error.__type);
+      logger.error(
         "LoginForm full error object:",
         JSON.stringify(error, null, 2)
       );
@@ -111,7 +112,7 @@ const LoginForm = ({
         error.__type === "UserNotConfirmedException" ||
         error.message === "UserNotConfirmedException"
       ) {
-        console.info(
+        logger.info(
           "UserNotConfirmedException detected, redirecting to verification with email:",
           formData.email.trim()
         );
@@ -122,28 +123,28 @@ const LoginForm = ({
           onSwitchToVerification(formData.email.trim());
           return; // Don't show error, just redirect
         } else {
-          console.error("onSwitchToVerification callback not provided");
+          logger.error("onSwitchToVerification callback not provided");
           setShowVerificationOption(true);
           setGlobalError(
             "Account not confirmed. Please verify your email address to continue."
           );
         }
       } else if (error.name === "IncompleteAccountSetupException") {
-        console.info("IncompleteAccountSetupException detected - showing user-friendly error");
+        logger.info("IncompleteAccountSetupException detected - showing user-friendly error");
         setGlobalError(error.userFriendlyMessage || error.message);
       } else if (error.name === "UserAlreadyAuthenticatedException") {
-        console.warn("🚨 State mismatch detected: Amplify says user is signed in, but AuthContext shows null");
-        console.info("🔄 Attempting to sync AuthContext state with Amplify...");
+        logger.warn("🚨 State mismatch detected: Amplify says user is signed in, but AuthContext shows null");
+        logger.info("🔄 Attempting to sync AuthContext state with Amplify...");
 
         try {
           // Try to update our AuthContext state to match Amplify's internal state
           await checkAuthState();
-          console.info("✅ Successfully synced AuthContext state with Amplify - should redirect now");
+          logger.info("✅ Successfully synced AuthContext state with Amplify - should redirect now");
           // The AuthRouter will handle the redirect automatically once state is synced
           return;
         } catch (syncError) {
-          console.error("❌ Failed to sync AuthContext state:", syncError);
-          console.info("🔄 This indicates a deeper authentication issue...");
+          logger.error("❌ Failed to sync AuthContext state:", syncError);
+          logger.info("🔄 This indicates a deeper authentication issue...");
           setGlobalError("Authentication state error detected. Please sign out and sign in again, or refresh the page.");
           return;
         }
@@ -154,7 +155,7 @@ const LoginForm = ({
       } else {
         // Check if the error message contains the UserNotConfirmedException text
         if (error.message && error.message.includes("User is not confirmed")) {
-          console.info(
+          logger.info(
             "UserNotConfirmedException detected via message, redirecting to verification"
           );
           setUnconfirmedEmail(formData.email.trim());

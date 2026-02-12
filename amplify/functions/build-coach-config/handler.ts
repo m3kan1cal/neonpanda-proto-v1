@@ -14,6 +14,7 @@ import {
 } from "../../dynamodb/operations";
 import { CoachCreatorAgent } from "../libs/agents/coach-creator/agent";
 import type { CoachCreatorContext } from "../libs/agents/coach-creator/types";
+import { logger } from "../libs/logger";
 
 // Interface for the event payload
 interface CoachConfigEvent {
@@ -31,7 +32,7 @@ export const handler: Handler<CoachConfigEvent> = async (
     let updatedSession: any = null;
 
     try {
-      console.info("🎨 Starting Coach Creator Agent:", {
+      logger.info("🎨 Starting Coach Creator Agent:", {
         userId,
         sessionId,
         timestamp: new Date().toISOString(),
@@ -42,7 +43,7 @@ export const handler: Handler<CoachConfigEvent> = async (
       }
 
       // Step 1: Load and validate session
-      console.info("📂 Step 1: Loading coach creator session");
+      logger.info("📂 Step 1: Loading coach creator session");
       session = await getCoachCreatorSession(userId, sessionId);
       if (!session) {
         throw new Error("Session not found or expired");
@@ -53,15 +54,15 @@ export const handler: Handler<CoachConfigEvent> = async (
       }
 
       // Step 2: Generate consistent timestamp for all operations
-      console.info(
+      logger.info(
         "⏰ Step 2: Generating consistent timestamp for config creation",
       );
       const creationTimestamp = new Date().toISOString();
       const creationDate = new Date(creationTimestamp);
-      console.info("Timestamp generated:", creationTimestamp);
+      logger.info("Timestamp generated:", creationTimestamp);
 
       // Step 3: Update session to indicate config generation is in progress
-      console.info("🔄 Step 3: Marking session as IN_PROGRESS");
+      logger.info("🔄 Step 3: Marking session as IN_PROGRESS");
       updatedSession = {
         ...session,
         configGeneration: {
@@ -79,13 +80,13 @@ export const handler: Handler<CoachConfigEvent> = async (
       };
 
       // Step 5: Create CoachCreator agent and run workflow
-      console.info(
+      logger.info(
         "🤖 Step 5: Creating CoachCreator agent and starting workflow",
       );
       const agent = new CoachCreatorAgent(agentContext);
       const result = await agent.createCoach();
 
-      console.info("✅ Agent workflow completed:", {
+      logger.info("✅ Agent workflow completed:", {
         success: result.success,
         coachConfigId: result.coachConfigId,
         skipped: result.skipped,
@@ -93,7 +94,7 @@ export const handler: Handler<CoachConfigEvent> = async (
 
       // Return response based on result
       if (result.success) {
-        console.info("✅ Coach config generation completed successfully:", {
+        logger.info("✅ Coach config generation completed successfully:", {
           coachConfigId: result.coachConfigId,
           coachName: result.coachName,
           primaryPersonality: result.primaryPersonality,
@@ -118,7 +119,7 @@ export const handler: Handler<CoachConfigEvent> = async (
         });
       } else {
         // Update session to indicate failure
-        console.warn("⚠️ Coach creation skipped or failed:", {
+        logger.warn("⚠️ Coach creation skipped or failed:", {
           reason: result.reason,
           validationIssues: result.validationIssues,
         });
@@ -136,9 +137,9 @@ export const handler: Handler<CoachConfigEvent> = async (
             lastActivity: new Date(),
           };
           await saveCoachCreatorSession(failedSession);
-          console.info("✅ Session updated to FAILED status");
+          logger.info("✅ Session updated to FAILED status");
         } catch (updateError) {
-          console.error(
+          logger.error(
             "⚠️ Failed to update session to FAILED (non-blocking):",
             updateError,
           );
@@ -154,7 +155,7 @@ export const handler: Handler<CoachConfigEvent> = async (
         });
       }
     } catch (error) {
-      console.error("❌ Error in coach creator agent:", error);
+      logger.error("❌ Error in coach creator agent:", error);
 
       // Update session to indicate failure
       // Use updatedSession if available (has startedAt), otherwise fall back to session
@@ -173,7 +174,7 @@ export const handler: Handler<CoachConfigEvent> = async (
           };
           await saveCoachCreatorSession(failedSession);
         } catch (updateError) {
-          console.error(
+          logger.error(
             "Failed to update session with error status:",
             updateError,
           );

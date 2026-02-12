@@ -1,3 +1,4 @@
+import { logger } from "../libs/logger";
 import {
   CloudWatchLogsClient,
   DescribeLogGroupsCommand,
@@ -11,40 +12,44 @@ const logs = new CloudWatchLogsClient({});
 const EXCLUDED_FUNCTIONS = ["forwardlogs", "synclogs"];
 
 const shouldSkipLogGroup = (logGroupName: string): boolean => {
-  return EXCLUDED_FUNCTIONS.some(excluded => logGroupName.includes(excluded));
+  return EXCLUDED_FUNCTIONS.some((excluded) => logGroupName.includes(excluded));
 };
 
 // Add delay to avoid throttling (CloudWatch Logs: 5 requests/second)
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Retry with exponential backoff for throttling errors
 const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
 ): Promise<T> => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error: any) {
-      const isThrottling = error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 400;
+      const isThrottling =
+        error.name === "ThrottlingException" ||
+        error.$metadata?.httpStatusCode === 400;
       const isLastAttempt = attempt === maxRetries - 1;
 
       if (isThrottling && !isLastAttempt) {
         const delayMs = baseDelay * Math.pow(2, attempt); // Exponential backoff: 1s, 2s, 4s
-        console.warn(`⏱️ Throttled, retrying in ${delayMs}ms.. (attempt ${attempt + 1}/${maxRetries})`);
+        logger.warn(
+          `⏱️ Throttled, retrying in ${delayMs}ms.. (attempt ${attempt + 1}/${maxRetries})`,
+        );
         await delay(delayMs);
       } else {
         throw error;
       }
     }
   }
-  throw new Error('Max retries exceeded');
+  throw new Error("Max retries exceeded");
 };
 
 const hasExistingFilter = async (logGroupName: string): Promise<boolean> => {
   const { subscriptionFilters } = await retryWithBackoff(() =>
-    logs.send(new DescribeSubscriptionFiltersCommand({ logGroupName }))
+    logs.send(new DescribeSubscriptionFiltersCommand({ logGroupName })),
   );
   return (subscriptionFilters?.length || 0) > 0;
 };
@@ -52,7 +57,7 @@ const hasExistingFilter = async (logGroupName: string): Promise<boolean> => {
 const addSubscriptionFilter = async (
   logGroupName: string,
   filterPattern: string,
-  destinationArn: string
+  destinationArn: string,
 ): Promise<boolean> => {
   try {
     await retryWithBackoff(() =>
@@ -62,13 +67,13 @@ const addSubscriptionFilter = async (
           filterName: "error-monitoring-filter",
           filterPattern,
           destinationArn,
-        })
-      )
+        }),
+      ),
     );
-    console.info("✅ Added filter to:", logGroupName);
+    logger.info("✅ Added filter to:", logGroupName);
     return true;
   } catch (err) {
-    console.error("❌ Failed to add filter to:", logGroupName, err);
+    logger.error("❌ Failed to add filter to:", logGroupName, err);
     return false;
   }
 };
@@ -76,11 +81,11 @@ const addSubscriptionFilter = async (
 export const handler = async () => {
   const { LOG_GROUP_PREFIX, DESTINATION_ARN, FILTER_PATTERN } = process.env;
 
-  console.info("🔄 Syncing log subscriptions for prefix:", LOG_GROUP_PREFIX);
+  logger.info("🔄 Syncing log subscriptions for prefix:", LOG_GROUP_PREFIX);
 
   try {
     const { logGroups } = await logs.send(
-      new DescribeLogGroupsCommand({ logGroupNamePrefix: LOG_GROUP_PREFIX })
+      new DescribeLogGroupsCommand({ logGroupNamePrefix: LOG_GROUP_PREFIX }),
     );
 
     let added = 0;
@@ -90,7 +95,7 @@ export const handler = async () => {
       const logGroupName = logGroup.logGroupName!;
 
       if (shouldSkipLogGroup(logGroupName)) {
-        console.info("⏭️ Skipping system function:", logGroupName);
+        logger.info("⏭️ Skipping system function:", logGroupName);
         skipped++;
         continue;
       }
@@ -108,14 +113,18 @@ export const handler = async () => {
       // Add delay before adding filter (to avoid throttling)
       await delay(250);
 
-      const success = await addSubscriptionFilter(logGroupName, FILTER_PATTERN!, DESTINATION_ARN!);
+      const success = await addSubscriptionFilter(
+        logGroupName,
+        FILTER_PATTERN!,
+        DESTINATION_ARN!,
+      );
       if (success) added++;
     }
 
-    console.info(`✅ Sync complete. Added: ${added}, Skipped: ${skipped}`);
+    logger.info(`✅ Sync complete. Added: ${added}, Skipped: ${skipped}`);
     return { added, skipped };
   } catch (error) {
-    console.error("❌ Error syncing subscriptions:", error);
+    logger.error("❌ Error syncing subscriptions:", error);
     throw error;
   }
 };

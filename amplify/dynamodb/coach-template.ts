@@ -7,6 +7,7 @@ import {
   UpdateCommand,
 } from "./core";
 import { saveCoachConfig } from "./coach-config";
+import { logger } from "../functions/libs/logger";
 import {
   CoachConfig,
   CoachTemplate,
@@ -43,14 +44,14 @@ export async function queryCoachTemplates(): Promise<CoachTemplate[]> {
       return a.template_name.localeCompare(b.template_name);
     });
 
-    console.info("Coach templates queried successfully:", {
+    logger.info("Coach templates queried successfully:", {
       totalFound: items.length,
       activeTemplates: activeTemplates.length,
     });
 
     return activeTemplates;
   } catch (error) {
-    console.error("Error querying coach templates from DynamoDB:", error);
+    logger.error("Error querying coach templates from DynamoDB:", error);
     throw error;
   }
 }
@@ -159,10 +160,10 @@ export async function createCoachConfigFromTemplate(
       await incrementTemplatePopularity(templateId);
     } catch (popularityError) {
       // Don't fail the whole operation if popularity update fails
-      console.warn("Failed to update template popularity:", popularityError);
+      logger.warn("Failed to update template popularity:", popularityError);
     }
 
-    console.info("Coach config created from template successfully:", {
+    logger.info("Coach config created from template successfully:", {
       templateId,
       templateName: template.template_name,
       userId,
@@ -172,7 +173,7 @@ export async function createCoachConfigFromTemplate(
 
     return newCoachConfig;
   } catch (error) {
-    console.error("Error creating coach config from template:", error);
+    logger.error("Error creating coach config from template:", error);
     throw error;
   }
 }

@@ -7,6 +7,7 @@ import {
   WeeklyAnalyticsEvent,
 } from "../libs/analytics";
 import { withHeartbeat } from "../libs/heartbeat";
+import { logger } from "../libs/logger";
 
 /**
  * Weekly Analytics Lambda Handler
@@ -15,7 +16,7 @@ import { withHeartbeat } from "../libs/heartbeat";
 export const handler = async (event: WeeklyAnalyticsEvent) => {
   return withHeartbeat('Weekly Analytics Processing', async () => {
     try {
-      console.info("📊 Starting weekly analytics processing:", {
+      logger.info("📊 Starting weekly analytics processing:", {
         source: event.source,
         timestamp: new Date().toISOString(),
         triggerEvent: event,
@@ -24,7 +25,7 @@ export const handler = async (event: WeeklyAnalyticsEvent) => {
       // Process all users in batches
       const totalProcessedUsers = await processAllUsersInBatches(50);
 
-    console.info("✅ Weekly analytics processing completed successfully:", {
+    logger.info("✅ Weekly analytics processing completed successfully:", {
       totalProcessedUsers,
       completedAt: new Date().toISOString(),
     });
@@ -35,7 +36,7 @@ export const handler = async (event: WeeklyAnalyticsEvent) => {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("❌ Weekly analytics processing failed:", error);
+      logger.error("❌ Weekly analytics processing failed:", error);
 
       return createErrorResponse(
         500,

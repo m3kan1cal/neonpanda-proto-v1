@@ -12,6 +12,7 @@
 
 import { UniversalWorkoutSchema } from "./types";
 import { generateNormalization } from "./tool-generation";
+import { logger } from "../logger";
 
 export interface NormalizationResult {
   isValid: boolean;
@@ -43,7 +44,7 @@ export const normalizeWorkout = async (
   userId: string,
   enableThinking: boolean = false,
 ): Promise<NormalizationResult> => {
-  console.info("🔧 Starting workout normalization:", {
+  logger.info("🔧 Starting workout normalization:", {
     userId,
     workoutId: workoutData.workout_id,
     discipline: workoutData.discipline,
@@ -73,7 +74,7 @@ export const normalizeWorkout = async (
   // Round confidence to 2 decimal places to avoid floating-point precision issues
   const roundedConfidence = Math.round(toolResult.confidence * 100) / 100;
 
-  console.info("✅ Normalization complete:", {
+  logger.info("✅ Normalization complete:", {
     isValid: toolResult.isValid,
     issuesFound: toolResult.issues.length,
     correctionsMade: toolResult.issues.filter((i) => i.corrected).length,
@@ -158,7 +159,7 @@ export const shouldNormalizeWorkout = (
   // Check for complexity indicators that might need normalization
   const isComplex = checkForComplexWorkoutIndicators(workoutData);
 
-  console.info("🔍 Normalization decision analysis:", {
+  logger.info("🔍 Normalization decision analysis:", {
     hasCorrectStructure,
     extractionConfidence,
     completeness,
@@ -169,20 +170,20 @@ export const shouldNormalizeWorkout = (
 
   // If structure is incorrect, always normalize regardless of confidence
   if (!hasCorrectStructure) {
-    console.info("🔧 Normalization required: structural issues detected");
+    logger.info("🔧 Normalization required: structural issues detected");
     return true;
   }
 
   // Always normalize low confidence extractions
   if (extractionConfidence < 0.7) {
-    console.info("🔧 Normalization required: low confidence extraction");
+    logger.info("🔧 Normalization required: low confidence extraction");
     return true;
   }
 
   // Skip normalization for very high confidence extractions (>= 0.95)
   // Even complex workouts don't need normalization if AI is highly confident
   if (extractionConfidence >= 0.95 && hasCorrectStructure) {
-    console.info(
+    logger.info(
       "✅ Skipping normalization: very high confidence extraction (>= 0.95)",
       {
         extractionConfidence,
@@ -196,7 +197,7 @@ export const shouldNormalizeWorkout = (
   // Normalize complex workouts with medium-high confidence for quality assurance
   // Only if confidence is between 0.7 and 0.95
   if (isComplex && hasCorrectStructure && extractionConfidence >= 0.7) {
-    console.info(
+    logger.info(
       "🔧 Normalization required: complex workout needs validation (confidence < 0.95)",
       {
         extractionConfidence,
@@ -208,7 +209,7 @@ export const shouldNormalizeWorkout = (
   // CRITICAL: Consider completeness for enrichment
   // Even with perfect structure (high confidence), bare-bones data needs enrichment
   if (completeness !== undefined && completeness < 0.65) {
-    console.info(
+    logger.info(
       "🔧 Normalization required: low completeness (needs enrichment)",
       {
         completeness,
@@ -220,7 +221,7 @@ export const shouldNormalizeWorkout = (
 
   // If structure is correct, confidence is high, and completeness is good, skip normalization
   if (hasCorrectStructure && extractionConfidence > 0.8 && !isComplex) {
-    console.info(
+    logger.info(
       "✅ Skipping normalization: correct structure + high confidence + good completeness + simple workout",
       {
         completeness: completeness || "not provided",
@@ -231,7 +232,7 @@ export const shouldNormalizeWorkout = (
 
   // For medium confidence (0.7-0.8), we already know structure is correct from above
   // so we can skip normalization if completeness is acceptable
-  console.info(
+  logger.info(
     "✅ Skipping normalization: correct structure + medium confidence",
   );
   return false;

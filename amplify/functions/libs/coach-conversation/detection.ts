@@ -16,6 +16,7 @@ import {
   CONVERSATION_COMPLEXITY_SCHEMA,
 } from "../schemas/router-schemas";
 import { SmartRequestRouter } from "../streaming/business-types";
+import { logger } from "../logger";
 import {
   parseJsonWithFallbacks,
   fixDoubleEncodedProperties,
@@ -105,7 +106,7 @@ Use the analyze_complexity tool to provide your analysis of complexity triggers 
 
     return result.hasComplexity || false;
   } catch (error) {
-    console.error("Error in conversation complexity detection:", error);
+    logger.error("Error in conversation complexity detection:", error);
     // Conservative fallback - assume no complexity to avoid unnecessary summaries
     return false;
   }
@@ -150,7 +151,7 @@ export async function detectAndProcessConversationSummary(
   const triggerReason =
     currentMessageCount % 6 === 0 ? "message_count" : "complexity";
 
-  console.info("🔄 Conversation summary trigger detected:", {
+  logger.info("🔄 Conversation summary trigger detected:", {
     conversationId,
     totalMessages: currentMessageCount,
     triggeredBy: triggerReason,
@@ -162,7 +163,7 @@ export async function detectAndProcessConversationSummary(
     const summaryFunction =
       process.env.BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME;
     if (!summaryFunction) {
-      console.warn(
+      logger.warn(
         "⚠️ BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME environment variable not set",
       );
       return {
@@ -193,7 +194,7 @@ export async function detectAndProcessConversationSummary(
       complexityDetected: hasComplexityTriggers,
     };
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Failed to trigger conversation summary generation:",
       error,
     );
@@ -556,7 +557,7 @@ Conversation Length: ${conversationLength} messages
 Use the analyze_request tool to provide comprehensive analysis following the framework above.`;
 
   try {
-    console.info("🧠 Smart Router analyzing request capabilities:", {
+    logger.info("🧠 Smart Router analyzing request capabilities:", {
       messageLength: userMessage.length,
       hasContext: !!messageContext,
       conversationLength,
@@ -594,7 +595,7 @@ Use the analyze_request tool to provide comprehensive analysis following the fra
     // Add processing time metadata
     result.routerMetadata.processingTime = Date.now() - startTime;
 
-    console.info("✅ Smart Router analysis completed:", {
+    logger.info("✅ Smart Router analysis completed:", {
       userIntent: result.userIntent,
       showContextualUpdates: result.showContextualUpdates,
       isWorkoutLog: result.workoutDetection.isWorkoutLog,
@@ -609,7 +610,7 @@ Use the analyze_request tool to provide comprehensive analysis following the fra
 
     return result;
   } catch (error) {
-    console.error("❌ Smart Router analysis failed:", error);
+    logger.error("❌ Smart Router analysis failed:", error);
     throw error; // Let the caller handle the error
   }
 }

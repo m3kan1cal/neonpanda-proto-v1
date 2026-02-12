@@ -19,6 +19,7 @@ import {
   validateStreamingInput,
 } from "./streamingAgentHelper";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
+import { logger } from "../logger";
 
 /**
  * CoachConversationAgent - Handles the business logic for coach conversations
@@ -147,7 +148,7 @@ export class CoachConversationAgent {
       this._updateState({ coach: formattedCoachData });
       return formattedCoachData;
     } catch (error) {
-      console.error("Error loading coach details:", error);
+      logger.error("Error loading coach details:", error);
       this._updateState({ error: "Failed to load coach details" });
       if (typeof this.onError === "function") {
         this.onError(error);
@@ -186,7 +187,7 @@ export class CoachConversationAgent {
 
       return sortedConversations;
     } catch (error) {
-      console.error("Error loading historical conversations:", error);
+      logger.error("Error loading historical conversations:", error);
       this._updateState({
         recentConversations: [],
         isLoadingRecentItems: false,
@@ -218,8 +219,8 @@ export class CoachConversationAgent {
         totalMessages: result.totalMessages,
       };
     } catch (error) {
-      console.error("Error loading conversation count:", error);
-      console.error("Error details:", error.message);
+      logger.error("Error loading conversation count:", error);
+      logger.error("Error details:", error.message);
       // Don't show error for count as it's not critical
       this._updateState({
         conversationCount: 0,
@@ -283,7 +284,7 @@ export class CoachConversationAgent {
 
       return { userId, coachId, conversationId, conversation };
     } catch (error) {
-      console.error("Error creating coach conversation:", error);
+      logger.error("Error creating coach conversation:", error);
       this._updateState({
         isLoadingItem: false,
         error: "Failed to create coach conversation",
@@ -338,7 +339,7 @@ export class CoachConversationAgent {
           // Ensure content is a string
           let messageContent = message.content || "";
           if (typeof messageContent !== "string") {
-            console.warn(
+            logger.warn(
               "Message content is not a string, converting:",
               messageContent,
               typeof messageContent,
@@ -360,7 +361,7 @@ export class CoachConversationAgent {
 
       // Debug: Log workout session on load
       if (actualConversation.workoutCreatorSession) {
-        console.info("🏋️ Loaded conversation with active workout session:", {
+        logger.info("🏋️ Loaded conversation with active workout session:", {
           conversationId,
           turnCount: actualConversation.workoutCreatorSession.turnCount,
           progress: actualConversation.workoutCreatorSession.progressDetails,
@@ -377,7 +378,7 @@ export class CoachConversationAgent {
 
       return conversationData;
     } catch (error) {
-      console.error("Error loading existing conversation:", error);
+      logger.error("Error loading existing conversation:", error);
       this._updateState({
         isLoadingItem: false,
         error: "Failed to load existing conversation",
@@ -410,7 +411,7 @@ export class CoachConversationAgent {
       !this.coachId ||
       !this.conversationId
     ) {
-      console.warn("❌ sendMessage validation failed");
+      logger.warn("❌ sendMessage validation failed");
       return;
     }
 
@@ -451,7 +452,7 @@ export class CoachConversationAgent {
 
       // Ensure content is a string
       if (typeof aiResponseContent !== "string") {
-        console.warn(
+        logger.warn(
           "AI response content is not a string, converting:",
           aiResponseContent,
           typeof aiResponseContent,
@@ -478,7 +479,7 @@ export class CoachConversationAgent {
 
       return result;
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
 
       // Add error message
       const errorResponse = {
@@ -509,7 +510,7 @@ export class CoachConversationAgent {
   async sendMessageStream(messageContent, imageS3Keys = []) {
     // Input validation - allow text OR images
     if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
-      console.warn("❌ sendMessageStream validation failed");
+      logger.warn("❌ sendMessageStream validation failed");
       return;
     }
 
@@ -683,7 +684,7 @@ export class CoachConversationAgent {
           },
 
           onError: async (errorMessage) => {
-            console.error("Streaming error:", errorMessage);
+            logger.error("Streaming error:", errorMessage);
           },
         });
       } catch (streamError) {
@@ -704,7 +705,7 @@ export class CoachConversationAgent {
         );
       }
     } catch (error) {
-      console.error("Error sending streaming message:", error);
+      logger.error("Error sending streaming message:", error);
 
       // Clean up and add error message
       this._cleanupStreamingError(error);
@@ -887,7 +888,7 @@ export class CoachConversationAgent {
     }
 
     try {
-      console.info("Updating conversation metadata:", {
+      logger.info("Updating conversation metadata:", {
         userId,
         coachId,
         conversationId,
@@ -924,10 +925,10 @@ export class CoachConversationAgent {
         await this.loadRecentConversations(userId, coachId);
       }
 
-      console.info("Conversation metadata updated successfully");
+      logger.info("Conversation metadata updated successfully");
       return result;
     } catch (error) {
-      console.error("Error updating conversation metadata:", error);
+      logger.error("Error updating conversation metadata:", error);
       this._updateState({
         error: "Failed to update conversation metadata",
       });
@@ -949,7 +950,7 @@ export class CoachConversationAgent {
     try {
       this._updateState({ isLoadingItem: true, error: null });
 
-      console.info("Deleting coach conversation:", {
+      logger.info("Deleting coach conversation:", {
         userId,
         coachId,
         conversationId,
@@ -970,10 +971,10 @@ export class CoachConversationAgent {
       // Update loading state
       this._updateState({ isLoadingItem: false });
 
-      console.info("Conversation deleted successfully");
+      logger.info("Conversation deleted successfully");
       return true;
     } catch (error) {
-      console.error("Error deleting conversation:", error);
+      logger.error("Error deleting conversation:", error);
       this._updateState({
         isLoadingItem: false,
         error: "Failed to delete conversation",

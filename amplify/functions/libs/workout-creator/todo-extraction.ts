@@ -20,6 +20,7 @@ import { MESSAGE_TYPES } from "../coach-conversation/types";
 import { TodoItem, ConversationMessage } from "../todo-types";
 import { WorkoutCreatorTodoList } from "./types";
 import { WORKOUT_CREATOR_TODO_SCHEMA } from "../schemas/workout-creator-todo-schema";
+import { logger } from "../logger";
 
 /**
  * Result of AI extraction from user's workout logging message
@@ -48,13 +49,13 @@ export async function extractAndUpdateTodoList(
     activeProgram?: any;
   },
 ): Promise<WorkoutExtractionResult> {
-  console.info("🔍 Extracting workout information from user response");
+  logger.info("🔍 Extracting workout information from user response");
 
   // Check if images are present
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
   if (hasImages) {
-    console.info("🖼️ Processing with images:", {
+    logger.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys!.length,
       imageKeys: imageS3Keys,
     });
@@ -163,24 +164,24 @@ Return JSON with ONLY the fields you found information for:
       );
     }
 
-    console.info("✅ Received extraction response");
+    logger.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input and fix any double-encoding
       extracted = extractionResponse.input;
-      console.info("✅ Tool-based extraction successful");
+      logger.info("✅ Tool-based extraction successful");
       // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
       extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn("⚠️ Received string response, parsing as JSON fallback");
+      logger.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
     if (!extracted || typeof extracted !== "object") {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to parse extraction response, returning current todo list",
       );
       return {
@@ -199,12 +200,12 @@ Return JSON with ONLY the fields you found information for:
     const userChangedTopic = extracted.userChangedTopic === true;
 
     if (userWantsToFinish) {
-      console.info(
+      logger.info(
         "⏭️ AI detected user wants to finish logging and skip remaining fields",
       );
     }
     if (userChangedTopic) {
-      console.info(
+      logger.info(
         "🔀 AI detected user changed topics - abandoning workout logging session",
       );
     }
@@ -238,7 +239,7 @@ Return JSON with ONLY the fields you found information for:
 
           updatedTodoList[key as keyof WorkoutCreatorTodoList] = todoItem;
 
-          console.info(
+          logger.info(
             `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
           );
         }
@@ -249,7 +250,7 @@ Return JSON with ONLY the fields you found information for:
     const extractedCount = Object.keys(extracted).filter(
       (k) => k !== "userWantsToFinish" && k !== "userChangedTopic",
     ).length;
-    console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
+    logger.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     return {
       todoList: updatedTodoList,
@@ -257,8 +258,8 @@ Return JSON with ONLY the fields you found information for:
       userChangedTopic,
     };
   } catch (error) {
-    console.error("❌ Error during extraction:", error);
-    console.error("Returning current todo list unchanged");
+    logger.error("❌ Error during extraction:", error);
+    logger.error("Returning current todo list unchanged");
     return {
       todoList: currentTodoList,
       userWantsToFinish: false,

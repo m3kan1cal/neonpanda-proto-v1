@@ -1,4 +1,5 @@
 import { submitContactForm } from "../apis/contactApi";
+import { logger } from "../logger";
 
 /**
  * ContactFormAgent - Handles business logic for Contact Form component
@@ -41,12 +42,12 @@ export class ContactFormAgent {
     });
 
     try {
-      console.info("Submitting contact form:", formData);
+      logger.info("Submitting contact form:", formData);
 
       // Make API call to the contact form endpoint
       const result = await submitContactForm(formData);
 
-      console.info("Form submitted successfully:", result);
+      logger.info("Form submitted successfully:", result);
 
       this._updateState({
         isSubmitting: false,
@@ -62,7 +63,7 @@ export class ContactFormAgent {
 
       return result;
     } catch (err) {
-      console.error("Submission error:", err);
+      logger.error("Submission error:", err);
 
       let errorMessage =
         "There was an error submitting your message. Please try again.";

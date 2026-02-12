@@ -17,6 +17,7 @@ import ReportAgent from "../../utils/agents/ReportAgent";
 import WorkoutAgent from "../../utils/agents/WorkoutAgent";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import { ModernPopover } from "../shared/FloatingMenu";
+import { logger } from "../../utils/logger";
 import {
   WorkoutIconSmall,
   ChatIconSmall,
@@ -84,7 +85,7 @@ export const QuickAccessPopover = ({
       });
 
       reportAgentRef.current.onError = (error) => {
-        console.error("Report agent error:", error);
+        logger.error("Report agent error:", error);
       };
     }
 
@@ -110,7 +111,7 @@ export const QuickAccessPopover = ({
       });
 
       workoutAgentRef.current.onError = (error) => {
-        console.error("Workout agent error:", error);
+        logger.error("Workout agent error:", error);
       };
 
       workoutAgentRef.current.onNewWorkout = (workout) => {
@@ -150,7 +151,7 @@ export const QuickAccessPopover = ({
           // Handle navigation if needed
         },
         onError: (error) => {
-          console.error("Conversation agent error:", error);
+          logger.error("Conversation agent error:", error);
         },
       });
     }
@@ -172,21 +173,21 @@ export const QuickAccessPopover = ({
       coachId &&
       conversationAgentRef.current
     ) {
-      console.info("Loading conversations for popover...", { userId, coachId });
+      logger.info("Loading conversations for popover...", { userId, coachId });
       conversationAgentRef.current.loadRecentConversations(userId, coachId, 10);
     }
   }, [isOpen, popoverType, userId, coachId]);
 
   useEffect(() => {
     if (isOpen && popoverType === "workouts" && userId && workoutAgentRef.current) {
-      console.info("Loading workouts for popover...", { userId });
+      logger.info("Loading workouts for popover...", { userId });
       workoutAgentRef.current.loadRecentWorkouts(10);
     }
   }, [isOpen, popoverType, userId]);
 
   useEffect(() => {
     if (isOpen && popoverType === "reports" && userId && reportAgentRef.current) {
-      console.info("Loading recent reports for popover...", { userId });
+      logger.info("Loading recent reports for popover...", { userId });
       reportAgentRef.current.loadRecentReports(10);
     }
   }, [isOpen, popoverType, userId]);
@@ -270,7 +271,7 @@ export const QuickAccessPopover = ({
         error("Failed to create conversation - no ID returned");
       }
     } catch (err) {
-      console.error("Error creating new conversation:", err);
+      logger.error("Error creating new conversation:", err);
       error("Failed to create conversation");
       navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
     } finally {

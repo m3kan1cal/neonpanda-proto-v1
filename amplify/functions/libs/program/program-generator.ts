@@ -28,6 +28,7 @@ import {
   DEFAULT_PROGRAM_DURATION_DAYS,
 } from "./duration-parser";
 import { validateParsedProgramDuration } from "./validation-helpers";
+import { logger } from "../logger";
 
 /**
  * Generate a concise program name (50-60 characters max)
@@ -200,7 +201,7 @@ export async function generateProgramV2(
   conversationContext: string,
   additionalConsiderations?: string,
 ): Promise<{ program: Program; debugData: ProgramGenerationDebugData }> {
-  console.info("🚀 Starting V2 parallel program generation:", {
+  logger.info("🚀 Starting V2 parallel program generation:", {
     userId,
     programId,
     conversationId,
@@ -229,7 +230,7 @@ export async function generateProgramV2(
 
   try {
     // 1. Load coach config and user profile
-    console.info("📥 Loading coach and user data...");
+    logger.info("📥 Loading coach and user data...");
     const [coachConfigResult, userProfile] = await Promise.all([
       getCoachConfig(userId, coachId),
       getUserProfile(userId),
@@ -242,7 +243,7 @@ export async function generateProgramV2(
     }
 
     // 2. Query Pinecone for relevant user context (including methodologies)
-    console.info("🔍 Querying Pinecone for user context...");
+    logger.info("🔍 Querying Pinecone for user context...");
     const pineconeResult = await queryPineconeContext(
       userId,
       `Program for: ${todoList.trainingGoals?.value || "fitness goals"}`,
@@ -301,7 +302,7 @@ export async function generateProgramV2(
     debugData.timings.dataLoading = dataLoadingTime;
 
     // 4. Generate phase structure (determines how to break down the program)
-    console.info("🎯 Step 1: Generating phase structure...");
+    logger.info("🎯 Step 1: Generating phase structure...");
     const phaseStructureStart = Date.now();
     const { phases: phaseStructure, debugData: phaseStructureDebug } =
       await generatePhaseStructure(phaseContext);
@@ -310,7 +311,7 @@ export async function generateProgramV2(
     // Store ACTUAL phase structure prompt and response
     debugData.phaseStructure = phaseStructureDebug;
 
-    console.info("✅ Phase structure generated:", {
+    logger.info("✅ Phase structure generated:", {
       phaseCount: phaseStructure.length,
       phases: phaseStructure.map((p) => ({
         name: p.name,
@@ -320,7 +321,7 @@ export async function generateProgramV2(
     });
 
     // 5. Generate all phases in PARALLEL (critical for staying under timeout)
-    console.info("🚀 Step 2: Generating all phases in parallel...");
+    logger.info("🚀 Step 2: Generating all phases in parallel...");
     const phaseGenerationStart = Date.now();
     const { phasesWithWorkouts, debugData: phaseWorkoutDebugData } =
       await generateAllPhasesParallel(phaseStructure, phaseContext);
@@ -330,7 +331,7 @@ export async function generateProgramV2(
     debugData.phaseWorkouts = phaseWorkoutDebugData;
 
     // 6. Assemble complete program
-    console.info("🔧 Step 3: Assembling complete program...");
+    logger.info("🔧 Step 3: Assembling complete program...");
     const assemblyStart = Date.now();
     const { phases, workoutTemplates, totalWorkouts } = assembleProgram(
       phasesWithWorkouts,
@@ -423,7 +424,7 @@ export async function generateProgramV2(
     // Finalize debug data timings
     debugData.timings.total = Date.now() - startTime;
 
-    console.info("✅ V2 parallel program generation complete:", {
+    logger.info("✅ V2 parallel program generation complete:", {
       programId,
       phaseCount: phases.length,
       totalWorkouts,
@@ -436,7 +437,7 @@ export async function generateProgramV2(
     return { program, debugData };
   } catch (error) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.error("❌ V2 parallel program generation failed:", {
+    logger.error("❌ V2 parallel program generation failed:", {
       error: error instanceof Error ? error.message : "Unknown error",
       elapsedSeconds: elapsed,
       userId,

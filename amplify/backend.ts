@@ -116,6 +116,7 @@ import {
   syncLogSubscriptions,
   createSyncLogSubscriptionsSchedule,
 } from "./functions/sync-log-subscriptions/resource";
+import { logger } from "./functions/libs/logger";
 import {
   SharedPolicies,
   grantLambdaInvokePermissions,
@@ -612,7 +613,7 @@ const forwardLogsRole = backend.forwardLogsToSns.resources.lambda.role;
 if (forwardLogsRole) {
   // The role should only have inline policies from SNS grant and CloudWatch permission
   // No managed policies should be attached
-  console.info(
+  logger.info(
     "🧹 forwardLogsToSns role configured with minimal inline policies only",
   );
 }
@@ -869,7 +870,7 @@ if (branchInfo.isSandbox) {
   }
 }
 
-console.info("📋 Log group configuration:", {
+logger.info("📋 Log group configuration:", {
   isSandbox: branchInfo.isSandbox,
   branchName: branchInfo.branchName,
   stackName: backend.contactForm.stack.stackName,
@@ -1141,8 +1142,8 @@ const syncLogSubscriptionsSchedule = createSyncLogSubscriptionsSchedule(
   backend.syncLogSubscriptions.resources.lambda,
 );
 
-console.info("✅ Log subscription sync scheduled (daily at 2am UTC)");
-console.info("✅ New functions automatically monitored within 24 hours");
+logger.info("✅ Log subscription sync scheduled (daily at 2am UTC)");
+logger.info("✅ New functions automatically monitored within 24 hours");
 
 // Create EventBridge schedule for weekly analytics (Sundays at 9am UTC)
 const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
@@ -1150,7 +1151,7 @@ const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
   backend.buildWeeklyAnalytics.resources.lambda,
 );
 
-console.info("✅ Weekly analytics scheduled (Sundays at 9am UTC)");
+logger.info("✅ Weekly analytics scheduled (Sundays at 9am UTC)");
 
 // Create EventBridge schedule for monthly analytics (1st of month at 9am UTC)
 const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
@@ -1158,7 +1159,7 @@ const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
   backend.buildMonthlyAnalytics.resources.lambda,
 );
 
-console.info("✅ Monthly analytics scheduled (1st of month at 9am UTC)");
+logger.info("✅ Monthly analytics scheduled (1st of month at 9am UTC)");
 
 // Create EventBridge schedule for inactive user notifications (every 14 days)
 const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
@@ -1166,7 +1167,7 @@ const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
   backend.notifyInactiveUsers.resources.lambda,
 );
 
-console.info("✅ Inactive user notifications scheduled (every 14 days)");
+logger.info("✅ Inactive user notifications scheduled (every 14 days)");
 
 // ============================================================================
 // COGNITO USER POOL CONFIGURATION
@@ -1213,7 +1214,7 @@ cfnUserPoolClient.explicitAuthFlows = shouldEnableApiTesting
   ? [...baseAuthFlows, ...apiTestingFlows]
   : baseAuthFlows;
 
-console.info("🔐 Auth Flows Configuration:", {
+logger.info("🔐 Auth Flows Configuration:", {
   branch: branchInfo.branchName,
   isSandbox: branchInfo.isSandbox,
   apiTestingEnabled: shouldEnableApiTesting,

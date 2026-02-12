@@ -32,6 +32,7 @@ import {
   getTierDisplayInfo,
   SUBSCRIPTION_TIERS,
 } from "../utils/apis/subscriptionApi";
+import { logger } from "../utils/logger";
 import {
   ProfileIcon,
   SecurityIcon,
@@ -172,7 +173,7 @@ function Settings() {
           const status = await getSubscriptionStatus(userId);
           setSubscription(status);
         } catch (error) {
-          console.error("Error loading subscription:", error);
+          logger.error("Error loading subscription:", error);
           // Default to free tier on error
           setSubscription({
             tier: SUBSCRIPTION_TIERS.FREE,
@@ -257,7 +258,7 @@ function Settings() {
           setOriginalDirective(directive);
           setDirectiveCharCount(directive.content?.length || 0);
         } catch (error) {
-          console.error("Error loading user profile:", error);
+          logger.error("Error loading user profile:", error);
           // Fallback to Cognito attributes if DynamoDB fetch fails
           const newProfileData = {
             email: userAttributes.email || "",
@@ -303,7 +304,7 @@ function Settings() {
       await updateUserProfile(userId, updates);
       showSuccess("Profile updated successfully");
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logger.error("Error updating profile:", error);
       showError(error.message || "Failed to update profile");
     } finally {
       setIsSavingProfile(false);
@@ -389,7 +390,7 @@ function Settings() {
         confirmPassword: "",
       });
     } catch (error) {
-      console.error("Error changing password:", error);
+      logger.error("Error changing password:", error);
 
       // Handle specific Amplify error messages
       let errorMessage = "Failed to change password";
@@ -450,7 +451,7 @@ function Settings() {
       setOriginalEmailNotifications(emailNotifications);
       showSuccess("Preferences updated successfully");
     } catch (error) {
-      console.error("Error updating preferences:", error);
+      logger.error("Error updating preferences:", error);
       showError(error.message || "Failed to update preferences");
     } finally {
       setIsSavingPreferences(false);
@@ -492,7 +493,7 @@ function Settings() {
       setOriginalDirective(directiveData);
       showSuccess("Critical Training Directive updated successfully");
     } catch (error) {
-      console.error("Error updating Critical Training Directive:", error);
+      logger.error("Error updating Critical Training Directive:", error);
       showError(error.message || "Failed to update directive");
     } finally {
       setIsSavingDirective(false);
@@ -518,7 +519,7 @@ function Settings() {
       const { url } = await createStripePortalSession(userId);
       window.location.href = url;
     } catch (error) {
-      console.error("Error creating portal session:", error);
+      logger.error("Error creating portal session:", error);
       showError(error.message || "Failed to open subscription management");
       setIsCreatingPortalSession(false);
     }
@@ -537,7 +538,7 @@ function Settings() {
         setIsRedirectingToUpgrade(false);
       }
     } catch (error) {
-      console.error("Error getting payment link:", error);
+      logger.error("Error getting payment link:", error);
       showError("Failed to initiate upgrade. Please try again.");
       setIsRedirectingToUpgrade(false);
     }

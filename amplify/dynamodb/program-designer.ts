@@ -6,6 +6,7 @@ import {
   createDynamoDBItem,
 } from "./core";
 import { ProgramDesignerSession } from "../functions/libs/program-designer/types";
+import { logger } from "../functions/libs/logger";
 
 // =====================================
 // PROGRAM DESIGNER SESSION OPERATIONS
@@ -38,7 +39,7 @@ export async function saveProgramDesignerSession(
   };
 
   await saveToDynamoDB(item);
-  console.info("Program designer session saved successfully:", {
+  logger.info("Program designer session saved successfully:", {
     sessionId: session.sessionId,
     userId: session.userId,
   });
@@ -85,7 +86,7 @@ export async function getProgramDesignerSession(
 
     return activeSessions[0] ?? null;
   } catch (error: any) {
-    console.error("Error getting program designer session:", error);
+    logger.error("Error getting program designer session:", error);
     return null;
   }
 }
@@ -106,7 +107,7 @@ export async function deleteProgramDesignerSession(
       `programDesignerSession#${sessionId}`,
       "programDesignerSession",
     );
-    console.info("Program designer session deleted successfully:", {
+    logger.info("Program designer session deleted successfully:", {
       sessionId,
       userId,
     });
@@ -218,7 +219,7 @@ export async function queryProgramDesignerSessions(
       filteredSessions = filteredSessions.slice(offset, offset + limit);
     }
 
-    console.info("Program designer sessions queried successfully:", {
+    logger.info("Program designer sessions queried successfully:", {
       userId,
       totalFound: allSessions.length,
       afterFiltering: filteredSessions.length,
@@ -226,7 +227,7 @@ export async function queryProgramDesignerSessions(
 
     return filteredSessions;
   } catch (error: any) {
-    console.error("Error querying program designer sessions:", error);
+    logger.error("Error querying program designer sessions:", error);
     throw error;
   }
 }

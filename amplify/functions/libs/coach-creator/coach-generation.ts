@@ -29,6 +29,7 @@ import {
 // Note: generateCoachCreatorSessionSummary is now AI-powered and used in the agent tools
 // flow (tools.ts save_coach_config_to_database) where coachConfig is available.
 // This legacy flow uses an inline summary builder instead.
+import { logger } from "../logger";
 import {
   validateCoachConfig,
   COACH_CONFIG_SCHEMA,
@@ -1126,9 +1127,9 @@ export const generateCoachConfig = async (
       },
       "coach-config",
     );
-    console.info("✅ Stored coach config prompt in S3 for debugging");
+    logger.info("✅ Stored coach config prompt in S3 for debugging");
   } catch (err) {
-    console.warn(
+    logger.warn(
       "⚠️ Failed to store coach config prompt in S3 (non-critical):",
       err,
     );
@@ -1141,7 +1142,7 @@ export const generateCoachConfig = async (
 
   try {
     // PRIMARY: Tool-based generation with schema enforcement
-    console.info("🎯 Attempting tool-based coach config generation");
+    logger.info("🎯 Attempting tool-based coach config generation");
 
     const result = await callBedrockApi(
       systemPrompt,
@@ -1162,7 +1163,7 @@ export const generateCoachConfig = async (
     // Extract coach config from tool use result
     if (typeof result !== "string") {
       coachConfig = result.input as CoachConfig;
-      console.info("✅ Tool-based generation succeeded");
+      logger.info("✅ Tool-based generation succeeded");
 
       // Store successful tool generation for analysis
       try {
@@ -1178,7 +1179,7 @@ export const generateCoachConfig = async (
           "coach-config",
         );
       } catch (err) {
-        console.warn(
+        logger.warn(
           "⚠️ Failed to store tool success data in S3 (non-critical):",
           err,
         );
@@ -1188,10 +1189,10 @@ export const generateCoachConfig = async (
     }
   } catch (toolError) {
     // FALLBACK: Prompt-based generation with JSON parsing
-    console.warn("⚠️ Tool-based generation failed, using fallback:", toolError);
+    logger.warn("⚠️ Tool-based generation failed, using fallback:", toolError);
     generationMethod = "fallback";
 
-    console.info("🔄 Falling back to prompt-based generation");
+    logger.info("🔄 Falling back to prompt-based generation");
     const fallbackResult = (await callBedrockApi(
       systemPrompt,
       userPrompt,
@@ -1204,7 +1205,7 @@ export const generateCoachConfig = async (
     )) as string;
 
     coachConfigResponse = fallbackResult;
-    console.info("✅ Fallback generation completed");
+    logger.info("✅ Fallback generation completed");
 
     // Store fallback response and error for debugging
     try {
@@ -1232,9 +1233,9 @@ export const generateCoachConfig = async (
         },
         "coach-config",
       );
-      console.info("✅ Stored fallback debug data in S3");
+      logger.info("✅ Stored fallback debug data in S3");
     } catch (err) {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to store fallback data in S3 (non-critical):",
         err,
       );
@@ -1253,7 +1254,7 @@ export const generateCoachConfig = async (
   coachConfig.metadata.created_date = timestamp;
   coachConfig.metadata.generation_method = generationMethod;
   coachConfig.metadata.generation_timestamp = timestamp;
-  console.info("📅 Coach config metadata set:", {
+  logger.info("📅 Coach config metadata set:", {
     created_date: coachConfig.metadata.created_date,
     generation_method: generationMethod,
     generation_timestamp: coachConfig.metadata.generation_timestamp,
@@ -1261,12 +1262,12 @@ export const generateCoachConfig = async (
 
   try {
     // Validate against schema (always run regardless of generation method)
-    console.info(
+    logger.info(
       `🔍 Validating coach config against schema (method: ${generationMethod})...`,
     );
     const schemaValidation = validateCoachConfig(coachConfig);
     if (!schemaValidation.isValid) {
-      console.warn(
+      logger.warn(
         `⚠️ Schema validation issues (${generationMethod}):`,
         schemaValidation.errors,
       );
@@ -1292,13 +1293,13 @@ export const generateCoachConfig = async (
           "coach-config-validation",
         );
       } catch (err) {
-        console.warn(
+        logger.warn(
           "⚠️ Failed to store validation failure in S3 (non-critical):",
           err,
         );
       }
     } else {
-      console.info(
+      logger.info(
         `✅ Coach config passed schema validation (method: ${generationMethod})`,
       );
     }
@@ -1306,7 +1307,7 @@ export const generateCoachConfig = async (
     // CRITICAL: Validate gender preference matches user's request
     if (coachConfig.gender_preference !== genderPreference) {
       const genderError = `Gender mismatch: User requested ${genderPreference} coach but generated config has ${coachConfig.gender_preference}`;
-      console.error(`❌ ${genderError}`);
+      logger.error(`❌ ${genderError}`);
 
       // Store gender mismatch for analysis
       try {
@@ -1334,7 +1335,7 @@ export const generateCoachConfig = async (
           "coach-config-validation",
         );
       } catch (err) {
-        console.warn(
+        logger.warn(
           "⚠️ Failed to store gender mismatch in S3 (non-critical):",
           err,
         );
@@ -1342,7 +1343,7 @@ export const generateCoachConfig = async (
 
       throw new Error(genderError);
     }
-    console.info(`✅ Gender preference validation passed: ${genderPreference}`);
+    logger.info(`✅ Gender preference validation passed: ${genderPreference}`);
 
     // Validate required fields exist
     if (!coachConfig.coach_name) {
@@ -1367,29 +1368,29 @@ export const generateCoachConfig = async (
       safetyProfile,
     );
     if (!safetyValidation.approved) {
-      console.warn("⚠️ Safety validation issues:", safetyValidation.issues);
+      logger.warn("⚠️ Safety validation issues:", safetyValidation.issues);
       // Don't fail completely, but log the issues
     } else {
-      console.info("✅ Coach config passed safety validation");
+      logger.info("✅ Coach config passed safety validation");
     }
 
     // Validate personality coherence
     const personalityValidation =
       await validatePersonalityCoherence(coachConfig);
     if (personalityValidation.consistency_score < 7) {
-      console.warn(
+      logger.warn(
         "⚠️ Personality coherence issues detected:",
         personalityValidation.conflicting_traits,
       );
     } else {
-      console.info("✅ Coach config passed personality coherence validation");
+      logger.info("✅ Coach config passed personality coherence validation");
     }
 
     // Note: Pinecone storage is now handled by the calling function (build-coach-config handler)
     // This allows for better separation of concerns and proper error handling
 
     // Log generation metrics for monitoring
-    console.info("📊 Coach config generation metrics:", {
+    logger.info("📊 Coach config generation metrics:", {
       userId: session.userId,
       sessionId: session.sessionId,
       generationMethod,
@@ -1398,10 +1399,10 @@ export const generateCoachConfig = async (
       timestamp: new Date().toISOString(),
     });
 
-    console.info("✅ Coach config generation complete and validated");
+    logger.info("✅ Coach config generation complete and validated");
     return coachConfig;
   } catch (error) {
-    console.error("❌ Failed to parse or validate coach configuration:", error);
+    logger.error("❌ Failed to parse or validate coach configuration:", error);
     throw new Error(
       `Failed to generate valid coach configuration: ${error instanceof Error ? error.message : "Unknown error"}`,
     );

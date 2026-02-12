@@ -1,6 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { logger } from "../../utils/logger";
 
 /**
  * MarkdownRenderer - Reusable component for rendering markdown content with synthwave styling
@@ -19,7 +20,7 @@ export const MarkdownRenderer = ({ content, className = "" }) => {
   // Guard against non-string content
   if (!content) return null;
   if (typeof content !== "string") {
-    console.warn(
+    logger.warn(
       "MarkdownRenderer received non-string content:",
       content,
       typeof content,

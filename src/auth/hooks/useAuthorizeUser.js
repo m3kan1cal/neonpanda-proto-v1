@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import { useNavigate } from 'react-router-dom';
+import { logger } from "../../utils/logger";
 
 /**
  * Hook to authorize that the userId in URL matches the authenticated user
@@ -53,7 +54,7 @@ export const useAuthorizeUser = (urlUserId, options = {}) => {
         setIsValid(matches);
 
         if (!matches) {
-          console.warn(`URL userId (${urlUserId}) does not match authenticated user (${authUserId})`);
+          logger.warn(`URL userId (${urlUserId}) does not match authenticated user (${authUserId})`);
 
           if (redirectOnMismatch) {
             // Redirect to the correct URL with the authenticated user's ID
@@ -69,7 +70,7 @@ export const useAuthorizeUser = (urlUserId, options = {}) => {
         }
 
       } catch (err) {
-        console.error('Error validating userId:', err);
+        logger.error('Error validating userId:', err);
         setError(err.message || 'Failed to validate user ID');
 
         if (redirectOnMismatch) {

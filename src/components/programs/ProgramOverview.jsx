@@ -13,6 +13,7 @@ import {
 } from "../themes/SynthwaveComponents";
 import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
+import { logger } from "../../utils/logger";
 
 export default function ProgramOverview({
   program,
@@ -72,7 +73,7 @@ export default function ProgramOverview({
         onProgramUpdate(response.program);
       }
     } catch (error) {
-      console.error("Error pausing program:", error);
+      logger.error("Error pausing program:", error);
       toast.error("Failed to pause training program");
     } finally {
       setIsPausing(false);
@@ -94,7 +95,7 @@ export default function ProgramOverview({
         onProgramUpdate(response.program);
       }
     } catch (error) {
-      console.error("Error resuming program:", error);
+      logger.error("Error resuming program:", error);
       toast.error("Failed to resume training program");
     } finally {
       setIsResuming(false);
@@ -116,7 +117,7 @@ export default function ProgramOverview({
         onProgramUpdate(response.program);
       }
     } catch (error) {
-      console.error("Error completing program:", error);
+      logger.error("Error completing program:", error);
       toast.error("Failed to complete training program");
     } finally {
       setIsCompleting(false);

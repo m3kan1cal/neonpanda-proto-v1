@@ -52,6 +52,7 @@ import {
   ContextualUpdateIndicator,
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
+import { logger } from "../utils/logger";
 import {
   WorkoutIconSmall,
   CloseIcon,
@@ -516,7 +517,7 @@ function CoachConversations() {
           }
         },
         onError: (error) => {
-          console.error("Agent error:", error);
+          logger.error("Agent error:", error);
           // Could show toast notification here
         },
       });
@@ -581,7 +582,7 @@ function CoachConversations() {
     // NEVER poll if there are no messages - polling is ONLY for conversations with pending AI responses
     // Empty conversations show the canned greeting instead
     if (coachConversationAgentState.messages.length === 0) {
-      console.info(
+      logger.info(
         `⏭️ Skipping polling for empty conversation (no messages to wait for)`,
       );
       hasAttemptedPollingRef.current = conversationId;
@@ -598,7 +599,7 @@ function CoachConversations() {
     hasAttemptedPollingRef.current = conversationId;
 
     const startTime = Date.now();
-    console.info(
+    logger.info(
       `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Starting polling for initial messages in conversation: ${conversationId}`,
     );
 
@@ -616,7 +617,7 @@ function CoachConversations() {
     // Poll every 3 seconds
     const intervalId = setInterval(() => {
       const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.info(
+      logger.info(
         `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling for messages... (${elapsedSeconds}s elapsed)`,
       );
       if (agentRef.current) {
@@ -631,7 +632,7 @@ function CoachConversations() {
 
     // Stop polling after 90 seconds
     const timeoutId = setTimeout(() => {
-      console.info(
+      logger.info(
         `⏱️ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling timeout reached (90s), stopping polling`,
       );
       setIsPollingForMessages(false);
@@ -655,7 +656,7 @@ function CoachConversations() {
       coachConversationAgentState.messages.length > 0 &&
       pollingIntervalRef.current
     ) {
-      console.info(
+      logger.info(
         `✅ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Messages loaded (${coachConversationAgentState.messages.length} messages), stopping polling`,
       );
       setIsPollingForMessages(false);
@@ -891,7 +892,7 @@ function CoachConversations() {
         },
       });
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
     } finally {
       // Reset flag after message is sent (success or failure)
@@ -932,7 +933,7 @@ function CoachConversations() {
       // Use timeout to ensure React has rendered the new message
       setTimeout(() => scrollToBottom(true), 100);
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
     } finally {
       // Reset flag after message is sent (success or failure)
@@ -965,7 +966,7 @@ function CoachConversations() {
       );
       showSuccess("Conversation title updated successfully");
     } catch (error) {
-      console.error("Error updating conversation title:", error);
+      logger.error("Error updating conversation title:", error);
       showError("Failed to update conversation title");
       throw error;
     }
@@ -994,7 +995,7 @@ function CoachConversations() {
         showError("Failed to delete conversation");
       }
     } catch (error) {
-      console.error("Error deleting conversation:", error);
+      logger.error("Error deleting conversation:", error);
       showError("Failed to delete conversation");
     } finally {
       setShowDeleteModal(false);
@@ -1538,9 +1539,7 @@ function CoachConversations() {
                           </div>
                         </div>
                         <div className="flex items-start gap-2 px-2 mt-2">
-                          <div
-                            className={`shrink-0 ${avatarPatterns.aiSmall}`}
-                          >
+                          <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
                             {coachConversationAgentState.coach?.name?.charAt(
                               0,
                             ) || "C"}

@@ -1,5 +1,6 @@
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { DISCIPLINE_DETECTION_SCHEMA } from "../schemas/discipline-detection-schema";
+import { logger } from "../logger";
 
 export interface DisciplineDetectionResult {
   discipline: string;
@@ -143,7 +144,7 @@ export async function detectDiscipline(
   userMessage: string,
 ): Promise<DisciplineDetectionResult> {
   try {
-    console.info("🎯 Detecting workout discipline with AI:", {
+    logger.info("🎯 Detecting workout discipline with AI:", {
       messageLength: userMessage.length,
     });
 
@@ -184,14 +185,14 @@ export async function detectDiscipline(
         roundedConfidence < LOW_CONFIDENCE_THRESHOLD &&
         disciplineData.discipline !== "hybrid"
       ) {
-        console.info(
+        logger.info(
           `⚠️ Low confidence (${roundedConfidence}) for ${disciplineData.discipline}, falling back to hybrid`,
         );
         finalDiscipline = "hybrid";
         finalReasoning = `Low confidence (${roundedConfidence}) for ${disciplineData.discipline}: ${disciplineData.reasoning}. Defaulting to hybrid due to mixed-modality characteristics.`;
       }
 
-      console.info("✅ Discipline detected:", {
+      logger.info("✅ Discipline detected:", {
         discipline: finalDiscipline,
         originalDiscipline:
           finalDiscipline !== disciplineData.discipline
@@ -212,7 +213,7 @@ export async function detectDiscipline(
     // Fallback if tool wasn't used (shouldn't happen with schema enforcement)
     throw new Error("AI did not use classification tool");
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ AI discipline detection failed, defaulting to hybrid:",
       error,
     );

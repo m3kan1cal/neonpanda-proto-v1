@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Program Design Slash Command Helpers
  *
@@ -34,7 +35,7 @@ export const isProgramDesignCommand = (command?: string): boolean => {
 
   const result = PROGRAM_DESIGN_COMMANDS.includes(command as ProgramDesignCommand);
 
-  console.info('🔍 isProgramDesignCommand: Check result:', {
+  logger.info('🔍 isProgramDesignCommand: Check result:', {
     command,
     supportedCommands: PROGRAM_DESIGN_COMMANDS,
     isSupported: result

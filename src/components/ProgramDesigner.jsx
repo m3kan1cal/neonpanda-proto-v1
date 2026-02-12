@@ -52,6 +52,7 @@ import {
   ContextualUpdateIndicator,
 } from "../utils/ui/streamingUiHelper.jsx";
 import { BuildModeIconTiny } from "./themes/SynthwaveComponents";
+import { logger } from "../utils/logger";
 
 // Icons for human and AI messages
 const UserIcon = () => (
@@ -497,7 +498,7 @@ function ProgramDesigner() {
           }
         },
         onError: (error) => {
-          console.error("Agent error:", error);
+          logger.error("Agent error:", error);
           showError(error.message || "An error occurred");
         },
       });
@@ -512,7 +513,7 @@ function ProgramDesigner() {
           ]);
           setSessionLoadError(null); // Clear any previous errors
         } catch (error) {
-          console.error("Error loading session data:", error);
+          logger.error("Error loading session data:", error);
           setSessionLoadError(
             error.message ||
               "Failed to load session. Please try again or start a new session.",
@@ -720,7 +721,7 @@ function ProgramDesigner() {
         `/training-grounds/programs?userId=${userId}&coachId=${coachId}`,
       );
     } catch (error) {
-      console.error("Error deleting program designer session:", error);
+      logger.error("Error deleting program designer session:", error);
       showError("Failed to delete session. Please try again.");
       // Close modal even on error
       setShowDeleteModal(false);
@@ -767,7 +768,7 @@ function ProgramDesigner() {
         },
       });
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
     } finally {
       // Reset flag after message is sent (success or failure)
@@ -808,7 +809,7 @@ function ProgramDesigner() {
       // Use timeout to ensure React has rendered the new message
       setTimeout(() => scrollToBottom(true), 100);
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
     } finally {
       // Reset flag after message is sent (success or failure)

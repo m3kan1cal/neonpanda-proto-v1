@@ -15,11 +15,16 @@ import {
   getProgramDetailsFromS3,
   saveProgramDetailsToS3,
 } from "../libs/program/s3-utils";
-import { WorkoutTemplate, WorkoutFeedback } from "../libs/program/types";
+import {
+  WorkoutTemplate,
+  WorkoutFeedback,
+  ProgramPhase,
+} from "../libs/program/types";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { parseJsonWithFallbacks } from "../libs/response-utils";
 import { BuildWorkoutEvent, TemplateContext } from "../libs/workout/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 import {
   buildScalingAnalysisPrompt,
   getDefaultScalingAnalysis,
@@ -110,10 +115,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Get the phase for this template (by day range)
     const phase = program.phases.find(
-      (p) => template.dayNumber >= p.startDay && template.dayNumber <= p.endDay,
+      (p: ProgramPhase) =>
+        template.dayNumber >= p.startDay && template.dayNumber <= p.endDay,
     );
 
-    console.info("🏋️ Logging workout from template:", {
+    logger.info("🏋️ Logging workout from template:", {
       userId,
       programId,
       templateId,
@@ -125,7 +131,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // ==================================================================
     // STEP 1: Quick AI call (Haiku 4.5) to analyze scaling/modifications
     // ==================================================================
-    console.info("🤖 Analyzing workout scaling with Haiku 4.5...");
+    logger.info("🤖 Analyzing workout scaling with Haiku 4.5...");
     const scalingPrompt = buildScalingAnalysisPrompt(
       template.description,
       userPerformance,
@@ -152,18 +158,18 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       const parsed = parseJsonWithFallbacks(scalingResponse);
       scalingAnalysis = normalizeScalingAnalysis(parsed);
 
-      console.info("✅ Scaling analysis completed:", {
+      logger.info("✅ Scaling analysis completed:", {
         wasScaled: scalingAnalysis.wasScaled,
         modificationsCount: scalingAnalysis.modifications.length,
         adherenceScore: scalingAnalysis.adherenceScore,
         reasoning: parsed?.reasoning || "N/A",
       });
     } catch (error: any) {
-      console.error(
+      logger.error(
         "⚠️ Scaling analysis failed, continuing with defaults:",
         error,
       );
-      console.error("⚠️ Error details:", {
+      logger.error("⚠️ Error details:", {
         name: error.name,
         message: error.message,
         $metadata: error.$metadata,
@@ -192,7 +198,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     programDetails.workoutTemplates[templateIndex] = template;
     await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
 
-    console.info("✅ Template status updated in S3:", {
+    logger.info("✅ Template status updated in S3:", {
       templateId,
       status: "completed",
       wasScaled: scalingAnalysis.wasScaled,
@@ -242,7 +248,7 @@ ${userPerformance}`;
 
     const buildWorkoutFunctionName = process.env.BUILD_WORKOUT_FUNCTION_NAME;
     if (!buildWorkoutFunctionName) {
-      console.error(
+      logger.error(
         "❌ BUILD_WORKOUT_FUNCTION_NAME environment variable not set",
       );
       return createErrorResponse(500, "Configuration error");
@@ -254,9 +260,9 @@ ${userPerformance}`;
         buildWorkoutPayload,
         `log workout from template ${templateId}`,
       );
-      console.info("✅ build-workout lambda invoked successfully");
+      logger.info("✅ build-workout lambda invoked successfully");
     } catch (error) {
-      console.error("❌ Failed to invoke build-workout lambda:", error);
+      logger.error("❌ Failed to invoke build-workout lambda:", error);
       // Don't return error - we've already updated template status
       // Just log the error and continue
     }
@@ -321,7 +327,7 @@ ${userPerformance}`;
 
     if (allDayTemplatesComplete && program.currentDay === dayNumber) {
       updates.currentDay = program.currentDay + 1;
-      console.info(
+      logger.info(
         "🎯 All workouts for day completed/skipped, advancing to next day:",
         {
           completedDay: dayNumber,
@@ -348,7 +354,7 @@ ${userPerformance}`;
       updates,
     );
 
-    console.info("✅ Workout logging initiated successfully:", {
+    logger.info("✅ Workout logging initiated successfully:", {
       userId,
       programId,
       templateId,
@@ -379,7 +385,7 @@ ${userPerformance}`;
       },
     });
   } catch (error) {
-    console.error("❌ Error logging workout template:", error);
+    logger.error("❌ Error logging workout template:", error);
     return createErrorResponse(500, "Failed to log workout template", error);
   }
 };

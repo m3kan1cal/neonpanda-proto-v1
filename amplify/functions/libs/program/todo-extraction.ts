@@ -17,6 +17,7 @@ import { MESSAGE_TYPES } from "../coach-conversation/types";
 import { TodoItem, ConversationMessage } from "../todo-types";
 import { ProgramDesignerTodoList } from "./types";
 import { PROGRAM_TODO_SCHEMA } from "../schemas/program-designer-todo-schema";
+import { logger } from "../logger";
 
 /**
  * Extract training program information from user's response and update the to-do list
@@ -29,13 +30,13 @@ export async function extractAndUpdateTodoList(
   currentTodoList: ProgramDesignerTodoList,
   imageS3Keys?: string[],
 ): Promise<ProgramDesignerTodoList> {
-  console.info("🔍 Extracting training program information from user response");
+  logger.info("🔍 Extracting training program information from user response");
 
   // Check if images are present (same pattern as build-workout)
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
   if (hasImages) {
-    console.info("🖼️ Processing with images:", {
+    logger.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys!.length,
       imageKeys: imageS3Keys,
     });
@@ -128,22 +129,22 @@ Return JSON with ONLY the fields you found information for:
       );
     }
 
-    console.info("✅ Received extraction response");
+    logger.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input
       extracted = extractionResponse.input;
-      console.info("✅ Tool-based extraction successful");
+      logger.info("✅ Tool-based extraction successful");
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn("⚠️ Received string response, parsing as JSON fallback");
+      logger.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
     if (!extracted || typeof extracted !== "object") {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to parse extraction response, returning current todo list",
       );
       return currentTodoList;
@@ -174,7 +175,7 @@ Return JSON with ONLY the fields you found information for:
               hasImages && shouldStoreImageRef(key) ? imageS3Keys : undefined,
           };
 
-          console.info(
+          logger.info(
             `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
           );
         }
@@ -183,12 +184,12 @@ Return JSON with ONLY the fields you found information for:
 
     // Log extraction summary
     const extractedCount = Object.keys(extracted).length;
-    console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
+    logger.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     return updatedTodoList;
   } catch (error) {
-    console.error("❌ Error during extraction:", error);
-    console.error("Returning current todo list unchanged");
+    logger.error("❌ Error during extraction:", error);
+    logger.error("Returning current todo list unchanged");
     return currentTodoList;
   }
 }

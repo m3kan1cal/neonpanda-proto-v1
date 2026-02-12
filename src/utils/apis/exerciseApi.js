@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 import {
   getApiUrl,
   authenticatedFetch,
@@ -47,7 +48,7 @@ export const getExerciseNames = async (userId, options = {}) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getExerciseNames: Error response:", errorText);
+      logger.error("getExerciseNames: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -66,7 +67,7 @@ export const getExerciseNames = async (userId, options = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getExerciseNames: API Error:", error);
+    logger.error("getExerciseNames: API Error:", error);
     throw error;
   }
 };
@@ -135,7 +136,7 @@ export const getExercises = async (userId, exerciseName, options = {}) => {
       }
 
       const errorText = await response.text();
-      console.error("getExercises: Error response:", errorText);
+      logger.error("getExercises: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -154,7 +155,7 @@ export const getExercises = async (userId, exerciseName, options = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getExercises: API Error:", error);
+    logger.error("getExercises: API Error:", error);
     throw error;
   }
 };
@@ -216,7 +217,7 @@ export const getExercisesCount = async (userId, options = {}) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getExercisesCount: Error response:", errorText);
+      logger.error("getExercisesCount: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -235,7 +236,7 @@ export const getExercisesCount = async (userId, options = {}) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("getExercisesCount: API Error:", error);
+    logger.error("getExercisesCount: API Error:", error);
     throw error;
   }
 };

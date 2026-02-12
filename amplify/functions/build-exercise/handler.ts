@@ -12,11 +12,16 @@
 
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { withHeartbeat } from "../libs/heartbeat";
-import type { BuildExerciseEvent, Exercise } from "../libs/exercise/types";
+import type {
+  BuildExerciseEvent,
+  Exercise,
+  ExtractedExercise,
+} from "../libs/exercise/types";
 import { extractExercisesFromWorkout } from "../libs/exercise/extraction";
 import { normalizeExerciseNamesBatch } from "../libs/exercise/normalization";
 import { saveExercises } from "../../dynamodb/operations";
 import { generateExerciseId } from "../libs/id-utils";
+import { logger } from "../libs/logger";
 
 export const handler = async (event: BuildExerciseEvent) => {
   return withHeartbeat(
@@ -25,7 +30,7 @@ export const handler = async (event: BuildExerciseEvent) => {
       const startTime = Date.now();
 
       try {
-        console.info("🏋️ Starting exercise extraction:", {
+        logger.info("🏋️ Starting exercise extraction:", {
           userId: event.userId,
           workoutId: event.workoutId,
           discipline: event.workoutData?.discipline,
@@ -41,7 +46,7 @@ export const handler = async (event: BuildExerciseEvent) => {
           !event.workoutData ||
           !event.completedAt
         ) {
-          console.error("❌ Missing required fields:", {
+          logger.error("❌ Missing required fields:", {
             hasUserId: !!event.userId,
             hasCoachId: !!event.coachId,
             hasWorkoutId: !!event.workoutId,
@@ -57,22 +62,22 @@ export const handler = async (event: BuildExerciseEvent) => {
         // Validate completedAt is a valid date
         const completedAtDate = new Date(event.completedAt);
         if (isNaN(completedAtDate.getTime())) {
-          console.error("❌ Invalid completedAt date:", event.completedAt);
+          logger.error("❌ Invalid completedAt date:", event.completedAt);
           return createErrorResponse(400, "Invalid completedAt date format");
         }
 
         // Step 1: Extract exercises from workout data
-        console.info("📋 Extracting exercises from workout...");
+        logger.info("📋 Extracting exercises from workout...");
         const extractionResult = extractExercisesFromWorkout(event.workoutData);
 
-        console.info("✅ Extraction completed:", {
+        logger.info("✅ Extraction completed:", {
           exerciseCount: extractionResult.exercises.length,
           discipline: extractionResult.discipline,
           method: extractionResult.extractionMethod,
         });
 
         if (extractionResult.exercises.length === 0) {
-          console.info("ℹ️ No exercises found in workout, skipping");
+          logger.info("ℹ️ No exercises found in workout, skipping");
           return createOkResponse({
             success: true,
             skipped: true,
@@ -82,14 +87,14 @@ export const handler = async (event: BuildExerciseEvent) => {
         }
 
         // Step 2: Batch normalize exercise names
-        console.info("🔄 Normalizing exercise names...");
+        logger.info("🔄 Normalizing exercise names...");
         const originalNames = extractionResult.exercises.map(
-          (e) => e.originalName,
+          (e: ExtractedExercise) => e.originalName,
         );
         const normalizationResult =
           await normalizeExerciseNamesBatch(originalNames);
 
-        console.info("✅ Normalization completed:", {
+        logger.info("✅ Normalization completed:", {
           count: normalizationResult.normalizations.length,
           processingTimeMs: normalizationResult.processingTimeMs,
         });
@@ -150,18 +155,18 @@ export const handler = async (event: BuildExerciseEvent) => {
           exercises.push(exercise);
         }
 
-        console.info("📝 Built exercise records:", {
+        logger.info("📝 Built exercise records:", {
           count: exercises.length,
           uniqueExercises: sequenceMap.size,
         });
 
         // Step 4: Batch save to DynamoDB
-        console.info("💾 Saving exercises to DynamoDB...");
+        logger.info("💾 Saving exercises to DynamoDB...");
         const saveResult = await saveExercises(exercises);
 
         const processingTimeMs = Date.now() - startTime;
 
-        console.info("✅ Exercise extraction completed:", {
+        logger.info("✅ Exercise extraction completed:", {
           userId: event.userId,
           workoutId: event.workoutId,
           discipline: extractionResult.discipline,
@@ -182,8 +187,8 @@ export const handler = async (event: BuildExerciseEvent) => {
           extractionMethod: extractionResult.extractionMethod,
         });
       } catch (error) {
-        console.error("❌ Error in exercise extraction:", error);
-        console.error("Event data:", {
+        logger.error("❌ Error in exercise extraction:", error);
+        logger.error("Event data:", {
           userId: event.userId,
           workoutId: event.workoutId,
           discipline: event.workoutData?.discipline,

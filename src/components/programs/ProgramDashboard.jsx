@@ -33,6 +33,7 @@ import PhaseTimeline from "./PhaseTimeline";
 import PhaseBreakdown from "./PhaseBreakdown";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
 import { useToast } from "../../contexts/ToastContext";
+import { logger } from "../../utils/logger";
 
 export default function ProgramDashboard() {
   const [searchParams] = useSearchParams();
@@ -145,7 +146,7 @@ export default function ProgramDashboard() {
         } catch (todayError) {
           // If loading today's workout fails, just set it to null
           // (e.g., program is complete, no more scheduled workouts)
-          console.warn("Could not load today's workout:", todayError);
+          logger.warn("Could not load today's workout:", todayError);
           setTodaysWorkout(null);
         }
       } else {
@@ -153,7 +154,7 @@ export default function ProgramDashboard() {
         setTodaysWorkout(null);
       }
     } catch (err) {
-      console.error("Error loading program dashboard:", err);
+      logger.error("Error loading program dashboard:", err);
       setError(err.message || "Failed to load program data");
     } finally {
       setIsLoading(false);
@@ -189,7 +190,7 @@ export default function ProgramDashboard() {
 
       // todaysWorkout is already updated via the agent callback (completeRestDay calls loadWorkoutTemplates internally)
     } catch (error) {
-      console.error("Error completing rest day:", error);
+      logger.error("Error completing rest day:", error);
       // Error is already shown by ProgramAgent
     } finally {
       setIsCompletingRestDay(false);

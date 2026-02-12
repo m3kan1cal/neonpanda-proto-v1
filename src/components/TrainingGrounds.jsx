@@ -59,6 +59,7 @@ import TodaysWorkoutCard from "./programs/TodaysWorkoutCard";
 import ActiveProgramSummary from "./programs/ActiveProgramSummary";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
+import { logger } from "../utils/logger";
 
 function TrainingGrounds() {
   const [searchParams] = useSearchParams();
@@ -194,7 +195,7 @@ function TrainingGrounds() {
         setCoachData(loadedCoachData);
         setIsLoadingCoachData(false);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
         setCoachDataError(error.message);
         setIsLoadingCoachData(false);
       }
@@ -228,7 +229,7 @@ function TrainingGrounds() {
           }
         },
         onError: (error) => {
-          console.error("CoachConversationAgent error:", error);
+          logger.error("CoachConversationAgent error:", error);
           // Could show toast notification here
         },
       });
@@ -349,7 +350,7 @@ function TrainingGrounds() {
         })
         .catch((error) => {
           // ProgramAgent handles rest days internally, so any error here is a real error
-          console.error("TrainingGrounds: Error loading program data:", error);
+          logger.error("TrainingGrounds: Error loading program data:", error);
         });
     }
   }, [userId, coachId]);
@@ -405,7 +406,7 @@ function TrainingGrounds() {
       showSuccess("Coach name updated successfully");
       return true;
     } catch (error) {
-      console.error("Error updating coach name:", error);
+      logger.error("Error updating coach name:", error);
       showError("Failed to update coach name");
       return false;
     }
@@ -426,7 +427,7 @@ function TrainingGrounds() {
 
       showSuccess("Rest day completed! Moving to next day.");
     } catch (error) {
-      console.error("Error completing rest day:", error);
+      logger.error("Error completing rest day:", error);
       showError("Failed to complete rest day");
     } finally {
       setIsCompletingRestDay(false);

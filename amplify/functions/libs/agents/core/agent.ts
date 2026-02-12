@@ -26,6 +26,7 @@ import type {
 import { MODEL_IDS } from "../../api-helpers";
 import { buildMultimodalContent } from "../../streaming/multimodal-helpers";
 import { MESSAGE_TYPES } from "../../coach-conversation/types";
+import { logger } from "../../logger";
 
 const MAX_TOKENS = 32768;
 const TEMPERATURE = 0.7;
@@ -46,7 +47,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
    * Runs the tool execution loop until Claude provides a final response
    */
   async converse(userMessage: string, imageS3Keys?: string[]): Promise<string> {
-    console.info("🤖 Agent conversation started", {
+    logger.info("🤖 Agent conversation started", {
       hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
       imageCount: imageS3Keys?.length || 0,
     });
@@ -66,18 +67,18 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
     while (shouldContinue && iterationCount < MAX_ITERATIONS) {
       iterationCount++;
-      console.info(`🔄 Agent iteration ${iterationCount}`);
+      logger.info(`🔄 Agent iteration ${iterationCount}`);
 
       const response = await this.invokeModel();
 
       if (response.stopReason === "tool_use") {
-        console.info("🔧 Claude decided to use tools");
+        logger.info("🔧 Claude decided to use tools");
         await this.handleToolUse(response);
         continue; // Let Claude reflect on tool results
       }
 
       if (response.stopReason === "end_turn") {
-        console.info("✅ Claude provided final response");
+        logger.info("✅ Claude provided final response");
         finalResponse = this.extractTextFromResponse(response);
 
         // Add final assistant message to history
@@ -90,7 +91,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       }
 
       if (response.stopReason === "max_tokens") {
-        console.warn("⚠️ Response hit max tokens limit");
+        logger.warn("⚠️ Response hit max tokens limit");
         finalResponse =
           this.extractTextFromResponse(response) ||
           "Response exceeded token limit.";
@@ -98,7 +99,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       }
 
       if (response.stopReason === "stop_sequence") {
-        console.info("🛑 Response stopped at stop sequence");
+        logger.info("🛑 Response stopped at stop sequence");
         finalResponse = this.extractTextFromResponse(response);
 
         // Add final assistant message to history
@@ -111,7 +112,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       }
 
       if (response.stopReason === "content_filtered") {
-        console.warn("⚠️ Response was content filtered");
+        logger.warn("⚠️ Response was content filtered");
         finalResponse =
           this.extractTextFromResponse(response) ||
           "Response was filtered due to content policy.";
@@ -120,11 +121,11 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     }
 
     if (iterationCount >= MAX_ITERATIONS) {
-      console.warn(`⚠️ Agent hit max iterations (${MAX_ITERATIONS})`);
+      logger.warn(`⚠️ Agent hit max iterations (${MAX_ITERATIONS})`);
       finalResponse = finalResponse || "Agent exceeded maximum iterations.";
     }
 
-    console.info("🏁 Agent conversation completed", {
+    logger.info("🏁 Agent conversation completed", {
       iterations: iterationCount,
       responseLength: finalResponse.length,
     });
@@ -137,7 +138,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
    * Uses api-helpers for automatic caching support
    */
   private async invokeModel(): Promise<BedrockResponse> {
-    console.info("🤖 Invoking model with agent conversation history", {
+    logger.info("🤖 Invoking model with agent conversation history", {
       messageCount: this.conversationHistory.length,
       hasStaticPrompt: !!this.config.staticPrompt,
       hasDynamicPrompt: !!this.config.dynamicPrompt,
@@ -158,7 +159,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     if (this.config.staticPrompt && this.config.dynamicPrompt) {
       options.staticPrompt = this.config.staticPrompt;
       options.dynamicPrompt = this.config.dynamicPrompt;
-      console.info(
+      logger.info(
         "🔥 AGENT CACHING ENABLED: Using static/dynamic prompt structure",
       );
     }
@@ -177,7 +178,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     );
     const duration = Date.now() - startTime;
 
-    console.info("📊 Bedrock response received", {
+    logger.info("📊 Bedrock response received", {
       stopReason: response.stopReason,
       duration: `${duration}ms`,
       inputTokens: response.usage?.inputTokens,
@@ -291,7 +292,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       (block: any): block is ToolUseBlock => block.toolUse,
     );
 
-    console.info(`🔧 Executing ${toolUses.length} tool(s)`);
+    logger.info(`🔧 Executing ${toolUses.length} tool(s)`);
 
     // First, add Claude's assistant message with tool uses to history
     this.conversationHistory.push({
@@ -307,7 +308,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       const tool = this.config.tools.find((t) => t.id === toolUse.name);
 
       if (!tool) {
-        console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+        logger.warn(`⚠️ Tool not found: ${toolUse.name}`);
         toolResults.push({
           toolResult: {
             toolUseId: toolUse.toolUseId,
@@ -411,7 +412,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       content: toolResults,
     });
 
-    console.info("📥 Tool results added to conversation history");
+    logger.info("📥 Tool results added to conversation history");
   }
 
   /**
@@ -428,7 +429,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     }
 
     // Build multimodal content using existing helper
-    console.info("🖼️ Building multimodal content for agent conversation:", {
+    logger.info("🖼️ Building multimodal content for agent conversation:", {
       messageLength: userMessage.length,
       imageCount: imageS3Keys.length,
     });
@@ -488,14 +489,14 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
     switch (log.phase) {
       case "start":
-        console.info(`⚙️ [TOOL_START] ${log.toolId}`, {
+        logger.info(`⚙️ [TOOL_START] ${log.toolId}`, {
           ...baseLog,
           inputPreview: log.inputPreview,
         });
         break;
 
       case "success":
-        console.info(`✅ [TOOL_SUCCESS] ${log.toolId}`, {
+        logger.info(`✅ [TOOL_SUCCESS] ${log.toolId}`, {
           ...baseLog,
           duration: `${log.duration}ms`,
           resultPreview: log.resultPreview,
@@ -504,7 +505,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         break;
 
       case "error":
-        console.error(`❌ [TOOL_ERROR] ${log.toolId}`, {
+        logger.error(`❌ [TOOL_ERROR] ${log.toolId}`, {
           ...baseLog,
           error: log.error,
           errorType: log.errorType,
@@ -512,7 +513,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         break;
 
       case "blocked":
-        console.warn(`⛔ [TOOL_BLOCKED] ${log.toolId}`, {
+        logger.warn(`⛔ [TOOL_BLOCKED] ${log.toolId}`, {
           ...baseLog,
           blockReason: log.blockReason,
         });

@@ -7,6 +7,7 @@ import { storePineconeContext, deletePineconeContext } from "../api-helpers";
 import { storeWithAutoCompression } from "../pinecone-compression";
 import { filterNullish } from "../object-utils";
 import { UserMemory } from "../memory/types";
+import { logger } from "../logger";
 
 /**
  * Store user memory in Pinecone for semantic search
@@ -16,7 +17,7 @@ export const storeMemoryInPinecone = async (
   memory: UserMemory,
 ): Promise<{ success: boolean; recordId?: string; error?: string }> => {
   try {
-    console.info("🧠 Storing memory in Pinecone:", {
+    logger.info("🧠 Storing memory in Pinecone:", {
       memoryId: memory.memoryId,
       userId: memory.userId,
       coachId: memory.coachId,
@@ -66,7 +67,7 @@ export const storeMemoryInPinecone = async (
       "user memory",
     );
 
-    console.info("✅ Successfully stored memory in Pinecone:", {
+    logger.info("✅ Successfully stored memory in Pinecone:", {
       memoryId: memory.memoryId,
       recordId: result.recordId,
       namespace: result.namespace,
@@ -79,11 +80,11 @@ export const storeMemoryInPinecone = async (
 
     return result;
   } catch (error) {
-    console.error("❌ Failed to store memory in Pinecone:", error);
+    logger.error("❌ Failed to store memory in Pinecone:", error);
 
     // Don't throw error to avoid breaking the memory creation process
     // Pinecone storage is for semantic search enhancement, not critical for core functionality
-    console.warn(
+    logger.warn(
       "Memory creation will continue despite Pinecone storage failure",
     );
     return {
@@ -102,7 +103,7 @@ export const deleteMemoryFromPinecone = async (
   memoryId: string,
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> => {
   try {
-    console.info("🗑️ Deleting memory from Pinecone:", {
+    logger.info("🗑️ Deleting memory from Pinecone:", {
       userId,
       memoryId,
     });
@@ -113,13 +114,13 @@ export const deleteMemoryFromPinecone = async (
     });
 
     if (result.success) {
-      console.info("✅ Successfully deleted memory from Pinecone:", {
+      logger.info("✅ Successfully deleted memory from Pinecone:", {
         userId,
         memoryId,
         deletedCount: result.deletedCount,
       });
     } else {
-      console.warn("⚠️ Failed to delete memory from Pinecone:", {
+      logger.warn("⚠️ Failed to delete memory from Pinecone:", {
         userId,
         memoryId,
         error: result.error,
@@ -128,7 +129,7 @@ export const deleteMemoryFromPinecone = async (
 
     return result;
   } catch (error) {
-    console.error("❌ Failed to delete memory from Pinecone:", error);
+    logger.error("❌ Failed to delete memory from Pinecone:", error);
     return {
       success: false,
       deletedCount: 0,

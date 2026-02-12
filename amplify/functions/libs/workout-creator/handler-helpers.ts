@@ -30,6 +30,7 @@ import {
 } from "./todo-list-utils";
 import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from "./types";
 import { handleGoodbyeAutoComplete } from "./goodbye-utils";
+import { logger } from "../logger";
 
 /**
  * Start a new workout collection session when insufficient data is detected
@@ -39,7 +40,7 @@ export async function* startWorkoutCollection(
   params: BusinessLogicParams,
   conversationData: ConversationData,
 ): AsyncGenerator<string, void, unknown> {
-  console.info("🏋️ Starting new workout collection session");
+  logger.info("🏋️ Starting new workout collection session");
 
   try {
     // Create new workout creator session (this will be modified by reference in the handler)
@@ -57,7 +58,7 @@ export async function* startWorkoutCollection(
       imageS3Keys: params.imageS3Keys || [],
     };
 
-    console.info("🆕 NEW WORKOUT SESSION CREATED:", {
+    logger.info("🆕 NEW WORKOUT SESSION CREATED:", {
       sessionId: fullWorkoutSession.sessionId,
       userId: fullWorkoutSession.userId,
       conversationId: fullWorkoutSession.conversationId,
@@ -66,7 +67,7 @@ export async function* startWorkoutCollection(
 
     // Yield metadata event to inform UI we're in workout_log mode
     yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
-    console.info("📋 Metadata event sent: mode=workout_log (session start)");
+    logger.info("📋 Metadata event sent: mode=workout_log (session start)");
 
     // Prepare user context from conversation data
     const userContext = {
@@ -100,7 +101,7 @@ export async function* startWorkoutCollection(
     if (processedResponse) {
       // 🐛 DEBUG: Log session state after handler completes
       const progress = getTodoProgress(fullWorkoutSession.todoList);
-      console.info("📊 SESSION STATE AFTER HANDLER (startWorkoutCollection):", {
+      logger.info("📊 SESSION STATE AFTER HANDLER (startWorkoutCollection):", {
         sessionId: fullWorkoutSession.sessionId,
         turnCount: fullWorkoutSession.turnCount,
         isComplete: processedResponse.isComplete,
@@ -180,10 +181,10 @@ export async function* startWorkoutCollection(
         },
       });
 
-      console.info("✅ Workout collection session started");
+      logger.info("✅ Workout collection session started");
     }
   } catch (error) {
-    console.error("❌ Error starting workout collection:", error);
+    logger.error("❌ Error starting workout collection:", error);
     yield formatChunkEvent(
       "I'd love to help you log that workout! Can you tell me a bit more about what you did?",
     );
@@ -199,7 +200,7 @@ export async function* handleWorkoutCreatorFlow(
   conversationData: ConversationData,
   workoutSession: NonNullable<CoachConversation["workoutCreatorSession"]>,
 ): AsyncGenerator<string, void, unknown> {
-  console.info("🏋️ Continuing workout collection session");
+  logger.info("🏋️ Continuing workout collection session");
 
   try {
     // Create full session object from the simplified workoutSession
@@ -219,7 +220,7 @@ export async function* handleWorkoutCreatorFlow(
 
     // 🐛 DEBUG: Log existing session state before handler
     const initialProgress = getTodoProgress(fullWorkoutSession.todoList);
-    console.info("🔄 CONTINUING WORKOUT SESSION:", {
+    logger.info("🔄 CONTINUING WORKOUT SESSION:", {
       sessionId: fullWorkoutSession.sessionId,
       userId: fullWorkoutSession.userId,
       conversationId: fullWorkoutSession.conversationId,
@@ -247,7 +248,7 @@ export async function* handleWorkoutCreatorFlow(
     // Yield metadata event to inform UI we're still in workout_log mode
     // (only after confirming goodbye handler didn't auto-complete)
     yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
-    console.info("📋 Metadata event sent: mode=workout_log (session continue)");
+    logger.info("📋 Metadata event sent: mode=workout_log (session continue)");
 
     // Prepare user context from conversation data
     const userContext = {
@@ -281,7 +282,7 @@ export async function* handleWorkoutCreatorFlow(
     if (processedResponse) {
       // 🐛 DEBUG: Log session state after handler completes
       const finalProgress = getTodoProgress(fullWorkoutSession.todoList);
-      console.info(
+      logger.info(
         "📊 SESSION STATE AFTER HANDLER (handleWorkoutCreatorFlow):",
         {
           sessionId: fullWorkoutSession.sessionId,
@@ -321,7 +322,7 @@ export async function* handleWorkoutCreatorFlow(
 
       // Check if session was cancelled (topic change detected)
       if (processedResponse.sessionCancelled) {
-        console.info(
+        logger.info(
           "🔀 Topic change detected - clearing workout session and re-processing message",
         );
 
@@ -347,7 +348,7 @@ export async function* handleWorkoutCreatorFlow(
           },
         });
 
-        console.info(
+        logger.info(
           "✅ Workout session cancelled - message will be re-processed as normal conversation",
         );
         return;
@@ -366,7 +367,7 @@ export async function* handleWorkoutCreatorFlow(
 
       // If complete, trigger workout creation and clear session
       if (processedResponse.isComplete) {
-        console.info(
+        logger.info(
           "🎉 Workout collection complete - triggering build-workout",
         );
 
@@ -397,12 +398,12 @@ export async function* handleWorkoutCreatorFlow(
               },
               "multi-turn workout creation",
             );
-            console.info("✅ Triggered async workout creation");
+            logger.info("✅ Triggered async workout creation");
           } catch (error) {
-            console.error("❌ Failed to trigger workout creation:", error);
+            logger.error("❌ Failed to trigger workout creation:", error);
           }
         } else {
-          console.warn("⚠️ BUILD_WORKOUT_FUNCTION_NAME not set");
+          logger.warn("⚠️ BUILD_WORKOUT_FUNCTION_NAME not set");
         }
 
         // Clear session from conversation and reset mode back to CHAT
@@ -440,10 +441,10 @@ export async function* handleWorkoutCreatorFlow(
         },
       });
 
-      console.info("✅ Workout collection flow completed");
+      logger.info("✅ Workout collection flow completed");
     }
   } catch (error) {
-    console.error("❌ Error in workout collection flow:", error);
+    logger.error("❌ Error in workout collection flow:", error);
     yield formatChunkEvent(
       "I'm having trouble with that. Can you try rephrasing?",
     );
@@ -459,10 +460,10 @@ export async function clearWorkoutSession(
   conversationId: string,
   conversation: CoachConversation,
 ): Promise<void> {
-  console.info("🧹 Clearing workout collection session");
+  logger.info("🧹 Clearing workout collection session");
   delete conversation.workoutCreatorSession;
 
   // Save conversation without session
   await saveCoachConversation(conversation);
-  console.info("✅ Workout session cleared");
+  logger.info("✅ Workout session cleared");
 }

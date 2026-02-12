@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 /**
  * Object Utility Functions
  *
@@ -122,7 +123,7 @@ export const omit = <T extends Record<string, any>, K extends keyof T>(
  * const original = { a: 1, b: { c: 2 } };
  * const clone = deepClone(original);
  * clone.b.c = 3;
- * console.info(original.b.c); // Still 2
+ * logger.info(original.b.c); // Still 2
  * ```
  */
 export const deepClone = <T>(obj: T): T => {

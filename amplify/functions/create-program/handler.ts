@@ -5,6 +5,7 @@ import { calculateEndDate } from "../libs/program/calendar-utils";
 import { Program, CreateProgramEvent } from "../libs/program/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { generateProgramId } from "../libs/id-utils";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -134,7 +135,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Store in DynamoDB
     await saveProgram(program);
 
-    console.info("Training program created successfully:", {
+    logger.info("Training program created successfully:", {
       programId,
       userId,
       coachIds: [coachId],
@@ -152,7 +153,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         "Training program created successfully. Daily workouts will be generated next.",
     });
   } catch (error) {
-    console.error("Error creating training program:", error);
+    logger.error("Error creating training program:", error);
     return createErrorResponse(500, "Failed to create training program", error);
   }
 };

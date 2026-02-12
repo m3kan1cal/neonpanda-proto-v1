@@ -35,6 +35,7 @@ import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
+import { logger } from "../utils/logger";
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -336,7 +337,7 @@ function CoachCreator() {
           }
         },
         onError: (error) => {
-          console.error("Agent error:", error);
+          logger.error("Agent error:", error);
           // Could show toast notification here
         },
       });
@@ -350,7 +351,7 @@ function CoachCreator() {
               coachCreatorSessionId,
             );
           } catch (error) {
-            console.error("Error loading existing session:", error);
+            logger.error("Error loading existing session:", error);
             // Set session load error for display
             if (error.message === "Session not found or expired") {
               setSessionLoadError(
@@ -492,7 +493,7 @@ function CoachCreator() {
         },
       );
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
     }
   };
@@ -567,7 +568,7 @@ function CoachCreator() {
       // Redirect to coaches page after successful deletion
       navigate(`/coaches?userId=${userId}`);
     } catch (error) {
-      console.error("Error deleting coach creator session:", error);
+      logger.error("Error deleting coach creator session:", error);
       // Close modal even on error
       setShowDeleteModal(false);
     } finally {

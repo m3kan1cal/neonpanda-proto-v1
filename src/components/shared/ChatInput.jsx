@@ -22,6 +22,7 @@ import {
   TrashIcon,
 } from "../themes/SynthwaveComponents";
 import { useImageUpload } from "../../hooks/useImageUpload";
+import { logger } from "../../utils/logger";
 
 // Question mark icon for tips (standardized size)
 const QuestionIcon = () => (
@@ -408,7 +409,7 @@ function ChatInput({
       try {
         await selectImages(files);
       } catch (err) {
-        console.error("Error selecting images:", err);
+        logger.error("Error selecting images:", err);
       }
     }
     // Reset file input
@@ -437,7 +438,7 @@ function ChatInput({
       try {
         await selectImages(imageFiles);
       } catch (err) {
-        console.error("Error processing pasted images:", err);
+        logger.error("Error processing pasted images:", err);
       }
     }
   };
@@ -609,7 +610,7 @@ function ChatInput({
       // Send message with images
       await onSubmit(messageToSend, imageS3Keys);
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       // Don't clear images on error so user can retry
     } finally {
       // Reset flag after message is sent (success or failure)

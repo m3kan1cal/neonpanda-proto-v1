@@ -10,6 +10,7 @@ import {
 } from "../../dynamodb/operations";
 import { CoachConversation, CONVERSATION_MODES } from "../libs/coach-conversation/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -55,7 +56,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // If there's an initial message, send it after creating the conversation
     if (initialMessage && initialMessage.trim()) {
       try {
-        console.info("Sending initial message to conversation:", {
+        logger.info("Sending initial message to conversation:", {
           conversationId,
           messageLength: initialMessage.trim().length,
         });
@@ -79,14 +80,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
             sendMessagePayload,
             "initial message processing"
           );
-          console.info("Initial message triggered for async processing");
+          logger.info("Initial message triggered for async processing");
         } else {
-          console.warn(
+          logger.warn(
             "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME not configured - skipping initial message"
           );
         }
       } catch (error) {
-        console.error("Failed to send initial message:", error);
+        logger.error("Failed to send initial message:", error);
         // Don't fail the whole conversation creation if initial message fails
         // The conversation is created, user can manually send the message
       }
@@ -107,7 +108,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         await saveCoachConfig(userId, updated);
       }
     } catch (error) {
-      console.error("Failed to update conversation count:", error);
+      logger.error("Failed to update conversation count:", error);
       // Don't fail the request - conversation was created successfully
     }
 

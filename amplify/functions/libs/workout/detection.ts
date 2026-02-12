@@ -9,6 +9,7 @@ import { QuickWorkoutExtraction } from "./types";
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
+import { logger } from "../logger";
 
 /**
  * Supported workout slash commands
@@ -41,7 +42,7 @@ export interface SlashCommandResult {
  */
 export const parseSlashCommand = (message: string): SlashCommandResult => {
   if (!message || typeof message !== "string") {
-    console.info("🔍 parseSlashCommand: Invalid message input:", {
+    logger.info("🔍 parseSlashCommand: Invalid message input:", {
       message,
       type: typeof message,
     });
@@ -51,7 +52,7 @@ export const parseSlashCommand = (message: string): SlashCommandResult => {
   const slashCommandRegex = /^\/([a-zA-Z0-9-]+)\s*([\s\S]*)$/;
   const match = message.match(slashCommandRegex);
 
-  console.info("🔍 parseSlashCommand: Regex match result:", {
+  logger.info("🔍 parseSlashCommand: Regex match result:", {
     messageStart: message.substring(0, 50),
     hasMatch: !!match,
     matchGroups: match ? match.length : 0,
@@ -68,7 +69,7 @@ export const parseSlashCommand = (message: string): SlashCommandResult => {
     content: content.trim(),
   };
 
-  console.info("🔍 parseSlashCommand: Parsed result:", result);
+  logger.info("🔍 parseSlashCommand: Parsed result:", result);
   return result;
 };
 
@@ -95,7 +96,7 @@ export const isWorkoutSlashCommand = (
     slashCommandResult.command !== undefined &&
     WORKOUT_SLASH_COMMANDS.includes(slashCommandResult.command as any);
 
-  console.info("🔍 isWorkoutSlashCommand: Check result:", {
+  logger.info("🔍 isWorkoutSlashCommand: Check result:", {
     isSlashCommand: slashCommandResult.isSlashCommand,
     command: slashCommandResult.command,
     supportedCommands: WORKOUT_SLASH_COMMANDS,
@@ -168,7 +169,7 @@ export const validateWorkoutContent = async (
   // ✅ NEW: If images are attached, skip text-based performance validation
   // Images may contain workout data (whiteboard photos, workout logs, etc.)
   if (imageS3Keys && imageS3Keys.length > 0) {
-    console.info("✅ Images detected - skipping text performance validation:", {
+    logger.info("✅ Images detected - skipping text performance validation:", {
       imageCount: imageS3Keys.length,
       contentPreview: workoutContent.substring(0, 100),
     });
@@ -254,7 +255,7 @@ CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIn
 - Slash command content (performance=true, intent=false or true)
 - Incomplete attempts (performance=false, intent=true)`;
 
-    console.info("🔍 Starting workout content validation:", {
+    logger.info("🔍 Starting workout content validation:", {
       contentLength: workoutContent.length,
       contentPreview: workoutContent.substring(0, 100),
     });
@@ -269,14 +270,14 @@ CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIn
       }, // Force JSON output format
     )) as string; // No tools used, always returns string
 
-    console.info("🔍 Received validation response:", {
+    logger.info("🔍 Received validation response:", {
       responseLength: response.length,
       responsePreview: response.substring(0, 200),
     });
 
     const result = parseJsonWithFallbacks(response);
 
-    console.info("🔍 Workout content validation result:", {
+    logger.info("🔍 Workout content validation result:", {
       workoutContent: workoutContent.substring(0, 100),
       hasPerformanceData: result.hasPerformanceData,
       hasLoggingIntent: result.hasLoggingIntent,
@@ -291,7 +292,7 @@ CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIn
       reasoning: result.reasoning,
     };
   } catch (error) {
-    console.error("❌ Error in validateWorkoutContent:", {
+    logger.error("❌ Error in validateWorkoutContent:", {
       error: error instanceof Error ? error.message : "Unknown error",
       contentLength: workoutContent.length,
       contentPreview: workoutContent.substring(0, 100),
@@ -369,7 +370,7 @@ Examples:
   )) as string; // No tools used, always returns string
   const result = parseJsonWithFallbacks(response);
 
-  console.info("AI quick workout extraction:", {
+  logger.info("AI quick workout extraction:", {
     message: message.substring(0, 100),
     confidence: result.confidence,
     summary: result.quickSummary,

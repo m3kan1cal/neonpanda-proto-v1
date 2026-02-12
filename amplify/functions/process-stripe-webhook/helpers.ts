@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { publishStripeAlertNotification } from "../libs/sns-helpers";
 import type { SubscriptionTier } from "../libs/subscription/types";
+import { logger } from "../libs/logger";
 
 /**
  * Extract userId from subscription metadata
@@ -83,7 +84,7 @@ export async function retrieveSubscriptionAndAlert(
     const userId = getUserIdFromSubscription(subscription);
 
     if (!userId) {
-      console.warn(`No userId in subscription metadata for ${alertType}`);
+      logger.warn(`No userId in subscription metadata for ${alertType}`);
       return;
     }
 
@@ -100,7 +101,7 @@ export async function retrieveSubscriptionAndAlert(
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error(
+    logger.error(
       `Failed to retrieve subscription for ${alertType} alert:`,
       error,
     );

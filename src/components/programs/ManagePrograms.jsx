@@ -17,6 +17,7 @@ import CommandPaletteButton from "../shared/CommandPaletteButton";
 import { InlineEditField } from "../shared/InlineEditField";
 import AppFooter from "../shared/AppFooter";
 import { useNavigationContext } from "../../contexts/NavigationContext";
+import { logger } from "../../utils/logger";
 import {
   NeonBorder,
   NewBadge,
@@ -311,7 +312,7 @@ function ManagePrograms() {
         );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error("Error loading coach data:", error);
+        logger.error("Error loading coach data:", error);
       } finally {
         setIsLoadingCoachData(false);
       }
@@ -387,7 +388,7 @@ function ManagePrograms() {
           error: null,
         });
       } catch (error) {
-        console.error("Error loading coaches and programs:", error);
+        logger.error("Error loading coaches and programs:", error);
         setProgramState((prev) => ({
           ...prev,
           error: error.message || "Failed to load programs",
@@ -460,7 +461,7 @@ function ManagePrograms() {
 
       // If any sessions completed, refresh the programs list
       if (completedSessionIds.length > 0) {
-        console.info(
+        logger.info(
           `✅ ${completedSessionIds.length} program(s) completed building, refreshing programs list...`,
         );
         // Use the callback if available, otherwise trigger a reload
@@ -489,7 +490,7 @@ function ManagePrograms() {
         setTimeout(loadInProgressSessions, 5000);
       }
     } catch (error) {
-      console.error("Error loading in-progress sessions:", error);
+      logger.error("Error loading in-progress sessions:", error);
       setInProgressSessions([]);
     } finally {
       setSessionsLoading(false);
@@ -536,7 +537,7 @@ function ManagePrograms() {
         };
       });
     } catch (error) {
-      console.error("Error pausing program:", error);
+      logger.error("Error pausing program:", error);
       toast.error("Failed to pause training program");
     } finally {
       setUpdatingProgram({ programId: null, action: null });
@@ -576,7 +577,7 @@ function ManagePrograms() {
         };
       });
     } catch (error) {
-      console.error("Error resuming program:", error);
+      logger.error("Error resuming program:", error);
       toast.error("Failed to resume training program");
     } finally {
       setUpdatingProgram({ programId: null, action: null });
@@ -620,7 +621,7 @@ function ManagePrograms() {
         };
       });
     } catch (error) {
-      console.error("Error completing program:", error);
+      logger.error("Error completing program:", error);
       toast.error("Failed to complete training program");
     } finally {
       setUpdatingProgram({ programId: null, action: null });
@@ -669,7 +670,7 @@ function ManagePrograms() {
       setShowDeleteModal(false);
       setProgramToDelete(null);
     } catch (error) {
-      console.error("Error deleting program:", error);
+      logger.error("Error deleting program:", error);
       toast.error("Failed to delete training program");
     } finally {
       setIsDeleting(false);
@@ -716,7 +717,7 @@ function ManagePrograms() {
       );
       toast.success("Session deleted successfully");
     } catch (error) {
-      console.error("Error deleting session:", error);
+      logger.error("Error deleting session:", error);
       toast.error("Failed to delete session");
     } finally {
       setIsDeleting(false);
@@ -753,7 +754,7 @@ function ManagePrograms() {
       // Trigger polling
       setTimeout(loadInProgressSessions, 2000);
     } catch (error) {
-      console.error("Error retrying build:", error);
+      logger.error("Error retrying build:", error);
       toast.error("Failed to retry build. Please try again.");
     } finally {
       setRetryingSessionId(null);
@@ -801,7 +802,7 @@ function ManagePrograms() {
         `/training-grounds/program-designer?userId=${userId}&coachId=${coachId}&programDesignerSessionId=${sessionId}`,
       );
     } catch (error) {
-      console.error("Error creating program designer session:", error);
+      logger.error("Error creating program designer session:", error);
       toast.error("Failed to create program design session");
       setIsCreatingProgram(false);
     }

@@ -1,4 +1,5 @@
 import { getApiUrl, authenticatedFetch } from './apiConfig';
+import { logger } from "../logger";
 
 /**
  * API service for Memory operations
@@ -38,7 +39,7 @@ export const getMemories = async (userId, options = {}) => {
   });
 
   if (!response.ok) {
-    console.error('getMemories: API Error - Status:', response.status);
+    logger.error('getMemories: API Error - Status:', response.status);
 
     // Try to get the specific error message from the response
     let errorMessage = `API Error: ${response.status}`;
@@ -46,10 +47,10 @@ export const getMemories = async (userId, options = {}) => {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
-        console.error('getMemories: Specific error message:', errorMessage);
+        logger.error('getMemories: Specific error message:', errorMessage);
       }
     } catch (jsonError) {
-      console.warn('getMemories: Could not parse error response as JSON');
+      logger.warn('getMemories: Could not parse error response as JSON');
     }
 
     throw new Error(errorMessage);
@@ -83,7 +84,7 @@ export const createMemory = async (userId, memoryData) => {
   });
 
   if (!response.ok) {
-    console.error('createMemory: API Error - Status:', response.status);
+    logger.error('createMemory: API Error - Status:', response.status);
 
     // Try to get the specific error message from the response
     let errorMessage = `API Error: ${response.status}`;
@@ -91,10 +92,10 @@ export const createMemory = async (userId, memoryData) => {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
-        console.error('createMemory: Specific error message:', errorMessage);
+        logger.error('createMemory: Specific error message:', errorMessage);
       }
     } catch (jsonError) {
-      console.warn('createMemory: Could not parse error response as JSON');
+      logger.warn('createMemory: Could not parse error response as JSON');
     }
 
     throw new Error(errorMessage);
@@ -118,7 +119,7 @@ export const deleteMemory = async (userId, memoryId) => {
   });
 
   if (!response.ok) {
-    console.error('deleteMemory: API Error - Status:', response.status);
+    logger.error('deleteMemory: API Error - Status:', response.status);
 
     // Try to get the specific error message from the response
     let errorMessage = `API Error: ${response.status}`;
@@ -126,10 +127,10 @@ export const deleteMemory = async (userId, memoryId) => {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
-        console.error('deleteMemory: Specific error message:', errorMessage);
+        logger.error('deleteMemory: Specific error message:', errorMessage);
       }
     } catch (jsonError) {
-      console.warn('deleteMemory: Could not parse error response as JSON');
+      logger.warn('deleteMemory: Could not parse error response as JSON');
     }
 
     throw new Error(errorMessage);

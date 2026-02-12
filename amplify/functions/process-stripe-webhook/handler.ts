@@ -9,6 +9,7 @@ import {
 } from "../../dynamodb/operations";
 import { mapStripePriceToTier } from "../libs/subscription/stripe-helpers";
 import { publishStripeAlertNotification } from "../libs/sns-helpers";
+import { logger } from "../libs/logger";
 import {
   getUserIdFromSubscription,
   buildSubscriptionData,
@@ -36,7 +37,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-  console.info("Stripe webhook received");
+  logger.info("Stripe webhook received");
 
   // Trim webhook secret defensively (guards against invisible whitespace from copy-paste)
   const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || "").trim();
@@ -44,13 +45,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     // Validate request has required fields
     if (!event.body) {
-      console.error("Missing request body");
+      logger.error("Missing request body");
       return createErrorResponse(400, "Missing request body");
     }
 
     const signature = event.headers["stripe-signature"];
     if (!signature) {
-      console.error("Missing stripe-signature header");
+      logger.error("Missing stripe-signature header");
       return createErrorResponse(400, "Missing stripe-signature header");
     }
 
@@ -72,17 +73,17 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         webhookSecret,
       );
     } catch (err) {
-      console.error("Webhook signature verification failed:", err);
+      logger.error("Webhook signature verification failed:", err);
       return createErrorResponse(400, "Invalid signature");
     }
 
-    console.info("Webhook event verified:", {
+    logger.info("Webhook event verified:", {
       type: stripeEvent.type,
       id: stripeEvent.id,
     });
 
     // Log full event payload for debugging
-    console.info("📋 FULL Stripe Event:", JSON.stringify(stripeEvent, null, 2));
+    logger.info("📋 FULL Stripe Event:", JSON.stringify(stripeEvent, null, 2));
 
     // Handle different event types
     switch (stripeEvent.type) {
@@ -92,14 +93,14 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const userId = session.client_reference_id;
 
         if (!userId) {
-          console.warn("No client_reference_id in checkout session:", {
+          logger.warn("No client_reference_id in checkout session:", {
             sessionId: session.id,
           });
           // Don't fail - the subscription.created event will handle this if metadata is set
           break;
         }
 
-        console.info("Checkout session completed:", {
+        logger.info("Checkout session completed:", {
           sessionId: session.id,
           userId,
           customerId: session.customer,
@@ -112,12 +113,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
             await stripe.subscriptions.update(session.subscription as string, {
               metadata: { userId },
             });
-            console.info("Updated subscription metadata with userId:", {
+            logger.info("Updated subscription metadata with userId:", {
               subscriptionId: session.subscription,
               userId,
             });
           } catch (updateError) {
-            console.error(
+            logger.error(
               "Failed to update subscription metadata:",
               updateError,
             );
@@ -190,7 +191,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           });
         }
 
-        console.info(`Subscription ${stripeEvent.type.split(".")[2]}:`, {
+        logger.info(`Subscription ${stripeEvent.type.split(".")[2]}:`, {
           subscriptionId: subscription.id,
           userId,
           tier,
@@ -204,7 +205,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const userId = getUserIdFromSubscription(subscription);
 
         if (!userId) {
-          console.warn("Cannot delete subscription - no userId in metadata:", {
+          logger.warn("Cannot delete subscription - no userId in metadata:", {
             subscriptionId: subscription.id,
           });
           break;
@@ -219,7 +220,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           timestamp: new Date().toISOString(),
         });
 
-        console.info("Subscription deleted:", {
+        logger.info("Subscription deleted:", {
           subscriptionId: subscription.id,
           userId,
         });
@@ -240,7 +241,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           );
         }
 
-        console.info("Invoice payment succeeded:", {
+        logger.info("Invoice payment succeeded:", {
           invoiceId: invoice.id,
           customerId: invoice.customer,
           amountPaid: invoice.amount_paid,
@@ -263,7 +264,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           );
         }
 
-        console.warn("Invoice payment failed:", {
+        logger.warn("Invoice payment failed:", {
           invoiceId: invoice.id,
           customerId: invoice.customer,
           attemptCount: invoice.attempt_count,
@@ -272,12 +273,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       }
 
       default:
-        console.info(`Unhandled event type: ${stripeEvent.type}`);
+        logger.info(`Unhandled event type: ${stripeEvent.type}`);
     }
 
     return createOkResponse({ received: true });
   } catch (error) {
-    console.error("Webhook handler error:", error);
+    logger.error("Webhook handler error:", error);
     return createErrorResponse(500, "Webhook processing failed");
   }
 };

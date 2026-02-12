@@ -5,6 +5,7 @@ import {
   createDynamoDBItem,
   deepMerge,
 } from "./core";
+import { logger } from "../functions/libs/logger";
 import {
   CoachConfig,
   CoachConfigSummary,
@@ -89,7 +90,7 @@ export async function updateCoachConfig(
 
   await saveToDynamoDB(updatedItem, true /* requireExists */);
 
-  console.info("Coach config updated successfully:", {
+  logger.info("Coach config updated successfully:", {
     coachId,
     userId,
     updatedFields: Object.keys(updates),
@@ -112,10 +113,10 @@ export async function queryCoachConfigs(
       "coachConfig",
     );
 
-    console.info(
+    logger.info(
       `📊 queryCoachConfigs: Found ${items.length} coach configs for user ${userId}`,
     );
-    console.info(
+    logger.info(
       `📊 Coach IDs:`,
       items.map((item) => item.attributes?.coach_id),
     );
@@ -125,7 +126,7 @@ export async function queryCoachConfigs(
       (item) => item.attributes?.status !== "archived",
     );
 
-    console.info(
+    logger.info(
       `📊 queryCoachConfigs: ${activeCoaches.length} active coaches after filtering archived`,
     );
 
@@ -172,7 +173,7 @@ export async function queryCoachConfigs(
       };
     });
   } catch (error) {
-    console.error(`Error loading coach configs for user ${userId}:`, error);
+    logger.error(`Error loading coach configs for user ${userId}:`, error);
     throw error;
   }
 }
@@ -198,14 +199,14 @@ export async function queryCoachConfigsCount(
 
     const totalCount = activeCoaches.length;
 
-    console.info("Coach configs counted successfully:", {
+    logger.info("Coach configs counted successfully:", {
       userId,
       totalFound: totalCount,
     });
 
     return { totalCount };
   } catch (error) {
-    console.error(`Error counting coach configs for user ${userId}:`, error);
+    logger.error(`Error counting coach configs for user ${userId}:`, error);
     throw error;
   }
 }

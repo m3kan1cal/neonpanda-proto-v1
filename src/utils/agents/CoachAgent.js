@@ -8,6 +8,7 @@ import {
   updateCoachConfig,
   deleteCoachConfig,
 } from "../apis/coachApi";
+import { logger } from "../logger";
 import {
   createCoachCreatorSession,
   getCoachConfigStatus,
@@ -62,7 +63,7 @@ export class CoachAgent {
     if (typeof this.onStateChange === "function") {
       this.onStateChange(this.state);
     } else {
-      console.warn(
+      logger.warn(
         "CoachAgent: onStateChange is not a function, skipping state update notification"
       );
     }
@@ -128,7 +129,7 @@ export class CoachAgent {
 
       return coaches;
     } catch (error) {
-      console.error("Error loading coaches:", error);
+      logger.error("Error loading coaches:", error);
       this._updateState({
         isLoading: false,
         error: error.message,
@@ -156,7 +157,7 @@ export class CoachAgent {
 
       return templates;
     } catch (error) {
-      console.error("Error loading coach templates:", error);
+      logger.error("Error loading coach templates:", error);
       this._updateState({
         templatesLoading: false,
         templatesError: error.message,
@@ -218,7 +219,7 @@ export class CoachAgent {
 
       return formattedCoachData;
     } catch (error) {
-      console.error("Error loading coach details:", error);
+      logger.error("Error loading coach details:", error);
       this.onError(error);
       throw error;
     }
@@ -243,7 +244,7 @@ export class CoachAgent {
 
       return coachConfig;
     } catch (error) {
-      console.error("Error creating coach from template:", error);
+      logger.error("Error creating coach from template:", error);
       this._updateState({
         error: "Failed to create coach from template. Please try again.",
       });
@@ -274,7 +275,7 @@ export class CoachAgent {
 
       return result;
     } catch (error) {
-      console.error("Error creating coach from session:", error);
+      logger.error("Error creating coach from session:", error);
       this._updateState({
         error: "Failed to create coach from session. Please try again.",
       });
@@ -302,7 +303,7 @@ export class CoachAgent {
 
       return { userId, sessionId };
     } catch (error) {
-      console.error("Error creating coach creator session:", error);
+      logger.error("Error creating coach creator session:", error);
       this._updateState({
         error: "Failed to create new coach creator session. Please try again.",
       });
@@ -328,11 +329,11 @@ export class CoachAgent {
   startPolling(sessionId) {
     if (this.pollInterval) return; // Already polling
     if (!sessionId) {
-      console.error("Cannot start polling without sessionId");
+      logger.error("Cannot start polling without sessionId");
       return;
     }
 
-    console.info(`Starting polling for coach build from session ${sessionId}`);
+    logger.info(`Starting polling for coach build from session ${sessionId}`);
 
     this.pollInterval = setInterval(async () => {
       try {
@@ -346,7 +347,7 @@ export class CoachAgent {
 
           if (newCoach) {
             // Coach has been created, update state and stop polling
-            console.info(`✅ Coach found for session ${sessionId}, stopping polling`);
+            logger.info(`✅ Coach found for session ${sessionId}, stopping polling`);
             this._updateState({
               coaches: result.coaches,
               inProgressCoach: null,
@@ -365,7 +366,7 @@ export class CoachAgent {
 
           if (statusResponse.status === "FAILED") {
             // Build failed - update state and stop polling
-            console.info(`❌ Coach build failed for session ${sessionId}, stopping polling`);
+            logger.info(`❌ Coach build failed for session ${sessionId}, stopping polling`);
             this._updateState({
               inProgressCoach: {
                 sessionId,
@@ -381,7 +382,7 @@ export class CoachAgent {
 
           if (statusResponse.status === "COMPLETE") {
             // Complete - refresh coaches and stop polling
-            console.info(`✅ Coach build complete for session ${sessionId}, refreshing and stopping polling`);
+            logger.info(`✅ Coach build complete for session ${sessionId}, refreshing and stopping polling`);
             await this.loadCoaches();
 
             // Clear in-progress state and stop polling
@@ -391,13 +392,13 @@ export class CoachAgent {
           }
 
           // Status is IN_PROGRESS - continue polling
-          console.info(`⏳ Coach build still in progress for session ${sessionId} (status: ${statusResponse.status})`);
+          logger.info(`⏳ Coach build still in progress for session ${sessionId} (status: ${statusResponse.status})`);
         } catch (statusError) {
-          console.error("Error checking coach config status:", statusError);
+          logger.error("Error checking coach config status:", statusError);
           // Continue polling even if status check fails - it might be a transient error
         }
       } catch (error) {
-        console.error("Error polling for coaches:", error);
+        logger.error("Error polling for coaches:", error);
       }
     }, 10000); // Poll every 10 seconds
 
@@ -476,7 +477,7 @@ export class CoachAgent {
         isUpdating: false,
       });
 
-      console.info("Coach config updated successfully in agent:", {
+      logger.info("Coach config updated successfully in agent:", {
         coachId,
         userId,
         updatedFields: Object.keys(metadata),
@@ -484,7 +485,7 @@ export class CoachAgent {
 
       return result;
     } catch (error) {
-      console.error("Error updating coach config:", error);
+      logger.error("Error updating coach config:", error);
       this._updateState({
         error: error.message,
         isUpdating: false,
@@ -516,14 +517,14 @@ export class CoachAgent {
         isUpdating: false,
       });
 
-      console.info("Coach deleted successfully:", {
+      logger.info("Coach deleted successfully:", {
         coachId,
         userId,
       });
 
       return result;
     } catch (error) {
-      console.error("Error deleting coach:", error);
+      logger.error("Error deleting coach:", error);
       this._updateState({
         error: error.message,
         isUpdating: false,
@@ -597,7 +598,7 @@ export class CoachAgent {
 
         return true;
       } catch (error) {
-        console.error("Error updating coach name:", error);
+        logger.error("Error updating coach name:", error);
         if (toast?.error) {
           toast.error("Failed to update coach name");
         }

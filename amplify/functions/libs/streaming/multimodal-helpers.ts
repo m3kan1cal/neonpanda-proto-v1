@@ -9,6 +9,7 @@
  */
 
 import { getObjectAsUint8Array } from "../s3-utils";
+import { logger } from "../logger";
 import {
   callBedrockApiStream,
   callBedrockApiMultimodalStream,
@@ -45,7 +46,7 @@ export async function fetchImageFromS3(
   try {
     return await getObjectAsUint8Array(s3Key);
   } catch (error) {
-    console.error(`❌ Failed to fetch image ${s3Key}:`, error);
+    logger.error(`❌ Failed to fetch image ${s3Key}:`, error);
     return null;
   }
 }
@@ -108,7 +109,7 @@ export async function buildMultimodalContent(
             },
           });
         } else {
-          console.warn(`⚠️ Skipping missing image: ${s3Key}`);
+          logger.warn(`⚠️ Skipping missing image: ${s3Key}`);
         }
       }
     }
@@ -119,7 +120,7 @@ export async function buildMultimodalContent(
     });
   }
 
-  console.info(
+  logger.info(
     `✅ Built multimodal content: ${converseMessages.length} messages, ${messages.filter((m) => m.imageS3Keys?.length).length} with images`,
   );
 
@@ -158,7 +159,7 @@ export async function getAIResponseStream(
 
   // Check if images are present
   if (imageS3Keys && imageS3Keys.length > 0) {
-    console.info("🖼️ Processing with images:", {
+    logger.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys.length,
     });
 

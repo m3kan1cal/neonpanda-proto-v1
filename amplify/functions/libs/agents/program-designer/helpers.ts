@@ -6,6 +6,7 @@
 
 import type { Program, WorkoutTemplate } from "../../program/types";
 import { storeDebugDataInS3 } from "../../api-helpers";
+import { logger } from "../../logger";
 
 /**
  * Store program generation debug data in S3
@@ -107,9 +108,9 @@ export const storeGenerationDebugData = async (
       "program",
     );
 
-    console.info(`✅ Stored ${type} debug data in S3`);
+    logger.info(`✅ Stored ${type} debug data in S3`);
   } catch (err) {
-    console.warn(`⚠️ Failed to store ${type} data in S3 (non-critical):`, err);
+    logger.warn(`⚠️ Failed to store ${type} data in S3 (non-critical):`, err);
   }
 };
 
@@ -175,7 +176,7 @@ export function checkTrainingFrequencyCompliance(
   // Guard against edge case: expectedTrainingDays is 0 or too low
   // This can happen with very short programs or invalid training frequency
   if (expectedTrainingDays < 3) {
-    console.warn(
+    logger.warn(
       "⚠️ Expected training days is very low or zero, skipping pruning check:",
       {
         expectedTrainingDays,
@@ -191,7 +192,7 @@ export function checkTrainingFrequencyCompliance(
     metrics.uniqueTrainingDays - expectedTrainingDays,
   );
 
-  console.info("🔍 Training frequency validation:", {
+  logger.info("🔍 Training frequency validation:", {
     currentTrainingDays: metrics.uniqueTrainingDays,
     expectedTrainingDays,
     variance: actualVariance,
@@ -217,7 +218,7 @@ export function checkTrainingFrequencyCompliance(
         ? `${Math.round((actualVariance / expectedTrainingDays) * 100)}%`
         : "N/A";
 
-    console.info("🔧 Pruning recommended:", {
+    logger.info("🔧 Pruning recommended:", {
       currentDays: metrics.uniqueTrainingDays,
       targetDays: expectedTrainingDays,
       excessDays: metrics.uniqueTrainingDays - expectedTrainingDays,
@@ -267,7 +268,7 @@ export const enforceAllBlocking = (
   if (toolId === "save_program_to_database") {
     // CASE 1: Validation threw an exception (has error field instead of isValid)
     if (validationResult && validationResult.error) {
-      console.error("⛔ Blocking save: Validation threw exception", {
+      logger.error("⛔ Blocking save: Validation threw exception", {
         error: validationResult.error,
       });
 
@@ -280,7 +281,7 @@ export const enforceAllBlocking = (
 
     // CASE 2: Validation returned isValid: false
     if (validationResult && validationResult.isValid === false) {
-      console.error("⛔ Blocking save: Validation failed", {
+      logger.error("⛔ Blocking save: Validation failed", {
         validationIssues: validationResult.validationIssues,
       });
 
@@ -297,7 +298,7 @@ export const enforceAllBlocking = (
     // over perfect frequency adherence. Log warnings but allow save to proceed.
     if (validationResult && validationResult.shouldPrune === true) {
       if (!pruningResult) {
-        console.warn(
+        logger.warn(
           "⚠️ Pruning was recommended but not executed - program will have excess training days",
           {
             currentTrainingDays:
@@ -308,7 +309,7 @@ export const enforceAllBlocking = (
           },
         );
       } else if (pruningResult.error) {
-        console.warn(
+        logger.warn(
           "⚠️ Pruning failed - program will have excess training days",
           {
             error: pruningResult.error,
@@ -321,7 +322,7 @@ export const enforceAllBlocking = (
 
     // CASE 4: Normalization threw an exception (has error field)
     if (normalizationResult && normalizationResult.error) {
-      console.error("⛔ Blocking save: Normalization threw exception", {
+      logger.error("⛔ Blocking save: Normalization threw exception", {
         error: normalizationResult.error,
       });
 
@@ -334,7 +335,7 @@ export const enforceAllBlocking = (
 
     // CASE 5: Normalization returned isValid: false
     if (normalizationResult && normalizationResult.isValid === false) {
-      console.warn("⛔ Blocking save: Normalization failed", {
+      logger.warn("⛔ Blocking save: Normalization failed", {
         issuesFound: normalizationResult.issuesFound,
         correctionsMade: normalizationResult.correctionsMade,
       });

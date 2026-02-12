@@ -13,6 +13,7 @@ import {
   detectMemoryCharacteristics,
 } from "../memory";
 import { parseSlashCommand } from "../workout/detection";
+import { logger } from "../logger";
 
 export interface MemoryRetrievalResult {
   memories: UserMemory[];
@@ -83,7 +84,7 @@ async function ensureMemoryInPinecone(
   try {
     // Only re-index if the memory has valid memoryId and content
     if (!memory.memoryId) {
-      console.info("ℹ️ Skipping Pinecone upsert for non-memory record (expected behavior):", {
+      logger.info("ℹ️ Skipping Pinecone upsert for non-memory record (expected behavior):", {
         hasContent: !!memory.content,
         contentPreview: memory.content?.substring(0, 100),
         pineconeId: (memory as any).pineconeId,
@@ -93,7 +94,7 @@ async function ensureMemoryInPinecone(
     }
 
     if (!memory.content || memory.content.length === 0) {
-      console.warn("⚠️ Skipping Pinecone upsert: memory has no content", {
+      logger.warn("⚠️ Skipping Pinecone upsert: memory has no content", {
         memoryId: memory.memoryId,
       });
       return;
@@ -101,7 +102,7 @@ async function ensureMemoryInPinecone(
 
     // Always upsert to ensure consistency (Pinecone upserts are idempotent)
     // This will update if exists, create if missing
-    console.info("🔄 Ensuring memory exists in Pinecone:", {
+    logger.info("🔄 Ensuring memory exists in Pinecone:", {
       memoryId: memory.memoryId,
       userId,
       type: memory.memoryType,
@@ -109,11 +110,11 @@ async function ensureMemoryInPinecone(
 
     await storeMemoryInPinecone(memory);
 
-    console.info("✅ Memory ensured in Pinecone:", {
+    logger.info("✅ Memory ensured in Pinecone:", {
       memoryId: memory.memoryId,
     });
   } catch (error) {
-    console.error("❌ Failed to ensure memory in Pinecone:", {
+    logger.error("❌ Failed to ensure memory in Pinecone:", {
       memoryId: memory.memoryId,
       error,
     });
@@ -147,7 +148,7 @@ export async function queryMemories(
         retrievalDetection.needsSemanticRetrieval &&
         retrievalDetection.confidence > 0.6
       ) {
-        console.info("🧠 AI detected need for semantic memory retrieval:", {
+        logger.info("🧠 AI detected need for semantic memory retrieval:", {
           confidence: retrievalDetection.confidence,
           contextTypes: retrievalDetection.contextTypes,
           reasoning: retrievalDetection.reasoning,
@@ -172,14 +173,14 @@ export async function queryMemories(
           importantMemories
         );
 
-        console.info("Retrieved hybrid memories:", {
+        logger.info("Retrieved hybrid memories:", {
           semanticCount: semanticMemories.length,
           importantCount: importantMemories.length,
           finalCount: memories.length,
         });
       } else {
         // AI determined semantic retrieval not beneficial - get top important memories only
-        console.info(
+        logger.info(
           "🔄 AI determined semantic retrieval not needed, using importance-based:",
           {
             confidence: retrievalDetection.confidence,
@@ -200,7 +201,7 @@ export async function queryMemories(
       memories.forEach((memory) => {
         // Skip non-memory records without a valid memoryId
         if (!memory.memoryId) {
-          console.info("ℹ️ Skipping usage update for non-memory record (expected behavior):", {
+          logger.info("ℹ️ Skipping usage update for non-memory record (expected behavior):", {
             pineconeId: (memory as any).pineconeId,
             recordType: memory.memoryType,
             contentPreview: memory.content?.substring(0, 100),
@@ -225,25 +226,25 @@ export async function queryMemories(
 
         // Update memory usage in DynamoDB
         updateMemory(memory.memoryId, userId, usageContext).catch((err: any) =>
-          console.warn("Failed to update memory usage with context:", err)
+          logger.warn("Failed to update memory usage with context:", err)
         );
 
         // Auto-heal: Ensure memory is indexed in Pinecone
         // If it's missing from Pinecone (e.g., manually deleted), re-index it
         ensureMemoryInPinecone(memory, userId).catch((err: any) =>
-          console.warn("Failed to ensure memory in Pinecone:", err)
+          logger.warn("Failed to ensure memory in Pinecone:", err)
         );
       });
     }
 
-    console.info("Retrieved memories for context:", {
+    logger.info("Retrieved memories for context:", {
       userId,
       coachId,
       memoryCount: memories.length,
       approach: userMessage ? "AI-guided" : "standard",
     });
   } catch (error) {
-    console.error("Error retrieving memories:", error);
+    logger.error("Error retrieving memories:", error);
     throw error; // Simplified - let the error bubble up rather than silent fallback
   }
 
@@ -292,7 +293,7 @@ export async function detectAndProcessMemory(
 
     isMemoryProcessing = isSlashCommandMemory || isNaturalLanguageMemory;
   } catch (error) {
-    console.error("❌ Error during memory detection:", error);
+    logger.error("❌ Error during memory detection:", error);
     slashCommand = { isSlashCommand: false };
     isSlashCommandMemory = false;
     isNaturalLanguageMemory = false;
@@ -303,7 +304,7 @@ export async function detectAndProcessMemory(
   let memoryFeedback: string | null = null;
 
   if (isMemoryProcessing) {
-    console.info("🧠 MEMORY PROCESSING DETECTED:", {
+    logger.info("🧠 MEMORY PROCESSING DETECTED:", {
       userId,
       coachId,
       conversationId,
@@ -336,7 +337,7 @@ export async function detectAndProcessMemory(
             coachName
           );
 
-          console.info("🎯 Slash command memory characteristics detected:", {
+          logger.info("🎯 Slash command memory characteristics detected:", {
             content:
               memoryContent.trim().substring(0, 50) +
               (memoryContent.length > 50 ? "..." : ""),
@@ -411,18 +412,18 @@ export async function detectAndProcessMemory(
         await saveMemory(memory);
         try {
           await storeMemoryInPinecone(memory);
-          console.info("Memory stored in both DynamoDB and Pinecone:", {
+          logger.info("Memory stored in both DynamoDB and Pinecone:", {
             type: isSlashCommandMemory ? "slash_command" : "natural_language",
             memoryId: memory.memoryId,
           });
         } catch (error) {
-          console.warn(
+          logger.warn(
             "Failed to store memory in Pinecone, continuing:",
             error
           );
         }
         memoryFeedback = `✅ I've remembered that for you: "${memory.content}"`;
-        console.info("Memory saved:", {
+        logger.info("Memory saved:", {
           memoryId: memory.memoryId,
           userId,
           scope: memory.coachId
@@ -434,7 +435,7 @@ export async function detectAndProcessMemory(
         });
       }
     } catch (error) {
-      console.error(
+      logger.error(
         "❌ Failed to process memory, but continuing conversation:",
         error
       );

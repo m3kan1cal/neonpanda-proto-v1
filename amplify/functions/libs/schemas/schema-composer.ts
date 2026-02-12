@@ -27,6 +27,7 @@ import { FUNCTIONAL_BODYBUILDING_SCHEMA_PLUGIN } from "./disciplines/functional-
 import { CALISTHENICS_SCHEMA_PLUGIN } from "./disciplines/calisthenics-schema";
 import { CIRCUIT_TRAINING_SCHEMA_PLUGIN } from "./disciplines/circuit-training-schema";
 import { HYBRID_SCHEMA_PLUGIN } from "./disciplines/hybrid-schema";
+import { logger } from "../logger";
 
 /**
  * Map of discipline names to their schema plugins
@@ -67,14 +68,14 @@ export function composeWorkoutSchema(discipline: string): any {
   // This matches the guidance-composer fallback to hybrid for consistency
   // This handles: "unknown", "strength_training", and any other unrecognized values
   if (!plugin) {
-    console.warn(
+    logger.warn(
       `⚠️ No schema plugin for discipline: ${discipline}, falling back to hybrid schema`,
     );
     plugin = DISCIPLINE_PLUGIN_MAP["hybrid"];
     actualDiscipline = "hybrid_fallback";
   }
 
-  console.info(`📋 Composing schema for discipline: ${actualDiscipline}`);
+  logger.info(`📋 Composing schema for discipline: ${actualDiscipline}`);
 
   // CRITICAL: Merge base schema with ONLY the detected discipline plugin
   // This is the key optimization that reduces tokens by ~70%
@@ -95,7 +96,7 @@ export function composeWorkoutSchema(discipline: string): any {
 
   // Log schema size for monitoring
   const schemaSize = JSON.stringify(composedSchema).length;
-  console.info(`📊 Composed schema size: ${schemaSize} characters`);
+  logger.info(`📊 Composed schema size: ${schemaSize} characters`);
 
   return composedSchema;
 }

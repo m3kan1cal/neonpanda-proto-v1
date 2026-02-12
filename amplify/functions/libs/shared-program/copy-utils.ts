@@ -15,6 +15,7 @@ import { storeProgramDetailsInS3 } from "../program/s3-utils";
 import { Program } from "../program/types";
 import { generateProgramId } from "../id-utils";
 import { calculateEndDate } from "../program/calendar-utils";
+import { logger } from "../logger";
 
 /**
  * Result of copying a shared program
@@ -165,7 +166,7 @@ export async function copySharedProgramToUser(
   // 8. Save program to DynamoDB
   await saveProgram(newProgram);
 
-  console.info("Shared program copied successfully:", {
+  logger.info("Shared program copied successfully:", {
     sharedProgramId,
     newProgramId,
     userId,

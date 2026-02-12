@@ -6,6 +6,7 @@
 
 import { getProgram } from "../../../dynamodb/operations";
 import { getProgramDetailsFromS3, saveProgramDetailsToS3 } from "./s3-utils";
+import { logger } from "../logger";
 
 /**
  * Link a completed workout to its template in a training program
@@ -25,7 +26,7 @@ export const linkWorkoutToTemplate = async (
   },
   workoutId: string,
 ): Promise<boolean> => {
-  console.info("🔗 Updating template linkedWorkoutId in S3..");
+  logger.info("🔗 Updating template linkedWorkoutId in S3..");
 
   try {
     // 1. Get program metadata from DynamoDB
@@ -36,7 +37,7 @@ export const linkWorkoutToTemplate = async (
     );
 
     if (!programData?.s3DetailKey) {
-      console.warn("⚠️ Program data or S3 detail key not found");
+      logger.warn("⚠️ Program data or S3 detail key not found");
       return false;
     }
 
@@ -46,7 +47,7 @@ export const linkWorkoutToTemplate = async (
     );
 
     if (!programDetails) {
-      console.warn("⚠️ Program details not found in S3");
+      logger.warn("⚠️ Program details not found in S3");
       return false;
     }
 
@@ -56,7 +57,7 @@ export const linkWorkoutToTemplate = async (
     );
 
     if (templateIndex === -1) {
-      console.warn("⚠️ Template not found in program:", {
+      logger.warn("⚠️ Template not found in program:", {
         templateId: templateContext.templateId,
         programId: templateContext.programId,
       });
@@ -69,14 +70,14 @@ export const linkWorkoutToTemplate = async (
     // 5. Save updated program details back to S3
     await saveProgramDetailsToS3(programData.s3DetailKey, programDetails);
 
-    console.info("✅ Template linkedWorkoutId updated:", {
+    logger.info("✅ Template linkedWorkoutId updated:", {
       templateId: templateContext.templateId,
       workoutId,
     });
 
     return true;
   } catch (error) {
-    console.error(
+    logger.error(
       "⚠️ Failed to update template linkedWorkoutId (non-critical):",
       error,
     );

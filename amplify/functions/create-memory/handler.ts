@@ -10,6 +10,7 @@ import {
 } from "../libs/memory";
 import { storeMemoryInPinecone } from "../libs/user/pinecone";
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -39,7 +40,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         }
         coachName = coachConfig?.coach_name;
       } catch (error) {
-        console.error(
+        logger.error(
           "Failed to load coach config for memory creation:",
           error
         );
@@ -48,7 +49,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
   try {
-    console.info("Creating memory:", {
+    logger.info("Creating memory:", {
       userId,
       contentLength: content.length,
       coachId: coachId || "global",
@@ -56,13 +57,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
     // Use AI to determine memory characteristics (combined analysis)
-    console.info("🤖 Running AI analysis for memory..");
+    logger.info("🤖 Running AI analysis for memory..");
     const memoryCharacteristics = await detectMemoryCharacteristics(
       content.trim(),
       coachName
     );
 
-    console.info("🎯 AI Memory Analysis:", {
+    logger.info("🎯 AI Memory Analysis:", {
       content:
         content.trim().substring(0, 50) + (content.length > 50 ? "..." : ""),
       result: `${memoryCharacteristics.isCoachSpecific ? "coach-specific" : "global"},
@@ -96,7 +97,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await saveMemory(memory);
 
     // Store memory in Pinecone for semantic search (async, don't block response)
-    console.info("🧠 Storing memory in Pinecone..");
+    logger.info("🧠 Storing memory in Pinecone..");
     const pineconeResult = await storeMemoryInPinecone(memory);
 
     // Return success response with the created memory
@@ -112,7 +113,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           : null,
     });
   } catch (error) {
-    console.error("Error creating memory:", error);
+    logger.error("Error creating memory:", error);
 
     if (error instanceof SyntaxError) {
       return createErrorResponse(400, "Invalid JSON in request body");

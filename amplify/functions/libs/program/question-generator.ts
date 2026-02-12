@@ -13,6 +13,7 @@ import {
 } from "../api-helpers";
 import { ConversationMessage } from "../todo-types";
 import { ProgramDesignerTodoList } from "./types";
+import { logger } from "../logger";
 import {
   getTodoSummary,
   getTodoItemLabel,
@@ -28,14 +29,14 @@ export async function generateNextQuestion(
   todoList: ProgramDesignerTodoList,
   coachPersonality?: string,
 ): Promise<string | null> {
-  console.info("🎯 Generating next training program question");
+  logger.info("🎯 Generating next training program question");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
   // If all required items are complete, return completion message
   if (summary.requiredPending.length === 0) {
-    console.info(
+    logger.info(
       "✅ All required information collected, generating completion message",
     );
     return generateCompletionMessage(todoList, coachPersonality);
@@ -109,15 +110,15 @@ Remember: You're helping them create a training program that will actually work 
       },
     )) as string;
 
-    console.info("✅ Generated next training program question");
+    logger.info("✅ Generated next training program question");
 
     return questionResponse.trim();
   } catch (error) {
-    console.error("❌ Error generating training program question:", error);
+    logger.error("❌ Error generating training program question:", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn("⚠️ Using fallback for initial message");
+      logger.warn("⚠️ Using fallback for initial message");
       return `Alright! Let's build your training program! 💪 I'm going to ask you a few questions so I can design something perfect for you. First things first - what are you training for? What's the main goal?`;
     }
 
@@ -136,14 +137,14 @@ export async function* generateNextQuestionStream(
   todoList: ProgramDesignerTodoList,
   coachPersonality?: string,
 ): AsyncGenerator<string, string, unknown> {
-  console.info("🎯 Generating next training program question (STREAMING)");
+  logger.info("🎯 Generating next training program question (STREAMING)");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
   // If all required items are complete, generate completion message (non-streaming for simplicity)
   if (summary.requiredPending.length === 0) {
-    console.info(
+    logger.info(
       "✅ All required information collected, generating completion message",
     );
     const completionMsg = await generateCompletionMessage(
@@ -236,20 +237,20 @@ Remember: You're helping them create a training program that will actually work 
       yield chunk;
     }
 
-    console.info(
+    logger.info(
       "✅ Generated next training program question (streaming complete)",
     );
 
     return fullResponse.trim();
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Error generating training program question (streaming):",
       error,
     );
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn("⚠️ Using fallback for initial message");
+      logger.warn("⚠️ Using fallback for initial message");
       const fallback = `Alright! Let's build your training program! 💪 I'm going to ask you a few questions so I can design something perfect for you. First things first - what are you training for? What's the main goal?`;
 
       // Simulate streaming for fallback
@@ -282,7 +283,7 @@ async function generateCompletionMessage(
   todoList: ProgramDesignerTodoList,
   coachPersonality?: string,
 ): Promise<string> {
-  console.info("🎉 Generating training program completion message");
+  logger.info("🎉 Generating training program completion message");
 
   const systemPrompt = `You're wrapping up a conversation to create a training program!
 
@@ -336,7 +337,7 @@ CRITICAL: Make sure to tell them about the 3-5 minute build time, progress updat
 
     return completionMessage.trim();
   } catch (error) {
-    console.error("❌ Error generating completion message, using fallback");
+    logger.error("❌ Error generating completion message, using fallback");
 
     // Fallback completion message
     return "Perfect! I've got everything I need to build your training program. 🔥\n\n**The AI is firing up now to generate your training program - this takes about 3-5 minutes.** You'll see progress updates as it works. Head to the Training Grounds and your program will appear in your programs list once it's ready! 💪";

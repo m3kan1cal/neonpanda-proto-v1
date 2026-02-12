@@ -3,6 +3,7 @@ import {
   getSubscriptionStatus,
   SUBSCRIPTION_TIERS,
 } from "../utils/apis/subscriptionApi";
+import { logger } from "../utils/logger";
 import {
   checkUpgradeTriggers,
   shouldShowUpgradePrompt,
@@ -87,7 +88,7 @@ export function useUpgradePrompts(userId, userData = {}) {
         const status = await getSubscriptionStatus(userId);
         setSubscription(status);
       } catch (error) {
-        console.warn("Failed to fetch subscription status:", error);
+        logger.warn("Failed to fetch subscription status:", error);
         // Default to free tier on error
         setSubscription({
           tier: SUBSCRIPTION_TIERS.FREE,

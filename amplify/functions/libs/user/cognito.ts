@@ -4,6 +4,7 @@
  */
 
 import { CognitoIdentityProviderClient, AdminUpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
+import { logger } from "../logger";
 
 const cognitoClient = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
 
@@ -68,7 +69,7 @@ export async function syncProfileToCognito(
     await cognitoClient.send(command);
 
     const syncedAttributeNames = cognitoAttributes.map(a => a.Name);
-    console.info('✅ Synced attributes to Cognito:', syncedAttributeNames);
+    logger.info('✅ Synced attributes to Cognito:', syncedAttributeNames);
 
     return {
       success: true,
@@ -77,7 +78,7 @@ export async function syncProfileToCognito(
 
   } catch (error) {
     // Log but don't throw - Cognito sync is best effort
-    console.error('⚠️ Failed to sync attributes to Cognito (non-fatal):', error);
+    logger.error('⚠️ Failed to sync attributes to Cognito (non-fatal):', error);
 
     return {
       success: false,

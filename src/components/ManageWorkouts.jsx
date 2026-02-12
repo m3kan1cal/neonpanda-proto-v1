@@ -20,6 +20,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
+import { logger } from "../utils/logger";
 import {
   StackIcon,
   CalendarMonthIcon,
@@ -131,7 +132,7 @@ function ManageWorkouts() {
       });
 
       workoutAgentRef.current.onError = (error) => {
-        console.error("Workout agent error:", error);
+        logger.error("Workout agent error:", error);
         setWorkoutAgentState((prevState) => ({
           ...prevState,
           error: error.message || "Failed to load workouts",
@@ -162,7 +163,7 @@ function ManageWorkouts() {
         );
         setCoachData(coachData);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
       }
     };
 
@@ -195,7 +196,7 @@ function ManageWorkouts() {
 
         await workoutAgentRef.current.loadTotalWorkoutCount();
       } catch (error) {
-        console.error("Error loading workout history:", error);
+        logger.error("Error loading workout history:", error);
       }
     };
 
@@ -228,7 +229,7 @@ function ManageWorkouts() {
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
     } catch (error) {
-      console.error("Error deleting workout:", error);
+      logger.error("Error deleting workout:", error);
       error("Failed to delete workout");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);

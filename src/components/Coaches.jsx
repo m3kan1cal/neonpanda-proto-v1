@@ -16,6 +16,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { InlineEditField } from "./shared/InlineEditField";
 import AppFooter from "./shared/AppFooter";
+import { logger } from "../utils/logger";
 import {
   NeonBorder,
   NewBadge,
@@ -313,7 +314,7 @@ function Coaches() {
       // Return the session ID that's currently building (if any) for tracking
       return buildingSession?.sessionId || null;
     } catch (error) {
-      console.error("Error loading in-progress sessions:", error);
+      logger.error("Error loading in-progress sessions:", error);
       setInProgressSessions([]);
     } finally {
       setSessionsLoading(false);
@@ -352,7 +353,7 @@ function Coaches() {
       setShowDeleteModal(false);
       setSessionToDelete(null);
     } catch (error) {
-      console.error("Error deleting session:", error);
+      logger.error("Error deleting session:", error);
       // Could show toast notification here
       setShowDeleteModal(false);
       setSessionToDelete(null);
@@ -391,7 +392,7 @@ function Coaches() {
       );
       toast.success("Coach build started successfully");
     } catch (error) {
-      console.error("Error retrying coach config build:", error);
+      logger.error("Error retrying coach config build:", error);
       // Clear the agent error state to prevent it from showing on the page
       agentRef.current?._updateState({ error: null });
       // Show toast instead
@@ -430,7 +431,7 @@ function Coaches() {
           }
         },
         onError: (error) => {
-          console.error("CoachAgent error:", error);
+          logger.error("CoachAgent error:", error);
           // Could show toast notification here
         },
       });
@@ -528,7 +529,7 @@ function Coaches() {
       setShowDeleteCoachModal(false);
       setCoachToDelete(null);
     } catch (error) {
-      console.error("Error deleting coach:", error);
+      logger.error("Error deleting coach:", error);
       toast.error("Failed to delete coach");
     } finally {
       setIsDeletingCoach(false);

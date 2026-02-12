@@ -18,6 +18,7 @@ import {
   buttonPatterns,
   tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
+import { logger } from "../../utils/logger";
 import {
   TrashIcon,
   ShareIconTiny,
@@ -167,7 +168,7 @@ function ManageSharedPrograms() {
       // Backend returns { sharedPrograms: [...] }
       setSharedPrograms(response.sharedPrograms || []);
     } catch (err) {
-      console.error("Failed to load shared programs:", err);
+      logger.error("Failed to load shared programs:", err);
       setError(err.message || "Failed to load shared programs");
       toast.error("Failed to load shared programs");
     } finally {
@@ -203,7 +204,7 @@ function ManageSharedPrograms() {
       // Refresh the list
       await loadSharedPrograms();
     } catch (err) {
-      console.error("Failed to unshare program:", err);
+      logger.error("Failed to unshare program:", err);
       toast.error(err.message || "Failed to unshare program");
     } finally {
       setIsDeleting(false);

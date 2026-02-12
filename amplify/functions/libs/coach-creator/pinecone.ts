@@ -9,6 +9,7 @@ import { storePineconeContext, deletePineconeContext } from "../api-helpers";
 import { storeWithAutoCompression } from "../pinecone-compression";
 import { filterNullish } from "../object-utils";
 import { CoachCreatorSession, CoachConfig } from "./types";
+import { logger } from "../logger";
 
 /**
  * Store coach creator session summary in Pinecone for future analysis
@@ -100,7 +101,7 @@ export const storeCoachCreatorSummaryInPinecone = async (
       "coach creator summary",
     );
 
-    console.info("✅ Successfully stored coach creator summary in Pinecone:", {
+    logger.info("✅ Successfully stored coach creator summary in Pinecone:", {
       coachId: coachConfig.coach_id,
       summary_id,
       pineconeId: summary_id, // summary_id is used as the Pinecone record ID
@@ -112,14 +113,14 @@ export const storeCoachCreatorSummaryInPinecone = async (
 
     return result;
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Failed to store coach creator summary in Pinecone:",
       error,
     );
 
     // Don't throw error to avoid breaking the coach creator process
     // Pinecone storage is for analytics/future retrieval, not critical for immediate functionality
-    console.warn(
+    logger.warn(
       "Coach creator will continue despite Pinecone storage failure",
     );
     return {
@@ -139,7 +140,7 @@ export async function deleteCoachCreatorSummaryFromPinecone(
   sessionId: string,
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   try {
-    console.info("🗑️ Deleting coach creator session summary from Pinecone:", {
+    logger.info("🗑️ Deleting coach creator session summary from Pinecone:", {
       userId,
       sessionId,
     });
@@ -150,13 +151,13 @@ export async function deleteCoachCreatorSummaryFromPinecone(
     });
 
     if (result.success) {
-      console.info("✅ Coach creator session summary deleted from Pinecone:", {
+      logger.info("✅ Coach creator session summary deleted from Pinecone:", {
         userId,
         sessionId,
         deletedCount: result.deletedCount,
       });
     } else {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to delete coach creator session summary from Pinecone:",
         {
           userId,
@@ -168,7 +169,7 @@ export async function deleteCoachCreatorSummaryFromPinecone(
 
     return result;
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Error deleting coach creator session summary from Pinecone:",
       error,
     );

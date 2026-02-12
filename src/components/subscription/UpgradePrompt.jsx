@@ -7,6 +7,7 @@ import {
   SUBSCRIPTION_TIERS,
 } from "../../utils/apis/subscriptionApi";
 import { CloseIcon } from "../themes/SynthwaveComponents";
+import { logger } from "../../utils/logger";
 import {
   STORAGE_KEYS,
   wasOnboardingShownRecently,
@@ -74,7 +75,7 @@ function UpgradePrompt({
         window.location.href = paymentLink;
       }, 1000);
     } else {
-      console.error("Payment link not configured");
+      logger.error("Payment link not configured");
       setIsLoading(false);
     }
   };

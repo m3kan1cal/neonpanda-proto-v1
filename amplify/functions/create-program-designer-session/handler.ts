@@ -10,6 +10,7 @@ import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { createEmptyProgramTodoList } from "../libs/program-designer/todo-list-utils";
 import type { ProgramDesignerSession } from "../libs/program-designer/types";
 import { REQUIRED_PROGRAM_FIELDS } from "../libs/program-designer/types";
+import { logger } from "../libs/logger";
 
 /**
  * Lambda handler for creating a new program designer session
@@ -47,7 +48,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   // Create session ID following pattern: program_designer_{userId}_{timestamp}
   const sessionId = `program_designer_${userId}_${Date.now()}`;
 
-  console.info("📝 Creating new program designer session", {
+  logger.info("📝 Creating new program designer session", {
     userId,
     coachId,
     sessionId,
@@ -60,7 +61,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Validate coach exists - don't create session if coach is invalid
     if (!coachConfig) {
-      console.warn("❌ Coach configuration not found", { coachId, userId });
+      logger.warn("❌ Coach configuration not found", { coachId, userId });
       return createErrorResponse(
         400,
         `Invalid coachId: ${coachId}. Coach configuration does not exist.`,
@@ -70,12 +71,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     coachName = coachConfig.coach_name;
     if (!coachName) {
-      console.warn("⚠️ Coach config found but no coach_name present", {
+      logger.warn("⚠️ Coach config found but no coach_name present", {
         coachId,
       });
     }
   } catch (error) {
-    console.error("❌ Failed to fetch coach config", {
+    logger.error("❌ Failed to fetch coach config", {
       coachId,
       error,
     });
@@ -113,7 +114,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   // Save session to DynamoDB
   await saveProgramDesignerSession(session);
 
-  console.info("✅ Program designer session created successfully", {
+  logger.info("✅ Program designer session created successfully", {
     sessionId,
     userId,
     totalItems,

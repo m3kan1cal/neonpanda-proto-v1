@@ -1,4 +1,5 @@
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { logger } from "./logger";
 
 // Initialize SNS client
 const snsClient = new SNSClient({
@@ -28,7 +29,7 @@ export async function publishContactFormNotification(
   const topicArn = process.env.CONTACT_FORM_TOPIC_ARN;
 
   if (!topicArn) {
-    console.warn(
+    logger.warn(
       "CONTACT_FORM_TOPIC_ARN environment variable not set, skipping SNS notification",
     );
     return;
@@ -82,11 +83,11 @@ This notification was sent automatically from the NeonPanda contact form system.
     });
 
     await snsClient.send(publishCommand);
-    console.info(
+    logger.info(
       "SNS notification sent successfully for contact form submission",
     );
   } catch (error) {
-    console.error("Failed to send SNS notification:", error);
+    logger.error("Failed to send SNS notification:", error);
     // Don't throw - we don't want SNS failures to break the contact form submission
   }
 }
@@ -100,7 +101,7 @@ export async function publishUserRegistrationNotification(
   const topicArn = process.env.USER_REGISTRATION_TOPIC_ARN;
 
   if (!topicArn) {
-    console.warn(
+    logger.warn(
       "USER_REGISTRATION_TOPIC_ARN environment variable not set, skipping SNS notification",
     );
     return;
@@ -153,9 +154,9 @@ This notification was sent automatically from the NeonPanda user registration sy
     });
 
     await snsClient.send(publishCommand);
-    console.info("SNS notification sent successfully for user registration");
+    logger.info("SNS notification sent successfully for user registration");
   } catch (error) {
-    console.error("Failed to send user registration SNS notification:", error);
+    logger.error("Failed to send user registration SNS notification:", error);
     // Don't throw - we don't want SNS failures to break user registration
   }
 }
@@ -236,7 +237,7 @@ export async function publishStripeAlertNotification(
   const topicArn = process.env.STRIPE_ALERTS_TOPIC_ARN;
 
   if (!topicArn) {
-    console.warn(
+    logger.warn(
       "STRIPE_ALERTS_TOPIC_ARN environment variable not set, skipping SNS notification",
     );
     return;
@@ -273,12 +274,12 @@ export async function publishStripeAlertNotification(
     });
 
     await snsClient.send(publishCommand);
-    console.info(
+    logger.info(
       "SNS notification sent successfully for Stripe event:",
       eventData.eventType,
     );
   } catch (error) {
-    console.error("Failed to send Stripe alert SNS notification:", error);
+    logger.error("Failed to send Stripe alert SNS notification:", error);
     // Don't throw - we don't want SNS failures to break webhook processing
   }
 }

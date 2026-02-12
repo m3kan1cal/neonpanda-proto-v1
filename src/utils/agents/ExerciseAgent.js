@@ -1,4 +1,5 @@
 import { getExerciseNames, getExercises } from "../apis/exerciseApi.js";
+import { logger } from "../logger";
 
 /**
  * ExerciseAgent - Handles the business logic for exercise history management
@@ -15,7 +16,7 @@ export class ExerciseAgent {
 
     // Validate callback
     if (this.onStateChange && typeof this.onStateChange !== "function") {
-      console.error(
+      logger.error(
         "ExerciseAgent: onStateChange must be a function, got:",
         typeof this.onStateChange,
       );
@@ -36,13 +37,13 @@ export class ExerciseAgent {
       try {
         this.onStateChange(newStateData);
       } catch (error) {
-        console.error(
+        logger.error(
           "ExerciseAgent._updateState: Error in state change callback:",
           error,
         );
       }
     } else if (this.onStateChange !== null) {
-      console.warn(
+      logger.warn(
         "ExerciseAgent._updateState: Invalid callback type:",
         typeof this.onStateChange,
       );
@@ -55,7 +56,7 @@ export class ExerciseAgent {
    */
   setUserId(userId) {
     if (!userId) {
-      console.error("ExerciseAgent.setUserId: userId is required");
+      logger.error("ExerciseAgent.setUserId: userId is required");
       return;
     }
 
@@ -71,7 +72,7 @@ export class ExerciseAgent {
    */
   async loadExerciseNames(options = {}) {
     if (!this.userId) {
-      console.error("ExerciseAgent.loadExerciseNames: No userId set");
+      logger.error("ExerciseAgent.loadExerciseNames: No userId set");
       return;
     }
 
@@ -88,7 +89,7 @@ export class ExerciseAgent {
 
       return result;
     } catch (error) {
-      console.error("ExerciseAgent.loadExerciseNames: Error:", error);
+      logger.error("ExerciseAgent.loadExerciseNames: Error:", error);
       this._updateState({
         isLoadingNames: false,
         error: error.message || "Failed to load exercise names",
@@ -112,12 +113,12 @@ export class ExerciseAgent {
    */
   async loadExercises(exerciseName, options = {}) {
     if (!this.userId) {
-      console.error("ExerciseAgent.loadExercises: No userId set");
+      logger.error("ExerciseAgent.loadExercises: No userId set");
       return;
     }
 
     if (!exerciseName) {
-      console.error("ExerciseAgent.loadExercises: exerciseName is required");
+      logger.error("ExerciseAgent.loadExercises: exerciseName is required");
       return;
     }
 
@@ -145,7 +146,7 @@ export class ExerciseAgent {
 
       return result;
     } catch (error) {
-      console.error("ExerciseAgent.loadExercises: Error:", error);
+      logger.error("ExerciseAgent.loadExercises: Error:", error);
       this._updateState({ isLoadingExercises: false });
       if (this.onError) {
         this.onError(error);

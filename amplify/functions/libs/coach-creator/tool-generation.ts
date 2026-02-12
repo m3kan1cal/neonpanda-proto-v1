@@ -32,6 +32,7 @@ import type {
   CoachPromptsResult,
 } from "../agents/coach-creator/types";
 import { fixDoubleEncodedProperties } from "../response-utils";
+import { logger } from "../logger";
 
 /**
  * Context for personality selection
@@ -89,7 +90,7 @@ export async function generatePersonalitySelection(
   context: PersonalitySelectionContext,
 ): Promise<Omit<PersonalitySelectionResult, "templateData">> {
   const startTime = Date.now();
-  console.info("🎯 Generating personality selection via AI:", {
+  logger.info("🎯 Generating personality selection via AI:", {
     genderPreference: context.genderPreference,
     methodologyFocus: context.methodologyPreferences.focus,
   });
@@ -168,7 +169,7 @@ Select the optimal personality template and provide reasoning using the tool.`;
     ? toolInput.primaryTemplate
     : "emma"; // Default to encouraging
 
-  console.info("✅ Personality selection completed:", {
+  logger.info("✅ Personality selection completed:", {
     primary: primaryTemplate,
     secondary: toolInput.secondaryInfluences,
     durationMs: duration,
@@ -195,7 +196,7 @@ export async function generateMethodologySelection(
   context: MethodologySelectionContext,
 ): Promise<Omit<MethodologySelectionResult, "templateData">> {
   const startTime = Date.now();
-  console.info("🎯 Generating methodology selection via AI:", {
+  logger.info("🎯 Generating methodology selection via AI:", {
     personalityTemplate:
       context.personalitySelection?.primaryTemplate || "not yet selected",
     methodologyFocus: context.methodologyPreferences.focus,
@@ -291,7 +292,7 @@ Select the optimal methodology and configuration using the tool.`;
     ? toolInput.primaryMethodology
     : "prvn_fitness"; // Default to balanced
 
-  console.info("✅ Methodology selection completed:", {
+  logger.info("✅ Methodology selection completed:", {
     methodology: primaryMethodology,
     emphasis: toolInput.programmingEmphasis,
     periodization: toolInput.periodizationApproach,
@@ -318,7 +319,7 @@ export async function generateCoachPrompts(
   context: PromptGenerationContext,
 ): Promise<CoachPromptsResult> {
   const startTime = Date.now();
-  console.info("🎯 Generating coach prompts via AI:", {
+  logger.info("🎯 Generating coach prompts via AI:", {
     personalityTemplate: context.personalitySelection.primaryTemplate,
     methodology: context.methodologySelection.primaryMethodology,
     genderPreference: context.genderPreference,
@@ -427,7 +428,7 @@ Generate all 7 prompts using the tool:
     }
   }
 
-  console.info("✅ Coach prompts generated:", {
+  logger.info("✅ Coach prompts generated:", {
     promptCount: 7,
     personalityLength: toolInput.personality_prompt.length,
     durationMs: duration,
@@ -455,7 +456,7 @@ export async function runConfigValidation(
   safetyProfile: SafetyProfile,
 ): Promise<AiValidationResult> {
   const startTime = Date.now();
-  console.info("🎯 Running AI validation on coach config:", {
+  logger.info("🎯 Running AI validation on coach config:", {
     coachId: config.coach_id,
     personality: config.selected_personality?.primary_template,
     methodology: config.selected_methodology?.primary_methodology,
@@ -510,7 +511,7 @@ Provide validation scores and any issues found using the tool.`;
     issues: string[];
   };
 
-  console.info("✅ AI validation completed:", {
+  logger.info("✅ AI validation completed:", {
     genderConsistency: toolInput.gender_consistency,
     safetyScore: toolInput.safety_language_quality,
     brandScore: toolInput.brand_voice_score,
@@ -565,7 +566,7 @@ export async function generateCoachName(
   context: CoachNameContext,
 ): Promise<CoachNameResult> {
   const startTime = Date.now();
-  console.info("🎨 Generating creative coach name via AI:", {
+  logger.info("🎨 Generating creative coach name via AI:", {
     personality: context.personalityTemplate,
     methodology: context.methodologyTemplate,
     gender: context.genderPreference,
@@ -658,7 +659,7 @@ Also provide a 3-5 word coach description of their specialty (e.g., "Technical E
 
   const duration = Date.now() - startTime;
 
-  console.info("✅ Coach name generated:", {
+  logger.info("✅ Coach name generated:", {
     coachName: toolInput.coach_name,
     description: toolInput.coach_description,
     durationMs: duration,

@@ -19,6 +19,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
+import { logger } from "../utils/logger";
 import {
   StackIcon,
   CalendarMonthIcon,
@@ -158,7 +159,7 @@ function ManageExercises() {
       });
 
       exerciseAgentRef.current.onError = (err) => {
-        console.error("Exercise agent error:", err);
+        logger.error("Exercise agent error:", err);
         setExerciseAgentState((prevState) => ({
           ...prevState,
           error: err.message || "Failed to load exercises",
@@ -189,7 +190,7 @@ function ManageExercises() {
         );
         setCoachData(data);
       } catch (err) {
-        console.error("Failed to load coach data:", err);
+        logger.error("Failed to load coach data:", err);
       }
     };
 
@@ -230,7 +231,7 @@ function ManageExercises() {
           limit: 5,
         });
       } catch (err) {
-        console.error("Failed to load exercises:", err);
+        logger.error("Failed to load exercises:", err);
       }
     }
   };

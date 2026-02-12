@@ -28,6 +28,7 @@ import { CenteredErrorState } from "../shared/ErrorStates";
 import { explainTerm } from "../../utils/apis/explainApi";
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import AppFooter from "../shared/AppFooter";
+import { logger } from "../../utils/logger";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -184,7 +185,7 @@ function ViewWorkouts() {
         }
       }
     } catch (err) {
-      console.error("Error loading data:", err);
+      logger.error("Error loading data:", err);
       setError(err.message || "Failed to load workout data");
     } finally {
       setIsLoading(false);
@@ -269,7 +270,7 @@ General thoughts: `;
 
     setProcessingWorkoutId(template.templateId);
     try {
-      console.info("📝 Submitting workout:", {
+      logger.info("📝 Submitting workout:", {
         templateId: template.templateId,
         originalLength: template.description?.length,
         editedLength: editedPerformance?.length,
@@ -350,7 +351,7 @@ General thoughts: `;
         };
       });
     } catch (err) {
-      console.error("Error logging workout:", err);
+      logger.error("Error logging workout:", err);
 
       // If error is due to "No templates found", it might be a rest day
       // Reload all data to properly handle rest day state
@@ -359,7 +360,7 @@ General thoughts: `;
         err.message.includes("No templates found") &&
         isViewingToday
       ) {
-        console.info(
+        logger.info(
           "Detected rest day after workout logging - reloading all data",
         );
         await loadData();
@@ -436,7 +437,7 @@ General thoughts: `;
         };
       });
     } catch (err) {
-      console.error("Error skipping workout:", err);
+      logger.error("Error skipping workout:", err);
 
       // If error is due to "No templates found", it might be a rest day
       // Reload all data to properly handle rest day state
@@ -445,7 +446,7 @@ General thoughts: `;
         err.message.includes("No templates found") &&
         isViewingToday
       ) {
-        console.info(
+        logger.info(
           "Detected rest day after workout skip - reloading all data",
         );
         await loadData();
@@ -496,7 +497,7 @@ General thoughts: `;
         };
       });
     } catch (err) {
-      console.error("Error unskipping workout:", err);
+      logger.error("Error unskipping workout:", err);
       showError(err.message || "Failed to unskip workout");
     } finally {
       setProcessingWorkoutId(null);
@@ -527,7 +528,7 @@ General thoughts: `;
         `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
       );
     } catch (err) {
-      console.error("Error completing rest day:", err);
+      logger.error("Error completing rest day:", err);
       showError(err.message || "Failed to complete rest day");
     } finally {
       setProcessingWorkoutId(null);
@@ -591,7 +592,7 @@ General thoughts: `;
         return;
       }
 
-      console.error("Error getting explanation:", error);
+      logger.error("Error getting explanation:", error);
 
       // Only show error if this request wasn't aborted
       if (!abortController.signal.aborted) {

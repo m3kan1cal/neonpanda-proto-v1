@@ -14,6 +14,7 @@ import {
   typographyPatterns,
 } from "../../utils/ui/uiPatterns.js";
 import { CloseIcon } from "../themes/SynthwaveComponents";
+import { logger } from "../../utils/logger";
 
 function ShareProgramModal({ program, userId, onClose, onSuccess }) {
   const [shareUrl, setShareUrl] = useState(null);
@@ -60,7 +61,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
           return;
         }
 
-        console.error("Failed to create share link:", err);
+        logger.error("Failed to create share link:", err);
         setError(
           err.message || "Failed to create share link. Please try again.",
         );
@@ -117,7 +118,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
         onSuccess(result);
       }
     } catch (err) {
-      console.error("Failed to create share link:", err);
+      logger.error("Failed to create share link:", err);
       setError(err.message || "Failed to create share link. Please try again.");
     } finally {
       setLoading(false);

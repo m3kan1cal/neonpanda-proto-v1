@@ -21,6 +21,7 @@ import { useToast } from "../contexts/ToastContext";
 import { MemoryAgent } from "../utils/agents/MemoryAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
+import { logger } from "../utils/logger";
 import {
   LightningIcon,
   ReportIcon,
@@ -108,7 +109,7 @@ function ManageMemories() {
         );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
       }
     };
 
@@ -289,7 +290,7 @@ function ManageMemories() {
         addToast("Failed to delete memory", "error");
       }
     } catch (error) {
-      console.error("Error deleting memory:", error);
+      logger.error("Error deleting memory:", error);
       addToast("Failed to delete memory", "error");
     } finally {
       setIsDeleting(false);

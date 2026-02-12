@@ -7,6 +7,7 @@ import {
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { deleteProgramSummaryFromPinecone } from "../libs/program/pinecone";
 import { deleteObject } from "../libs/s3-utils";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -27,7 +28,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   try {
     if (hardDelete) {
-      console.info("Hard deleting program (complete removal):", {
+      logger.info("Hard deleting program (complete removal):", {
         userId,
         coachId,
         programId,
@@ -41,7 +42,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
       // Delete from DynamoDB
       await deleteProgram(userId, coachId, programId);
-      console.info("✅ Program deleted from DynamoDB");
+      logger.info("✅ Program deleted from DynamoDB");
 
       // Delete from Pinecone
       const pineconeResult = await deleteProgramSummaryFromPinecone(
@@ -49,9 +50,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         programId,
       );
       if (pineconeResult.success) {
-        console.info("✅ Program summary deleted from Pinecone");
+        logger.info("✅ Program summary deleted from Pinecone");
       } else {
-        console.warn(
+        logger.warn(
           "⚠️ Failed to delete program summary from Pinecone:",
           pineconeResult.error,
         );
@@ -61,13 +62,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       if (program.s3DetailKey) {
         try {
           await deleteObject(program.s3DetailKey);
-          console.info("✅ Program details deleted from S3");
+          logger.info("✅ Program details deleted from S3");
         } catch (s3Error) {
-          console.warn("⚠️ Failed to delete program details from S3:", s3Error);
+          logger.warn("⚠️ Failed to delete program details from S3:", s3Error);
         }
       }
 
-      console.info("Training program hard deleted successfully:", {
+      logger.info("Training program hard deleted successfully:", {
         programId,
         coachId,
         userId,
@@ -82,7 +83,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         "Training program permanently deleted",
       );
     } else {
-      console.info("Archiving program (soft delete):", {
+      logger.info("Archiving program (soft delete):", {
         userId,
         coachId,
         programId,
@@ -94,7 +95,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         status: "archived",
       });
 
-      console.info("Training program archived successfully:", {
+      logger.info("Training program archived successfully:", {
         programId,
         coachId,
         userId,
@@ -109,7 +110,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       );
     }
   } catch (error) {
-    console.error("Error deleting training program:", error);
+    logger.error("Error deleting training program:", error);
     return createErrorResponse(
       500,
       hardDelete

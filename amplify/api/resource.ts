@@ -4,6 +4,7 @@ import * as apigatewayv2_integrations from "aws-cdk-lib/aws-apigatewayv2-integra
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
 import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import { logger } from "../functions/libs/logger";
 import {
   createBranchAwareResourceName,
   getBranchInfo,
@@ -107,7 +108,7 @@ export function createCoreApi(
     useCustomDomain = true;
   }
 
-  console.info(`🌐 API Configuration:`, {
+  logger.info(`🌐 API Configuration:`, {
     isSandbox: branchInfo.isSandbox,
     branchName: branchInfo.branchName,
     apiName,
@@ -131,7 +132,7 @@ export function createCoreApi(
       certificateArn,
     );
 
-    console.info(`📄 SSL Certificate imported for custom domain`);
+    logger.info(`📄 SSL Certificate imported for custom domain`);
   }
 
   // Create HTTP API Gateway v2
@@ -1195,9 +1196,9 @@ export function createCoreApi(
       stage: httpApi.defaultStage,
     });
 
-    console.info(`✅ Custom domain created: ${domainName}`);
+    logger.info(`✅ Custom domain created: ${domainName}`);
   } else {
-    console.info(
+    logger.info(
       `ℹ️  Using default Amplify endpoint (no custom domain for sandbox)`,
     );
   }

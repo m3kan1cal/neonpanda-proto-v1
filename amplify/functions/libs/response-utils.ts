@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 /**
  * Response Processing Utilities
  *
@@ -50,7 +51,7 @@ export const cleanResponse = (response: string): string => {
 
   // Log if we detected and cleaned markdown (for monitoring)
   if (cleaned !== response.trim()) {
-    console.info("✅ Stripped markdown code fences from AI response", {
+    logger.info("✅ Stripped markdown code fences from AI response", {
       originalLength: response.length,
       cleanedLength: cleaned.length,
       hadMarkdown: true,
@@ -75,7 +76,7 @@ export const cleanResponse = (response: string): string => {
       const extracted = cleaned.substring(firstBracket, lastBracket + 1);
 
       if (extracted !== cleaned) {
-        console.info("✅ Extracted JSON array, removed surrounding text", {
+        logger.info("✅ Extracted JSON array, removed surrounding text", {
           originalLength: cleaned.length,
           extractedLength: extracted.length,
           removedPrefix: firstBracket > 0,
@@ -94,7 +95,7 @@ export const cleanResponse = (response: string): string => {
       const extracted = cleaned.substring(firstBrace, lastBrace + 1);
 
       if (extracted !== cleaned) {
-        console.info("✅ Extracted JSON object, removed surrounding text", {
+        logger.info("✅ Extracted JSON object, removed surrounding text", {
           originalLength: cleaned.length,
           extractedLength: extracted.length,
           removedPrefix: firstBrace > 0,
@@ -149,7 +150,7 @@ export const stripNonJson = (response: string): string => {
   const extracted = cleaned.substring(startIndex, endIndex + 1);
 
   if (extracted !== cleaned) {
-    console.info("✅ Stripped non-JSON text from response", {
+    logger.info("✅ Stripped non-JSON text from response", {
       originalLength: cleaned.length,
       extractedLength: extracted.length,
       removedPrefix: startIndex > 0,
@@ -171,7 +172,7 @@ export function fixMalformedJson(jsonString: string): string {
     JSON.parse(jsonString);
     return jsonString;
   } catch (error) {
-    console.warn("JSON parsing failed, attempting to fix common issues..");
+    logger.warn("JSON parsing failed, attempting to fix common issues..");
 
     let fixed = jsonString.trim();
 
@@ -181,7 +182,7 @@ export function fixMalformedJson(jsonString: string): string {
       const positionMatch = error.message.match(/position (\d+)/);
       if (positionMatch) {
         errorPosition = parseInt(positionMatch[1]);
-        console.info("JSON error at position:", errorPosition);
+        logger.info("JSON error at position:", errorPosition);
       }
     }
 
@@ -197,7 +198,7 @@ export function fixMalformedJson(jsonString: string): string {
     const openBrackets = (fixed.match(/\[/g) || []).length;
     const closeBrackets = (fixed.match(/\]/g) || []).length;
 
-    console.info("Brace/Bracket count analysis:", {
+    logger.info("Brace/Bracket count analysis:", {
       openBraces,
       closeBraces,
       braceDifference: closeBraces - openBraces,
@@ -209,7 +210,7 @@ export function fixMalformedJson(jsonString: string): string {
     // Fix bracket imbalance (for arrays)
     if (openBrackets > closeBrackets) {
       fixed += "]".repeat(openBrackets - closeBrackets);
-      console.info(
+      logger.info(
         `Added ${openBrackets - closeBrackets} missing closing brackets`,
       );
     }
@@ -218,10 +219,10 @@ export function fixMalformedJson(jsonString: string): string {
     if (openBraces > closeBraces) {
       // Add missing closing braces
       fixed += "}".repeat(openBraces - closeBraces);
-      console.info(`Added ${openBraces - closeBraces} missing closing braces`);
+      logger.info(`Added ${openBraces - closeBraces} missing closing braces`);
     } else if (closeBraces > openBraces) {
       const extraBraces = closeBraces - openBraces;
-      console.info(`Need to remove ${extraBraces} extra closing braces`);
+      logger.info(`Need to remove ${extraBraces} extra closing braces`);
 
       // If we have an error position, try to remove braces near that position first
       if (errorPosition > 0 && errorPosition < fixed.length) {
@@ -230,7 +231,7 @@ export function fixMalformedJson(jsonString: string): string {
         const contextEnd = Math.min(fixed.length, errorPosition + 100);
         const context = fixed.substring(contextStart, contextEnd);
 
-        console.info("Context around error:", {
+        logger.info("Context around error:", {
           position: errorPosition,
           contextBefore: fixed.substring(contextStart, errorPosition),
           contextAfter: fixed.substring(errorPosition, contextEnd),
@@ -239,13 +240,13 @@ export function fixMalformedJson(jsonString: string): string {
         // Look for patterns like }}} or }}}} that indicate multiple extra braces
         const multipleCloseBraces = fixed.match(/}{2,}/g);
         if (multipleCloseBraces) {
-          console.info(
+          logger.info(
             "Found multiple consecutive closing braces:",
             multipleCloseBraces,
           );
           // Replace multiple consecutive closing braces with single ones
           fixed = fixed.replace(/}{2,}/g, "}");
-          console.info("Replaced multiple consecutive closing braces");
+          logger.info("Replaced multiple consecutive closing braces");
         }
       }
 
@@ -264,24 +265,24 @@ export function fixMalformedJson(jsonString: string): string {
               fixed.substring(lastBraceIndex + 1);
           }
         }
-        console.info(
+        logger.info(
           `Removed ${remainingExtra} remaining extra closing braces from end`,
         );
       } else if (remainingExtra < 0) {
         // We need to add missing closing braces after cleaning up extras
         const missingBraces = Math.abs(remainingExtra);
         fixed += "}".repeat(missingBraces);
-        console.info(`Added ${missingBraces} missing closing braces to end`);
+        logger.info(`Added ${missingBraces} missing closing braces to end`);
       }
     }
 
     // Try parsing the fixed version
     try {
       JSON.parse(fixed);
-      console.info("Successfully fixed malformed JSON");
+      logger.info("Successfully fixed malformed JSON");
       return fixed;
     } catch (fixError) {
-      console.error(
+      logger.error(
         "Could not fix malformed JSON after all attempts:",
         fixError,
       );
@@ -359,13 +360,13 @@ export function removeTriggerFromStream(
       // Hold this partial in the buffer for the next chunk
       newBuffer = partial;
       cleanedContent = cleanedContent.slice(0, -partial.length);
-      console.info(`🔄 Buffering partial trigger: "${partial}"`);
+      logger.info(`🔄 Buffering partial trigger: "${partial}"`);
       break;
     }
   }
 
   if (wasTriggerRemoved) {
-    console.info("✂️ Removed tool invocation trigger from streaming chunk");
+    logger.info("✂️ Removed tool invocation trigger from streaming chunk");
   }
 
   return {
@@ -394,7 +395,7 @@ function fixDoubleEncodedJson(jsonString: string): string {
         typeof parsed === "string" &&
         (parsed.startsWith("{") || parsed.startsWith("["))
       ) {
-        console.warn(
+        logger.warn(
           "⚠️ Fixed double-encoded JSON - AI returned JSON wrapped in quotes",
         );
         return parsed; // Return the inner JSON string
@@ -424,7 +425,7 @@ export function fixDoubleEncodedProperties(
 
   // Debug: Log entry for root call only
   if (path === "root") {
-    console.info("🔍 fixDoubleEncodedProperties ENTRY:", {
+    logger.info("🔍 fixDoubleEncodedProperties ENTRY:", {
       dataType: typeof data,
       isArray: Array.isArray(data),
       topLevelKeys:
@@ -440,7 +441,7 @@ export function fixDoubleEncodedProperties(
     try {
       const parsed = JSON.parse(data);
       problematicKeys.push(path);
-      console.warn(`🔧 ACTUAL FIX: String→Object conversion at "${path}"`, {
+      logger.warn(`🔧 ACTUAL FIX: String→Object conversion at "${path}"`, {
         path,
         stringLength: data.length,
         stringPreview: data.substring(0, 150),
@@ -484,14 +485,14 @@ export function fixDoubleEncodedProperties(
 
     if (path === "root") {
       if (problematicKeys.length > 0) {
-        console.warn("⚠️ Fixed double-encoded properties in object", {
+        logger.warn("⚠️ Fixed double-encoded properties in object", {
           affectedKeys: actuallyFixedKeys,
           fullPaths: problematicKeys,
           objectKeys: Object.keys(data),
           totalFixesApplied: problematicKeys.length,
         });
       } else {
-        console.info("✅ fixDoubleEncodedProperties: No fixes needed", {
+        logger.info("✅ fixDoubleEncodedProperties: No fixes needed", {
           objectKeys: Object.keys(data),
           note: "All properties were already proper types",
         });
@@ -544,7 +545,7 @@ export const parseJsonWithFallbacks = (
 
   // If we had double-encoding and context was provided, log the context
   if (result !== parsed && context) {
-    console.warn("🔍 DOUBLE-ENCODING DEBUG:", {
+    logger.warn("🔍 DOUBLE-ENCODING DEBUG:", {
       model: context.model || "unknown",
       tool: context.tool || "unknown",
       purpose: context.purpose || "JSON parsing",

@@ -19,6 +19,7 @@ import { formatChunkEvent, formatCompleteEvent } from "../streaming";
 import type { BusinessLogicParams, ConversationData } from "../streaming";
 import { getTodoProgress, hasSubstantialProgress } from "./todo-list-utils";
 import type { WorkoutCreatorSession } from "./types";
+import { logger } from "../logger";
 
 /** Patterns that indicate a closing/goodbye message */
 export const GOODBYE_PATTERNS =
@@ -61,13 +62,13 @@ export async function* handleGoodbyeAutoComplete(
   const hasEnoughData = hasSubstantialProgress(fullWorkoutSession.todoList);
 
   if (!hasEnoughData) {
-    console.info(
+    logger.info(
       `📋 Goodbye detected but insufficient progress (${goodbyeProgress.requiredPercentage}%) - letting conversation handler process normally`,
     );
     return { handled: false };
   }
 
-  console.info(
+  logger.info(
     `📋 Goodbye detected with substantial progress (${goodbyeProgress.requiredPercentage}%) - auto-completing workout session`,
   );
 
@@ -103,11 +104,11 @@ export async function* handleGoodbyeAutoComplete(
         },
         "goodbye auto-complete workout creation",
       );
-      console.info(
+      logger.info(
         "✅ Triggered async workout creation (goodbye auto-complete)",
       );
     } catch (error) {
-      console.error("❌ Failed to trigger workout creation on goodbye:", error);
+      logger.error("❌ Failed to trigger workout creation on goodbye:", error);
     }
   }
 
@@ -168,6 +169,6 @@ export async function* handleGoodbyeAutoComplete(
     },
   });
 
-  console.info("✅ Workout auto-completed on goodbye");
+  logger.info("✅ Workout auto-completed on goodbye");
   return { handled: true };
 }

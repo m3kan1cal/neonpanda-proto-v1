@@ -8,6 +8,7 @@ import {
   buttonPatterns,
   inlineEditPatterns,
 } from "../utils/ui/uiPatterns";
+import { logger } from "../utils/logger";
 import {
   NeonBorder,
   WorkoutIcon,
@@ -3568,7 +3569,7 @@ function Theme() {
                             <InlineEditField
                               value="Small Text Example"
                               onSave={async (newValue) => {
-                                console.info("Saved:", newValue);
+                                logger.info("Saved:", newValue);
                                 return true;
                               }}
                               placeholder="Enter small text..."
@@ -3597,7 +3598,7 @@ function Theme() {
                             <InlineEditField
                               value="Medium Text Example"
                               onSave={async (newValue) => {
-                                console.info("Saved:", newValue);
+                                logger.info("Saved:", newValue);
                                 return true;
                               }}
                               placeholder="Enter medium text..."
@@ -3627,7 +3628,7 @@ function Theme() {
                             <InlineEditField
                               value="Large Text Example"
                               onSave={async (newValue) => {
-                                console.info("Saved:", newValue);
+                                logger.info("Saved:", newValue);
                                 return true;
                               }}
                               placeholder="Enter large text..."

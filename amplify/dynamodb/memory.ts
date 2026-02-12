@@ -10,6 +10,7 @@ import {
   UpdateCommand,
 } from "./core";
 import { UserMemory } from "../functions/libs/memory/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // MEMORY OPERATIONS
@@ -36,7 +37,7 @@ export async function saveMemory(memory: UserMemory): Promise<void> {
   );
 
   await saveToDynamoDB(item);
-  console.info("Memory saved successfully:", {
+  logger.info("Memory saved successfully:", {
     memoryId: memory.memoryId,
     userId: memory.userId,
     coachId: memory.coachId,
@@ -133,7 +134,7 @@ export async function queryMemories(
     filteredItems = filteredItems.slice(0, options.limit);
   }
 
-  console.info("Memories queried successfully:", {
+  logger.info("Memories queried successfully:", {
     userId,
     coachId: coachId || "all",
     totalFound: filteredItems.length,
@@ -215,7 +216,7 @@ export async function updateMemory(
   // Load memory for tag updates (only if context provided)
   if (!usageContext) {
     // No tag updates needed - we're done
-    console.info("Memory usage count updated:", {
+    logger.info("Memory usage count updated:", {
       memoryId,
       userId,
       newUsageCount,
@@ -230,7 +231,7 @@ export async function updateMemory(
   );
 
   if (!memory) {
-    console.warn(`Memory ${memoryId} not found for user ${userId}`);
+    logger.warn(`Memory ${memoryId} not found for user ${userId}`);
     return;
   }
 
@@ -293,17 +294,17 @@ export async function updateMemory(
       const { storeMemoryInPinecone } =
         await import("../functions/libs/user/pinecone");
       await storeMemoryInPinecone(memory.attributes);
-      console.info("Memory updated in Pinecone with enhanced tags:", {
+      logger.info("Memory updated in Pinecone with enhanced tags:", {
         memoryId,
         userId,
         tagCount: memory.attributes.metadata.tags.length,
       });
     } catch (error) {
-      console.warn("Failed to update memory in Pinecone:", error);
+      logger.warn("Failed to update memory in Pinecone:", error);
     }
   }
 
-  console.info("Memory usage updated with enhanced tags:", {
+  logger.info("Memory usage updated with enhanced tags:", {
     memoryId,
     userId,
     newUsageCount,
@@ -332,7 +333,7 @@ export async function deleteMemory(
       `userMemory#${memoryId}`,
       "userMemory",
     );
-    console.info("Memory deleted successfully:", {
+    logger.info("Memory deleted successfully:", {
       memoryId,
       userId,
     });

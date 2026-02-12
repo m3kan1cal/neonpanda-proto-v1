@@ -17,6 +17,7 @@ import { getEnhancedMethodologyContext } from "./pinecone-utils";
 import { putObject } from "./s3-utils";
 import { deepSanitizeNullish } from "./object-utils";
 import { parseJsonWithFallbacks } from "./response-utils";
+import { logger } from "./logger";
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
@@ -63,7 +64,7 @@ export const TEMPERATURE_PRESETS = {
  * }
  *
  * // Fallback for unexpected response format
- * console.warn("⚠️ Tool response not in expected format");
+ * logger.warn("⚠️ Tool response not in expected format");
  * return defaultValue;
  * ```
  *
@@ -135,7 +136,7 @@ const PINECONE_API_KEY =
   "pcsk_4tHp6N_MUauyYPRhqQjDZ9qyrWwe4nD7gRXuPz66SnbtkbAUQdUqkCfmcmzbAJfhYKSsyC";
 
 // Debug: Log Pinecone configuration at module load
-console.info("🔧 PINECONE_API_KEY validation:", {
+logger.info("🔧 PINECONE_API_KEY validation:", {
   exists: !!PINECONE_API_KEY,
   length: PINECONE_API_KEY?.length,
   isPlaceholder: PINECONE_API_KEY === "pcsk_replace_me",
@@ -238,7 +239,7 @@ export const invokeLambda = async (
   context?: string,
 ): Promise<any> => {
   try {
-    console.info(
+    logger.info(
       `🚀 Triggering sync Lambda invocation${context ? ` for ${context}` : ""}:`,
       {
         functionName,
@@ -255,7 +256,7 @@ export const invokeLambda = async (
 
     const response = await lambdaClient.send(command);
 
-    console.info(
+    logger.info(
       `✅ Successfully completed sync Lambda${context ? ` for ${context}` : ""}:`,
       {
         functionName,
@@ -274,7 +275,7 @@ export const invokeLambda = async (
 
     return null;
   } catch (error) {
-    console.error(
+    logger.error(
       `❌ Failed to invoke sync Lambda${context ? ` for ${context}` : ""}:`,
       {
         functionName,
@@ -303,7 +304,7 @@ export const invokeAsyncLambda = async (
   context?: string,
 ): Promise<void> => {
   try {
-    console.info(
+    logger.info(
       `🚀 Triggering async Lambda invocation${context ? ` for ${context}` : ""}:`,
       {
         functionName,
@@ -320,7 +321,7 @@ export const invokeAsyncLambda = async (
 
     await lambdaClient.send(command);
 
-    console.info(
+    logger.info(
       `✅ Successfully triggered async Lambda${context ? ` for ${context}` : ""}:`,
       {
         functionName,
@@ -328,7 +329,7 @@ export const invokeAsyncLambda = async (
       },
     );
   } catch (error) {
-    console.error(
+    logger.error(
       `❌ Failed to trigger async Lambda${context ? ` for ${context}` : ""}:`,
       {
         functionName,
@@ -385,16 +386,16 @@ const buildNativeReasoningFields = (
  * Centralizes error logging pattern across all Bedrock functions
  */
 const logAwsError = (error: any, context: string): void => {
-  console.error(`=== ${context} FAILED ===`);
-  console.error("Error type:", typeof error);
-  console.error("Error constructor:", error.constructor?.name);
-  console.error("Error message:", error.message);
-  console.error("Error stack:", error.stack);
+  logger.error(`=== ${context} FAILED ===`);
+  logger.error("Error type:", typeof error);
+  logger.error("Error constructor:", error.constructor?.name);
+  logger.error("Error message:", error.message);
+  logger.error("Error stack:", error.stack);
 
-  if (error.$fault) console.error("AWS Fault:", error.$fault);
-  if (error.$service) console.error("AWS Service:", error.$service);
-  if (error.$metadata) console.error("AWS Metadata:", error.$metadata);
-  if (error.Code) console.error("AWS Error Code:", error.Code);
+  if (error.$fault) logger.error("AWS Fault:", error.$fault);
+  if (error.$service) logger.error("AWS Service:", error.$service);
+  if (error.$metadata) logger.error("AWS Metadata:", error.$metadata);
+  if (error.Code) logger.error("AWS Error Code:", error.Code);
 };
 
 /**
@@ -417,27 +418,27 @@ const logBedrockCallStart = (
   context: string,
   details: BedrockCallLogDetails,
 ): void => {
-  console.info(`=== ${context} START ===`);
-  console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
-  console.info("Model ID:", details.modelId);
-  console.info("Temperature:", details.temperature);
-  console.info("System prompt length:", details.systemPromptLength);
+  logger.info(`=== ${context} START ===`);
+  logger.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
+  logger.info("Model ID:", details.modelId);
+  logger.info("Temperature:", details.temperature);
+  logger.info("System prompt length:", details.systemPromptLength);
 
   if (details.userMessageLength !== undefined) {
-    console.info("User message length:", details.userMessageLength);
+    logger.info("User message length:", details.userMessageLength);
   }
   if (details.messagesCount !== undefined) {
-    console.info("Messages count:", details.messagesCount);
+    logger.info("Messages count:", details.messagesCount);
   }
   if (details.toolsCount !== undefined) {
-    console.info("Tools count:", details.toolsCount);
+    logger.info("Tools count:", details.toolsCount);
   }
 
-  console.info("Thinking enabled:", details.enableThinking);
-  console.info("Use native reasoning (Nova):", details.useNativeReasoning);
+  logger.info("Thinking enabled:", details.enableThinking);
+  logger.info("Use native reasoning (Nova):", details.useNativeReasoning);
 
   if (details.hasImages !== undefined) {
-    console.info("Has images:", details.hasImages);
+    logger.info("Has images:", details.hasImages);
   }
 };
 
@@ -458,7 +459,7 @@ const logNativeReasoningContent = (
   if (reasoningBlock) {
     const reasoningText = reasoningBlock.reasoningContent?.reasoningText?.text;
     const reasoningLength = reasoningText?.length ?? 0;
-    console.info("🧠 Nova reasoning extracted:", {
+    logger.info("🧠 Nova reasoning extracted:", {
       reasoningLength,
       reasoningPreview:
         reasoningText?.substring(0, 200) + (reasoningLength > 200 ? "..." : ""),
@@ -636,7 +637,7 @@ function buildToolConfig(
         name: toolsArray[0].name,
       },
     };
-    console.info(
+    logger.info(
       `🔒 Enforcing strict tool use: ${toolsArray[0].name}${strictSchema ? " (guaranteed JSON)" : ""}`,
     );
   }
@@ -654,7 +655,7 @@ export function extractToolUseResult(
 ): BedrockToolUseResult {
   // Debug: Log the incoming response structure
   const content = response.output?.message?.content;
-  console.info("🔍 extractToolUseResult DEBUG:", {
+  logger.info("🔍 extractToolUseResult DEBUG:", {
     stopReason: response.stopReason,
     hasOutput: !!response.output,
     hasMessage: !!response.output?.message,
@@ -679,7 +680,7 @@ export function extractToolUseResult(
 
   if (!toolUse) {
     // Enhanced debug logging when tool use not found
-    console.error("🔍 extractToolUseResult FAILURE DEBUG:", {
+    logger.error("🔍 extractToolUseResult FAILURE DEBUG:", {
       contentItems: Array.isArray(content)
         ? content.map((c: any, i: number) => ({
             index: i,
@@ -728,7 +729,7 @@ export function extractToolUseResult(
   );
 
   if (inputAnalysis.stringifiedFields.length > 0) {
-    console.warn("⚠️ DOUBLE-ENCODING DETECTED IN BEDROCK RESPONSE:", {
+    logger.warn("⚠️ DOUBLE-ENCODING DETECTED IN BEDROCK RESPONSE:", {
       toolName: result.toolName,
       stringifiedFields: inputAnalysis.stringifiedFields,
       objectFields: inputAnalysis.objectFields,
@@ -737,7 +738,7 @@ export function extractToolUseResult(
     });
   }
 
-  console.info("✅ extractToolUseResult SUCCESS:", {
+  logger.info("✅ extractToolUseResult SUCCESS:", {
     toolName: result.toolName,
     inputKeys: Object.keys(result.input || {}),
     inputTypes: Object.entries(result.input || {}).reduce(
@@ -786,7 +787,7 @@ function buildSystemParams(
 
   // Handle empty system prompt (Bedrock requires non-empty text)
   if (!systemPrompt || systemPrompt.trim() === "") {
-    console.info("ℹ️ No system prompt provided, skipping system parameter");
+    logger.info("ℹ️ No system prompt provided, skipping system parameter");
     return {
       systemParams: [],
       enableThinking: false, // No thinking without system context
@@ -796,15 +797,13 @@ function buildSystemParams(
 
   // Build system parameter with cache control if static/dynamic prompts are provided
   if (options?.staticPrompt && options?.dynamicPrompt) {
-    console.info(
-      "🔥 CACHE OPTIMIZATION: Using static/dynamic prompt structure",
-    );
-    console.info(
+    logger.info("🔥 CACHE OPTIMIZATION: Using static/dynamic prompt structure");
+    logger.info(
       "Static prompt size:",
       (options.staticPrompt.length / 1024).toFixed(2),
       "KB",
     );
-    console.info(
+    logger.info(
       "Dynamic prompt size:",
       (options.dynamicPrompt.length / 1024).toFixed(2),
       "KB",
@@ -851,7 +850,7 @@ function buildSystemParams(
  */
 function logCachePerformance(usage: any, context: string = "API call") {
   if (!usage) {
-    console.warn(`⚠️ No usage data available for ${context}`);
+    logger.warn(`⚠️ No usage data available for ${context}`);
     return;
   }
 
@@ -878,7 +877,7 @@ function logCachePerformance(usage: any, context: string = "API call") {
     (inputTokens - cacheReadTokens - cacheCreateTokens) * 0.000003;
   const savings = normalCost - actualCost;
 
-  console.info("💰 CACHE PERFORMANCE:", {
+  logger.info("💰 CACHE PERFORMANCE:", {
     context,
     inputTokens,
     outputTokens,
@@ -942,7 +941,7 @@ export const callBedrockApi = async (
           },
         ],
       });
-      console.info("🎯 Response prefilling enabled:", options.prefillResponse);
+      logger.info("🎯 Response prefilling enabled:", options.prefillResponse);
     }
 
     // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
@@ -951,7 +950,7 @@ export const callBedrockApi = async (
       (!!options?.tools && isStrictCapableModel(modelId));
 
     if (useStrictSchema && options?.tools) {
-      console.info("🔐 Guaranteed JSON mode enabled (strict schema)");
+      logger.info("🔐 Guaranteed JSON mode enabled (strict schema)");
     }
 
     const command = new ConverseCommand({
@@ -974,12 +973,12 @@ export const callBedrockApi = async (
       }),
     });
 
-    console.info("Converse command created successfully..");
-    console.info("About to call bedrockClient.send()...");
+    logger.info("Converse command created successfully..");
+    logger.info("About to call bedrockClient.send()...");
 
     // Add heartbeat logging to track if Lambda is still running
     const heartbeatInterval = setInterval(() => {
-      console.info(
+      logger.info(
         "HEARTBEAT: Lambda still running, waiting for Bedrock response..",
       );
     }, 5000);
@@ -988,33 +987,33 @@ export const callBedrockApi = async (
     let response;
 
     try {
-      console.info("Starting Bedrock API call with 60s timeout..");
+      logger.info("Starting Bedrock API call with 60s timeout..");
 
       // Simple approach: just make the API call and let AWS SDK handle timeouts
       response = await bedrockClient.send(command);
 
       clearInterval(heartbeatInterval);
-      console.info("bedrockClient.send() completed successfully");
+      logger.info("bedrockClient.send() completed successfully");
     } catch (sendError: any) {
       clearInterval(heartbeatInterval);
-      console.error(
+      logger.error(
         "SEND ERROR - Error calling bedrockClient.send():",
         sendError,
       );
-      console.error("SEND ERROR - Error name:", sendError.name);
-      console.error("SEND ERROR - Error message:", sendError.message);
-      console.error("SEND ERROR - Error stack:", sendError.stack);
+      logger.error("SEND ERROR - Error name:", sendError.name);
+      logger.error("SEND ERROR - Error message:", sendError.message);
+      logger.error("SEND ERROR - Error stack:", sendError.stack);
       if (sendError.$metadata) {
-        console.error("SEND ERROR - AWS metadata:", sendError.$metadata);
+        logger.error("SEND ERROR - AWS metadata:", sendError.$metadata);
       }
       throw sendError;
     }
 
-    console.info("Response received from Bedrock");
-    console.info("Response metadata:", response.$metadata);
+    logger.info("Response received from Bedrock");
+    logger.info("Response metadata:", response.$metadata);
 
     // Log response structure without full content to avoid token waste
-    console.info("Response structure:", {
+    logger.info("Response structure:", {
       hasOutput: !!response.output,
       hasMessage: !!response.output?.message,
       hasContent: !!response.output?.message?.content,
@@ -1028,7 +1027,7 @@ export const callBedrockApi = async (
     logNativeReasoningContent(response, useNativeReasoning);
 
     if (!response.output?.message?.content?.[0]) {
-      console.error(
+      logger.error(
         "Invalid response structure - no content[0]:",
         JSON.stringify(response, null, 2),
       );
@@ -1038,14 +1037,14 @@ export const callBedrockApi = async (
     // If tools were provided, extract tool use result FIRST (before trying to extract text)
     // Tool responses have a different structure than text responses
     if (options?.tools) {
-      console.info("🔧 Tool use requested, extracting tool result");
+      logger.info("🔧 Tool use requested, extracting tool result");
 
       // Try to extract tool use, but gracefully handle text responses
       if (response.stopReason === "tool_use") {
         return extractToolUseResult(response, options.expectedToolName);
       } else {
         // Model returned text instead of using tool - try to parse as JSON
-        console.warn(
+        logger.warn(
           "⚠️ Tool was requested but model returned text response, attempting to parse as JSON",
         );
         const contentItem = response.output.message.content[0];
@@ -1057,7 +1056,7 @@ export const callBedrockApi = async (
           try {
             const parsed = parseJsonWithFallbacks(textContent);
             if (parsed && typeof parsed === "object") {
-              console.info("✅ Successfully parsed text response as JSON");
+              logger.info("✅ Successfully parsed text response as JSON");
               // Return in tool use format for consistency
               return {
                 toolName: options.expectedToolName ?? "unknown",
@@ -1067,14 +1066,14 @@ export const callBedrockApi = async (
             }
           } catch (parseError) {
             // Parsing failed - this is expected for conversational text responses
-            console.info(
+            logger.info(
               "ℹ️ Text response is not JSON (likely conversational response), using empty object",
             );
           }
         }
 
         // If we can't parse as JSON, return empty object
-        console.info("ℹ️ Returning empty tool input (non-JSON text response)");
+        logger.info("ℹ️ Returning empty tool input (non-JSON text response)");
         return {
           toolName: options.expectedToolName ?? "unknown",
           input: {},
@@ -1096,7 +1095,7 @@ export const callBedrockApi = async (
 
       // Verify contentItem.text is actually a string
       if (typeof rawResponseText !== "string") {
-        console.error("❌ contentItem.text exists but is not a string:", {
+        logger.error("❌ contentItem.text exists but is not a string:", {
           textType: typeof rawResponseText,
           textValue: rawResponseText,
           textKeys:
@@ -1112,7 +1111,7 @@ export const callBedrockApi = async (
       }
     } else if (typeof contentItem === "object") {
       // If it's an object but no .text property, log the structure
-      console.error("❌ Content item is an object without .text property:", {
+      logger.error("❌ Content item is an object without .text property:", {
         contentItem,
         keys: Object.keys(contentItem),
         stringified: JSON.stringify(contentItem, null, 2),
@@ -1121,7 +1120,7 @@ export const callBedrockApi = async (
         "Invalid response format from Bedrock - content item has no text property",
       );
     } else {
-      console.error("❌ Unexpected content item type:", {
+      logger.error("❌ Unexpected content item type:", {
         type: typeof contentItem,
         value: contentItem,
       });
@@ -1132,7 +1131,7 @@ export const callBedrockApi = async (
 
     // Final type check: ensure we have a string at this point
     if (typeof rawResponseText !== "string") {
-      console.error("❌ rawResponseText is not a string after extraction:", {
+      logger.error("❌ rawResponseText is not a string after extraction:", {
         type: typeof rawResponseText,
         value: rawResponseText,
         stringified: JSON.stringify(rawResponseText, null, 2),
@@ -1147,7 +1146,7 @@ export const callBedrockApi = async (
     // If response was prefilled, prepend the prefill text back
     if (options?.prefillResponse) {
       responseText = options.prefillResponse + responseText;
-      console.info("🎯 Prepended prefill text to response:", {
+      logger.info("🎯 Prepended prefill text to response:", {
         prefillText: options.prefillResponse,
         originalLength: rawResponseText.length,
         newLength: responseText.length,
@@ -1159,7 +1158,7 @@ export const callBedrockApi = async (
       responseText = stripThinkingTags(responseText);
     }
 
-    console.info(
+    logger.info(
       "Successfully extracted response text, length:",
       responseText.length,
     );
@@ -1168,7 +1167,7 @@ export const callBedrockApi = async (
     const maxTokensUsed = getMaxTokensForModel(modelId);
     if (responseText.length > maxTokensUsed * 3) {
       // Rough estimate: 1 token ≈ 3-4 chars
-      console.warn(
+      logger.warn(
         "⚠️ Response length suggests possible token limit truncation:",
         {
           responseLength: responseText.length,
@@ -1178,7 +1177,7 @@ export const callBedrockApi = async (
       );
     }
 
-    console.info("=== BEDROCK API CALL SUCCESS ===");
+    logger.info("=== BEDROCK API CALL SUCCESS ===");
 
     // Return text response
     return responseText;
@@ -1220,7 +1219,7 @@ export const callBedrockApiStream = async (
       (!!options?.tools && isStrictCapableModel(modelId));
 
     if (useStrictSchema && options?.tools) {
-      console.info(
+      logger.info(
         "🔐 Guaranteed JSON mode enabled (strict schema) - streaming",
       );
     }
@@ -1254,7 +1253,7 @@ export const callBedrockApiStream = async (
       }),
     });
 
-    console.info("Converse stream command created successfully..");
+    logger.info("Converse stream command created successfully..");
 
     const response = await bedrockClient.send(command);
 
@@ -1262,7 +1261,7 @@ export const callBedrockApiStream = async (
       throw new Error("No stream received from Bedrock");
     }
 
-    console.info("Stream response received from Bedrock");
+    logger.info("Stream response received from Bedrock");
 
     // Return an async generator that yields chunks as they come in
     return (async function* streamGenerator() {
@@ -1291,13 +1290,13 @@ export const callBedrockApiStream = async (
 
           // Handle end of stream
           if (chunk.messageStop) {
-            console.info("=== BEDROCK STREAMING API CALL SUCCESS ===");
-            console.info(
+            logger.info("=== BEDROCK STREAMING API CALL SUCCESS ===");
+            logger.info(
               "Stream complete. Total response length:",
               fullResponse.length,
             );
             if (useNativeReasoning && reasoningLength > 0) {
-              console.info(
+              logger.info(
                 "🧠 Nova reasoning received during stream, length:",
                 reasoningLength,
               );
@@ -1309,7 +1308,7 @@ export const callBedrockApiStream = async (
           }
         }
       } catch (streamError: any) {
-        console.error("Error processing stream:", streamError);
+        logger.error("Error processing stream:", streamError);
         throw streamError;
       }
     })();
@@ -1365,7 +1364,7 @@ export const callBedrockApiMultimodal = async (
       (!!options?.tools && isStrictCapableModel(modelId));
 
     if (useStrictSchema && options?.tools) {
-      console.info(
+      logger.info(
         "🔐 Guaranteed JSON mode enabled (strict schema) - multimodal",
       );
     }
@@ -1390,12 +1389,12 @@ export const callBedrockApiMultimodal = async (
       }),
     });
 
-    console.info("Multimodal converse command created successfully..");
+    logger.info("Multimodal converse command created successfully..");
 
     const response = await bedrockClient.send(command);
 
-    console.info("Response received from Bedrock");
-    console.info("Response metadata:", response.$metadata);
+    logger.info("Response received from Bedrock");
+    logger.info("Response metadata:", response.$metadata);
 
     // Log cache performance metrics if available
     if (response.usage) {
@@ -1408,16 +1407,14 @@ export const callBedrockApiMultimodal = async (
     // If tools were provided, extract tool use result FIRST (before trying to extract text)
     // Tool responses have a different structure than text responses
     if (options?.tools) {
-      console.info(
-        "🔧 Tool use requested (multimodal), extracting tool result",
-      );
+      logger.info("🔧 Tool use requested (multimodal), extracting tool result");
 
       // Try to extract tool use, but gracefully handle text responses
       if (response.stopReason === "tool_use") {
         return extractToolUseResult(response, options.expectedToolName);
       } else {
         // Model returned text instead of using tool - try to parse as JSON
-        console.warn(
+        logger.warn(
           "⚠️ Tool was requested but model returned text response (multimodal), attempting to parse as JSON",
         );
         const contentItem = findTextContentItem(response, useNativeReasoning);
@@ -1429,7 +1426,7 @@ export const callBedrockApiMultimodal = async (
           try {
             const parsed = parseJsonWithFallbacks(textContent);
             if (parsed && typeof parsed === "object") {
-              console.info(
+              logger.info(
                 "✅ Successfully parsed text response as JSON (multimodal)",
               );
               // Return in tool use format for consistency
@@ -1441,14 +1438,14 @@ export const callBedrockApiMultimodal = async (
             }
           } catch (parseError) {
             // Parsing failed - this is expected for conversational text responses
-            console.info(
+            logger.info(
               "ℹ️ Text response is not JSON (likely conversational response), using empty object",
             );
           }
         }
 
         // If we can't parse as JSON, return empty object
-        console.info(
+        logger.info(
           "ℹ️ Returning empty tool input (multimodal non-JSON text response)",
         );
         return {
@@ -1462,7 +1459,7 @@ export const callBedrockApiMultimodal = async (
     // Otherwise extract text as usual (handling Nova reasoning blocks)
     const contentItem = findTextContentItem(response, useNativeReasoning);
     if (!contentItem) {
-      console.error(
+      logger.error(
         "Invalid response structure - no content found:",
         JSON.stringify(response, null, 2),
       );
@@ -1473,18 +1470,18 @@ export const callBedrockApiMultimodal = async (
       typeof contentItem === "string" ? contentItem : contentItem.text;
 
     if (!responseText) {
-      console.error(
+      logger.error(
         "Invalid response structure - no text in content:",
         JSON.stringify(response, null, 2),
       );
       throw new Error("Invalid response format from Bedrock - no text");
     }
 
-    console.info(
+    logger.info(
       "Successfully extracted response text, length:",
       responseText.length,
     );
-    console.info("=== BEDROCK MULTIMODAL API CALL SUCCESS ===");
+    logger.info("=== BEDROCK MULTIMODAL API CALL SUCCESS ===");
 
     return responseText;
   } catch (error: any) {
@@ -1546,7 +1543,7 @@ export const callBedrockApiForAgent = async (
   });
 
   const useCaching = !!(options?.staticPrompt && options?.dynamicPrompt);
-  console.info("Caching enabled:", useCaching);
+  logger.info("Caching enabled:", useCaching);
 
   // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
   const useStrictSchema =
@@ -1554,7 +1551,7 @@ export const callBedrockApiForAgent = async (
     (tools.length > 0 && isStrictCapableModel(modelId));
 
   if (useStrictSchema) {
-    console.info("🔐 Guaranteed JSON mode enabled (strict schema) - agent");
+    logger.info("🔐 Guaranteed JSON mode enabled (strict schema) - agent");
   }
 
   // Build tool config with cache point
@@ -1567,7 +1564,7 @@ export const callBedrockApiForAgent = async (
   }));
 
   if (useCaching) {
-    console.info("🔥 AGENT CACHE OPTIMIZATION: Adding cache point after tools");
+    logger.info("🔥 AGENT CACHE OPTIMIZATION: Adding cache point after tools");
   }
 
   // Add cache point after tools if caching is enabled, plus strict mode for guaranteed JSON
@@ -1613,10 +1610,10 @@ export const callBedrockApiForAgent = async (
   // Log Nova reasoning content if present (for observability, caller handles extraction)
   logNativeReasoningContent(response, useNativeReasoning);
 
-  console.info("=== BEDROCK AGENT API CALL SUCCESS ===");
-  console.info("Stop reason:", response.stopReason);
-  console.info("Input tokens:", response.usage?.inputTokens);
-  console.info("Output tokens:", response.usage?.outputTokens);
+  logger.info("=== BEDROCK AGENT API CALL SUCCESS ===");
+  logger.info("Stop reason:", response.stopReason);
+  logger.info("Input tokens:", response.usage?.inputTokens);
+  logger.info("Output tokens:", response.usage?.outputTokens);
 
   return response; // Return full response for agent loop
 };
@@ -1665,7 +1662,7 @@ export const callBedrockApiMultimodalStream = async (
       (!!options?.tools && isStrictCapableModel(modelId));
 
     if (useStrictSchema && options?.tools) {
-      console.info(
+      logger.info(
         "🔐 Guaranteed JSON mode enabled (strict schema) - multimodal streaming",
       );
     }
@@ -1690,7 +1687,7 @@ export const callBedrockApiMultimodalStream = async (
       }),
     });
 
-    console.info("Multimodal converse stream command created successfully..");
+    logger.info("Multimodal converse stream command created successfully..");
 
     const response = await bedrockClient.send(command);
 
@@ -1698,7 +1695,7 @@ export const callBedrockApiMultimodalStream = async (
       throw new Error("No stream received from Bedrock");
     }
 
-    console.info("Stream response received from Bedrock");
+    logger.info("Stream response received from Bedrock");
 
     // Return an async generator that yields chunks as they come in
     return (async function* streamGenerator() {
@@ -1728,15 +1725,15 @@ export const callBedrockApiMultimodalStream = async (
 
           // Mark stream as ended but continue to capture metadata
           if (chunk.messageStop) {
-            console.info(
+            logger.info(
               "=== BEDROCK MULTIMODAL STREAMING API CALL SUCCESS ===",
             );
-            console.info(
+            logger.info(
               "Stream complete. Total response length:",
               fullResponse.length,
             );
             if (useNativeReasoning && reasoningLength > 0) {
-              console.info(
+              logger.info(
                 "🧠 Nova reasoning received during stream, length:",
                 reasoningLength,
               );
@@ -1748,15 +1745,15 @@ export const callBedrockApiMultimodalStream = async (
           // Capture metadata event (comes after messageStop)
           if ((chunk as any).metadata) {
             const metadata = (chunk as any).metadata;
-            console.info("📊 Metadata event received after messageStop");
+            logger.info("📊 Metadata event received after messageStop");
 
             if (metadata.usage) {
-              console.info("📊 Usage data found in metadata");
+              logger.info("📊 Usage data found in metadata");
               logCachePerformance(metadata.usage, "Multimodal Streaming API");
             }
 
             if (metadata.metrics) {
-              console.info("📊 Stream metrics:", metadata.metrics);
+              logger.info("📊 Stream metrics:", metadata.metrics);
             }
 
             // Now we can break after capturing metadata
@@ -1766,7 +1763,7 @@ export const callBedrockApiMultimodalStream = async (
           }
         }
       } catch (streamError: any) {
-        console.error("Error processing multimodal stream:", streamError);
+        logger.error("Error processing multimodal stream:", streamError);
         throw streamError;
       }
     })();
@@ -1823,7 +1820,7 @@ export const storePineconeContext = async (
       recordId = metadata.summaryId; // e.g., "conversation_summary_.." or "coach_creator_summary_.."
     } else {
       // No ID field found - this is an error
-      console.error("❌ No ID field found in metadata for Pinecone record", {
+      logger.error("❌ No ID field found in metadata for Pinecone record", {
         userId,
         metadata,
         availableFields: Object.keys(metadata),
@@ -1847,22 +1844,24 @@ export const storePineconeContext = async (
     // This handles nested objects and arrays at any depth
     const sanitizedFields = deepSanitizeNullish(additionalFields);
 
-    console.info("🧹 Sanitized Pinecone metadata:", {
+    logger.info("🧹 Sanitized Pinecone metadata:", {
       originalKeys: Object.keys(additionalFields).length,
       sanitizedKeys: Object.keys(sanitizedFields).length,
       recordId,
     });
 
     // Use upsertRecords for auto-embedding with llama-text-embed-v2
-    await index.namespace(userNamespace).upsertRecords([
-      {
-        id: recordId,
-        text: content, // This field gets auto-embedded by llama-text-embed-v2 (matches index field_map)
-        ...sanitizedFields, // Additional metadata fields for filtering and retrieval (sanitized)
-      },
-    ]);
+    await index.namespace(userNamespace).upsertRecords({
+      records: [
+        {
+          id: recordId,
+          text: content, // This field gets auto-embedded by llama-text-embed-v2 (matches index field_map)
+          ...sanitizedFields, // Additional metadata fields for filtering and retrieval (sanitized)
+        },
+      ],
+    });
 
-    console.info(`Successfully stored context in Pinecone:`, {
+    logger.info(`Successfully stored context in Pinecone:`, {
       indexName: PINECONE_INDEX_NAME,
       namespace: userNamespace,
       recordId,
@@ -1872,7 +1871,7 @@ export const storePineconeContext = async (
 
     return { success: true, recordId, namespace: userNamespace };
   } catch (error) {
-    console.error("Failed to store Pinecone context:", error);
+    logger.error("Failed to store Pinecone context:", error);
     throw error;
   }
 };
@@ -1913,7 +1912,7 @@ export const storeDebugDataInS3 = async (
       serverSideEncryption: "AES256",
     });
 
-    console.info(`Successfully stored debug data in S3:`, {
+    logger.info(`Successfully stored debug data in S3:`, {
       bucket: bucketName,
       key,
       contentLength: content.length,
@@ -1922,14 +1921,14 @@ export const storeDebugDataInS3 = async (
 
     return `s3://${bucketName}/${key}`;
   } catch (error) {
-    console.error("Failed to store debug data in S3:", error);
+    logger.error("Failed to store debug data in S3:", error);
     throw error;
   }
 };
 
 // Helper function to validate Pinecone configuration
 const validatePineconeConfig = () => {
-  console.info("🔧 DEBUG: Pinecone configuration:", {
+  logger.info("🔧 DEBUG: Pinecone configuration:", {
     indexName: PINECONE_INDEX_NAME,
     apiKeySet: !!PINECONE_API_KEY,
     apiKeyLength: PINECONE_API_KEY?.length,
@@ -1996,10 +1995,7 @@ const querySingleRecordType = async (
       metadata: hit.fields || {},
     }));
   } catch (error) {
-    console.error(
-      `❌ Failed to query user namespace for ${recordType}:`,
-      error,
-    );
+    logger.error(`❌ Failed to query user namespace for ${recordType}:`, error);
     return [];
   }
 };
@@ -2055,7 +2051,7 @@ const queryUserNamespace = async (
 
   if (queries.length === 0) return [];
 
-  console.info("Querying user namespace (per-type parallel):", {
+  logger.info("Querying user namespace (per-type parallel):", {
     indexName: PINECONE_INDEX_NAME,
     userId,
     userMessageLength: userMessage.length,
@@ -2072,7 +2068,7 @@ const queryUserNamespace = async (
   // Flatten results from all types
   const allMatches = results.flat();
 
-  console.info("✅ User namespace queries successful:", {
+  logger.info("✅ User namespace queries successful:", {
     totalMatches: allMatches.length,
     perType: queries.map((q, i) => `${q.recordType}: ${results[i].length}`),
   });
@@ -2093,7 +2089,7 @@ const queryMethodologyNamespace = async (
     const { topK } = options;
     const { index } = await getPineconeClient();
 
-    console.info("🔍 Querying methodology namespace:", {
+    logger.info("🔍 Querying methodology namespace:", {
       userMessage: userMessage.substring(0, 100),
       topK,
       namespace: "methodology",
@@ -2111,7 +2107,7 @@ const queryMethodologyNamespace = async (
       .searchRecords(searchQuery);
 
     if (!response.result.hits || response.result.hits.length === 0) {
-      console.info("📭 No methodology matches found");
+      logger.info("📭 No methodology matches found");
       return [];
     }
 
@@ -2128,14 +2124,14 @@ const queryMethodologyNamespace = async (
       })
       .map((match) => normalizeMatch(match, "methodology"));
 
-    console.info("✅ Methodology query successful:", {
+    logger.info("✅ Methodology query successful:", {
       originalHits: response.result.hits.length,
       matches: matches.length,
     });
 
     return matches;
   } catch (error) {
-    console.error("❌ Failed to query methodology namespace:", error);
+    logger.error("❌ Failed to query methodology namespace:", error);
     return [];
   }
 };
@@ -2195,7 +2191,7 @@ const rerankPineconeResults = async (
       const finalText = text.trim();
 
       if (!finalText) {
-        console.warn(`⚠️ No text content found for match ${index}:`, {
+        logger.warn(`⚠️ No text content found for match ${index}:`, {
           id: match.id,
           hasText: !!match.text,
           hasContent: !!match.content,
@@ -2209,7 +2205,7 @@ const rerankPineconeResults = async (
       return finalText;
     });
 
-    console.info("🔄 Starting reranking process:", {
+    logger.info("🔄 Starting reranking process:", {
       originalMatches: matches.length,
       documentsExtracted: documents.length,
       queryLength: query.length,
@@ -2231,21 +2227,19 @@ const rerankPineconeResults = async (
     });
 
     // Call Pinecone rerank API
-    const rerankResponse = await client.inference.rerank(
+    const rerankResponse = await client.inference.rerank({
       model,
       query,
       documents,
-      {
-        topN: Math.min(topN, matches.length), // Don't request more than we have
-        returnDocuments: true, // Get the documents back with scores
-        parameters: {
-          truncate,
-        },
+      topN: Math.min(topN, matches.length), // Don't request more than we have
+      returnDocuments: true, // Get the documents back with scores
+      parameters: {
+        truncate,
       },
-    );
+    });
 
     if (!rerankResponse.data || rerankResponse.data.length === 0) {
-      console.warn(
+      logger.warn(
         "⚠️ Reranking returned no results, falling back to original matches",
       );
       return matches.slice(0, topN);
@@ -2270,7 +2264,7 @@ const rerankPineconeResults = async (
       };
     });
 
-    console.info("✅ Reranking successful:", {
+    logger.info("✅ Reranking successful:", {
       originalCount: matches.length,
       rerankedCount: rerankedMatches.length,
       avgOriginalScore:
@@ -2287,7 +2281,7 @@ const rerankPineconeResults = async (
 
     return rerankedMatches;
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Reranking failed, falling back to original results:",
       error,
     );
@@ -2349,7 +2343,7 @@ const processAndFilterResults = async (
   } = options;
   const userNamespace = getUserNamespace(userId);
 
-  console.info("Processing Pinecone results:", {
+  logger.info("Processing Pinecone results:", {
     totalMatches: allMatches.length,
     targetTopK: topK,
     minScore,
@@ -2374,7 +2368,7 @@ const processAndFilterResults = async (
         Math.min(RERANKING_CONFIG.initialTopK, normalizedMatches.length),
       );
 
-      console.info("🔄 Applying reranking:", {
+      logger.info("🔄 Applying reranking:", {
         originalCount: normalizedMatches.length,
         rerankingCount: matchesForReranking.length,
         targetFinalCount: RERANKING_CONFIG.finalTopN,
@@ -2388,7 +2382,7 @@ const processAndFilterResults = async (
         },
       );
     } catch (error) {
-      console.error(
+      logger.error(
         "❌ Reranking failed in processing, using original results:",
         error,
       );
@@ -2424,7 +2418,7 @@ const processAndFilterResults = async (
   const wasReranked =
     enableReranking && originalQuery && normalizedMatches.length > 1;
 
-  console.info("✅ Successfully processed Pinecone results:", {
+  logger.info("✅ Successfully processed Pinecone results:", {
     indexName: PINECONE_INDEX_NAME,
     userId,
     totalMatches: normalizedMatches.length,
@@ -2496,7 +2490,7 @@ export const queryPineconeContext = async (
 
     const { index } = await getPineconeClient();
 
-    console.info("🔧 About to query Pinecone:", {
+    logger.info("🔧 About to query Pinecone:", {
       namespace: getUserNamespace(userId),
       userId,
       indexName: PINECONE_INDEX_NAME,
@@ -2531,7 +2525,7 @@ export const queryPineconeContext = async (
     // Combine all matches
     const allMatches = [...userMatches, ...methodologyMatches];
 
-    console.info("🔍 Retrieved initial Pinecone matches:", {
+    logger.info("🔍 Retrieved initial Pinecone matches:", {
       userMatches: userMatches.length,
       methodologyMatches: methodologyMatches.length,
       totalMatches: allMatches.length,
@@ -2547,7 +2541,7 @@ export const queryPineconeContext = async (
       userMessage, // Pass original query for reranking
     );
   } catch (error) {
-    console.error("Failed to query Pinecone context:", error);
+    logger.error("Failed to query Pinecone context:", error);
 
     // Return empty results instead of throwing - allows graceful degradation
     return {
@@ -2576,7 +2570,7 @@ export const deletePineconeContext = async (
     const { index } = await getPineconeClient();
     const userNamespace = getUserNamespace(userId);
 
-    console.info("🗑️ Deleting records from Pinecone by metadata filter:", {
+    logger.info("🗑️ Deleting records from Pinecone by metadata filter:", {
       userId,
       namespace: userNamespace,
       filter,
@@ -2585,7 +2579,7 @@ export const deletePineconeContext = async (
     // Delete directly by metadata filter - much simpler approach
     await index.namespace(userNamespace).deleteMany(filter);
 
-    console.info(
+    logger.info(
       "✅ Successfully deleted records from Pinecone by metadata filter:",
       {
         userId,
@@ -2597,7 +2591,7 @@ export const deletePineconeContext = async (
     // Note: Pinecone deleteMany by filter doesn't return count, so we return success without count
     return { success: true, deletedCount: 1 }; // Assume at least 1 record was deleted
   } catch (error) {
-    console.error("❌ Failed to delete records from Pinecone:", error);
+    logger.error("❌ Failed to delete records from Pinecone:", error);
     return {
       success: false,
       deletedCount: 0,
@@ -2633,7 +2627,7 @@ export const querySemanticMemories = async (
     const { index } = await getPineconeClient();
     const userNamespace = getUserNamespace(userId);
 
-    console.info("🔍 Querying semantic memories from Pinecone:", {
+    logger.info("🔍 Querying semantic memories from Pinecone:", {
       userId,
       userMessageLength: userMessage.length,
       topK,
@@ -2674,7 +2668,7 @@ export const querySemanticMemories = async (
       .searchRecords(searchQuery);
 
     if (!response.result.hits || response.result.hits.length === 0) {
-      console.info("📭 No semantic memories found in Pinecone:", {
+      logger.info("📭 No semantic memories found in Pinecone:", {
         userId,
         contextTypes,
         queryLength: userMessage.length,
@@ -2685,7 +2679,7 @@ export const querySemanticMemories = async (
     }
 
     // Log raw scores for diagnostics (before any filtering)
-    console.info("📊 Raw Pinecone memory scores (before filtering):", {
+    logger.info("📊 Raw Pinecone memory scores (before filtering):", {
       userId,
       totalHits: response.result.hits.length,
       scores: response.result.hits.slice(0, 10).map((hit: any) => ({
@@ -2716,7 +2710,7 @@ export const querySemanticMemories = async (
     // Apply reranking if enabled and we have sufficient results
     if (enableReranking && normalizedHits.length > 1) {
       try {
-        console.info("🔄 Applying reranking to memory results:", {
+        logger.info("🔄 Applying reranking to memory results:", {
           originalCount: normalizedHits.length,
           targetCount: topK,
         });
@@ -2729,7 +2723,7 @@ export const querySemanticMemories = async (
           },
         );
       } catch (error) {
-        console.error(
+        logger.error(
           "❌ Memory reranking failed, using original results:",
           error,
         );
@@ -2760,7 +2754,7 @@ export const querySemanticMemories = async (
       // Must have memoryId (skip old context records without proper IDs)
       if (!hit.metadata.memoryId) {
         filteredByMissingId++;
-        console.info(
+        logger.info(
           "ℹ️ Skipping non-memory Pinecone record (expected behavior):",
           {
             pineconeId: hit.id,
@@ -2776,7 +2770,7 @@ export const querySemanticMemories = async (
 
     // Log filtering diagnostics
     if (filteredByScore > 0 || filteredByMissingId > 0) {
-      console.info("📉 Semantic memory filtering diagnostics:", {
+      logger.info("📉 Semantic memory filtering diagnostics:", {
         filteredByScore,
         filteredByMissingId,
         effectiveMinScore,
@@ -2815,7 +2809,7 @@ export const querySemanticMemories = async (
       };
     });
 
-    console.info("✅ Successfully retrieved semantic memories:", {
+    logger.info("✅ Successfully retrieved semantic memories:", {
       userId,
       totalHits: response.result.hits.length,
       relevantMemories: finalMemories.length,
@@ -2835,7 +2829,7 @@ export const querySemanticMemories = async (
 
     return finalMemories;
   } catch (error) {
-    console.error("❌ Failed to query semantic memories from Pinecone:", error);
+    logger.error("❌ Failed to query semantic memories from Pinecone:", error);
     // Return empty array to allow graceful fallback
     return [];
   }
