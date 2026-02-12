@@ -503,10 +503,9 @@ async function* processCoachConversationAsync(
       // Save the conversation without the session
       await saveCoachConversation(conversationData.existingConversation);
 
-      // Yield cancel event
+      // Yield cancel event (keep type as "complete" so client recognizes it)
       yield formatCompleteEvent({
         messageId: `msg_${Date.now()}_cancelled`,
-        type: "session_cancelled",
         fullMessage: "",
         aiResponse: "",
         isComplete: false,

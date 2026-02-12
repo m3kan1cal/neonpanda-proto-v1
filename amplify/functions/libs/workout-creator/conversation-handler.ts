@@ -154,9 +154,9 @@ export async function* handleTodoListConversation(
 
     // GUARD: Override userWantsToFinish for very short or ambiguous messages
     // A message under 5 characters that doesn't contain explicit finish language
-    // should NEVER trigger session completion (e.g., "Um", "Hm", "Ok", "?")
+    // should NEVER trigger session completion (e.g., "Um", "Hm", "?")
     const EXPLICIT_FINISH_PATTERNS =
-      /\b(done|skip|finish|log it|that'?s (all|it)|i'?m done|just log|save it|yes|yep|yeah|yea)\b/i;
+      /\b(done|skip|finish|log it|that'?s (all|it)|i'?m done|just log|save it|yes|yep|yeah|yea|nah|nope|ok|no)\b/i;
     if (
       extractionResult.userWantsToFinish &&
       userResponse.trim().length < 5 &&
