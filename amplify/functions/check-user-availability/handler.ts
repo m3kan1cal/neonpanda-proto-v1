@@ -13,6 +13,7 @@ import {
   getHttpMethod,
 } from '../libs/api-helpers';
 import { getUserProfileByEmail, getUserProfileByUsername } from '../../dynamodb/operations';
+import { logger } from "../libs/logger";
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION
@@ -23,7 +24,7 @@ const USER_POOL_ID = process.env.USER_POOL_ID;
 export const handler: APIGatewayProxyHandlerV2 = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
-  console.info('Check availability event:', JSON.stringify(event, null, 2));
+  logger.info('Check availability event:', JSON.stringify(event, null, 2));
 
   try {
     // Only allow GET requests
@@ -54,7 +55,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (
       );
     }
 
-    console.info(`Checking availability for ${type}: ${value}`);
+    logger.info(`Checking availability for ${type}: ${value}`);
 
     let isAvailable = true;
     let existsInCognito = false;
@@ -62,7 +63,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (
 
     // Check Cognito
     if (!USER_POOL_ID) {
-      console.error('USER_POOL_ID environment variable not set');
+      logger.error('USER_POOL_ID environment variable not set');
       return createErrorResponse(500, 'Server configuration error');
     }
 
@@ -79,11 +80,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (
       existsInCognito = !!(cognitoResult.Users && cognitoResult.Users.length > 0);
 
       if (existsInCognito) {
-        console.info(`${type} exists in Cognito: ${value}`);
+        logger.info(`${type} exists in Cognito: ${value}`);
         isAvailable = false;
       }
     } catch (cognitoError) {
-      console.error('Error checking Cognito:', cognitoError);
+      logger.error('Error checking Cognito:', cognitoError);
       // Continue checking DynamoDB even if Cognito fails
     }
 
@@ -98,11 +99,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (
       }
 
       if (existsInDynamoDB) {
-        console.info(`${type} exists in DynamoDB: ${value}`);
+        logger.info(`${type} exists in DynamoDB: ${value}`);
         isAvailable = false;
       }
     } catch (dbError) {
-      console.error('Error checking DynamoDB:', dbError);
+      logger.error('Error checking DynamoDB:', dbError);
       // If we already found it in Cognito, that's enough
       if (!existsInCognito) {
         // If DynamoDB fails and Cognito check passed, we can't confirm availability
@@ -126,7 +127,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (
     });
 
   } catch (error) {
-    console.error('Unexpected error checking availability:', error);
+    logger.error('Unexpected error checking availability:', error);
     return createErrorResponse(
       500,
       'Internal server error',

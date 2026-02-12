@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getPresignedImageUrl } from '../../utils/s3Helper';
+import { logger } from "../../utils/logger";
 
 /**
  * Component to load and display images with presigned URLs from private S3 bucket
@@ -22,7 +23,7 @@ const ImageWithPresignedUrl = ({ s3Key, userId, index }) => {
           setError(true);
         }
       } catch (err) {
-        console.error('Failed to load presigned URL:', err);
+        logger.error('Failed to load presigned URL:', err);
         setError(true);
       } finally {
         setLoading(false);

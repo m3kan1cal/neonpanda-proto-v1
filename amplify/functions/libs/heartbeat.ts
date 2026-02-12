@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 /**
  * Heartbeat Utility for Long-Running Lambda Handlers
  *
@@ -39,7 +40,7 @@ export function startHeartbeat(
   operationName: string,
   intervalMs: number = DEFAULT_INTERVAL_MS
 ): HeartbeatHandle {
-  console.info(`💓 Starting heartbeat monitoring for: ${operationName} (${intervalMs/1000}s interval)`);
+  logger.info(`💓 Starting heartbeat monitoring for: ${operationName} (${intervalMs/1000}s interval)`);
 
   const handle: HeartbeatHandle = {
     _operationName: operationName,
@@ -51,7 +52,7 @@ export function startHeartbeat(
   handle._interval = setInterval(() => {
     handle._count++;
     const elapsedSeconds = handle._count * (intervalMs / 1000);
-    console.info(
+    logger.info(
       `💓 Heartbeat #${handle._count}: ${operationName} in progress (${elapsedSeconds}s elapsed)`
     );
   }, intervalMs);
@@ -70,7 +71,7 @@ export function stopHeartbeat(handle: HeartbeatHandle | null): void {
   if (handle._interval) {
     clearInterval(handle._interval);
     const totalSeconds = handle._count * (handle._intervalMs / 1000);
-    console.info(
+    logger.info(
       `💓 Heartbeat stopped for ${handle._operationName}: ${handle._count} beats (${totalSeconds}s total)`
     );
   }

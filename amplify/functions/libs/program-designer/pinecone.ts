@@ -10,6 +10,7 @@ import { storeWithAutoCompression } from "../pinecone-compression";
 import { filterNullish } from "../object-utils";
 import { ProgramDesignerSession } from "./types";
 import { Program } from "../program/types";
+import { logger } from "../logger";
 
 /**
  * Store program designer session summary in Pinecone for coach context
@@ -73,7 +74,7 @@ export const storeProgramDesignerSessionSummaryInPinecone = async (
       "program designer session summary",
     );
 
-    console.info(
+    logger.info(
       "✅ Program designer session summary stored in Pinecone successfully:",
       {
         userId,
@@ -93,14 +94,14 @@ export const storeProgramDesignerSessionSummaryInPinecone = async (
       namespace: result.namespace,
     };
   } catch (error) {
-    console.error(
+    logger.error(
       "Failed to store program designer session summary in Pinecone:",
       error,
     );
 
     // Non-blocking: Return failure but don't throw
     // Program creation should succeed even if Pinecone storage fails
-    console.warn(
+    logger.warn(
       "Program creation will continue despite Pinecone session storage failure",
     );
     return {
@@ -119,7 +120,7 @@ export async function deleteProgramDesignerSessionSummaryFromPinecone(
   sessionId: string,
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   try {
-    console.info(
+    logger.info(
       "🗑️ Deleting program designer session summary from Pinecone:",
       {
         userId,
@@ -134,7 +135,7 @@ export async function deleteProgramDesignerSessionSummaryFromPinecone(
     });
 
     if (result.success) {
-      console.info(
+      logger.info(
         "✅ Program designer session summary deleted from Pinecone:",
         {
           userId,
@@ -143,7 +144,7 @@ export async function deleteProgramDesignerSessionSummaryFromPinecone(
         },
       );
     } else {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to delete program designer session summary from Pinecone:",
         {
           userId,
@@ -155,7 +156,7 @@ export async function deleteProgramDesignerSessionSummaryFromPinecone(
 
     return result;
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Error deleting program designer session summary from Pinecone:",
       error,
     );

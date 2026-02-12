@@ -58,7 +58,7 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} flex-shrink-0 mt-2`}></div>
+          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}></div>
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
@@ -83,7 +83,7 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start space-x-3">
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} flex-shrink-0 mt-2`}></div>
+          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}></div>
           <div>
             <h3 className="font-russo font-bold text-white text-lg uppercase">
               Today's Workout

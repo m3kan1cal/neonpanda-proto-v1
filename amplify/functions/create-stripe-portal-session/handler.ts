@@ -3,6 +3,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { getSubscription } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { getAppUrl } from "../libs/domain-utils";
+import { logger } from "../libs/logger";
 
 /**
  * Create a Stripe Customer Portal session for subscription management
@@ -19,14 +20,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const baseHandler: AuthenticatedHandler = async (event) => {
   const userId = event.user.userId;
 
-  console.info("Creating Stripe portal session for userId:", userId);
+  logger.info("Creating Stripe portal session for userId:", userId);
 
   try {
     // Get user's subscription to retrieve Stripe customer ID
     const subscription = await getSubscription(userId);
 
     if (!subscription || !subscription.stripeCustomerId) {
-      console.warn("No active subscription found for portal session:", {
+      logger.warn("No active subscription found for portal session:", {
         userId,
         hasSubscription: !!subscription,
         hasCustomerId: !!subscription?.stripeCustomerId,
@@ -40,7 +41,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return_url: `${getAppUrl()}/settings?userId=${userId}`,
     });
 
-    console.info("Stripe portal session created:", {
+    logger.info("Stripe portal session created:", {
       userId,
       customerId: subscription.stripeCustomerId,
       portalSessionId: session.id,
@@ -48,7 +49,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     return createOkResponse({ url: session.url });
   } catch (error) {
-    console.error("Error creating Stripe portal session:", error);
+    logger.error("Error creating Stripe portal session:", error);
 
     // Handle specific Stripe errors
     if (error instanceof Stripe.errors.StripeError) {

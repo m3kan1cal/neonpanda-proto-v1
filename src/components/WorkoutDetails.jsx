@@ -22,6 +22,7 @@ import IconButton from "./shared/IconButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { CenteredErrorState, EmptyState } from "./shared/ErrorStates";
 import AppFooter from "./shared/AppFooter";
+import { logger } from "../utils/logger";
 import {
   ClockIcon,
   TargetIcon,
@@ -133,7 +134,7 @@ function WorkoutDetails() {
       });
 
       workoutAgentRef.current.onError = (error) => {
-        console.error("Workout agent error:", error);
+        logger.error("Workout agent error:", error);
       };
 
       workoutAgentRef.current.onNewWorkout = (workout) => {
@@ -168,7 +169,7 @@ function WorkoutDetails() {
         );
         setCoachData(coachData);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
       }
     };
 
@@ -221,7 +222,7 @@ function WorkoutDetails() {
           currentWorkout: workout,
         }));
       } catch (error) {
-        console.error("Error loading workout:", error);
+        logger.error("Error loading workout:", error);
       }
     };
 
@@ -284,7 +285,7 @@ function WorkoutDetails() {
       success("Workout title updated successfully");
       return true;
     } catch (err) {
-      console.error("Error updating workout title:", err);
+      logger.error("Error updating workout title:", err);
       error("Failed to update workout title");
       return false;
     }
@@ -312,7 +313,7 @@ function WorkoutDetails() {
         `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`,
       );
     } catch (error) {
-      console.error("Error deleting workout:", error);
+      logger.error("Error deleting workout:", error);
       error("Failed to delete workout");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
@@ -631,7 +632,7 @@ function WorkoutDetailsSkeleton() {
               <div className={`${containerPatterns.cardMedium}`}>
                 <div className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
                   <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -650,7 +651,7 @@ function WorkoutDetailsSkeleton() {
               <div className={`${containerPatterns.cardMedium}`}>
                 <div className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
                   </div>
                   <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -668,7 +669,7 @@ function WorkoutDetailsSkeleton() {
               <div className={`${containerPatterns.cardMedium}`}>
                 <div className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                   </div>
                   <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -687,7 +688,7 @@ function WorkoutDetailsSkeleton() {
               <div className={`${containerPatterns.cardMedium}`}>
                 <div className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
                   </div>
                   <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -704,7 +705,7 @@ function WorkoutDetailsSkeleton() {
               <div className={`${containerPatterns.cardMedium}`}>
                 <div className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                   </div>
                   <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -718,7 +719,7 @@ function WorkoutDetailsSkeleton() {
               <div className={`${containerPatterns.cardMedium}`}>
                 <div className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                   </div>
                   <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -733,7 +734,7 @@ function WorkoutDetailsSkeleton() {
               <div className={`${containerPatterns.cardMedium}`}>
                 <div className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
                   </div>
                   <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>

@@ -33,6 +33,7 @@ import PhaseTimeline from "./PhaseTimeline";
 import PhaseBreakdown from "./PhaseBreakdown";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
 import { useToast } from "../../contexts/ToastContext";
+import { logger } from "../../utils/logger";
 
 export default function ProgramDashboard() {
   const [searchParams] = useSearchParams();
@@ -145,7 +146,7 @@ export default function ProgramDashboard() {
         } catch (todayError) {
           // If loading today's workout fails, just set it to null
           // (e.g., program is complete, no more scheduled workouts)
-          console.warn("Could not load today's workout:", todayError);
+          logger.warn("Could not load today's workout:", todayError);
           setTodaysWorkout(null);
         }
       } else {
@@ -153,7 +154,7 @@ export default function ProgramDashboard() {
         setTodaysWorkout(null);
       }
     } catch (err) {
-      console.error("Error loading program dashboard:", err);
+      logger.error("Error loading program dashboard:", err);
       setError(err.message || "Failed to load program data");
     } finally {
       setIsLoading(false);
@@ -189,7 +190,7 @@ export default function ProgramDashboard() {
 
       // todaysWorkout is already updated via the agent callback (completeRestDay calls loadWorkoutTemplates internally)
     } catch (error) {
-      console.error("Error completing rest day:", error);
+      logger.error("Error completing rest day:", error);
       // Error is already shown by ProgramAgent
     } finally {
       setIsCompletingRestDay(false);
@@ -537,7 +538,7 @@ function DashboardSkeleton() {
             <div className={`${containerPatterns.cardMedium}`}>
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                 </div>
                 <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -556,7 +557,7 @@ function DashboardSkeleton() {
             <div className={`${containerPatterns.cardMedium}`}>
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                 </div>
                 <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -572,7 +573,7 @@ function DashboardSkeleton() {
             <div className={`${containerPatterns.cardMedium}`}>
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
                 </div>
                 <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -592,7 +593,7 @@ function DashboardSkeleton() {
             <div className={`${containerPatterns.cardMedium}`}>
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                 </div>
                 <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -606,7 +607,7 @@ function DashboardSkeleton() {
             <div className={`${containerPatterns.cardMedium}`}>
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                 </div>
                 <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -621,7 +622,7 @@ function DashboardSkeleton() {
             <div className={`${containerPatterns.cardMedium}`}>
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                 </div>
                 <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>

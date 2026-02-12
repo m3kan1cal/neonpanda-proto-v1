@@ -14,6 +14,7 @@ import {
 import { callBedrockApi, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-schema";
+import { logger } from "../logger";
 
 /**
  * Builds AI normalization prompt that instructs the model to normalize
@@ -113,7 +114,7 @@ export const normalizeAnalytics = async (
         ? weeklyData.weekRange.weekEnd
         : weeklyData.monthRange.monthEnd;
 
-    console.info("Analytics normalization call configuration:", {
+    logger.info("Analytics normalization call configuration:", {
       enableThinking,
       promptLength: normalizationPrompt.length,
       userId,
@@ -164,7 +165,7 @@ export const normalizeAnalytics = async (
       normalizationMethod: "ai",
     };
   } catch (error) {
-    console.error("Analytics normalization failed:", error);
+    logger.error("Analytics normalization failed:", error);
     return {
       isValid: false,
       normalizedData: analyticsData,
@@ -503,7 +504,7 @@ export const shouldNormalizeAnalytics = (
       issue.type === "cross_validation",
   );
 
-  console.info("🔍 Normalization decision analysis:", {
+  logger.info("🔍 Normalization decision analysis:", {
     totalIssues: issues.length,
     errors: errors.length,
     warnings: warnings.length,
@@ -513,7 +514,7 @@ export const shouldNormalizeAnalytics = (
 
   // Always normalize if there are any errors
   if (errors.length > 0) {
-    console.info("🔧 Normalization required: errors detected", {
+    logger.info("🔧 Normalization required: errors detected", {
       errorCount: errors.length,
       errorFields: errors.map((e) => e.field),
     });
@@ -522,7 +523,7 @@ export const shouldNormalizeAnalytics = (
 
   // Normalize if there are many warnings (quality threshold)
   if (warnings.length >= 3) {
-    console.info("🔧 Normalization required: multiple warnings", {
+    logger.info("🔧 Normalization required: multiple warnings", {
       warningCount: warnings.length,
       warningFields: warnings.map((w) => w.field),
     });
@@ -531,14 +532,14 @@ export const shouldNormalizeAnalytics = (
 
   // Normalize if there are critical structural or data consistency issues
   if (criticalIssues.length > 0) {
-    console.info("🔧 Normalization required: critical issues detected", {
+    logger.info("🔧 Normalization required: critical issues detected", {
       criticalCount: criticalIssues.length,
       criticalTypes: criticalIssues.map((i) => i.type),
     });
     return true;
   }
 
-  console.info("✅ Skipping normalization: no critical issues detected");
+  logger.info("✅ Skipping normalization: no critical issues detected");
   return false;
 };
 

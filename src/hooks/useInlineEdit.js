@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { logger } from "../utils/logger";
 
 /**
  * Custom hook for inline editing functionality
@@ -131,7 +132,7 @@ export function useInlineEdit(initialValue, onSave, options = {}) {
         onSuccess(valueToSave);
       }
     } catch (err) {
-      console.error('Error saving inline edit:', err);
+      logger.error('Error saving inline edit:', err);
       setError(err.message || 'Failed to save');
 
       if (onError) {

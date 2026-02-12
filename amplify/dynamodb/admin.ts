@@ -6,6 +6,7 @@ import {
   DynamoDBItem,
 } from "./core";
 import { UserProfile } from "../functions/libs/user/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // ADMIN QUERY INTERFACES
@@ -51,7 +52,7 @@ export async function queryAllEntitiesByType<T>(
   const tableName = getTableName();
 
   return withThroughputScaling(async () => {
-    console.info(
+    logger.info(
       `Querying all ${entityType} entities from DynamoDB using GSI-3:`,
       {
         entityType,
@@ -77,7 +78,7 @@ export async function queryAllEntitiesByType<T>(
     const result = await docClient.send(command);
     const items = (result.Items || []) as DynamoDBItem<T>[];
 
-    console.info(`Successfully queried ${entityType} entities:`, {
+    logger.info(`Successfully queried ${entityType} entities:`, {
       entityType,
       itemCount: items.length,
       hasMoreResults: !!result.LastEvaluatedKey,

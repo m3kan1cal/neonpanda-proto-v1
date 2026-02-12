@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Parallel Execution Helpers for Streaming
  *
@@ -34,7 +35,7 @@ export async function executeWithContextualUpdate<T>(
   try {
     update = await startedUpdate;  // Usually instant (already resolved)
   } catch (err) {
-    console.warn(`Contextual update ${updateType} failed (non-critical):`, err);
+    logger.warn(`Contextual update ${updateType} failed (non-critical):`, err);
   }
 
   return { update, workResult };

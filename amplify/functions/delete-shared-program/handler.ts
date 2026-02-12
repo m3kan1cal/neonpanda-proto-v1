@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { deactivateSharedProgram } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 /**
  * Deactivate (soft delete) a shared program
@@ -16,7 +17,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(400, "sharedProgramId is required");
     }
 
-    console.info("Deactivating shared program:", {
+    logger.info("Deactivating shared program:", {
       userId,
       sharedProgramId,
     });
@@ -24,7 +25,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Deactivate the shared program (verifies ownership internally)
     await deactivateSharedProgram(userId, sharedProgramId);
 
-    console.info("Shared program deactivated successfully:", {
+    logger.info("Shared program deactivated successfully:", {
       userId,
       sharedProgramId,
     });
@@ -38,7 +39,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       "Share link is now inactive",
     );
   } catch (error) {
-    console.error("Error deactivating shared program:", error);
+    logger.error("Error deactivating shared program:", error);
 
     // Handle specific error cases
     if (error instanceof Error) {

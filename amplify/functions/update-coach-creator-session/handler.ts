@@ -17,6 +17,7 @@ import {
   getTodoProgress,
   isSessionComplete,
 } from "../libs/coach-creator/todo-list-utils";
+import { logger } from "../libs/logger";
 import {
   markSessionComplete,
   saveSessionAndTriggerCoachConfig,
@@ -125,7 +126,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       progressDetails,
     });
   } catch (error) {
-    console.error("Error updating coach creator session:", error);
+    logger.error("Error updating coach creator session:", error);
     return createErrorResponse(
       500,
       error instanceof Error ? error.message : "Failed to update session",

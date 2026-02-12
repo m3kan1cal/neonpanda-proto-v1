@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { querySharedPrograms } from "../../dynamodb/operations";
 import { QuerySharedProgramsResponse } from "../libs/shared-program/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 /**
  * Get all shared programs created by the authenticated user
@@ -11,7 +12,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Auth handled by middleware - userId is already validated
     const userId = event.user.userId;
 
-    console.info("Querying shared programs for user:", { userId });
+    logger.info("Querying shared programs for user:", { userId });
 
     // Query all shared programs for this user
     const sharedPrograms = await querySharedPrograms(userId);
@@ -24,14 +25,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       })),
     };
 
-    console.info("Shared programs queried successfully:", {
+    logger.info("Shared programs queried successfully:", {
       userId,
       count: sharedPrograms.length,
     });
 
     return createOkResponse(response);
   } catch (error) {
-    console.error("Error querying shared programs:", error);
+    logger.error("Error querying shared programs:", error);
     return createErrorResponse(500, "Failed to query shared programs", error);
   }
 };

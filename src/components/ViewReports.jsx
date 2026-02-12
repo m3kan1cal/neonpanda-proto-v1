@@ -26,6 +26,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
+import { logger } from "../utils/logger";
 import {
   StackIcon,
   CalendarMonthIcon,
@@ -122,7 +123,7 @@ function ViewReports() {
         );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
       }
     };
 
@@ -219,7 +220,7 @@ function ViewReports() {
 
       // Set up error callback
       reportAgentRef.current.onError = (error) => {
-        console.error("Report agent error:", error);
+        logger.error("Report agent error:", error);
         setReportAgentState((prevState) => ({
           ...prevState,
           error: error.message || "Failed to load reports",
@@ -255,7 +256,7 @@ function ViewReports() {
           limit: 100, // Get up to 100 reports (increased from 50)
         });
       } catch (error) {
-        console.error("Error loading report history:", error);
+        logger.error("Error loading report history:", error);
         // Error handling is done by the agent callback
       }
     };
@@ -283,7 +284,7 @@ function ViewReports() {
           limit: 50,
         });
       } catch (error) {
-        console.error("Error loading monthly report history:", error);
+        logger.error("Error loading monthly report history:", error);
         // Error handling is done by the agent callback
       }
     };
@@ -396,7 +397,7 @@ function ViewReports() {
 
         {/* Header with purple dot */}
         <div className="flex items-start gap-3 mb-2">
-          <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2" />
+          <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2" />
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             {formattedMonth}
           </h3>
@@ -564,7 +565,7 @@ function ViewReports() {
 
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2">
-          <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2" />
+          <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2" />
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             Weekly Report: Week {report.weekId}
           </h3>
@@ -725,7 +726,7 @@ function ViewReports() {
                 >
                   {/* Header with dot skeleton */}
                   <div className="flex items-start gap-3 mb-2">
-                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
 
@@ -765,7 +766,7 @@ function ViewReports() {
                   >
                     {/* Header with dot skeleton */}
                     <div className="flex items-start gap-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 
@@ -803,7 +804,7 @@ function ViewReports() {
                   >
                     {/* Header with dot skeleton */}
                     <div className="flex items-start gap-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 

@@ -7,6 +7,7 @@ import {
 } from "../../utils/ui/uiPatterns";
 import CommandPaletteAgent from "../../utils/agents/CommandPaletteAgent";
 import { useToast } from "../../contexts/ToastContext";
+import { logger } from "../../utils/logger";
 
 const CommandPalette = ({
   isOpen,
@@ -214,7 +215,7 @@ const CommandPalette = ({
       // Show error toast
       const errorMessage = error?.message || "Command execution failed";
       showError(errorMessage);
-      console.error("Command execution failed:", error);
+      logger.error("Command execution failed:", error);
     }
   };
 

@@ -13,6 +13,7 @@ import {
 } from "../api-helpers";
 import { NORMALIZE_EXERCISES_TOOL } from "../schemas/exercise-normalization-schema";
 import type { NormalizedExerciseName, BatchNormalizationResult } from "./types";
+import { logger } from "../logger";
 
 /**
  * System prompt for exercise name normalization
@@ -122,7 +123,7 @@ For each exercise name, determine the canonical normalized form and provide a co
 
     const processingTimeMs = Date.now() - startTime;
 
-    console.info("✅ Exercise name normalization completed:", {
+    logger.info("✅ Exercise name normalization completed:", {
       inputCount: originalNames.length,
       uniqueCount: uniqueNames.length,
       processingTimeMs,
@@ -133,7 +134,7 @@ For each exercise name, determine the canonical normalized form and provide a co
       processingTimeMs,
     };
   } catch (error) {
-    console.error("❌ Exercise name normalization failed:", error);
+    logger.error("❌ Exercise name normalization failed:", error);
 
     // Fallback: use simple normalization for all names
     const normalizations: NormalizedExerciseName[] = originalNames.map(
@@ -158,7 +159,7 @@ For each exercise name, determine the canonical normalized form and provide a co
 function fallbackNormalize(name: string): string {
   // Defensive: handle undefined/null/empty names
   if (!name || typeof name !== "string") {
-    console.warn("⚠️ fallbackNormalize received invalid name:", name);
+    logger.warn("⚠️ fallbackNormalize received invalid name:", name);
     return "unknown_exercise";
   }
 

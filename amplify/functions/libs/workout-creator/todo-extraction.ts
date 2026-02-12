@@ -20,6 +20,7 @@ import { MESSAGE_TYPES } from "../coach-conversation/types";
 import { TodoItem, ConversationMessage } from "../todo-types";
 import { WorkoutCreatorTodoList } from "./types";
 import { WORKOUT_CREATOR_TODO_SCHEMA } from "../schemas/workout-creator-todo-schema";
+import { logger } from "../logger";
 
 /**
  * Result of AI extraction from user's workout logging message
@@ -48,13 +49,13 @@ export async function extractAndUpdateTodoList(
     activeProgram?: any;
   },
 ): Promise<WorkoutExtractionResult> {
-  console.info("🔍 Extracting workout information from user response");
+  logger.info("🔍 Extracting workout information from user response");
 
   // Check if images are present
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
   if (hasImages) {
-    console.info("🖼️ Processing with images:", {
+    logger.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys!.length,
       imageKeys: imageS3Keys,
     });
@@ -163,24 +164,24 @@ Return JSON with ONLY the fields you found information for:
       );
     }
 
-    console.info("✅ Received extraction response");
+    logger.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input and fix any double-encoding
       extracted = extractionResponse.input;
-      console.info("✅ Tool-based extraction successful");
+      logger.info("✅ Tool-based extraction successful");
       // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
       extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn("⚠️ Received string response, parsing as JSON fallback");
+      logger.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
     if (!extracted || typeof extracted !== "object") {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to parse extraction response, returning current todo list",
       );
       return {
@@ -199,12 +200,12 @@ Return JSON with ONLY the fields you found information for:
     const userChangedTopic = extracted.userChangedTopic === true;
 
     if (userWantsToFinish) {
-      console.info(
+      logger.info(
         "⏭️ AI detected user wants to finish logging and skip remaining fields",
       );
     }
     if (userChangedTopic) {
-      console.info(
+      logger.info(
         "🔀 AI detected user changed topics - abandoning workout logging session",
       );
     }
@@ -238,7 +239,7 @@ Return JSON with ONLY the fields you found information for:
 
           updatedTodoList[key as keyof WorkoutCreatorTodoList] = todoItem;
 
-          console.info(
+          logger.info(
             `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
           );
         }
@@ -249,7 +250,7 @@ Return JSON with ONLY the fields you found information for:
     const extractedCount = Object.keys(extracted).filter(
       (k) => k !== "userWantsToFinish" && k !== "userChangedTopic",
     ).length;
-    console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
+    logger.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     return {
       todoList: updatedTodoList,
@@ -257,8 +258,8 @@ Return JSON with ONLY the fields you found information for:
       userChangedTopic,
     };
   } catch (error) {
-    console.error("❌ Error during extraction:", error);
-    console.error("Returning current todo list unchanged");
+    logger.error("❌ Error during extraction:", error);
+    logger.error("Returning current todo list unchanged");
     return {
       todoList: currentTodoList,
       userWantsToFinish: false,
@@ -367,23 +368,25 @@ IMAGE ANALYSIS (if images provided):
 - Gym equipment photos: Identify weights, equipment used
 
 INTENT DETECTION (userWantsToFinish field):
-Set "userWantsToFinish": true if the user indicates they want to skip remaining optional fields and finish logging.
+Set "userWantsToFinish": true ONLY if the user clearly and intentionally indicates they want to finish logging.
 
-**CRITICAL CONTEXT**: If we've collected 4+ required fields already, be MORE SENSITIVE to dismissal signals.
+**CRITICAL**: Be CONSERVATIVE with this flag. Setting it prematurely loses workout data.
 
-Detect these patterns:
-- **Explicit**: "skip", "that's all", "that's it", "log it now", "I'm done", "done", "just log it", "finish"
-- **Dismissive**: "no more", "nah", "nope", "nothing else", "no", "n"
-- **Short/terse**: ".", "ok", "okay", single letter responses when asked for optional info
-- **Acknowledgment after substantial data**: "thanks", "thank you", "got it", "sounds good", "perfect"
-  * ESPECIALLY if we already have 5+ required fields or 4+ required + all high-priority fields
-  * These signal "I'm satisfied, wrap it up" rather than continuing the conversation
+**NEVER set userWantsToFinish=true for**:
+- Confused or ambiguous responses: "um", "uh", "hm", "hmm", "?", "what"
+- Very short responses under 3 characters that aren't clear affirmatives
+- Messages that seem like the user is thinking or confused, NOT confirming
+
+**Set userWantsToFinish=true for these patterns**:
+- **Explicit finish language**: "skip", "that's all", "that's it", "log it now", "I'm done", "done", "just log it", "finish", "save it"
+- **Clear dismissals**: "no more", "nah", "nope", "nothing else"
+- **Acknowledgment after substantial data (5/6+ required fields)**: "thanks", "thank you", "got it", "sounds good", "perfect"
+  * ONLY when we already have 5+ required fields or 4+ required + all high-priority fields
+  * These signal "I'm satisfied, wrap it up"
 - **Deflection**: "I'll let you know", "maybe later", "not sure", "don't remember"
-  * User avoiding answering → wants to finish
-- **Repetition**: User repeating the same information (indicates they want to finish)
 - **Context clues**: "gotta go", "in a hurry", "quick log", "busy"
 
-**IMPORTANT**: If we have substantial progress (5/6 required OR 4/6+high-priority complete), simple acknowledgments like "thanks", "okay", "got it" should be treated as finish signals, NOT as continuing the conversation.
+**IMPORTANT**: When in doubt, set userWantsToFinish=false and let the system continue collecting data. It is much better to ask one more question than to prematurely save incomplete workout data.
 
 EXTRACTION RULES:
 1. ONLY extract information that is clearly stated or strongly implied
@@ -397,12 +400,13 @@ EXTRACTION RULES:
 7. For images: Analyze visual content carefully and extract relevant workout details
 
 INTENT DETECTION:
-- **userWantsToFinish**: Set to true if user wants to skip remaining fields and finish logging
-  - Explicit phrases: "skip", "that's all", "I'm done", "just log it", "log it now", "finish", "no more"
+- **userWantsToFinish**: Set to true ONLY if user clearly wants to finish logging
+  - Explicit phrases: "skip", "that's all", "I'm done", "just log it", "log it now", "finish", "no more", "save it", "done"
   - Acknowledgments with substantial progress (5/6 or 4/6+high-priority): "thanks", "thank you", "okay", "got it", "sounds good"
   - Deflections: "I'll let you know", "not sure", "don't remember"
-  - Consider context and tone, not just exact keywords
-  - If we have good progress already, be generous in interpreting dismissal intent
+  - NEVER set true for confused/ambiguous responses: "um", "uh", "hm", "?", "what"
+  - NEVER set true for very short messages (<3 chars) unless they are clear affirmatives ("ok", "no")
+  - When in doubt, set to false — it is better to ask one more question than lose data
 
 - **userChangedTopic**: Set to true if user has abandoned workout logging and changed topics
   - Phrases: "never mind", "forget it", "what's a good workout?", "how should I program?", "tell me about..."

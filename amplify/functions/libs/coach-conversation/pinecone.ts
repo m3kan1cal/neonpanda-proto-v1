@@ -13,6 +13,7 @@ import {
   PINECONE_METADATA_LIMIT,
 } from "../pinecone-compression";
 import { CoachConversationSummary } from "./types";
+import { logger } from "../logger";
 
 /**
  * Store coach conversation summary in Pinecone for semantic search
@@ -36,7 +37,7 @@ export async function storeCoachConversationSummaryInPinecone(
       conversation_tags: summary.structuredData.conversation_tags,
     };
 
-    console.info("📊 Preparing summary for Pinecone:", {
+    logger.info("📊 Preparing summary for Pinecone:", {
       hasCompactSummary: !!summary.compactSummary,
       usingCompactVersion: !!summary.compactSummary,
     });
@@ -85,7 +86,7 @@ Conversation Tags: ${summaryData.conversation_tags?.join(", ") || "none"}
     const initialSize = calculateMetadataSize(searchableContent, metadata);
     let finalContent = searchableContent;
 
-    console.info("📏 Initial content size check:", {
+    logger.info("📏 Initial content size check:", {
       initialSize,
       limit: PINECONE_METADATA_LIMIT,
       utilizationPercent:
@@ -96,7 +97,7 @@ Conversation Tags: ${summaryData.conversation_tags?.join(", ") || "none"}
     // Apply deterministic compression if still too large
     // This avoids AI compression entirely for most cases
     if (initialSize > PINECONE_METADATA_LIMIT) {
-      console.info(
+      logger.info(
         "🔧 Applying deterministic compression to compact summary...",
       );
       const compressedData = deterministicCompressSummary(
@@ -121,7 +122,7 @@ Conversation Tags: ${compressedData.conversation_tags?.join(", ") || "none"}
       `.trim();
 
       const compressedSize = calculateMetadataSize(finalContent, metadata);
-      console.info("✅ Deterministic compression applied:", {
+      logger.info("✅ Deterministic compression applied:", {
         originalSize: initialSize,
         compressedSize,
         reduction:
@@ -132,7 +133,7 @@ Conversation Tags: ${compressedData.conversation_tags?.join(", ") || "none"}
 
       // If STILL too large after deterministic compression, fall back to AI compression
       if (compressedSize > PINECONE_METADATA_LIMIT) {
-        console.warn(
+        logger.warn(
           "⚠️ Deterministic compression insufficient, falling back to AI compression",
         );
         await storeWithAutoCompression(
@@ -150,7 +151,7 @@ Conversation Tags: ${compressedData.conversation_tags?.join(", ") || "none"}
       await storePineconeContext(summary.userId, finalContent, metadata);
     }
 
-    console.info("✅ Conversation summary stored in Pinecone:", {
+    logger.info("✅ Conversation summary stored in Pinecone:", {
       pineconeId: summary.summaryId,
       summaryId: summary.summaryId,
       contentLength: finalContent.length,
@@ -167,7 +168,7 @@ Conversation Tags: ${compressedData.conversation_tags?.join(", ") || "none"}
 
     return { success: true, recordId: summary.summaryId };
   } catch (error) {
-    console.error("❌ Error storing conversation summary in Pinecone:", error);
+    logger.error("❌ Error storing conversation summary in Pinecone:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -187,7 +188,7 @@ export const deleteConversationSummaryFromPinecone = async (
   conversationId: string,
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.info("🗑️ Deleting conversation summary from Pinecone:", {
+    logger.info("🗑️ Deleting conversation summary from Pinecone:", {
       userId,
       conversationId,
     });
@@ -199,7 +200,7 @@ export const deleteConversationSummaryFromPinecone = async (
     });
 
     if (result.success) {
-      console.info(
+      logger.info(
         "✅ Successfully deleted conversation summary from Pinecone:",
         {
           userId,
@@ -208,7 +209,7 @@ export const deleteConversationSummaryFromPinecone = async (
         },
       );
     } else {
-      console.warn("⚠️ Failed to delete conversation summary from Pinecone:", {
+      logger.warn("⚠️ Failed to delete conversation summary from Pinecone:", {
         userId,
         conversationId,
         error: result.error,
@@ -220,14 +221,14 @@ export const deleteConversationSummaryFromPinecone = async (
       error: result.error,
     };
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Failed to delete conversation summary from Pinecone:",
       error,
     );
 
     // Don't throw error to avoid breaking the conversation deletion process
     // Pinecone cleanup failure shouldn't prevent DynamoDB deletion
-    console.warn(
+    logger.warn(
       "Conversation deletion will continue despite Pinecone cleanup failure",
     );
     return {

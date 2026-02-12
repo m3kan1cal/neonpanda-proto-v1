@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 /**
  * Changelog Data - Centralized version history for NeonPanda platform
  *
@@ -9,6 +10,48 @@
  */
 
 export const changelogEntries = [
+  {
+    version: "Release v1.0.20260211-beta",
+    date: "2026-02-11",
+    changes: {
+      added: [
+        "Workout Streak feature on Training Grounds dashboard: displays current consecutive training day streak with pixel-art FireIcon, 'Best' streak metric showing all-time longest streak, and weekly progress bar (X of 5 workouts Mon-Sun)",
+        "StreakCard component in Your Highlights section with dual hero numbers (current streak + best streak in neon cyan), weekly progress bar with pink-to-purple gradient fill, and contextual nudge messages based on training activity",
+        "Best streak calculation in WorkoutAgent (_calculateBestStreak) scanning all workout history to find longest consecutive day sequence; stored in workoutState.bestStreak",
+        "Top Exercises Card in Your Highlights section showing 6 most-performed exercises in 2-column grid layout with exercise name, workout count, relative timestamps, and discipline badges",
+        "TopExercisesCard component with compact card styling matching Recent PRs grid pattern, WeightPlateIconTiny icon header, and count badges",
+        "ExerciseAgent integration in TrainingGroundsV2 for loading top exercises with limit: 6, including initialization in useEffect and state management",
+        "PR unit of measure tracking: unit field added to PRAchievement data model, JSON schema, AI extraction guidance, and display across RecentPRsCard and WorkoutViewer",
+        "FireIcon and FireIconSmall pixel-art SVG components in SynthwaveComponents using user-provided retro fire icon with fill='currentColor' for theme integration",
+        "formatRelativeTime utility in dateUtils.js for consistent relative timestamp formatting (e.g., '2d ago', '5h ago', '3mo ago') across all highlight cards",
+        "_getUniqueDateStrings helper method in WorkoutAgent for shared date extraction logic used by both streak calculation methods",
+      ],
+      changed: [
+        "QuickStats 'Days' metric replaced with 'Streak' metric displaying currentStreak with FireIcon, showing consecutive training days instead of total training days",
+        "QuickStats 'This Week' tooltip updated to display 'X of 5 workouts completed (Mon-Sun)' for clearer weekly target context",
+        "Progress bar styling standardized across all three locations (ManageWorkouts RPE/Intensity, TodaysWorkoutRow program progress, StreakCard weekly progress) to use consistent container (bg-synthwave-bg-primary/60) and fill pattern (gradient with duration-500 transition) while preserving individual heights and colors",
+        "TodaysWorkoutRow program progress bar height increased from 3px to 6px for better visibility, with mb-1.5 gutter added to 'Day X of Y' meta row",
+        "Training Grounds Your Highlights section order updated: desktop left column now shows Active Programs → Reports & Insights → Workout History → Recent Conversations; desktop right column shows Streak → Recent PRs → Top Exercises",
+        "Training Grounds pagination limit reduced from 5 to 3 items for Recent Conversations, Workout History, and Reports sections, creating more compact initial view with Show More links",
+        "Page-level skeleton loading structure updated to match exact component-level skeletons, eliminating double-skeleton visual transition on initial load",
+        "Streak card best metric resized from small stacked layout to same-size side-by-side layout (both using text-4xl), with 'Best:' label and 'days' suffix matching main metric styling",
+        "TopExercisesCard icon changed from ActivityIcon to WeightPlateIconTiny to match 'Exercises' menu item in sidebar navigation",
+        "TopExercisesCard restyled from vertical list to 2-column grid with compact cards matching Recent PRs visual pattern (hero count number, time badge, discipline badges)",
+        "_calculateLastWorkoutDaysAgo in WorkoutAgent changed from elapsed-time based (Math.floor(hours / 24)) to calendar-date based calculation, matching streak semantics and fixing nudge message mismatch",
+        "WorkoutViewer now accepts and uses unitSystem prop from user profile preferences instead of hardcoded 'imperial', respecting metric-preferring users for PR unit display",
+        "PR detection examples in extraction.ts diversified to show all five PR types (1rm with lbs, distance_pr with mi, workout_time with min, pace_pr with min/mi, volume_pr with reps) instead of all examples using 1rm/lbs",
+        "PR_ACHIEVEMENT_STRUCTURE documentation enhanced to map each pr_type to its typical units (1rm → lbs/kg, volume_pr → reps, distance_pr → mi/km, pace_pr → min/mi, workout_time → min/sec)",
+      ],
+      fixed: [
+        "Streak nudge message showing 'You trained today' when workout was actually yesterday (< 24 hours ago but different calendar day); fixed by making lastWorkoutDaysAgo calendar-based instead of elapsed-time based",
+        "Duplicate formatRelativeTime utility across RecentPRsCard, TopExercisesCard, and ManageExercises; extracted to shared dateUtils.js with month-level formatting support",
+        "Duplicate date extraction logic in _calculateWorkoutStreak and _calculateBestStreak; extracted to shared _getUniqueDateStrings helper method reducing ~28 lines of duplicate code",
+        "TopExercisesCard load limit (5) didn't match display limit (6), creating uneven 2+2+1 grid layout; increased load limit to 6 for balanced 3×2 grid",
+        "Hardcoded 'imperial' unit system in WorkoutViewer.jsx ignored user preferences; now accepts unitSystem prop from user profile",
+        "PR detection prompt examples biased toward 1rm type with lbs units; diversified examples to demonstrate distance_pr, pace_pr, volume_pr, and workout_time PRs with appropriate units",
+      ],
+    },
+  },
   {
     version: "Release v1.0.20260210-beta",
     date: "2026-02-10",

@@ -58,6 +58,7 @@ import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
 import { createProgramDesignerSession } from "../utils/apis/programDesignerApi";
+import { logger } from "../utils/logger";
 
 // ---------------------------------------------------------------------------
 // Helper: static contextual greeting (used as instant fallback)
@@ -275,7 +276,7 @@ function TrainingGroundsV2() {
         setCoachData(loaded);
         setIsLoadingCoachData(false);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
         setCoachDataError(error.message);
         setIsLoadingCoachData(false);
       }
@@ -302,7 +303,7 @@ function TrainingGroundsV2() {
           }
         },
         onError: (error) =>
-          console.error("CoachConversationAgent error:", error),
+          logger.error("CoachConversationAgent error:", error),
       });
     }
     return () => {
@@ -415,7 +416,7 @@ function TrainingGroundsV2() {
           return programAgentRef.current?.loadAllTodaysWorkouts();
         })
         .catch((error) => {
-          console.error(
+          logger.error(
             "TrainingGroundsV2: Error loading program data:",
             error,
           );
@@ -478,7 +479,7 @@ function TrainingGroundsV2() {
       } catch (error) {
         // Silently fall back to static greeting on any error
         if (!abortController.signal.aborted) {
-          console.warn(
+          logger.warn(
             "AI greeting unavailable, using static fallback:",
             error.message,
           );
@@ -540,7 +541,7 @@ function TrainingGroundsV2() {
       showSuccess("Coach name updated successfully");
       return true;
     } catch (error) {
-      console.error("Error updating coach name:", error);
+      logger.error("Error updating coach name:", error);
       showError("Failed to update coach name");
       return false;
     }
@@ -557,7 +558,7 @@ function TrainingGroundsV2() {
       await programAgentRef.current.loadAllTodaysWorkouts();
       showSuccess("Rest day completed! Moving to next day.");
     } catch (error) {
-      console.error("Error completing rest day:", error);
+      logger.error("Error completing rest day:", error);
       showError("Failed to complete rest day");
     } finally {
       setIsCompletingRestDay(false);
@@ -574,7 +575,7 @@ function TrainingGroundsV2() {
         `/training-grounds/program-designer?userId=${userId}&coachId=${coachId}&programDesignerSessionId=${sessionId}`,
       );
     } catch (error) {
-      console.error("Error creating program designer session:", error);
+      logger.error("Error creating program designer session:", error);
       showError("Failed to create program design session");
       setIsCreatingProgram(false);
     }
@@ -644,7 +645,7 @@ function TrainingGroundsV2() {
                 }))}
               />
             </div>
-            <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-2 shrink-0">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
@@ -667,8 +668,17 @@ function TrainingGroundsV2() {
                     <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
-                    <div className="h-[3px] bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
-                    <div className="flex-1 min-h-[16px]"></div>
+                    <div className="h-[6px] bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
+                    <div className="space-y-1.5 pt-1">
+                      {[1].map((j) => (
+                        <div key={j} className="flex items-center gap-2">
+                          <div className="w-5 h-5 min-w-[20px] rounded-md bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
+                          <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                          <div className="h-3 w-8 bg-synthwave-text-muted/20 rounded animate-pulse shrink-0"></div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex-1 min-h-[4px]"></div>
                     <div className="h-12 bg-synthwave-text-muted/20 rounded-[10px] animate-pulse w-full"></div>
                   </div>
                 </div>
@@ -697,7 +707,7 @@ function TrainingGroundsV2() {
                         key={i}
                         className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 rounded-lg p-4 flex items-center gap-4"
                       >
-                        <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse flex-shrink-0"></div>
+                        <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                         <div className="flex-1 space-y-2">
                           <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                           <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
@@ -748,7 +758,7 @@ function TrainingGroundsV2() {
                 {/* Streak skeleton - matches StreakCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
                   </div>
                   <div className="h-16 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
@@ -756,7 +766,7 @@ function TrainingGroundsV2() {
                 {/* Recent PRs skeleton - matches RecentPRsCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -775,7 +785,7 @@ function TrainingGroundsV2() {
                 {/* Top Exercises skeleton - matches TopExercisesCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -855,7 +865,7 @@ function TrainingGroundsV2() {
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
         <svg
-          className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0 mt-1.5"
+          className="w-5 h-5 text-synthwave-neon-pink shrink-0 mt-1.5"
           fill="currentColor"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -963,7 +973,7 @@ function TrainingGroundsV2() {
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
         <svg
-          className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0 mt-1.5"
+          className="w-5 h-5 text-synthwave-neon-pink shrink-0 mt-1.5"
           fill="currentColor"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -1120,7 +1130,7 @@ function TrainingGroundsV2() {
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
         <svg
-          className="w-5 h-5 text-synthwave-neon-purple flex-shrink-0 mt-1.5"
+          className="w-5 h-5 text-synthwave-neon-purple shrink-0 mt-1.5"
           fill="currentColor"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -1403,7 +1413,7 @@ function TrainingGroundsV2() {
           </div>
 
           {/* Quick action pills -- visible on desktop, hidden on mobile (FAB covers mobile) */}
-          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             <button
               onClick={handleStartNewConversation}
               disabled={conversationAgentState.isLoadingItem}
@@ -1498,7 +1508,7 @@ function TrainingGroundsV2() {
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
                 <svg
-                  className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0 mt-1.5"
+                  className="w-5 h-5 text-synthwave-neon-cyan shrink-0 mt-1.5"
                   fill="currentColor"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -1547,7 +1557,7 @@ function TrainingGroundsV2() {
               <div className={`${containerPatterns.cardMedium} p-6`}>
                 <div className="flex items-start space-x-3 mb-4">
                   <svg
-                    className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0 mt-1.5"
+                    className="w-5 h-5 text-synthwave-neon-cyan shrink-0 mt-1.5"
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"

@@ -13,6 +13,7 @@ import {
   DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { logger } from "./logger";
 
 // Singleton S3 client
 let s3ClientInstance: S3Client | null = null;
@@ -206,7 +207,7 @@ export async function deleteObject(
   const client = getS3Client();
   const bucket = bucketName || getBucketName();
 
-  console.info("🗑️ Deleting S3 object:", {
+  logger.info("🗑️ Deleting S3 object:", {
     bucket,
     key: s3Key,
   });
@@ -218,7 +219,7 @@ export async function deleteObject(
 
   await client.send(command);
 
-  console.info("✅ S3 object deleted successfully:", {
+  logger.info("✅ S3 object deleted successfully:", {
     bucket,
     key: s3Key,
   });
@@ -243,11 +244,11 @@ export async function deleteObjects(
   const bucket = bucketName || getBucketName();
 
   if (s3Keys.length === 0) {
-    console.info("No S3 objects to delete");
+    logger.info("No S3 objects to delete");
     return { deletedCount: 0, errors: [] };
   }
 
-  console.info("🗑️ Batch deleting S3 objects:", {
+  logger.info("🗑️ Batch deleting S3 objects:", {
     bucket,
     count: s3Keys.length,
   });
@@ -289,9 +290,9 @@ export async function deleteObjects(
         }
       }
 
-      console.info(`✅ Batch deleted ${deletedInBatch} objects from S3`);
+      logger.info(`✅ Batch deleted ${deletedInBatch} objects from S3`);
     } catch (error) {
-      console.error("❌ Failed to batch delete S3 objects:", error);
+      logger.error("❌ Failed to batch delete S3 objects:", error);
       // Add all keys in this batch to errors
       for (const key of batch) {
         allErrors.push({
@@ -302,7 +303,7 @@ export async function deleteObjects(
     }
   }
 
-  console.info("Batch delete completed:", {
+  logger.info("Batch delete completed:", {
     bucket,
     totalRequested: s3Keys.length,
     totalDeleted,

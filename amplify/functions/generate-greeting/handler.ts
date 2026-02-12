@@ -24,6 +24,7 @@ import type {
   GenerateGreetingResponse,
 } from "../libs/greeting/types";
 import { VALID_TIMES_OF_DAY } from "../libs/greeting/types";
+import { logger } from "../libs/logger";
 import {
   buildGreetingSystemPrompt,
   buildGreetingUserPrompt,
@@ -75,7 +76,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     );
   }
 
-  console.info("Generating coach greeting:", {
+  logger.info("Generating coach greeting:", {
     userId,
     coachId,
     timeOfDay,
@@ -113,7 +114,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     return createOkResponse(response);
   } catch (error) {
-    console.error("Error generating greeting:", error);
+    logger.error("Error generating greeting:", error);
     return createErrorResponse(500, "Failed to generate greeting");
   }
 };

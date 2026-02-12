@@ -1,6 +1,7 @@
 import type { Context } from "aws-lambda";
 import util from "util";
 import stream from "stream";
+import { logger } from "../libs/logger";
 
 const { Readable } = stream;
 const pipeline = util.promisify(stream.pipeline);
@@ -82,7 +83,7 @@ async function validateAndExtractParams(
     );
   }
 
-  console.info("✅ Path parameters validated:", {
+  logger.info("✅ Path parameters validated:", {
     userId,
     sessionId,
   });
@@ -94,7 +95,7 @@ async function validateAndExtractParams(
       maxImages: 5,
     });
 
-  console.info("✅ Request body validated:", {
+  logger.info("✅ Request body validated:", {
     hasUserResponse: !!userResponse,
     hasMessageTimestamp: !!messageTimestamp,
     userResponseLength: userResponse.length,
@@ -119,22 +120,22 @@ async function* createCoachCreatorEventStream(
 ): AsyncGenerator<string, void, unknown> {
   // Immediately yield start event
   yield formatStartEvent();
-  console.info("📡 Yielded start event immediately");
+  logger.info("📡 Yielded start event immediately");
 
   // Yield coach creator acknowledgment immediately while processing starts (as contextual update)
   const randomAcknowledgment = getRandomCoachCreatorAcknowledgement();
   yield formatContextualEvent(randomAcknowledgment, "session_review");
-  console.info(
+  logger.info(
     `📡 Yielded coach creator acknowledgment (contextual): "${randomAcknowledgment}"`,
   );
 
   try {
     // Step 1: Validate and extract parameters
-    console.info("🔍 Step 1: Validating parameters");
+    logger.info("🔍 Step 1: Validating parameters");
     const params = await validateAndExtractParams(event);
 
     // Step 2: Load session data + Pinecone context + contextual update (ALL PARALLELIZED)
-    console.info(
+    logger.info(
       "📂 Step 2: Loading session data + Pinecone context + generating contextual update",
     );
     const phase1StartTime = Date.now();
@@ -161,7 +162,7 @@ async function* createCoachCreatorEventStream(
           minScore: 0.5,
         },
       ).catch((error) => {
-        console.warn(
+        logger.warn(
           "⚠️ Pinecone query failed, continuing without context:",
           error,
         );
@@ -175,26 +176,26 @@ async function* createCoachCreatorEventStream(
     ]);
 
     const phase1Time = Date.now() - phase1StartTime;
-    console.info(`✅ Phase 1 parallel loading completed in ${phase1Time}ms`);
+    logger.info(`✅ Phase 1 parallel loading completed in ${phase1Time}ms`);
 
     // Format Pinecone context for prompt injection
     let userHistoryContext = "";
     if (pineconeResult.success && pineconeResult.matches.length > 0) {
       userHistoryContext = formatPineconeContext(pineconeResult.matches);
-      console.info("✅ Pinecone context retrieved for coach creator:", {
+      logger.info("✅ Pinecone context retrieved for coach creator:", {
         totalMatches: pineconeResult.totalMatches,
         relevantMatches: pineconeResult.relevantMatches,
         contextLength: userHistoryContext.length,
       });
     } else {
-      console.info("📭 No Pinecone context available for coach creator");
+      logger.info("📭 No Pinecone context available for coach creator");
     }
 
     yield formatContextualEvent(startingUpdate, "session_review");
-    console.info("💬 Yielded starting update (Vesper):", startingUpdate);
+    logger.info("💬 Yielded starting update (Vesper):", startingUpdate);
 
     // Step 3: Use the AI-driven to-do list conversation flow
-    console.info("✨ Using to-do list based conversational flow");
+    logger.info("✨ Using to-do list based conversational flow");
 
     // Use generator to stream conversation chunks and get processed response
     const conversationGenerator = handleTodoListConversation(
@@ -241,7 +242,7 @@ async function* createCoachCreatorEventStream(
       });
     }
   } catch (error) {
-    console.error("❌ Error in coach creator streaming:", error);
+    logger.error("❌ Error in coach creator streaming:", error);
     const errorEvent = formatValidationErrorEvent(
       error instanceof Error ? error : new Error("Unknown error occurred"),
     );
@@ -257,7 +258,7 @@ const internalStreamingHandler: StreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
-  console.info("🎬 Starting coach creator session streaming handler");
+  logger.info("🎬 Starting coach creator session streaming handler");
 
   try {
     // Create SSE event stream
@@ -267,12 +268,12 @@ const internalStreamingHandler: StreamingHandler = async (
     // Pipeline the SSE stream to response stream
     await pipeline(sseEventStream, responseStream);
 
-    console.info("✅ Streaming pipeline completed successfully");
+    logger.info("✅ Streaming pipeline completed successfully");
 
     // FIX: Prevent Lambda from hanging - all streaming is complete, don't wait for event loop
     context.callbackWaitsForEmptyEventLoop = false;
   } catch (error) {
-    console.error("❌ Fatal error in streaming handler:", error);
+    logger.error("❌ Fatal error in streaming handler:", error);
     // Error will be caught by Lambda runtime
     throw error;
   }
@@ -306,7 +307,7 @@ const authenticatedStreamingHandler = async (
     const path = event.rawPath || "";
 
     if (!path || path === "/" || method === "OPTIONS") {
-      console.info("⚠️ Ignoring health check or OPTIONS request:", {
+      logger.info("⚠️ Ignoring health check or OPTIONS request:", {
         method,
         path,
       });
@@ -316,7 +317,7 @@ const authenticatedStreamingHandler = async (
     }
 
     // OPTIONS requests are handled automatically by Lambda Function URL CORS config
-    console.info("🚀 Processing streaming request:", {
+    logger.info("🚀 Processing streaming request:", {
       method,
       path,
     });
@@ -329,7 +330,7 @@ const authenticatedStreamingHandler = async (
       routePattern: STREAMING_ROUTE_PATTERNS.COACH_CREATOR_SESSION,
     })(event, responseStream, context);
   } catch (error) {
-    console.error("❌ Authentication error:", error);
+    logger.error("❌ Authentication error:", error);
 
     // Create error stream using pipeline approach
     const errorEvent = formatAuthErrorEvent(
@@ -343,11 +344,11 @@ const authenticatedStreamingHandler = async (
 
 // Use awslambda.streamifyResponse to enable streaming responses
 // awslambda is a global object provided by Lambda's Node.js runtime
-console.info(
+logger.info(
   "🔧 awslambda global available:",
   typeof (globalThis as any).awslambda !== "undefined",
 );
-console.info(
+logger.info(
   "🔧 streamifyResponse available:",
   typeof (globalThis as any).awslambda?.streamifyResponse === "function",
 );
@@ -366,7 +367,7 @@ if (
   );
 }
 
-console.info("✅ Using awslambda.streamifyResponse for streaming mode");
+logger.info("✅ Using awslambda.streamifyResponse for streaming mode");
 handler = awslambda.streamifyResponse(authenticatedStreamingHandler);
 
 export { handler };

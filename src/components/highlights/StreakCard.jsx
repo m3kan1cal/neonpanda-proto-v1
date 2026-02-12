@@ -33,7 +33,7 @@ export default function StreakCard({
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
-          <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+          <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
           <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
         </div>
         <div className="h-16 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
@@ -51,9 +51,7 @@ export default function StreakCard({
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
       <div className="flex items-start space-x-3 mb-4">
-        <span
-          className={`flex-shrink-0 mt-1.5 ${streakActive ? "text-synthwave-neon-pink" : "text-synthwave-text-muted"}`}
-        >
+        <span className="shrink-0 mt-1.5 text-synthwave-neon-pink">
           <FireIconSmall />
         </span>
         <h3 className="font-russo font-bold text-white text-lg uppercase">

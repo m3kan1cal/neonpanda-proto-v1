@@ -1,5 +1,6 @@
 import { getCoach } from '../apis/coachApi';
 import CoachAgent from './CoachAgent';
+import { logger } from "../logger";
 
 /**
  * TrainingGroundsAgent - Handles business logic for Training Grounds page
@@ -72,8 +73,8 @@ export class TrainingGroundsAgent {
           ? primaryMethodologyRaw.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
           : 'Custom';
 
-        console.info('Full coach config loaded:', coach);
-        console.info('Methodology value:', formattedPrimaryMethodology);
+        logger.info('Full coach config loaded:', coach);
+        logger.info('Methodology value:', formattedPrimaryMethodology);
 
         const formattedCoachData = {
           name: this.coachAgent.formatCoachName(coach.coachConfig?.coach_name),
@@ -100,7 +101,7 @@ export class TrainingGroundsAgent {
         });
       }
     } catch (err) {
-      console.error('Error fetching coach data:', err);
+      logger.error('Error fetching coach data:', err);
       this._updateState({
         error: 'Failed to load coach data',
         isLoading: false
@@ -124,7 +125,7 @@ export class TrainingGroundsAgent {
       // Load coach data only
       await this.loadCoachData(userId, coachId);
     } catch (error) {
-      console.error('Error initializing training grounds:', error);
+      logger.error('Error initializing training grounds:', error);
     }
   }
 

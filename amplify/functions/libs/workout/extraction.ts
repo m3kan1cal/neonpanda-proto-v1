@@ -20,6 +20,7 @@ import {
 import { parseJsonWithFallbacks } from "../response-utils";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseCompletedAt } from "../analytics/date-utils";
+import { logger } from "../logger";
 import {
   WORKOUT_COMPLEXITY_SCHEMA,
   WorkoutComplexityResult,
@@ -85,7 +86,7 @@ export const checkWorkoutComplexity = async (
       const complexityData = result.input as WorkoutComplexityResult;
       const duration = Date.now() - startTime;
 
-      console.info("🔍 AI workout complexity analysis:", {
+      logger.info("🔍 AI workout complexity analysis:", {
         isComplex: complexityData.isComplex,
         confidence: complexityData.confidence,
         reasoning: complexityData.reasoning,
@@ -98,7 +99,7 @@ export const checkWorkoutComplexity = async (
     }
 
     // Fallback if tool use didn't work as expected - default to complex (conservative)
-    console.warn(
+    logger.warn(
       "⚠️ AI complexity detection returned unexpected format, defaulting to complex",
     );
     return {
@@ -110,7 +111,7 @@ export const checkWorkoutComplexity = async (
     };
   } catch (error) {
     // On error, default to complex (conservative - enables thinking when uncertain)
-    console.error(
+    logger.error(
       "❌ AI complexity detection failed, defaulting to complex:",
       error,
     );
@@ -327,7 +328,7 @@ export const buildWorkoutExtractionPrompt = (
 
   // Otherwise, fall back to full prompt below (for backward compatibility)
   // This path should rarely be hit since discipline is always detected now
-  console.warn(
+  logger.warn(
     "⚠️ buildWorkoutExtractionPrompt called without discipline - using legacy fallback path",
   );
 
@@ -662,23 +663,27 @@ EXTRACTION GUIDELINES:
 
 8.6. PR (PERSONAL RECORD) DETECTION:
    - EXPLICIT PR INDICATORS:
-     * "a PR for me" → pr_achievements: [{pr_type: "1rm", exercise: "...", new_best: weight, unit: "lbs"}]
-     * "a first for me" → pr_achievements: [{pr_type: "1rm", exercise: "...", new_best: value, unit: "lbs"}]
-     * "first time doing X" → pr_achievements: [{pr_type: "1rm", exercise: "X", new_best: value, unit: "lbs"}]
+     * "a PR for me" → extract as PR achievement with appropriate pr_type and unit
+     * "a first for me" → extract as PR achievement with appropriate pr_type and unit
+     * "first time doing X" → extract as PR achievement
      * "personal best", "new record", "PR" → extract as PR achievement
-     * "heaviest I've done", "never done X before" → extract as PR achievement
+     * "longest run", "fastest pace", "most reps", "heaviest weight" → extract with matching pr_type
+     * "never done X before" → extract as PR achievement
    - PR ACHIEVEMENT STRUCTURE:
-     * pr_type: "1rm" | "volume_pr" | "distance_pr" | "pace_pr" | "workout_time"
+     * pr_type: "1rm" (heaviest weight) | "volume_pr" (most reps/total volume) | "distance_pr" (longest distance) | "pace_pr" (fastest pace) | "workout_time" (fastest completion)
      * exercise: normalized exercise name
      * new_best: numeric value achieved
-     * unit: appropriate unit (lbs, kg, mi, km, min, sec)
-     * context: any context about the PR (e.g., "first time with 30lb kettlebells")
+     * unit: match to pr_type → 1rm: lbs/kg, volume_pr: reps, distance_pr: mi/km, pace_pr: min/mi or min/km, workout_time: min/sec
+     * context: any additional context about the PR
    - USER QUESTIONS ABOUT PRs:
      * "does that make it a PR by default?" → Yes, first time at a new weight/movement = PR
      * When user asks about PR status, confirm and extract as PR achievement
    - EXAMPLES:
      * "deadlift 205 - a PR for me" → pr_achievements: [{pr_type: "1rm", exercise: "deadlift", new_best: 205, unit: "lbs"}]
-     * "double KB swings with 30 pounds - a first for me" → pr_achievements: [{pr_type: "1rm", exercise: "double_kettlebell_swing", new_best: 30, unit: "lbs", context: "First time at this weight"}]
+     * "ran 5 miles - my longest distance yet" → pr_achievements: [{pr_type: "distance_pr", exercise: "running", new_best: 5, unit: "mi"}]
+     * "finished the workout in 24 minutes - new best time" → pr_achievements: [{pr_type: "workout_time", exercise: "workout", new_best: 24, unit: "min"}]
+     * "8 minute mile pace - personal best" → pr_achievements: [{pr_type: "pace_pr", exercise: "running", new_best: 8, unit: "min/mi"}]
+     * "100 total pull-ups - never done that many before" → pr_achievements: [{pr_type: "volume_pr", exercise: "pull_up", new_best: 100, unit: "reps"}]
 
 8.7. WEARABLE DEVICE DATA EXTRACTION (Apple Watch, Garmin, Fitbit, etc.):
    - CALORIE DATA:
@@ -862,7 +867,7 @@ const validateTimeInSeconds = (
   // If value seems too small to be seconds (likely minutes), warn but don't auto-convert
   // Let the AI handle proper conversion based on context
   if (numValue > 0 && numValue < 10 && fieldName.includes("duration")) {
-    console.warn(
+    logger.warn(
       `⚠️ Suspicious ${fieldName} value: ${numValue} (too small for seconds, might be minutes)`,
     );
   }
@@ -946,7 +951,7 @@ export const applyPerformanceMetricDefaults = (
     workoutData.performance_metrics.intensity === undefined
   ) {
     workoutData.performance_metrics.intensity = 5;
-    console.info("📊 Applied default intensity: 5 (moderate)");
+    logger.info("📊 Applied default intensity: 5 (moderate)");
   }
 
   // Set default perceived_exertion (5 = moderate) if not specified
@@ -955,7 +960,7 @@ export const applyPerformanceMetricDefaults = (
     workoutData.performance_metrics.perceived_exertion === undefined
   ) {
     workoutData.performance_metrics.perceived_exertion = 5;
-    console.info("📊 Applied default perceived_exertion: 5 (moderate)");
+    logger.info("📊 Applied default perceived_exertion: 5 (moderate)");
   }
 
   // Apply default RPE to individual exercises in discipline-specific data
@@ -968,7 +973,7 @@ export const applyPerformanceMetricDefaults = (
     sets.forEach((set: any, setIdx: number) => {
       if (set.rpe === null || set.rpe === undefined) {
         set.rpe = 5;
-        console.info(`📊 Applied default RPE to set ${setIdx + 1}: 5`);
+        logger.info(`📊 Applied default RPE to set ${setIdx + 1}: 5`);
       }
     });
   }
@@ -1201,7 +1206,7 @@ Examples:
 `;
 
   try {
-    console.info("Extracting workout completion time using Nova Micro:", {
+    logger.info("Extracting workout completion time using Nova Micro:", {
       userMessage: userMessage.substring(0, 100),
       messageTimestamp: referenceTime,
       currentTime: new Date().toISOString(),
@@ -1224,7 +1229,7 @@ Examples:
       result = parseJsonWithFallbacks(response.trim());
     } catch (parseError) {
       // If parsing fails, log warning and use message time as fallback
-      console.warn(
+      logger.warn(
         "⚠️ Time extraction returned non-JSON response, using message time as fallback:",
         {
           responsePreview: response.substring(0, 100),
@@ -1237,7 +1242,7 @@ Examples:
       return messageTimestamp ? new Date(messageTimestamp) : new Date();
     }
 
-    console.info("AI time extraction result:", {
+    logger.info("AI time extraction result:", {
       userMessage: userMessage.substring(0, 100),
       extractedTime: result.completedAt,
       confidence: result.confidence,
@@ -1257,7 +1262,7 @@ Examples:
       // AUTO-CORRECT workouts with future dates (more than 1 hour in the future)
       // We never reject workouts, but we do correct impossible dates
       if (hoursDiff > 1) {
-        console.info(
+        logger.info(
           "ℹ️ AUTO-CORRECTING: Extracted workout time is in the future relative to message time:",
           {
             extractedTime: extractedTime.toISOString(),
@@ -1270,7 +1275,7 @@ Examples:
 
         // Use message time as corrected completion time
         // Workout will still be saved, just with corrected timestamp
-        console.info(
+        logger.info(
           "✅ Corrected workout time to message timestamp (workout will be saved)",
         );
         return messageTime;
@@ -1284,7 +1289,7 @@ Examples:
       ? parseCompletedAt(result.completedAt, "extractCompletedAtTime")
       : null;
   } catch (error) {
-    console.error(
+    logger.error(
       "AI time extraction failed, using current time as default:",
       error,
     );
@@ -1339,7 +1344,7 @@ SUMMARY:`;
 
     return cleanSummary;
   } catch (error) {
-    console.error("Error generating workout summary:", error);
+    logger.error("Error generating workout summary:", error);
 
     // Fallback to basic summary if AI fails
     const workoutName = workoutData.workout_name || "Workout";
@@ -1444,7 +1449,7 @@ EDGE CASES:
 Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0.5 for unclear.`;
 
   try {
-    console.info("Classifying discipline as qualitative/quantitative:", {
+    logger.info("Classifying discipline as qualitative/quantitative:", {
       discipline,
       hasWorkoutContext: !!workoutData,
     });
@@ -1483,11 +1488,11 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
         "workout-discipline",
       );
 
-      console.info(
+      logger.info(
         "✅ Stored discipline classification prompt + response in S3",
       );
     } catch (s3Error) {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to store discipline classification in S3 (non-critical):",
         s3Error,
       );
@@ -1496,7 +1501,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
     // Use existing response parsing utility
     const result = parseJsonWithFallbacks(response);
 
-    console.info("AI discipline classification result:", {
+    logger.info("AI discipline classification result:", {
       discipline,
       isQualitative: result.isQualitative,
       requiresPreciseMetrics: result.requiresPreciseMetrics,
@@ -1509,7 +1514,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
     // Return the full classification result
     return result;
   } catch (error) {
-    console.error("AI discipline classification failed:", error);
+    logger.error("AI discipline classification failed:", error);
     throw new Error(
       `Failed to classify discipline "${discipline}": ${error instanceof Error ? error.message : "Unknown error"}`,
     );

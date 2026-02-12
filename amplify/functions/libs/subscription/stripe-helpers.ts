@@ -1,4 +1,5 @@
 import { SubscriptionTier } from "./types";
+import { logger } from "../logger";
 
 export function mapStripePriceToTier(priceId: string): SubscriptionTier {
   const electricPriceId = process.env.ELECTRICPANDA_PRICE_ID;
@@ -13,7 +14,7 @@ export function mapStripePriceToTier(priceId: string): SubscriptionTier {
   }
 
   // Default to free if price ID not recognized
-  console.warn(`Unknown price ID: ${priceId}, defaulting to free`);
+  logger.warn(`Unknown price ID: ${priceId}, defaulting to free`);
   return "free";
 }
 

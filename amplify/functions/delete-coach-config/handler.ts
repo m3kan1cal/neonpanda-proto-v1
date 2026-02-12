@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { updateCoachConfig, queryPrograms } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -28,7 +29,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           ? ` and ${associatedPrograms.length - 3} more`
           : "";
 
-      console.warn("Cannot delete coach with associated programs:", {
+      logger.warn("Cannot delete coach with associated programs:", {
         coachId,
         userId,
         programCount: associatedPrograms.length,
@@ -46,7 +47,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       status: "archived",
     });
 
-    console.info("Coach deleted successfully:", {
+    logger.info("Coach deleted successfully:", {
       coachId,
       userId,
     });
@@ -58,7 +59,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       "Coach deleted successfully",
     );
   } catch (error) {
-    console.error("Error deleting coach:", error);
+    logger.error("Error deleting coach:", error);
     return createErrorResponse(500, "Failed to delete coach", error);
   }
 };

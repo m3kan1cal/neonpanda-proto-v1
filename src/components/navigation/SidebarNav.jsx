@@ -32,6 +32,7 @@ import {
 } from "../../utils/navigation";
 import { Tooltip } from "react-tooltip";
 import QuickAccessPopover from "./QuickAccessPopover";
+import { logger } from "../../utils/logger";
 
 // Quick Actions Popover Component with Floating UI positioning
 const QuickActionsPopover = ({
@@ -503,7 +504,7 @@ const SidebarNav = () => {
       if (context.onCommandPaletteToggle && commandMap[item.action]) {
         context.onCommandPaletteToggle(commandMap[item.action]);
       } else {
-        console.info(
+        logger.info(
           `Quick action clicked: ${item.action} - Command palette not available`,
         );
       }
@@ -890,7 +891,7 @@ const SidebarNav = () => {
               {/* Avatar - using UserAvatar component */}
               <div
                 className={`
-                flex-shrink-0
+                shrink-0
                 ${isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10"}
               `}
               >

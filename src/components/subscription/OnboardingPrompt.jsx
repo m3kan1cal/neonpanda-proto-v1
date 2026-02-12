@@ -12,6 +12,7 @@ import {
   SUBSCRIPTION_TIERS,
 } from "../../utils/apis/subscriptionApi";
 import { ArrowRightIcon, CheckIcon } from "../themes/SynthwaveComponents";
+import { logger } from "../../utils/logger";
 
 /**
  * OnboardingPrompt - Feature announcement prompt shown after first login
@@ -47,7 +48,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         window.location.href = paymentLink;
       }, 1000);
     } else {
-      console.error("Payment link not configured");
+      logger.error("Payment link not configured");
       setIsLoading(false);
     }
   };
@@ -113,7 +114,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
                 key={index}
                 className="flex items-center gap-2 font-rajdhani text-synthwave-text-secondary text-sm"
               >
-                <div className="text-synthwave-neon-pink flex-shrink-0">
+                <div className="text-synthwave-neon-pink shrink-0">
                   <CheckIcon />
                 </div>
                 {feature}

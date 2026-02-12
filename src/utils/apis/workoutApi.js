@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 import {
   getApiUrl,
   authenticatedFetch,
@@ -64,7 +65,7 @@ export const getWorkouts = async (userId, options = {}) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getWorkouts: Error response:", errorText);
+      logger.error("getWorkouts: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -83,7 +84,7 @@ export const getWorkouts = async (userId, options = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getWorkouts: API Error:", error);
+    logger.error("getWorkouts: API Error:", error);
     throw error;
   }
 };
@@ -109,7 +110,7 @@ export const getWorkout = async (userId, workoutId) => {
       }
 
       const errorText = await response.text();
-      console.error("getWorkout: Error response:", errorText);
+      logger.error("getWorkout: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -128,7 +129,7 @@ export const getWorkout = async (userId, workoutId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getWorkout: API Error:", error);
+    logger.error("getWorkout: API Error:", error);
     throw error;
   }
 };
@@ -161,7 +162,7 @@ export const updateWorkout = async (userId, workoutId, updates) => {
       }
 
       const errorText = await response.text();
-      console.error("updateWorkout: Error response:", errorText);
+      logger.error("updateWorkout: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -183,7 +184,7 @@ export const updateWorkout = async (userId, workoutId, updates) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("updateWorkout: API Error:", error);
+    logger.error("updateWorkout: API Error:", error);
     throw error;
   }
 };
@@ -265,7 +266,7 @@ export async function getWorkoutsCount(userId, options = {}) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getWorkoutsCount: Error response:", errorText);
+      logger.error("getWorkoutsCount: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -284,7 +285,7 @@ export async function getWorkoutsCount(userId, options = {}) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("getWorkoutsCount: API Error:", error);
+    logger.error("getWorkoutsCount: API Error:", error);
     throw error;
   }
 }
@@ -329,7 +330,7 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
           const dateString = date.toISOString().split("T")[0];
           uniqueDates.add(dateString);
         } catch (error) {
-          console.warn(
+          logger.warn(
             "getTrainingDaysCount: Invalid date format for workout:",
             workout.workoutId,
             workout.completedAt,
@@ -341,7 +342,7 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
     const trainingDaysCount = uniqueDates.size;
     return trainingDaysCount;
   } catch (error) {
-    console.error(
+    logger.error(
       "getTrainingDaysCount: Error calculating training days:",
       error,
     );
@@ -378,7 +379,7 @@ export const createWorkout = async (userId, workoutContent, options = {}) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("createWorkout: Error response:", errorText);
+      logger.error("createWorkout: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -397,7 +398,7 @@ export const createWorkout = async (userId, workoutContent, options = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("createWorkout: API Error:", error);
+    logger.error("createWorkout: API Error:", error);
     throw error;
   }
 };
@@ -423,7 +424,7 @@ export const deleteWorkout = async (userId, workoutId) => {
       }
 
       const errorText = await response.text();
-      console.error("deleteWorkout: Error response:", errorText);
+      logger.error("deleteWorkout: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -442,7 +443,7 @@ export const deleteWorkout = async (userId, workoutId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("deleteWorkout: API Error:", error);
+    logger.error("deleteWorkout: API Error:", error);
     throw error;
   }
 };

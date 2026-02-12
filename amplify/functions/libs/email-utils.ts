@@ -12,6 +12,7 @@
 
 import { SESClient, SendEmailCommand, SendEmailCommandOutput } from '@aws-sdk/client-ses';
 import { getAppUrl, getApiUrl } from './domain-utils';
+import { logger } from "./logger";
 
 // Shared SES client instance
 // Reused across all email sending functions to avoid creating multiple clients
@@ -85,7 +86,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   try {
     const result: SendEmailCommandOutput = await sesClient.send(command);
 
-    console.info('✅ Email sent successfully', {
+    logger.info('✅ Email sent successfully', {
       to: toAddresses,
       subject,
       messageId: result.MessageId,
@@ -98,7 +99,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
       requestId: result.$metadata.requestId,
     };
   } catch (error) {
-    console.error('❌ Failed to send email:', {
+    logger.error('❌ Failed to send email:', {
       to: toAddresses,
       subject,
       error: error instanceof Error ? error.message : String(error),

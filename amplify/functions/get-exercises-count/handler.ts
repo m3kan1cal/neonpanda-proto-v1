@@ -9,6 +9,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { queryExercisesCount } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import type { ExerciseDiscipline } from "../libs/exercise/types";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -40,7 +41,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     );
   }
 
-  console.info("Counting exercises for user:", {
+  logger.info("Counting exercises for user:", {
     userId,
     discipline,
   });
@@ -54,7 +55,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       count,
     });
   } catch (error) {
-    console.error("Error counting exercises:", error);
+    logger.error("Error counting exercises:", error);
     return createErrorResponse(500, "Failed to count exercises");
   }
 };

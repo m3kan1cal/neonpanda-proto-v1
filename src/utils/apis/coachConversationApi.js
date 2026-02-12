@@ -7,6 +7,7 @@ import {
 import { handleStreamingApiRequest } from "./streamingApiHelper";
 import { streamCoachConversationLambda } from "./streamingLambdaApi";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
+import { logger } from "../logger";
 
 /**
  * API service for Coach Conversation operations
@@ -142,13 +143,13 @@ export const sendCoachConversationMessage = async (
     clearTimeout(timeoutId);
 
     if (error.name === "AbortError") {
-      console.error("❌ Request timed out after 45 seconds");
+      logger.error("❌ Request timed out after 45 seconds");
       throw new Error(
         "Request timed out - the server is taking too long to respond",
       );
     }
 
-    console.error("❌ Error sending coach conversation message:", error);
+    logger.error("❌ Error sending coach conversation message:", error);
     throw error;
   }
 };
@@ -173,7 +174,7 @@ export async function* streamCoachConversation(
   // Try Lambda Function URL first if enabled
   if (isStreamingEnabled("coachConversation")) {
     try {
-      console.info(
+      logger.info(
         "🚀 Attempting Lambda Function URL streaming for coach conversation",
       );
       yield* streamCoachConversationLambda(
@@ -185,7 +186,7 @@ export async function* streamCoachConversation(
       );
       return; // Success - exit
     } catch (lambdaError) {
-      console.error(
+      logger.error(
         "❌ Lambda Function URL streaming failed (fallback DISABLED for debugging):",
         lambdaError,
       );
@@ -196,7 +197,7 @@ export async function* streamCoachConversation(
 
   // FALLBACK DISABLED FOR DEBUGGING - this code won't execute while debugging Lambda streaming
   // Fallback to API Gateway streaming
-  console.info(
+  logger.info(
     "🔄 Using API Gateway fallback for coach conversation streaming",
   );
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message?stream=true`;
@@ -314,7 +315,7 @@ export const getCoachConversationsCount = async (userId, coachId) => {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
       } catch (parseError) {
-        console.error("Error parsing error response:", parseError);
+        logger.error("Error parsing error response:", parseError);
       }
       throw new Error(errorMessage);
     }
@@ -322,7 +323,7 @@ export const getCoachConversationsCount = async (userId, coachId) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error getting conversation count:", error);
+    logger.error("Error getting conversation count:", error);
     throw error;
   }
 };
@@ -368,7 +369,7 @@ export const deleteCoachConversation = async (
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
         } catch (parseError) {
-          console.error("Error parsing error response:", parseError);
+          logger.error("Error parsing error response:", parseError);
         }
       }
 
@@ -379,7 +380,7 @@ export const deleteCoachConversation = async (
 
     return data;
   } catch (error) {
-    console.error("Error deleting conversation:", error);
+    logger.error("Error deleting conversation:", error);
     throw error;
   }
 };

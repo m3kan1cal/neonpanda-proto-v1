@@ -9,6 +9,7 @@ import { storePineconeContext, deletePineconeContext } from "../api-helpers";
 import { storeWithAutoCompression } from "../pinecone-compression";
 import { filterNullish } from "../object-utils";
 import { Program } from "./types";
+import { logger } from "../logger";
 
 /**
  * Store training program summary in Pinecone for semantic search and coach context
@@ -89,7 +90,7 @@ export const storeProgramSummaryInPinecone = async (
       "training program summary",
     );
 
-    console.info(
+    logger.info(
       "✅ Successfully stored training program summary in Pinecone:",
       {
         programId: program.programId,
@@ -103,14 +104,14 @@ export const storeProgramSummaryInPinecone = async (
 
     return result;
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Failed to store training program summary in Pinecone:",
       error,
     );
 
     // Don't throw error to avoid breaking the program generation process
     // Pinecone storage is for future retrieval/analysis, not critical for immediate functionality
-    console.warn(
+    logger.warn(
       "Training program generation will continue despite Pinecone storage failure",
     );
     return {
@@ -129,7 +130,7 @@ export async function deleteProgramSummaryFromPinecone(
   programId: string,
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   try {
-    console.info("🗑️ Deleting program summary from Pinecone:", {
+    logger.info("🗑️ Deleting program summary from Pinecone:", {
       userId,
       programId,
     });
@@ -141,13 +142,13 @@ export async function deleteProgramSummaryFromPinecone(
     });
 
     if (result.success) {
-      console.info("✅ Program summary deleted from Pinecone:", {
+      logger.info("✅ Program summary deleted from Pinecone:", {
         userId,
         programId,
         deletedCount: result.deletedCount,
       });
     } else {
-      console.warn("⚠️ Failed to delete program summary from Pinecone:", {
+      logger.warn("⚠️ Failed to delete program summary from Pinecone:", {
         userId,
         programId,
         error: result.error,
@@ -156,7 +157,7 @@ export async function deleteProgramSummaryFromPinecone(
 
     return result;
   } catch (error) {
-    console.error("❌ Error deleting program summary from Pinecone:", error);
+    logger.error("❌ Error deleting program summary from Pinecone:", error);
     return {
       success: false,
       deletedCount: 0,

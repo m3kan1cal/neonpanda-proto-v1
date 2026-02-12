@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { queryPrograms } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -26,7 +27,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       );
     }
 
-    console.info("📋 Querying programs:", {
+    logger.info("📋 Querying programs:", {
       userId,
       coachId: coachId || "all",
       status: status || "all",
@@ -51,7 +52,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       includeStatus: includeStatuses,
     });
 
-    console.info("✅ Programs queried successfully:", {
+    logger.info("✅ Programs queried successfully:", {
       totalFound: programs.length,
       programIds: programs.map((p) => p.programId),
     });
@@ -60,7 +61,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     if (coachId) {
       const beforeFilterCount = programs.length;
       programs = programs.filter((p) => p.coachIds?.includes(coachId));
-      console.info("🔍 Filtered by coachId:", {
+      logger.info("🔍 Filtered by coachId:", {
         coachId,
         beforeFilter: beforeFilterCount,
         afterFilter: programs.length,
@@ -72,7 +73,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       count: programs.length,
     });
   } catch (error) {
-    console.error("❌ Error getting training programs:", error);
+    logger.error("❌ Error getting training programs:", error);
     return createErrorResponse(500, "Failed to get training programs", error);
   }
 };

@@ -11,6 +11,7 @@ import { parseJsonWithFallbacks } from "../response-utils";
 import { getCondensedSchema } from "../object-utils";
 import { PROGRAM_SCHEMA } from "../schemas/program-schema";
 import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/program-normalization-schema";
+import { logger } from "../logger";
 
 export interface NormalizationResult {
   isValid: boolean;
@@ -204,7 +205,7 @@ export const normalizeProgram = async (
   enableThinking: boolean = false,
 ): Promise<NormalizationResult> => {
   try {
-    console.info("🔧 Starting training program normalization:", {
+    logger.info("🔧 Starting training program normalization:", {
       userId,
       programName: programData.name,
       phases: programData.phases?.length || 0,
@@ -214,7 +215,7 @@ export const normalizeProgram = async (
     // Use intelligent normalization for all cases that need normalization
     return await performNormalization(programData, userId, enableThinking);
   } catch (error) {
-    console.error("Program normalization failed:", error);
+    logger.error("Program normalization failed:", error);
     return {
       isValid: false,
       normalizedData: programData as ProgramGenerationData,
@@ -258,7 +259,7 @@ const performNormalization = async (
       ? MODEL_IDS.EXECUTOR_MODEL_FULL
       : MODEL_IDS.PLANNER_MODEL_FULL;
 
-    console.info("🔀 Two-tier normalization model selection:", {
+    logger.info("🔀 Two-tier normalization model selection:", {
       extractionConfidence,
       threshold: 0.8,
       selectedTier: useHaiku
@@ -270,7 +271,7 @@ const performNormalization = async (
         : "Low confidence generation - use thorough validation with deep reasoning",
     });
 
-    console.info("Program normalization call configuration:", {
+    logger.info("Program normalization call configuration:", {
       enableThinking,
       promptLength: normalizationPrompt.length,
       promptSizeKB: `${promptSizeKB}KB`,
@@ -282,7 +283,7 @@ const performNormalization = async (
     let normalizationMethod: "tool" | "fallback" = "tool";
 
     // PRIMARY: Tool-based normalization with schema enforcement
-    console.info("🎯 Attempting tool-based program normalization");
+    logger.info("🎯 Attempting tool-based program normalization");
 
     try {
       const result = await callBedrockApi(
@@ -303,7 +304,7 @@ const performNormalization = async (
       );
 
       if (typeof result === "object" && result !== null) {
-        console.info("✅ Tool-based program normalization succeeded");
+        logger.info("✅ Tool-based program normalization succeeded");
         // Extract the input from tool use result (callBedrockApi returns { toolName, input, stopReason })
         normalizationResult = result.input || result;
         normalizationMethod = "tool";
@@ -312,11 +313,11 @@ const performNormalization = async (
       }
     } catch (toolError) {
       // FALLBACK: Text-based normalization with parsing (using same tier-selected model)
-      console.warn(
+      logger.warn(
         "⚠️ Tool-based normalization failed, falling back to text parsing:",
         toolError,
       );
-      console.info("🔄 Attempting fallback program normalization");
+      logger.info("🔄 Attempting fallback program normalization");
 
       const fallbackPrompt = `${normalizationPrompt}
 
@@ -335,7 +336,7 @@ ${JSON.stringify(getCondensedSchema(NORMALIZATION_RESPONSE_SCHEMA), null, 2)}`;
 
       normalizationResult = parseJsonWithFallbacks(fallbackResponse);
       normalizationMethod = "fallback";
-      console.info("✅ Fallback program normalization succeeded");
+      logger.info("✅ Fallback program normalization succeeded");
     }
 
     // Validate the response structure
@@ -361,7 +362,7 @@ ${JSON.stringify(getCondensedSchema(NORMALIZATION_RESPONSE_SCHEMA), null, 2)}`;
       normalizationMethod,
     };
   } catch (error) {
-    console.error("❌ Program normalization failed:", error);
+    logger.error("❌ Program normalization failed:", error);
     return {
       isValid: false,
       normalizedData: programData as ProgramGenerationData,
@@ -424,7 +425,7 @@ const hasCorrectRootStructure = (programData: any): boolean => {
   );
 
   if (missingProperties.length > 0) {
-    console.info(
+    logger.info(
       `⚠️ Missing root properties (will be added during normalization): ${missingProperties.join(", ")}`,
     );
     return false;
@@ -432,7 +433,7 @@ const hasCorrectRootStructure = (programData: any): boolean => {
 
   // Check phases is an array
   if (!Array.isArray(programData.phases)) {
-    console.info("❌ Phases is not an array");
+    logger.info("❌ Phases is not an array");
     return false;
   }
 
@@ -455,13 +456,13 @@ const hasValidPhaseLogic = (programData: any): boolean => {
 
     // Check required phase fields
     if (!phase.hasOwnProperty("startDay") || !phase.hasOwnProperty("endDay")) {
-      console.info(`❌ Phase ${i + 1} missing startDay or endDay`);
+      logger.info(`❌ Phase ${i + 1} missing startDay or endDay`);
       return false;
     }
 
     // Check if phase days are valid
     if (phase.startDay >= phase.endDay) {
-      console.info(`❌ Phase ${i + 1} has invalid day range`);
+      logger.info(`❌ Phase ${i + 1} has invalid day range`);
       return false;
     }
 
@@ -469,7 +470,7 @@ const hasValidPhaseLogic = (programData: any): boolean => {
     if (i > 0) {
       const previousPhase = phases[i - 1];
       if (phase.startDay !== previousPhase.endDay + 1) {
-        console.info(
+        logger.info(
           `❌ Phase ${i + 1} does not follow previous phase sequentially`,
         );
         return false;
@@ -480,7 +481,7 @@ const hasValidPhaseLogic = (programData: any): boolean => {
   // Check if total phase days match program duration
   const lastPhase = phases[phases.length - 1];
   if (lastPhase.endDay !== programData.totalDays) {
-    console.info("❌ Phase days do not match program duration");
+    logger.info("❌ Phase days do not match program duration");
     return false;
   }
 
@@ -499,7 +500,7 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
   // If program has s3DetailKey, workouts are stored in S3 (assembled program)
   // This is valid - skip workout template validation
   if (programData.s3DetailKey) {
-    console.info("✅ Program has s3DetailKey - workouts stored in S3 (valid)");
+    logger.info("✅ Program has s3DetailKey - workouts stored in S3 (valid)");
     return true;
   }
 
@@ -513,7 +514,7 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
   );
 
   if (allPhasesHaveWorkoutCount) {
-    console.info(
+    logger.info(
       "✅ Agent architecture detected - phases have workoutCount (valid)",
     );
     return true;
@@ -522,7 +523,7 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
   // Otherwise, validate intermediate generation format (workouts in phases)
   for (const phase of programData.phases) {
     if (!phase.workoutTemplates || !Array.isArray(phase.workoutTemplates)) {
-      console.info("❌ Phase missing workoutTemplates array");
+      logger.info("❌ Phase missing workoutTemplates array");
       return false;
     }
 
@@ -536,7 +537,7 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
         typeof template.workoutContent !== "string" ||
         template.workoutContent.trim().length === 0
       ) {
-        console.info(
+        logger.info(
           "❌ Workout template missing required fields (name, description, or workoutContent)",
         );
         return false;
@@ -550,7 +551,7 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
         typeof template.estimatedDuration !== "number" ||
         !Array.isArray(template.requiredEquipment)
       ) {
-        console.info("❌ Workout template has invalid metadata fields");
+        logger.info("❌ Workout template has invalid metadata fields");
         return false;
       }
 
@@ -559,7 +560,7 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
         template.prescribedExercises !== undefined &&
         !Array.isArray(template.prescribedExercises)
       ) {
-        console.info("❌ prescribedExercises must be an array if present");
+        logger.info("❌ prescribedExercises must be an array if present");
         return false;
       }
     }

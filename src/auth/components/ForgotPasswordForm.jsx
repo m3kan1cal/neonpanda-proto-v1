@@ -6,6 +6,7 @@ import AuthLayout from './AuthLayout';
 import AuthInput from './AuthInput';
 import AuthButton from './AuthButton';
 import AuthErrorMessage from './AuthErrorMessage';
+import { logger } from "../../utils/logger";
 
 const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
   const { resetPassword } = useAuth();
@@ -70,7 +71,7 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
       }, 1000);
 
     } catch (error) {
-      console.error('Reset password error:', error);
+      logger.error('Reset password error:', error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases

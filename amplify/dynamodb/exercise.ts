@@ -9,6 +9,7 @@ import {
   QueryCommand,
   BatchWriteCommand,
 } from "./core";
+import { logger } from "../functions/libs/logger";
 import type {
   Exercise,
   ExerciseHistoryQueryResult,
@@ -56,7 +57,7 @@ export async function saveExercise(exercise: Exercise): Promise<void> {
 
   await saveToDynamoDB(itemWithGsi);
 
-  console.info("Exercise saved successfully:", {
+  logger.info("Exercise saved successfully:", {
     exerciseId: exercise.exerciseId,
     exerciseName: exercise.exerciseName,
     userId: exercise.userId,
@@ -133,7 +134,7 @@ export async function saveExercises(
         result.UnprocessedItems?.[tableName]?.length ?? 0;
 
       if (unprocessedCount > 0) {
-        console.warn(
+        logger.warn(
           `⚠️ Batch write partially succeeded: ${unprocessedCount} items unprocessed`,
         );
         successful += batch.length - unprocessedCount;
@@ -142,12 +143,12 @@ export async function saveExercises(
         successful += batch.length;
       }
     } catch (error) {
-      console.error("Batch write failed for exercises:", error);
+      logger.error("Batch write failed for exercises:", error);
       failed += batch.length;
     }
   }
 
-  console.info("Exercise batch save completed:", {
+  logger.info("Exercise batch save completed:", {
     total: exercises.length,
     successful,
     failed,
@@ -420,7 +421,7 @@ export async function queryExercisesCount(
 
     const uniqueCount = exerciseNames.size;
 
-    console.info("Exercises counted successfully:", {
+    logger.info("Exercises counted successfully:", {
       userId,
       totalExercises: items.length,
       uniqueExercises: uniqueCount,
@@ -429,7 +430,7 @@ export async function queryExercisesCount(
 
     return uniqueCount;
   } catch (error) {
-    console.error(`Error counting exercises for user ${userId}:`, error);
+    logger.error(`Error counting exercises for user ${userId}:`, error);
     throw error;
   }
 }

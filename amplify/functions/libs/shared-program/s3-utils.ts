@@ -9,6 +9,7 @@
 import { getObjectAsJson, putObjectAsJson } from "../s3-utils";
 import { SharedProgramDetails, SharedProgramSnapshot } from "./types";
 import { ProgramDetails } from "../program/types";
+import { logger } from "../logger";
 
 /**
  * Store shared program details in S3
@@ -60,7 +61,7 @@ export async function storeSharedProgramDetailsInS3(
       },
     });
 
-    console.info("Successfully stored shared program details in S3:", {
+    logger.info("Successfully stored shared program details in S3:", {
       key,
       sharedProgramId,
       creatorUserId,
@@ -69,7 +70,7 @@ export async function storeSharedProgramDetailsInS3(
 
     return key;
   } catch (error) {
-    console.error("Failed to store shared program details in S3:", error);
+    logger.error("Failed to store shared program details in S3:", error);
     throw error;
   }
 }
@@ -86,7 +87,7 @@ export async function getSharedProgramDetailsFromS3(
   try {
     const details = await getObjectAsJson<SharedProgramDetails>(s3Key);
 
-    console.info("Successfully retrieved shared program details from S3:", {
+    logger.info("Successfully retrieved shared program details from S3:", {
       key: s3Key,
       sharedProgramId: details.sharedProgramId,
       templateCount: details.workoutTemplates.length,
@@ -94,7 +95,7 @@ export async function getSharedProgramDetailsFromS3(
 
     return details;
   } catch (error) {
-    console.error("Failed to retrieve shared program details from S3:", {
+    logger.error("Failed to retrieve shared program details from S3:", {
       error,
       key: s3Key,
     });

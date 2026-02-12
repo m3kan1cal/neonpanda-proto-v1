@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
+import { logger } from "../logger";
 
 /**
  * JWT Claims interface for Cognito ID tokens
@@ -35,7 +36,7 @@ export function decodeJwtToken(token: string): JWTClaims {
 
     return claims;
   } catch (jwtError) {
-    console.error('❌ JWT decode error:', jwtError);
+    logger.error('❌ JWT decode error:', jwtError);
     throw new Error('Failed to decode JWT token');
   }
 }

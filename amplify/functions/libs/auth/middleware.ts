@@ -5,6 +5,7 @@ import {
   Context,
 } from "aws-lambda";
 import { createErrorResponse } from "../api-helpers";
+import { logger } from "../logger";
 import {
   decodeJwtToken,
   extractUserId,
@@ -32,7 +33,7 @@ export const withAuth = (
     event: APIGatewayProxyEventV2WithJWTAuthorizer,
   ): Promise<APIGatewayProxyResultV2> => {
     // DEBUG: Log the raw event structure
-    console.info("🔍 withAuth received event:", {
+    logger.info("🔍 withAuth received event:", {
       hasEvent: !!event,
       eventKeys: Object.keys(event || {}),
       hasRequestContext: !!event?.requestContext,
@@ -57,7 +58,7 @@ export const withAuth = (
         username: "dev_user",
         email: "dev@test.com",
       };
-      console.info(
+      logger.info(
         "🔓 Dev mode bypass activated for user:",
         authenticatedEvent.user.userId,
       );
@@ -79,7 +80,7 @@ export const withAuth = (
 
       // Log all available path parameters for debugging and future extensibility
       const availableParams = Object.keys(event.pathParameters || {});
-      console.info("🔗 Internal Lambda call detected:", {
+      logger.info("🔗 Internal Lambda call detected:", {
         userId,
         availableParams,
         pathParameters: event.pathParameters,
@@ -119,7 +120,7 @@ export const withAuth = (
     // Only validate userId match if there's a userId in the path parameters
     // Some endpoints (like /stripe/portal-session) don't have userId in path
     if (requestedUserId && userId !== requestedUserId) {
-      console.warn(
+      logger.warn(
         `🚫 Access denied: ${userId} tried to access ${requestedUserId}`,
       );
       return createErrorResponse(
@@ -135,7 +136,7 @@ export const withAuth = (
       email: claims.email as string,
     };
 
-    console.info("✅ Authenticated user:", authenticatedEvent.user.userId);
+    logger.info("✅ Authenticated user:", authenticatedEvent.user.userId);
     return handler(authenticatedEvent);
   };
 };
@@ -184,7 +185,7 @@ export function withStreamingAuth(
     responseStream: any,
     context: Context,
   ) => {
-    console.info("🔍 withStreamingAuth received event:", {
+    logger.info("🔍 withStreamingAuth received event:", {
       rawPath: event.rawPath,
       method: event.requestContext?.http?.method,
       hasHeaders: !!event.headers,
@@ -213,7 +214,7 @@ export function withStreamingAuth(
           email: "dev@test.com",
         };
 
-        console.info(
+        logger.info(
           "🔓 Dev mode bypass activated for streaming user:",
           authenticatedEvent.user.userId,
         );
@@ -235,7 +236,7 @@ export function withStreamingAuth(
             email: `${pathUserId}@internal.lambda`,
           };
 
-          console.info("🔗 Internal Lambda streaming call detected:", {
+          logger.info("🔗 Internal Lambda streaming call detected:", {
             userId: pathUserId,
             pathParams,
             source: "lambda-to-lambda",
@@ -264,7 +265,7 @@ export function withStreamingAuth(
         pathUserId &&
         authenticatedUserId !== pathUserId
       ) {
-        console.warn(
+        logger.warn(
           `🚫 Streaming access denied: ${authenticatedUserId} tried to access ${pathUserId}`,
         );
         throw new Error("Access denied: can only access your own data");
@@ -278,7 +279,7 @@ export function withStreamingAuth(
         email: claims.email || `${authenticatedUserId}@unknown.com`,
       };
 
-      console.info("✅ Streaming authentication successful:", {
+      logger.info("✅ Streaming authentication successful:", {
         userId: authenticatedEvent.user.userId,
         pathUserId,
         username: authenticatedEvent.user.username,
@@ -287,7 +288,7 @@ export function withStreamingAuth(
       // Call the actual handler
       return handler(authenticatedEvent, responseStream, context);
     } catch (error) {
-      console.error("❌ Streaming authentication error:", error);
+      logger.error("❌ Streaming authentication error:", error);
       // Re-throw the error so the pipeline can handle it
       throw error;
     }

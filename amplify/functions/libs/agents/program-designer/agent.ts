@@ -20,6 +20,7 @@ import {
 import { buildProgramDesignerPrompt } from "./prompts";
 import { MODEL_IDS } from "../../api-helpers";
 import { enforceAllBlocking, calculateProgramMetrics } from "./helpers";
+import { logger } from "../../logger";
 
 /**
  * Semantic storage key mapping for tool results
@@ -67,7 +68,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
   ): void {
     const storageKey = uniqueKey || STORAGE_KEY_MAP[toolId] || toolId;
     this.toolResults.set(storageKey, result);
-    console.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
+    logger.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
   }
 
   /**
@@ -148,7 +149,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       const tool = this.config.tools.find((t) => t.id === toolUse.name);
 
       if (!tool) {
-        console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+        logger.warn(`⚠️ Tool not found: ${toolUse.name}`);
         continue;
       }
 
@@ -174,7 +175,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       toolGroup.map(async ({ block, tool }) => {
         const toolUse = block.toolUse;
 
-        console.info(`⚙️ Executing tool: ${tool.id}`, {
+        logger.info(`⚙️ Executing tool: ${tool.id}`, {
           phaseId: toolUse.input?.phase?.phaseId,
           phaseName: toolUse.input?.phase?.name,
         });
@@ -184,7 +185,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           const result = await tool.execute(toolUse.input, augmentedContext);
           const duration = Date.now() - startTime;
 
-          console.info(`✅ Tool ${tool.id} completed in ${duration}ms`, {
+          logger.info(`✅ Tool ${tool.id} completed in ${duration}ms`, {
             phaseId: result.phaseId,
             workoutCount: result.workoutTemplates?.length,
           });
@@ -195,7 +196,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
             this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
           } else {
             // Fallback: store with tool.id if phaseId is missing
-            console.warn(
+            logger.warn(
               `⚠️ Phase workout result missing phaseId - storing with tool.id fallback`,
             );
           }
@@ -203,7 +204,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
           return this.buildToolResult(toolUse, result, "success");
         } catch (error) {
-          console.error(`❌ Tool ${tool.id} failed:`, error);
+          logger.error(`❌ Tool ${tool.id} failed:`, error);
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           const errorResult = { error: errorMessage || "Unknown error" };
@@ -244,19 +245,19 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       );
 
       if (blockingResult) {
-        console.warn(`⛔ Blocking tool execution: ${tool.id}`);
+        logger.warn(`⛔ Blocking tool execution: ${tool.id}`);
         results.push(this.buildToolResult(toolUse, blockingResult, "error"));
         continue;
       }
 
-      console.info(`⚙️ Executing tool: ${tool.id}`);
+      logger.info(`⚙️ Executing tool: ${tool.id}`);
 
       try {
         const startTime = Date.now();
         const result = await tool.execute(toolUse.input, augmentedContext);
         const duration = Date.now() - startTime;
 
-        console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
+        logger.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
 
         // Store results for retrieval by other tools
         if (tool.id === "generate_phase_workouts") {
@@ -266,7 +267,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
             this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
           } else {
             // Warning if phaseId is unexpectedly missing
-            console.warn(
+            logger.warn(
               `⚠️ Phase workout result missing phaseId - storing with tool.id fallback`,
             );
           }
@@ -279,16 +280,16 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           // CRITICAL: Apply phase updates to stored phase workout results
           // This ensures save_program_to_database retrieves pruned templates
           if (result.phaseUpdates && Array.isArray(result.phaseUpdates)) {
-            console.info(
+            logger.info(
               `📝 Applying ${result.phaseUpdates.length} phase updates from pruning...`,
             );
             for (const update of result.phaseUpdates) {
               this.toolResults.set(update.storageKey, update.updatedResult);
-              console.info(
+              logger.info(
                 `  ✓ Updated ${update.storageKey} with ${update.updatedResult.workoutTemplates.length} pruned templates`,
               );
             }
-            console.info(
+            logger.info(
               "✅ All phase workout storage updated with pruned templates",
             );
           }
@@ -298,7 +299,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
         results.push(this.buildToolResult(toolUse, result, "success"));
       } catch (error) {
-        console.error(`❌ Tool ${tool.id} failed:`, error);
+        logger.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         const errorResult = { error: errorMessage || "Unknown error" };
@@ -328,11 +329,11 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
       // Parallelize phase workout generation
       if (toolId === "generate_phase_workouts" && count > 1) {
-        console.info(`🚀 Executing ${count} phase workout(s) in parallel`);
+        logger.info(`🚀 Executing ${count} phase workout(s) in parallel`);
         const parallelResults =
           await this.executePhaseWorkoutsParallel(toolGroup);
         allResults.push(...parallelResults);
-        console.info(`✅ Completed ${count} phase workout(s) in parallel`);
+        logger.info(`✅ Completed ${count} phase workout(s) in parallel`);
       } else {
         // Execute sequentially with blocking checks
         const sequentialResults =
@@ -361,7 +362,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
     // Extract and group tools for parallelization
     const toolGroups = this.extractAndGroupTools(contentBlocks);
 
-    console.info(`🔧 Executing ${toolGroups.size} tool group(s)`);
+    logger.info(`🔧 Executing ${toolGroups.size} tool group(s)`);
 
     // Execute tool groups with parallel/sequential logic
     const toolResults = await this.executeToolGroups(toolGroups);
@@ -372,7 +373,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       content: toolResults,
     });
 
-    console.info("📥 Tool results added to conversation history");
+    logger.info("📥 Tool results added to conversation history");
   }
 
   constructor(context: ProgramDesignerContext) {
@@ -419,7 +420,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       context,
     });
 
-    console.info("🔥 ProgramDesignerAgent initialized with caching support");
+    logger.info("🔥 ProgramDesignerAgent initialized with caching support");
   }
 
   /**
@@ -427,7 +428,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
    * Returns standardized result structure matching existing build-program Lambda
    */
   async designProgram(): Promise<ProgramDesignResult> {
-    console.info("🏋️ ProgramDesigner agent starting", {
+    logger.info("🏋️ ProgramDesigner agent starting", {
       userId: this.config.context.userId,
       programId: this.config.context.programId,
       sessionId: this.config.context.sessionId,
@@ -441,7 +442,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
         "Design the complete training program based on the provided todo list and context.",
       );
 
-      console.info("Agent response received:", {
+      logger.info("Agent response received:", {
         responseLength: response.length,
         responsePreview: response.substring(0, 200),
         toolResultsCollected: Array.from(this.toolResults.keys()),
@@ -452,7 +453,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       // RETRY LOGIC: If AI didn't use tools (incomplete workflow),
       // retry with a stronger prompt forcing it to proceed
       if (this.shouldRetryWithStrongerPrompt(result, response)) {
-        console.warn(
+        logger.warn(
           "🔄 AI incomplete workflow - RETRYING with stronger prompt to force tool execution",
         );
 
@@ -462,7 +463,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
         const retryPrompt = this.buildRetryPrompt(response);
         const retryResponse = await this.converse(retryPrompt);
 
-        console.info("Retry response received:", {
+        logger.info("Retry response received:", {
           responseLength: retryResponse.length,
           toolResultsCollected: Array.from(this.toolResults.keys()),
         });
@@ -471,17 +472,17 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
         // If retry also failed, fall back to original result
         if (!retryResult.success && retryResult.skipped) {
-          console.warn(
+          logger.warn(
             "⚠️ Retry also resulted in skip - using original result",
           );
           return result;
         }
 
-        console.info("✅ Retry successful - program designed after retry");
+        logger.info("✅ Retry successful - program designed after retry");
         return retryResult;
       }
 
-      console.info("Built program design result:", {
+      logger.info("Built program design result:", {
         success: result.success,
         programId: result.programId,
         hasAllFields: !!(result.programName && result.totalDays),
@@ -489,7 +490,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
       return result;
     } catch (error) {
-      console.error("❌ ProgramDesigner agent error:", error);
+      logger.error("❌ ProgramDesigner agent error:", error);
 
       return {
         success: false,
@@ -641,7 +642,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
     // Extract tool results using structured helper
     const results = this.getStructuredToolResults();
 
-    console.info("Tool results available:", {
+    logger.info("Tool results available:", {
       hasRequirements: !!results.requirements,
       hasPhaseStructure: !!results.phaseStructure,
       phaseWorkoutsCount: results.phaseWorkouts.length,
@@ -654,7 +655,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
 
     // If save tool was called successfully, we have a complete program
     if (results.save?.success && results.save?.programId) {
-      console.info("✅ Building success result from save tool");
+      logger.info("✅ Building success result from save tool");
 
       // Assemble program data from tool results
       const phases = results.phaseStructure?.phases || [];
@@ -667,7 +668,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
       // Calculate metrics using shared helper
       const metrics = calculateProgramMetrics(allWorkoutTemplates);
 
-      console.info("📊 Program metrics calculated:", {
+      logger.info("📊 Program metrics calculated:", {
         phaseCount: phases.length,
         totalWorkoutTemplates: metrics.totalWorkoutTemplates,
         uniqueTrainingDays: metrics.uniqueTrainingDays,
@@ -696,7 +697,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
 
     // If validation blocked save, return structured failure
     if (results.validation && !results.validation.isValid) {
-      console.info("⚠️ Building failure result from validation");
+      logger.info("⚠️ Building failure result from validation");
 
       return {
         success: false,
@@ -714,7 +715,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
       !results.validation &&
       !results.save
     ) {
-      console.info(
+      logger.info(
         "💬 Agent incomplete workflow (no tools called - may need retry)",
       );
 
@@ -729,7 +730,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
     // Note: We DO NOT attempt to parse program IDs from text, as this can
     // create false positives (e.g., Claude mentioning the input programId).
     // Only saveResult provides authoritative confirmation of success.
-    console.warn("⚠️ Partial tool execution - workflow incomplete");
+    logger.warn("⚠️ Partial tool execution - workflow incomplete");
 
     return {
       success: false,

@@ -1,4 +1,5 @@
 import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
+import { logger } from "../logger";
 
 /**
  * API service for Training Program operations
@@ -43,7 +44,7 @@ export const getPrograms = async (userId, coachId, options = {}) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getPrograms: Error response:", errorText);
+      logger.error("getPrograms: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -62,7 +63,7 @@ export const getPrograms = async (userId, coachId, options = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getPrograms: Exception:", error);
+    logger.error("getPrograms: Exception:", error);
     throw error;
   }
 };
@@ -99,7 +100,7 @@ export const getAllPrograms = async (userId, options = {}) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getAllPrograms: Error response:", errorText);
+      logger.error("getAllPrograms: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -118,7 +119,7 @@ export const getAllPrograms = async (userId, options = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getAllPrograms: Exception:", error);
+    logger.error("getAllPrograms: Exception:", error);
     throw error;
   }
 };
@@ -140,7 +141,7 @@ export const getProgram = async (userId, coachId, programId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getProgram: Error response:", errorText);
+      logger.error("getProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -159,7 +160,7 @@ export const getProgram = async (userId, coachId, programId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getProgram: Exception:", error);
+    logger.error("getProgram: Exception:", error);
     throw error;
   }
 };
@@ -196,7 +197,7 @@ export const getWorkoutTemplates = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getWorkoutTemplates: Error response:", errorText);
+      logger.error("getWorkoutTemplates: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -215,7 +216,7 @@ export const getWorkoutTemplates = async (
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getWorkoutTemplates: Exception:", error);
+    logger.error("getWorkoutTemplates: Exception:", error);
     throw error;
   }
 };
@@ -243,7 +244,7 @@ export const updateProgram = async (userId, coachId, programId, body) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("updateProgram: Error response:", errorText);
+      logger.error("updateProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -262,7 +263,7 @@ export const updateProgram = async (userId, coachId, programId, body) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("updateProgram: Exception:", error);
+    logger.error("updateProgram: Exception:", error);
     throw error;
   }
 };
@@ -299,7 +300,7 @@ export const logWorkout = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("logWorkout: Error response:", errorText);
+      logger.error("logWorkout: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -318,7 +319,7 @@ export const logWorkout = async (
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("logWorkout: Exception:", error);
+    logger.error("logWorkout: Exception:", error);
     throw error;
   }
 };
@@ -353,7 +354,7 @@ export const skipWorkout = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("skipWorkout: Error response:", errorText);
+      logger.error("skipWorkout: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -372,7 +373,7 @@ export const skipWorkout = async (
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("skipWorkout: Exception:", error);
+    logger.error("skipWorkout: Exception:", error);
     throw error;
   }
 };
@@ -406,7 +407,7 @@ export const completeRestDay = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("completeRestDay: Error response:", errorText);
+      logger.error("completeRestDay: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -425,7 +426,7 @@ export const completeRestDay = async (
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("completeRestDay: Exception:", error);
+    logger.error("completeRestDay: Exception:", error);
     throw error;
   }
 };
@@ -447,7 +448,7 @@ export const deleteProgram = async (userId, coachId, programId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("deleteProgram: Error response:", errorText);
+      logger.error("deleteProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -469,7 +470,7 @@ export const deleteProgram = async (userId, coachId, programId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("deleteProgram: Exception:", error);
+    logger.error("deleteProgram: Exception:", error);
     throw error;
   }
 };
@@ -495,7 +496,7 @@ export const createProgram = async (userId, coachId, programData) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("createProgram: Error response:", errorText);
+      logger.error("createProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -514,7 +515,7 @@ export const createProgram = async (userId, coachId, programData) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("createProgram: Exception:", error);
+    logger.error("createProgram: Exception:", error);
     throw error;
   }
 };

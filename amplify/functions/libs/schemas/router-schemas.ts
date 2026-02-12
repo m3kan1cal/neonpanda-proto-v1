@@ -14,6 +14,7 @@ export const SMART_ROUTER_ANALYSIS_SCHEMA = {
         "question",
         "progress_check",
         "acknowledgment",
+        "cancel_request",
         "general",
       ],
       description: "Primary intent of the user's message",

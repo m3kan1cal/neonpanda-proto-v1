@@ -7,6 +7,7 @@ import {
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { deleteProgramDesignerSessionSummaryFromPinecone } from "../libs/program-designer/pinecone";
 import { deleteObjects } from "../libs/s3-utils";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -28,7 +29,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     if (hardDelete) {
-      console.info(
+      logger.info(
         "Hard deleting program designer session (complete removal):",
         {
           userId,
@@ -38,7 +39,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
       // Delete from DynamoDB
       await deleteProgramDesignerSession(userId, sessionId);
-      console.info("✅ Program designer session deleted from DynamoDB");
+      logger.info("✅ Program designer session deleted from DynamoDB");
 
       // Delete from Pinecone
       const pineconeResult =
@@ -47,11 +48,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           sessionId,
         );
       if (pineconeResult.success) {
-        console.info(
+        logger.info(
           "✅ Program designer session summary deleted from Pinecone",
         );
       } else {
-        console.warn(
+        logger.warn(
           "⚠️ Failed to delete program designer session summary from Pinecone:",
           pineconeResult.error,
         );
@@ -59,18 +60,18 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
       // Delete images from S3 if imageS3Keys exist (using batch delete for efficiency)
       if (session.imageS3Keys && session.imageS3Keys.length > 0) {
-        console.info(`Deleting ${session.imageS3Keys.length} images from S3`);
+        logger.info(`Deleting ${session.imageS3Keys.length} images from S3`);
         const deleteResult = await deleteObjects(session.imageS3Keys);
-        console.info(`✅ Deleted ${deleteResult.deletedCount} images from S3`);
+        logger.info(`✅ Deleted ${deleteResult.deletedCount} images from S3`);
         if (deleteResult.errors.length > 0) {
-          console.warn(
+          logger.warn(
             `⚠️ Failed to delete ${deleteResult.errors.length} images:`,
             deleteResult.errors,
           );
         }
       }
 
-      console.info("Program designer session hard deleted successfully:", {
+      logger.info("Program designer session hard deleted successfully:", {
         userId,
         sessionId,
       });
@@ -84,7 +85,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         "Program designer session permanently deleted",
       );
     } else {
-      console.info("Soft deleting program designer session:", {
+      logger.info("Soft deleting program designer session:", {
         userId,
         sessionId,
       });
@@ -94,7 +95,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       session.completedAt = new Date();
       await saveProgramDesignerSession(session);
 
-      console.info("Program designer session soft deleted successfully:", {
+      logger.info("Program designer session soft deleted successfully:", {
         userId,
         sessionId,
       });
@@ -109,7 +110,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       );
     }
   } catch (error: any) {
-    console.error("Error deleting program designer session:", error);
+    logger.error("Error deleting program designer session:", error);
     if (error.message && error.message.includes("not found")) {
       return createErrorResponse(404, "Program designer session not found");
     }

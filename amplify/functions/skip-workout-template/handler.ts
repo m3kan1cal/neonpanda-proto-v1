@@ -21,6 +21,7 @@ import {
 } from "../libs/program/s3-utils";
 import { WorkoutTemplate } from "../libs/program/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 // Action types for skip/unskip operations
 const enum SkipAction {
@@ -71,7 +72,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
           notes = body.notes || null;
         } catch (error) {
-          console.warn(
+          logger.warn(
             "Failed to parse request body, continuing without notes:",
             error,
           );
@@ -122,7 +123,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         );
       }
 
-      console.info("✅ Completing rest day:", {
+      logger.info("✅ Completing rest day:", {
         userId,
         programId,
         dayNumber: targetDay,
@@ -164,7 +165,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       // Advance currentDay if we're completing the current day
       if (program.currentDay === targetDay) {
         updates.currentDay = program.currentDay + 1;
-        console.info("🎯 Rest day complete, advancing to next day:", {
+        logger.info("🎯 Rest day complete, advancing to next day:", {
           completedDay: targetDay,
           newCurrentDay: updates.currentDay,
         });
@@ -173,7 +174,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       // Check if program is complete
       if (updates.currentDay && updates.currentDay > program.totalDays) {
         updates.status = "completed";
-        console.info("🏁 Program completed after rest day!", {
+        logger.info("🏁 Program completed after rest day!", {
           programId,
           totalDays: program.totalDays,
         });
@@ -186,7 +187,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         updates,
       );
 
-      console.info("✅ Rest day completed successfully:", {
+      logger.info("✅ Rest day completed successfully:", {
         userId,
         programId,
         completedDay: targetDay,
@@ -236,7 +237,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         action = body.action || SkipAction.SKIP; // Support 'skip' or 'unskip'
       } catch (error) {
         // Body is optional for skip, continue without it
-        console.warn(
+        logger.warn(
           "Failed to parse request body, continuing without skip reason:",
           error,
         );
@@ -285,7 +286,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         );
       }
 
-      console.info("↩️ Unskipping workout template:", {
+      logger.info("↩️ Unskipping workout template:", {
         userId,
         programId,
         templateId,
@@ -302,7 +303,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       programDetails.workoutTemplates[templateIndex] = template;
       await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
 
-      console.info("✅ Template status reverted to pending in S3:", {
+      logger.info("✅ Template status reverted to pending in S3:", {
         templateId,
         status: "pending",
       });
@@ -346,7 +347,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       (p) => template.dayNumber >= p.startDay && template.dayNumber <= p.endDay,
     );
 
-    console.info("⏭️ Skipping workout template:", {
+    logger.info("⏭️ Skipping workout template:", {
       userId,
       programId,
       templateId,
@@ -375,7 +376,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     programDetails.workoutTemplates[templateIndex] = template;
     await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
 
-    console.info("✅ Template status updated to skipped in S3:", {
+    logger.info("✅ Template status updated to skipped in S3:", {
       templateId,
       status: "skipped",
       skipReason: skipReason || "Not provided",
@@ -436,7 +437,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     if (allDayTemplatesComplete && program.currentDay === dayNumber) {
       updates.currentDay = program.currentDay + 1;
-      console.info(
+      logger.info(
         "🎯 All workouts for day completed/skipped, advancing to next day:",
         {
           completedDay: dayNumber,
@@ -461,7 +462,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       updates,
     );
 
-    console.info("✅ Workout skipped successfully:", {
+    logger.info("✅ Workout skipped successfully:", {
       userId,
       programId,
       templateId,
@@ -489,7 +490,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error skipping workout template:", error);
+    logger.error("❌ Error skipping workout template:", error);
     return createErrorResponse(500, "Failed to skip workout template", error);
   }
 };

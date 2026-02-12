@@ -35,6 +35,7 @@ import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
+import { logger } from "../utils/logger";
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -159,7 +160,7 @@ const MessageItem = memo(
           >
             {/* Avatar for AI messages (left side) */}
             {message.type === "ai" && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <div className={avatarPatterns.aiSmall}>V</div>
               </div>
             )}
@@ -182,7 +183,7 @@ const MessageItem = memo(
 
             {/* Avatar for user messages (right side) */}
             {message.type === "user" && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <UserAvatar
                   email={userEmail}
                   username={userDisplayName}
@@ -336,7 +337,7 @@ function CoachCreator() {
           }
         },
         onError: (error) => {
-          console.error("Agent error:", error);
+          logger.error("Agent error:", error);
           // Could show toast notification here
         },
       });
@@ -350,7 +351,7 @@ function CoachCreator() {
               coachCreatorSessionId,
             );
           } catch (error) {
-            console.error("Error loading existing session:", error);
+            logger.error("Error loading existing session:", error);
             // Set session load error for display
             if (error.message === "Session not found or expired") {
               setSessionLoadError(
@@ -492,7 +493,7 @@ function CoachCreator() {
         },
       );
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
     }
   };
@@ -567,7 +568,7 @@ function CoachCreator() {
       // Redirect to coaches page after successful deletion
       navigate(`/coaches?userId=${userId}`);
     } catch (error) {
-      console.error("Error deleting coach creator session:", error);
+      logger.error("Error deleting coach creator session:", error);
       // Close modal even on error
       setShowDeleteModal(false);
     } finally {
@@ -651,7 +652,7 @@ function CoachCreator() {
                       className={`flex items-end gap-2 ${i % 2 === 0 ? "flex-row-reverse" : "flex-row"}`}
                     >
                       {/* Avatar skeleton */}
-                      <div className="flex-shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                      <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
 
                       {/* Message bubble skeleton */}
                       <div
@@ -790,7 +791,7 @@ function CoachCreator() {
                         </div>
                         <div className="flex items-start gap-2 px-2 mt-2">
                           <div
-                            className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
+                            className={`shrink-0 ${avatarPatterns.aiSmall}`}
                           >
                             V
                           </div>
@@ -822,7 +823,7 @@ function CoachCreator() {
               className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-synthwave-neon-cyan"
                     fill="none"
@@ -849,7 +850,7 @@ function CoachCreator() {
               </div>
               <button
                 onClick={() => navigate(`/coaches?userId=${userId}`)}
-                className={`${buttonPatterns.secondarySmall} flex-shrink-0`}
+                className={`${buttonPatterns.secondarySmall} shrink-0`}
               >
                 View Coaches
               </button>
@@ -933,7 +934,7 @@ function CoachCreator() {
             <div className="text-center">
               {/* Header with inline icon */}
               <div className="flex items-center justify-center space-x-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center shrink-0">
                   <svg
                     className="w-4 h-4 text-synthwave-neon-cyan"
                     fill="none"
@@ -965,7 +966,7 @@ function CoachCreator() {
                 <div className="space-y-2">
                   <div className="flex items-start space-x-2">
                     <svg
-                      className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-synthwave-neon-cyan shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -983,7 +984,7 @@ function CoachCreator() {
                   </div>
                   <div className="flex items-start space-x-2">
                     <svg
-                      className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-synthwave-neon-pink shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1001,7 +1002,7 @@ function CoachCreator() {
                   </div>
                   <div className="flex items-start space-x-2">
                     <svg
-                      className="w-5 h-5 text-synthwave-neon-purple flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-synthwave-neon-purple shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

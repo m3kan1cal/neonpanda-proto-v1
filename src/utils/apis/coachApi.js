@@ -1,4 +1,5 @@
 import { getApiUrl, authenticatedFetch, requireValidUserId } from "./apiConfig";
+import { logger } from "../logger";
 
 /**
  * API service for Coach operations
@@ -20,7 +21,7 @@ export const getCoaches = async (userId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getCoaches: Error response:", errorText);
+      logger.error("getCoaches: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -37,7 +38,7 @@ export const getCoaches = async (userId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getCoaches: API Error:", error);
+    logger.error("getCoaches: API Error:", error);
     throw error;
   }
 };
@@ -58,7 +59,7 @@ export const getCoachesCount = async (userId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getCoachesCount: Error response:", errorText);
+      logger.error("getCoachesCount: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -75,7 +76,7 @@ export const getCoachesCount = async (userId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getCoachesCount: API Error:", error);
+    logger.error("getCoachesCount: API Error:", error);
     throw error;
   }
 };
@@ -97,7 +98,7 @@ export const getCoach = async (userId, coachId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getCoach: Error response:", errorText);
+      logger.error("getCoach: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -114,7 +115,7 @@ export const getCoach = async (userId, coachId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getCoach: API Error:", error);
+    logger.error("getCoach: API Error:", error);
     throw error;
   }
 };
@@ -139,7 +140,7 @@ export const updateCoachConfig = async (userId, coachId, metadata) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("updateCoachConfig: Error response:", errorText);
+      logger.error("updateCoachConfig: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -160,7 +161,7 @@ export const updateCoachConfig = async (userId, coachId, metadata) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("updateCoachConfig: API Error:", error);
+    logger.error("updateCoachConfig: API Error:", error);
     throw error;
   }
 };
@@ -182,7 +183,7 @@ export const deleteCoachConfig = async (userId, coachId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("deleteCoachConfig: Error response:", errorText);
+      logger.error("deleteCoachConfig: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -203,7 +204,7 @@ export const deleteCoachConfig = async (userId, coachId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("deleteCoachConfig: API Error:", error);
+    logger.error("deleteCoachConfig: API Error:", error);
     throw error;
   }
 };
@@ -271,7 +272,7 @@ export const createCoachFromTemplate = async (userId, templateId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("createCoachFromTemplate: Error response:", errorText);
+      logger.error("createCoachFromTemplate: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -288,7 +289,7 @@ export const createCoachFromTemplate = async (userId, templateId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("createCoachFromTemplate: API Error:", error);
+    logger.error("createCoachFromTemplate: API Error:", error);
     throw error;
   }
 };
@@ -311,7 +312,7 @@ export const createCoachFromSession = async (userId, sessionId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("createCoachFromSession: Error response:", errorText);
+      logger.error("createCoachFromSession: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -328,7 +329,7 @@ export const createCoachFromSession = async (userId, sessionId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("createCoachFromSession: API Error:", error);
+    logger.error("createCoachFromSession: API Error:", error);
     throw error;
   }
 };

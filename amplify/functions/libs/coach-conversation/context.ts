@@ -1,5 +1,6 @@
 import { queryWorkouts } from "../../../dynamodb/operations";
 import { queryPineconeContext } from "../api-helpers";
+import { logger } from "../logger";
 import {
   shouldUsePineconeSearch,
   formatPineconeContext,
@@ -47,7 +48,7 @@ export async function gatherConversationContext(
         discipline: workout.workoutData.discipline,
         workoutName: workout.workoutData.workout_name,
       }));
-      console.info("Loaded recent workouts for context:", {
+      logger.info("Loaded recent workouts for context:", {
         userId,
         workoutCount: workouts.length,
         summaries: workouts.map((w) => w.summary?.substring(0, 50) + "..."),
@@ -55,7 +56,7 @@ export async function gatherConversationContext(
       return workouts;
     })
     .catch((error) => {
-      console.warn(
+      logger.warn(
         "Failed to load recent workouts for context, continuing without:",
         error,
       );
@@ -67,7 +68,7 @@ export async function gatherConversationContext(
         try {
           const decisionSource =
             shouldQueryPinecone !== undefined ? "smart-router" : "ai-analysis";
-          console.info(
+          logger.info(
             `🔍 Querying Pinecone for semantic context (decision: ${decisionSource}):`,
             {
               userId,
@@ -92,7 +93,7 @@ export async function gatherConversationContext(
           );
 
           if (pineconeResult.success && pineconeResult.matches.length > 0) {
-            console.info("✅ Successfully retrieved Pinecone context:", {
+            logger.info("✅ Successfully retrieved Pinecone context:", {
               totalMatches: pineconeResult.totalMatches,
               relevantMatches: pineconeResult.relevantMatches,
             });
@@ -101,14 +102,14 @@ export async function gatherConversationContext(
               context: formatPineconeContext(pineconeResult.matches),
             };
           } else {
-            console.info("📭 No relevant Pinecone context found:", {
+            logger.info("📭 No relevant Pinecone context found:", {
               success: pineconeResult.success,
               totalMatches: pineconeResult.totalMatches,
             });
             return { matches: [] as any[], context: "" };
           }
         } catch (error) {
-          console.warn(
+          logger.warn(
             "⚠️ Failed to query Pinecone context, continuing without:",
             error,
           );
@@ -116,7 +117,7 @@ export async function gatherConversationContext(
         }
       })()
     : (() => {
-        console.info(
+        logger.info(
           "⏭️ Skipping Pinecone query - message does not require semantic search",
         );
         return Promise.resolve({ matches: [] as any[], context: "" });

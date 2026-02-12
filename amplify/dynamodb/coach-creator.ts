@@ -6,6 +6,7 @@ import {
   createDynamoDBItem,
 } from "./core";
 import { CoachCreatorSession } from "../functions/libs/coach-creator/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // COACH CREATOR SESSION OPERATIONS
@@ -65,7 +66,7 @@ export async function deleteCoachCreatorSession(
       `coachCreatorSession#${sessionId}`,
       "coachCreatorSession",
     );
-    console.info("Coach creator session deleted successfully:", {
+    logger.info("Coach creator session deleted successfully:", {
       sessionId,
       userId,
     });
@@ -171,7 +172,7 @@ export async function queryCoachCreatorSessions(
       filteredSessions = filteredSessions.slice(offset, offset + limit);
     }
 
-    console.info("Coach creator sessions queried successfully:", {
+    logger.info("Coach creator sessions queried successfully:", {
       userId,
       totalFound: allSessions.length,
       afterFiltering: filteredSessions.length,
@@ -180,7 +181,7 @@ export async function queryCoachCreatorSessions(
 
     return filteredSessions;
   } catch (error) {
-    console.error(
+    logger.error(
       `Error querying coach creator sessions for user ${userId}:`,
       error,
     );

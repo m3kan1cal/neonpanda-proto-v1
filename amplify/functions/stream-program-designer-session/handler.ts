@@ -1,6 +1,7 @@
 import type { Context } from "aws-lambda";
 import util from "util";
 import stream from "stream";
+import { logger } from "../libs/logger";
 
 const { Readable } = stream;
 const pipeline = util.promisify(stream.pipeline);
@@ -100,7 +101,7 @@ async function validateAndExtractParams(
     );
   }
 
-  console.info("✅ Path parameters validated:", {
+  logger.info("✅ Path parameters validated:", {
     userId,
     sessionId,
   });
@@ -112,7 +113,7 @@ async function validateAndExtractParams(
       maxImages: 0, // No images in program design flow
     });
 
-  console.info("✅ Request body validated:", {
+  logger.info("✅ Request body validated:", {
     hasUserResponse: !!userResponse,
     hasMessageTimestamp: !!messageTimestamp,
     userResponseLength: userResponse?.length || 0,
@@ -146,7 +147,7 @@ async function loadSessionData(
     );
   }
 
-  console.info("✅ Program designer session loaded:", {
+  logger.info("✅ Program designer session loaded:", {
     sessionId: programSession.sessionId,
     userId: programSession.userId,
     isComplete: programSession.isComplete,
@@ -188,7 +189,7 @@ async function* createProgramDesignerEventStream(
 ): AsyncGenerator<string, void, unknown> {
   // Yield start event IMMEDIATELY (this happens right away)
   yield formatStartEvent();
-  console.info("📡 Yielded start event immediately");
+  logger.info("📡 Yielded start event immediately");
 
   try {
     // Validate and extract parameters
@@ -196,7 +197,7 @@ async function* createProgramDesignerEventStream(
 
     const { userId, sessionId, userResponse, messageTimestamp } = params;
 
-    console.info("🚀 Starting program design business logic (Session-Based)", {
+    logger.info("🚀 Starting program design business logic (Session-Based)", {
       userId,
       sessionId,
       userResponseLength: userResponse.length,
@@ -205,12 +206,12 @@ async function* createProgramDesignerEventStream(
     // Yield initial acknowledgment while processing starts
     const acknowledgment = getRandomCoachAcknowledgement();
     yield formatContextualEvent(acknowledgment);
-    console.info(
+    logger.info(
       `📡 Yielded coach acknowledgment (contextual): "${acknowledgment}"`,
     );
 
     // Load session data + Pinecone context in parallel
-    console.info("🔄 Loading session data + Pinecone context...");
+    logger.info("🔄 Loading session data + Pinecone context...");
     const [sessionData, pineconeResult] = await Promise.all([
       loadSessionData(userId, sessionId),
       queryPineconeContext(
@@ -227,7 +228,7 @@ async function* createProgramDesignerEventStream(
           minScore: 0.5,
         },
       ).catch((error) => {
-        console.warn(
+        logger.warn(
           "⚠️ Pinecone query failed, continuing without context:",
           error,
         );
@@ -246,16 +247,16 @@ async function* createProgramDesignerEventStream(
     let pineconeContext = "";
     if (pineconeResult.success && pineconeResult.matches.length > 0) {
       pineconeContext = formatPineconeContext(pineconeResult.matches);
-      console.info("✅ Pinecone context retrieved for program designer:", {
+      logger.info("✅ Pinecone context retrieved for program designer:", {
         totalMatches: pineconeResult.totalMatches,
         relevantMatches: pineconeResult.relevantMatches,
         contextLength: pineconeContext.length,
       });
     } else {
-      console.info("📭 No Pinecone context available for program designer");
+      logger.info("📭 No Pinecone context available for program designer");
     }
 
-    console.info("✅ Session data loaded", {
+    logger.info("✅ Session data loaded", {
       sessionId: programSession.sessionId,
       coachId: programSession.coachId,
       conversationHistoryLength:
@@ -282,7 +283,7 @@ async function* createProgramDesignerEventStream(
     programSession.conversationHistory.push(userMessage);
     programSession.lastActivity = new Date();
 
-    console.info("📝 User message added to session conversation history", {
+    logger.info("📝 User message added to session conversation history", {
       conversationHistoryLength: programSession.conversationHistory.length,
     });
 
@@ -296,7 +297,7 @@ async function* createProgramDesignerEventStream(
       isProgramDesignCommand(slashCommandResult.command);
 
     if (isProgramDesignSlashCommand) {
-      console.info("⚡ Restarting session due to slash command");
+      logger.info("⚡ Restarting session due to slash command");
       programSession.isDeleted = true;
       programSession.completedAt = new Date();
       await saveProgramDesignerSession(programSession);
@@ -345,7 +346,7 @@ async function* createProgramDesignerEventStream(
       programSession,
     );
   } catch (error) {
-    console.error("❌ Error in program designer streaming:", error);
+    logger.error("❌ Error in program designer streaming:", error);
     const errorEvent = formatValidationErrorEvent(
       error instanceof Error ? error : new Error("Unknown error occurred"),
     );
@@ -362,7 +363,7 @@ const internalStreamingHandler: StreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
-  console.info("🎬 Starting program designer session streaming handler");
+  logger.info("🎬 Starting program designer session streaming handler");
 
   try {
     // Create SSE event stream
@@ -372,12 +373,12 @@ const internalStreamingHandler: StreamingHandler = async (
     // Pipeline the SSE stream to response stream
     await pipeline(sseEventStream, responseStream);
 
-    console.info("✅ Streaming pipeline completed successfully");
+    logger.info("✅ Streaming pipeline completed successfully");
 
     // FIX: Prevent Lambda from hanging - all streaming is complete, don't wait for event loop
     context.callbackWaitsForEmptyEventLoop = false;
   } catch (error) {
-    console.error("❌ Fatal error in streaming handler:", error);
+    logger.error("❌ Fatal error in streaming handler:", error);
     // Error will be caught by Lambda runtime
     throw error;
   }
@@ -411,7 +412,7 @@ const authenticatedStreamingHandler = async (
     const path = event.rawPath || "";
 
     if (!path || path === "/" || method === "OPTIONS") {
-      console.info("⚠️ Ignoring health check or OPTIONS request:", {
+      logger.info("⚠️ Ignoring health check or OPTIONS request:", {
         method,
         path,
       });
@@ -421,7 +422,7 @@ const authenticatedStreamingHandler = async (
     }
 
     // OPTIONS requests are handled automatically by Lambda Function URL CORS config
-    console.info("🚀 Processing streaming request:", {
+    logger.info("🚀 Processing streaming request:", {
       method,
       path,
     });
@@ -434,7 +435,7 @@ const authenticatedStreamingHandler = async (
       routePattern: PROGRAM_DESIGNER_SESSION_ROUTE,
     })(event, responseStream, context);
   } catch (error) {
-    console.error("❌ Authentication error:", error);
+    logger.error("❌ Authentication error:", error);
 
     // Create error stream using pipeline approach
     const errorEvent = formatAuthErrorEvent(
@@ -448,11 +449,11 @@ const authenticatedStreamingHandler = async (
 
 // Use awslambda.streamifyResponse to enable streaming responses
 // awslambda is a global object provided by Lambda's Node.js runtime
-console.info(
+logger.info(
   "🔧 awslambda global available:",
   typeof (globalThis as any).awslambda !== "undefined",
 );
-console.info(
+logger.info(
   "🔧 streamifyResponse available:",
   typeof (globalThis as any).awslambda?.streamifyResponse === "function",
 );
@@ -471,7 +472,7 @@ if (
   );
 }
 
-console.info("✅ Using awslambda.streamifyResponse for streaming mode");
+logger.info("✅ Using awslambda.streamifyResponse for streaming mode");
 handler = awslambda.streamifyResponse(authenticatedStreamingHandler);
 
 export { handler };

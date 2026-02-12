@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Streaming chunk optimization utilities
  * Handles intelligent buffering to work around Lambda Function URL limitations
@@ -101,7 +102,7 @@ export async function* optimizeChunkStream(
 
     if (result.shouldFlush) {
       yield result.content;
-      console.info(
+      logger.info(
         `📡 Optimized chunk #${chunkIndex} flushed: "${result.content.substring(0, 30)}..." (${result.bufferSize} chars)`
       );
       buffer = "";
@@ -113,7 +114,7 @@ export async function* optimizeChunkStream(
   // Yield any remaining buffer content
   if (buffer.length > 0) {
     yield buffer;
-    console.info(`📡 Final buffer flushed: "${buffer.substring(0, 30)}..." (${buffer.length} chars)`);
+    logger.info(`📡 Final buffer flushed: "${buffer.substring(0, 30)}..." (${buffer.length} chars)`);
   }
 }
 

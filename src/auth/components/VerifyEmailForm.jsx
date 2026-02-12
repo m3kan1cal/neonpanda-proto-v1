@@ -6,6 +6,7 @@ import AuthLayout from './AuthLayout';
 import AuthInput from './AuthInput';
 import AuthButton from './AuthButton';
 import AuthErrorMessage from './AuthErrorMessage';
+import { logger } from "../../utils/logger";
 
 const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
   const { confirmSignUp, resendSignUpCode } = useAuth();
@@ -52,9 +53,9 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
     setIsSubmitting(true);
 
     try {
-      console.info('🔄 About to verify email for:', email);
+      logger.info('🔄 About to verify email for:', email);
       const result = await confirmSignUp(email, formData.confirmationCode.trim());
-      console.info('✅ Email verification result:', result);
+      logger.info('✅ Email verification result:', result);
 
       // The AuthContext now handles race conditions with retry logic, so no need for delay here
 
@@ -64,7 +65,7 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
       onVerificationSuccess();
 
     } catch (error) {
-      console.error('Confirmation error:', error);
+      logger.error('Confirmation error:', error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases
@@ -91,7 +92,7 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
       await resendSignUpCode(email);
       setSuccessMessage('A new confirmation code has been sent to your email.');
     } catch (error) {
-      console.error('Resend code error:', error);
+      logger.error('Resend code error:', error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases

@@ -8,6 +8,7 @@ import { createEmptyTodoList } from "../libs/coach-creator/todo-list-utils";
 import { generateNextQuestion } from "../libs/coach-creator/question-generator";
 import { CoachCreatorSession } from "../libs/coach-creator/types";
 import { nanoid } from "nanoid";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -19,7 +20,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   // Generate the initial AI message dynamically
   // This ensures consistency with the AI-driven approach and allows
   // the AI to determine the best first question
-  console.info(
+  logger.info(
     "🎬 Generating initial AI message for new coach creator session",
   );
 
@@ -30,9 +31,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       createEmptyTodoList(),
       "UNKNOWN", // Sophistication level unknown at start
     );
-    console.info("✅ AI generated initial message successfully");
+    logger.info("✅ AI generated initial message successfully");
   } catch (error) {
-    console.error("❌ Error generating initial message:", error);
+    logger.error("❌ Error generating initial message:", error);
     initialMessage = null;
   }
 
@@ -44,7 +45,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 I'll adapt based on your experience level, so just be real with me. What are your main fitness goals right now?`;
 
   if (!initialMessage) {
-    console.warn(
+    logger.warn(
       "⚠️ Using fallback initial message - AI generation may have failed",
     );
   }

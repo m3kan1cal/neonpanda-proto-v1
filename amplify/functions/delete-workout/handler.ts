@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { deleteWorkout, getWorkout } from "../../dynamodb/operations";
 import { deleteWorkoutSummaryFromPinecone } from "../libs/workout/pinecone";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -13,7 +14,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   try {
-    console.info("Deleting workout session:", {
+    logger.info("Deleting workout session:", {
       userId,
       workoutId,
     });
@@ -28,7 +29,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await deleteWorkout(userId, workoutId);
 
     // Clean up associated workout summary from Pinecone
-    console.info("🗑️ Cleaning up workout summary from Pinecone..");
+    logger.info("🗑️ Cleaning up workout summary from Pinecone..");
     const pineconeResult = await deleteWorkoutSummaryFromPinecone(
       userId,
       workoutId,
@@ -42,7 +43,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       pineconeCleanup: pineconeResult.success,
     });
   } catch (error) {
-    console.error("Error deleting workout session:", error);
+    logger.error("Error deleting workout session:", error);
 
     // Handle specific error types
     if (error instanceof Error) {

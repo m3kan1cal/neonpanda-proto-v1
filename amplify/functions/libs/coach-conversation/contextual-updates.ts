@@ -19,6 +19,7 @@
 
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { formatContextualEvent } from "../streaming";
+import { logger } from "../logger";
 
 // Generate contextual updates using Amazon Nova Micro for fast, cost-effective progressive user feedback
 export async function generateContextualUpdate(
@@ -190,7 +191,7 @@ Generate a brief processing update. One sentence, calm tone.`;
 
     return cleanedUpdate;
   } catch (error) {
-    console.error(`❌ Error generating ${updateType} update:`, error);
+    logger.error(`❌ Error generating ${updateType} update:`, error);
 
     // Fallback messages based on update type (creative, energetic)
     const fallbacks: Record<string, string> = {
@@ -346,7 +347,7 @@ Examples: Processing your message.. OR Working through this.. OR Analyzing what 
 
     return update;
   } catch (error) {
-    console.error(
+    logger.error(
       `❌ Error generating ${updateType} update for Vesper:`,
       error,
     );
@@ -1031,7 +1032,7 @@ export async function shouldShowContextualUpdates(
 ): Promise<boolean> {
   const message = userResponse.toLowerCase().trim();
 
-  console.info(
+  logger.info(
     `🎯 Analyzing message intent: "${userResponse.substring(0, 50)}..."`,
   );
 
@@ -1097,7 +1098,7 @@ export async function shouldShowContextualUpdates(
       message === shortResponse + ", thanks" ||
       message === "thanks, " + shortResponse
     ) {
-      console.info(
+      logger.info(
         `🚫 Rule-based: SKIP updates (obvious short: "${shortResponse}")`,
       );
       return false;
@@ -1146,7 +1147,7 @@ export async function shouldShowContextualUpdates(
 
   for (const goodbye of goodbyes) {
     if (message.includes(goodbye)) {
-      console.info(`🚫 Rule-based: SKIP updates (goodbye: "${goodbye}")`);
+      logger.info(`🚫 Rule-based: SKIP updates (goodbye: "${goodbye}")`);
       return false;
     }
   }
@@ -1187,7 +1188,7 @@ export async function shouldShowContextualUpdates(
 
   for (const reaction of emotionalReactions) {
     if (message === reaction || message === reaction.replace("!", "")) {
-      console.info(
+      logger.info(
         `🚫 Rule-based: SKIP updates (emotional reaction: "${reaction}")`,
       );
       return false;
@@ -1245,7 +1246,7 @@ export async function shouldShowContextualUpdates(
 
   for (const confirmation of confirmations) {
     if (message.includes(confirmation)) {
-      console.info(
+      logger.info(
         `🚫 Rule-based: SKIP updates (confirmation: "${confirmation}")`,
       );
       return false;
@@ -1324,7 +1325,7 @@ export async function shouldShowContextualUpdates(
 
   for (const needsHelp of obviousNeedsAnalysis) {
     if (message.includes(needsHelp)) {
-      console.info(
+      logger.info(
         `✅ Rule-based: SHOW updates (obvious question: "${needsHelp}")`,
       );
       return true;
@@ -1446,7 +1447,7 @@ export async function shouldShowContextualUpdates(
   }
 
   if (hasFitnessKeywords && message.length > 15) {
-    console.info(
+    logger.info(
       `✅ Rule-based: SHOW updates (fitness keywords + length > 15)`,
     );
     return true;
@@ -1454,7 +1455,7 @@ export async function shouldShowContextualUpdates(
 
   // Very short messages (under 8 characters) - likely simple responses
   if (message.length < 8) {
-    console.info(
+    logger.info(
       `🚫 Rule-based: SKIP updates (very short: ${message.length} chars)`,
     );
     return false;
@@ -1462,7 +1463,7 @@ export async function shouldShowContextualUpdates(
 
   // Very long messages (over 60 characters) - likely need analysis
   if (message.length > 60) {
-    console.info(
+    logger.info(
       `✅ Rule-based: SHOW updates (long message: ${message.length} chars)`,
     );
     return true;
@@ -1470,18 +1471,18 @@ export async function shouldShowContextualUpdates(
 
   // === PHASE 2: AI-BASED INTENT DETECTION FOR EDGE CASES ===
 
-  console.info(
+  logger.info(
     `🤖 Using AI intent detection for ambiguous message (${message.length} chars)`,
   );
 
   try {
     const response = await determineIntentWithAI(userResponse);
-    console.info(
+    logger.info(
       `🤖 AI decision: ${response ? "SHOW" : "SKIP"} contextual updates`,
     );
     return response;
   } catch (error) {
-    console.warn(
+    logger.warn(
       "⚠️ AI intent detection failed, defaulting to SHOW updates:",
       error,
     );
@@ -1551,7 +1552,7 @@ export async function generateAndFormatUpdate(
     );
     return formatContextualEvent(update, updateType);
   } catch (err) {
-    console.warn(`Contextual update ${updateType} failed (non-critical):`, err);
+    logger.warn(`Contextual update ${updateType} failed (non-critical):`, err);
     return null;
   }
 }

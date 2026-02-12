@@ -28,6 +28,7 @@ import { CenteredErrorState } from "../shared/ErrorStates";
 import { explainTerm } from "../../utils/apis/explainApi";
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import AppFooter from "../shared/AppFooter";
+import { logger } from "../../utils/logger";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -184,7 +185,7 @@ function ViewWorkouts() {
         }
       }
     } catch (err) {
-      console.error("Error loading data:", err);
+      logger.error("Error loading data:", err);
       setError(err.message || "Failed to load workout data");
     } finally {
       setIsLoading(false);
@@ -269,7 +270,7 @@ General thoughts: `;
 
     setProcessingWorkoutId(template.templateId);
     try {
-      console.info("📝 Submitting workout:", {
+      logger.info("📝 Submitting workout:", {
         templateId: template.templateId,
         originalLength: template.description?.length,
         editedLength: editedPerformance?.length,
@@ -350,7 +351,7 @@ General thoughts: `;
         };
       });
     } catch (err) {
-      console.error("Error logging workout:", err);
+      logger.error("Error logging workout:", err);
 
       // If error is due to "No templates found", it might be a rest day
       // Reload all data to properly handle rest day state
@@ -359,7 +360,7 @@ General thoughts: `;
         err.message.includes("No templates found") &&
         isViewingToday
       ) {
-        console.info(
+        logger.info(
           "Detected rest day after workout logging - reloading all data",
         );
         await loadData();
@@ -436,7 +437,7 @@ General thoughts: `;
         };
       });
     } catch (err) {
-      console.error("Error skipping workout:", err);
+      logger.error("Error skipping workout:", err);
 
       // If error is due to "No templates found", it might be a rest day
       // Reload all data to properly handle rest day state
@@ -445,7 +446,7 @@ General thoughts: `;
         err.message.includes("No templates found") &&
         isViewingToday
       ) {
-        console.info(
+        logger.info(
           "Detected rest day after workout skip - reloading all data",
         );
         await loadData();
@@ -496,7 +497,7 @@ General thoughts: `;
         };
       });
     } catch (err) {
-      console.error("Error unskipping workout:", err);
+      logger.error("Error unskipping workout:", err);
       showError(err.message || "Failed to unskip workout");
     } finally {
       setProcessingWorkoutId(null);
@@ -527,7 +528,7 @@ General thoughts: `;
         `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
       );
     } catch (err) {
-      console.error("Error completing rest day:", err);
+      logger.error("Error completing rest day:", err);
       showError(err.message || "Failed to complete rest day");
     } finally {
       setProcessingWorkoutId(null);
@@ -591,7 +592,7 @@ General thoughts: `;
         return;
       }
 
-      console.error("Error getting explanation:", error);
+      logger.error("Error getting explanation:", error);
 
       // Only show error if this request wasn't aborted
       if (!abortController.signal.aborted) {
@@ -664,7 +665,7 @@ General thoughts: `;
                     {/* Name and Badge */}
                     <div className="flex items-center gap-3 mb-2">
                       <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-                      <div className="h-5 w-24 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
                     </div>
                     {/* Metadata Row */}
                     <div className="flex items-center flex-wrap gap-4">
@@ -710,25 +711,25 @@ General thoughts: `;
                   <div>
                     <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-2"></div>
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                      <div className="h-6 w-24 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                      <div className="h-6 w-16 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
                     </div>
                   </div>
                   {/* Prescribed Exercises */}
                   <div>
                     <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-36 mb-2"></div>
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 w-28 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                      <div className="h-6 w-24 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
                     </div>
                   </div>
                   {/* Focus Areas */}
                   <div>
                     <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24 mb-2"></div>
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                      <div className="h-6 w-16 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
                     </div>
                   </div>
                 </div>
@@ -1054,7 +1055,7 @@ General thoughts: `;
                   >
                     <div className="flex-1">
                       <div className="flex items-start gap-3 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan flex-shrink-0 mt-2" />
+                        <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
                         <h3 className="font-russo text-lg font-bold uppercase text-white">
                           {template.name}
                         </h3>
@@ -1090,7 +1091,7 @@ General thoughts: `;
                         {template.estimatedDuration && (
                           <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
                             <svg
-                              className="w-4 h-4 flex-shrink-0"
+                              className="w-4 h-4 shrink-0"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -1268,7 +1269,7 @@ General thoughts: `;
                                 `}
                               >
                                 <svg
-                                  className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0"
+                                  className="w-5 h-5 text-synthwave-neon-cyan shrink-0"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1304,7 +1305,7 @@ General thoughts: `;
                                 `}
                               >
                                 <svg
-                                  className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0"
+                                  className="w-5 h-5 text-synthwave-neon-pink shrink-0"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"

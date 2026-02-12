@@ -8,6 +8,7 @@ import {
   deepMerge,
   DynamoDBSaveResult,
 } from "./core";
+import { logger } from "../functions/libs/logger";
 import {
   CoachConversation,
   CoachConversationListItem,
@@ -135,7 +136,7 @@ export async function queryCoachConversations(
       };
     });
   } catch (error) {
-    console.error(
+    logger.error(
       `Error loading coach conversations for user ${userId}, coach ${coachId}:`,
       error,
     );
@@ -203,7 +204,7 @@ export async function sendCoachConversationMessage(
         },
       };
 
-      console.error("❌ Conversation not found:", errorResult);
+      logger.error("❌ Conversation not found:", errorResult);
       throw new Error(`Conversation not found: ${conversationId}`);
     }
   } catch (error) {
@@ -238,7 +239,7 @@ export async function sendCoachConversationMessage(
       },
     };
 
-    console.error("❌ Error loading conversation:", errorResult);
+    logger.error("❌ Error loading conversation:", errorResult);
     throw error;
   }
 
@@ -284,7 +285,7 @@ export async function sendCoachConversationMessage(
         },
       };
 
-      console.error("❌ DynamoDB save failed:", errorResult);
+      logger.error("❌ DynamoDB save failed:", errorResult);
       throw new Error(
         `DynamoDB save failed: ${saveResult.errorDetails?.message || "Unknown error"}`,
       );
@@ -312,7 +313,7 @@ export async function sendCoachConversationMessage(
       },
     };
 
-    console.error("❌ Error during conversation save:", errorResult);
+    logger.error("❌ Error during conversation save:", errorResult);
     throw error;
   }
 
@@ -411,7 +412,7 @@ export async function deleteCoachConversation(
       targetConversation.sk,
       "coachConversation",
     );
-    console.info("Coach conversation deleted successfully:", {
+    logger.info("Coach conversation deleted successfully:", {
       conversationId,
       userId,
     });
@@ -445,7 +446,7 @@ export async function saveCoachConversationSummary(
 
   await saveToDynamoDB(item);
 
-  console.info("Conversation summary saved successfully:", {
+  logger.info("Conversation summary saved successfully:", {
     summaryId: summary.summaryId,
     userId: summary.userId,
     conversationId: summary.conversationId,
@@ -490,7 +491,7 @@ export async function queryConversationsCount(
       return sum + (conversation.attributes.metadata?.totalMessages || 0);
     }, 0);
 
-    console.info("Conversations counted successfully:", {
+    logger.info("Conversations counted successfully:", {
       userId,
       coachId,
       totalFound: totalCount,
@@ -499,7 +500,7 @@ export async function queryConversationsCount(
 
     return { totalCount, totalMessages };
   } catch (error) {
-    console.error(
+    logger.error(
       `Error counting conversations for user ${userId} and coach ${coachId}:`,
       error,
     );
@@ -530,7 +531,7 @@ export async function queryCoachConversationSummaries(
       ? items.filter((item) => item.coachId === coachId)
       : items;
 
-    console.info("Conversation summaries queried successfully:", {
+    logger.info("Conversation summaries queried successfully:", {
       userId,
       coachId: coachId || "all",
       totalFound: filteredItems.length,
@@ -538,7 +539,7 @@ export async function queryCoachConversationSummaries(
 
     return filteredItems;
   } catch (error) {
-    console.error(
+    logger.error(
       `Error querying conversation summaries for user ${userId}:`,
       error,
     );

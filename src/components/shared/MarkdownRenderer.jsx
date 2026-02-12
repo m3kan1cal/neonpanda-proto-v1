@@ -1,6 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { logger } from "../../utils/logger";
 
 /**
  * MarkdownRenderer - Reusable component for rendering markdown content with synthwave styling
@@ -19,7 +20,7 @@ export const MarkdownRenderer = ({ content, className = "" }) => {
   // Guard against non-string content
   if (!content) return null;
   if (typeof content !== "string") {
-    console.warn(
+    logger.warn(
       "MarkdownRenderer received non-string content:",
       content,
       typeof content,
@@ -107,7 +108,7 @@ export const MarkdownRenderer = ({ content, className = "" }) => {
             }
             return (
               <li className="flex items-start space-x-3">
-                <span className="text-white flex-shrink-0 font-bold">•</span>
+                <span className="text-white shrink-0 font-bold">•</span>
                 <span className="flex-1 leading-normal">{children}</span>
               </li>
             );

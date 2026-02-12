@@ -9,6 +9,7 @@ import { UniversalWorkoutSchema } from "./types";
 import { callBedrockApi, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
+import { logger } from "../logger";
 
 export interface NormalizationResult {
   isValid: boolean;
@@ -108,7 +109,7 @@ export const normalizeWorkout = async (
   userId: string,
 ): Promise<NormalizationResult> => {
   try {
-    console.info("🔧 Starting workout normalization:", {
+    logger.info("🔧 Starting workout normalization:", {
       userId,
       workoutId: workoutData.workout_id,
       discipline: workoutData.discipline,
@@ -117,7 +118,7 @@ export const normalizeWorkout = async (
     // Use intelligent normalization for all cases that need normalization
     return await performNormalization(workoutData, userId);
   } catch (error) {
-    console.error("Normalization failed:", error);
+    logger.error("Normalization failed:", error);
     return {
       isValid: false,
       normalizedData: workoutData as UniversalWorkoutSchema,
@@ -194,7 +195,7 @@ const performNormalization = async (
       normalizationMethod: "ai",
     };
   } catch (error) {
-    console.error("Normalization failed:", error);
+    logger.error("Normalization failed:", error);
     return {
       isValid: false,
       normalizedData: workoutData as UniversalWorkoutSchema,

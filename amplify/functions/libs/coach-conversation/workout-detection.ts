@@ -9,6 +9,7 @@ import {
 import type { CoachConfig } from "../coach-creator/types";
 import type { UserProfile } from "../user/types";
 import type { SmartRequestRouter } from "../streaming/business-types";
+import { logger } from "../logger";
 
 export interface WorkoutDetectionResult {
   isWorkoutLogging: boolean;
@@ -46,7 +47,7 @@ export async function detectAndProcessWorkout(
 
   try {
     slashCommand = parseSlashCommand(userMessage);
-    console.info("🔍 Slash command parsing result:", {
+    logger.info("🔍 Slash command parsing result:", {
       userMessage: userMessage.substring(0, 100),
       isSlashCommand: slashCommand.isSlashCommand,
       command: slashCommand.command,
@@ -54,7 +55,7 @@ export async function detectAndProcessWorkout(
     });
 
     isSlashCommandWorkout = isWorkoutSlashCommand(slashCommand);
-    console.info("🔍 Slash command workout check:", {
+    logger.info("🔍 Slash command workout check:", {
       isSlashCommandWorkout,
       supportedCommands: ["log-workout"],
       detectedCommand: slashCommand.command,
@@ -66,7 +67,7 @@ export async function detectAndProcessWorkout(
         // ✅ Use Smart Router result (no duplicate AI call)
         isNaturalLanguageWorkout = routerAnalysis.workoutDetection.isWorkoutLog;
 
-        console.info(
+        logger.info(
           "🔍 Natural language workout check (using Smart Router result):",
           {
             isNaturalLanguageWorkout,
@@ -77,7 +78,7 @@ export async function detectAndProcessWorkout(
         );
       } else {
         // Fallback: Call validateWorkoutContent if no router result (shouldn't happen in streaming flow)
-        console.warn(
+        logger.warn(
           "⚠️ No Smart Router result provided - falling back to validateWorkoutContent",
         );
         const naturalLanguageValidation = await validateWorkoutContent(
@@ -88,7 +89,7 @@ export async function detectAndProcessWorkout(
           naturalLanguageValidation.hasPerformanceData &&
           naturalLanguageValidation.hasLoggingIntent;
 
-        console.info(
+        logger.info(
           "🔍 Natural language workout check (fallback validation):",
           {
             isNaturalLanguageWorkout,
@@ -102,19 +103,19 @@ export async function detectAndProcessWorkout(
       }
     } else {
       isNaturalLanguageWorkout = false;
-      console.info(
+      logger.info(
         "🔍 Natural language workout check skipped (slash command detected)",
       );
     }
 
     isWorkoutLogging = isSlashCommandWorkout || isNaturalLanguageWorkout;
-    console.info("🔍 Final workout detection result:", {
+    logger.info("🔍 Final workout detection result:", {
       isWorkoutLogging,
       isSlashCommandWorkout,
       isNaturalLanguageWorkout,
     });
   } catch (error) {
-    console.error("❌ Error during workout detection:", error);
+    logger.error("❌ Error during workout detection:", error);
     slashCommand = { isSlashCommand: false };
     isSlashCommandWorkout = false;
     isNaturalLanguageWorkout = false;
@@ -125,7 +126,7 @@ export async function detectAndProcessWorkout(
   let workoutContent = userMessage; // Default to full user response
 
   if (isWorkoutLogging) {
-    console.info("🏋️ WORKOUT DETECTED:", {
+    logger.info("🏋️ WORKOUT DETECTED:", {
       userId,
       coachId,
       conversationId,
@@ -152,7 +153,7 @@ export async function detectAndProcessWorkout(
 
     if (isSlashCommandWorkout) {
       // ✅ SLASH COMMAND VALIDATION: Check if workout content has actual performance data
-      console.info(
+      logger.info(
         "🔍 Validating slash command workout content for performance data..",
         {
           contentLength: workoutContent.length,
@@ -168,7 +169,7 @@ export async function detectAndProcessWorkout(
       );
 
       if (!validationResult.hasPerformanceData) {
-        console.warn(
+        logger.warn(
           "⚠️ SLASH COMMAND VALIDATION FAILED: No performance data detected",
           {
             userId,
@@ -191,7 +192,7 @@ export async function detectAndProcessWorkout(
         };
       }
 
-      console.info(
+      logger.info(
         "✅ Slash command validation passed - performance data detected",
         {
           confidence: validationResult.confidence,
@@ -202,7 +203,7 @@ export async function detectAndProcessWorkout(
       // Continue to extraction below...
     } else {
       // ✅ NATURAL LANGUAGE: Always trigger multi-turn session (skip validation)
-      console.info(
+      logger.info(
         "🔄 Natural language workout detected - triggering multi-turn session",
         {
           userId,
@@ -266,7 +267,7 @@ export async function detectAndProcessWorkout(
         "workout extraction",
       );
     } catch (error) {
-      console.error(
+      logger.error(
         "❌ Failed to trigger workout extraction, but continuing conversation:",
         error,
       );

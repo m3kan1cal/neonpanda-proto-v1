@@ -1,4 +1,5 @@
 import { Stack } from 'aws-cdk-lib';
+import { logger } from "./logger";
 
 /**
  * Branch and environment detection utilities for consistent resource naming
@@ -62,7 +63,7 @@ export function logBranchConfiguration(
   resourceName: string,
   resourceType: string
 ): void {
-  console.info(`🏗️ ${resourceType} Configuration:`, {
+  logger.info(`🏗️ ${resourceType} Configuration:`, {
     isSandbox: branchInfo.isSandbox,
     branchName: branchInfo.branchName,
     resourceName,
@@ -122,6 +123,6 @@ export function getTableName(): string {
     return constructedName;
   }
 
-  console.error('❌ No table name available - both DYNAMODB_TABLE_NAME and DYNAMODB_BASE_TABLE_NAME are missing');
+  logger.error('❌ No table name available - both DYNAMODB_TABLE_NAME and DYNAMODB_BASE_TABLE_NAME are missing');
   throw new Error("Neither DYNAMODB_TABLE_NAME nor DYNAMODB_BASE_TABLE_NAME environment variable is set");
 }

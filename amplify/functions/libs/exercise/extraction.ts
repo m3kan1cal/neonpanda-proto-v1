@@ -36,6 +36,7 @@ import type {
   HybridWorkout,
   HybridExercise,
 } from "../workout/types";
+import { logger } from "../logger";
 import type {
   ExtractedExercise,
   ExerciseExtractionResult,
@@ -54,7 +55,7 @@ export function extractExercisesFromWorkout(
   const disciplineSpecific = workoutData.discipline_specific;
 
   if (!disciplineSpecific) {
-    console.warn("No discipline_specific data found in workout");
+    logger.warn("No discipline_specific data found in workout");
     return {
       exercises: [],
       discipline: discipline || "crossfit",
@@ -112,7 +113,7 @@ export function extractExercisesFromWorkout(
       return extractHybridExercises(disciplineSpecific.hybrid, discipline);
 
     default:
-      console.warn(
+      logger.warn(
         `Unknown discipline: ${discipline}, attempting generic extraction`,
       );
       return extractGenericExercises(
@@ -140,7 +141,7 @@ function extractCrossFitExercises(
     for (const exercise of round.exercises || []) {
       // Skip exercises without names
       if (!exercise.exercise_name) {
-        console.warn(
+        logger.warn(
           "⚠️ Skipping CrossFit exercise without name in round",
           round.round_number,
         );
@@ -217,7 +218,7 @@ function extractPowerliftingExercises(
   for (const exercise of exerciseList) {
     // Skip exercises without names
     if (!exercise.exercise_name) {
-      console.warn("⚠️ Skipping Powerlifting exercise without name");
+      logger.warn("⚠️ Skipping Powerlifting exercise without name");
       continue;
     }
 
@@ -367,7 +368,7 @@ function extractBodybuildingExercises(
   for (const exercise of bodybuilding.exercises) {
     // Skip exercises without names
     if (!exercise.exercise_name) {
-      console.warn("⚠️ Skipping Bodybuilding exercise without name");
+      logger.warn("⚠️ Skipping Bodybuilding exercise without name");
       continue;
     }
 
@@ -518,7 +519,7 @@ function extractRunningExercises(
       metrics: mainMetrics,
     });
   } else {
-    console.warn("⚠️ Skipping Running exercise without run_type");
+    logger.warn("⚠️ Skipping Running exercise without run_type");
   }
 
   // Also extract individual segments if they have different types
@@ -570,7 +571,7 @@ function extractHyroxExercises(
   for (const station of hyrox.stations || []) {
     // Skip stations without names
     if (!station.station_name) {
-      console.warn("⚠️ Skipping Hyrox station without station_name");
+      logger.warn("⚠️ Skipping Hyrox station without station_name");
       continue;
     }
 
@@ -595,7 +596,7 @@ function extractHyroxExercises(
   for (const run of hyrox.runs || []) {
     // Skip runs without run_number (use != null to allow 0)
     if (run.run_number == null) {
-      console.warn("⚠️ Skipping Hyrox run without run_number");
+      logger.warn("⚠️ Skipping Hyrox run without run_number");
       continue;
     }
 
@@ -634,7 +635,7 @@ function extractOlympicWeightliftingExercises(
   for (const lift of oly.lifts) {
     // Skip lifts without names
     if (!lift.lift_name) {
-      console.warn("⚠️ Skipping Olympic Weightlifting lift without name");
+      logger.warn("⚠️ Skipping Olympic Weightlifting lift without name");
       continue;
     }
 
@@ -789,7 +790,7 @@ function extractFunctionalBodybuildingExercises(
   for (const exercise of fb.exercises) {
     // Skip exercises without names
     if (!exercise.exercise_name) {
-      console.warn("⚠️ Skipping Functional Bodybuilding exercise without name");
+      logger.warn("⚠️ Skipping Functional Bodybuilding exercise without name");
       continue;
     }
 
@@ -923,7 +924,7 @@ function extractCalisthenicsExercises(
   for (const exercise of calisthenics.exercises) {
     // Skip exercises without names
     if (!exercise.exercise_name) {
-      console.warn("⚠️ Skipping Calisthenics exercise without name");
+      logger.warn("⚠️ Skipping Calisthenics exercise without name");
       continue;
     }
 
@@ -1027,9 +1028,7 @@ function extractCircuitTrainingExercises(
 
   for (const station of circuitData.stations) {
     if (!station.exercise_name) {
-      console.warn(
-        "⚠️ Skipping Circuit Training station without exercise_name",
-      );
+      logger.warn("⚠️ Skipping Circuit Training station without exercise_name");
       continue;
     }
 
@@ -1075,7 +1074,7 @@ function extractHybridExercises(
 
       for (const exercise of phase.exercises) {
         if (!exercise.exercise_name) {
-          console.warn(
+          logger.warn(
             `⚠️ Skipping Hybrid exercise without name in phase: ${phase.phase_name}`,
           );
           continue;
@@ -1101,7 +1100,7 @@ function extractHybridExercises(
   if (hybrid.exercises && hybrid.exercises.length > 0) {
     for (const exercise of hybrid.exercises) {
       if (!exercise.exercise_name) {
-        console.warn("⚠️ Skipping Hybrid exercise without name");
+        logger.warn("⚠️ Skipping Hybrid exercise without name");
         continue;
       }
 

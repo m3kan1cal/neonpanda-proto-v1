@@ -69,7 +69,7 @@ function AboutUs() {
               </p>
               <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                     •
                   </span>
                   <span>
@@ -78,7 +78,7 @@ function AboutUs() {
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                     •
                   </span>
                   <span>
@@ -87,7 +87,7 @@ function AboutUs() {
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                     •
                   </span>
                   <span>
@@ -95,7 +95,7 @@ function AboutUs() {
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                     •
                   </span>
                   <span>
@@ -104,7 +104,7 @@ function AboutUs() {
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                  <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                     •
                   </span>
                   <span>
@@ -619,7 +619,7 @@ function AboutUs() {
                 </h3>
                 <ul className="space-y-4 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -628,7 +628,7 @@ function AboutUs() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -636,7 +636,7 @@ function AboutUs() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -645,7 +645,7 @@ function AboutUs() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -654,7 +654,7 @@ function AboutUs() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-cyan mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -673,7 +673,7 @@ function AboutUs() {
                 </h3>
                 <ul className="space-y-4 text-synthwave-text-primary font-rajdhani text-lg ml-6">
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -684,7 +684,7 @@ function AboutUs() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -695,7 +695,7 @@ function AboutUs() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <span>
@@ -706,7 +706,7 @@ function AboutUs() {
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="text-synthwave-neon-pink mt-1 flex-shrink-0">
+                    <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
                     </span>
                     <span>

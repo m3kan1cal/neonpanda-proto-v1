@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { runAllStreamingTests, testRawStreamingAPI, testStreamingWithManualProcessing, testStreamingApiHelper, testStreamingAgentHelper } from '../utils/debug/streamingDebugTest';
 import { testLambdaStreamingConnection, checkLambdaStreamingHealth } from '../utils/apis/streamingLambdaApi';
+import { logger } from "../utils/logger";
 
 /**
  * Debug test page for streaming functionality
@@ -99,7 +100,7 @@ export default function StreamingDebugTest() {
         setStreamingEvents(prev => [...prev, eventData]);
 
         // Log with precise timing
-        console.info(`🕐 Real-time event #${eventCount} [+${timeSinceStart}ms]:`, {
+        logger.info(`🕐 Real-time event #${eventCount} [+${timeSinceStart}ms]:`, {
           type: event.type,
           content: event.content?.substring(0, 30) + (event.content?.length > 30 ? '...' : ''),
           timeSinceStart: timeSinceStart + 'ms'

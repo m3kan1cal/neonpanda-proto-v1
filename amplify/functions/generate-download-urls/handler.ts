@@ -1,9 +1,10 @@
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { generatePresignedGetUrl, validateUserS3Key } from '../libs/s3-utils';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
-  console.info('🖼️ Starting presigned download URL generation', {
+  logger.info('🖼️ Starting presigned download URL generation', {
     pathUserId: event.pathParameters?.userId,
     authenticatedUserId: event.user.userId,
   });
@@ -14,14 +15,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const body = JSON.parse(event.body || '{}');
   const { s3Keys } = body;
 
-  console.info('📥 Request body parsed:', {
+  logger.info('📥 Request body parsed:', {
     hasS3Keys: !!s3Keys,
     s3KeysCount: s3Keys?.length || 0,
   });
 
   // Verify user can only access their own images
   if (authenticatedUserId !== pathUserId) {
-    console.error('❌ User mismatch:', { authenticatedUserId, pathUserId });
+    logger.error('❌ User mismatch:', { authenticatedUserId, pathUserId });
     return createErrorResponse(403, 'Cannot generate download URLs for other users');
   }
 
@@ -37,7 +38,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   // Verify all S3 keys belong to this user
   for (const s3Key of s3Keys) {
     if (!validateUserS3Key(s3Key, authenticatedUserId)) {
-      console.error('❌ Security violation: S3 key does not belong to user', { authenticatedUserId, s3Key });
+      logger.error('❌ Security violation: S3 key does not belong to user', { authenticatedUserId, s3Key });
       return createErrorResponse(403, 'Invalid S3 key: access denied');
     }
   }
@@ -57,7 +58,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       })
     );
 
-    console.info('✅ Generated presigned download URLs:', {
+    logger.info('✅ Generated presigned download URLs:', {
       count: downloadUrls.length,
       expiresIn: '15min'
     });
@@ -67,7 +68,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       expiresIn: 900,
     });
   } catch (error) {
-    console.error('❌ Error generating presigned URLs:', error);
+    logger.error('❌ Error generating presigned URLs:', error);
     return createErrorResponse(500, 'Failed to generate presigned URLs', {
       message: error instanceof Error ? error.message : 'Unknown error'
     });

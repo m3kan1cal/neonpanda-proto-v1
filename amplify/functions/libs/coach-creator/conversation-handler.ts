@@ -17,6 +17,7 @@ import { getTodoProgress, isSessionComplete } from "./todo-list-utils";
 import { extractSophisticationLevel } from "./data-extraction";
 import { markSessionComplete } from "./session-management";
 import { CoachMessage } from "../coach-conversation/types";
+import { logger } from "../logger";
 
 /**
  * Handle to-do list based conversational flow
@@ -28,11 +29,11 @@ export async function* handleTodoListConversation(
   session: any,
   userHistoryContext?: string,
 ): AsyncGenerator<string, any, unknown> {
-  console.info("✨ Handling to-do list conversation");
+  logger.info("✨ Handling to-do list conversation");
 
   try {
     // Step 1: Extract information from user response and update todoList FIRST
-    console.info(
+    logger.info(
       "🔍 Extracting information and updating to-do list BEFORE generating next question",
     );
     session.conversationHistory = session.conversationHistory || [];
@@ -51,14 +52,14 @@ export async function* handleTodoListConversation(
     );
 
     // Step 2: Generate next question or completion message using UPDATED todoList
-    console.info("🎯 Generating next question based on UPDATED to-do list");
+    logger.info("🎯 Generating next question based on UPDATED to-do list");
     const craftingUpdate = await generateCoachCreatorContextualUpdate(
       userResponse,
       "response_crafting",
       {},
     );
     yield formatContextualEvent(craftingUpdate, "response_crafting");
-    console.info("💬 Yielded crafting update (Vesper):", craftingUpdate);
+    logger.info("💬 Yielded crafting update (Vesper):", craftingUpdate);
 
     // REAL STREAMING: Get chunks directly from Bedrock as they're generated
     const questionStream = generateNextQuestionStream(
@@ -78,17 +79,17 @@ export async function* handleTodoListConversation(
 
     // Fallback check (shouldn't happen with new streaming approach)
     if (!nextResponse) {
-      console.warn("⚠️ No response generated, using fallback");
+      logger.warn("⚠️ No response generated, using fallback");
       const fallback =
         "Thanks for sharing! Let me think about what else I need to know...";
       yield formatChunkEvent(fallback);
       nextResponse = fallback;
     }
 
-    console.info("✅ Response generated and streamed");
+    logger.info("✅ Response generated and streamed");
 
     // Step 3: Store AI response and finalize session state
-    console.info("⚙️ Finalizing session state");
+    logger.info("⚙️ Finalizing session state");
 
     // Detect sophistication level (still useful for adapting tone)
     const detectedLevel = extractSophisticationLevel(nextResponse);
@@ -132,7 +133,7 @@ export async function* handleTodoListConversation(
       markSessionComplete(session);
     }
 
-    console.info("✅ To-do list session update processed:", {
+    logger.info("✅ To-do list session update processed:", {
       isComplete: complete,
       sophisticationLevel: session.sophisticationLevel,
       progress: progressDetails.percentage,
@@ -149,7 +150,7 @@ export async function* handleTodoListConversation(
       isOnFinalQuestion: complete,
     };
   } catch (error) {
-    console.error("❌ Error in to-do list conversation:", error);
+    logger.error("❌ Error in to-do list conversation:", error);
     yield formatChunkEvent(
       "I apologize, but I'm having trouble processing that. Could you try again?",
     );
@@ -158,7 +159,7 @@ export async function* handleTodoListConversation(
     try {
       await saveCoachCreatorSession(session);
     } catch (saveError) {
-      console.error("❌ Error saving session after error:", saveError);
+      logger.error("❌ Error saving session after error:", saveError);
     }
 
     // Return error state

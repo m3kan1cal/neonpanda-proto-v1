@@ -5,6 +5,7 @@
 
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { DEFAULT_PROGRAM_DURATION_STRING } from "./duration-parser";
+import { logger } from "../logger";
 
 /**
  * Schema for the normalize_duration tool response
@@ -79,7 +80,7 @@ EXAMPLES:
     if (result && typeof result === "object" && result.input) {
       const toolResult = result.input as DurationNormalizationResult;
 
-      console.info("📅 AI normalized duration (tool response):", {
+      logger.info("📅 AI normalized duration (tool response):", {
         input: rawValue,
         output: toolResult.normalizedDuration,
         confidence: toolResult.confidence,
@@ -90,14 +91,14 @@ EXAMPLES:
     }
 
     // Fallback if tool wasn't used properly
-    console.warn("⚠️ Tool response not in expected format, using default");
+    logger.warn("⚠️ Tool response not in expected format, using default");
     return {
       normalizedDuration: DEFAULT_PROGRAM_DURATION_STRING,
       confidence: "low",
       originalInterpretation: "Fallback - unexpected response format",
     };
   } catch (error) {
-    console.error("❌ AI normalization failed:", error);
+    logger.error("❌ AI normalization failed:", error);
     return {
       normalizedDuration: DEFAULT_PROGRAM_DURATION_STRING,
       confidence: "low",

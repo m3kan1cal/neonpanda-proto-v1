@@ -10,6 +10,7 @@ import {
 } from "../response-utils";
 import { CoachCreatorTodoList, TodoItem, CoachMessage } from "./types";
 import { COACH_CREATOR_TODO_SCHEMA } from "../schemas/coach-creator-todo-schema";
+import { logger } from "../logger";
 
 /**
  * Extract information from user's response and update the to-do list
@@ -20,7 +21,7 @@ export async function extractAndUpdateTodoList(
   conversationHistory: CoachMessage[],
   currentTodoList: CoachCreatorTodoList,
 ): Promise<CoachCreatorTodoList> {
-  console.info("🔍 Extracting information from user response");
+  logger.info("🔍 Extracting information from user response");
 
   // Include FULL conversation history for better context
   // With 200K token context window, we have plenty of room
@@ -76,24 +77,24 @@ Return JSON with ONLY the fields you found information for:
       },
     );
 
-    console.info("✅ Received extraction response");
+    logger.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input and fix any double-encoding
       extracted = extractionResponse.input;
-      console.info("✅ Tool-based extraction successful");
+      logger.info("✅ Tool-based extraction successful");
       // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
       extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn("⚠️ Received string response, parsing as JSON fallback");
+      logger.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
     if (!extracted || typeof extracted !== "object") {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to parse extraction response, returning current todo list",
       );
       return currentTodoList;
@@ -121,7 +122,7 @@ Return JSON with ONLY the fields you found information for:
             extractedFrom: `message_${messageIndex}`,
           };
 
-          console.info(
+          logger.info(
             `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
           );
         }
@@ -130,12 +131,12 @@ Return JSON with ONLY the fields you found information for:
 
     // Log extraction summary
     const extractedCount = Object.keys(extracted).length;
-    console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
+    logger.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     return updatedTodoList;
   } catch (error) {
-    console.error("❌ Error during extraction:", error);
-    console.error("Returning current todo list unchanged");
+    logger.error("❌ Error during extraction:", error);
+    logger.error("Returning current todo list unchanged");
     return currentTodoList;
   }
 }

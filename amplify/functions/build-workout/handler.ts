@@ -10,11 +10,12 @@ import { withHeartbeat } from "../libs/heartbeat";
 import type { BuildWorkoutEvent } from "../libs/workout/types";
 import { WorkoutLoggerAgent } from "../libs/agents/workout-logger/agent";
 import type { WorkoutLoggerContext } from "../libs/agents/workout-logger/types";
+import { logger } from "../libs/logger";
 
 export const handler = async (event: BuildWorkoutEvent) => {
   return withHeartbeat("Workout Logger Agent", async () => {
     try {
-      console.info("🏋️ Starting Workout Logger Agent:", {
+      logger.info("🏋️ Starting Workout Logger Agent:", {
         userId: event.userId,
         coachId: event.coachId,
         conversationId: event.conversationId,
@@ -39,7 +40,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
 
         // Check for obviously incomplete submissions
         if (charCount < 10 || wordCount < 3) {
-          console.warn("⚠️ Suspiciously short workout content detected:", {
+          logger.warn("⚠️ Suspiciously short workout content detected:", {
             content: contentTrimmed,
             charCount,
             wordCount,
@@ -64,7 +65,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
         const singleWordPattern =
           /^(warm|workout|exercise|training|gym|lift)\s*(up)?$/i;
         if (singleWordPattern.test(contentTrimmed)) {
-          console.warn("⚠️ Single keyword detected without workout details:", {
+          logger.warn("⚠️ Single keyword detected without workout details:", {
             content: contentTrimmed,
             isKeywordOnly: true,
           });
@@ -103,13 +104,13 @@ export const handler = async (event: BuildWorkoutEvent) => {
       const agent = new WorkoutLoggerAgent(context);
 
       // Let agent handle the entire workflow
-      console.info("🤖 Starting agent workflow...");
+      logger.info("🤖 Starting agent workflow...");
       const result = await agent.logWorkout(
         event.userMessage,
         event.imageS3Keys,
       );
 
-      console.info("✅ Agent workflow completed:", {
+      logger.info("✅ Agent workflow completed:", {
         success: result.success,
         workoutId: result.workoutId,
         skipped: result.skipped,
@@ -137,8 +138,8 @@ export const handler = async (event: BuildWorkoutEvent) => {
         });
       }
     } catch (error) {
-      console.error("❌ Error in workout builder agent:", error);
-      console.error("Event data:", {
+      logger.error("❌ Error in workout builder agent:", error);
+      logger.error("Event data:", {
         userId: event.userId,
         coachId: event.coachId,
         conversationId: event.conversationId,

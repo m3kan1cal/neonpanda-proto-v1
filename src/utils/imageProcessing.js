@@ -1,5 +1,6 @@
 import imageCompression from 'browser-image-compression';
 import heic2any from 'heic2any';
+import { logger } from "./logger";
 
 /**
  * Process a single image: HEIC conversion, compression, and optimization
@@ -38,7 +39,7 @@ export async function processImage(file) {
 
     return compressedFile;
   } catch (error) {
-    console.error('Error processing image:', error);
+    logger.error('Error processing image:', error);
     throw new Error(`Failed to process image: ${error.message}`);
   }
 }

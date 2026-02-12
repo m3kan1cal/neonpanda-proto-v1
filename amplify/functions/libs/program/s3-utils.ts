@@ -7,6 +7,7 @@
 import { getObjectAsJson, putObjectAsJson } from "../s3-utils";
 import { ProgramDetails, WorkoutTemplate } from "./types";
 import { parseCompletedAt } from "../analytics/date-utils";
+import { logger } from "../logger";
 
 /**
  * Store training program details (workout templates) in S3
@@ -54,7 +55,7 @@ export async function storeProgramDetailsInS3(
       },
     });
 
-    console.info("Successfully stored program details in S3:", {
+    logger.info("Successfully stored program details in S3:", {
       key,
       programId,
       userId,
@@ -64,7 +65,7 @@ export async function storeProgramDetailsInS3(
 
     return key;
   } catch (error) {
-    console.error("Failed to store program details in S3:", error);
+    logger.error("Failed to store program details in S3:", error);
     throw error;
   }
 }
@@ -97,7 +98,7 @@ export async function getProgramDetailsFromS3(
       }),
     );
 
-    console.info("Successfully retrieved program details from S3:", {
+    logger.info("Successfully retrieved program details from S3:", {
       key: s3Key,
       programId: programDetails.programId,
       templateCount: programDetails.workoutTemplates.length,
@@ -105,7 +106,7 @@ export async function getProgramDetailsFromS3(
 
     return programDetails;
   } catch (error) {
-    console.error("Failed to retrieve program details from S3:", {
+    logger.error("Failed to retrieve program details from S3:", {
       error,
       key: s3Key,
     });
@@ -125,7 +126,7 @@ export async function saveProgramDetailsToS3(
       pretty: true,
     });
 
-    console.info("Successfully saved program details to S3:", {
+    logger.info("Successfully saved program details to S3:", {
       key: s3Key,
       programId: programDetails.programId,
       templateCount: programDetails.workoutTemplates.length,
@@ -133,7 +134,7 @@ export async function saveProgramDetailsToS3(
 
     return s3Key;
   } catch (error) {
-    console.error("Failed to save program details to S3:", error);
+    logger.error("Failed to save program details to S3:", error);
     throw error;
   }
 }
@@ -185,7 +186,7 @@ export async function updateWorkoutInS3(
       pretty: true,
     });
 
-    console.info("Successfully updated workout in S3:", {
+    logger.info("Successfully updated workout in S3:", {
       oldKey: s3Key,
       newKey,
       programId: programDetails.programId,
@@ -195,7 +196,7 @@ export async function updateWorkoutInS3(
 
     return newKey;
   } catch (error) {
-    console.error("Failed to update workout in S3:", error);
+    logger.error("Failed to update workout in S3:", error);
     throw error;
   }
 }
@@ -220,7 +221,7 @@ export async function getWorkoutFromS3(
 
     return template || null;
   } catch (error) {
-    console.error("Failed to get workout template from S3:", error);
+    logger.error("Failed to get workout template from S3:", error);
     return null;
   }
 }
@@ -245,7 +246,7 @@ export async function getMultipleWorkoutsFromS3(
 
     return templates;
   } catch (error) {
-    console.error("Failed to get multiple workout templates from S3:", error);
+    logger.error("Failed to get multiple workout templates from S3:", error);
     return [];
   }
 }
@@ -272,7 +273,7 @@ export async function getWorkoutsForPhase(
 
     return templates;
   } catch (error) {
-    console.error("Failed to get workout templates for phase from S3:", error);
+    logger.error("Failed to get workout templates for phase from S3:", error);
     return [];
   }
 }

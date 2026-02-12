@@ -15,6 +15,7 @@ import { formatChunkEvent } from "../streaming";
 import { extractAndUpdateTodoList } from "./todo-extraction";
 import { getTodoProgress, isSessionComplete } from "./todo-list-utils";
 import { CoachMessage } from "../coach-conversation/types";
+import { logger } from "../logger";
 
 import { ProgramDesignerSession } from "./types";
 
@@ -36,10 +37,10 @@ export async function* handleTodoListConversation(
     activeProgram?: any;
   },
 ): AsyncGenerator<string, any, unknown> {
-  console.info("✨ Handling program to-do list conversation");
+  logger.info("✨ Handling program to-do list conversation");
 
   if (imageS3Keys && imageS3Keys.length > 0) {
-    console.info("🖼️ Conversation includes images:", {
+    logger.info("🖼️ Conversation includes images:", {
       imageCount: imageS3Keys.length,
       imageKeys: imageS3Keys,
     });
@@ -49,7 +50,7 @@ export async function* handleTodoListConversation(
     // NOTE: User message already added to session.conversationHistory[] in main handler
     // We don't need to add it again here - just use the existing history
 
-    console.info("🔍 Extracting information from user response", {
+    logger.info("🔍 Extracting information from user response", {
       conversationHistoryLength: session.conversationHistory.length,
       turnCount: session.turnCount,
     });
@@ -68,7 +69,7 @@ export async function* handleTodoListConversation(
 
     // Step 1.5: Check for topic change (user abandoned program design)
     if (extractionResult.userChangedTopic) {
-      console.info(
+      logger.info(
         "🔀 User changed topics - cancelling program design session",
       );
       session.isComplete = false; // Don't complete the program
@@ -88,13 +89,13 @@ export async function* handleTodoListConversation(
 
     // Step 1.6: Check for early completion intent (user wants to skip optional fields)
     if (extractionResult.userWantsToFinish) {
-      console.info(
+      logger.info(
         "✅ User wants to finish early - checking if minimum requirements met",
       );
       const requiredComplete = isSessionComplete(session.todoList);
 
       if (requiredComplete) {
-        console.info(
+        logger.info(
           "✅ Required fields complete - triggering program generation",
         );
         // Generate completion message and trigger generation
@@ -132,7 +133,7 @@ export async function* handleTodoListConversation(
           progressDetails: getTodoProgress(session.todoList),
         };
       } else {
-        console.info(
+        logger.info(
           "⚠️ User wants to finish but required fields incomplete - continuing collection",
         );
         // Continue normal flow
@@ -144,7 +145,7 @@ export async function* handleTodoListConversation(
 
     // If required items are complete but additionalConsiderations hasn't been asked yet
     if (requiredComplete && session.additionalConsiderations === undefined) {
-      console.info(
+      logger.info(
         "🎯 Required items complete - will ask final considerations question",
       );
       // The question generator will handle asking this question
@@ -162,14 +163,14 @@ export async function* handleTodoListConversation(
         lastAiMessage &&
         lastAiMessage.content.includes("anything else you'd like me to know")
       ) {
-        console.info("💾 Storing user's final considerations response");
+        logger.info("💾 Storing user's final considerations response");
         // Store their response (even if it's "nothing else" or "no")
         session.additionalConsiderations = userResponse.trim();
       }
     }
 
     // Step 3: Generate next question or completion message using UPDATED todoList
-    console.info(
+    logger.info(
       "🎯 Generating next program question based on UPDATED to-do list",
     );
 
@@ -200,17 +201,17 @@ export async function* handleTodoListConversation(
 
     // Fallback check (shouldn't happen with new streaming approach)
     if (!nextResponse) {
-      console.warn("⚠️ No response generated, using fallback");
+      logger.warn("⚠️ No response generated, using fallback");
       const fallback =
         "Thanks for sharing! Let me think about what else I need to know...";
       yield formatChunkEvent(fallback);
       nextResponse = fallback;
     }
 
-    console.info("✅ Response generated and streamed");
+    logger.info("✅ Response generated and streamed");
 
     // Step 3: Store AI response and finalize session state
-    console.info("⚙️ Finalizing session state");
+    logger.info("⚙️ Finalizing session state");
 
     // Get progress for metadata
     const todoProgress = getTodoProgress(session.todoList);
@@ -239,7 +240,7 @@ export async function* handleTodoListConversation(
     // Update session metadata
     session.lastActivity = new Date();
 
-    console.info("✅ Program to-do list session update processed:", {
+    logger.info("✅ Program to-do list session update processed:", {
       isComplete: complete,
       progress: progressDetails.percentage,
       todoProgress: `${todoProgress.requiredCompleted}/${todoProgress.requiredTotal} required items`,
@@ -252,7 +253,7 @@ export async function* handleTodoListConversation(
       progressDetails,
     };
   } catch (error) {
-    console.error("❌ Error in program to-do list conversation:", error);
+    logger.error("❌ Error in program to-do list conversation:", error);
     yield formatChunkEvent(
       "I apologize, but I'm having trouble processing that. Could you try again?",
     );

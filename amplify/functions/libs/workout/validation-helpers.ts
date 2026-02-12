@@ -10,6 +10,7 @@ import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getExpectedArrayFields } from "../schemas/schema-composer";
 import { WORKOUT_CLASSIFICATION_SCHEMA } from "../schemas/workout-classification-schema";
+import { logger } from "../logger";
 
 /**
  * Check if a workout is qualitative (activity completion focused) using AI
@@ -96,7 +97,7 @@ Classify this workout and provide reasoning.`;
       reason: parsed.reason || "No reasoning provided",
     };
   } catch (error) {
-    console.error("❌ AI qualitative workout detection failed:", error);
+    logger.error("❌ AI qualitative workout detection failed:", error);
     // Conservative fallback: treat as quantitative to maintain strict validation
     return {
       isQualitative: false,
@@ -185,7 +186,7 @@ export const validateAndCorrectWorkoutDate = (
   if (isInvalidYear) {
     const originalDate = workoutData.date;
 
-    console.warn("⚠️ Detected workout date in wrong year - correcting:", {
+    logger.warn("⚠️ Detected workout date in wrong year - correcting:", {
       originalDate,
       workoutYear,
       completedAtYear,
@@ -204,7 +205,7 @@ export const validateAndCorrectWorkoutDate = (
       workoutData.metadata.validation_flags.push("date");
     }
 
-    console.info("✅ Corrected workout date to:", correctedDate);
+    logger.info("✅ Corrected workout date to:", correctedDate);
     return { corrected: true, originalDate };
   }
 
@@ -251,7 +252,7 @@ export const validateExerciseStructure = async (
     for (const key of allKeys) {
       const candidateData = (workoutData.discipline_specific as any)?.[key];
       if (candidateData && Object.keys(candidateData).length > 0) {
-        console.warn("⚠️ Data found under mismatched key:", {
+        logger.warn("⚠️ Data found under mismatched key:", {
           declaredDiscipline: discipline,
           actualDataKey: key,
           action: "using data from mismatched key",
@@ -270,7 +271,7 @@ export const validateExerciseStructure = async (
   // Check for phases (hybrid - phase-based structure)
   const phasesCount = disciplineData?.phases?.length || 0;
   if (phasesCount > 0) {
-    console.info(
+    logger.info(
       "✅ Exercise structure validated via property check (phases array)",
       { discipline, phasesCount },
     );
@@ -284,7 +285,7 @@ export const validateExerciseStructure = async (
   // Check for structured exercises (powerlifting, bodybuilding)
   const exerciseCount = disciplineData?.exercises?.length || 0;
   if (exerciseCount > 0) {
-    console.info(
+    logger.info(
       "✅ Exercise structure validated via property check (exercises array)",
       { discipline, exerciseCount },
     );
@@ -298,7 +299,7 @@ export const validateExerciseStructure = async (
   // Check for rounds (crossfit, hiit)
   const roundCount = disciplineData?.rounds?.length || 0;
   if (roundCount > 0) {
-    console.info(
+    logger.info(
       "✅ Exercise structure validated via property check (rounds array)",
       { discipline, roundCount },
     );
@@ -312,7 +313,7 @@ export const validateExerciseStructure = async (
   // Check for segments (running, swimming, cycling)
   const segmentCount = disciplineData?.segments?.length || 0;
   if (segmentCount > 0) {
-    console.info(
+    logger.info(
       "✅ Exercise structure validated via property check (segments array)",
       { discipline, segmentCount },
     );
@@ -327,7 +328,7 @@ export const validateExerciseStructure = async (
   const stationsCount = disciplineData?.stations?.length || 0;
   const runsCount = disciplineData?.runs?.length || 0;
   if (stationsCount > 0 || runsCount > 0) {
-    console.info(
+    logger.info(
       "✅ Exercise structure validated via property check (hyrox stations/runs)",
       { discipline, stationsCount, runsCount },
     );
@@ -342,7 +343,7 @@ export const validateExerciseStructure = async (
   // Check for lifts (olympic_weightlifting)
   const liftsCount = disciplineData?.lifts?.length || 0;
   if (liftsCount > 0) {
-    console.info(
+    logger.info(
       "✅ Exercise structure validated via property check (lifts array)",
       { discipline, liftsCount },
     );
@@ -365,7 +366,7 @@ export const validateExerciseStructure = async (
     const qualitativeValidation = validateQualitativeWorkout(workoutData);
 
     if (qualitativeValidation.isValid) {
-      console.info(
+      logger.info(
         "✅ Qualitative workout validated - no exercise structure required",
         {
           reason: qualitativeCheck.reason,
@@ -381,7 +382,7 @@ export const validateExerciseStructure = async (
         isQualitative: true,
       };
     } else {
-      console.warn(
+      logger.warn(
         "⚠️ Qualitative workout identified but missing required data",
         {
           reason: qualitativeCheck.reason,
@@ -394,7 +395,7 @@ export const validateExerciseStructure = async (
 
   // Fast fail: Completely empty discipline data and not qualitative
   if (!disciplineData || Object.keys(disciplineData).length === 0) {
-    console.warn(
+    logger.warn(
       "❌ No exercise structure found - discipline_specific is empty",
       { discipline },
     );
@@ -410,7 +411,7 @@ export const validateExerciseStructure = async (
   // For ambiguous cases: partial data, edge cases where property checks
   // found no known array fields but discipline data exists.
 
-  console.info(
+  logger.info(
     "🤖 Using AI validation for exercise structure (ambiguous case)",
     {
       discipline,
@@ -425,7 +426,7 @@ export const validateExerciseStructure = async (
       disciplineData,
     );
 
-    console.info("🤖 AI validation result:", {
+    logger.info("🤖 AI validation result:", {
       hasExercises: aiResult.hasExercises,
       reasoning: aiResult.reasoning,
     });
@@ -436,7 +437,7 @@ export const validateExerciseStructure = async (
       aiReasoning: aiResult.reasoning,
     };
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ AI validation failed, falling back to conservative decision",
       error,
     );
@@ -521,7 +522,7 @@ RESPOND WITH JSON:
   try {
     result = parseJsonWithFallbacks(response.trim());
   } catch (parseError) {
-    console.warn(
+    logger.warn(
       "⚠️ AI validation returned non-JSON response, defaulting to false",
       { responsePreview: response.substring(0, 200) },
     );
@@ -663,7 +664,7 @@ export function validateSchemaStructure(workoutData: UniversalWorkoutSchema): {
         .filter(([, v]) => Array.isArray(v) && (v as any[]).length > 0)
         .map(([k]) => k);
 
-      console.warn("⚠️ Schema structure mismatch detected:", {
+      logger.warn("⚠️ Schema structure mismatch detected:", {
         discipline,
         expectedFields: expectedArrayFields,
         actualFields: actualArrayFields,

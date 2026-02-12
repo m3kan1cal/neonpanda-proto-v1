@@ -23,6 +23,7 @@ import {
 } from "../libs/program/validation-helpers";
 import { normalizeDuration } from "../libs/program/duration-normalizer";
 import { DEFAULT_PROGRAM_DURATION_STRING } from "../libs/program/duration-parser";
+import { logger } from "../libs/logger";
 
 // Duration calculation constants
 const DEFAULT_DURATION_FALLBACK_MS = 600000; // 10 minutes in milliseconds
@@ -35,7 +36,7 @@ const DAY_COVERAGE_FLOOR_PERCENT = 20; // Absolute minimum day coverage percenta
 export const handler = async (event: BuildProgramEvent) => {
   return withHeartbeat("Program Designer Agent", async () => {
     try {
-      console.info("🏋️ Starting program designer agent (V2):", {
+      logger.info("🏋️ Starting program designer agent (V2):", {
         userId: event.userId,
         coachId: event.coachId,
         programId: event.programId,
@@ -46,7 +47,7 @@ export const handler = async (event: BuildProgramEvent) => {
       // Pre-validation
       // Note: conversationId is optional when sessionId is provided (for program designer sessions)
       if (!event.userId || !event.coachId || !event.programId) {
-        console.error("❌ Missing required fields:", {
+        logger.error("❌ Missing required fields:", {
           hasUserId: !!event.userId,
           hasCoachId: !!event.coachId,
           hasProgramId: !!event.programId,
@@ -59,7 +60,7 @@ export const handler = async (event: BuildProgramEvent) => {
       }
 
       if (!event.todoList) {
-        console.error("❌ No todo list provided");
+        logger.error("❌ No todo list provided");
         return createErrorResponse(400, "Todo list is required");
       }
 
@@ -69,7 +70,7 @@ export const handler = async (event: BuildProgramEvent) => {
         todoList.trainingGoals?.value || todoList.programDuration?.value;
 
       if (!hasBasicRequirements) {
-        console.warn("⚠️ Incomplete program requirements detected:", {
+        logger.warn("⚠️ Incomplete program requirements detected:", {
           hasTrainingGoals: !!todoList.trainingGoals?.value,
           hasProgramDuration: !!todoList.programDuration?.value,
           todoListKeys: Object.keys(todoList),
@@ -94,7 +95,7 @@ export const handler = async (event: BuildProgramEvent) => {
         todoList.programDuration?.value,
       );
       if (!durationValidation.isValid) {
-        console.warn(
+        logger.warn(
           "⚠️ Duration validation failed, attempting AI normalization:",
           {
             providedValue: todoList.programDuration?.value,
@@ -113,7 +114,7 @@ export const handler = async (event: BuildProgramEvent) => {
           normalizationResult.normalizedDuration === undefined ||
           normalizationResult.normalizedDuration === null
         ) {
-          console.warn(
+          logger.warn(
             "⚠️ AI normalization returned malformed data, using default:",
             {
               original: todoList.programDuration?.value,
@@ -135,7 +136,7 @@ export const handler = async (event: BuildProgramEvent) => {
           normalizationResult.normalizedDuration,
         );
         if (!revalidation.isValid) {
-          console.warn(
+          logger.warn(
             "⚠️ AI normalization produced invalid value, using default:",
             {
               original: todoList.programDuration?.value,
@@ -152,7 +153,7 @@ export const handler = async (event: BuildProgramEvent) => {
         }
 
         // Update the todoList with normalized value
-        console.info("✅ AI normalization succeeded:", {
+        logger.info("✅ AI normalization succeeded:", {
           original: todoList.programDuration?.value,
           normalized: normalizationResult.normalizedDuration,
           confidence: normalizationResult.confidence,
@@ -170,7 +171,7 @@ export const handler = async (event: BuildProgramEvent) => {
         todoList.trainingFrequency?.value,
       );
       if (!frequencyValidation.isValid) {
-        console.error("❌ Invalid training frequency:", {
+        logger.error("❌ Invalid training frequency:", {
           providedValue: frequencyValidation.providedValue,
           error: frequencyValidation.error,
         });
@@ -185,10 +186,10 @@ export const handler = async (event: BuildProgramEvent) => {
       const agent = new ProgramDesignerAgent(event);
 
       // Let agent handle the entire workflow
-      console.info("🤖 Starting agent workflow...");
+      logger.info("🤖 Starting agent workflow...");
       const result = await agent.designProgram();
 
-      console.info("✅ Agent workflow completed:", {
+      logger.info("✅ Agent workflow completed:", {
         success: result.success,
         programId: result.programId,
         skipped: result.skipped,
@@ -212,7 +213,7 @@ export const handler = async (event: BuildProgramEvent) => {
               ).getTime();
             }
           } catch (error) {
-            console.warn(
+            logger.warn(
               "⚠️ Could not load session for duration calculation:",
               error,
             );
@@ -221,7 +222,7 @@ export const handler = async (event: BuildProgramEvent) => {
 
         const durationSeconds = Math.floor((endTime - startTimeMs) / 1000);
 
-        console.info("📊 PROGRAM GENERATION SUMMARY:", {
+        logger.info("📊 PROGRAM GENERATION SUMMARY:", {
           // Identity
           programId: result.programId,
           programName: result.programName || "Unknown",
@@ -278,7 +279,7 @@ export const handler = async (event: BuildProgramEvent) => {
           totalWorkoutTemplates <
             expectedTrainingDays * WORKOUT_COUNT_MIN_THRESHOLD
         ) {
-          console.error(
+          logger.error(
             `❌ METRICS ANOMALY DETECTED: Program has only ${totalWorkoutTemplates} workout templates ` +
               `but expected at least ${Math.floor(expectedTrainingDays * WORKOUT_COUNT_MIN_THRESHOLD)} based on ${trainingFrequency}x/week training over ${totalDays} days. ` +
               `This may indicate incomplete generation.`,
@@ -297,7 +298,7 @@ export const handler = async (event: BuildProgramEvent) => {
           actualDayCoveragePercent > 0 &&
           actualDayCoveragePercent < coverageThreshold
         ) {
-          console.error(
+          logger.error(
             `❌ METRICS ANOMALY DETECTED: Day coverage is ${actualDayCoveragePercent.toFixed(0)}% ` +
               `(${uniqueTrainingDays}/${totalDays} days) but expected ~${expectedDayCoveragePercent.toFixed(0)}% ` +
               `for ${trainingFrequency}x/week training. This may indicate incomplete program generation.`,
@@ -308,7 +309,7 @@ export const handler = async (event: BuildProgramEvent) => {
       // Update session status to COMPLETE
       if (result.success && event.sessionId) {
         try {
-          console.info("Updating session status to COMPLETE...", {
+          logger.info("Updating session status to COMPLETE...", {
             sessionId: event.sessionId,
             programId: result.programId,
           });
@@ -333,17 +334,17 @@ export const handler = async (event: BuildProgramEvent) => {
             // Save updated session
             await saveProgramDesignerSession(existingSession);
 
-            console.info("✅ Session updated to COMPLETE status");
+            logger.info("✅ Session updated to COMPLETE status");
 
             // Store program designer session summary in Pinecone (async, non-blocking)
             try {
-              console.info(
+              logger.info(
                 "🔍 Storing program designer session summary in Pinecone...",
               );
 
               // Only proceed if we have a programId
               if (!result.programId) {
-                console.warn(
+                logger.warn(
                   "⚠️ No programId available for Pinecone session storage",
                 );
                 // Skip Pinecone storage but continue handler execution
@@ -371,7 +372,7 @@ export const handler = async (event: BuildProgramEvent) => {
                     )
                     .then((pineconeResult) => {
                       if (pineconeResult.success) {
-                        console.info(
+                        logger.info(
                           "✅ Program designer session stored in Pinecone:",
                           {
                             summaryId: pineconeResult.summaryId,
@@ -380,7 +381,7 @@ export const handler = async (event: BuildProgramEvent) => {
                           },
                         );
                       } else {
-                        console.warn(
+                        logger.warn(
                           "⚠️ Failed to store session in Pinecone (non-blocking):",
                           {
                             error: pineconeResult.error,
@@ -389,31 +390,31 @@ export const handler = async (event: BuildProgramEvent) => {
                       }
                     })
                     .catch((error) => {
-                      console.error(
+                      logger.error(
                         "⚠️ Pinecone session storage error (non-blocking):",
                         error,
                       );
                     });
                 } else {
-                  console.warn(
+                  logger.warn(
                     "⚠️ Program not found for Pinecone session storage",
                   );
                 }
               }
             } catch (error) {
-              console.error(
+              logger.error(
                 "⚠️ Failed to store session in Pinecone (non-blocking):",
                 error,
               );
               // Don't throw - this is optional
             }
           } else {
-            console.warn("⚠️ Session not found for update:", {
+            logger.warn("⚠️ Session not found for update:", {
               sessionId: event.sessionId,
             });
           }
         } catch (error) {
-          console.error("⚠️ Failed to update session (non-blocking):", error);
+          logger.error("⚠️ Failed to update session (non-blocking):", error);
           // Don't throw - program was saved successfully
         }
       }
@@ -463,10 +464,10 @@ export const handler = async (event: BuildProgramEvent) => {
               };
               existingSession.lastActivity = new Date();
               await saveProgramDesignerSession(existingSession);
-              console.info("✅ Session updated to FAILED status (skipped)");
+              logger.info("✅ Session updated to FAILED status (skipped)");
             }
           } catch (error) {
-            console.error(
+            logger.error(
               "⚠️ Failed to update session to FAILED (non-blocking):",
               error,
             );
@@ -480,8 +481,8 @@ export const handler = async (event: BuildProgramEvent) => {
         });
       }
     } catch (error) {
-      console.error("❌ Error in program designer agent:", error);
-      console.error("Event data:", {
+      logger.error("❌ Error in program designer agent:", error);
+      logger.error("Event data:", {
         userId: event.userId,
         coachId: event.coachId,
         programId: event.programId,
@@ -511,10 +512,10 @@ export const handler = async (event: BuildProgramEvent) => {
             };
             existingSession.lastActivity = new Date();
             await saveProgramDesignerSession(existingSession);
-            console.info("✅ Session updated to FAILED status (exception)");
+            logger.info("✅ Session updated to FAILED status (exception)");
           }
         } catch (updateError) {
-          console.error(
+          logger.error(
             "⚠️ Failed to update session to FAILED (non-blocking):",
             updateError,
           );

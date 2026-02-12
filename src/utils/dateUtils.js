@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 /**
  * Date utility functions for the application
  */
@@ -61,7 +62,7 @@ export const isNewWorkout = (completedAt) => {
     // Return true if workout is less than 24 hours old
     return diffInHours >= 0 && diffInHours <= 24;
   } catch (error) {
-    console.error("Error checking if workout is new:", error);
+    logger.error("Error checking if workout is new:", error);
     return false;
   }
 };
@@ -93,7 +94,7 @@ export const isRecentConversation = (lastActivity, createdAt) => {
     // Return true if conversation had activity less than 24 hours ago
     return diffInHours >= 0 && diffInHours <= 24;
   } catch (error) {
-    console.error("Error checking if conversation is recent:", error);
+    logger.error("Error checking if conversation is recent:", error);
     return false;
   }
 };

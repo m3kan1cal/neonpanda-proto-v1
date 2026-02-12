@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateWorkout, getWorkout } from '../../dynamodb/operations';
 import { Workout } from '../libs/workout/types';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -37,7 +38,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
   try {
-    console.info('Updating workout session:', {
+    logger.info('Updating workout session:', {
       userId,
       workoutId,
       updateFields: Object.keys(updateData)
@@ -69,7 +70,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
   } catch (error) {
-    console.error('Error updating workout session:', error);
+    logger.error('Error updating workout session:', error);
 
     // Handle specific error types
     if (error instanceof Error) {

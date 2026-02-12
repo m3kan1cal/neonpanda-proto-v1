@@ -9,6 +9,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { queryExerciseNames } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import type { ExerciseDiscipline } from "../libs/exercise/types";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -52,7 +53,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
   }
 
-  console.info("Querying exercise names:", {
+  logger.info("Querying exercise names:", {
     userId,
     discipline,
     limit: limitNum,
@@ -69,7 +70,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       totalCount: result.totalCount,
     });
   } catch (error) {
-    console.error("Error querying exercise names:", error);
+    logger.error("Error querying exercise names:", error);
     return createErrorResponse(500, "Failed to query exercise names");
   }
 };

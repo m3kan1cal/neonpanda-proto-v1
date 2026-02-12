@@ -1,5 +1,6 @@
 import outputs from "../../../amplify_outputs.json";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { logger } from "../logger";
 
 // ============================================================================
 // VALIDATION HELPERS
@@ -190,7 +191,7 @@ function getCoachConversationStreamingUrl() {
   const streamingConfig = outputs.custom?.coachConversationStreamingApi;
 
   if (!streamingConfig?.functionUrl) {
-    console.warn(
+    logger.warn(
       "⚠️ No coach conversation streaming function URL found in amplify_outputs.json",
     );
     return null;
@@ -207,7 +208,7 @@ function getCoachCreatorStreamingUrl() {
   const streamingConfig = outputs.custom?.coachCreatorSessionStreamingApi;
 
   if (!streamingConfig?.functionUrl) {
-    console.warn(
+    logger.warn(
       "⚠️ No coach creator session streaming function URL found in amplify_outputs.json",
     );
     return null;
@@ -224,7 +225,7 @@ function getProgramDesignerSessionStreamingUrl() {
   const streamingConfig = outputs.custom?.programDesignerSessionStreamingApi;
 
   if (!streamingConfig?.functionUrl) {
-    console.warn(
+    logger.warn(
       "⚠️ No program designer session streaming function URL found in amplify_outputs.json",
     );
     return null;

@@ -6,6 +6,7 @@ import {
 } from "../../dynamodb/operations";
 import { withHeartbeat } from "../libs/heartbeat";
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
+import { logger } from "../libs/logger";
 import {
   sendEmail,
   buildEmailFooterHtml,
@@ -35,7 +36,7 @@ interface InactivityStats {
  */
 export const handler = async () => {
   return withHeartbeat("Inactive User Notification Check", async () => {
-    console.info("📧 Starting inactive user notification check", {
+    logger.info("📧 Starting inactive user notification check", {
       timestamp: new Date().toISOString(),
       inactivityPeriodDays: INACTIVITY_PERIOD_DAYS,
       minDaysBetweenReminders: MIN_DAYS_BETWEEN_REMINDERS,
@@ -64,7 +65,7 @@ export const handler = async () => {
         const result = await queryAllUsers(50, lastEvaluatedKey); // Process 50 users at a time
         const users = result.users;
 
-        console.info(
+        logger.info(
           `📦 Processing batch ${batchNumber} with ${users.length} users`,
         );
         stats.totalUsers += users.length;
@@ -74,7 +75,7 @@ export const handler = async () => {
           try {
             await processUser(user, stats);
           } catch (error) {
-            console.error(`❌ Error processing user ${user.userId}:`, error);
+            logger.error(`❌ Error processing user ${user.userId}:`, error);
             stats.errors++;
           }
         }
@@ -82,7 +83,7 @@ export const handler = async () => {
         lastEvaluatedKey = result.lastEvaluatedKey;
       } while (lastEvaluatedKey);
 
-      console.info(
+      logger.info(
         "✅ Inactive user notification check completed successfully",
         {
           ...stats,
@@ -96,7 +97,7 @@ export const handler = async () => {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("❌ Fatal error in inactive user notification:", error);
+      logger.error("❌ Fatal error in inactive user notification:", error);
 
       return createErrorResponse(
         500,
@@ -122,14 +123,14 @@ async function processUser(
   const emailNotificationsEnabled =
     user.preferences?.emailNotifications?.coachCheckIns ?? true;
   if (!emailNotificationsEnabled) {
-    console.info(`⏭️  User ${user.userId} has opted out of coach check-ins`);
+    logger.info(`⏭️  User ${user.userId} has opted out of coach check-ins`);
     stats.emailsSkipped.optedOut++;
     return;
   }
 
   // Skip if no email address
   if (!user.email) {
-    console.warn(`⚠️  User ${user.userId} has no email address`);
+    logger.warn(`⚠️  User ${user.userId} has no email address`);
     stats.emailsSkipped.noEmail++;
     return;
   }
@@ -142,7 +143,7 @@ async function processUser(
         (1000 * 60 * 60 * 24),
     );
     if (daysSinceLastReminder < MIN_DAYS_BETWEEN_REMINDERS) {
-      console.info(
+      logger.info(
         `⏭️ User ${user.userId} received reminder ${daysSinceLastReminder} days ago, skipping`,
       );
       stats.emailsSkipped.recentReminder++;
@@ -158,7 +159,7 @@ async function processUser(
   });
 
   if (workoutCount > 0) {
-    console.info(
+    logger.info(
       `✅ User ${user.userId} has logged ${workoutCount} workouts, active`,
     );
     stats.activeUsers++;
@@ -166,7 +167,7 @@ async function processUser(
   }
 
   // User is inactive, send reminder email
-  console.info(
+  logger.info(
     `📧 User ${user.userId} is inactive, sending reminder email to ${user.email}`,
   );
   stats.inactiveUsers++;
@@ -175,7 +176,7 @@ async function processUser(
   await updateLastReminderSent(user.userId);
 
   stats.emailsSent++;
-  console.info(`✅ Successfully sent reminder to ${user.email}`);
+  logger.info(`✅ Successfully sent reminder to ${user.email}`);
 }
 
 /**
@@ -331,7 +332,7 @@ ${buildEmailFooterText(user.email, "coach-checkins", user.userId)}
     throw new Error(`Failed to send email: ${result.error?.message}`);
   }
 
-  console.info(`✅ Successfully sent inactivity reminder to ${user.email}`, {
+  logger.info(`✅ Successfully sent inactivity reminder to ${user.email}`, {
     messageId: result.messageId,
     requestId: result.requestId,
   });
@@ -349,5 +350,5 @@ async function updateLastReminderSent(userId: string): Promise<void> {
     },
   });
 
-  console.info(`Updated preferences.lastSent.coachCheckIns for user ${userId}`);
+  logger.info(`Updated preferences.lastSent.coachCheckIns for user ${userId}`);
 }

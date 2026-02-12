@@ -16,6 +16,7 @@ import { FUNCTIONAL_BODYBUILDING_EXTRACTION_GUIDANCE } from "./functional-bodybu
 import { CALISTHENICS_EXTRACTION_GUIDANCE } from "./calisthenics-guidance";
 import { CIRCUIT_TRAINING_EXTRACTION_GUIDANCE } from "./circuit-training-guidance";
 import { HYBRID_EXTRACTION_GUIDANCE } from "./hybrid-guidance";
+import { logger } from "../../logger";
 
 /**
  * Map of discipline names to their specific extraction guidance
@@ -43,7 +44,7 @@ export function composeDisciplineGuidance(discipline: string): string {
   // If no guidance found (unrecognized discipline), fall back to hybrid
   // This handles: "strength_training", "unknown", and any other unrecognized values
   if (guidance === undefined) {
-    console.warn(
+    logger.warn(
       `No extraction guidance for discipline: ${discipline}, falling back to hybrid guidance`,
     );
     guidance = HYBRID_EXTRACTION_GUIDANCE;

@@ -5,6 +5,7 @@ import { getPhaseForDay } from "../libs/program/calendar-utils";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { TodaysWorkoutTemplates } from "../libs/program/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -200,7 +201,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       totalDays: program.totalDays,
     });
   } catch (error) {
-    console.error("Error getting workout template:", error);
+    logger.error("Error getting workout template:", error);
     return createErrorResponse(500, "Failed to get workout template", error);
   }
 };

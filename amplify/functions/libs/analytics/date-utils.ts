@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Date utilities for analytics processing
  */
@@ -304,7 +305,7 @@ export const parseCompletedAt = (
     completedAt.trim() !== ""
   ) {
     value = Number(completedAt);
-    console.info(
+    logger.info(
       `${contextPrefix}📅 Converted numeric string to number: ${completedAt} → ${value}`,
     );
   } else {
@@ -324,7 +325,7 @@ export const parseCompletedAt = (
       );
     }
 
-    console.info(
+    logger.info(
       `${contextPrefix}📅 Parsed Unix timestamp: ${value} → ${date.toISOString()}`,
     );
     return date;
@@ -337,7 +338,7 @@ export const parseCompletedAt = (
       throw new Error(`${contextPrefix}Invalid date string: ${completedAt}`);
     }
 
-    console.info(
+    logger.info(
       `${contextPrefix}📅 Parsed date string: ${value} → ${date.toISOString()}`,
     );
     return date;

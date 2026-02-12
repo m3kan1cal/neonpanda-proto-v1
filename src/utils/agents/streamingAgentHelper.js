@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Smaller, focused streaming helpers for agent classes
  * Each function handles a specific aspect of streaming without managing complex state
@@ -51,7 +52,7 @@ export async function processStreamingChunks(
       } else if (chunk.type === "error") {
         throw new Error(chunk.error || "Streaming failed");
       } else {
-        console.warn("⚠️ Unknown chunk type:", chunk.type, chunk);
+        logger.warn("⚠️ Unknown chunk type:", chunk.type, chunk);
       }
     }
   } catch (error) {
@@ -95,7 +96,7 @@ export function createStreamingMessage(agent, metadata = {}) {
       agent._updateMessageMetadata(messageId, metadata);
     },
     remove: () => {
-      console.info("🗑️ StreamingMessage.remove:", { messageId });
+      logger.info("🗑️ StreamingMessage.remove:", { messageId });
       agent._removeMessage(messageId);
     },
   };
@@ -115,7 +116,7 @@ export async function handleStreamingFallback(
   handleResult,
   operationName,
 ) {
-  console.info(
+  logger.info(
     `🔄 Streaming failed, falling back to non-streaming for ${operationName}`,
   );
 
@@ -123,7 +124,7 @@ export async function handleStreamingFallback(
     const result = await fallbackApiFunction(...fallbackApiParams);
     return await handleResult(result, true); // true indicates error fallback
   } catch (fallbackError) {
-    console.error("Fallback also failed:", fallbackError);
+    logger.error("Fallback also failed:", fallbackError);
     throw fallbackError;
   }
 }

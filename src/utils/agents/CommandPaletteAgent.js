@@ -2,6 +2,7 @@ import { MemoryAgent } from "./MemoryAgent.js";
 import { CoachConversationAgent } from "./CoachConversationAgent.js";
 import { createCoachCreatorSession } from "../apis/coachCreatorApi.js";
 import { createProgramDesignerSession } from "../apis/programDesignerApi.js";
+import { logger } from "../logger";
 
 /**
  * CommandPaletteAgent - Handles command execution and state management
@@ -33,7 +34,7 @@ export class CommandPaletteAgent {
 
     // Validate callback
     if (this.onStateChange && typeof this.onStateChange !== "function") {
-      console.error(
+      logger.error(
         "CommandPaletteAgent: onStateChange must be a function, got:",
         typeof this.onStateChange,
       );
@@ -66,7 +67,7 @@ export class CommandPaletteAgent {
       try {
         this.onStateChange(this.state);
       } catch (error) {
-        console.error(
+        logger.error(
           "CommandPaletteAgent._updateState: Error in state change callback:",
           error,
         );
@@ -107,7 +108,7 @@ export class CommandPaletteAgent {
       (!allowsEmptyContent && !hasContent) ||
       this.state.isExecuting
     ) {
-      console.warn(
+      logger.warn(
         "CommandPaletteAgent.executeCommand: Invalid parameters or already executing",
       );
       return;
@@ -178,7 +179,7 @@ export class CommandPaletteAgent {
         },
       };
 
-      console.info(
+      logger.info(
         "CommandPaletteAgent: Command executed successfully:",
         executionResult,
       );
@@ -200,7 +201,7 @@ export class CommandPaletteAgent {
 
       return result;
     } catch (error) {
-      console.error("CommandPaletteAgent.executeCommand: Error:", error);
+      logger.error("CommandPaletteAgent.executeCommand: Error:", error);
 
       // Even for errors, ensure minimum display time
       const executionTime = Date.now() - executionStartTime;
@@ -236,7 +237,7 @@ export class CommandPaletteAgent {
 
     // Check if the WorkoutAgent has a userId set, and try to set it if not
     if (!this.workoutAgent.userId) {
-      console.warn(
+      logger.warn(
         "CommandPaletteAgent: WorkoutAgent missing userId, attempting to set it",
       );
 
@@ -257,7 +258,7 @@ export class CommandPaletteAgent {
       }
     }
 
-    console.info("CommandPaletteAgent._executeLogWorkout:", {
+    logger.info("CommandPaletteAgent._executeLogWorkout:", {
       userId: this.userId,
       workoutAgentUserId: this.workoutAgent.userId,
       contentLength: content.length,
@@ -283,7 +284,7 @@ export class CommandPaletteAgent {
       throw new Error("Unable to save memory - missing required data");
     }
 
-    console.info("CommandPaletteAgent._executeSaveMemory:", {
+    logger.info("CommandPaletteAgent._executeSaveMemory:", {
       userId: this.userId,
       contentLength: content.length,
       options,
@@ -336,7 +337,7 @@ export class CommandPaletteAgent {
 
     const initialMessage = content?.trim() || null;
 
-    console.info("CommandPaletteAgent._executeStartConversation:", {
+    logger.info("CommandPaletteAgent._executeStartConversation:", {
       userId: this.userId,
       coachId: coachId,
       hasInitialMessage: !!initialMessage,
@@ -389,7 +390,7 @@ export class CommandPaletteAgent {
       throw new Error("Unable to create coach - user not authenticated");
     }
 
-    console.info("CommandPaletteAgent._executeCreateCoach:", {
+    logger.info("CommandPaletteAgent._executeCreateCoach:", {
       userId: this.userId,
       options,
     });
@@ -425,7 +426,7 @@ export class CommandPaletteAgent {
       );
     }
 
-    console.info("CommandPaletteAgent._executeDesignProgram:", {
+    logger.info("CommandPaletteAgent._executeDesignProgram:", {
       userId: this.userId,
       coachId: coachId,
       options,
@@ -462,7 +463,7 @@ export class CommandPaletteAgent {
       );
     }
 
-    console.info("CommandPaletteAgent._executeViewExercises:", {
+    logger.info("CommandPaletteAgent._executeViewExercises:", {
       userId: this.userId,
       coachId: coachId,
     });

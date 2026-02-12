@@ -17,7 +17,7 @@ function ProgressRing({ percentage = 0, size = 40, strokeWidth = 3.5 }) {
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="flex-shrink-0 -rotate-90"
+      className="shrink-0 -rotate-90"
     >
       <defs>
         <linearGradient
@@ -111,7 +111,7 @@ function ProgramList({
             key={i}
             className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 rounded-lg p-4 flex items-center gap-4"
           >
-            <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse flex-shrink-0"></div>
+            <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
               <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>

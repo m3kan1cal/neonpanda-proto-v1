@@ -61,6 +61,7 @@ import { storeWorkoutSummaryInPinecone } from "../../workout/pinecone";
 import { linkWorkoutToTemplate } from "../../program/template-linking";
 import { storeExtractionDebugData } from "./helpers";
 import { detectDiscipline } from "../../workout/discipline-detector";
+import { logger } from "../../logger";
 
 /**
  * Augmented context type that includes getToolResult accessor
@@ -120,18 +121,18 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
     input: any,
     _context: WorkoutLoggerContext,
   ): Promise<DisciplineDetectionResult> {
-    console.info("🎯 Executing detect_discipline tool");
+    logger.info("🎯 Executing detect_discipline tool");
 
     const { userMessage } = input;
 
-    console.info("🔍 Running AI discipline detection...", {
+    logger.info("🔍 Running AI discipline detection...", {
       messageLength: userMessage.length,
     });
 
     try {
       const detection = await detectDiscipline(userMessage);
 
-      console.info("✅ Discipline detected:", {
+      logger.info("✅ Discipline detected:", {
         discipline: detection.discipline,
         confidence: detection.confidence,
         reasoning: detection.reasoning,
@@ -139,7 +140,7 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
 
       return detection;
     } catch (error) {
-      console.error(
+      logger.error(
         "❌ Discipline detection failed, defaulting to hybrid:",
         error,
       );
@@ -228,7 +229,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     input: any,
     context: WorkoutLoggerContext,
   ): Promise<WorkoutExtractionResult> {
-    console.info("🏋️ Executing extract_workout_data tool");
+    logger.info("🏋️ Executing extract_workout_data tool");
 
     const {
       discipline,
@@ -246,7 +247,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       );
     }
 
-    console.info("🎯 Using discipline for targeted extraction:", {
+    logger.info("🎯 Using discipline for targeted extraction:", {
       discipline,
       source: "detect_discipline_tool",
     });
@@ -254,7 +255,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     // Compose targeted schema (BASE + ONE discipline plugin)
     const targetedSchema = composeWorkoutSchema(discipline);
 
-    console.info("📋 Composed targeted schema:", {
+    logger.info("📋 Composed targeted schema:", {
       discipline,
       schemaSize: JSON.stringify(targetedSchema).length,
     });
@@ -264,7 +265,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     const isComplexWorkout = complexityResult.isComplex;
     const enableThinking = isComplexWorkout;
 
-    console.info("Extraction configuration:", {
+    logger.info("Extraction configuration:", {
       isComplexWorkout,
       enableThinking,
       complexityConfidence: complexityResult.confidence,
@@ -282,7 +283,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       discipline,
     );
 
-    console.info("📝 Built targeted extraction prompt:", {
+    logger.info("📝 Built targeted extraction prompt:", {
       promptSize: extractionPrompt.length,
       discipline,
     });
@@ -293,7 +294,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
 
     try {
       // PRIMARY: Tool-based generation with targeted schema enforcement
-      console.info(
+      logger.info(
         "🎯 Attempting tool-based workout extraction with targeted schema",
       );
 
@@ -316,7 +317,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       // Extract workout data from tool use result
       if (typeof result !== "string") {
         workoutData = result.input as UniversalWorkoutSchema;
-        console.info("✅ Tool-based extraction succeeded with targeted schema");
+        logger.info("✅ Tool-based extraction succeeded with targeted schema");
 
         // Reconcile discipline with actual data structure
         // AI may output discipline="functional_bodybuilding" but store data under "crossfit" key
@@ -327,7 +328,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
           actualDisciplineKey &&
           workoutData.discipline !== actualDisciplineKey
         ) {
-          console.warn("⚠️ Discipline mismatch detected:", {
+          logger.warn("⚠️ Discipline mismatch detected:", {
             declaredDiscipline: workoutData.discipline,
             actualDataKey: actualDisciplineKey,
             action: "correcting discipline field",
@@ -336,7 +337,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         }
 
         // Post-extraction discipline check for debugging
-        console.info("🔍 Post-extraction discipline check:", {
+        logger.info("🔍 Post-extraction discipline check:", {
           expectedDiscipline: discipline, // From detect_discipline
           extractedDiscipline: workoutData.discipline,
           disciplineSpecificKeys: Object.keys(
@@ -372,7 +373,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         }
 
         if (bedrockDoubleEncoded.length > 0) {
-          console.warn("⚠️ DOUBLE-ENCODING FROM BEDROCK RESPONSE:", {
+          logger.warn("⚠️ DOUBLE-ENCODING FROM BEDROCK RESPONSE:", {
             bedrockNestedTypes,
             bedrockDoubleEncoded,
             sampleValue: {
@@ -384,7 +385,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
             note: "result.input already has double-encoded fields from callBedrockApi",
           });
         } else {
-          console.info(
+          logger.info(
             "✅ Bedrock response check: Nested fields are proper objects",
             { bedrockNestedTypes },
           );
@@ -420,13 +421,13 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       }
     } catch (toolError) {
       // FALLBACK: Prompt-based generation with JSON parsing
-      console.warn(
+      logger.warn(
         "⚠️ Tool-based extraction failed, using fallback:",
         toolError,
       );
       generationMethod = "fallback";
 
-      console.info("🔄 Falling back to prompt-based extraction");
+      logger.info("🔄 Falling back to prompt-based extraction");
 
       const fallbackResult = (await callBedrockApi(
         extractionPrompt,
@@ -440,7 +441,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         },
       )) as string;
 
-      console.info("✅ Fallback extraction completed");
+      logger.info("✅ Fallback extraction completed");
 
       // Parse JSON with fallbacks
       workoutData = parseJsonWithFallbacks(fallbackResult);
@@ -490,7 +491,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         `User explicitly logged workout using /${slashCommand} command.`;
     }
 
-    console.info("Extraction completed:", {
+    logger.info("Extraction completed:", {
       method: generationMethod,
       workoutId: workoutData.workout_id,
       discipline: workoutData.discipline,
@@ -507,7 +508,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       ? parseCompletedAt(context.completedAt, "extract_workout_data")
       : extractedTime || new Date();
 
-    console.info("Workout timing analysis:", {
+    logger.info("Workout timing analysis:", {
       userMessage: userMessage.substring(0, 100),
       userTimezone,
       extractedTime: extractedTime ? extractedTime.toISOString() : null,
@@ -543,7 +544,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     }
 
     if (returnDoubleEncodedFields.length > 0) {
-      console.warn(
+      logger.warn(
         "⚠️ DOUBLE-ENCODING DETECTED IN extract_workout_data BEFORE RETURN:",
         {
           nestedFieldTypes: returnNestedFieldTypes,
@@ -562,7 +563,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         },
       );
     } else {
-      console.info(
+      logger.info(
         "✅ extract_workout_data return check: Nested fields are proper objects",
         {
           nestedFieldTypes: returnNestedFieldTypes,
@@ -635,7 +636,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutValidationResult> {
-    console.info("✅ Executing validate_workout_completeness tool");
+    logger.info("✅ Executing validate_workout_completeness tool");
 
     const { isSlashCommand, workoutIndex } = input;
 
@@ -696,7 +697,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
               (subValue.startsWith("{") || subValue.startsWith("["))
             ) {
               doubleEncodedFields.push(`${key}.${subKey}`);
-              console.warn(`🔴 NESTED DOUBLE-ENCODING: ${key}.${subKey}`, {
+              logger.warn(`🔴 NESTED DOUBLE-ENCODING: ${key}.${subKey}`, {
                 type: subType,
                 preview: subValue.substring(0, 150),
               });
@@ -707,7 +708,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     }
 
     if (doubleEncodedFields.length > 0) {
-      console.warn("⚠️ DOUBLE-ENCODING DETECTED AT RETRIEVAL TIME:", {
+      logger.warn("⚠️ DOUBLE-ENCODING DETECTED AT RETRIEVAL TIME:", {
         nestedFieldTypes,
         doubleEncodedFields,
         deeperInspection,
@@ -723,7 +724,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
         note: "Data is double-encoded when retrieved from context.getToolResult",
       });
     } else {
-      console.info("✅ Retrieval check: Nested fields are proper objects", {
+      logger.info("✅ Retrieval check: Nested fields are proper objects", {
         nestedFieldTypes,
         deeperInspection,
       });
@@ -741,7 +742,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     const confidence = calculateConfidence(workoutData);
     const completeness = calculateCompleteness(workoutData);
 
-    console.info("Confidence and completeness scores:", {
+    logger.info("Confidence and completeness scores:", {
       confidence,
       completeness,
     });
@@ -774,9 +775,9 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       );
       isQualitativeDiscipline = disciplineClassification.isQualitative;
 
-      console.info("Discipline classification:", disciplineClassification);
+      logger.info("Discipline classification:", disciplineClassification);
     } catch (error) {
-      console.warn(
+      logger.warn(
         "Failed to classify discipline, defaulting to quantitative:",
         error,
       );
@@ -800,7 +801,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
 
     // Check for extremely low completeness
     if (completeness < 0.2) {
-      console.warn(
+      logger.warn(
         "🚫 Blocking workout due to extremely low completeness (<20%):",
         {
           completeness,
@@ -830,7 +831,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     );
 
     if (!exerciseValidation.hasExercises) {
-      console.warn("🚫 Blocking workout due to missing exercise structure:", {
+      logger.warn("🚫 Blocking workout due to missing exercise structure:", {
         discipline: workoutData.discipline,
         hasExercises: false,
         completeness,
@@ -858,7 +859,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
 
     // If validation succeeded via qualitative path, log it
     if (exerciseValidation.isQualitative) {
-      console.info("✅ Workout validated as qualitative/activity-based:", {
+      logger.info("✅ Workout validated as qualitative/activity-based:", {
         discipline: workoutData.discipline,
         workoutName: workoutData.workout_name,
         method: exerciseValidation.method,
@@ -874,7 +875,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       !schemaValidation.isValid &&
       schemaValidation.suggestedAction === "normalize"
     ) {
-      console.warn("⚠️ Schema structure mismatch - forcing normalization:", {
+      logger.warn("⚠️ Schema structure mismatch - forcing normalization:", {
         discipline: workoutData.discipline,
         reason: schemaValidation.mismatchReason,
       });
@@ -917,7 +918,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       completedAt,
     };
 
-    console.info("Validation result:", {
+    logger.info("Validation result:", {
       isValid: validationResult.isValid,
       shouldNormalize: validationResult.shouldNormalize,
       shouldSave: validationResult.shouldSave,
@@ -972,7 +973,7 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutNormalizationResult> {
-    console.info("🔧 Executing normalize_workout_data tool");
+    logger.info("🔧 Executing normalize_workout_data tool");
 
     const { workoutIndex } = input;
 
@@ -1003,7 +1004,7 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     const enableThinking = originalConfidence < 0.5;
 
     // Run normalization
-    console.info("Running normalization on workout data..");
+    logger.info("Running normalization on workout data..");
     const normalizationResult: NormalizationResult = await normalizeWorkout(
       workoutData,
       context.userId,
@@ -1013,7 +1014,7 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     const normalizationSummary =
       generateNormalizationSummary(normalizationResult);
 
-    console.info("Normalization completed:", {
+    logger.info("Normalization completed:", {
       isValid: normalizationResult.isValid,
       issuesFound: normalizationResult.issues.length,
       correctionsMade: normalizationResult.issues.filter((i) => i.corrected)
@@ -1125,7 +1126,7 @@ Returns: summary (string)`,
     input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutSummaryResult> {
-    console.info("📝 Executing generate_workout_summary tool");
+    logger.info("📝 Executing generate_workout_summary tool");
 
     const { originalMessage, workoutIndex } = input;
 
@@ -1155,14 +1156,14 @@ Returns: summary (string)`,
     }
 
     // Generate AI summary with extended thinking enabled
-    console.info("Generating workout summary..");
+    logger.info("Generating workout summary..");
     const summary = await generateWorkoutSummary(
       workoutData,
       originalMessage,
       true,
     );
 
-    console.info("Generated summary:", { summary, length: summary.length });
+    logger.info("Generated summary:", { summary, length: summary.length });
 
     return {
       summary,
@@ -1214,7 +1215,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutSaveResult> {
-    console.info("💾 Executing save_workout_to_database tool");
+    logger.info("💾 Executing save_workout_to_database tool");
 
     const { workoutIndex } = input;
 
@@ -1318,7 +1319,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       },
     };
 
-    console.info("Saving workout to DynamoDB..", {
+    logger.info("Saving workout to DynamoDB..", {
       workoutId: workout.workoutId,
       discipline: workoutData.discipline,
       workoutName: workoutData.workout_name,
@@ -1327,17 +1328,17 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
     // Save to DynamoDB
     await saveWorkout(workout);
-    console.info("✅ Workout saved to DynamoDB");
+    logger.info("✅ Workout saved to DynamoDB");
 
     // Store workout summary in Pinecone (fire-and-forget, non-blocking)
-    console.info("📝 Storing workout summary in Pinecone (async)..");
+    logger.info("📝 Storing workout summary in Pinecone (async)..");
     storeWorkoutSummaryInPinecone(
       context.userId,
       summary,
       workoutData,
       workout,
     ).catch((error) => {
-      console.error(
+      logger.error(
         "⚠️ Failed to store workout in Pinecone (non-blocking):",
         error,
       );
@@ -1346,7 +1347,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     // Fire-and-forget exercise log extraction (non-blocking)
     const buildExerciseFunction = process.env.BUILD_EXERCISE_FUNCTION_NAME;
     if (buildExerciseFunction) {
-      console.info("🏋️ Invoking exercise log extraction (async)..");
+      logger.info("🏋️ Invoking exercise log extraction (async)..");
       invokeAsyncLambda(
         buildExerciseFunction,
         {
@@ -1358,7 +1359,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         },
         "exercise log extraction",
       ).catch((error) => {
-        console.error(
+        logger.error(
           "⚠️ Failed to invoke build-exercise (non-blocking):",
           error,
         );
@@ -1375,7 +1376,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         )
       : false;
 
-    console.info("✅ Workout saved successfully");
+    logger.info("✅ Workout saved successfully");
 
     return {
       workoutId: workout.workoutId,

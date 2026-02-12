@@ -16,6 +16,7 @@ import {
   COACH_MODIFICATION_OPTIONS,
 } from "../../coach-creator/coach-generation";
 import { generateCoachName } from "../../coach-creator/tool-generation";
+import { logger } from "../../logger";
 
 /**
  * Enforce blocking decisions from validation
@@ -48,7 +49,7 @@ export const enforceValidationBlocking = (
 
   // CASE 1: Validation threw an exception (has error field instead of isValid)
   if (validationResult.error) {
-    console.error(
+    logger.error(
       "⛔ BLOCKING save_coach_config_to_database: Validation threw exception",
       {
         error: validationResult.error,
@@ -65,7 +66,7 @@ export const enforceValidationBlocking = (
 
   // CASE 2: Validation returned isValid: false
   if (validationResult.isValid === false) {
-    console.error(
+    logger.error(
       "⛔ BLOCKING save_coach_config_to_database: Validation returned isValid=false",
       {
         validationIssues: validationResult.validationIssues,
@@ -134,9 +135,9 @@ export const storeGenerationDebugData = async (
       "coach-config",
     );
 
-    console.info(`✅ Stored ${type} debug data in S3`);
+    logger.info(`✅ Stored ${type} debug data in S3`);
   } catch (err) {
-    console.warn(`⚠️ Failed to store ${type} data in S3 (non-critical):`, err);
+    logger.warn(`⚠️ Failed to store ${type} data in S3 (non-critical):`, err);
   }
 };
 
@@ -207,7 +208,7 @@ export async function assembleCoachConfig(
   const coachId = `user_${userId}_coach_${Date.now()}`;
 
   // Generate creative, contextual coach name using AI
-  console.info("🎨 Generating creative coach name via AI...");
+  logger.info("🎨 Generating creative coach name via AI...");
   const nameResult = await generateCoachName({
     personalityTemplate: personalitySelection.primaryTemplate,
     personalityReasoning: personalitySelection.selectionReasoning,

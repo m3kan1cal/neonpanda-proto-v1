@@ -16,6 +16,7 @@ import {
   CONVERSATION_COMPLEXITY_SCHEMA,
 } from "../schemas/router-schemas";
 import { SmartRequestRouter } from "../streaming/business-types";
+import { logger } from "../logger";
 import {
   parseJsonWithFallbacks,
   fixDoubleEncodedProperties,
@@ -105,7 +106,7 @@ Use the analyze_complexity tool to provide your analysis of complexity triggers 
 
     return result.hasComplexity || false;
   } catch (error) {
-    console.error("Error in conversation complexity detection:", error);
+    logger.error("Error in conversation complexity detection:", error);
     // Conservative fallback - assume no complexity to avoid unnecessary summaries
     return false;
   }
@@ -150,7 +151,7 @@ export async function detectAndProcessConversationSummary(
   const triggerReason =
     currentMessageCount % 6 === 0 ? "message_count" : "complexity";
 
-  console.info("🔄 Conversation summary trigger detected:", {
+  logger.info("🔄 Conversation summary trigger detected:", {
     conversationId,
     totalMessages: currentMessageCount,
     triggeredBy: triggerReason,
@@ -162,7 +163,7 @@ export async function detectAndProcessConversationSummary(
     const summaryFunction =
       process.env.BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME;
     if (!summaryFunction) {
-      console.warn(
+      logger.warn(
         "⚠️ BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME environment variable not set",
       );
       return {
@@ -193,7 +194,7 @@ export async function detectAndProcessConversationSummary(
       complexityDetected: hasComplexityTriggers,
     };
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Failed to trigger conversation summary generation:",
       error,
     );
@@ -298,9 +299,18 @@ ANALYSIS FRAMEWORK:
 - question: User is asking for advice, guidance, or information
 - progress_check: User is discussing progress, results, or performance
 - acknowledgment: Simple responses like "ok", "thanks", "got it"
+- cancel_request: User wants to cancel or stop an active process (e.g., "cancel log", "stop logging", "cancel workout", "never mind the log", "don't log that", "cancel", "stop")
 - general: General conversation, motivation, or other topics
 
 NOTE: Program design requests should be classified as "question" - the AI can help with program design in regular conversations.
+
+CANCEL DETECTION: If the message contains cancel/stop language related to workout logging or any active process, classify as "cancel_request" - NOT "acknowledgment". Examples:
+- "Cancel log" → cancel_request
+- "Cancel workout log" → cancel_request
+- "Stop logging" → cancel_request
+- "Don't log that" → cancel_request
+- "Never mind" → cancel_request (when in context of an active process)
+- "Forget it" → cancel_request (when in context of an active process)
 
 === CONTEXTUAL UPDATES DECISION ===
 Skip contextual updates for:
@@ -361,6 +371,12 @@ STRICT CRITERIA - ALL THREE must be met:
   - "Log this workout:", "Track this:", "Record my workout:"
   - "Add this to my log:", "Save this workout:", "Document this session:"
   AVOID: Questions, discussions, experiences, feelings, commentary
+
+CANCEL/NEGATIVE SIGNALS - ALWAYS override workout detection:
+If the message contains ANY cancel or stop language, ALWAYS set isWorkoutLog=false regardless of other criteria:
+  - "cancel log", "cancel workout", "stop logging", "don't log", "cancel"
+  - "never mind", "forget it", "stop", "abort"
+  - These are NOT workout logs. They are cancel requests. Set isWorkoutLog=false and confidence=0.0
 
 Workout Types (must match workout schema):
 - strength: Weightlifting, powerlifting, bodybuilding, resistance training
@@ -541,7 +557,7 @@ Conversation Length: ${conversationLength} messages
 Use the analyze_request tool to provide comprehensive analysis following the framework above.`;
 
   try {
-    console.info("🧠 Smart Router analyzing request capabilities:", {
+    logger.info("🧠 Smart Router analyzing request capabilities:", {
       messageLength: userMessage.length,
       hasContext: !!messageContext,
       conversationLength,
@@ -579,7 +595,7 @@ Use the analyze_request tool to provide comprehensive analysis following the fra
     // Add processing time metadata
     result.routerMetadata.processingTime = Date.now() - startTime;
 
-    console.info("✅ Smart Router analysis completed:", {
+    logger.info("✅ Smart Router analysis completed:", {
       userIntent: result.userIntent,
       showContextualUpdates: result.showContextualUpdates,
       isWorkoutLog: result.workoutDetection.isWorkoutLog,
@@ -594,7 +610,7 @@ Use the analyze_request tool to provide comprehensive analysis following the fra
 
     return result;
   } catch (error) {
-    console.error("❌ Smart Router analysis failed:", error);
+    logger.error("❌ Smart Router analysis failed:", error);
     throw error; // Let the caller handle the error
   }
 }

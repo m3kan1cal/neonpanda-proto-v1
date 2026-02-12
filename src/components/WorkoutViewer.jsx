@@ -1249,7 +1249,7 @@ const WorkoutViewer = ({
               }}
             >
               <div className="flex items-start gap-3 flex-1">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                 <InlineEditField
                   value={`${workout.workoutData?.workout_name || "Unnamed Workout"} (${workoutData.discipline || "fitness"})`}
                   onSave={onSaveWorkoutTitle}
@@ -1975,7 +1975,7 @@ const WorkoutViewer = ({
               }}
             >
               <div className="flex items-start gap-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   Subjective Feedback
                 </h3>
@@ -2297,7 +2297,7 @@ const WorkoutViewer = ({
               }}
             >
               <div className="flex items-start gap-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   Personal Insights
                 </h3>
@@ -2495,7 +2495,7 @@ const WorkoutViewer = ({
               }}
             >
               <div className="flex items-start gap-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   PR Achievements
                   {workoutData.pr_achievements &&
@@ -2644,7 +2644,7 @@ const WorkoutViewer = ({
               onClick={() => toggleCollapse(9)}
             >
               <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   Coach Notes
                 </h3>
@@ -2880,7 +2880,7 @@ const WorkoutViewer = ({
               onClick={() => toggleCollapse(10)}
             >
               <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   Extraction Notes
                 </h3>
@@ -3190,7 +3190,7 @@ const WorkoutViewer = ({
             onClick={() => toggleCollapse(11)}
           >
             <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan flex-shrink-0 mt-2" />
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Raw Workout Data
               </h3>

@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { logger } from "../logger";
 import {
   getWorkouts,
   getWorkout,
@@ -23,7 +24,7 @@ export class WorkoutAgent {
 
     // Validate callback
     if (this.onStateChange && typeof this.onStateChange !== "function") {
-      console.error(
+      logger.error(
         "WorkoutAgent: onStateChange must be a function, got:",
         typeof this.onStateChange,
       );
@@ -124,7 +125,7 @@ export class WorkoutAgent {
 
       return Math.max(0, diffInDays); // Ensure non-negative
     } catch (error) {
-      console.warn(
+      logger.warn(
         "WorkoutAgent._calculateLastWorkoutDaysAgo: Error calculating days ago:",
         error,
       );
@@ -241,13 +242,13 @@ export class WorkoutAgent {
       try {
         this.onStateChange(this.workoutState);
       } catch (error) {
-        console.error(
+        logger.error(
           "WorkoutAgent._updateState: Error in state change callback:",
           error,
         );
       }
     } else if (this.onStateChange !== null) {
-      console.warn(
+      logger.warn(
         "WorkoutAgent._updateState: Invalid callback type:",
         typeof this.onStateChange,
       );
@@ -259,7 +260,7 @@ export class WorkoutAgent {
    */
   async setUserId(userId) {
     if (!userId) {
-      console.error("WorkoutAgent.setUserId: userId is required");
+      logger.error("WorkoutAgent.setUserId: userId is required");
       return;
     }
 
@@ -275,7 +276,7 @@ export class WorkoutAgent {
    */
   async loadWorkoutStats() {
     if (!this.userId) {
-      console.error("WorkoutAgent.loadWorkoutStats: No userId set");
+      logger.error("WorkoutAgent.loadWorkoutStats: No userId set");
       return;
     }
 
@@ -335,7 +336,7 @@ export class WorkoutAgent {
             const dateString = date.toISOString().split("T")[0];
             uniqueDates.add(dateString);
           } catch (error) {
-            console.warn("Invalid date format for workout:", workout.workoutId);
+            logger.warn("Invalid date format for workout:", workout.workoutId);
           }
         }
       });
@@ -370,7 +371,7 @@ export class WorkoutAgent {
         lastCheckTime: Date.now(),
       });
     } catch (error) {
-      console.error(
+      logger.error(
         "WorkoutAgent.loadWorkoutStats: Error loading workout stats:",
         error,
       );
@@ -389,7 +390,7 @@ export class WorkoutAgent {
    */
   async loadTotalWorkoutCount() {
     if (!this.userId) {
-      console.error("WorkoutAgent.loadTotalWorkoutCount: No userId set");
+      logger.error("WorkoutAgent.loadTotalWorkoutCount: No userId set");
       return;
     }
 
@@ -404,7 +405,7 @@ export class WorkoutAgent {
         error: null,
       });
     } catch (error) {
-      console.error(
+      logger.error(
         "WorkoutAgent.loadTotalWorkoutCount: Error loading count:",
         error,
       );
@@ -420,7 +421,7 @@ export class WorkoutAgent {
    */
   async loadTrainingDaysCount(options = {}) {
     if (!this.userId) {
-      console.error("WorkoutAgent.loadTrainingDaysCount: No userId set");
+      logger.error("WorkoutAgent.loadTrainingDaysCount: No userId set");
       return;
     }
 
@@ -438,7 +439,7 @@ export class WorkoutAgent {
         error: null,
       });
     } catch (error) {
-      console.error(
+      logger.error(
         "WorkoutAgent.loadTrainingDaysCount: Error loading training days count:",
         error,
       );
@@ -454,7 +455,7 @@ export class WorkoutAgent {
    */
   async loadThisWeekWorkoutCount() {
     if (!this.userId) {
-      console.error("WorkoutAgent.loadThisWeekWorkoutCount: No userId set");
+      logger.error("WorkoutAgent.loadThisWeekWorkoutCount: No userId set");
       return;
     }
 
@@ -489,7 +490,7 @@ export class WorkoutAgent {
         error: null,
       });
     } catch (error) {
-      console.error(
+      logger.error(
         "WorkoutAgent.loadThisWeekWorkoutCount: Error loading this week count:",
         error,
       );
@@ -505,7 +506,7 @@ export class WorkoutAgent {
    */
   async loadRecentWorkouts(limit = 10) {
     if (!this.userId) {
-      console.error("WorkoutAgent.loadRecentWorkouts: No userId set");
+      logger.error("WorkoutAgent.loadRecentWorkouts: No userId set");
       return;
     }
 
@@ -532,7 +533,7 @@ export class WorkoutAgent {
         lastCheckTime: new Date(),
       });
     } catch (error) {
-      console.error(
+      logger.error(
         "WorkoutAgent.loadRecentWorkouts: Error loading workouts:",
         error,
       );
@@ -622,7 +623,7 @@ export class WorkoutAgent {
 
       return allWorkouts;
     } catch (error) {
-      console.error("Error loading all workouts:", error);
+      logger.error("Error loading all workouts:", error);
       this._updateState({
         isLoadingAllItems: false,
         error: error.message,
@@ -647,7 +648,7 @@ export class WorkoutAgent {
       this._updateState({ isLoadingItem: false });
       return result.workout || null;
     } catch (error) {
-      console.error("Error loading workout details:", error);
+      logger.error("Error loading workout details:", error);
       this._updateState({
         isLoadingItem: false,
         error: error.message || "Failed to load workout details",
@@ -701,7 +702,7 @@ export class WorkoutAgent {
         }
       }
     } catch (error) {
-      console.error("Error checking for new workouts:", error);
+      logger.error("Error checking for new workouts:", error);
     }
   }
 
@@ -763,7 +764,7 @@ export class WorkoutAgent {
 
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        console.warn("Invalid date format:", completedAt);
+        logger.warn("Invalid date format:", completedAt);
         return "Invalid date";
       }
 
@@ -776,7 +777,7 @@ export class WorkoutAgent {
 
       // Log negative values for debugging
       if (diffInMinutes < 0) {
-        console.warn("Workout time calculation resulted in negative value:", {
+        logger.warn("Workout time calculation resulted in negative value:", {
           completedAt,
           parsedDate: date.toISOString(),
           now: now.toISOString(),
@@ -796,7 +797,7 @@ export class WorkoutAgent {
         return `${days}d ago`;
       }
     } catch (error) {
-      console.error("Error formatting workout time:", error, { completedAt });
+      logger.error("Error formatting workout time:", error, { completedAt });
       return "Unknown time";
     }
   }
@@ -860,7 +861,7 @@ export class WorkoutAgent {
 
       return result;
     } catch (error) {
-      console.error("Error updating workout metadata:", error);
+      logger.error("Error updating workout metadata:", error);
       this._updateState({
         error: "Failed to update workout metadata",
       });
@@ -897,7 +898,7 @@ export class WorkoutAgent {
 
       return result;
     } catch (error) {
-      console.error("Error creating workout:", error);
+      logger.error("Error creating workout:", error);
       this._updateState({
         error: "Failed to create workout",
       });
@@ -935,7 +936,7 @@ export class WorkoutAgent {
 
       return result;
     } catch (error) {
-      console.error("Error deleting workout:", error);
+      logger.error("Error deleting workout:", error);
       this._updateState({
         error: "Failed to delete workout",
       });

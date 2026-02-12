@@ -18,6 +18,7 @@ import {
   MODEL_IDS,
 } from "../api-helpers";
 import type { Program } from "../program/types";
+import { logger } from "../logger";
 
 /**
  * Generate an AI-powered summary of a program design session for semantic search and coaching context.
@@ -127,7 +128,7 @@ export interface SessionData {
  * Creates new session if none exists for this user
  */
 export async function loadSessionData(userId: string): Promise<SessionData> {
-  console.info("📂 Loading program designer session data:", {
+  logger.info("📂 Loading program designer session data:", {
     userId,
   });
 
@@ -138,9 +139,9 @@ export async function loadSessionData(userId: string): Promise<SessionData> {
 
   // If no session exists, this is a new program creation - will be created by caller
   if (!session) {
-    console.info("ℹ️ No existing session found - new program creation");
+    logger.info("ℹ️ No existing session found - new program creation");
   } else {
-    console.info("✅ Session data loaded successfully");
+    logger.info("✅ Session data loaded successfully");
   }
 
   return {
@@ -159,7 +160,7 @@ export async function saveSessionAndTriggerProgramGeneration(
   isComplete: boolean,
   generationPayload?: any, // Full BuildProgramEvent payload
 ): Promise<{ programId?: string; alreadyGenerating?: boolean }> {
-  console.info("💾 Preparing to save program designer session...");
+  logger.info("💾 Preparing to save program designer session...");
 
   // ✅ IDEMPOTENCY CHECK: Perform BEFORE saving to prevent race conditions
   if (isComplete) {
@@ -167,7 +168,7 @@ export async function saveSessionAndTriggerProgramGeneration(
 
     // Handle already-complete scenario
     if (idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_COMPLETE) {
-      console.info(
+      logger.info(
         "⏭️ Training program already exists for this session (IDEMPOTENCY SKIP):",
         {
           sessionId: session.sessionId,
@@ -187,7 +188,7 @@ export async function saveSessionAndTriggerProgramGeneration(
 
     // Handle already-in-progress scenario
     if (idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_IN_PROGRESS) {
-      console.info(
+      logger.info(
         "⏭️ Training program generation already in progress for this session (IDEMPOTENCY SKIP):",
         {
           sessionId: session.sessionId,
@@ -207,12 +208,12 @@ export async function saveSessionAndTriggerProgramGeneration(
     // ✅ CRITICAL: Apply lock to session BEFORE saving (prevents race condition)
     // This ensures the lock is atomically written with the completion state
     session = createProgramGenerationLock(session);
-    console.info("🔒 Applied IN_PROGRESS lock to session before save");
+    logger.info("🔒 Applied IN_PROGRESS lock to session before save");
   }
 
   // Save session once (with lock applied if needed)
   await saveProgramDesignerSession(session);
-  console.info("✅ Program designer session saved successfully", {
+  logger.info("✅ Program designer session saved successfully", {
     hasLock: !!session.programGeneration,
     lockStatus: session.programGeneration?.status,
   });
@@ -224,7 +225,7 @@ export async function saveSessionAndTriggerProgramGeneration(
       const buildProgramFunction =
         process.env.BUILD_TRAINING_PROGRAM_FUNCTION_NAME;
       if (!buildProgramFunction) {
-        console.warn(
+        logger.warn(
           "⚠️ BUILD_TRAINING_PROGRAM_FUNCTION_NAME environment variable not set",
         );
       } else {
@@ -243,23 +244,23 @@ export async function saveSessionAndTriggerProgramGeneration(
           "program generation",
         );
 
-        console.info(
+        logger.info(
           "✅ Triggered async training program generation with idempotency protection",
         );
       }
     } catch (error) {
-      console.error("❌ Failed to trigger training program generation:", error);
+      logger.error("❌ Failed to trigger training program generation:", error);
 
       // Reset status to allow retry using extracted utility
       const failedSession = createProgramGenerationFailure(session, error);
 
       try {
         await saveProgramDesignerSession(failedSession);
-        console.info(
+        logger.info(
           "🔓 Reset session to FAILED status after Lambda trigger error",
         );
       } catch (resetError) {
-        console.error("❌ Failed to reset session status:", resetError);
+        logger.error("❌ Failed to reset session status:", resetError);
       }
 
       // Don't fail the request if program generation trigger fails

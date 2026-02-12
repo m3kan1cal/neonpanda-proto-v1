@@ -98,7 +98,7 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} flex-shrink-0 mt-2`}></div>
+          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}></div>
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             Training Calendar
           </h3>
@@ -114,7 +114,7 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
       <div className="flex items-start space-x-3 mb-4">
-        <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} flex-shrink-0 mt-2`}></div>
+        <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}></div>
         <h3 className="font-russo font-bold text-white text-lg uppercase">
           Training Calendar
         </h3>
