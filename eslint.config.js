@@ -22,15 +22,11 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      // Import react-hooks rules and convert all to warnings
-      ...Object.keys(reactHooks.configs.recommended.rules || {}).reduce(
-        (acc, key) => {
-          acc[key] = "warn";
-          return acc;
-        },
-        {},
-      ),
-      // Downgrade to warnings for gradual cleanup
+      // Import react-hooks recommended rules
+      ...reactHooks.configs.recommended.rules,
+      // Downgrade exhaustive-deps to warning (too noisy), but keep rules-of-hooks as error (prevents crashes)
+      "react-hooks/exhaustive-deps": "warn",
+      // Downgrade other rules to warnings for gradual cleanup
       "no-unused-vars": ["warn", { varsIgnorePattern: "^[A-Z_]" }],
       "no-useless-escape": "warn",
       "no-dupe-keys": "warn",

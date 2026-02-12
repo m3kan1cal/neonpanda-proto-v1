@@ -503,25 +503,12 @@ async function* processCoachConversationAsync(
       // Save the conversation without the session
       await saveCoachConversation(conversationData.existingConversation);
 
-      // Yield cancel event (keep type as "complete" so client recognizes it)
-      yield formatCompleteEvent({
-        messageId: `msg_${Date.now()}_cancelled`,
-        fullMessage: "",
-        aiResponse: "",
-        isComplete: false,
-        mode: CONVERSATION_MODES.CHAT,
-        workoutCreatorSession: null,
-        metadata: {
-          sessionCancelled: true,
-          reason: "cancel_request",
-        },
-      });
-
       console.info(
         "✅ Workout session cancelled via cancel_request - re-processing as normal conversation",
       );
 
       // Fall through to normal conversation processing below
+      // The complete event will be sent at the end with the actual AI response
     } else {
       console.info(
         "🏋️ Workout collection session in progress - continuing multi-turn flow",

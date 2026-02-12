@@ -27,7 +27,6 @@ import {
   createEmptyWorkoutTodoList,
   getCollectedDataSummary,
   getTodoProgress,
-  hasSubstantialProgress,
 } from "./todo-list-utils";
 import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from "./types";
 import { handleGoodbyeAutoComplete } from "./goodbye-utils";
