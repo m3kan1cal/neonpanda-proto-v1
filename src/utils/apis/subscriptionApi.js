@@ -1,4 +1,5 @@
 import { authenticatedFetch } from "./apiConfig";
+import { logger } from "../logger";
 
 /**
  * Subscription tier types
@@ -74,7 +75,7 @@ export function getElectricPandaPaymentLink(userId, email) {
   const baseUrl = import.meta.env.VITE_ELECTRIC_PANDA_PAYMENT_LINK;
 
   if (!baseUrl) {
-    console.error("VITE_ELECTRIC_PANDA_PAYMENT_LINK is not configured");
+    logger.error("VITE_ELECTRIC_PANDA_PAYMENT_LINK is not configured");
     return null;
   }
 
@@ -170,7 +171,7 @@ export async function pollSubscriptionStatus(userId, options = {}) {
         return { success: true, subscription: status };
       }
     } catch (error) {
-      console.warn(`Subscription polling attempt ${attempt} failed:`, error);
+      logger.warn(`Subscription polling attempt ${attempt} failed:`, error);
     }
 
     // Wait before next attempt (unless this was the last attempt)

@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getWeeklyAnalytics } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -11,7 +12,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(400, 'weekId is required');
     }
 
-    console.info('Getting weekly report:', {
+    logger.info('Getting weekly report:', {
       userId,
       weekId
     });

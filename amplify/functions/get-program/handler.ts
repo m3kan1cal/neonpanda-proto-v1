@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getProgram } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -28,7 +29,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       program: program
     });
   } catch (error) {
-    console.error('Error getting training program:', error);
+    logger.error('Error getting training program:', error);
     return createErrorResponse(500, 'Failed to get training program', error);
   }
 };

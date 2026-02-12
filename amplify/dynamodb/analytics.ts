@@ -4,6 +4,7 @@ import {
   queryFromDynamoDB,
   createDynamoDBItem,
 } from "./core";
+import { logger } from "../functions/libs/logger";
 import {
   WeeklyAnalytics,
   MonthlyAnalytics,
@@ -28,7 +29,7 @@ export async function saveWeeklyAnalytics(
   );
 
   await saveToDynamoDB(item);
-  console.info("Weekly analytics saved successfully:", {
+  logger.info("Weekly analytics saved successfully:", {
     userId: weeklyAnalytics.userId,
     weekId: weeklyAnalytics.weekId,
     weekRange: `${weeklyAnalytics.weekStart} to ${weeklyAnalytics.weekEnd}`,
@@ -126,12 +127,12 @@ export async function queryWeeklyAnalytics(
       filteredAnalytics = filteredAnalytics.slice(offset, offset + limit);
     }
 
-    console.info(
+    logger.info(
       `Found ${filteredAnalytics.length} weekly analytics records for user ${userId}`,
     );
     return filteredAnalytics;
   } catch (error) {
-    console.error("Error querying weekly analytics:", error);
+    logger.error("Error querying weekly analytics:", error);
     throw error;
   }
 }
@@ -176,7 +177,7 @@ export async function saveMonthlyAnalytics(
   );
 
   await saveToDynamoDB(item);
-  console.info("Monthly analytics saved successfully:", {
+  logger.info("Monthly analytics saved successfully:", {
     userId: monthlyAnalytics.userId,
     monthId: monthlyAnalytics.monthId,
     monthRange: `${monthlyAnalytics.monthStart} to ${monthlyAnalytics.monthEnd}`,
@@ -274,12 +275,12 @@ export async function queryMonthlyAnalytics(
       filteredAnalytics = filteredAnalytics.slice(offset, offset + limit);
     }
 
-    console.info(
+    logger.info(
       `Found ${filteredAnalytics.length} monthly analytics records for user ${userId}`,
     );
     return filteredAnalytics;
   } catch (error) {
-    console.error("Error querying monthly analytics:", error);
+    logger.error("Error querying monthly analytics:", error);
     throw error;
   }
 }

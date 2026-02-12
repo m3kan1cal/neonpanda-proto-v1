@@ -23,6 +23,7 @@ import { useToast } from "../contexts/ToastContext";
 import { CoachConversationAgent } from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
+import { logger } from "../utils/logger";
 import {
   ConversationIcon,
   LightningIcon,
@@ -111,7 +112,7 @@ function ManageCoachConversations() {
         );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
       }
     };
 
@@ -246,7 +247,7 @@ function ManageCoachConversations() {
           coaches: [coachData],
         }));
       } catch (error) {
-        console.error("Error loading conversations:", error);
+        logger.error("Error loading conversations:", error);
         setConversationAgentState((prev) => ({
           ...prev,
           isLoadingAllItems: false,
@@ -316,7 +317,7 @@ function ManageCoachConversations() {
         conversationAgentRef.current = new CoachConversationAgent({
           userId,
           onError: (error) => {
-            console.error("Agent error:", error);
+            logger.error("Agent error:", error);
           },
         });
       }
@@ -346,7 +347,7 @@ function ManageCoachConversations() {
         addToast("Failed to delete conversation", "error");
       }
     } catch (error) {
-      console.error("Error deleting conversation:", error);
+      logger.error("Error deleting conversation:", error);
       addToast("Failed to delete conversation", "error");
     } finally {
       setIsDeleting(false);
@@ -378,7 +379,7 @@ function ManageCoachConversations() {
         setIsCreatingConversation(false);
       }
     } catch (error) {
-      console.error("Error creating conversation:", error);
+      logger.error("Error creating conversation:", error);
       addToast("Failed to create conversation", "error");
       setIsCreatingConversation(false);
     }
@@ -481,7 +482,7 @@ function ManageCoachConversations() {
 
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             {headerText}
           </h3>
@@ -811,7 +812,7 @@ function ManageCoachConversations() {
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start space-x-3 mb-2">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
 
@@ -860,7 +861,7 @@ function ManageCoachConversations() {
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 
@@ -896,7 +897,7 @@ function ManageCoachConversations() {
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 

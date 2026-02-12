@@ -20,6 +20,7 @@ import {
 import { buildCoachCreatorPrompt } from "./prompts";
 import { MODEL_IDS } from "../../api-helpers";
 import { enforceValidationBlocking } from "./helpers";
+import { logger } from "../../logger";
 
 /**
  * Minimum number of tools that must be called for a complete coach creation workflow.
@@ -65,7 +66,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
   private storeToolResult(toolId: string, result: any): void {
     const storageKey = STORAGE_KEY_MAP[toolId] || toolId;
     this.toolResults.set(storageKey, result);
-    console.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
+    logger.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
   }
 
   /**
@@ -164,7 +165,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
     // Extract tool uses
     const toolUses = contentBlocks.filter((block: any) => block.toolUse);
 
-    console.info(`🔧 Executing ${toolUses.length} tool(s)`);
+    logger.info(`🔧 Executing ${toolUses.length} tool(s)`);
 
     // Check if we can parallelize personality and methodology selection
     const hasPersonalityTool = toolUses.some(
@@ -180,7 +181,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
     let toolResults: any[] = [];
 
     if (canParallelize) {
-      console.info(
+      logger.info(
         "🚀 Executing personality and methodology selection in parallel",
       );
       toolResults = await this.executeToolsInParallel(toolUses);
@@ -195,7 +196,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       content: toolResults,
     });
 
-    console.info("📥 Tool results added to conversation history");
+    logger.info("📥 Tool results added to conversation history");
   }
 
   /**
@@ -210,7 +211,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
         const tool = this.config.tools.find((t) => t.id === toolUse.name);
 
         if (!tool) {
-          console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+          logger.warn(`⚠️ Tool not found: ${toolUse.name}`);
           return this.buildToolResult(
             toolUse,
             { error: `Tool '${toolUse.name}' not found` },
@@ -218,21 +219,21 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
           );
         }
 
-        console.info(`⚙️ Executing tool: ${tool.id} (parallel)`);
+        logger.info(`⚙️ Executing tool: ${tool.id} (parallel)`);
 
         try {
           const startTime = Date.now();
           const result = await tool.execute(toolUse.input, augmentedContext);
           const duration = Date.now() - startTime;
 
-          console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
+          logger.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
 
           // Store result for later retrieval
           this.storeToolResult(tool.id, result);
 
           return this.buildToolResult(toolUse, result, "success");
         } catch (error) {
-          console.error(`❌ Tool ${tool.id} failed:`, error);
+          logger.error(`❌ Tool ${tool.id} failed:`, error);
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           const errorResult = { error: errorMessage || "Unknown error" };
@@ -261,7 +262,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       const tool = this.config.tools.find((t) => t.id === toolUse.name);
 
       if (!tool) {
-        console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+        logger.warn(`⚠️ Tool not found: ${toolUse.name}`);
         toolResults.push(
           this.buildToolResult(
             toolUse,
@@ -275,28 +276,28 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       // Use base class blocking enforcement hook
       const blockingResult = this.enforceToolBlocking(tool.id, toolUse.input);
       if (blockingResult) {
-        console.warn(`⛔ Blocking tool execution: ${tool.id}`);
+        logger.warn(`⛔ Blocking tool execution: ${tool.id}`);
         toolResults.push(
           this.buildToolResult(toolUse, blockingResult, "error"),
         );
         continue;
       }
 
-      console.info(`⚙️ Executing tool: ${tool.id}`);
+      logger.info(`⚙️ Executing tool: ${tool.id}`);
 
       try {
         const startTime = Date.now();
         const result = await tool.execute(toolUse.input, augmentedContext);
         const duration = Date.now() - startTime;
 
-        console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
+        logger.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
 
         // Store result for later retrieval
         this.storeToolResult(tool.id, result);
 
         toolResults.push(this.buildToolResult(toolUse, result, "success"));
       } catch (error) {
-        console.error(`❌ Tool ${tool.id} failed:`, error);
+        logger.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         const errorResult = { error: errorMessage || "Unknown error" };
@@ -345,7 +346,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       context,
     });
 
-    console.info("🔥 CoachCreatorAgent initialized with caching support");
+    logger.info("🔥 CoachCreatorAgent initialized with caching support");
   }
 
   /**
@@ -353,7 +354,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
    * Returns standardized result structure matching existing build-coach-config Lambda
    */
   async createCoach(): Promise<CoachCreatorResult> {
-    console.info("🎨 CoachCreator agent starting", {
+    logger.info("🎨 CoachCreator agent starting", {
       userId: this.config.context.userId,
       sessionId: this.config.context.sessionId,
     });
@@ -366,7 +367,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
         `Create a personalized AI fitness coach for this user. Use timestamp: ${creationTimestamp}`,
       );
 
-      console.info("Agent response received:", {
+      logger.info("Agent response received:", {
         responseLength: response.length,
         responsePreview: response.substring(0, 200),
         toolResultsCollected: Array.from(this.toolResults.keys()),
@@ -377,7 +378,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       // RETRY LOGIC: Use base class hook to determine if retry is needed
       const retryDecision = this.shouldRetryWorkflow(result, response);
       if (retryDecision?.shouldRetry) {
-        console.warn(`🔄 ${retryDecision.logMessage}`);
+        logger.warn(`🔄 ${retryDecision.logMessage}`);
 
         // NOTE: We do NOT clear tool results here. Tools marked as "(✓ ALREADY DONE)" in the
         // retry prompt may be skipped by the AI, and if so, they need their results to still
@@ -386,7 +387,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
 
         const retryResponse = await this.converse(retryDecision.retryPrompt);
 
-        console.info("Retry response received:", {
+        logger.info("Retry response received:", {
           responseLength: retryResponse.length,
           toolResultsCollected: Array.from(this.toolResults.keys()),
         });
@@ -395,17 +396,17 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
 
         // If retry also failed, fall back to original result
         if (!retryResult.success && retryResult.skipped) {
-          console.warn(
+          logger.warn(
             "⚠️ Retry also resulted in skip - using original result",
           );
           return result;
         }
 
-        console.info("✅ Retry successful - coach created after retry");
+        logger.info("✅ Retry successful - coach created after retry");
         return retryResult;
       }
 
-      console.info("Built coach creation result:", {
+      logger.info("Built coach creation result:", {
         success: result.success,
         coachConfigId: result.coachConfigId,
         hasAllFields: !!(result.coachName && result.primaryPersonality),
@@ -413,7 +414,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
 
       return result;
     } catch (error) {
-      console.error("❌ CoachCreator agent error:", error);
+      logger.error("❌ CoachCreator agent error:", error);
 
       return {
         success: false,
@@ -540,7 +541,7 @@ Now create the coach using your tools.`;
     // Extract tool results using structured helper
     const results = this.getStructuredToolResults();
 
-    console.info("Tool results available:", {
+    logger.info("Tool results available:", {
       hasRequirements: !!results.requirements,
       hasPersonalitySelection: !!results.personalitySelection,
       hasMethodologySelection: !!results.methodologySelection,
@@ -552,7 +553,7 @@ Now create the coach using your tools.`;
 
     // If save tool was called successfully, we have a complete coach
     if (results.save?.success && results.save?.coachConfigId) {
-      console.info("✅ Building success result from save tool");
+      logger.info("✅ Building success result from save tool");
 
       return {
         success: true,
@@ -569,7 +570,7 @@ Now create the coach using your tools.`;
 
     // If validation failed, return structured failure
     if (results.validation && !results.validation.isValid) {
-      console.info("⚠️ Building failure result from validation");
+      logger.info("⚠️ Building failure result from validation");
 
       return {
         success: false,
@@ -586,7 +587,7 @@ Now create the coach using your tools.`;
       !results.validation &&
       !results.save
     ) {
-      console.info(
+      logger.info(
         "💬 Agent incomplete workflow (no tools called - may need retry)",
       );
 
@@ -598,7 +599,7 @@ Now create the coach using your tools.`;
     }
 
     // Partial tool execution without save - this is a failure
-    console.warn("⚠️ Partial tool execution - workflow incomplete");
+    logger.warn("⚠️ Partial tool execution - workflow incomplete");
 
     return {
       success: false,

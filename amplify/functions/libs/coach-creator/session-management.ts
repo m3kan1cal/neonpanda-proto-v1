@@ -4,6 +4,7 @@ import {
   getUserProfile,
   saveCoachCreatorSession,
 } from "../../../dynamodb/operations";
+import { logger } from "../logger";
 import {
   invokeAsyncLambda,
   callBedrockApi,
@@ -114,7 +115,7 @@ export async function loadSessionData(
   userId: string,
   sessionId: string,
 ): Promise<SessionData> {
-  console.info("📂 Loading session data:", { userId, sessionId });
+  logger.info("📂 Loading session data:", { userId, sessionId });
 
   const [session, userProfile] = await Promise.all([
     getCoachCreatorSession(userId, sessionId),
@@ -125,7 +126,7 @@ export async function loadSessionData(
     throw new Error("Session not found or expired");
   }
 
-  console.info("✅ Session data loaded successfully");
+  logger.info("✅ Session data loaded successfully");
 
   return {
     session,
@@ -143,7 +144,7 @@ export async function saveSessionAndTriggerCoachConfig(
   session: CoachCreatorSession,
   isComplete: boolean,
 ): Promise<{ coachConfigId?: string; alreadyGenerating?: boolean }> {
-  console.info("💾 Preparing to save session..");
+  logger.info("💾 Preparing to save session..");
 
   // ✅ IDEMPOTENCY CHECK: Perform BEFORE saving to prevent race conditions
   if (isComplete) {
@@ -151,7 +152,7 @@ export async function saveSessionAndTriggerCoachConfig(
 
     // Handle already-complete scenario
     if (idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_COMPLETE) {
-      console.info(
+      logger.info(
         "⏭️ Coach config already exists for this session (IDEMPOTENCY SKIP):",
         {
           sessionId,
@@ -171,7 +172,7 @@ export async function saveSessionAndTriggerCoachConfig(
 
     // Handle already-in-progress scenario
     if (idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_IN_PROGRESS) {
-      console.info(
+      logger.info(
         "⏭️ Coach config generation already in progress for this session (IDEMPOTENCY SKIP):",
         {
           sessionId,
@@ -191,12 +192,12 @@ export async function saveSessionAndTriggerCoachConfig(
     // ✅ CRITICAL: Apply lock to session BEFORE saving (prevents race condition)
     // This ensures the lock is atomically written with the completion state
     session = createCoachConfigGenerationLock(session);
-    console.info("🔒 Applied IN_PROGRESS lock to session before save");
+    logger.info("🔒 Applied IN_PROGRESS lock to session before save");
   }
 
   // Save session once (with lock applied if needed)
   await saveCoachCreatorSession(session);
-  console.info("✅ Session saved successfully", {
+  logger.info("✅ Session saved successfully", {
     hasLock: !!session.configGeneration,
     lockStatus: session.configGeneration?.status,
   });
@@ -208,7 +209,7 @@ export async function saveSessionAndTriggerCoachConfig(
       const buildCoachConfigFunction =
         process.env.BUILD_COACH_CONFIG_FUNCTION_NAME;
       if (!buildCoachConfigFunction) {
-        console.warn(
+        logger.warn(
           "⚠️ BUILD_COACH_CONFIG_FUNCTION_NAME environment variable not set",
         );
       } else {
@@ -222,23 +223,23 @@ export async function saveSessionAndTriggerCoachConfig(
           "coach config generation",
         );
 
-        console.info(
+        logger.info(
           "✅ Triggered async coach config generation with idempotency protection",
         );
       }
     } catch (error) {
-      console.error("❌ Failed to trigger coach config generation:", error);
+      logger.error("❌ Failed to trigger coach config generation:", error);
 
       // Reset status to allow retry using extracted utility
       const failedSession = createCoachConfigGenerationFailure(session, error);
 
       try {
         await saveCoachCreatorSession(failedSession);
-        console.info(
+        logger.info(
           "🔓 Reset session to FAILED status after Lambda trigger error",
         );
       } catch (resetError) {
-        console.error("❌ Failed to reset session status:", resetError);
+        logger.error("❌ Failed to reset session status:", resetError);
       }
 
       // Don't fail the request if coach config trigger fails
@@ -297,12 +298,12 @@ export interface IdempotencyCheckResult {
  * const result = checkCoachConfigIdempotency(session);
  *
  * if (result.reason === IDEMPOTENCY_REASONS.ALREADY_COMPLETE) {
- *   console.info("Coach already created:", result.coachConfigId);
+ *   logger.info("Coach already created:", result.coachConfigId);
  *   return; // Early return with existing coach
  * }
  *
  * if (result.reason === IDEMPOTENCY_REASONS.ALREADY_IN_PROGRESS) {
- *   console.info("Coach creation in progress:", result.metadata);
+ *   logger.info("Coach creation in progress:", result.metadata);
  *   return; // Early return - already building
  * }
  *

@@ -14,6 +14,7 @@ import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
 import { MemoryRetrievalResult } from "./memory-processing";
 import { buildMultimodalContent } from "../streaming";
+import { logger } from "../logger";
 import {
   CoachMessage,
   ConversationMode,
@@ -45,7 +46,7 @@ export function selectModelForConversation(
     ? MODEL_IDS.PLANNER_MODEL_DISPLAY
     : MODEL_IDS.EXECUTOR_MODEL_DISPLAY;
 
-  console.info(
+  logger.info(
     `🤖 Model selection: ${modelDisplay} (requiresDeepReasoning=${requiresDeepReasoning})`,
   );
 
@@ -73,7 +74,7 @@ function buildMessagesWithHistoryCaching(existingMessages: any[]): any[] {
 
   // Don't cache short conversations
   if (messageCount < MIN_CACHE_THRESHOLD) {
-    console.info(
+    logger.info(
       `📝 Short conversation (${messageCount} messages) - no history caching`,
     );
     return existingMessages.map((msg) => ({
@@ -89,7 +90,7 @@ function buildMessagesWithHistoryCaching(existingMessages: any[]): any[] {
   const cachedMessages = existingMessages.slice(0, cachedCount);
   const dynamicMessages = existingMessages.slice(cachedCount);
 
-  console.info(
+  logger.info(
     `💰 STEPPED HISTORY CACHING: Boundary at ${cachedCount} messages`,
     {
       totalMessages: messageCount,
@@ -167,7 +168,7 @@ export async function generateAIResponse(
     // Validate coach config has all required prompts
     const validation = validateCoachConfig(coachConfig);
     if (!validation.isValid) {
-      console.error("Coach config validation failed:", {
+      logger.error("Coach config validation failed:", {
         missingComponents: validation.missingComponents,
         coachId,
         userId,
@@ -176,7 +177,7 @@ export async function generateAIResponse(
     }
 
     if (validation.warnings.length > 0) {
-      console.warn("Coach config validation warnings:", {
+      logger.warn("Coach config validation warnings:", {
         warnings: validation.warnings,
         coachId,
         userId,
@@ -211,7 +212,7 @@ export async function generateAIResponse(
     // Log prompt preview for debugging (in development)
     if (process.env.NODE_ENV !== "production") {
       const preview = generateSystemPromptPreview(coachConfig);
-      console.info("Generated system prompt preview:", {
+      logger.info("Generated system prompt preview:", {
         ...preview,
         conversationContext,
         promptLength: metadata.promptLength,
@@ -276,7 +277,7 @@ export async function generateAIResponse(
           "coach-conversation",
         );
 
-        console.info("✅ System prompt stored in S3 for debug/monitoring:", {
+        logger.info("✅ System prompt stored in S3 for debug/monitoring:", {
           location: s3Location,
           totalSizeKB: promptSizeKB,
           baseSizeKB: baseSizeKB,
@@ -290,7 +291,7 @@ export async function generateAIResponse(
           },
         });
       } catch (s3Error) {
-        console.warn(
+        logger.warn(
           "⚠️ Failed to store system prompt in S3 (non-critical):",
           s3Error,
         );
@@ -323,7 +324,7 @@ export async function generateAIResponse(
         ];
         const converseMessages = await buildMultimodalContent(allMessages);
 
-        console.info("🖼️ Using multimodal Converse API with images", {
+        logger.info("🖼️ Using multimodal Converse API with images", {
           messageCount: converseMessages.length,
           imagesCount: imageS3Keys.length,
           model: selectedModel,
@@ -355,7 +356,7 @@ export async function generateAIResponse(
           content: [{ text: userMessage }],
         });
 
-        console.info("💬 Using text-only Converse API with history caching", {
+        logger.info("💬 Using text-only Converse API with history caching", {
           totalMessages: messagesWithHistory.length,
           existingMessages: existingMessages.length,
           model: selectedModel,
@@ -376,11 +377,11 @@ export async function generateAIResponse(
         )) as string; // No tools used, always returns string
       }
     } catch (error) {
-      console.error("Claude API error:", error);
+      logger.error("Claude API error:", error);
       throw new Error("Failed to process response with AI");
     }
   } catch (aiError) {
-    console.error("Error generating AI response:", aiError);
+    logger.error("Error generating AI response:", aiError);
     throw new Error("Failed to generate coach response");
   }
 
@@ -421,7 +422,7 @@ export async function generateAIResponseStream(
     // Validate coach config has all required prompts
     const validation = validateCoachConfig(coachConfig);
     if (!validation.isValid) {
-      console.error("Coach config validation failed:", {
+      logger.error("Coach config validation failed:", {
         missingComponents: validation.missingComponents,
         coachId,
         userId,
@@ -430,7 +431,7 @@ export async function generateAIResponseStream(
     }
 
     if (validation.warnings.length > 0) {
-      console.warn("Coach config validation warnings:", {
+      logger.warn("Coach config validation warnings:", {
         warnings: validation.warnings,
         coachId,
         userId,
@@ -465,7 +466,7 @@ export async function generateAIResponseStream(
     // Log prompt preview for debugging (in development)
     if (process.env.NODE_ENV !== "production") {
       const preview = generateSystemPromptPreview(coachConfig);
-      console.info("Generated system prompt preview for streaming:", {
+      logger.info("Generated system prompt preview for streaming:", {
         ...preview,
         conversationContext,
         promptLength: metadata.promptLength,
@@ -529,7 +530,7 @@ export async function generateAIResponseStream(
           "coach-conversation",
         );
 
-        console.info("✅ System prompt stored in S3 for debug/monitoring:", {
+        logger.info("✅ System prompt stored in S3 for debug/monitoring:", {
           location: s3Location,
           totalSizeKB: promptSizeKB,
           baseSizeKB: baseSizeKB,
@@ -543,7 +544,7 @@ export async function generateAIResponseStream(
           },
         });
       } catch (s3Error) {
-        console.warn(
+        logger.warn(
           "⚠️ Failed to store system prompt in S3 (non-critical):",
           s3Error,
         );
@@ -576,7 +577,7 @@ export async function generateAIResponseStream(
         ];
         const converseMessages = await buildMultimodalContent(allMessages);
 
-        console.info("🖼️ Using multimodal Converse Stream API with images", {
+        logger.info("🖼️ Using multimodal Converse Stream API with images", {
           messageCount: converseMessages.length,
           imagesCount: imageS3Keys.length,
           model: selectedModel,
@@ -613,7 +614,7 @@ export async function generateAIResponseStream(
           content: [{ text: userMessage }],
         });
 
-        console.info(
+        logger.info(
           "💬 Using text-only Converse Stream API with history caching",
           {
             totalMessages: messagesWithHistory.length,
@@ -642,11 +643,11 @@ export async function generateAIResponseStream(
         };
       }
     } catch (error) {
-      console.error("Claude Streaming API error:", error);
+      logger.error("Claude Streaming API error:", error);
       throw new Error("Failed to process response with AI streaming");
     }
   } catch (aiError) {
-    console.error("Error generating AI streaming response:", aiError);
+    logger.error("Error generating AI streaming response:", aiError);
     throw new Error("Failed to generate coach streaming response");
   }
 }

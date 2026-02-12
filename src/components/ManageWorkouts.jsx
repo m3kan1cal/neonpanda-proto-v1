@@ -20,6 +20,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
+import { logger } from "../utils/logger";
 import {
   StackIcon,
   CalendarMonthIcon,
@@ -131,7 +132,7 @@ function ManageWorkouts() {
       });
 
       workoutAgentRef.current.onError = (error) => {
-        console.error("Workout agent error:", error);
+        logger.error("Workout agent error:", error);
         setWorkoutAgentState((prevState) => ({
           ...prevState,
           error: error.message || "Failed to load workouts",
@@ -162,7 +163,7 @@ function ManageWorkouts() {
         );
         setCoachData(coachData);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
       }
     };
 
@@ -195,7 +196,7 @@ function ManageWorkouts() {
 
         await workoutAgentRef.current.loadTotalWorkoutCount();
       } catch (error) {
-        console.error("Error loading workout history:", error);
+        logger.error("Error loading workout history:", error);
       }
     };
 
@@ -228,7 +229,7 @@ function ManageWorkouts() {
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
     } catch (error) {
-      console.error("Error deleting workout:", error);
+      logger.error("Error deleting workout:", error);
       error("Failed to delete workout");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
@@ -394,7 +395,7 @@ function ManageWorkouts() {
 
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             {workoutName}
           </h3>
@@ -621,7 +622,7 @@ function ManageWorkouts() {
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start space-x-3 mb-2">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
 
@@ -669,7 +670,7 @@ function ManageWorkouts() {
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 
@@ -705,7 +706,7 @@ function ManageWorkouts() {
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 

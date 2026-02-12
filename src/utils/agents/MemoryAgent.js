@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { getMemories, deleteMemory, createMemory } from "../apis/memoryApi.js";
+import { logger } from "../logger";
 
 /**
  * MemoryAgent - Handles the business logic for memory management
@@ -13,7 +14,7 @@ export class MemoryAgent {
 
     // Validate callback
     if (this.onStateChange && typeof this.onStateChange !== "function") {
-      console.error(
+      logger.error(
         "MemoryAgent: onStateChange must be a function, got:",
         typeof this.onStateChange
       );
@@ -56,13 +57,13 @@ export class MemoryAgent {
       try {
         this.onStateChange(this.memoryState);
       } catch (error) {
-        console.error(
+        logger.error(
           "MemoryAgent._updateState: Error in state change callback:",
           error
         );
       }
     } else if (this.onStateChange !== null) {
-      console.warn(
+      logger.warn(
         "MemoryAgent._updateState: Invalid callback type:",
         typeof this.onStateChange
       );
@@ -74,7 +75,7 @@ export class MemoryAgent {
    */
   async setUserId(userId) {
     if (!userId) {
-      console.error("MemoryAgent.setUserId: userId is required");
+      logger.error("MemoryAgent.setUserId: userId is required");
       return;
     }
 
@@ -89,7 +90,7 @@ export class MemoryAgent {
    */
   async loadAllMemories(options = {}) {
     if (!this.userId) {
-      console.warn("MemoryAgent.loadAllMemories: No userId set");
+      logger.warn("MemoryAgent.loadAllMemories: No userId set");
       return;
     }
 
@@ -108,7 +109,7 @@ export class MemoryAgent {
         error: null,
       });
     } catch (error) {
-      console.error(
+      logger.error(
         "MemoryAgent.loadAllMemories: Error loading memories:",
         error
       );
@@ -131,16 +132,16 @@ export class MemoryAgent {
    */
   async createMemory(content, options = {}) {
     if (!this.userId) {
-      console.warn("MemoryAgent.createMemory: No userId set");
+      logger.warn("MemoryAgent.createMemory: No userId set");
       return false;
     }
 
     if (!content || !content.trim()) {
-      console.error("MemoryAgent.createMemory: content is required");
+      logger.error("MemoryAgent.createMemory: content is required");
       return false;
     }
 
-    console.info("MemoryAgent.createMemory: Creating memory:", {
+    logger.info("MemoryAgent.createMemory: Creating memory:", {
       content,
       options,
     });
@@ -159,7 +160,7 @@ export class MemoryAgent {
 
       const result = await createMemory(this.userId, memoryData);
 
-      console.info(
+      logger.info(
         "MemoryAgent.createMemory: Memory created successfully:",
         result
       );
@@ -177,7 +178,7 @@ export class MemoryAgent {
 
       return result;
     } catch (error) {
-      console.error("MemoryAgent.createMemory: Error creating memory:", error);
+      logger.error("MemoryAgent.createMemory: Error creating memory:", error);
 
       this._updateState({
         isLoadingItem: false,
@@ -193,16 +194,16 @@ export class MemoryAgent {
    */
   async deleteMemory(memoryId) {
     if (!this.userId) {
-      console.warn("MemoryAgent.deleteMemory: No userId set");
+      logger.warn("MemoryAgent.deleteMemory: No userId set");
       return false;
     }
 
     if (!memoryId) {
-      console.error("MemoryAgent.deleteMemory: memoryId is required");
+      logger.error("MemoryAgent.deleteMemory: memoryId is required");
       return false;
     }
 
-    console.info("MemoryAgent.deleteMemory: Deleting memory:", memoryId);
+    logger.info("MemoryAgent.deleteMemory: Deleting memory:", memoryId);
 
     this._updateState({
       isLoadingItem: true,
@@ -212,7 +213,7 @@ export class MemoryAgent {
     try {
       await deleteMemory(this.userId, memoryId);
 
-      console.info(
+      logger.info(
         "MemoryAgent.deleteMemory: Memory deleted successfully:",
         memoryId
       );
@@ -231,7 +232,7 @@ export class MemoryAgent {
 
       return true;
     } catch (error) {
-      console.error("MemoryAgent.deleteMemory: Error deleting memory:", error);
+      logger.error("MemoryAgent.deleteMemory: Error deleting memory:", error);
 
       this._updateState({
         isLoadingItem: false,

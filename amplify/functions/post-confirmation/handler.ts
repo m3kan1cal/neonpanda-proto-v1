@@ -7,13 +7,14 @@ import type { PostConfirmationTriggerEvent, PostConfirmationTriggerHandler } fro
 import { saveUserProfile, getUserProfileByEmail } from '../../dynamodb/operations'
 import type { UserProfile } from '../libs/user/types'
 import { publishUserRegistrationNotification, type UserRegistrationData } from '../libs/sns-helpers'
+import { logger } from "../libs/logger";
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION
 })
 
 export const handler: PostConfirmationTriggerHandler = async (event: PostConfirmationTriggerEvent) => {
-  console.info('Post-confirmation trigger:', JSON.stringify(event, null, 2))
+  logger.info('Post-confirmation trigger:', JSON.stringify(event, null, 2))
 
   try {
     // Extract user attributes from the event
@@ -24,11 +25,11 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
     const preferredUsername = userAttributes.preferred_username || event.userName
 
     // Check if a user profile already exists with this email
-    console.info(`Checking for existing user profile with email: ${email}`)
+    logger.info(`Checking for existing user profile with email: ${email}`)
     const existingProfile = await getUserProfileByEmail(email)
 
     if (existingProfile) {
-      console.warn(`⚠️ User profile already exists for email: ${email}`, {
+      logger.warn(`⚠️ User profile already exists for email: ${email}`, {
         existingUserId: existingProfile.userId,
         existingUsername: existingProfile.username,
         cognitoUsername: event.userName
@@ -36,7 +37,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
 
       // Update Cognito with the existing custom:user_id instead of creating a new profile
       const existingCustomUserId = existingProfile.userId
-      console.info(`Using existing custom userId: ${existingCustomUserId} for Cognito user: ${event.userName}`)
+      logger.info(`Using existing custom userId: ${existingCustomUserId} for Cognito user: ${event.userName}`)
 
       const cognitoCommand = new AdminUpdateUserAttributesCommand({
         UserPoolId: event.userPoolId,
@@ -48,7 +49,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
       })
 
       await cognitoClient.send(cognitoCommand)
-      console.info(`Successfully linked existing profile ${existingCustomUserId} to Cognito user: ${event.userName}`)
+      logger.info(`Successfully linked existing profile ${existingCustomUserId} to Cognito user: ${event.userName}`)
 
       // Send SNS notification for existing user re-linking
       try {
@@ -64,7 +65,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
         };
         await publishUserRegistrationNotification(registrationData);
       } catch (snsError) {
-        console.error('Failed to send SNS notification for existing user:', snsError);
+        logger.error('Failed to send SNS notification for existing user:', snsError);
         // Don't throw - continue with registration even if SNS fails
       }
 
@@ -73,7 +74,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
 
     // Generate custom userId for new user
     const customUserId = nanoid(21)
-    console.info(`Generating new custom userId: ${customUserId} for user: ${event.userName}`)
+    logger.info(`Generating new custom userId: ${customUserId} for user: ${event.userName}`)
 
     // Set custom userId attribute in Cognito
     const cognitoCommand = new AdminUpdateUserAttributesCommand({
@@ -86,7 +87,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
     })
 
     await cognitoClient.send(cognitoCommand)
-    console.info(`Successfully set custom userId: ${customUserId}`)
+    logger.info(`Successfully set custom userId: ${customUserId}`)
 
     const userProfile: UserProfile = {
       athleteProfile: {
@@ -125,7 +126,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
     }
 
     await saveUserProfile(userProfile)
-    console.info(`Successfully created user profile for: ${customUserId}`)
+    logger.info(`Successfully created user profile for: ${customUserId}`)
 
     // Send SNS notification for new user registration
     try {
@@ -141,17 +142,17 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
       };
       await publishUserRegistrationNotification(registrationData);
     } catch (snsError) {
-      console.error('Failed to send SNS notification for new user:', snsError);
+      logger.error('Failed to send SNS notification for new user:', snsError);
       // Don't throw - continue with registration even if SNS fails
     }
 
     return event
 
   } catch (error) {
-    console.error('Failed in post-confirmation:', error)
+    logger.error('Failed in post-confirmation:', error)
     // Don't throw error to prevent blocking user registration
     // Just log it and continue
-    console.error('Continuing with registration despite error')
+    logger.error('Continuing with registration despite error')
     return event
   }
 }

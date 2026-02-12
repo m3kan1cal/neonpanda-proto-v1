@@ -22,6 +22,7 @@ import {
   generateAIResponseStream,
 } from "../libs/coach-conversation/response-orchestrator";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 // Feature flags
 const FEATURE_FLAGS = {
@@ -31,7 +32,7 @@ const FEATURE_FLAGS = {
 };
 
 const baseHandler: AuthenticatedHandler = async (event) => {
-  console.info("🚀 Starting send-coach-conversation-message handler");
+  logger.info("🚀 Starting send-coach-conversation-message handler");
 
   // Auth handled by middleware - userId is already validated
   const userId = event.user.userId;
@@ -39,21 +40,21 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const conversationId = event.pathParameters?.conversationId;
 
   if (!coachId) {
-    console.error("❌ Validation failed: coachId is required");
+    logger.error("❌ Validation failed: coachId is required");
     return createErrorResponse(400, "coachId is required");
   }
 
   if (!conversationId) {
-    console.error("❌ Validation failed: conversationId is required");
+    logger.error("❌ Validation failed: conversationId is required");
     return createErrorResponse(400, "conversationId is required");
   }
 
   if (!event.body) {
-    console.error("❌ Validation failed: Request body is required");
+    logger.error("❌ Validation failed: Request body is required");
     return createErrorResponse(400, "Request body is required");
   }
 
-  console.info("✅ Path parameters validated:", {
+  logger.info("✅ Path parameters validated:", {
     userId,
     coachId,
     conversationId,
@@ -61,7 +62,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   // Check if streaming is requested
   const isStreamingRequested = event.queryStringParameters?.stream === "true";
-  console.info(
+  logger.info(
     "🔄 Streaming mode:",
     isStreamingRequested ? "ENABLED" : "DISABLED",
   );
@@ -69,7 +70,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const body = JSON.parse(event.body);
   const { userResponse, messageTimestamp, imageS3Keys } = body;
 
-  console.info("📥 Request body parsed:", {
+  logger.info("📥 Request body parsed:", {
     hasUserResponse: !!userResponse,
     userResponseType: typeof userResponse,
     hasMessageTimestamp: !!messageTimestamp,
@@ -80,12 +81,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   // Validation: Either text or images required
   if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
-    console.error("❌ Validation failed: Either text or images required");
+    logger.error("❌ Validation failed: Either text or images required");
     return createErrorResponse(400, "Either text or images required");
   }
 
   if (imageS3Keys && imageS3Keys.length > 5) {
-    console.error("❌ Validation failed: Maximum 5 images per message");
+    logger.error("❌ Validation failed: Maximum 5 images per message");
     return createErrorResponse(400, "Maximum 5 images per message");
   }
 
@@ -93,7 +94,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   if (imageS3Keys) {
     for (const key of imageS3Keys) {
       if (!key.startsWith(`user-uploads/${userId}/`)) {
-        console.error("❌ Validation failed: Invalid image key:", {
+        logger.error("❌ Validation failed: Invalid image key:", {
           key,
           userId,
         });
@@ -103,7 +104,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   if (!messageTimestamp) {
-    console.error(
+    logger.error(
       "❌ Validation failed: Message timestamp is required for accurate workout logging",
     );
     return createErrorResponse(
@@ -112,7 +113,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     );
   }
 
-  console.info("✅ All validations passed, starting message processing");
+  logger.info("✅ All validations passed, starting message processing");
 
   // Load existing conversation
   const existingConversation = await getCoachConversation(
@@ -135,7 +136,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   // Load user profile for critical training directive
   const userProfile = await getUserProfile(userId);
-  console.info("📋 User profile loaded:", {
+  logger.info("📋 User profile loaded:", {
     hasProfile: !!userProfile,
     hasCriticalDirective: !!userProfile?.criticalTrainingDirective,
     directiveEnabled: userProfile?.criticalTrainingDirective?.enabled,
@@ -163,13 +164,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const existingMessages = existingConversation.messages;
   const conversationContext = {
     sessionNumber:
-      existingMessages.filter((msg) => msg.role === "user").length + 1,
+      existingMessages.filter((msg: CoachMessage) => msg.role === "user")
+        .length + 1,
   };
 
   // Detect and process workouts (natural language or slash commands)
   let workoutResult;
   if (FEATURE_FLAGS.ENABLE_WORKOUT_DETECTION) {
-    console.info("🔍 Starting workout detection for message:", {
+    logger.info("🔍 Starting workout detection for message:", {
       messageLength: userResponse.length,
       messagePreview: userResponse.substring(0, 100),
       conversationId,
@@ -188,7 +190,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         userProfile ?? undefined,
       );
     } catch (error) {
-      console.error("❌ Error in workout detection, using fallback:", error);
+      logger.error("❌ Error in workout detection, using fallback:", error);
       // Provide fallback workout result to prevent conversation from failing
       workoutResult = {
         isWorkoutLogging: false,
@@ -200,7 +202,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       };
     }
   } else {
-    console.info("🔍 Workout detection disabled by feature flag");
+    logger.info("🔍 Workout detection disabled by feature flag");
     workoutResult = {
       isWorkoutLogging: false,
       workoutContent: userResponse,
@@ -229,7 +231,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Calculate conversation context from existing messages for AI-guided memory retrieval
     const messageContext = existingMessages
       .slice(-3)
-      .map((msg) => `${msg.role}: ${msg.content}`)
+      .map((msg: CoachMessage) => `${msg.role}: ${msg.content}`)
       .join("\n");
 
     memoryRetrieval = await queryMemories(
@@ -239,7 +241,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       messageContext,
     );
   } else {
-    console.info("🧠 Memory processing disabled by feature flag");
+    logger.info("🧠 Memory processing disabled by feature flag");
     memoryResult = {
       memoryFeedback: null,
     };
@@ -250,7 +252,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   // Generate AI response with all context - handle streaming vs non-streaming
   if (isStreamingRequested) {
-    console.info("🔄 Processing streaming request");
+    logger.info("🔄 Processing streaming request");
     return await handleStreamingResponse(
       userId,
       coachId,
@@ -289,7 +291,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       false, // Use Haiku for speed (no router analysis in legacy path)
     );
   } catch (error) {
-    console.error("❌ Error in AI response generation, using fallback:", error);
+    logger.error("❌ Error in AI response generation, using fallback:", error);
     // Provide fallback response to prevent conversation from failing
     responseResult = {
       aiResponseContent:
@@ -336,7 +338,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const sizePercentage = Math.min(Math.round((itemSizeKB / 400) * 100), 100);
   const isApproachingLimit = itemSizeKB > 350; // 87.5% threshold
 
-  console.info("📊 Conversation size:", {
+  logger.info("📊 Conversation size:", {
     sizeKB: itemSizeKB,
     percentage: sizePercentage,
     isApproachingLimit,
@@ -364,7 +366,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         );
       }
     } catch (summaryError) {
-      console.error(
+      logger.error(
         "❌ Failed to trigger conversation summary generation, but continuing:",
         summaryError,
       );
@@ -397,10 +399,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       "Conversation updated successfully",
     );
 
-    console.info("✅ Successfully created success response");
+    logger.info("✅ Successfully created success response");
     return successResponse;
   } catch (responseError) {
-    console.error("❌ Error creating success response:", responseError);
+    logger.error("❌ Error creating success response:", responseError);
     // Even if response creation fails, the messages were saved successfully
     return createOkResponse(
       { conversationId, status: "saved" },
@@ -427,7 +429,7 @@ async function handleStreamingResponse(
   imageS3Keys?: string[], // NEW: Add imageS3Keys parameter
 ) {
   try {
-    console.info("🔄 Starting streaming response generation");
+    logger.info("🔄 Starting streaming response generation");
 
     // Create user message first
     const newUserMessage: CoachMessage = {
@@ -488,10 +490,10 @@ async function handleStreamingResponse(
       isBase64Encoded: false,
     };
   } catch (error) {
-    console.error("❌ Error in streaming response:", error);
+    logger.error("❌ Error in streaming response:", error);
 
     // Fallback to non-streaming on error
-    console.info("🔄 Falling back to non-streaming response");
+    logger.info("🔄 Falling back to non-streaming response");
     try {
       const responseResult = await generateAIResponse(
         coachConfig,
@@ -534,7 +536,7 @@ async function handleStreamingResponse(
         }),
       };
     } catch (fallbackError) {
-      console.error("❌ Fallback also failed:", fallbackError);
+      logger.error("❌ Fallback also failed:", fallbackError);
       return createErrorResponse(500, "Failed to generate response");
     }
   }
@@ -583,7 +585,7 @@ async function generateSSEStream(
     };
 
     // Save messages to conversation after streaming completes - capture result for size tracking
-    console.info("💾 Saving messages to DynamoDB after streaming");
+    logger.info("💾 Saving messages to DynamoDB after streaming");
     const saveResult = await sendCoachConversationMessage(
       userId,
       coachId,
@@ -598,7 +600,7 @@ async function generateSSEStream(
     const sizePercentage = Math.min(Math.round((itemSizeKB / 400) * 100), 100);
     const isApproachingLimit = itemSizeKB > 350; // 87.5% threshold
 
-    console.info("📊 Conversation size:", {
+    logger.info("📊 Conversation size:", {
       sizeKB: itemSizeKB,
       percentage: sizePercentage,
       isApproachingLimit,
@@ -627,7 +629,7 @@ async function generateSSEStream(
           messageContext,
         );
       } catch (summaryError) {
-        console.warn(
+        logger.warn(
           "⚠️ Conversation summary processing failed (non-critical):",
           summaryError,
         );
@@ -655,10 +657,10 @@ async function generateSSEStream(
     };
     sseOutput += `data: ${JSON.stringify(completeData)}\n\n`;
 
-    console.info("✅ Streaming response completed successfully");
+    logger.info("✅ Streaming response completed successfully");
     return sseOutput;
   } catch (streamError) {
-    console.error("❌ Error during streaming:", streamError);
+    logger.error("❌ Error during streaming:", streamError);
 
     // Send error message in stream format
     const errorData = {

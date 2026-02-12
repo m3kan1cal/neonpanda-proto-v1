@@ -9,6 +9,7 @@ import {
   selectSampleWorkouts,
 } from "../libs/shared-program/s3-utils";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { logger } from "../libs/logger";
 
 /**
  * Public endpoint - no authentication required
@@ -42,13 +43,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         );
       }
     } catch (s3Error) {
-      console.warn("Failed to load sample workouts from S3:", s3Error);
+      logger.warn("Failed to load sample workouts from S3:", s3Error);
       // Don't fail the whole request if we can't load workouts
     }
 
     // Increment view count (fire-and-forget, don't block response)
     incrementSharedProgramViews(sharedProgramId).catch((error) => {
-      console.warn(
+      logger.warn(
         "Failed to increment view count (non-critical):",
         sharedProgramId,
         error,
@@ -70,7 +71,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       copyCount: sharedProgram.copyCount || 0,
     };
 
-    console.info("Shared program retrieved successfully:", {
+    logger.info("Shared program retrieved successfully:", {
       sharedProgramId,
       programName: sharedProgram.programSnapshot.name,
       creatorUsername: sharedProgram.creatorUsername,
@@ -80,7 +81,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     return createOkResponse(response);
   } catch (error) {
-    console.error("Error getting shared program:", error);
+    logger.error("Error getting shared program:", error);
     return createErrorResponse(500, "Failed to get shared program", error);
   }
 };

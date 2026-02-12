@@ -8,6 +8,7 @@ import {
   buttonPatterns,
   inlineEditPatterns,
 } from "../utils/ui/uiPatterns";
+import { logger } from "../utils/logger";
 import {
   NeonBorder,
   WorkoutIcon,
@@ -2193,7 +2194,7 @@ function Theme() {
                           </h4>
                           <div className="bg-synthwave-bg-card/20 hover:bg-synthwave-bg-card/40 border-0 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-synthwave-neon-pink/10">
                             <div className="flex items-start space-x-3 mb-4">
-                              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                               <h5 className="font-russo text-lg text-white uppercase">
                                 Minimal
                               </h5>
@@ -2213,7 +2214,7 @@ function Theme() {
                           </h4>
                           <div className="bg-transparent hover:bg-synthwave-neon-cyan/5 border-2 border-synthwave-neon-cyan/30 hover:border-synthwave-neon-cyan/60 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-start space-x-3 mb-4">
-                              <div className="w-3 h-3 border-2 border-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
+                              <div className="w-3 h-3 border-2 border-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
                               <h5 className="font-russo text-lg text-white uppercase">
                                 Outlined
                               </h5>
@@ -2232,7 +2233,7 @@ function Theme() {
                           </h4>
                           <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-purple/20 hover:shadow-2xl hover:shadow-synthwave-neon-purple/30 transition-all duration-300 hover:-translate-y-2">
                             <div className="flex items-start space-x-3 mb-4">
-                              <div className="w-3 h-3 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                              <div className="w-3 h-3 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                               <h5 className="font-russo text-lg text-white uppercase">
                                 Elevated
                               </h5>
@@ -2327,7 +2328,7 @@ function Theme() {
                         </h4>
                         <div className="bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/30 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/50 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1 p-6">
                           <div className="flex items-start space-x-3 mb-4">
-                            <div className="w-3 h-3 border-2 border-dashed border-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                            <div className="w-3 h-3 border-2 border-dashed border-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                             <h5 className="font-russo text-lg text-white uppercase">
                               Create New
                             </h5>
@@ -3568,7 +3569,7 @@ function Theme() {
                             <InlineEditField
                               value="Small Text Example"
                               onSave={async (newValue) => {
-                                console.info("Saved:", newValue);
+                                logger.info("Saved:", newValue);
                                 return true;
                               }}
                               placeholder="Enter small text..."
@@ -3597,7 +3598,7 @@ function Theme() {
                             <InlineEditField
                               value="Medium Text Example"
                               onSave={async (newValue) => {
-                                console.info("Saved:", newValue);
+                                logger.info("Saved:", newValue);
                                 return true;
                               }}
                               placeholder="Enter medium text..."
@@ -3627,7 +3628,7 @@ function Theme() {
                             <InlineEditField
                               value="Large Text Example"
                               onSave={async (newValue) => {
-                                console.info("Saved:", newValue);
+                                logger.info("Saved:", newValue);
                                 return true;
                               }}
                               placeholder="Enter large text..."

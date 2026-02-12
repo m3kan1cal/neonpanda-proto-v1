@@ -49,6 +49,7 @@ import {
 } from "../../api-helpers";
 import type { BedrockToolUseResult } from "../../api-helpers";
 import { storeGenerationDebugData, assembleCoachConfig } from "./helpers";
+import { logger } from "../../logger";
 import {
   generatePersonalitySelection,
   generateMethodologySelection,
@@ -103,12 +104,12 @@ Returns: session, userProfile, safetyProfile, methodologyPreferences, genderPref
     input: any,
     context: CoachCreatorContext,
   ): Promise<SessionRequirementsResult> {
-    console.info("📥 Executing load_session_requirements tool");
+    logger.info("📥 Executing load_session_requirements tool");
 
     const { userId, sessionId } = input;
 
     // 1. Load session and user profile from DynamoDB
-    console.info("Loading session and user profile...");
+    logger.info("Loading session and user profile...");
     const [session, userProfile] = await Promise.all([
       getCoachCreatorSession(userId, sessionId),
       getUserProfile(userId),
@@ -123,7 +124,7 @@ Returns: session, userProfile, safetyProfile, methodologyPreferences, genderPref
     }
 
     // 2. Extract all data in parallel for performance
-    console.info("Extracting session data in parallel...");
+    logger.info("Extracting session data in parallel...");
     const [
       safetyProfile,
       methodologyPreferences,
@@ -142,7 +143,7 @@ Returns: session, userProfile, safetyProfile, methodologyPreferences, genderPref
       extractSpecializationsFromSession(session),
     ]);
 
-    console.info("✅ Session requirements loaded:", {
+    logger.info("✅ Session requirements loaded:", {
       hasUserProfile: !!userProfile,
       genderPreference,
       trainingFrequency,
@@ -202,7 +203,7 @@ Returns: primaryTemplate, secondaryInfluences, selectionReasoning, blendingWeigh
     _input: any,
     context: CoachCreatorContext & { getToolResult?: (key: string) => any },
   ): Promise<PersonalitySelectionResult> {
-    console.info("🎭 Executing select_personality_template tool");
+    logger.info("🎭 Executing select_personality_template tool");
 
     // Retrieve stored requirements (pattern from program-designer)
     const requirements = context.getToolResult?.("requirements");
@@ -241,7 +242,7 @@ Returns: primaryTemplate, secondaryInfluences, selectionReasoning, blendingWeigh
       );
     }
 
-    console.info("✅ Personality template selected:", {
+    logger.info("✅ Personality template selected:", {
       primary: result.primaryTemplate,
       secondary: result.secondaryInfluences,
       reasoning: result.selectionReasoning?.substring(0, 100),
@@ -298,7 +299,7 @@ Returns: primaryMethodology, methodologyReasoning, programmingEmphasis, periodiz
     _input: any,
     context: CoachCreatorContext & { getToolResult?: (key: string) => any },
   ): Promise<MethodologySelectionResult> {
-    console.info("📋 Executing select_methodology_template tool");
+    logger.info("📋 Executing select_methodology_template tool");
 
     // Retrieve stored requirements (personality may not be available during parallel execution)
     const requirements = context.getToolResult?.("requirements");
@@ -343,7 +344,7 @@ Returns: primaryMethodology, methodologyReasoning, programmingEmphasis, periodiz
       );
     }
 
-    console.info("✅ Methodology template selected:", {
+    logger.info("✅ Methodology template selected:", {
       methodology: result.primaryMethodology,
       emphasis: result.programmingEmphasis,
       periodization: result.periodizationApproach,
@@ -391,7 +392,7 @@ Returns: All 7 prompts as strings`,
     _input: any,
     context: CoachCreatorContext & { getToolResult?: (key: string) => any },
   ): Promise<CoachPromptsResult> {
-    console.info("📝 Executing generate_coach_prompts tool");
+    logger.info("📝 Executing generate_coach_prompts tool");
 
     // Retrieve all required stored results
     const requirements = context.getToolResult?.("requirements");
@@ -431,7 +432,7 @@ Returns: All 7 prompts as strings`,
       methodologySelection,
     });
 
-    console.info("✅ Coach prompts generated:", {
+    logger.info("✅ Coach prompts generated:", {
       promptCount: 7,
       personalityLength: result.personalityPrompt.length,
     });
@@ -477,7 +478,7 @@ Returns: coachConfig (complete assembled structure)`,
     input: any,
     context: CoachCreatorContext & { getToolResult?: (key: string) => any },
   ): Promise<{ coachConfig: CoachConfig }> {
-    console.info("🔧 Executing assemble_coach_config tool");
+    logger.info("🔧 Executing assemble_coach_config tool");
 
     const { creationTimestamp } = input;
 
@@ -512,7 +513,7 @@ Returns: coachConfig (complete assembled structure)`,
       creationTimestamp,
     );
 
-    console.info("✅ Coach config assembled:", {
+    logger.info("✅ Coach config assembled:", {
       coachId: coachConfig.coach_id,
       coachName: coachConfig.coach_name,
       personality: coachConfig.selected_personality.primary_template,
@@ -556,7 +557,7 @@ Returns: isValid, shouldNormalize, confidence, validationIssues, safetyValidatio
     _input: any,
     context: CoachCreatorContext & { getToolResult?: (key: string) => any },
   ): Promise<CoachConfigValidationResult> {
-    console.info("✅ Executing validate_coach_config tool");
+    logger.info("✅ Executing validate_coach_config tool");
 
     // Retrieve from stored results
     const requirements = context.getToolResult?.("requirements");
@@ -601,7 +602,7 @@ Returns: isValid, shouldNormalize, confidence, validationIssues, safetyValidatio
     }
 
     // 5. AI-POWERED ENHANCED VALIDATION using helper with tool config
-    console.info("Running AI-powered validation checks...");
+    logger.info("Running AI-powered validation checks...");
     let aiValidationIssues: string[] = [];
     let aiScores = {
       genderConsistency: 10,
@@ -636,7 +637,7 @@ Returns: isValid, shouldNormalize, confidence, validationIssues, safetyValidatio
           "coach-config",
         );
       } catch (err) {
-        console.warn("⚠️ Failed to store AI validation debug data:", err);
+        logger.warn("⚠️ Failed to store AI validation debug data:", err);
       }
 
       // Extract AI validation results
@@ -676,12 +677,12 @@ Returns: isValid, shouldNormalize, confidence, validationIssues, safetyValidatio
         promptCoherence: aiValidation.promptCoherence,
       };
 
-      console.info("✅ AI validation completed:", {
+      logger.info("✅ AI validation completed:", {
         issuesFound: aiValidationIssues.length,
         scores: aiScores,
       });
     } catch (error) {
-      console.warn("⚠️ AI validation failed (non-critical):", error);
+      logger.warn("⚠️ AI validation failed (non-critical):", error);
       aiValidationIssues.push(
         "AI validation unavailable - using programmatic validation only",
       );
@@ -724,7 +725,7 @@ Returns: isValid, shouldNormalize, confidence, validationIssues, safetyValidatio
       aiScores.genderConsistency >= 7 && // AI must confirm gender consistency
       aiScores.safetyLanguageQuality >= 7; // AI must confirm safety language quality
 
-    console.info("Validation results:", {
+    logger.info("Validation results:", {
       isValid,
       shouldNormalize,
       confidence,
@@ -782,7 +783,7 @@ Returns: normalizedConfig, issuesFixed, normalizationSummary`,
     _input: any,
     context: CoachCreatorContext & { getToolResult?: (key: string) => any },
   ): Promise<CoachConfigNormalizationResult> {
-    console.info("🔧 Executing normalize_coach_config tool");
+    logger.info("🔧 Executing normalize_coach_config tool");
 
     // Retrieve from stored results
     const assembledConfig = context.getToolResult?.("assembled_config");
@@ -882,7 +883,7 @@ Returns: normalizedConfig, issuesFixed, normalizationSummary`,
     );
 
     if (qualityIssues.length > 0) {
-      console.info(
+      logger.info(
         `Running AI-powered normalization for ${qualityIssues.length} quality issues (Nova 2 Lite)...`,
       );
 
@@ -928,7 +929,7 @@ Returns: normalizedConfig, issuesFixed, normalizationSummary`,
           }
         }
 
-        console.info(`Fixing ${promptsToFix.length} prompts with AI...`);
+        logger.info(`Fixing ${promptsToFix.length} prompts with AI...`);
 
         // Fix each prompt using AI
         for (const { key, prompt, issues } of promptsToFix) {
@@ -1019,10 +1020,7 @@ Return JSON:
               "coach-config",
             );
           } catch (err) {
-            console.warn(
-              "⚠️ Failed to store AI normalization debug data:",
-              err,
-            );
+            logger.warn("⚠️ Failed to store AI normalization debug data:", err);
           }
 
           if (result.fixed_prompt && result.fixed_prompt.length > 50) {
@@ -1031,23 +1029,23 @@ Return JSON:
             fixes.push(
               `AI fixed ${key}: ${result.changes_made?.join(", ") || "quality improvements"}`,
             );
-            console.info(`✅ AI normalized ${key}`);
+            logger.info(`✅ AI normalized ${key}`);
           } else {
-            console.warn(
+            logger.warn(
               `⚠️ AI normalization for ${key} produced invalid result`,
             );
           }
         }
 
-        console.info("✅ AI normalization completed");
+        logger.info("✅ AI normalization completed");
       } catch (error) {
-        console.warn("⚠️ AI normalization failed (non-critical):", error);
+        logger.warn("⚠️ AI normalization failed (non-critical):", error);
         fixes.push(
           "AI normalization unavailable - using programmatic fixes only",
         );
       }
     } else {
-      console.info("No quality issues detected - skipping AI normalization");
+      logger.info("No quality issues detected - skipping AI normalization");
     }
 
     const normalizationSummary =
@@ -1055,7 +1053,7 @@ Return JSON:
         ? `Fixed ${issuesFixed} issues: ${fixes.join("; ")}`
         : "No normalization needed";
 
-    console.info("Normalization completed:", {
+    logger.info("Normalization completed:", {
       issuesFixed,
       summary: normalizationSummary,
     });
@@ -1108,7 +1106,7 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
     _input: any,
     context: CoachCreatorContext & { getToolResult?: (key: string) => any },
   ): Promise<CoachConfigSaveResult> {
-    console.info("💾 Executing save_coach_config_to_database tool");
+    logger.info("💾 Executing save_coach_config_to_database tool");
 
     // Retrieve from stored results
     const requirements = context.getToolResult?.("requirements");
@@ -1143,12 +1141,12 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
     coachConfig.metadata.generation_timestamp = creationTimestamp;
 
     // 2. Save to DynamoDB
-    console.info("Saving coach config to DynamoDB...");
+    logger.info("Saving coach config to DynamoDB...");
     await saveCoachConfig(context.userId, coachConfig, creationTimestamp);
-    console.info("✅ Coach config saved to DynamoDB");
+    logger.info("✅ Coach config saved to DynamoDB");
 
     // 3. Generate AI-powered session summary and store in Pinecone
-    console.info("Generating AI session summary and storing in Pinecone...");
+    logger.info("Generating AI session summary and storing in Pinecone...");
     let pineconeRecordId: string | null = null;
     let pineconeStored = false;
 
@@ -1169,11 +1167,11 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
         pineconeRecordId = (pineconeResult as any).recordId || null;
       }
     } catch (error) {
-      console.warn("⚠️ Pinecone storage failed (non-blocking):", error);
+      logger.warn("⚠️ Pinecone storage failed (non-blocking):", error);
     }
 
     // 4. Update session to COMPLETE
-    console.info("Updating session status to COMPLETE...");
+    logger.info("Updating session status to COMPLETE...");
     const completedSession = {
       ...session,
       configGeneration: {
@@ -1186,7 +1184,7 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
       lastActivity: new Date(creationTimestamp),
     };
     await saveCoachCreatorSession(completedSession);
-    console.info("✅ Session updated to COMPLETE status");
+    logger.info("✅ Session updated to COMPLETE status");
 
     // 5. Store debug data
     await storeGenerationDebugData(
@@ -1205,7 +1203,7 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
       },
     );
 
-    console.info("✅ Coach config saved successfully:", {
+    logger.info("✅ Coach config saved successfully:", {
       coachId: coachConfig.coach_id,
       coachName: coachConfig.coach_name,
       pineconeStored,

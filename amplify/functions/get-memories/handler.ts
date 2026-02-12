@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryMemories } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -42,7 +43,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       options.limit = limitNum;
     }
 
-    console.info('Querying memories for user:', {
+    logger.info('Querying memories for user:', {
       userId,
       coachId,
       filters: options

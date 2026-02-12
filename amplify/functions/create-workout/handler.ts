@@ -7,12 +7,13 @@ import { BuildWorkoutEvent } from "../libs/workout/types";
 import { CoachConfig } from "../libs/coach-creator/types";
 import { getCoachConfig } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
   const userId = event.user.userId;
 
-    console.info("🏋️ Create workout handler started:", {
+    logger.info("🏋️ Create workout handler started:", {
       userId: userId,
       timestamp: new Date().toISOString(),
     });
@@ -26,7 +27,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     try {
       body = JSON.parse(event.body);
     } catch (error) {
-      console.error("Invalid JSON in request body:", error);
+      logger.error("Invalid JSON in request body:", error);
       return createErrorResponse(400, "Invalid request body");
     }
 
@@ -34,38 +35,38 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Validate required fields
     if (!userMessage || typeof userMessage !== "string" || userMessage.trim().length === 0) {
-      console.error("Missing or invalid userMessage");
+      logger.error("Missing or invalid userMessage");
       return createErrorResponse(400, "Workout content is required");
     }
 
     // CoachId is required - the command palette is only accessible from Training Grounds
     // where users always have a coach context
     if (!coachId) {
-      console.error("❌ Missing coachId - command palette should only be used in coach context");
+      logger.error("❌ Missing coachId - command palette should only be used in coach context");
       return createErrorResponse(400, "Coach ID is required");
     }
 
     // Fetch the coach config from DynamoDB
     let coachConfig: CoachConfig;
     try {
-      console.info("📋 Fetching coach config from DynamoDB:", { userId, coachId });
+      logger.info("📋 Fetching coach config from DynamoDB:", { userId, coachId });
       const fetchedCoachConfig = await getCoachConfig(userId, coachId);
       if (!fetchedCoachConfig) {
-        console.error("❌ Coach config not found:", { userId, coachId });
+        logger.error("❌ Coach config not found:", { userId, coachId });
         return createErrorResponse(404, "Coach configuration not found");
       }
 
       coachConfig = fetchedCoachConfig;
-      console.info("✅ Coach config fetched successfully:", {
+      logger.info("✅ Coach config fetched successfully:", {
         coachName: coachConfig.coach_name,
         methodology: coachConfig.technical_config.methodology
       });
     } catch (error) {
-      console.error("❌ Failed to fetch coach config:", error);
+      logger.error("❌ Failed to fetch coach config:", error);
       return createErrorResponse(500, "Failed to load coach configuration");
     }
 
-    console.info("🚀 Triggering build-workout lambda:", {
+    logger.info("🚀 Triggering build-workout lambda:", {
       userId,
       messageLength: userMessage.length,
       coachId,
@@ -89,7 +90,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Invoke the build-workout lambda asynchronously
     const buildWorkoutFunctionName = process.env.BUILD_WORKOUT_FUNCTION_NAME;
     if (!buildWorkoutFunctionName) {
-      console.error("❌ BUILD_WORKOUT_FUNCTION_NAME environment variable not set");
+      logger.error("❌ BUILD_WORKOUT_FUNCTION_NAME environment variable not set");
       return createErrorResponse(500, "Configuration error. Please try again.");
     }
 
@@ -99,9 +100,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         buildWorkoutPayload,
         `create workout for user ${userId}`
       );
-      console.info("✅ Build-workout lambda invoked successfully");
+      logger.info("✅ Build-workout lambda invoked successfully");
     } catch (error) {
-      console.error("❌ Failed to invoke build-workout lambda:", error);
+      logger.error("❌ Failed to invoke build-workout lambda:", error);
       return createErrorResponse(500, "Failed to process workout. Please try again.");
     }
 
@@ -117,7 +118,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       },
     };
 
-    console.info("🎉 Create workout completed successfully:", {
+    logger.info("🎉 Create workout completed successfully:", {
       userId,
       status: "processing",
     });

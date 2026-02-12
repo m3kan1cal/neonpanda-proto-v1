@@ -12,6 +12,7 @@ import {
   DynamoDBItem,
 } from "./core";
 import { Workout, WorkoutSummary } from "../functions/libs/workout/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // WORKOUT OPERATIONS
@@ -43,7 +44,7 @@ export async function saveWorkout(workout: Workout): Promise<void> {
 
   await saveToDynamoDB(item);
 
-  console.info("Workout saved successfully:", {
+  logger.info("Workout saved successfully:", {
     workoutId: workout.workoutId,
     userId: workout.userId,
     discipline: workout.workoutData.discipline,
@@ -162,7 +163,7 @@ export async function queryWorkoutsCount(
 
     const totalCount = filteredSessions.length;
 
-    console.info("Workouts counted successfully:", {
+    logger.info("Workouts counted successfully:", {
       userId,
       totalFound: allSessions.length,
       afterFiltering: totalCount,
@@ -171,7 +172,7 @@ export async function queryWorkoutsCount(
 
     return totalCount;
   } catch (error) {
-    console.error(`Error counting workout sessions for user ${userId}:`, error);
+    logger.error(`Error counting workout sessions for user ${userId}:`, error);
     throw error;
   }
 }
@@ -191,7 +192,7 @@ export async function queryWorkoutSummaries(
     const fromDateIso = fromDate.toISOString();
     const toDateIso = toDate.toISOString();
 
-    console.info("🔍 Workout summary query parameters:", {
+    logger.info("🔍 Workout summary query parameters:", {
       userId,
       fromDate: fromDateIso,
       toDate: toDateIso,
@@ -224,7 +225,7 @@ export async function queryWorkoutSummaries(
     const result = await docClient.send(command);
     const items = (result.Items || []) as any[];
 
-    console.info(`Workout summaries queried successfully:`, {
+    logger.info(`Workout summaries queried successfully:`, {
       userId,
       itemCount: items.length,
       dateRange: `${fromDateIso.split("T")[0]} to ${toDateIso.split("T")[0]}`,
@@ -256,7 +257,7 @@ export async function queryWorkoutSummaries(
         const diagnosticResult = await docClient.send(diagnosticCommand);
         const diagnosticItems = (diagnosticResult.Items || []) as any[];
 
-        console.warn(
+        logger.warn(
           "⚠️ No workouts found in date range. Diagnostic query (no date filter):",
           {
             totalWorkoutsForUser:
@@ -267,7 +268,7 @@ export async function queryWorkoutSummaries(
           },
         );
       } catch (diagnosticError) {
-        console.warn(
+        logger.warn(
           "⚠️ Diagnostic query failed (non-critical):",
           diagnosticError,
         );
@@ -276,7 +277,7 @@ export async function queryWorkoutSummaries(
 
     // Log first few completedAt values for debugging if items found
     if (items.length > 0 && items.length <= 5) {
-      console.info("✅ Sample completedAt values from query results:", {
+      logger.info("✅ Sample completedAt values from query results:", {
         samples: items.map((item) => ({
           workoutId: item.attributes?.workoutId,
           completedAt: item.attributes?.completedAt,
@@ -437,7 +438,7 @@ export async function queryWorkouts(
       filteredSessions = filteredSessions.slice(offset, offset + limit);
     }
 
-    console.info("Workouts queried successfully:", {
+    logger.info("Workouts queried successfully:", {
       userId,
       totalFound: allSessions.length,
       afterFiltering: filteredSessions.length,
@@ -446,7 +447,7 @@ export async function queryWorkouts(
 
     return filteredSessions;
   } catch (error) {
-    console.error(`Error querying workout sessions for user ${userId}:`, error);
+    logger.error(`Error querying workout sessions for user ${userId}:`, error);
     throw error;
   }
 }
@@ -490,7 +491,7 @@ export async function updateWorkout(
     updatedAt: new Date().toISOString(),
   };
 
-  console.info("About to save workout update to DynamoDB:", {
+  logger.info("About to save workout update to DynamoDB:", {
     workoutId,
     userId,
     updateFields: Object.keys(updates),
@@ -500,7 +501,7 @@ export async function updateWorkout(
 
   await saveToDynamoDB(updatedItem, true /* requireExists */);
 
-  console.info("Successfully updated workout in DynamoDB");
+  logger.info("Successfully updated workout in DynamoDB");
 
   return updatedSession;
 }
@@ -518,7 +519,7 @@ export async function deleteWorkout(
       `workout#${workoutId}`,
       "workout",
     );
-    console.info("Workout deleted successfully:", {
+    logger.info("Workout deleted successfully:", {
       workoutId,
       userId,
     });
@@ -564,7 +565,7 @@ export async function queryWorkoutsByGroup(
       updatedAt: new Date(item.updatedAt),
     }));
   } catch (error: any) {
-    console.error(`Error querying workouts by groupId ${groupId}:`, error);
+    logger.error(`Error querying workouts by groupId ${groupId}:`, error);
     throw error;
   }
 }
@@ -603,7 +604,7 @@ export async function queryWorkoutsByTemplate(
       updatedAt: new Date(item.updatedAt),
     }));
   } catch (error: any) {
-    console.error(
+    logger.error(
       `Error querying workouts by templateId ${templateId}:`,
       error,
     );

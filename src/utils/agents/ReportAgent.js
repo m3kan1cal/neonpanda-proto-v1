@@ -1,4 +1,5 @@
 import { getWeeklyReports, getWeeklyReport, getMonthlyReports, getMonthlyReport } from '../apis/reportApi.js';
+import { logger } from "../logger";
 
 export class ReportAgent {
   constructor(userId, onStateChange = null) {
@@ -88,7 +89,7 @@ export class ReportAgent {
       return allReports;
 
     } catch (error) {
-      console.error('Error loading all reports:', error);
+      logger.error('Error loading all reports:', error);
       this._updateState({
         isLoadingAllItems: false,
         error: error.message || 'Failed to load reports',
@@ -163,7 +164,7 @@ export class ReportAgent {
       return allMonthlyReports;
 
     } catch (error) {
-      console.error('Error loading all monthly reports:', error);
+      logger.error('Error loading all monthly reports:', error);
       this._updateState({
         isLoadingAllMonthlyItems: false,
         error: error.message || 'Failed to load monthly reports',

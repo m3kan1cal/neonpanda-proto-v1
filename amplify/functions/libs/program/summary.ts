@@ -7,6 +7,7 @@
 
 import { callBedrockApi, TEMPERATURE_PRESETS } from "../api-helpers";
 import { Program } from "./types";
+import { logger } from "../logger";
 
 /**
  * Generate an AI-powered summary of a training program for coaching context
@@ -91,7 +92,7 @@ Write the summary now:`;
 
     return cleanSummary;
   } catch (error) {
-    console.error("Error generating training program summary:", error);
+    logger.error("Error generating training program summary:", error);
 
     // Fallback to basic summary if AI fails
     const phaseSummary =

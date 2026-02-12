@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { getSubscription } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { SubscriptionStatusResponse } from "../libs/subscription/types";
+import { logger } from "../libs/logger";
 
 /**
  * Get subscription status for a user
@@ -13,7 +14,7 @@ import { SubscriptionStatusResponse } from "../libs/subscription/types";
 const baseHandler: AuthenticatedHandler = async (event) => {
   const userId = event.user.userId;
 
-  console.info("Getting subscription status for userId:", userId);
+  logger.info("Getting subscription status for userId:", userId);
 
   try {
     const subscription = await getSubscription(userId);
@@ -26,7 +27,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         tier: "free",
       };
 
-      console.info("No subscription found, returning free tier:", {
+      logger.info("No subscription found, returning free tier:", {
         userId,
         tier: "free",
       });
@@ -45,7 +46,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       canceledAt: subscription.canceledAt,
     };
 
-    console.info("Subscription found:", {
+    logger.info("Subscription found:", {
       userId,
       tier: subscription.tier,
       status: subscription.status,
@@ -53,7 +54,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     return createOkResponse(response);
   } catch (error) {
-    console.error("Error getting subscription status:", error);
+    logger.error("Error getting subscription status:", error);
     return createErrorResponse(500, "Failed to get subscription status");
   }
 };

@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateProgram, getProgram } from '../../dynamodb/operations';
 import { calculatePauseDuration } from '../libs/program/calendar-utils';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -104,7 +105,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       message: 'Training program updated successfully'
     });
   } catch (error) {
-    console.error('Error updating training program:', error);
+    logger.error('Error updating training program:', error);
     return createErrorResponse(500, 'Failed to update training program', error);
   }
 };

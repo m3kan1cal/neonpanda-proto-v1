@@ -59,6 +59,7 @@ import TodaysWorkoutCard from "./programs/TodaysWorkoutCard";
 import ActiveProgramSummary from "./programs/ActiveProgramSummary";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
+import { logger } from "../utils/logger";
 
 function TrainingGrounds() {
   const [searchParams] = useSearchParams();
@@ -194,7 +195,7 @@ function TrainingGrounds() {
         setCoachData(loadedCoachData);
         setIsLoadingCoachData(false);
       } catch (error) {
-        console.error("Failed to load coach data:", error);
+        logger.error("Failed to load coach data:", error);
         setCoachDataError(error.message);
         setIsLoadingCoachData(false);
       }
@@ -228,7 +229,7 @@ function TrainingGrounds() {
           }
         },
         onError: (error) => {
-          console.error("CoachConversationAgent error:", error);
+          logger.error("CoachConversationAgent error:", error);
           // Could show toast notification here
         },
       });
@@ -349,7 +350,7 @@ function TrainingGrounds() {
         })
         .catch((error) => {
           // ProgramAgent handles rest days internally, so any error here is a real error
-          console.error("TrainingGrounds: Error loading program data:", error);
+          logger.error("TrainingGrounds: Error loading program data:", error);
         });
     }
   }, [userId, coachId]);
@@ -405,7 +406,7 @@ function TrainingGrounds() {
       showSuccess("Coach name updated successfully");
       return true;
     } catch (error) {
-      console.error("Error updating coach name:", error);
+      logger.error("Error updating coach name:", error);
       showError("Failed to update coach name");
       return false;
     }
@@ -426,7 +427,7 @@ function TrainingGrounds() {
 
       showSuccess("Rest day completed! Moving to next day.");
     } catch (error) {
-      console.error("Error completing rest day:", error);
+      logger.error("Error completing rest day:", error);
       showError("Failed to complete rest day");
     } finally {
       setIsCompletingRestDay(false);
@@ -839,7 +840,7 @@ function TrainingGrounds() {
             // User has no programs at all - show empty state
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
-                <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                 <h3 className="font-russo font-bold text-white text-lg uppercase">
                   Training Programs
                 </h3>
@@ -897,7 +898,7 @@ function TrainingGrounds() {
           {/* Conversations Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Conversations
               </h3>
@@ -1013,7 +1014,7 @@ function TrainingGrounds() {
           {/* Workout History Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Workout History
               </h3>
@@ -1030,7 +1031,7 @@ function TrainingGrounds() {
           {/* Reports & Insights Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Reports & Insights
               </h3>
@@ -1147,7 +1148,7 @@ function TrainingGrounds() {
           {/* Messages & Notifications Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2"></div>
+              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Messages & Notifications
               </h3>

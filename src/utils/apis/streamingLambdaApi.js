@@ -6,6 +6,7 @@
  */
 
 import { getAuthHeaders } from "./apiConfig";
+import { logger } from "../logger";
 import {
   STREAMING_CONFIG,
   getStreamingUrl,
@@ -60,7 +61,7 @@ async function* streamLambdaRequest({
 
     // Optional logging for debugging
     if (Object.keys(logContext).length > 0) {
-      console.info(`🚀 Streaming to ${endpointType} Lambda Function URL:`, {
+      logger.info(`🚀 Streaming to ${endpointType} Lambda Function URL:`, {
         url: url.substring(0, 50) + "...",
         ...logContext,
       });
@@ -126,7 +127,7 @@ async function* streamLambdaRequest({
                 }
               }
             } catch (parseError) {
-              console.warn(
+              logger.warn(
                 "⚠️ Failed to parse Lambda SSE data:",
                 parseError,
                 "Line:",
@@ -140,7 +141,7 @@ async function* streamLambdaRequest({
       reader.releaseLock();
     }
   } catch (error) {
-    console.error(
+    logger.error(
       `❌ ${endpointType} Lambda Function URL streaming error:`,
       error,
     );

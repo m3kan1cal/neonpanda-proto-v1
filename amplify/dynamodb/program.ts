@@ -13,6 +13,7 @@ import {
   DynamoDBItem,
 } from "./core";
 import { Program, ProgramSummary } from "../functions/libs/program/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // TRAINING PROGRAM OPERATIONS
@@ -47,7 +48,7 @@ export async function saveProgram(program: Program): Promise<void> {
 
   await saveToDynamoDB(itemWithGsi);
 
-  console.info("Training program saved successfully:", {
+  logger.info("Training program saved successfully:", {
     programId: program.programId,
     userId: program.userId,
     coachIds: program.coachIds,
@@ -67,7 +68,7 @@ export async function getProgram(
   coachId: string,
   programId: string,
 ): Promise<Program | null> {
-  console.info("📋 Getting single program:", {
+  logger.info("📋 Getting single program:", {
     userId,
     coachId,
     programId,
@@ -83,7 +84,7 @@ export async function getProgram(
   );
 
   if (!item) {
-    console.warn("⚠️ Program not found:", {
+    logger.warn("⚠️ Program not found:", {
       userId,
       programId,
       attemptedPk: `user#${userId}`,
@@ -99,7 +100,7 @@ export async function getProgram(
   };
 
   if (coachId && !program.coachIds?.includes(coachId)) {
-    console.warn("⚠️ Program found but does not belong to requested coach:", {
+    logger.warn("⚠️ Program found but does not belong to requested coach:", {
       userId,
       programId,
       requestedCoachId: coachId,
@@ -108,7 +109,7 @@ export async function getProgram(
     return null; // Return null if coach doesn't match
   }
 
-  console.info("✅ Program loaded successfully:", {
+  logger.info("✅ Program loaded successfully:", {
     userId,
     programId,
     programName: program.name,
@@ -138,10 +139,10 @@ export async function queryProgramsByCoach(
     sortOrder?: "asc" | "desc";
   },
 ): Promise<Program[]> {
-  console.warn(
+  logger.warn(
     "⚠️ DEPRECATED: queryProgramsByCoach() is deprecated. Use queryPrograms() instead.",
   );
-  console.warn(
+  logger.warn(
     "⚠️ This function queries with composite PK (user#userId#coach#coachId) which is no longer used for new programs.",
   );
 
@@ -184,7 +185,7 @@ export async function queryProgramsByCoach(
       filteredPrograms = filteredPrograms.slice(0, options.limit);
     }
 
-    console.info("Training programs queried successfully:", {
+    logger.info("Training programs queried successfully:", {
       userId,
       coachId,
       totalFound: allPrograms.length,
@@ -194,7 +195,7 @@ export async function queryProgramsByCoach(
 
     return filteredPrograms;
   } catch (error) {
-    console.error(
+    logger.error(
       `Error querying training programs for user ${userId} and coach ${coachId}:`,
       error,
     );
@@ -308,7 +309,7 @@ export async function queryPrograms(
       programs = programs.slice(0, options.limit);
     }
 
-    console.info("All training programs queried successfully:", {
+    logger.info("All training programs queried successfully:", {
       userId,
       totalFound: programs.length,
       pagesRead: pageCount,
@@ -328,7 +329,7 @@ export async function updateProgram(
   programId: string,
   updates: Partial<Program>,
 ): Promise<Program> {
-  console.info("📝 Updating program:", {
+  logger.info("📝 Updating program:", {
     userId,
     coachId,
     programId,
@@ -343,7 +344,7 @@ export async function updateProgram(
   );
 
   if (!existingItem) {
-    console.warn("⚠️ Program not found for update:", {
+    logger.warn("⚠️ Program not found for update:", {
       userId,
       programId,
       attemptedPk: `user#${userId}`,
@@ -353,7 +354,7 @@ export async function updateProgram(
 
   // Verify program belongs to this coach before allowing update
   if (coachId && !existingItem.attributes.coachIds?.includes(coachId)) {
-    console.warn("⚠️ Program found but does not belong to coach:", {
+    logger.warn("⚠️ Program found but does not belong to coach:", {
       userId,
       programId,
       requestedCoachId: coachId,
@@ -385,7 +386,7 @@ export async function updateProgram(
 
   await saveToDynamoDB(updatedItem, true /* requireExists */);
 
-  console.info("Training program updated successfully:", {
+  logger.info("Training program updated successfully:", {
     programId,
     userId,
     coachId,
@@ -406,7 +407,7 @@ export async function deleteProgram(
   programId: string,
 ): Promise<void> {
   try {
-    console.info("🗑️ Deleting program:", {
+    logger.info("🗑️ Deleting program:", {
       userId,
       coachId,
       programId,
@@ -427,7 +428,7 @@ export async function deleteProgram(
       "program",
     );
 
-    console.info("✅ Training program deleted successfully:", {
+    logger.info("✅ Training program deleted successfully:", {
       programId,
       userId,
       coachId,
@@ -439,7 +440,7 @@ export async function deleteProgram(
         `Training program ${programId} not found for user ${userId} and coach ${coachId}`,
       );
     }
-    console.error("❌ Error deleting program:", error);
+    logger.error("❌ Error deleting program:", error);
     throw error;
   }
 }
@@ -474,7 +475,7 @@ export async function queryProgramSummaries(
       coachNames: program.coachNames,
     }));
 
-    console.info("Training program summaries created:", {
+    logger.info("Training program summaries created:", {
       userId,
       coachId: coachId || "all",
       summaryCount: summaries.length,
@@ -482,7 +483,7 @@ export async function queryProgramSummaries(
 
     return summaries;
   } catch (error) {
-    console.error(
+    logger.error(
       `Error creating training program summaries for user ${userId}:`,
       error,
     );
@@ -520,7 +521,7 @@ export async function queryProgramsCount(
 
     const totalCount = filteredPrograms.length;
 
-    console.info("Training programs counted successfully:", {
+    logger.info("Training programs counted successfully:", {
       userId,
       coachId: options?.coachId || "all",
       status: options?.status || "all",
@@ -529,7 +530,7 @@ export async function queryProgramsCount(
 
     return { totalCount };
   } catch (error) {
-    console.error(
+    logger.error(
       `Error counting training programs for user ${userId}:`,
       error,
     );

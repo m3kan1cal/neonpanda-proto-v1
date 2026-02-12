@@ -23,6 +23,7 @@ import {
 } from "../../utils/ui/uiPatterns.js";
 import Footer from "../shared/Footer";
 import SelectCoachModal from "./SelectCoachModal";
+import { logger } from "../../utils/logger";
 
 function SharedProgramPreview() {
   const { sharedProgramId } = useParams();
@@ -72,7 +73,7 @@ function SharedProgramPreview() {
           return;
         }
 
-        console.error("Failed to load shared program:", err);
+        logger.error("Failed to load shared program:", err);
         setError(
           err.message ||
             "Failed to load program. The link may be invalid or expired.",
@@ -110,7 +111,7 @@ function SharedProgramPreview() {
           setSelectedCoachId(coachesData.coaches[0].coach_id);
         }
       } catch (err) {
-        console.error("Failed to load coaches:", err);
+        logger.error("Failed to load coaches:", err);
         setCoaches([]);
       } finally {
         setCoachesLoading(false);
@@ -131,7 +132,7 @@ function SharedProgramPreview() {
 
     // Validate userId is available
     if (!userId) {
-      console.error("userId is undefined. User attributes:", user?.attributes);
+      logger.error("userId is undefined. User attributes:", user?.attributes);
       toast.error(
         "Unable to get user information. Please try refreshing the page.",
       );
@@ -176,7 +177,7 @@ function SharedProgramPreview() {
         `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${result.programId}`,
       );
     } catch (err) {
-      console.error("Failed to copy program:", err);
+      logger.error("Failed to copy program:", err);
       toast.error(err.message || "Failed to copy program. Please try again.");
     } finally {
       setIsCopying(false);
@@ -563,7 +564,7 @@ function SharedProgramPreview() {
                       {/* Phase header */}
                       <div className="flex items-center gap-3 mb-4">
                         <div
-                          className={`w-10 h-10 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center flex-shrink-0`}
+                          className={`w-10 h-10 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center shrink-0`}
                         >
                           <span
                             className={`font-inter font-bold ${colors.text}`}

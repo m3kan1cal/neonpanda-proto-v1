@@ -185,7 +185,7 @@ const WeeklyHeatMapV2 = ({
       {/* Section Header */}
       <div className="flex items-start justify-between p-6">
         <div className="flex items-start gap-3 flex-1">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             Weekly Training Intensity
           </h3>

@@ -18,6 +18,7 @@ import { getCondensedSchema } from "../object-utils";
 import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
 import type { UniversalWorkoutSchema } from "./types";
 import { fixDoubleEncodedProperties } from "../response-utils";
+import { logger } from "../logger";
 
 /**
  * Result from normalization tool call
@@ -103,7 +104,7 @@ export async function generateNormalization(
   const startTime = Date.now();
   const { workoutData, enableThinking } = context;
 
-  console.info("🔧 Generating normalization via AI:", {
+  logger.info("🔧 Generating normalization via AI:", {
     workoutId: workoutData.workout_id,
     discipline: workoutData.discipline,
     enableThinking,
@@ -112,7 +113,7 @@ export async function generateNormalization(
   const normalizationPrompt = buildNormalizationPrompt(workoutData);
   const promptSizeKB = (normalizationPrompt.length / 1024).toFixed(1);
 
-  console.info("Normalization prompt built:", {
+  logger.info("Normalization prompt built:", {
     promptSizeKB: `${promptSizeKB}KB`,
     workoutId: workoutData.workout_id,
   });
@@ -157,7 +158,7 @@ export async function generateNormalization(
       toolInput.normalizedData.discipline &&
       toolInput.normalizedData.workout_id;
     toolInput.isValid = !!hasRequiredFields;
-    console.info("📋 Defaulted isValid based on normalizedData presence:", {
+    logger.info("📋 Defaulted isValid based on normalizedData presence:", {
       isValid: toolInput.isValid,
     });
   }
@@ -179,7 +180,7 @@ export async function generateNormalization(
       : "Normalization completed with issues";
   }
 
-  console.info("✅ Normalization completed:", {
+  logger.info("✅ Normalization completed:", {
     isValid: toolInput.isValid,
     issuesFound: toolInput.issues.length,
     confidence: toolInput.confidence,
@@ -210,7 +211,7 @@ export async function detectDisciplineWithTool(
 ): Promise<DisciplineDetectionToolResult> {
   const startTime = Date.now();
 
-  console.info("🎯 Detecting discipline via AI tool:", {
+  logger.info("🎯 Detecting discipline via AI tool:", {
     messageLength: userMessage.length,
   });
 
@@ -279,7 +280,7 @@ Classify this workout into ONE discipline. If mixed or unclear, use "crossfit" a
   const fixedInput = fixDoubleEncodedProperties(result.input);
   const toolInput = fixedInput as DisciplineDetectionToolResult;
 
-  console.info("✅ Discipline detected:", {
+  logger.info("✅ Discipline detected:", {
     discipline: toolInput.discipline,
     confidence: toolInput.confidence,
     durationMs: duration,

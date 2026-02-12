@@ -11,6 +11,7 @@ import {
   DynamoDBItem,
 } from "./core";
 import { SharedProgram } from "../functions/libs/shared-program/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // SHARED PROGRAM OPERATIONS
@@ -44,7 +45,7 @@ export async function saveSharedProgram(
 
   await saveToDynamoDB(itemWithGsi);
 
-  console.info("Shared program saved successfully:", {
+  logger.info("Shared program saved successfully:", {
     sharedProgramId: sharedProgram.sharedProgramId,
     creatorUserId: sharedProgram.creatorUserId,
     originalProgramId: sharedProgram.originalProgramId,
@@ -75,7 +76,7 @@ export async function getSharedProgram(
 
   // Check if active before returning (unless includeInactive is true)
   if (!includeInactive && !item.attributes.isActive) {
-    console.info("Shared program found but inactive:", { sharedProgramId });
+    logger.info("Shared program found but inactive:", { sharedProgramId });
     return null;
   }
 
@@ -193,7 +194,7 @@ export async function querySharedPrograms(
         updatedAt: new Date(item.updatedAt),
       }));
 
-    console.info("User shared programs queried successfully:", {
+    logger.info("User shared programs queried successfully:", {
       userId,
       totalFound: allSharedProgramItems.length,
       activeCount: activePrograms.length,
@@ -230,7 +231,7 @@ export async function deactivateSharedProgram(
 
   // 4. If already inactive, return success (idempotent operation)
   if (!sharedProgram.isActive) {
-    console.info("Shared program already inactive, no action needed:", {
+    logger.info("Shared program already inactive, no action needed:", {
       sharedProgramId,
       userId,
     });
@@ -265,7 +266,7 @@ export async function deactivateSharedProgram(
 
   await saveToDynamoDB(updatedItem, true /* requireExists */);
 
-  console.info("Shared program deactivated successfully:", {
+  logger.info("Shared program deactivated successfully:", {
     sharedProgramId,
     userId,
   });
@@ -325,7 +326,7 @@ async function incrementSharedProgramCounter(
       | undefined;
     const newValue = (attributes?.[fieldName] as number) || 0;
 
-    console.info(`Shared program ${fieldName} incremented:`, {
+    logger.info(`Shared program ${fieldName} incremented:`, {
       sharedProgramId,
       [fieldName]: newValue,
     });

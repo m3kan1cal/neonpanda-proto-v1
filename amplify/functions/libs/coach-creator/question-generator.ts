@@ -11,6 +11,7 @@ import {
 } from "../api-helpers";
 import { CoachCreatorTodoList, SophisticationLevel } from "./types";
 import { CoachMessage } from "../coach-conversation/types";
+import { logger } from "../logger";
 import {
   getTodoSummary,
   getTodoItemLabel,
@@ -26,14 +27,14 @@ export async function generateNextQuestion(
   todoList: CoachCreatorTodoList,
   sophisticationLevel: SophisticationLevel,
 ): Promise<string | null> {
-  console.info("🎯 Generating next question");
+  logger.info("🎯 Generating next question");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
   // If all required items are complete, return completion message
   if (summary.requiredPending.length === 0) {
-    console.info(
+    logger.info(
       "✅ All required information collected, generating completion message",
     );
     return generateCompletionMessage(
@@ -119,15 +120,15 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
       },
     )) as string;
 
-    console.info("✅ Generated next question");
+    logger.info("✅ Generated next question");
 
     return questionResponse.trim();
   } catch (error) {
-    console.error("❌ Error generating question:", error);
+    logger.error("❌ Error generating question:", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn("⚠️ Using fallback for initial message");
+      logger.warn("⚠️ Using fallback for initial message");
       return `Hey! Ready to create your AI coach? This is where NeonPanda gets seriously cool. We're building you a coach that actually gets YOU. In about 15-20 minutes, we'll craft an AI coach as unique as your fingerprint, but way better at programming workouts and tracking progress. I'll adapt based on your experience level, so just be real with me. What are your main fitness goals right now?`;
     }
 
@@ -148,14 +149,14 @@ export async function* generateNextQuestionStream(
   sophisticationLevel: SophisticationLevel,
   userHistoryContext?: string,
 ): AsyncGenerator<string, string, unknown> {
-  console.info("🎯 Generating next question (STREAMING)");
+  logger.info("🎯 Generating next question (STREAMING)");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
   // If all required items are complete, generate completion message (non-streaming for simplicity)
   if (summary.requiredPending.length === 0) {
-    console.info(
+    logger.info(
       "✅ All required information collected, generating completion message",
     );
     const completionMsg = await generateCompletionMessage(
@@ -258,15 +259,15 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
       yield chunk;
     }
 
-    console.info("✅ Generated next question (streaming complete)");
+    logger.info("✅ Generated next question (streaming complete)");
 
     return fullResponse.trim();
   } catch (error) {
-    console.error("❌ Error generating question (streaming):", error);
+    logger.error("❌ Error generating question (streaming):", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn("⚠️ Using fallback for initial message");
+      logger.warn("⚠️ Using fallback for initial message");
       const fallback = `Hey! Ready to create your AI coach? This is where NeonPanda gets seriously cool. We're building you a coach that actually gets YOU. In about 15-20 minutes, we'll craft an AI coach as unique as your fingerprint, but way better at programming workouts and tracking progress. I'll adapt based on your experience level, so just be real with me. What are your main fitness goals right now?`;
 
       // Simulate streaming for fallback
@@ -303,7 +304,7 @@ async function generateCompletionMessage(
   todoList: CoachCreatorTodoList,
   sophisticationLevel: SophisticationLevel,
 ): Promise<string> {
-  console.info("🎉 Generating completion message");
+  logger.info("🎉 Generating completion message");
 
   const systemPrompt = `You're NeonPanda's AI intake coach wrapping up an amazing conversation!
 
@@ -356,7 +357,7 @@ CRITICAL: Make sure to tell them about the 2-3 minute build time and that they'l
 
     return completionMessage.trim();
   } catch (error) {
-    console.error("❌ Error generating completion message, using fallback");
+    logger.error("❌ Error generating completion message, using fallback");
 
     // Fallback completion message with proper expectations
     return "This is awesome! I've got everything I need to build your perfect coach. 🔥\n\n**The AI is firing up now to generate your coach - this takes about 2-3 minutes.** You'll see progress updates as it works, and when it's done, your personalized coach will be ready to start guiding your training! Hang tight! 💪";

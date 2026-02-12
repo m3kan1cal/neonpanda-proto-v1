@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getCoachCreatorSession, getCoachConfig } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -70,7 +71,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
             coachConfig: coachConfig
           });
         } catch (error) {
-          console.error('Error loading coach config:', error);
+          logger.error('Error loading coach config:', error);
           return createOkResponse({
             status: 'COMPLETE_BUT_ERROR',
             message: 'Coach config generation completed but config could not be loaded',

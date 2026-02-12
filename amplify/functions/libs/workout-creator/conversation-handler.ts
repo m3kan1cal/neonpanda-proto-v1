@@ -20,6 +20,7 @@ import {
 } from "./todo-list-utils";
 import { ConversationMessage } from "../todo-types";
 import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from "./types";
+import { logger } from "../logger";
 
 export interface WorkoutConversationResult {
   cleanedResponse: string;
@@ -70,9 +71,9 @@ async function* completeWorkoutSession(
   };
 
   if (logLevel === "warn") {
-    console.warn(logMessage, logData);
+    logger.warn(logMessage, logData);
   } else {
-    console.info(logMessage, logData);
+    logger.info(logMessage, logData);
   }
 
   return {
@@ -105,10 +106,10 @@ export async function* handleTodoListConversation(
     activeProgram?: any;
   },
 ): AsyncGenerator<string, any, unknown> {
-  console.info("✨ Handling workout to-do list conversation");
+  logger.info("✨ Handling workout to-do list conversation");
 
   if (imageS3Keys && imageS3Keys.length > 0) {
-    console.info("🖼️ Conversation includes images:", {
+    logger.info("🖼️ Conversation includes images:", {
       imageCount: imageS3Keys.length,
       imageKeys: imageS3Keys,
     });
@@ -116,7 +117,7 @@ export async function* handleTodoListConversation(
 
   try {
     // Step 1: Extract information from user response and update todoList FIRST
-    console.info(
+    logger.info(
       "🔍 Extracting information and updating workout to-do list BEFORE generating next question",
     );
 
@@ -138,7 +139,7 @@ export async function* handleTodoListConversation(
 
     // Increment turn counter
     session.turnCount = (session.turnCount || 0) + 1;
-    console.info(`📊 Turn ${session.turnCount} of workout collection`);
+    logger.info(`📊 Turn ${session.turnCount} of workout collection`);
 
     // Extract with multimodal support (returns todoList + AI-detected skip intent)
     const extractionResult = await extractAndUpdateTodoList(
@@ -152,12 +153,28 @@ export async function* handleTodoListConversation(
     // Update session with extracted data
     session.todoList = extractionResult.todoList;
 
+    // GUARD: Override userWantsToFinish for very short or ambiguous messages
+    // A message under 5 characters that doesn't contain explicit finish language
+    // should NEVER trigger session completion (e.g., "Um", "Hm", "?")
+    const EXPLICIT_FINISH_PATTERNS =
+      /\b(done|skip|finish|log it|that'?s (all|it)|i'?m done|just log|save it|yes|yep|yeah|yea|nah|nope|okay?|no)\b/i;
+    if (
+      extractionResult.userWantsToFinish &&
+      userResponse.trim().length < 5 &&
+      !EXPLICIT_FINISH_PATTERNS.test(userResponse.trim())
+    ) {
+      logger.warn(
+        `⚠️ Overriding userWantsToFinish=true for short ambiguous message: "${userResponse}" (${userResponse.trim().length} chars)`,
+      );
+      extractionResult.userWantsToFinish = false;
+    }
+
     // 🐛 DEBUG: Log todoList status after extraction
     const progressAfterExtraction = getTodoProgress(session.todoList);
     const collectedDataAfterExtraction = getCollectedDataSummary(
       session.todoList,
     );
-    console.info("📋 TODO LIST AFTER EXTRACTION:", {
+    logger.info("📋 TODO LIST AFTER EXTRACTION:", {
       turn: session.turnCount,
       progress: {
         required: `${progressAfterExtraction.requiredCompleted}/${progressAfterExtraction.requiredTotal} (${progressAfterExtraction.requiredPercentage}%)`,
@@ -169,7 +186,7 @@ export async function* handleTodoListConversation(
 
     // Step 1.5: Check for topic change (user abandoned workout logging)
     if (extractionResult.userChangedTopic) {
-      console.info(
+      logger.info(
         "🔀 User changed topics - cancelling workout logging session",
       );
       session.isComplete = false; // Don't complete the workout
@@ -201,7 +218,7 @@ export async function* handleTodoListConversation(
 
     // Condition 1: Max turns reached with all required fields
     if (session.turnCount >= MAX_TURNS && requiredComplete) {
-      console.info(
+      logger.info(
         `⏰ Max turns (${MAX_TURNS}) reached with required fields complete - auto-completing workout logging`,
       );
       return yield* completeWorkoutSession(
@@ -214,7 +231,7 @@ export async function* handleTodoListConversation(
 
     // Condition 2: Max turns reached but required fields incomplete (safety)
     if (session.turnCount >= MAX_TURNS) {
-      console.warn(
+      logger.warn(
         `⚠️ Max turns (${MAX_TURNS}) reached but required fields incomplete - forcing completion with partial data`,
       );
       return yield* completeWorkoutSession(
@@ -232,7 +249,7 @@ export async function* handleTodoListConversation(
       const hasGoodProgress = hasSubstantialProgress(session.todoList);
 
       if (requiredComplete) {
-        console.info("⏭️ User wants to finish - all required fields complete");
+        logger.info("⏭️ User wants to finish - all required fields complete");
         return yield* completeWorkoutSession(
           session,
           "Perfect! I have everything I need. Let me get that logged for you right now.",
@@ -240,7 +257,7 @@ export async function* handleTodoListConversation(
           "User wants to finish (complete)",
         );
       } else if (hasGoodProgress) {
-        console.info(
+        logger.info(
           "⏭️ User wants to finish - substantial progress (5/6 or 4/6+high-priority)",
         );
         return yield* completeWorkoutSession(
@@ -250,7 +267,7 @@ export async function* handleTodoListConversation(
           "User wants to finish (substantial)",
         );
       } else {
-        console.info(
+        logger.info(
           "⏭️ User wants to finish - limited data, but respecting user intent",
         );
         return yield* completeWorkoutSession(
@@ -263,7 +280,7 @@ export async function* handleTodoListConversation(
     }
 
     // Step 3: Generate next question or completion message using UPDATED todoList
-    console.info(
+    logger.info(
       "🎯 Generating next workout question based on UPDATED to-do list",
     );
 
@@ -289,17 +306,17 @@ export async function* handleTodoListConversation(
 
     // Fallback check (shouldn't happen with new streaming approach)
     if (!nextResponse) {
-      console.warn("⚠️ No response generated, using fallback");
+      logger.warn("⚠️ No response generated, using fallback");
       const fallback =
         "Thanks for sharing! Let me think about what else I need to know...";
       yield formatChunkEvent(fallback);
       nextResponse = fallback;
     }
 
-    console.info("✅ Response generated and streamed");
+    logger.info("✅ Response generated and streamed");
 
     // Step 3: Store AI response and finalize session state
-    console.info("⚙️ Finalizing session state");
+    logger.info("⚙️ Finalizing session state");
     session.conversationHistory.push({
       role: "ai",
       content: nextResponse,
@@ -335,7 +352,7 @@ export async function* handleTodoListConversation(
     // Update session metadata
     session.lastActivity = new Date();
 
-    console.info("✅ Workout to-do list session update processed:", {
+    logger.info("✅ Workout to-do list session update processed:", {
       isComplete: complete,
       atRecommendedPhase,
       progress: progressDetails.percentage,
@@ -347,7 +364,7 @@ export async function* handleTodoListConversation(
 
     // 🐛 DEBUG: Log final todoList status before returning
     const finalCollectedData = getCollectedDataSummary(session.todoList);
-    console.info("📋 TODO LIST BEFORE RETURN:", {
+    logger.info("📋 TODO LIST BEFORE RETURN:", {
       turn: session.turnCount,
       isComplete: complete,
       progress: {
@@ -365,7 +382,7 @@ export async function* handleTodoListConversation(
       progressDetails,
     };
   } catch (error) {
-    console.error("❌ Error in workout to-do list conversation:", error);
+    logger.error("❌ Error in workout to-do list conversation:", error);
     yield formatChunkEvent(
       "I apologize, but I'm having trouble processing that. Could you try again?",
     );

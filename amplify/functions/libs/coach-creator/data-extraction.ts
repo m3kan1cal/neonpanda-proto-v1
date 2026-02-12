@@ -9,6 +9,7 @@ import { SophisticationLevel, CoachCreatorSession } from "./types";
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import type { BedrockToolUseResult } from "../api-helpers";
 import { fixDoubleEncodedProperties } from "../response-utils";
+import { logger } from "../logger";
 import {
   SAFETY_PROFILE_EXTRACTION_SCHEMA,
   METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA,
@@ -82,7 +83,7 @@ Return ONLY one word: "male", "female", or "neutral"`;
         return cleaned as "male" | "female" | "neutral";
       }
     } catch (error) {
-      console.warn("AI gender extraction failed, using default");
+      logger.warn("AI gender extraction failed, using default");
     }
   }
 
@@ -139,7 +140,7 @@ Return ONLY a single number between 1-7. If not found, return 4.`;
         return parsed;
       }
     } catch (error) {
-      console.warn("AI frequency extraction failed, using default");
+      logger.warn("AI frequency extraction failed, using default");
     }
   }
 
@@ -187,7 +188,7 @@ Return a simple phrase. If not mentioned, return "6 months"`;
 
       return response.trim() || "6 months";
     } catch (error) {
-      console.warn("AI timeline extraction failed, using default");
+      logger.warn("AI timeline extraction failed, using default");
     }
   }
 
@@ -226,7 +227,7 @@ Return ONLY one word: "high", "moderate", or "low"`;
         return cleaned;
       }
     } catch (error) {
-      console.warn("AI intensity extraction failed, using default");
+      logger.warn("AI intensity extraction failed, using default");
     }
   }
 
@@ -281,7 +282,7 @@ If "none" or empty, use empty arrays. Be specific and helpful.`;
           recoveryNeeds: profile.recoveryNeeds || [],
         };
       } catch (error) {
-        console.error("❌ AI safety profile extraction failed:", {
+        logger.error("❌ AI safety profile extraction failed:", {
           message: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           errorType:
@@ -291,7 +292,7 @@ If "none" or empty, use empty arrays. Be specific and helpful.`;
     }
   }
 
-  console.info("⚠️ Safety profile extraction: using fallback defaults");
+  logger.info("⚠️ Safety profile extraction: using fallback defaults");
   return {
     injuries: [],
     contraindications: [],
@@ -350,7 +351,7 @@ preferences, avoidances, and experience level.`;
           experience: prefs.experience || experience || "intermediate",
         };
       } catch (error) {
-        console.error("❌ AI methodology extraction failed:", {
+        logger.error("❌ AI methodology extraction failed:", {
           message: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           errorType:
@@ -360,7 +361,7 @@ preferences, avoidances, and experience level.`;
     }
   }
 
-  console.info("⚠️ Methodology extraction: using fallback defaults");
+  logger.info("⚠️ Methodology extraction: using fallback defaults");
   return {
     focus: ["strength", "conditioning"],
     preferences: [],
@@ -416,7 +417,7 @@ Identify relevant specializations. If none apply, return an empty array.`;
         const result = fixDoubleEncodedProperties(response.input);
         return result.specializations || [];
       } catch (error) {
-        console.error("❌ AI specialization extraction failed:", {
+        logger.error("❌ AI specialization extraction failed:", {
           message: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           errorType:
@@ -426,7 +427,7 @@ Identify relevant specializations. If none apply, return an empty array.`;
     }
   }
 
-  console.info("⚠️ Specialization extraction: using fallback defaults");
+  logger.info("⚠️ Specialization extraction: using fallback defaults");
   return []; // No specializations
 };
 

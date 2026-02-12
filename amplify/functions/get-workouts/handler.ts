@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { queryWorkouts } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -101,7 +102,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     options.sortOrder = sortOrder;
   }
 
-  console.info("Querying workout sessions for user:", {
+  logger.info("Querying workout sessions for user:", {
     userId,
     filters: options,
   });

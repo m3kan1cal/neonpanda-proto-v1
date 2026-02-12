@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Duration Parsing Utilities
  *
@@ -71,29 +72,29 @@ export function extractNumericValue(durationStr: string): number {
   // Check for vague terms using word boundaries (BEFORE checking for "a/an" to avoid false matches)
   // Using \b for word boundaries prevents false matches like "awesome" matching "some"
   if (/\bcouple\b/.test(lowerValue)) {
-    console.info("📅 Interpreted 'couple' as 2");
+    logger.info("📅 Interpreted 'couple' as 2");
     return 2;
   }
 
   if (/\bfew\b/.test(lowerValue)) {
-    console.info("📅 Interpreted 'few' as 3");
+    logger.info("📅 Interpreted 'few' as 3");
     return 3;
   }
 
   if (/\b(several|some)\b/.test(lowerValue)) {
-    console.info("📅 Interpreted 'several/some' as 4");
+    logger.info("📅 Interpreted 'several/some' as 4");
     return 4;
   }
 
   // Check for standalone "a" or "an" (e.g., "a week", "an month")
   // This must come AFTER vague term checks to avoid matching "a couple", "a few", etc.
   if (/\b(a|an)\s+(week|month|day)/.test(lowerValue)) {
-    console.info("📅 Interpreted 'a/an' as 1");
+    logger.info("📅 Interpreted 'a/an' as 1");
     return 1;
   }
 
   // Default fallback
-  console.info("📅 No number found, defaulting to 8");
+  logger.info("📅 No number found, defaulting to 8");
   return 8;
 }
 
@@ -128,7 +129,7 @@ export function parseProgramDuration(
 
   // Type guard: must be a string at this point
   if (typeof durationValue !== "string") {
-    console.warn("⚠️ Invalid duration type (expected string or number):", {
+    logger.warn("⚠️ Invalid duration type (expected string or number):", {
       type: typeof durationValue,
       value: durationValue,
       default: defaultDays,
@@ -147,7 +148,7 @@ export function parseProgramDuration(
   // Word boundary \b prevents "weekend", "biweekly" but allows "8weeks"
   if (/\bweeks?\b|weeks?(?!\w)/.test(lowerValue)) {
     const days = extractedNum * 7;
-    console.info("📅 Converted weeks to days:", {
+    logger.info("📅 Converted weeks to days:", {
       input: durationValue,
       weeks: extractedNum,
       days,
@@ -157,7 +158,7 @@ export function parseProgramDuration(
 
   if (/\bmonths?\b|months?(?!\w)/.test(lowerValue)) {
     const days = extractedNum * 30; // Approximate
-    console.info("📅 Converted months to days:", {
+    logger.info("📅 Converted months to days:", {
       input: durationValue,
       months: extractedNum,
       days,
@@ -167,7 +168,7 @@ export function parseProgramDuration(
 
   if (/\bdays?\b|days?(?!\w)/.test(lowerValue)) {
     const days = extractedNum;
-    console.info("📅 Using days directly from extracted value:", {
+    logger.info("📅 Using days directly from extracted value:", {
       input: durationValue,
       days,
     });
@@ -177,7 +178,7 @@ export function parseProgramDuration(
   // Handle open-ended terms → default duration (checked AFTER explicit time units
   // so that inputs like "12 week long-term program" parse the explicit duration)
   if (isOpenEndedDuration(lowerValue)) {
-    console.info("📅 Open-ended duration resolved to default:", {
+    logger.info("📅 Open-ended duration resolved to default:", {
       input: durationValue,
       days: DEFAULT_PROGRAM_DURATION_DAYS,
     });
@@ -187,7 +188,7 @@ export function parseProgramDuration(
   // Assume days if no unit specified but we can parse a number
   const days = parseInt(durationValue, 10);
   if (!isNaN(days)) {
-    console.info("📅 Using days directly from parseInt:", {
+    logger.info("📅 Using days directly from parseInt:", {
       input: durationValue,
       days,
     });
@@ -195,7 +196,7 @@ export function parseProgramDuration(
   }
 
   // Final fallback
-  console.warn("⚠️ Could not parse duration, using default:", {
+  logger.warn("⚠️ Could not parse duration, using default:", {
     input: durationValue,
     default: defaultDays,
   });

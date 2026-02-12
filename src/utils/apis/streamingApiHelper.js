@@ -1,4 +1,5 @@
 import { authenticatedFetch } from './apiConfig';
+import { logger } from "../logger";
 
 /**
  * Generic Server-Sent Events (SSE) streaming API helper
@@ -89,7 +90,7 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
                 }
               }
             } catch (parseError) {
-              console.error('Failed to parse SSE data:', parseError);
+              logger.error('Failed to parse SSE data:', parseError);
             }
           }
         }
@@ -99,7 +100,7 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
     }
 
   } catch (error) {
-    console.error(`❌ Error in streaming ${operationName}:`, error);
+    logger.error(`❌ Error in streaming ${operationName}:`, error);
 
     // Fallback to non-streaming API
     try {
@@ -109,7 +110,7 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
         data: fallbackResult
       };
     } catch (fallbackError) {
-      console.error('❌ Fallback also failed:', fallbackError);
+      logger.error('❌ Fallback also failed:', fallbackError);
       yield {
         type: 'error',
         error: fallbackError.message || `Failed to ${operationName.toLowerCase()}`

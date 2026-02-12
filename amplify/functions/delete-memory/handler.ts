@@ -3,6 +3,7 @@ import { deleteMemory, loadFromDynamoDB } from '../../dynamodb/operations';
 import { deleteMemoryFromPinecone } from '../libs/user/pinecone';
 import { UserMemory } from '../libs/memory/types';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -14,7 +15,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
   try {
-    console.info('Deleting memory:', {
+    logger.info('Deleting memory:', {
       userId,
       memoryId
     });
@@ -34,7 +35,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await deleteMemory(userId, memoryId);
 
     // Clean up from Pinecone
-    console.info('🗑️ Cleaning up memory from Pinecone..');
+    logger.info('🗑️ Cleaning up memory from Pinecone..');
     const pineconeResult = await deleteMemoryFromPinecone(userId, memoryId);
 
     // Return success response
@@ -46,7 +47,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
   } catch (error) {
-    console.error('Error deleting memory:', error);
+    logger.error('Error deleting memory:', error);
 
     // Handle specific error types
     if (error instanceof Error) {

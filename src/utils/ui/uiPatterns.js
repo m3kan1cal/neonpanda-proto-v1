@@ -49,7 +49,7 @@ export const buttonPatterns = {
 
   // Challenge Icon Container - Square gradient container for challenge/agitation icons
   challengeIcon:
-    "w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center flex-shrink-0",
+    "w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center shrink-0",
 
   // Mode Toggle Buttons - For conversation mode switching (Chat vs Build)
   // Base classes for all mode toggle buttons
@@ -95,7 +95,7 @@ export const buttonPatterns = {
 export const badgePatterns = {
   // Numbered circle badges - For step indicators and numbered lists (inline-flex for natural text flow)
   numberedCircle:
-    "inline-flex flex-shrink-0 w-5 h-5 bg-synthwave-neon-pink rounded-full items-center justify-center align-middle",
+    "inline-flex shrink-0 w-5 h-5 bg-synthwave-neon-pink rounded-full items-center justify-center align-middle",
   numberedCircleText: "font-rajdhani font-bold text-white text-xs",
 
   // Pink badges - For high priority, primary categorization
@@ -234,7 +234,7 @@ export const formPatterns = {
     "text-synthwave-text-muted font-rajdhani text-sm font-medium",
 
   // Availability icon container (for checkmark/X)
-  availabilityIcon: "flex-shrink-0",
+  availabilityIcon: "shrink-0",
 };
 
 export const inputPatterns = {
@@ -363,7 +363,7 @@ export const inlineEditPatterns = {
 export const imagePreviewPatterns = {
   // Image preview container - for uploaded/selected images (overflow-visible to show remove button)
   container:
-    "relative flex-shrink-0 w-16 h-16 rounded-lg border-2 border-synthwave-neon-cyan/30 bg-synthwave-bg-primary",
+    "relative shrink-0 w-16 h-16 rounded-lg border-2 border-synthwave-neon-cyan/30 bg-synthwave-bg-primary",
 
   // Image element - rounded to match container
   image: "w-full h-full object-cover rounded-md",
@@ -684,7 +684,7 @@ export const compactCardPatterns = {
     "flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/40 hover:shadow-lg hover:shadow-synthwave-neon-cyan/20 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
 
   // Avatar container within pill (relative positioning for status badge)
-  coachPillAvatar: "relative flex-shrink-0",
+  coachPillAvatar: "relative shrink-0",
 
   // Online status badge (positioned on avatar)
   coachPillStatusBadge:
@@ -835,7 +835,7 @@ export const navigationPatterns = {
 
     // Logo/Brand section at top
     brandSection: "flex items-center justify-center gap-3 px-3 py-3",
-    brandLogo: "w-10 h-10 flex-shrink-0",
+    brandLogo: "w-10 h-10 shrink-0",
     brandText: "flex flex-col",
     brandTitle:
       "font-russo font-bold text-xl text-white uppercase leading-tight",
@@ -853,8 +853,8 @@ export const navigationPatterns = {
     // Navigation items
     navItemsContainer: "space-y-1 mb-6",
     navItem:
-      "w-full flex items-center gap-3 px-4 py-2 focus:outline-none active:outline-none relative border-t border-b border-transparent transition-all duration-150",
-    navItemIcon: "w-5 h-5 flex-shrink-0",
+      "w-full flex items-center gap-3 px-4 py-2 focus:outline-none active:outline-none relative border-t border-b border-transparent transition-all duration-150 cursor-pointer",
+    navItemIcon: "w-5 h-5 shrink-0",
     navItemLabel: "font-rajdhani font-medium text-base",
     navItemBadge:
       "ml-auto min-w-[20px] h-5 px-2 rounded-full text-xs font-bold flex items-center justify-center bg-synthwave-neon-pink text-white",

@@ -340,7 +340,7 @@ function BlogPost5Orchestration() {
           </h3>
           <div className="space-y-4">
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-pink/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
                   1
                 </span>
@@ -356,7 +356,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-cyan/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded bg-synthwave-neon-cyan/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-cyan">
                   2
                 </span>
@@ -372,7 +372,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-purple/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded bg-synthwave-neon-purple/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-purple">
                   3
                 </span>
@@ -388,7 +388,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-pink/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
                   4
                 </span>

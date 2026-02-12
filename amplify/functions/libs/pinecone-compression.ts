@@ -7,6 +7,7 @@
  */
 
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "./api-helpers";
+import { logger } from "./logger";
 
 /**
  * Pinecone metadata size limit (40KB)
@@ -78,7 +79,7 @@ export function deterministicCompressSummary(
   summaryData: any,
   targetSize: number = PINECONE_METADATA_LIMIT * DEFAULT_TARGET_SIZE_RATIO,
 ): any {
-  console.info("📐 Applying deterministic compression:", {
+  logger.info("📐 Applying deterministic compression:", {
     targetSize,
     originalSize: Buffer.byteLength(JSON.stringify(summaryData), "utf8"),
   });
@@ -162,7 +163,7 @@ export function deterministicCompressSummary(
   }
 
   const compressedSize = Buffer.byteLength(JSON.stringify(compressed), "utf8");
-  console.info("✅ Deterministic compression completed:", {
+  logger.info("✅ Deterministic compression completed:", {
     originalSize: Buffer.byteLength(JSON.stringify(summaryData), "utf8"),
     compressedSize,
     targetSize,
@@ -202,7 +203,7 @@ export async function compressContent(
     content.length * compressionRatio * COMPRESSION_SAFETY_MARGIN,
   );
 
-  console.info("🤖 AI compressing content for Pinecone:", {
+  logger.info("🤖 AI compressing content for Pinecone:", {
     contentType,
     originalSize: currentSize,
     targetSize,
@@ -244,7 +245,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
       const compressionAchieved =
         ((currentSize - finalSize) / currentSize) * 100;
 
-      console.info("✅ AI compression completed:", {
+      logger.info("✅ AI compression completed:", {
         contentType,
         originalSize: currentSize,
         compressedSize: finalSize,
@@ -262,7 +263,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
             (targetSize / finalSize) *
             TRUNCATION_SAFETY_MARGIN,
         );
-        console.warn(
+        logger.warn(
           "⚠️ AI compression still too large, applying truncation:",
           {
             compressedSize: finalSize,
@@ -287,7 +288,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
 
       if (isThrottling && attempt < THROTTLE_RETRY_DELAYS.length) {
         const delayMs = THROTTLE_RETRY_DELAYS[attempt];
-        console.warn(
+        logger.warn(
           `⚠️ Bedrock API throttled (attempt ${attempt + 1}/${THROTTLE_RETRY_DELAYS.length + 1}) - waiting ${delayMs}ms before retry`,
           {
             errorName: error.name,
@@ -302,7 +303,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
 
       // Either not a throttling error, or we've exhausted retries
       if (isThrottling) {
-        console.error(
+        logger.error(
           "❌ Bedrock API still throttled after all retries - falling back to truncation",
           {
             totalAttempts: attempt + 1,
@@ -320,7 +321,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
   }
 
   // If we get here, all attempts failed
-  console.error("❌ AI compression failed after all attempts:", lastError);
+  logger.error("❌ AI compression failed after all attempts:", lastError);
 
   // Check if final error was throttling
   const wasThrottling =
@@ -335,7 +336,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
     const conservativeTruncate = Math.floor(
       (targetSize / currentSize) * content.length * 0.8, // Extra conservative (80% of target)
     );
-    console.warn(
+    logger.warn(
       "⚠️ Falling back to conservative truncation due to persistent throttling",
       {
         targetChars: conservativeTruncate,
@@ -348,7 +349,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
     const truncateAt = Math.floor(
       content.length * ratio * TRUNCATION_SAFETY_MARGIN,
     );
-    console.warn(
+    logger.warn(
       "⚠️ Falling back to truncation due to non-throttling AI error:",
       {
         currentSize,
@@ -361,7 +362,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
     );
 
     if (truncateAt >= content.length) {
-      console.error("❌ Truncation calculation error - would not reduce size", {
+      logger.error("❌ Truncation calculation error - would not reduce size", {
         contentLength: content.length,
         calculatedTruncateAt: truncateAt,
         currentSize,
@@ -406,7 +407,7 @@ export async function storeWithAutoCompression<T>(
     (initialSize / PINECONE_METADATA_LIMIT) * 100,
   );
 
-  console.info("📊 Pinecone storage size check:", {
+  logger.info("📊 Pinecone storage size check:", {
     contentType,
     estimatedSize: initialSize,
     limitBytes: PINECONE_METADATA_LIMIT,
@@ -424,7 +425,7 @@ export async function storeWithAutoCompression<T>(
         error?.message?.includes("Metadata size") ||
         error?.message?.includes("exceeds the limit")
       ) {
-        console.warn(
+        logger.warn(
           "⚠️ Size error despite estimate being under limit, will attempt compression...",
           {
             estimatedSize: initialSize,
@@ -449,7 +450,7 @@ export async function storeWithAutoCompression<T>(
   );
   const actualTotalSize = actualContentSize + actualMetadataSize;
 
-  console.info("🔄 Content exceeds Pinecone limit, using AI compression...", {
+  logger.info("🔄 Content exceeds Pinecone limit, using AI compression...", {
     contentType,
     estimatedSize: initialSize,
     actualSize: actualTotalSize,
@@ -465,7 +466,7 @@ export async function storeWithAutoCompression<T>(
   );
 
   const compressedSize = calculateMetadataSize(compressedContent, metadata);
-  console.info("🎯 Retrying storage with compressed content:", {
+  logger.info("🎯 Retrying storage with compressed content:", {
     contentType,
     originalSize: actualTotalSize,
     compressedSize,

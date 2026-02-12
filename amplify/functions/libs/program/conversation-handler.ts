@@ -15,6 +15,7 @@ import { formatChunkEvent } from "../streaming";
 import { extractAndUpdateTodoList } from "./todo-extraction";
 import { getTodoProgress, isSessionComplete } from "./todo-list-utils";
 import { ConversationMessage } from "../todo-types";
+import { logger } from "../logger";
 
 /**
  * Session interface for program creation
@@ -38,10 +39,10 @@ export async function* handleTodoListConversation(
   session: ProgramDesignerSession,
   imageS3Keys?: string[],
 ): AsyncGenerator<string, any, unknown> {
-  console.info("✨ Handling training program to-do list conversation");
+  logger.info("✨ Handling training program to-do list conversation");
 
   if (imageS3Keys && imageS3Keys.length > 0) {
-    console.info("🖼️ Conversation includes images:", {
+    logger.info("🖼️ Conversation includes images:", {
       imageCount: imageS3Keys.length,
       imageKeys: imageS3Keys,
     });
@@ -49,7 +50,7 @@ export async function* handleTodoListConversation(
 
   try {
     // Step 1: Extract information from user response and update todoList FIRST
-    console.info(
+    logger.info(
       "🔍 Extracting information and updating training program to-do list BEFORE generating next question",
     );
 
@@ -78,7 +79,7 @@ export async function* handleTodoListConversation(
     );
 
     // Step 2: Generate next question or completion message using UPDATED todoList
-    console.info(
+    logger.info(
       "🎯 Generating next training program question based on UPDATED to-do list",
     );
 
@@ -103,17 +104,17 @@ export async function* handleTodoListConversation(
 
     // Fallback check (shouldn't happen with new streaming approach)
     if (!nextResponse) {
-      console.warn("⚠️ No response generated, using fallback");
+      logger.warn("⚠️ No response generated, using fallback");
       const fallback =
         "Thanks for sharing! Let me think about what else I need to know...";
       yield formatChunkEvent(fallback);
       nextResponse = fallback;
     }
 
-    console.info("✅ Response generated and streamed");
+    logger.info("✅ Response generated and streamed");
 
     // Step 3: Store AI response and finalize session state
-    console.info("⚙️ Finalizing session state");
+    logger.info("⚙️ Finalizing session state");
     session.conversationHistory.push({
       role: "ai",
       content: nextResponse,
@@ -134,7 +135,7 @@ export async function* handleTodoListConversation(
     // Update session metadata
     session.lastActivity = new Date();
 
-    console.info("✅ Training program to-do list session update processed:", {
+    logger.info("✅ Training program to-do list session update processed:", {
       isComplete: complete,
       progress: progressDetails.percentage,
       todoProgress: `${todoProgress.requiredCompleted}/${todoProgress.requiredTotal} required items`,
@@ -147,7 +148,7 @@ export async function* handleTodoListConversation(
       progressDetails,
     };
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Error in training program to-do list conversation:",
       error,
     );

@@ -20,6 +20,7 @@ import { MESSAGE_TYPES, CoachMessage } from "../coach-conversation/types";
 import { TodoItem } from "../todo-types";
 import { ProgramDesignerTodoList } from "./types";
 import { PROGRAM_TODO_SCHEMA } from "../schemas/program-designer-todo-schema";
+import { logger } from "../logger";
 
 // Extraction configuration
 const EXTRACTION_MAX_RETRIES = 2;
@@ -53,7 +54,7 @@ export async function extractAndUpdateTodoList(
     activeProgram?: any;
   },
 ): Promise<ProgramExtractionResult> {
-  console.info(
+  logger.info(
     "🔍 Extracting training program information from user response",
     {
       userResponseLength: userResponse.length,
@@ -66,7 +67,7 @@ export async function extractAndUpdateTodoList(
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
   if (hasImages) {
-    console.info("🖼️ Processing with images:", {
+    logger.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys!.length,
       imageKeys: imageS3Keys,
     });
@@ -109,7 +110,7 @@ Return ONLY the fields you found information for using the tool. If no informati
     // Retry loop with timeout for extraction
     for (let attempt = 1; attempt <= EXTRACTION_MAX_RETRIES; attempt++) {
       try {
-        console.info(
+        logger.info(
           `🔄 Extraction attempt ${attempt}/${EXTRACTION_MAX_RETRIES}`,
         );
 
@@ -175,7 +176,7 @@ Return ONLY the fields you found information for using the tool. If no informati
           extractionPromise,
           timeoutPromise,
         ]);
-        console.info(`✅ Extraction attempt ${attempt} succeeded`);
+        logger.info(`✅ Extraction attempt ${attempt} succeeded`);
         lastError = null;
         break; // Success, exit retry loop
       } catch (attemptError) {
@@ -183,7 +184,7 @@ Return ONLY the fields you found information for using the tool. If no informati
           attemptError instanceof Error
             ? attemptError
             : new Error(String(attemptError));
-        console.warn(
+        logger.warn(
           `⚠️ Extraction attempt ${attempt} failed:`,
           lastError.message,
         );
@@ -196,7 +197,7 @@ Return ONLY the fields you found information for using the tool. If no informati
           lastError.message.includes("no content");
 
         if (!isRetryable || attempt === EXTRACTION_MAX_RETRIES) {
-          console.error(
+          logger.error(
             `❌ Extraction failed after ${attempt} attempts, trying fallback`,
           );
           break;
@@ -209,7 +210,7 @@ Return ONLY the fields you found information for using the tool. If no informati
 
     // If all retries failed, return unchanged todoList
     if (lastError) {
-      console.error(
+      logger.error(
         "❌ Extraction failed after all retries:",
         lastError.message,
       );
@@ -220,15 +221,15 @@ Return ONLY the fields you found information for using the tool. If no informati
       };
     }
 
-    console.info("✅ Received extraction response");
+    logger.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input and fix any double-encoding
       extracted = extractionResponse.input;
-      console.info("✅ Tool-based extraction successful");
-      console.info(
+      logger.info("✅ Tool-based extraction successful");
+      logger.info(
         "🔎 Raw tool input:",
         JSON.stringify(extractionResponse.input, null, 2),
       );
@@ -236,11 +237,11 @@ Return ONLY the fields you found information for using the tool. If no informati
       extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn("⚠️ Received string response, parsing as JSON fallback");
+      logger.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
-    console.info("🔎 Extracted data structure:", {
+    logger.info("🔎 Extracted data structure:", {
       keys: Object.keys(extracted),
       types: Object.fromEntries(
         Object.entries(extracted).map(([k, v]) => [k, typeof v]),
@@ -249,7 +250,7 @@ Return ONLY the fields you found information for using the tool. If no informati
     });
 
     if (!extracted || typeof extracted !== "object") {
-      console.warn(
+      logger.warn(
         "⚠️ Failed to parse extraction response, returning current todo list",
       );
       return {
@@ -268,12 +269,12 @@ Return ONLY the fields you found information for using the tool. If no informati
     const userChangedTopic = extracted.userChangedTopic === true;
 
     if (userWantsToFinish) {
-      console.info(
+      logger.info(
         "⏭️ AI detected user wants to finish designing and skip remaining fields",
       );
     }
     if (userChangedTopic) {
-      console.info(
+      logger.info(
         "🔀 AI detected user changed topics - abandoning program design session",
       );
     }
@@ -282,7 +283,7 @@ Return ONLY the fields you found information for using the tool. If no informati
       // Skip intent detection fields (not todo items)
       if (key === "userWantsToFinish" || key === "userChangedTopic") continue;
 
-      console.info(
+      logger.info(
         `🔍 Processing key: ${key}, type: ${typeof extractedItem}, isObject: ${typeof extractedItem === "object"}, inTodoList: ${key in updatedTodoList}`,
       );
 
@@ -308,12 +309,12 @@ Return ONLY the fields you found information for using the tool. If no informati
             value: extractedItem,
             confidence: "high", // Default to high since AI extracted it
           };
-          console.info(
+          logger.info(
             `🔧 Normalized ${key} from simple value to structured format`,
           );
         }
 
-        console.info(
+        logger.info(
           `🔍 Item structure for ${key}:`,
           JSON.stringify(normalizedItem).substring(0, 200),
         );
@@ -334,17 +335,17 @@ Return ONLY the fields you found information for using the tool. If no informati
               hasImages && shouldStoreImageRef(key) ? imageS3Keys : undefined,
           };
 
-          console.info(
+          logger.info(
             `✅ Extracted ${key}: ${JSON.stringify(normalizedItem.value).substring(0, 50)} - MARKED AS COMPLETE`,
           );
         } else {
-          console.warn(
+          logger.warn(
             `⚠️ Skipping ${key}: normalizedItem.value is null or undefined`,
           );
         }
       } else {
         if (!(key in updatedTodoList)) {
-          console.warn(`⚠️ Key ${key} not found in updatedTodoList`);
+          logger.warn(`⚠️ Key ${key} not found in updatedTodoList`);
         }
       }
     }
@@ -353,13 +354,13 @@ Return ONLY the fields you found information for using the tool. If no informati
     const extractedCount = Object.keys(extracted).filter(
       (k) => k !== "userWantsToFinish" && k !== "userChangedTopic",
     ).length;
-    console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
+    logger.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     // Log which fields were actually marked as complete
     const completedFields = Object.entries(updatedTodoList)
       .filter(([_, item]) => item.status === "complete")
       .map(([key, _]) => key);
-    console.info(
+    logger.info(
       `📊 TodoList status: ${completedFields.length} complete out of ${Object.keys(updatedTodoList).length} total`,
     );
 
@@ -369,8 +370,8 @@ Return ONLY the fields you found information for using the tool. If no informati
       userChangedTopic,
     };
   } catch (error) {
-    console.error("❌ Error during extraction:", error);
-    console.error("Returning current todo list unchanged");
+    logger.error("❌ Error during extraction:", error);
+    logger.error("Returning current todo list unchanged");
     return {
       todoList: currentTodoList,
       userWantsToFinish: false,

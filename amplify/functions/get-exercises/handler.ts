@@ -8,6 +8,8 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { queryExercises } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
+import type { Exercise } from "../libs/exercise/types";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -55,7 +57,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, 'sortOrder must be either "asc" or "desc"');
   }
 
-  console.info("Querying exercise history:", {
+  logger.info("Querying exercise history:", {
     userId,
     exerciseName,
     fromDate,
@@ -75,7 +77,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
     // Transform exercises for response
-    const exercises = result.exercises.map((exercise) => ({
+    const exercises = result.exercises.map((exercise: Exercise) => ({
       exerciseId: exercise.exerciseId,
       exerciseName: exercise.exerciseName,
       originalName: exercise.originalName,
@@ -98,7 +100,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       pagination: result.pagination,
     });
   } catch (error) {
-    console.error("Error querying exercise history:", error);
+    logger.error("Error querying exercise history:", error);
     return createErrorResponse(500, "Failed to query exercise history");
   }
 };

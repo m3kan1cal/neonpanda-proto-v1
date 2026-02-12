@@ -15,6 +15,7 @@ import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { getUserProfile } from "../../dynamodb/operations";
 import { getAppUrl } from "../libs/domain-utils";
 import { generateSharedProgramId } from "../libs/id-utils";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -45,7 +46,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     if (existingShare) {
       // Return existing shared program instead of creating a duplicate
       const shareUrl = `${getAppUrl()}/shared/programs/${existingShare.sharedProgramId}`;
-      console.info("Returning existing shared program (idempotency check):", {
+      logger.info("Returning existing shared program (idempotency check):", {
         sharedProgramId: existingShare.sharedProgramId,
         originalProgramId: programId,
         userId,
@@ -137,7 +138,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // 12. Generate share URL
     const shareUrl = `${getAppUrl()}/shared/programs/${sharedProgramId}`;
 
-    console.info("Shared program created successfully:", {
+    logger.info("Shared program created successfully:", {
       sharedProgramId,
       originalProgramId: programId,
       userId,
@@ -155,7 +156,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       message: "Program shared successfully",
     });
   } catch (error) {
-    console.error("Error creating shared program:", error);
+    logger.error("Error creating shared program:", error);
     return createErrorResponse(500, "Failed to share program", error);
   }
 };

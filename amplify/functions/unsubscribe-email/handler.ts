@@ -1,11 +1,15 @@
-import { updateUserProfileByEmail, getUserProfileByEmail } from '../../dynamodb/operations';
-import { buildSettingsLink } from '../libs/email-utils';
+import {
+  updateUserProfileByEmail,
+  getUserProfileByEmail,
+} from "../../dynamodb/operations";
+import { buildSettingsLink } from "../libs/email-utils";
+import { logger } from "../libs/logger";
 import {
   createHtmlResponse,
   createNotFoundHtmlResponse,
   createBadRequestHtmlResponse,
-  createErrorHtmlResponse
-} from '../libs/html-utils';
+  createErrorHtmlResponse,
+} from "../libs/html-utils";
 
 /**
  * Handler for email notification unsubscribe requests
@@ -14,7 +18,7 @@ import {
  * This is a public endpoint (no auth required) for email unsubscribe compliance
  */
 export const handler = async (event: any) => {
-  console.info('Processing unsubscribe request');
+  logger.info("Processing unsubscribe request");
 
   // Extract query parameters
   const email = event.queryStringParameters?.email;
@@ -23,24 +27,31 @@ export const handler = async (event: any) => {
   // Validate required parameters
   if (!email) {
     return createBadRequestHtmlResponse(
-      'Missing Email Address',
-      "Looks like the unsubscribe link is incomplete – no email address included. If you clicked this from an email, the link might be broken. Reach out to us and we'll help you update your preferences manually."
+      "Missing Email Address",
+      "Looks like the unsubscribe link is incomplete – no email address included. If you clicked this from an email, the link might be broken. Reach out to us and we'll help you update your preferences manually.",
     );
   }
 
   if (!notificationType) {
     return createBadRequestHtmlResponse(
-      'Missing Notification Type',
-      "This unsubscribe link is missing some info. Not sure which emails you want to stop receiving? Reach out to us or log into your account settings to customize your notifications."
+      "Missing Notification Type",
+      "This unsubscribe link is missing some info. Not sure which emails you want to stop receiving? Reach out to us or log into your account settings to customize your notifications.",
     );
   }
 
   // Validate notification type
-  const validTypes = ['coach-checkins', 'weekly', 'monthly', 'program', 'features', 'all'];
+  const validTypes = [
+    "coach-checkins",
+    "weekly",
+    "monthly",
+    "program",
+    "features",
+    "all",
+  ];
   if (!validTypes.includes(notificationType)) {
     return createBadRequestHtmlResponse(
-      'Invalid Link',
-      "This unsubscribe link looks a bit off – the notification type isn't recognized. Head to your account settings to manage your email preferences, or reach out if you need help."
+      "Invalid Link",
+      "This unsubscribe link looks a bit off – the notification type isn't recognized. Head to your account settings to manage your email preferences, or reach out if you need help.",
     );
   }
 
@@ -56,7 +67,7 @@ export const handler = async (event: any) => {
       },
     };
 
-    if (notificationType === 'all') {
+    if (notificationType === "all") {
       // Unsubscribe from all notifications
       updates.preferences.emailNotifications = {
         coachCheckIns: false,
@@ -68,18 +79,18 @@ export const handler = async (event: any) => {
     } else {
       // Unsubscribe from specific type
       let preferenceKey: string;
-      if (notificationType === 'coach-checkins') {
-        preferenceKey = 'coachCheckIns';
-      } else if (notificationType === 'weekly') {
-        preferenceKey = 'weeklyReports';
-      } else if (notificationType === 'monthly') {
-        preferenceKey = 'monthlyReports';
-      } else if (notificationType === 'program') {
-        preferenceKey = 'programUpdates';
-      } else if (notificationType === 'features') {
-        preferenceKey = 'featureAnnouncements';
+      if (notificationType === "coach-checkins") {
+        preferenceKey = "coachCheckIns";
+      } else if (notificationType === "weekly") {
+        preferenceKey = "weeklyReports";
+      } else if (notificationType === "monthly") {
+        preferenceKey = "monthlyReports";
+      } else if (notificationType === "program") {
+        preferenceKey = "programUpdates";
+      } else if (notificationType === "features") {
+        preferenceKey = "featureAnnouncements";
       } else {
-        preferenceKey = 'programUpdates'; // fallback
+        preferenceKey = "programUpdates"; // fallback
       }
 
       updates.preferences.emailNotifications[preferenceKey] = false;
@@ -88,7 +99,9 @@ export const handler = async (event: any) => {
     // Update user profile by email
     await updateUserProfileByEmail(email, updates);
 
-    console.info(`Successfully unsubscribed ${email} from ${notificationType} notifications`);
+    logger.info(
+      `Successfully unsubscribed ${email} from ${notificationType} notifications`,
+    );
 
     return createHtmlResponse(
       200,
@@ -105,23 +118,23 @@ export const handler = async (event: any) => {
         </div>
 
         <p>Keep training hard, and remember – we're still in your corner, even if we're a little quieter now. 💪</p>
-      `
+      `,
     );
   } catch (error: any) {
-    console.error('Error processing unsubscribe request:', error);
+    logger.error("Error processing unsubscribe request:", error);
 
     // Handle case where user not found
-    if (error.message?.includes('not found')) {
+    if (error.message?.includes("not found")) {
       return createNotFoundHtmlResponse(
         "Hmm, We Can't Find That Account",
-        "We searched high and low, but couldn't find an account with that email address. Double-check the email link or reach out to us if you think something's off."
+        "We searched high and low, but couldn't find an account with that email address. Double-check the email link or reach out to us if you think something's off.",
       );
     }
 
     return createErrorHtmlResponse(
-      'Oops, Something Went Wrong',
+      "Oops, Something Went Wrong",
       "We hit a snag trying to process your unsubscribe request. Not your fault – we're on it.",
-      "<p>Give it another shot in a few minutes, or reach out to us directly if it keeps happening. We'll get you sorted.</p>"
+      "<p>Give it another shot in a few minutes, or reach out to us directly if it keeps happening. We'll get you sorted.</p>",
     );
   }
 };
@@ -131,18 +144,18 @@ export const handler = async (event: any) => {
  */
 function getNotificationDisplayName(type: string): string {
   switch (type) {
-    case 'coach-checkins':
-      return 'coach check-in and reminder';
-    case 'weekly':
-      return 'weekly report';
-    case 'monthly':
-      return 'monthly report';
-    case 'program':
-      return 'training program update';
-    case 'features':
-      return 'feature announcement';
-    case 'all':
-      return 'all';
+    case "coach-checkins":
+      return "coach check-in and reminder";
+    case "weekly":
+      return "weekly report";
+    case "monthly":
+      return "monthly report";
+    case "program":
+      return "training program update";
+    case "features":
+      return "feature announcement";
+    case "all":
+      return "all";
     default:
       return type;
   }

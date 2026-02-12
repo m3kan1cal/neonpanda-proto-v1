@@ -4,6 +4,7 @@ import {
   createErrorResponse,
 } from "../libs/api-helpers";
 import { queryCoachTemplates } from "../../dynamodb/operations";
+import { logger } from "../libs/logger";
 
 export const handler = async (
   event: APIGatewayProxyEventV2
@@ -12,7 +13,7 @@ export const handler = async (
     // Query all active coach templates
     const templates = await queryCoachTemplates();
 
-    console.info("Successfully retrieved coach templates:", {
+    logger.info("Successfully retrieved coach templates:", {
       templateCount: templates.length,
       templateNames: templates.map((t) => t.template_name),
     });
@@ -29,7 +30,7 @@ export const handler = async (
       count: templates.length,
     });
   } catch (error) {
-    console.error("Error getting coach templates:", error);
+    logger.error("Error getting coach templates:", error);
     return createErrorResponse(500, "Internal server error");
   }
 };

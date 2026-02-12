@@ -7,6 +7,7 @@ import {
   MonthlyAnalyticsEvent,
 } from "../libs/analytics";
 import { withHeartbeat } from "../libs/heartbeat";
+import { logger } from "../libs/logger";
 
 /**
  * Monthly Analytics Lambda Handler
@@ -15,7 +16,7 @@ import { withHeartbeat } from "../libs/heartbeat";
 export const handler = async (event: MonthlyAnalyticsEvent) => {
   return withHeartbeat('Monthly Analytics Processing', async () => {
     try {
-      console.info("📊 Starting monthly analytics processing:", {
+      logger.info("📊 Starting monthly analytics processing:", {
         source: event.source,
         timestamp: new Date().toISOString(),
         triggerEvent: event,
@@ -24,7 +25,7 @@ export const handler = async (event: MonthlyAnalyticsEvent) => {
       // Process all users in batches
       const totalProcessedUsers = await processAllUsersInBatchesMonthly(50);
 
-    console.info("✅ Monthly analytics processing completed successfully:", {
+    logger.info("✅ Monthly analytics processing completed successfully:", {
       totalProcessedUsers,
       completedAt: new Date().toISOString(),
     });
@@ -35,7 +36,7 @@ export const handler = async (event: MonthlyAnalyticsEvent) => {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("❌ Monthly analytics processing failed:", error);
+      logger.error("❌ Monthly analytics processing failed:", error);
 
       return createErrorResponse(
         500,

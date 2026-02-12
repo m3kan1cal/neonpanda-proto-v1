@@ -13,6 +13,7 @@ import {
 } from "../api-helpers";
 import { CoachMessage } from "../coach-conversation/types";
 import { ProgramDesignerTodoList } from "./types";
+import { logger } from "../logger";
 import {
   getTodoSummary,
   getTodoItemLabel,
@@ -28,14 +29,14 @@ export async function generateNextQuestion(
   todoList: ProgramDesignerTodoList,
   coachPersonality?: string,
 ): Promise<string | null> {
-  console.info("🎯 Generating next program question");
+  logger.info("🎯 Generating next program question");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
   // If all required items are complete, signal completion (caller handles completion message)
   if (summary.requiredPending.length === 0) {
-    console.info("✅ All required information collected, session complete");
+    logger.info("✅ All required information collected, session complete");
     return null;
   }
 
@@ -152,15 +153,15 @@ Remember: You're helping them create a training program that will actually work 
       },
     )) as string;
 
-    console.info("✅ Generated next program question");
+    logger.info("✅ Generated next program question");
 
     return questionResponse.trim();
   } catch (error) {
-    console.error("❌ Error generating program question:", error);
+    logger.error("❌ Error generating program question:", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn("⚠️ Using fallback for initial message");
+      logger.warn("⚠️ Using fallback for initial message");
       return `Alright! Let's build your training program! 💪 I'm going to ask you a few questions so I can design something perfect for you. First things first - what are you training for? What's the main goal?`;
     }
 
@@ -188,7 +189,7 @@ export async function* generateNextQuestionStream(
     additionalConsiderations?: string; // Flag from session
   },
 ): AsyncGenerator<string, string, unknown> {
-  console.info("🎯 Generating next program question (STREAMING)");
+  logger.info("🎯 Generating next program question (STREAMING)");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
@@ -200,7 +201,7 @@ export async function* generateNextQuestionStream(
       userContext?.additionalConsiderations !== undefined;
 
     if (!hasAskedFinalConsiderations) {
-      console.info(
+      logger.info(
         "🎯 All required items complete - asking final considerations question",
       );
 
@@ -228,7 +229,7 @@ Feel free to share as much or as little as you'd like - or just say "nothing els
     }
 
     // Final considerations collected, generate completion message
-    console.info(
+    logger.info(
       "✅ All required information collected and final considerations received, generating completion message",
     );
 
@@ -372,15 +373,15 @@ Remember: You're helping them create a training program that will actually work 
       yield chunk;
     }
 
-    console.info("✅ Generated next program question (streaming complete)");
+    logger.info("✅ Generated next program question (streaming complete)");
 
     return fullResponse.trim();
   } catch (error) {
-    console.error("❌ Error generating program question (streaming):", error);
+    logger.error("❌ Error generating program question (streaming):", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn("⚠️ Using fallback for initial message");
+      logger.warn("⚠️ Using fallback for initial message");
       const fallback = `Alright! Let's build your training program! 💪 I'm going to ask you a few questions so I can design something perfect for you. First things first - what are you training for? What's the main goal?`;
 
       // Simulate streaming for fallback
@@ -418,7 +419,7 @@ export async function* generateCompletionMessage(
   coachPersonality?: string,
   userContext?: any,
 ): AsyncGenerator<string, void, unknown> {
-  console.info("🎉 Generating program completion message (streaming)");
+  logger.info("🎉 Generating program completion message (streaming)");
 
   // Build system prompt with coach personality
   const systemPrompt = coachPersonality
@@ -461,7 +462,7 @@ Generate the completion message now:
       yield chunk;
     }
   } catch (error) {
-    console.error("❌ Error generating completion message, using fallback");
+    logger.error("❌ Error generating completion message, using fallback");
 
     // Fallback completion message
     const fallback =

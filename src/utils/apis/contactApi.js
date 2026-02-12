@@ -1,4 +1,5 @@
 import { getApiUrl } from './apiConfig';
+import { logger } from "../logger";
 
 /**
  * API service for Contact Form operations
@@ -16,8 +17,8 @@ import { getApiUrl } from './apiConfig';
 export const submitContactForm = async (formData) => {
   const url = `${getApiUrl('')}/contact`;
 
-  console.info('submitContactForm: Making API call to:', url);
-  console.info('submitContactForm: formData:', formData);
+  logger.info('submitContactForm: Making API call to:', url);
+  logger.info('submitContactForm: formData:', formData);
 
   const response = await fetch(url, {
     method: 'POST',
@@ -27,12 +28,12 @@ export const submitContactForm = async (formData) => {
     body: JSON.stringify(formData),
   });
 
-  console.info('submitContactForm: Response status:', response.status);
-  console.info('submitContactForm: Response ok:', response.ok);
+  logger.info('submitContactForm: Response status:', response.status);
+  logger.info('submitContactForm: Response ok:', response.ok);
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('submitContactForm: Error response:', errorText);
+    logger.error('submitContactForm: Error response:', errorText);
 
     let errorMessage;
     try {
@@ -46,7 +47,7 @@ export const submitContactForm = async (formData) => {
   }
 
   const result = await response.json();
-  console.info('submitContactForm: Success response:', result);
+  logger.info('submitContactForm: Success response:', result);
 
   return result;
 };

@@ -80,7 +80,7 @@ export default function RecentPRsCard({
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
-          <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+          <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
           <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -110,7 +110,7 @@ export default function RecentPRsCard({
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
       <div className="flex items-start space-x-3 mb-4">
-        <span className="text-synthwave-neon-pink flex-shrink-0 mt-1.5">
+        <span className="text-synthwave-neon-pink shrink-0 mt-1.5">
           <TrophySolidIcon />
         </span>
         <h3 className="font-russo font-bold text-white text-lg uppercase">
@@ -172,7 +172,7 @@ export default function RecentPRsCard({
                 {(pr.improvement != null ||
                   pr.improvementPercentage != null) && (
                   <div className="flex items-center gap-0.5">
-                    <span className="text-green-400 flex-shrink-0">
+                    <span className="text-green-400 shrink-0">
                       <TrendingUpIconTiny className="w-2.5 h-2.5" />
                     </span>
                     {pr.improvement != null && (

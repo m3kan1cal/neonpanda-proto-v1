@@ -2,7 +2,7 @@
 
 **Status:** Active
 
-**Last Updated:** February 10, 2026
+**Last Updated:** February 11, 2026
 
 **Context:** Feature ideas for improving the Training Grounds dashboard (`TrainingGroundsV2.jsx`) and broader platform capabilities. Prioritized by ROI relative to effort.
 
@@ -423,16 +423,81 @@ Currently, best streak is computed from the most recent 100 workouts fetched by 
 
 ---
 
+## Feature 10: Configurable Weekly Target for Streak Card
+
+**Priority:** Low -- Nice-to-have personalization
+**Effort:** Low-Medium
+**Status:** Not Started
+
+### Overview
+
+The StreakCard "This Week" progress bar currently uses a hardcoded weekly target of 5 workouts (`WEEKLY_TARGET = 5` in `StreakCard.jsx`). Make the target configurable so it reflects the user's preference or their current training program (e.g. program prescribes 4 days/week → show X/4).
+
+### Current State
+
+- `StreakCard.jsx` defines `const WEEKLY_TARGET = 5` and uses it for the "This Week" label (X/5) and progress bar percentage.
+- No user setting or program-derived target exists; all users see 5 as the target.
+- QuickStat tooltip and changelog copy reference "5 workouts" (see `src/utils/changelogData.js` and any "This Week" tooltip).
+
+### What Needs to Be Built
+
+**Option A: User setting**
+
+- Add a user preference (e.g. in Settings or user profile) for "Weekly workout target" (default 5).
+- Store in DynamoDB user record or a lightweight preferences entity.
+- Pass `weeklyTarget` (or equivalent) from dashboard/agent into `StreakCard`; component uses prop with fallback to 5.
+
+**Option B: Derive from active program(s)**
+
+- From active program(s), infer "workouts per week" (e.g. program has 4 phases with 4 days/week → target 4).
+- Requires a clear rule: single active program vs multiple (e.g. max, sum, or primary program only).
+- Pass derived target into `StreakCard`; fallback to 5 when no program or ambiguous.
+
+**Option C: Hybrid**
+
+- Prefer program-derived target when available and unambiguous; otherwise use user setting; default 5.
+
+**Frontend:**
+
+- `StreakCard` accepts optional `weeklyTarget?: number` prop; use it when provided, else `WEEKLY_TARGET`.
+- Update any tooltips or copy that say "5 workouts" to use the active target (or generic "weekly target" wording).
+- If Option A or C: Settings UI for weekly target (number input or preset, e.g. 3, 4, 5, 6, 7).
+
+**Backend (if Option A or C):**
+
+- User preferences schema and read/update operations for weekly target.
+- Optional: endpoint or inclusion in existing user/profile fetch.
+
+### Key Files
+
+| File                                               | Change                                                           |
+| -------------------------------------------------- | ---------------------------------------------------------------- |
+| `src/components/highlights/StreakCard.jsx`         | Accept `weeklyTarget` prop, use for label and progress bar       |
+| `src/components/TrainingGroundsV2.jsx`             | Pass `weeklyTarget` to StreakCard (from settings or derived)     |
+| `src/components/Settings.jsx`                      | (If Option A/C) Weekly target setting control                    |
+| `src/utils/agents/WorkoutAgent.js` or ProgramAgent | (If Option B/C) Expose or derive workouts-per-week from programs |
+| `amplify/dynamodb/operations.ts`                   | (If Option A/C) User preferences read/update for weekly target   |
+| `src/utils/changelogData.js`                       | Update copy if it hardcodes "5"                                  |
+
+### Design Notes
+
+- Default 5 keeps current behavior and avoids breaking existing users.
+- Program-derived target is more accurate for users on a structured plan but needs a simple, documented rule for multi-program or no-program cases.
+- Consider capping displayed target (e.g. 3–7) to avoid odd values from bad data or edge cases.
+
+---
+
 ## Priority Summary
 
-| #   | Feature                          | Priority  | Effort     | Build When                            |
-| --- | -------------------------------- | --------- | ---------- | ------------------------------------- |
-| 1   | PR Highlights                    | High      | Low-Medium | Complete                              |
-| 2   | Report Action Card               | Medium    | Medium     | Next                                  |
-| 3   | Multi-Workout Architecture       | High      | Medium     | Complete (Phases 1-3)                 |
-| 4   | Meal Planner Agent               | Low (now) | Very High  | After core engagement is proven       |
-| 5   | Exercise History & PR Timeline   | Low       | Medium     | After users request exercise tracking |
-| 6   | Workout Streak + Weekly Progress | High      | Low        | Complete                              |
-| 7   | PR Unit of Measure               | High      | Low        | Complete                              |
-| 8   | Top Exercises Card               | Medium    | Trivial    | Complete                              |
-| 9   | Best Streak Backend Optimization | Medium    | Medium     | When power users hit 100+ workouts    |
+| #   | Feature                             | Priority  | Effort     | Build When                            |
+| --- | ----------------------------------- | --------- | ---------- | ------------------------------------- |
+| 1   | PR Highlights                       | High      | Low-Medium | Complete                              |
+| 2   | Report Action Card                  | Medium    | Medium     | Next                                  |
+| 3   | Multi-Workout Architecture          | High      | Medium     | Complete (Phases 1-3)                 |
+| 4   | Meal Planner Agent                  | Low (now) | Very High  | After core engagement is proven       |
+| 5   | Exercise History & PR Timeline      | Low       | Medium     | After users request exercise tracking |
+| 6   | Workout Streak + Weekly Progress    | High      | Low        | Complete                              |
+| 7   | PR Unit of Measure                  | High      | Low        | Complete                              |
+| 8   | Top Exercises Card                  | Medium    | Trivial    | Complete                              |
+| 9   | Best Streak Backend Optimization    | Medium    | Medium     | When power users hit 100+ workouts    |
+| 10  | Configurable Weekly Target (Streak) | Low       | Low-Medium | When personalization is prioritized   |

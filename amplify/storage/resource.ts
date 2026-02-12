@@ -2,6 +2,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { RemovalPolicy, Stack, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { createBranchAwareResourceName } from '../functions/libs/branch-naming';
+import { logger } from "../functions/libs/logger";
 
 export function createAppsBucket(scope: Construct) {
   const stack = Stack.of(scope);
@@ -58,7 +59,7 @@ export function createAppsBucket(scope: Construct) {
     autoDeleteObjects: true, // Only for dev
   });
 
-  console.info(`✅ Apps bucket created: ${bucketName} (branch: ${branchInfo.branchName})`);
+  logger.info(`✅ Apps bucket created: ${bucketName} (branch: ${branchInfo.branchName})`);
 
   return {
     bucket,

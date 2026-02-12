@@ -5,6 +5,7 @@ import {
 } from "./types";
 import { CoachConfig } from "../coach-creator/types";
 import { parseJsonWithFallbacks } from "../response-utils";
+import { logger } from "../logger";
 
 /**
  * Build the prompt for coach conversation summarization
@@ -129,14 +130,14 @@ export function parseCoachConversationSummary(
     // Determine if we have a string or already-parsed data
     let parsedData: any;
     if (typeof dataOrString === "string") {
-      console.info("Parsing JSON string (legacy mode)..", {
+      logger.info("Parsing JSON string (legacy mode)..", {
         responseLength: dataOrString.length,
         responsePreview: dataOrString.substring(0, 200),
       });
       // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
       parsedData = parseJsonWithFallbacks(dataOrString);
     } else {
-      console.info("Processing tool result data (toolConfig mode)..");
+      logger.info("Processing tool result data (toolConfig mode)..");
       parsedData = dataOrString;
     }
 
@@ -147,14 +148,14 @@ export function parseCoachConversationSummary(
 
     if (parsedData.full_summary && parsedData.compact_summary) {
       // New dual format (from toolConfig)
-      console.info("✅ Detected dual-format response (full + compact)");
+      logger.info("✅ Detected dual-format response (full + compact)");
       narrative = parsedData.full_summary.narrative || "";
       structuredData = { ...parsedData.full_summary };
       delete structuredData.narrative;
       compactSummary = parsedData.compact_summary;
     } else {
       // Legacy single format (backwards compatibility)
-      console.info("⚠️ Legacy single-format response detected");
+      logger.info("⚠️ Legacy single-format response detected");
       narrative = parsedData.narrative || parsedData.narrative_summary || "";
       structuredData = { ...parsedData };
       if (structuredData.narrative) delete structuredData.narrative;
@@ -162,7 +163,7 @@ export function parseCoachConversationSummary(
         delete structuredData.narrative_summary;
     }
 
-    console.info("Parsed conversation data:", {
+    logger.info("Parsed conversation data:", {
       narrativeLength: narrative.length,
       hasGoals: !!structuredData.current_goals,
       hasProgress: !!structuredData.recent_progress,
@@ -257,8 +258,8 @@ export function parseCoachConversationSummary(
     // Return with compact summary if available (for Pinecone optimization)
     return compactSummary ? { ...summary, compactSummary } : summary;
   } catch (error) {
-    console.error("Error parsing conversation summary:", error);
-    console.error(
+    logger.error("Error parsing conversation summary:", error);
+    logger.error(
       "Input data:",
       typeof dataOrString === "string"
         ? dataOrString.substring(0, 500)

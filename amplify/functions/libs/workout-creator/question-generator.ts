@@ -15,6 +15,7 @@ import {
 } from "../api-helpers";
 import { ConversationMessage } from "../todo-types";
 import { WorkoutCreatorTodoList } from "./types";
+import { logger } from "../logger";
 import {
   getMissingFieldsSummary,
   getCollectedDataSummary,
@@ -43,7 +44,7 @@ export async function* generateNextQuestionStream(
   },
   turnCount?: number,
 ): AsyncGenerator<string, string, unknown> {
-  console.info("🎯 Generating next workout creator question (streaming)", {
+  logger.info("🎯 Generating next workout creator question (streaming)", {
     turnCount,
   });
 
@@ -86,10 +87,10 @@ export async function* generateNextQuestionStream(
       yield chunk;
     }
 
-    console.info("✅ Question generation streaming complete");
+    logger.info("✅ Question generation streaming complete");
     return fullResponse;
   } catch (error) {
-    console.error("❌ Error generating question stream:", error);
+    logger.error("❌ Error generating question stream:", error);
 
     // Fallback: return a simple question
     const pendingFields = getPendingRequiredFields(todoList);

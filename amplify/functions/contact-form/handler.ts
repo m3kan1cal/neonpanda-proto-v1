@@ -10,6 +10,7 @@ import {
 } from "../libs/api-helpers";
 import { publishContactFormNotification } from "../libs/sns-helpers";
 import { saveContactForm } from "../../dynamodb/operations";
+import { logger } from "../libs/logger";
 import {
   ContactFormData,
   validateContactForm,
@@ -18,19 +19,16 @@ import {
 } from "./validate";
 
 export const handler: APIGatewayProxyHandlerV2 = async (
-  event: APIGatewayProxyEventV2
+  event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
-  console.info(
-    "Contact form submission event:",
-    JSON.stringify(event, null, 2)
-  );
+  logger.info("Contact form submission event:", JSON.stringify(event, null, 2));
 
   try {
     // Only allow POST requests
     if (getHttpMethod(event) !== "POST") {
       return createErrorResponse(
         405,
-        "Method not allowed. Only POST requests are supported."
+        "Method not allowed. Only POST requests are supported.",
       );
     }
 
@@ -44,14 +42,14 @@ export const handler: APIGatewayProxyHandlerV2 = async (
     try {
       formData = JSON.parse(event.body);
     } catch (parseError) {
-      console.error("Failed to parse request body:", parseError);
+      logger.error("Failed to parse request body:", parseError);
       return createErrorResponse(400, "Invalid JSON in request body");
     }
 
     // Validate the form data
     const validation = validateContactForm(formData);
     if (!validation.isValid) {
-      console.info("Form validation failed:", validation.errors);
+      logger.info("Form validation failed:", validation.errors);
       return createErrorResponse(400, "Validation failed", validation.errors);
     }
 
@@ -73,11 +71,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (
         timestamp: sanitizedData.timestamp,
       });
     } catch (dbError) {
-      console.error("Failed to save contact form to DynamoDB:", dbError);
+      logger.error("Failed to save contact form to DynamoDB:", dbError);
       return createErrorResponse(
         500,
         "Failed to save contact form",
-        "There was an error saving your submission. Please try again."
+        "There was an error saving your submission. Please try again.",
       );
     }
 
@@ -85,9 +83,9 @@ export const handler: APIGatewayProxyHandlerV2 = async (
     try {
       await publishContactFormNotification(sanitizedData);
     } catch (error) {
-      console.error(
+      logger.error(
         "SNS notification failed, but continuing with successful response:",
-        error
+        error,
       );
     }
 
@@ -105,11 +103,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (
       },
     });
   } catch (error) {
-    console.error("Unexpected error processing contact form:", error);
+    logger.error("Unexpected error processing contact form:", error);
     return createErrorResponse(
       500,
       "Internal server error",
-      "An unexpected error occurred while processing your request"
+      "An unexpected error occurred while processing your request",
     );
   }
 };

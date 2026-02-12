@@ -14,6 +14,7 @@ import {
   retryProgramBuild,
 } from "../apis/programDesignerApi.js";
 import { PROGRAM_STATUS } from "../../constants/conversationModes.js";
+import { logger } from "../logger";
 
 /**
  * ProgramAgent - Handles the business logic for training program management
@@ -28,7 +29,7 @@ export class ProgramAgent {
 
     // Validate callback
     if (this.onStateChange && typeof this.onStateChange !== "function") {
-      console.error(
+      logger.error(
         "ProgramAgent: onStateChange must be a function, got:",
         typeof this.onStateChange,
       );
@@ -85,7 +86,7 @@ export class ProgramAgent {
       try {
         this.onStateChange(this.programState);
       } catch (error) {
-        console.error(
+        logger.error(
           "ProgramAgent._updateState: Error in state change callback:",
           error,
         );
@@ -98,12 +99,12 @@ export class ProgramAgent {
    */
   async setUserAndCoach(userId, coachId) {
     if (!userId) {
-      console.error("ProgramAgent.setUserAndCoach: userId is required");
+      logger.error("ProgramAgent.setUserAndCoach: userId is required");
       return;
     }
 
     if (!coachId) {
-      console.error("ProgramAgent.setUserAndCoach: coachId is required");
+      logger.error("ProgramAgent.setUserAndCoach: coachId is required");
       return;
     }
 
@@ -124,7 +125,7 @@ export class ProgramAgent {
    */
   async loadPrograms(options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.loadPrograms: userId and coachId are required",
       );
       return;
@@ -157,7 +158,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.loadPrograms: Error:", error);
+      logger.error("ProgramAgent.loadPrograms: Error:", error);
       this._updateState({
         error: error.message,
         isLoadingPrograms: false,
@@ -177,14 +178,14 @@ export class ProgramAgent {
    */
   async loadProgram(programId) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.loadProgram: userId and coachId are required",
       );
       return;
     }
 
     if (!programId) {
-      console.error("ProgramAgent.loadProgram: programId is required");
+      logger.error("ProgramAgent.loadProgram: programId is required");
       return;
     }
 
@@ -213,7 +214,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.loadProgram: Error:", error);
+      logger.error("ProgramAgent.loadProgram: Error:", error);
       this._updateState({
         error: error.message,
         isLoadingProgram: false,
@@ -237,7 +238,7 @@ export class ProgramAgent {
    */
   async loadWorkoutTemplates(programId = null, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.loadWorkoutTemplates: userId and coachId are required",
       );
       return;
@@ -248,7 +249,7 @@ export class ProgramAgent {
       programId || this.programState.activeProgram?.programId;
 
     if (!targetProgramId) {
-      console.error(
+      logger.error(
         "ProgramAgent.loadWorkoutTemplates: No programId provided and no active program found",
       );
       return;
@@ -284,7 +285,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.loadWorkoutTemplates: Error:", error);
+      logger.error("ProgramAgent.loadWorkoutTemplates: Error:", error);
 
       // "No templates found" is not an error - it's a rest day
       const isRestDay =
@@ -292,7 +293,7 @@ export class ProgramAgent {
         error.message?.includes("No templates found");
 
       if (isRestDay) {
-        console.info(
+        logger.info(
           "ProgramAgent: Rest day detected - no workout template for today",
         );
         this._updateState({
@@ -326,19 +327,19 @@ export class ProgramAgent {
    */
   async updateProgramStatus(programId, action, data = {}) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.updateProgramStatus: userId and coachId are required",
       );
       return;
     }
 
     if (!programId) {
-      console.error("ProgramAgent.updateProgramStatus: programId is required");
+      logger.error("ProgramAgent.updateProgramStatus: programId is required");
       return;
     }
 
     if (!action) {
-      console.error("ProgramAgent.updateProgramStatus: action is required");
+      logger.error("ProgramAgent.updateProgramStatus: action is required");
       return;
     }
 
@@ -390,7 +391,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.updateProgramStatus: Error:", error);
+      logger.error("ProgramAgent.updateProgramStatus: Error:", error);
       this._updateState({
         error: error.message,
         isUpdating: false,
@@ -421,14 +422,14 @@ export class ProgramAgent {
     options = {},
   ) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.logWorkoutFromTemplate: userId and coachId are required",
       );
       return;
     }
 
     if (!programId || !templateId) {
-      console.error(
+      logger.error(
         "ProgramAgent.logWorkoutFromTemplate: programId and templateId are required",
       );
       return;
@@ -459,7 +460,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.logWorkoutFromTemplate: Error:", error);
+      logger.error("ProgramAgent.logWorkoutFromTemplate: Error:", error);
       this._updateState({
         error: error.message,
         isLoggingWorkout: false,
@@ -490,7 +491,7 @@ export class ProgramAgent {
 
         // If freshData is null, it's a rest day - stop polling
         if (freshData === null) {
-          console.info(
+          logger.info(
             "⏹️ Rest day detected after logging workout - stopping polling for template:",
             templateId,
           );
@@ -506,7 +507,7 @@ export class ProgramAgent {
 
           // If linkedWorkoutId is now available, stop polling
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            console.info(
+            logger.info(
               "✅ linkedWorkoutId found:",
               updatedTemplate.linkedWorkoutId,
             );
@@ -524,7 +525,7 @@ export class ProgramAgent {
             );
 
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            console.info(
+            logger.info(
               "✅ linkedWorkoutId found:",
               updatedTemplate.linkedWorkoutId,
             );
@@ -535,7 +536,7 @@ export class ProgramAgent {
 
         // Stop polling after max attempts
         if (pollCount >= maxPolls) {
-          console.warn(
+          logger.warn(
             "⏱️ Max polling attempts reached for template:",
             templateId,
           );
@@ -543,13 +544,13 @@ export class ProgramAgent {
           this.pollingIntervals.delete(templateId);
         }
       } catch (err) {
-        console.error("Error polling for linkedWorkoutId:", err);
+        logger.error("Error polling for linkedWorkoutId:", err);
         // Stop polling if we've moved to a rest day (no templates found)
         if (
           err.message === "No templates found for today" ||
           err.message?.includes("No templates found")
         ) {
-          console.info(
+          logger.info(
             "⏹️ Rest day detected - stopping polling for template:",
             templateId,
           );
@@ -577,14 +578,14 @@ export class ProgramAgent {
    */
   async skipWorkoutTemplate(programId, templateId, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.skipWorkoutTemplate: userId and coachId are required",
       );
       return;
     }
 
     if (!programId || !templateId) {
-      console.error(
+      logger.error(
         "ProgramAgent.skipWorkoutTemplate: programId and templateId are required",
       );
       return;
@@ -624,7 +625,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.skipWorkoutTemplate: Error:", error);
+      logger.error("ProgramAgent.skipWorkoutTemplate: Error:", error);
       this._updateState({
         error: error.message,
         isUpdating: false,
@@ -649,14 +650,14 @@ export class ProgramAgent {
    */
   async unskipWorkoutTemplate(programId, templateId, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.unskipWorkoutTemplate: userId and coachId are required",
       );
       return;
     }
 
     if (!programId || !templateId) {
-      console.error(
+      logger.error(
         "ProgramAgent.unskipWorkoutTemplate: programId and templateId are required",
       );
       return;
@@ -694,7 +695,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.unskipWorkoutTemplate: Error:", error);
+      logger.error("ProgramAgent.unskipWorkoutTemplate: Error:", error);
       this._updateState({
         error: error.message,
         isUpdating: false,
@@ -718,14 +719,14 @@ export class ProgramAgent {
    */
   async completeRestDay(programId, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.completeRestDay: userId and coachId are required",
       );
       return;
     }
 
     if (!programId) {
-      console.error("ProgramAgent.completeRestDay: programId is required");
+      logger.error("ProgramAgent.completeRestDay: programId is required");
       return;
     }
 
@@ -759,7 +760,7 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error("ProgramAgent.completeRestDay: Error:", error);
+      logger.error("ProgramAgent.completeRestDay: Error:", error);
       this._updateState({
         error: error.message,
         isUpdating: false,
@@ -803,14 +804,14 @@ export class ProgramAgent {
    */
   async deleteProgram(programId) {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.deleteProgram: userId and coachId are required",
       );
       throw new Error("userId and coachId are required");
     }
 
     if (!programId) {
-      console.error("ProgramAgent.deleteProgram: programId is required");
+      logger.error("ProgramAgent.deleteProgram: programId is required");
       throw new Error("programId is required");
     }
 
@@ -818,7 +819,7 @@ export class ProgramAgent {
       // Call the DELETE API via the programApi helper
       const result = await deleteProgram(this.userId, this.coachId, programId);
 
-      console.info("Training program deleted successfully:", {
+      logger.info("Training program deleted successfully:", {
         programId,
         userId: this.userId,
         coachId: this.coachId,
@@ -826,7 +827,7 @@ export class ProgramAgent {
 
       return result;
     } catch (error) {
-      console.error("Error deleting training program:", error);
+      logger.error("Error deleting training program:", error);
       throw error;
     }
   }
@@ -841,7 +842,7 @@ export class ProgramAgent {
    */
   async loadAllTodaysWorkouts() {
     if (!this.userId || !this.coachId) {
-      console.error(
+      logger.error(
         "ProgramAgent.loadAllTodaysWorkouts: userId and coachId are required",
       );
       return {};
@@ -923,7 +924,7 @@ export class ProgramAgent {
 
       return todaysWorkouts;
     } catch (error) {
-      console.error("ProgramAgent.loadAllTodaysWorkouts: Error:", error);
+      logger.error("ProgramAgent.loadAllTodaysWorkouts: Error:", error);
       this._updateState({
         isLoadingAllTodaysWorkouts: false,
         isLoadingTodaysWorkout: false,
@@ -991,7 +992,7 @@ export class ProgramAgent {
    */
   static async getIncompleteSessions(userId) {
     if (!userId) {
-      console.warn("Cannot load program designer sessions without userId");
+      logger.warn("Cannot load program designer sessions without userId");
       return [];
     }
 
@@ -1007,7 +1008,7 @@ export class ProgramAgent {
 
       return result.sessions || [];
     } catch (error) {
-      console.error(
+      logger.error(
         "Error loading incomplete program designer sessions:",
         error,
       );
@@ -1022,7 +1023,7 @@ export class ProgramAgent {
    */
   static async getCompletedSessions(userId) {
     if (!userId) {
-      console.warn(
+      logger.warn(
         "Cannot load completed program designer sessions without userId",
       );
       return [];
@@ -1040,7 +1041,7 @@ export class ProgramAgent {
 
       return result.sessions || [];
     } catch (error) {
-      console.error(
+      logger.error(
         "Error loading completed program designer sessions:",
         error,
       );
@@ -1060,11 +1061,11 @@ export class ProgramAgent {
     }
 
     try {
-      console.info("Deleting program designer session:", { userId, sessionId });
+      logger.info("Deleting program designer session:", { userId, sessionId });
       const result = await deleteProgramDesignerSession(userId, sessionId);
       return result;
     } catch (error) {
-      console.error("Error deleting program designer session:", error);
+      logger.error("Error deleting program designer session:", error);
       throw error;
     }
   }
@@ -1081,11 +1082,11 @@ export class ProgramAgent {
     }
 
     try {
-      console.info("Retrying program build:", { userId, sessionId });
+      logger.info("Retrying program build:", { userId, sessionId });
       const result = await retryProgramBuild(userId, sessionId);
       return result;
     } catch (error) {
-      console.error("Error retrying program build:", error);
+      logger.error("Error retrying program build:", error);
       throw error;
     }
   }

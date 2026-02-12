@@ -16,6 +16,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { InlineEditField } from "./shared/InlineEditField";
 import AppFooter from "./shared/AppFooter";
+import { logger } from "../utils/logger";
 import {
   NeonBorder,
   NewBadge,
@@ -313,7 +314,7 @@ function Coaches() {
       // Return the session ID that's currently building (if any) for tracking
       return buildingSession?.sessionId || null;
     } catch (error) {
-      console.error("Error loading in-progress sessions:", error);
+      logger.error("Error loading in-progress sessions:", error);
       setInProgressSessions([]);
     } finally {
       setSessionsLoading(false);
@@ -352,7 +353,7 @@ function Coaches() {
       setShowDeleteModal(false);
       setSessionToDelete(null);
     } catch (error) {
-      console.error("Error deleting session:", error);
+      logger.error("Error deleting session:", error);
       // Could show toast notification here
       setShowDeleteModal(false);
       setSessionToDelete(null);
@@ -391,7 +392,7 @@ function Coaches() {
       );
       toast.success("Coach build started successfully");
     } catch (error) {
-      console.error("Error retrying coach config build:", error);
+      logger.error("Error retrying coach config build:", error);
       // Clear the agent error state to prevent it from showing on the page
       agentRef.current?._updateState({ error: null });
       // Show toast instead
@@ -430,7 +431,7 @@ function Coaches() {
           }
         },
         onError: (error) => {
-          console.error("CoachAgent error:", error);
+          logger.error("CoachAgent error:", error);
           // Could show toast notification here
         },
       });
@@ -528,7 +529,7 @@ function Coaches() {
       setShowDeleteCoachModal(false);
       setCoachToDelete(null);
     } catch (error) {
-      console.error("Error deleting coach:", error);
+      logger.error("Error deleting coach:", error);
       toast.error("Failed to delete coach");
     } finally {
       setIsDeletingCoach(false);
@@ -590,7 +591,7 @@ function Coaches() {
                 <div className="flex-1">
                   {/* Coach name skeleton */}
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
+                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
 
@@ -636,7 +637,7 @@ function Coaches() {
                   className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}
                 >
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full flex-shrink-0 mt-2"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full shrink-0 mt-2"></div>
                     <div className="flex-1">
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
@@ -676,7 +677,7 @@ function Coaches() {
                 >
                   <div className="flex-1">
                     <div className="flex items-start space-x-3 mb-3">
-                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
+                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                     </div>
                     <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full mb-2"></div>
@@ -969,7 +970,7 @@ function Coaches() {
                   <div className="flex-1">
                     {/* Coach Name - Either editable or static */}
                     <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
                       {editingCoachId === coach.coach_id ? (
                         <InlineEditField
                           value={agentRef.current?.formatCoachName(
@@ -1238,7 +1239,7 @@ function Coaches() {
                     {/* Session Header */}
                     <div className="flex items-start space-x-3 mb-4">
                       <div
-                        className={`w-3 h-3 ${dotColor} rounded-full flex-shrink-0 mt-2`}
+                        className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
                       ></div>
                       <div className="flex-1">
                         <h3 className="font-russo font-bold text-white text-lg uppercase">
@@ -1512,7 +1513,7 @@ function Coaches() {
 
                       {/* Template Name */}
                       <div className="flex items-start space-x-3 mb-3">
-                        <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                        <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                         <h3 className="font-russo font-bold text-white text-lg uppercase">
                           {template.template_name}
                         </h3>

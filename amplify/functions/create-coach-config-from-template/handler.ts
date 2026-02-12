@@ -4,6 +4,7 @@ import {
 } from "../libs/api-helpers";
 import { createCoachConfigFromTemplate } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -15,7 +16,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   try {
-    console.info("Creating coach config from template:", {
+    logger.info("Creating coach config from template:", {
       userId,
       templateId,
     });
@@ -26,7 +27,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       templateId
     );
 
-    console.info("Successfully created coach config from template:", {
+    logger.info("Successfully created coach config from template:", {
       userId,
       templateId,
       newCoachId: newCoachConfig.coach_id,
@@ -46,7 +47,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       "Coach config created successfully from template"
     );
   } catch (error) {
-    console.error("Error creating coach config from template:", error);
+    logger.error("Error creating coach config from template:", error);
 
     // Handle specific error cases
     if (error instanceof Error) {

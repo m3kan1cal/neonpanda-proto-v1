@@ -15,6 +15,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { copySharedProgramToUser } from "../libs/shared-program/copy-utils";
 import { incrementSharedProgramCopies } from "../../dynamodb/operations";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -42,7 +43,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   try {
-    console.info("Copying shared program:", {
+    logger.info("Copying shared program:", {
       userId,
       sharedProgramId,
       coachId,
@@ -57,14 +58,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Increment copy count on the source shared program (fire-and-forget, don't block response)
     incrementSharedProgramCopies(sharedProgramId).catch((error) => {
-      console.warn(
+      logger.warn(
         "Failed to increment copy count (non-critical):",
         sharedProgramId,
         error,
       );
     });
 
-    console.info("Successfully copied shared program:", {
+    logger.info("Successfully copied shared program:", {
       userId,
       sharedProgramId,
       newProgramId: result.programId,
@@ -79,7 +80,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       message: "Program copied successfully. Ready to start!",
     });
   } catch (error) {
-    console.error("Error copying shared program:", error);
+    logger.error("Error copying shared program:", error);
 
     // Handle specific error cases
     if (error instanceof Error) {

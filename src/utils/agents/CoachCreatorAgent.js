@@ -7,6 +7,7 @@ import {
   getCoachCreatorSessions,
   deleteCoachCreatorSession,
 } from "../apis/coachCreatorApi";
+import { logger } from "../logger";
 import {
   processStreamingChunks,
   createStreamingMessage,
@@ -106,7 +107,7 @@ export class CoachCreatorAgent {
       // Generate userId if not provided
       const userId = providedUserId || this.userId || nanoid(21);
 
-      console.info("Creating new coach creator session for userId:", userId);
+      logger.info("Creating new coach creator session for userId:", userId);
 
       // Create session via API
       const result = await createCoachCreatorSession(userId);
@@ -135,7 +136,7 @@ export class CoachCreatorAgent {
 
       return { userId, sessionId };
     } catch (error) {
-      console.error("Error creating coach creator session:", error);
+      logger.error("Error creating coach creator session:", error);
       this._updateState({
         isLoadingItem: false,
         error: "Failed to create coach creator session",
@@ -155,7 +156,7 @@ export class CoachCreatorAgent {
 
     // Skip loading if this session was just created (prevents overwriting initial message)
     if (this.isNewlyCreated && this.sessionId === sessionId) {
-      console.info('⏭️ Skipping loadExistingSession - session was just created');
+      logger.info('⏭️ Skipping loadExistingSession - session was just created');
       this.isNewlyCreated = false; // Reset flag for future loads
       return;
     }
@@ -207,7 +208,7 @@ export class CoachCreatorAgent {
       } else {
         // Fallback: If no conversation history yet (should not happen in practice)
         // The backend always stores the initial AI message in conversationHistory
-        console.warn('⚠️ No conversation history found in session, using fallback message');
+        logger.warn('⚠️ No conversation history found in session, using fallback message');
 
         const fallbackMessage = `Hey! Ready to create your AI coach? Let's build a coach that actually gets YOU. What are your main fitness goals right now?`;
 
@@ -234,7 +235,7 @@ export class CoachCreatorAgent {
 
       return sessionData;
     } catch (error) {
-      console.error("Error loading existing session:", error);
+      logger.error("Error loading existing session:", error);
       this._updateState({
         isLoadingItem: false,
         error: "Failed to load existing session",
@@ -366,7 +367,7 @@ export class CoachCreatorAgent {
 
       return result;
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
 
       // Add error message
       const errorResponse = {
@@ -397,7 +398,7 @@ export class CoachCreatorAgent {
   async sendMessageStream(messageContent, imageS3Keys = []) {
     // Input validation using helper
     if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
-      console.warn("❌ sendMessageStream validation failed");
+      logger.warn("❌ sendMessageStream validation failed");
       return;
     }
 
@@ -498,7 +499,7 @@ export class CoachCreatorAgent {
             // Note: For fallback responses, isComplete may not be available
             // so we avoid triggering completion unless explicitly true
 
-            console.info("🔄 Using fallback response for coach creator:", {
+            logger.info("🔄 Using fallback response for coach creator:", {
               isComplete: data?.isComplete,
               hasAiResponse: !!data?.aiResponse,
               hasNextQuestion: !!data?.nextQuestion,
@@ -508,7 +509,7 @@ export class CoachCreatorAgent {
           },
 
           onError: async (errorMessage) => {
-            console.error("Coach creator streaming error:", errorMessage);
+            logger.error("Coach creator streaming error:", errorMessage);
           },
         });
       } catch (streamError) {
@@ -523,7 +524,7 @@ export class CoachCreatorAgent {
         );
       }
     } catch (error) {
-      console.error("Error sending streaming coach creator message:", error);
+      logger.error("Error sending streaming coach creator message:", error);
 
       // Clean up and add error message
       this._cleanupStreamingError(error);
@@ -766,7 +767,7 @@ export class CoachCreatorAgent {
    */
   static async getInProgressSessions(userId, options = {}) {
     if (!userId) {
-      console.warn("Cannot load coach creator sessions without userId");
+      logger.warn("Cannot load coach creator sessions without userId");
       return [];
     }
 
@@ -781,7 +782,7 @@ export class CoachCreatorAgent {
 
       return result.sessions || [];
     } catch (error) {
-      console.error("Error loading coach creator sessions:", error);
+      logger.error("Error loading coach creator sessions:", error);
       return [];
     }
   }
@@ -794,7 +795,7 @@ export class CoachCreatorAgent {
    */
   static async getCompletedSessions(userId, options = {}) {
     if (!userId) {
-      console.warn("Cannot load completed coach creator sessions without userId");
+      logger.warn("Cannot load completed coach creator sessions without userId");
       return [];
     }
 
@@ -809,7 +810,7 @@ export class CoachCreatorAgent {
 
       return result.sessions || [];
     } catch (error) {
-      console.error("Error loading completed coach creator sessions:", error);
+      logger.error("Error loading completed coach creator sessions:", error);
       return [];
     }
   }
@@ -826,11 +827,11 @@ export class CoachCreatorAgent {
     }
 
     try {
-      console.info("Deleting coach creator session:", { userId, sessionId });
+      logger.info("Deleting coach creator session:", { userId, sessionId });
       const result = await deleteCoachCreatorSession(userId, sessionId);
       return result;
     } catch (error) {
-      console.error("Error deleting coach creator session:", error);
+      logger.error("Error deleting coach creator session:", error);
       throw error;
     }
   }

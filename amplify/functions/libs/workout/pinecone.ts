@@ -9,6 +9,7 @@ import { storePineconeContext, deletePineconeContext } from "../api-helpers";
 import { storeWithAutoCompression } from "../pinecone-compression";
 import { filterNullish } from "../object-utils";
 import { UniversalWorkoutSchema, Workout } from "./types";
+import { logger } from "../logger";
 
 /**
  * Store workout summary in Pinecone for semantic search and coach context
@@ -118,7 +119,7 @@ export const storeWorkoutSummaryInPinecone = async (
       "workout summary",
     );
 
-    console.info("✅ Successfully stored workout summary in Pinecone:", {
+    logger.info("✅ Successfully stored workout summary in Pinecone:", {
       workoutId: workoutData.workout_id,
       recordId: result.recordId,
       namespace: result.namespace,
@@ -128,11 +129,11 @@ export const storeWorkoutSummaryInPinecone = async (
 
     return result;
   } catch (error) {
-    console.error("❌ Failed to store workout summary in Pinecone:", error);
+    logger.error("❌ Failed to store workout summary in Pinecone:", error);
 
     // Don't throw error to avoid breaking the workout extraction process
     // Pinecone storage is for future retrieval/analysis, not critical for immediate functionality
-    console.warn(
+    logger.warn(
       "Workout extraction will continue despite Pinecone storage failure",
     );
     return {
@@ -154,7 +155,7 @@ export const deleteWorkoutSummaryFromPinecone = async (
   workoutId: string,
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.info("🗑️ Deleting workout summary from Pinecone:", {
+    logger.info("🗑️ Deleting workout summary from Pinecone:", {
       userId,
       workoutId,
     });
@@ -166,13 +167,13 @@ export const deleteWorkoutSummaryFromPinecone = async (
     });
 
     if (result.success) {
-      console.info("✅ Successfully deleted workout summary from Pinecone:", {
+      logger.info("✅ Successfully deleted workout summary from Pinecone:", {
         userId,
         workoutId,
         deletedRecords: result.deletedCount,
       });
     } else {
-      console.warn("⚠️ Failed to delete workout summary from Pinecone:", {
+      logger.warn("⚠️ Failed to delete workout summary from Pinecone:", {
         userId,
         workoutId,
         error: result.error,
@@ -184,11 +185,11 @@ export const deleteWorkoutSummaryFromPinecone = async (
       error: result.error,
     };
   } catch (error) {
-    console.error("❌ Failed to delete workout summary from Pinecone:", error);
+    logger.error("❌ Failed to delete workout summary from Pinecone:", error);
 
     // Don't throw error to avoid breaking the workout deletion process
     // Pinecone cleanup failure shouldn't prevent DynamoDB deletion
-    console.warn(
+    logger.warn(
       "Workout deletion will continue despite Pinecone cleanup failure",
     );
     return {

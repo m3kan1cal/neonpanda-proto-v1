@@ -1,6 +1,7 @@
 import { getApiUrl, authenticatedFetch, isStreamingEnabled } from './apiConfig';
 import { handleStreamingApiRequest } from './streamingApiHelper';
 import { streamCoachCreatorSessionLambda } from './streamingLambdaApi';
+import { logger } from "../logger";
 
 /**
  * API service for Coach Creator operations
@@ -76,7 +77,7 @@ export async function* streamCoachCreatorSession(userId, sessionId, userResponse
       yield* streamCoachCreatorSessionLambda(userId, sessionId, userResponse, imageS3Keys);
       return; // Success - exit
     } catch (lambdaError) {
-      console.warn('⚠️ Lambda Function URL streaming failed, falling back to API Gateway:', lambdaError);
+      logger.warn('⚠️ Lambda Function URL streaming failed, falling back to API Gateway:', lambdaError);
       // Continue to API Gateway fallback
     }
   }

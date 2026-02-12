@@ -14,6 +14,7 @@ import {
   EnhancedMethodologyOptions,
 } from "./coach-conversation/types";
 import { parseJsonWithFallbacks } from "./response-utils";
+import { logger } from "./logger";
 
 // Configuration
 const PINECONE_QUERY_ENABLED = true;
@@ -89,7 +90,7 @@ Analyze this message and determine if semantic search would enhance the coaching
 
     return result.shouldUseSemanticSearch || false;
   } catch (error) {
-    console.error("Error in Pinecone search decision:", error);
+    logger.error("Error in Pinecone search decision:", error);
     // Conservative fallback - use semantic search for complex questions
     const isComplexQuery = userMessage.length > 50 && userMessage.includes("?");
     return isComplexQuery;
@@ -141,7 +142,7 @@ Examples:
     )) as string; // No tools used, always returns string
     return parseJsonWithFallbacks(response);
   } catch (error) {
-    console.error("Failed to analyze methodology intent:", error);
+    logger.error("Failed to analyze methodology intent:", error);
     return {
       isComparison: false,
       isImplementationQuestion: false,
@@ -224,7 +225,7 @@ export const getEnhancedMethodologyContext = async (
 
       allResults.push(...matches);
     } catch (error) {
-      console.error(`Failed to query methodology with: ${query}`, error);
+      logger.error(`Failed to query methodology with: ${query}`, error);
     }
   }
 

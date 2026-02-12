@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { deleteCoachConversation, getCoachConversation, getCoachConfig, saveCoachConfig } from '../../dynamodb/operations';
 import { deleteConversationSummaryFromPinecone } from '../libs/coach-conversation/pinecone';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -18,7 +19,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
   try {
-    console.info('Deleting coach conversation:', {
+    logger.info('Deleting coach conversation:', {
       userId,
       coachId,
       conversationId
@@ -34,7 +35,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await deleteCoachConversation(userId, conversationId);
 
     // Clean up associated conversation summary from Pinecone
-    console.info('🗑️ Cleaning up conversation summary from Pinecone..');
+    logger.info('🗑️ Cleaning up conversation summary from Pinecone..');
     const pineconeResult = await deleteConversationSummaryFromPinecone(userId, conversationId);
 
     // Update coach config conversation count
@@ -50,13 +51,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           },
         };
         await saveCoachConfig(userId, updated);
-        console.info('Updated coach config conversation count:', {
+        logger.info('Updated coach config conversation count:', {
           previousCount: currentCount,
           newCount: updated.metadata.total_conversations
         });
       }
     } catch (error) {
-      console.error('Failed to update conversation count:', error);
+      logger.error('Failed to update conversation count:', error);
       // Don't fail the request - conversation was deleted successfully
     }
 
@@ -70,7 +71,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
   } catch (error) {
-    console.error('Error deleting coach conversation:', error);
+    logger.error('Error deleting coach conversation:', error);
 
     // Handle specific error types
     if (error instanceof Error) {

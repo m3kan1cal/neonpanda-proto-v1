@@ -67,7 +67,7 @@ function Breadcrumbs() {
           {/* Logo - Mobile only */}
           <Link
             to="/"
-            className="md:hidden flex-shrink-0 mr-1"
+            className="md:hidden shrink-0 mr-1"
             aria-label="Go to home"
             data-tooltip-id="breadcrumb-logo-tooltip"
             data-tooltip-content="Go to Home"
@@ -82,7 +82,7 @@ function Breadcrumbs() {
           {/* Home link */}
           <Link
             to="/"
-            className="flex items-center space-x-1 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+            className="flex items-center space-x-1 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
           >
             <HomeIcon />
             <span>Home</span>
@@ -131,7 +131,7 @@ function Breadcrumbs() {
                 <React.Fragment key="coaches">
                   <Link
                     to={coachesPath}
-                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                   >
                     Coaches
                   </Link>
@@ -139,7 +139,7 @@ function Breadcrumbs() {
 
                 // Coach Creator breadcrumb (current page)
                 <React.Fragment key="coach-creator-current">
-                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap shrink-0">
                     Coach Creator
                   </span>
                 </React.Fragment>,
@@ -170,7 +170,7 @@ function Breadcrumbs() {
                       <React.Fragment key={name}>
                         <Link
                           to={routeTo}
-                          className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                          className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                         >
                           {displayName}
                         </Link>
@@ -182,7 +182,7 @@ function Breadcrumbs() {
                 <React.Fragment key="manage-workouts">
                   <Link
                     to={buildRoute(manageWorkoutsPath, "manage-workouts")}
-                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                   >
                     Workouts
                   </Link>
@@ -190,7 +190,7 @@ function Breadcrumbs() {
 
                 // Workout Details breadcrumb (current page)
                 <React.Fragment key="workout-details-current">
-                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap shrink-0">
                     Workout Details
                   </span>
                 </React.Fragment>,
@@ -221,7 +221,7 @@ function Breadcrumbs() {
                       <React.Fragment key={name}>
                         <Link
                           to={routeTo}
-                          className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                          className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                         >
                           {displayName}
                         </Link>
@@ -236,7 +236,7 @@ function Breadcrumbs() {
                       manageConversationsPath,
                       "manage-conversations",
                     )}
-                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                   >
                     Coach Conversations
                   </Link>
@@ -244,7 +244,7 @@ function Breadcrumbs() {
 
                 // Conversation Details breadcrumb (current page)
                 <React.Fragment key="coach-conversations-current">
-                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap shrink-0">
                     Conversation Details
                   </span>
                 </React.Fragment>,
@@ -267,7 +267,7 @@ function Breadcrumbs() {
                 <React.Fragment key="training-grounds">
                   <Link
                     to={buildRoute(trainingGroundsSegment, "training-grounds")}
-                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                   >
                     Training Grounds
                   </Link>
@@ -275,7 +275,7 @@ function Breadcrumbs() {
 
                 // View Workouts breadcrumb (current page - dynamic text)
                 <React.Fragment key="view-workouts-current">
-                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap shrink-0">
                     {breadcrumbText}
                   </span>
                 </React.Fragment>,
@@ -307,7 +307,7 @@ function Breadcrumbs() {
                     <React.Fragment key={name}>
                       <Link
                         to={routeTo}
-                        className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                        className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                       >
                         {displayName}
                       </Link>
@@ -316,7 +316,7 @@ function Breadcrumbs() {
                 }),
                 // Add dynamic workout breadcrumb as the current page
                 <React.Fragment key="workout-details">
-                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap shrink-0">
                     {breadcrumbText}
                   </span>
                 </React.Fragment>,
@@ -333,13 +333,13 @@ function Breadcrumbs() {
               return (
                 <React.Fragment key={name}>
                   {isLast ? (
-                    <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                    <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap shrink-0">
                       {displayName}
                     </span>
                   ) : (
                     <Link
                       to={routeTo}
-                      className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                      className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
                     >
                       {displayName}
                     </Link>

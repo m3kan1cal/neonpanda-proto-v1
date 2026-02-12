@@ -23,6 +23,7 @@ import type { CoachConfig } from "../coach-creator/types";
 import type { UserProfile } from "../user/types";
 import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
 import type { ProgramDesignerTodoList } from "../program-designer/types";
+import { logger } from "../logger";
 
 /**
  * Phase structure without workouts (for initial breakdown)
@@ -230,7 +231,7 @@ export async function generatePhaseStructure(
   context: PhaseGenerationContext,
 ): Promise<{ phases: PhaseStructure[]; debugData: PhaseStructureDebugData }> {
   const startTime = Date.now();
-  console.info("🎯 Generating phase structure:", {
+  logger.info("🎯 Generating phase structure:", {
     totalDays: context.totalDays,
     trainingFrequency: context.trainingFrequency,
     userId: context.userId,
@@ -261,7 +262,7 @@ export async function generatePhaseStructure(
       },
     );
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Failed to build coach personality prompt (phase structure):",
       {
         error: error instanceof Error ? error.message : String(error),
@@ -368,7 +369,7 @@ Generate the phase structure using the tool.`;
 
   try {
     // PRIMARY: Tool-based generation
-    console.info("🎯 Attempting tool-based phase structure generation");
+    logger.info("🎯 Attempting tool-based phase structure generation");
 
     const result = await callBedrockApi(
       prompt,
@@ -402,7 +403,7 @@ Generate the phase structure using the tool.`;
       const phases = (fixedInput as any).phases;
       const duration = Date.now() - startTime;
 
-      console.info("✅ Tool-based phase structure generation succeeded:", {
+      logger.info("✅ Tool-based phase structure generation succeeded:", {
         phaseCount: phases.length,
         durationMs: duration,
         phases: phases.map((p: any) => ({
@@ -426,13 +427,13 @@ Generate the phase structure using the tool.`;
       throw new Error("Tool did not return valid phase structure");
     }
   } catch (toolError) {
-    console.error(
+    logger.error(
       "❌ Tool-based phase structure generation failed:",
       toolError,
     );
 
     // FALLBACK: Text-based generation with parsing
-    console.info("⚠️ Falling back to text-based phase structure generation");
+    logger.info("⚠️ Falling back to text-based phase structure generation");
 
     const fallbackPrompt = `${prompt}
 
@@ -453,7 +454,7 @@ ${JSON.stringify(getCondensedSchema(PHASE_STRUCTURE_SCHEMA), null, 2)}`;
     const duration = Date.now() - startTime;
 
     if (parsed && parsed.phases && Array.isArray(parsed.phases)) {
-      console.info("✅ Fallback phase structure generation succeeded:", {
+      logger.info("✅ Fallback phase structure generation succeeded:", {
         phaseCount: parsed.phases.length,
         durationMs: duration,
       });
@@ -499,7 +500,7 @@ export async function generateSinglePhaseWorkouts(
   debugData: PhaseWorkoutDebugData;
 }> {
   const startTime = Date.now();
-  console.info("🏋️ Generating workouts for phase:", {
+  logger.info("🏋️ Generating workouts for phase:", {
     phaseName: phase.name,
     startDay: phase.startDay,
     endDay: phase.endDay,
@@ -530,7 +531,7 @@ export async function generateSinglePhaseWorkouts(
       },
     );
   } catch (error) {
-    console.error(
+    logger.error(
       "❌ Failed to build coach personality prompt (phase workouts):",
       {
         error: error instanceof Error ? error.message : String(error),
@@ -772,7 +773,7 @@ Generate the complete phase with all workouts using the tool.`;
 
   try {
     // PRIMARY: Tool-based generation
-    console.info("🎯 Attempting tool-based phase workout generation");
+    logger.info("🎯 Attempting tool-based phase workout generation");
 
     const result = await callBedrockApi(
       prompt,
@@ -810,7 +811,7 @@ Generate the complete phase with all workouts using the tool.`;
       };
       const duration = Date.now() - startTime;
 
-      console.info("✅ Tool-based phase workout generation succeeded:", {
+      logger.info("✅ Tool-based phase workout generation succeeded:", {
         phaseName: phase.name,
         workoutCount: phaseWithWorkouts.workouts.length,
         daysCovered: new Set(phaseWithWorkouts.workouts.map((w) => w.dayNumber))
@@ -831,7 +832,7 @@ Generate the complete phase with all workouts using the tool.`;
         );
 
         if (!validation.valid) {
-          console.warn("⚠️ Rest day compliance violations detected:", {
+          logger.warn("⚠️ Rest day compliance violations detected:", {
             phaseName: phase.name,
             violationCount: validation.violations.length,
             violations: validation.violations,
@@ -840,7 +841,7 @@ Generate the complete phase with all workouts using the tool.`;
           // Log violations but don't fail - AI should have respected the constraints
           // This is a sanity check to track if the AI is following instructions
         } else {
-          console.info("✅ Rest day compliance validated - no violations:", {
+          logger.info("✅ Rest day compliance validated - no violations:", {
             phaseName: phase.name,
             restDays: restDayInfo.names,
           });
@@ -862,10 +863,10 @@ Generate the complete phase with all workouts using the tool.`;
       throw new Error("Tool did not return valid phase with workouts");
     }
   } catch (toolError) {
-    console.error("❌ Tool-based phase workout generation failed:", toolError);
+    logger.error("❌ Tool-based phase workout generation failed:", toolError);
 
     // FALLBACK: Text-based generation with parsing
-    console.info("⚠️ Falling back to text-based phase workout generation");
+    logger.info("⚠️ Falling back to text-based phase workout generation");
 
     const fallbackPrompt = `${prompt}
 
@@ -887,7 +888,7 @@ ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
 
     if (parsed && parsed.workouts && Array.isArray(parsed.workouts)) {
       const phaseWithWorkouts = parsed as PhaseWithWorkouts;
-      console.info("✅ Fallback phase workout generation succeeded:", {
+      logger.info("✅ Fallback phase workout generation succeeded:", {
         phaseName: phase.name,
         workoutCount: phaseWithWorkouts.workouts.length,
         durationMs: duration,
@@ -906,7 +907,7 @@ ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
         );
 
         if (!validation.valid) {
-          console.warn(
+          logger.warn(
             "⚠️ Rest day compliance violations detected (fallback):",
             {
               phaseName: phase.name,
@@ -916,7 +917,7 @@ ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
             },
           );
         } else {
-          console.info(
+          logger.info(
             "✅ Rest day compliance validated (fallback) - no violations:",
             {
               phaseName: phase.name,
@@ -956,7 +957,7 @@ export async function generateAllPhasesParallel(
   phasesWithWorkouts: PhaseWithWorkouts[];
   debugData: PhaseWorkoutDebugData[];
 }> {
-  console.info("🚀 Starting parallel phase generation:", {
+  logger.info("🚀 Starting parallel phase generation:", {
     phaseCount: phases.length,
     totalDays: context.totalDays,
     estimatedWorkouts: Math.floor(
@@ -980,7 +981,7 @@ export async function generateAllPhasesParallel(
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
 
-    console.info("✅ Parallel phase generation complete:", {
+    logger.info("✅ Parallel phase generation complete:", {
       phaseCount: phasesWithWorkouts.length,
       totalWorkouts: phasesWithWorkouts.reduce(
         (sum, p) => sum + p.workouts.length,
@@ -996,7 +997,7 @@ export async function generateAllPhasesParallel(
 
     return { phasesWithWorkouts, debugData };
   } catch (error) {
-    console.error("❌ Parallel phase generation failed:", error);
+    logger.error("❌ Parallel phase generation failed:", error);
     throw new Error(
       `Failed to generate phases: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
@@ -1015,7 +1016,7 @@ export function assembleProgram(
   workoutTemplates: WorkoutTemplate[];
   totalWorkouts: number;
 } {
-  console.info("🔧 Assembling complete program from phases:", {
+  logger.info("🔧 Assembling complete program from phases:", {
     phaseCount: phases.length,
   });
 
@@ -1027,7 +1028,7 @@ export function assembleProgram(
     const phase = sortedPhases[i];
 
     if (i === 0 && phase.startDay !== 1) {
-      console.warn("⚠️ First phase does not start on day 1:", phase);
+      logger.warn("⚠️ First phase does not start on day 1:", phase);
     }
 
     if (i > 0) {
@@ -1035,7 +1036,7 @@ export function assembleProgram(
 
       // Check for phase overlap (current phase starts before or on previous phase's end day)
       if (phase.startDay <= prevPhase.endDay) {
-        console.error("❌ Phase overlap detected:", {
+        logger.error("❌ Phase overlap detected:", {
           prevPhase: prevPhase.name,
           prevEnd: prevPhase.endDay,
           currentPhase: phase.name,
@@ -1046,7 +1047,7 @@ export function assembleProgram(
 
       // Check for phase gap (current phase starts more than 1 day after previous phase ends)
       if (phase.startDay > prevPhase.endDay + 1) {
-        console.warn("⚠️ Phase gap detected:", {
+        logger.warn("⚠️ Phase gap detected:", {
           prevPhase: prevPhase.name,
           prevEnd: prevPhase.endDay,
           currentPhase: phase.name,
@@ -1089,7 +1090,7 @@ export function assembleProgram(
     return a.templateId.localeCompare(b.templateId);
   });
 
-  console.info("✅ Program assembly complete:", {
+  logger.info("✅ Program assembly complete:", {
     phaseCount: programPhases.length,
     totalWorkouts: allWorkouts.length,
     daysCovered: new Set(allWorkouts.map((w) => w.dayNumber)).size,

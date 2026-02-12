@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 /**
  * Google Chat webhook utilities
  * Provides functions for sending formatted messages to Google Chat spaces
@@ -32,7 +33,7 @@ export async function sendToGoogleChat(
   const url = webhookUrl || process.env.GOOGLE_CHAT_ERRORS_WEBHOOK_URL;
 
   if (!url) {
-    console.warn('GOOGLE_CHAT_ERRORS_WEBHOOK_URL environment variable is not set, skipping Google Chat notification');
+    logger.warn('GOOGLE_CHAT_ERRORS_WEBHOOK_URL environment variable is not set, skipping Google Chat notification');
     return;
   }
 
@@ -50,9 +51,9 @@ export async function sendToGoogleChat(
       throw new Error(`Google Chat webhook responded with status ${response.status}: ${errorText}`);
     }
 
-    console.info('Successfully sent notification to Google Chat');
+    logger.info('Successfully sent notification to Google Chat');
   } catch (error) {
-    console.error('Failed to send notification to Google Chat:', error);
+    logger.error('Failed to send notification to Google Chat:', error);
     // Don't throw error here - we don't want to fail the entire function if Google Chat fails
   }
 }

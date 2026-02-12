@@ -379,7 +379,7 @@ export const RunningSection = ({
             onClick={() => toggleCollapse(detailsId)}
           >
             <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Running Details
               </h3>
@@ -429,7 +429,7 @@ export const RunningSection = ({
             onClick={() => toggleCollapse(segmentsId)}
           >
             <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Run Segments ({runningData?.segments?.length || 0})
               </h3>

@@ -15,6 +15,7 @@ import {
   MemoryRetrievalNeedResult,
   MemoryCharacteristicsResult,
 } from "./types";
+import { logger } from "../logger";
 import {
   parseJsonWithFallbacks,
   fixDoubleEncodedProperties,
@@ -95,7 +96,7 @@ Use the analyze_semantic_retrieval tool to provide your analysis of whether retr
 
     return result;
   } catch (error) {
-    console.error("Error in memory retrieval detection:", error);
+    logger.error("Error in memory retrieval detection:", error);
     // Conservative fallback - assume no semantic retrieval needed
     return {
       needsSemanticRetrieval: false,
@@ -158,7 +159,7 @@ GUIDELINES:
 Analyze this message and use the detect_memory_request tool to provide your analysis.`;
 
   try {
-    console.info("🔍 Detecting memory request:", {
+    logger.info("🔍 Detecting memory request:", {
       userMessage:
         userMessage.substring(0, 100) + (userMessage.length > 100 ? "..." : ""),
       hasContext: !!messageContext,
@@ -190,7 +191,7 @@ Analyze this message and use the detect_memory_request tool to provide your anal
     const fixedInput = fixDoubleEncodedProperties(response.input);
     return fixedInput as MemoryDetectionResult;
   } catch (error) {
-    console.error("Error in memory request detection:", error);
+    logger.error("Error in memory request detection:", error);
 
     // Return safe fallback (no memory detected)
     return {
@@ -353,7 +354,7 @@ GUIDELINES:
 Use the detect_memory_characteristics tool to analyze this memory.`;
 
   try {
-    console.info("🎯 Detecting memory characteristics (combined):", {
+    logger.info("🎯 Detecting memory characteristics (combined):", {
       memoryContent:
         memoryContent.substring(0, 100) +
         (memoryContent.length > 100 ? "..." : ""),
@@ -386,10 +387,10 @@ Use the detect_memory_characteristics tool to analyze this memory.`;
     const fixedInput = fixDoubleEncodedProperties(response.input);
     return fixedInput as MemoryCharacteristicsResult;
   } catch (error) {
-    console.error("Error in memory characteristics detection:", error);
+    logger.error("Error in memory characteristics detection:", error);
 
     // Log the error context for debugging
-    console.error("❌ Memory characteristics detection failed:", {
+    logger.error("❌ Memory characteristics detection failed:", {
       memoryContent:
         memoryContent.substring(0, 100) +
         (memoryContent.length > 100 ? "..." : ""),
@@ -510,7 +511,7 @@ ${coachName ? `Coach Name: ${coachName}` : ""}
 Use the analyze_memory_needs tool to provide comprehensive memory analysis following the framework above.`;
 
   try {
-    console.info("🧠 Consolidated Memory Analysis starting:", {
+    logger.info("🧠 Consolidated Memory Analysis starting:", {
       messageLength: userMessage.length,
       hasContext: !!messageContext,
       hasCoachName: !!coachName,
@@ -574,7 +575,7 @@ Use the analyze_memory_needs tool to provide comprehensive memory analysis follo
       processingTime,
     };
 
-    console.info("✅ Consolidated Memory Analysis completed:", {
+    logger.info("✅ Consolidated Memory Analysis completed:", {
       needsRetrieval: consolidatedResult.needsRetrieval,
       isMemoryRequest: consolidatedResult.isMemoryRequest,
       memoryType: consolidatedResult.memoryCharacteristics?.type,
@@ -584,7 +585,7 @@ Use the analyze_memory_needs tool to provide comprehensive memory analysis follo
 
     return consolidatedResult;
   } catch (error) {
-    console.error("❌ Consolidated Memory Analysis failed:", error);
+    logger.error("❌ Consolidated Memory Analysis failed:", error);
 
     // Return safe fallback
     return {
@@ -621,15 +622,13 @@ export function filterMemories(memories: any[]): any[] {
 
     // ❌ EXCLUDE: Coach-specific memories (user is creating a NEW coach)
     if (coachId && coachId !== "all") {
-      console.info(
-        `🚫 Filtering out coach-specific memory: ${memory.memoryId}`,
-      );
+      logger.info(`🚫 Filtering out coach-specific memory: ${memory.memoryId}`);
       return false;
     }
 
     // ❌ EXCLUDE: Goal-related memories (user is defining NEW goals)
     if (memoryType === "goal") {
-      console.info(`🚫 Filtering out goal memory: ${memory.memoryId}`);
+      logger.info(`🚫 Filtering out goal memory: ${memory.memoryId}`);
       return false;
     }
 
@@ -638,7 +637,7 @@ export function filterMemories(memories: any[]): any[] {
       memoryType === "workout_planning" ||
       tags.includes("workout_planning")
     ) {
-      console.info(
+      logger.info(
         `🚫 Filtering out workout planning memory: ${memory.memoryId}`,
       );
       return false;
@@ -646,13 +645,13 @@ export function filterMemories(memories: any[]): any[] {
 
     // ❌ EXCLUDE: Instruction memories (coach-specific approaches)
     if (memoryType === "instruction") {
-      console.info(`🚫 Filtering out instruction memory: ${memory.memoryId}`);
+      logger.info(`🚫 Filtering out instruction memory: ${memory.memoryId}`);
       return false;
     }
 
     // ❌ EXCLUDE: Motivational memories (coach-specific patterns)
     if (memoryType === "motivational") {
-      console.info(`🚫 Filtering out motivational memory: ${memory.memoryId}`);
+      logger.info(`🚫 Filtering out motivational memory: ${memory.memoryId}`);
       return false;
     }
 
@@ -661,7 +660,7 @@ export function filterMemories(memories: any[]): any[] {
     if (
       tags.some((tag: string) => competitionTags.includes(tag.toLowerCase()))
     ) {
-      console.info(`🚫 Filtering out competition memory: ${memory.memoryId}`);
+      logger.info(`🚫 Filtering out competition memory: ${memory.memoryId}`);
       return false;
     }
 
@@ -679,13 +678,13 @@ export function filterMemories(memories: any[]): any[] {
       );
 
       if (hasAllowedTag) {
-        console.info(`✅ Including constraint memory: ${memory.memoryId}`);
+        logger.info(`✅ Including constraint memory: ${memory.memoryId}`);
         return true;
       }
     }
 
     // ❌ EXCLUDE: Everything else by default (clean slate approach)
-    console.info(
+    logger.info(
       `🚫 Filtering out memory (default exclusion): ${memory.memoryId}, type: ${memoryType}`,
     );
     return false;

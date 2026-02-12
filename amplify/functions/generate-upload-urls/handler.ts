@@ -5,9 +5,10 @@ import {
 } from '../libs/api-helpers';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { generatePresignedPutUrl, getBucketName } from '../libs/s3-utils';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
-  console.info('🖼️ Starting presigned URL generation', {
+  logger.info('🖼️ Starting presigned URL generation', {
     pathUserId: event.pathParameters?.userId,
     authenticatedUserId: event.user.userId,
   });
@@ -17,7 +18,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   // Verify user can only upload for themselves
   if (userId !== pathUserId) {
-    console.error('❌ User mismatch:', { userId, pathUserId });
+    logger.error('❌ User mismatch:', { userId, pathUserId });
     return createErrorResponse(403, 'Cannot upload images for other users');
   }
 
@@ -41,7 +42,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Validate bucket is configured
     getBucketName();
   } catch (error) {
-    console.error('❌ APPS_BUCKET_NAME environment variable not set');
+    logger.error('❌ APPS_BUCKET_NAME environment variable not set');
     return createErrorResponse(500, 'Server configuration error');
   }
 
@@ -74,7 +75,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
   }
 
-  console.info(`✅ Generated ${uploadUrls.length} presigned URLs for user ${userId}`);
+  logger.info(`✅ Generated ${uploadUrls.length} presigned URLs for user ${userId}`);
 
   return createOkResponse({
     uploadUrls,

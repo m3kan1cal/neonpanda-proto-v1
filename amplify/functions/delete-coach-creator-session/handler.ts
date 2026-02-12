@@ -5,6 +5,7 @@ import {
 } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { deleteCoachCreatorSummaryFromPinecone } from "../libs/coach-creator/pinecone";
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -15,7 +16,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, "sessionId is required");
   }
 
-  console.info("Deleting coach creator session:", {
+  logger.info("Deleting coach creator session:", {
     userId,
     sessionId,
   });
@@ -35,9 +36,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     sessionId,
   );
   if (pineconeResult.success) {
-    console.info("✅ Coach creator session summary deleted from Pinecone");
+    logger.info("✅ Coach creator session summary deleted from Pinecone");
   } else {
-    console.warn(
+    logger.warn(
       "⚠️ Failed to delete coach creator session summary from Pinecone:",
       pineconeResult.error,
     );

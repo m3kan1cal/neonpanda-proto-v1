@@ -23,6 +23,7 @@ import {
 import { buildWorkoutLoggerPrompt } from "./prompts";
 import { MODEL_IDS } from "../../api-helpers";
 import { enforceValidationBlocking } from "./helpers";
+import { logger } from "../../logger";
 
 /**
  * Semantic storage key mapping for tool results
@@ -99,7 +100,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
                 (subValue.startsWith("{") || subValue.startsWith("["))
               ) {
                 doubleEncodedFields.push(`${key}.${subKey}`);
-                console.warn(
+                logger.warn(
                   `🔴 NESTED DOUBLE-ENCODING AT STORAGE: ${key}.${subKey}`,
                   {
                     type: subType,
@@ -113,7 +114,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       }
 
       if (doubleEncodedFields.length > 0) {
-        console.warn("⚠️ DOUBLE-ENCODING DETECTED AT STORAGE TIME:", {
+        logger.warn("⚠️ DOUBLE-ENCODING DETECTED AT STORAGE TIME:", {
           toolId,
           storageKey,
           nestedFieldTypes,
@@ -122,7 +123,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
           note: "Data is ALREADY double-encoded when arriving at storeToolResult",
         });
       } else {
-        console.info("✅ Storage check: Nested fields are proper objects", {
+        logger.info("✅ Storage check: Nested fields are proper objects", {
           toolId,
           storageKey,
           nestedFieldTypes,
@@ -141,13 +142,13 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       // Positional storage: ensures the result for workoutIndex N is at arr[N]
       // regardless of execution order within a turn
       arr[workoutIndex] = result;
-      console.info(
+      logger.info(
         `📦 Stored tool result: ${toolId} → ${storageKey}[${workoutIndex}] (positional)`,
       );
     } else {
       // Append storage: for tools without workoutIndex (detect, extract)
       arr.push(result);
-      console.info(
+      logger.info(
         `📦 Stored tool result: ${toolId} → ${storageKey}[${arr.length - 1}] (append)`,
       );
     }
@@ -262,7 +263,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
     // Extract tool uses
     const toolUses = contentBlocks.filter((block: any) => block.toolUse);
 
-    console.info(`🔧 Executing ${toolUses.length} tool(s)`);
+    logger.info(`🔧 Executing ${toolUses.length} tool(s)`);
 
     const toolResults: any[] = [];
     const augmentedContext = this.createAugmentedContext();
@@ -276,7 +277,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       const tool = this.config.tools.find((t) => t.id === toolUse.name);
 
       if (!tool) {
-        console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+        logger.warn(`⚠️ Tool not found: ${toolUse.name}`);
         toolResults.push(
           this.buildToolResult(
             toolUse,
@@ -290,14 +291,14 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       // Use base class blocking enforcement hook
       const blockingResult = this.enforceToolBlocking(tool.id, toolUse.input);
       if (blockingResult) {
-        console.warn(`⛔ Blocking tool execution: ${tool.id}`);
+        logger.warn(`⛔ Blocking tool execution: ${tool.id}`);
         toolResults.push(
           this.buildToolResult(toolUse, blockingResult, "error"),
         );
         continue;
       }
 
-      console.info(`⚙️ Executing tool: ${tool.id}`);
+      logger.info(`⚙️ Executing tool: ${tool.id}`);
 
       // Extract workoutIndex from tool input for positional storage alignment
       const workoutIndex: number | undefined = toolUse.input?.workoutIndex;
@@ -307,14 +308,14 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
         const result = await tool.execute(toolUse.input, augmentedContext);
         const duration = Date.now() - startTime;
 
-        console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
+        logger.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
 
         // Store result for later retrieval (with sanitization)
         this.storeToolResult(tool.id, result, workoutIndex);
 
         toolResults.push(this.buildToolResult(toolUse, result, "success"));
       } catch (error) {
-        console.error(`❌ Tool ${tool.id} failed:`, error);
+        logger.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         const errorResult = { error: errorMessage || "Unknown error" };
@@ -333,7 +334,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       content: toolResults,
     });
 
-    console.info("📥 Tool results added to conversation history");
+    logger.info("📥 Tool results added to conversation history");
   }
 
   constructor(context: WorkoutLoggerContext) {
@@ -365,7 +366,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       context,
     });
 
-    console.info("🔥 WorkoutLoggerAgent initialized with caching support");
+    logger.info("🔥 WorkoutLoggerAgent initialized with caching support");
   }
 
   /**
@@ -376,7 +377,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
     userMessage: string,
     imageS3Keys?: string[],
   ): Promise<WorkoutLogResult> {
-    console.info("🏋️ WorkoutLogger agent starting", {
+    logger.info("🏋️ WorkoutLogger agent starting", {
       messageLength: userMessage.length,
       hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
       userId: this.config.context.userId,
@@ -388,7 +389,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       // No tool wrapping needed here - the override pattern handles everything
       const response = await this.converse(userMessage, imageS3Keys);
 
-      console.info("Agent response received:", {
+      logger.info("Agent response received:", {
         responseLength: response.length,
         responsePreview: response.substring(0, 200),
         toolResultsCollected: Array.from(this.toolResults.keys()),
@@ -399,7 +400,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       // RETRY LOGIC: Use base class hook to determine if retry is needed
       const retryDecision = this.shouldRetryWorkflow(result, response);
       if (retryDecision?.shouldRetry) {
-        console.warn(`🔄 ${retryDecision.logMessage}`);
+        logger.warn(`🔄 ${retryDecision.logMessage}`);
 
         // NOTE: We do NOT clear tool results here. If the retry prompt references
         // already-completed tools, those results need to remain available for dependent
@@ -407,7 +408,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
         const retryResponse = await this.converse(retryDecision.retryPrompt);
 
-        console.info("Retry response received:", {
+        logger.info("Retry response received:", {
           responseLength: retryResponse.length,
           toolResultsCollected: Array.from(this.toolResults.keys()),
         });
@@ -416,19 +417,19 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
         // If retry also failed, fall back to original result
         if (!retryResult.success && retryResult.skipped) {
-          console.warn(
+          logger.warn(
             "⚠️ Retry also resulted in skip - using original result",
           );
           return result;
         }
 
-        console.info(
+        logger.info(
           "✅ Retry successful - workout logged after clarification",
         );
         return retryResult;
       }
 
-      console.info("Built workout log result:", {
+      logger.info("Built workout log result:", {
         success: result.success,
         workoutId: result.workoutId,
         hasAllFields: !!(result.discipline && result.confidence),
@@ -436,7 +437,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
       return result;
     } catch (error) {
-      console.error("❌ WorkoutLogger agent error:", error);
+      logger.error("❌ WorkoutLogger agent error:", error);
 
       return {
         success: false,
@@ -469,7 +470,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
     // Don't retry if validation explicitly blocked (trust AI validation decision)
     // Validation tool uses AI to determine blocking flags (planning, advice-seeking, etc.)
     if (result.blockingFlags && result.blockingFlags.length > 0) {
-      console.info("✋ Not retrying - validation blocked with flags:", {
+      logger.info("✋ Not retrying - validation blocked with flags:", {
         blockingFlags: result.blockingFlags,
         reason: result.reason,
       });
@@ -487,7 +488,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
     // If Claude correctly identifies non-workout content, it will respond with blocking
     // phrases WITHOUT calling tools - this is CORRECT behavior, not a retry case
     if (this.isValidBlockingResponse(response)) {
-      console.info(
+      logger.info(
         "✅ Valid blocking response detected - Claude correctly blocked non-workout content",
       );
       return null; // Don't retry
@@ -748,7 +749,7 @@ Complete the workout logging workflow now using your tools.`;
     // Use structured access helper for typed results
     const results = this.getStructuredToolResults();
 
-    console.info("Tool results available:", {
+    logger.info("Tool results available:", {
       hasDiscipline: !!results.discipline,
       hasExtraction: !!results.extraction,
       hasValidation: !!results.validation,
@@ -776,7 +777,7 @@ Complete the workout logging workflow now using your tools.`;
         this.getToolResult("normalization", primarySave.originalIndex) ||
         results.normalization;
 
-      console.info("✅ Building success result from save tool", {
+      logger.info("✅ Building success result from save tool", {
         totalSaves: allSaves.length,
         successfulSaves: successfulSaves.length,
         primaryIndex: primarySave.originalIndex,
@@ -810,7 +811,7 @@ Complete the workout logging workflow now using your tools.`;
           };
         });
 
-        console.info("📋 Multi-workout aggregation:", {
+        logger.info("📋 Multi-workout aggregation:", {
           totalSaves: allSaves.length,
           totalExtractions: allExtractions.length,
           successfulWorkouts: primaryResult.allWorkouts.length,
@@ -823,7 +824,7 @@ Complete the workout logging workflow now using your tools.`;
 
     // If validation blocked save, return structured failure
     if (results.validation && !results.validation.shouldSave) {
-      console.info("⚠️ Building failure result from validation");
+      logger.info("⚠️ Building failure result from validation");
 
       return {
         success: false,
@@ -842,7 +843,7 @@ Complete the workout logging workflow now using your tools.`;
       !results.normalization &&
       !results.save
     ) {
-      console.info(
+      logger.info(
         "💬 Agent asking clarifying question (no tools called - this is expected)",
       );
 
@@ -855,7 +856,7 @@ Complete the workout logging workflow now using your tools.`;
         agentResponse.toLowerCase().includes("please");
 
       if (isQuestion) {
-        console.info("✅ Recognized as clarifying question");
+        logger.info("✅ Recognized as clarifying question");
       }
 
       return {
@@ -866,7 +867,7 @@ Complete the workout logging workflow now using your tools.`;
     }
 
     // If some tools were called but save wasn't, try to parse the response
-    console.warn(
+    logger.warn(
       "⚠️ Partial tool execution - attempting to parse text response",
     );
 

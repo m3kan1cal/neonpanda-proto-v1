@@ -3,12 +3,13 @@ import { updateUserProfile, getUserProfile } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { syncProfileToCognito, extractCognitoUsername } from '../libs/user/cognito';
 import { validateCriticalTrainingDirective, normalizeCriticalTrainingDirective } from '../libs/user/validation';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
   const userId = event.user.userId;
 
-  console.info('Updating user profile for userId:', userId);
+  logger.info('Updating user profile for userId:', userId);
 
   // Parse and validate request body
   let updates;
@@ -79,7 +80,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       profile: updatedProfile
     });
   } catch (error) {
-    console.error('Error updating user profile:', error);
+    logger.error('Error updating user profile:', error);
     return createErrorResponse(500, 'Failed to update user profile');
   }
 };

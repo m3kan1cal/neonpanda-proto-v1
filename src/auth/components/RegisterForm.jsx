@@ -8,6 +8,7 @@ import AuthLayout from './AuthLayout';
 import AuthInput from './AuthInput';
 import AuthButton from './AuthButton';
 import AuthErrorMessage from './AuthErrorMessage';
+import { logger } from "../../utils/logger";
 
 const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
   const { signUp } = useAuth();
@@ -55,7 +56,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
         available: response.available
       });
     } catch (error) {
-      console.error('Error checking email availability:', error);
+      logger.error('Error checking email availability:', error);
       setEmailAvailability({ status: 'idle', available: null });
     }
   };
@@ -78,7 +79,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
         available: response.available
       });
     } catch (error) {
-      console.error('Error checking username availability:', error);
+      logger.error('Error checking username availability:', error);
       setUsernameAvailability({ status: 'idle', available: null });
     }
   };
@@ -199,7 +200,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
       onRegistrationSuccess(formData.email.trim());
 
     } catch (error) {
-      console.error('Sign up error:', error);
+      logger.error('Sign up error:', error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases

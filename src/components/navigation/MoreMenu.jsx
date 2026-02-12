@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { navigationPatterns } from "../../utils/ui/uiPatterns";
+import { logger } from "../../utils/logger";
 import {
   navigationItems,
   isItemVisible,
@@ -72,7 +73,7 @@ const MoreMenu = () => {
       if (context.onCommandPaletteToggle && commandMap[item.action]) {
         context.onCommandPaletteToggle(commandMap[item.action]);
       } else {
-        console.info(
+        logger.info(
           `Quick action clicked: ${item.action} - Command palette not available`,
         );
       }

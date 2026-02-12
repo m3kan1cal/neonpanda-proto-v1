@@ -8,6 +8,7 @@
  * - Managing user's shared programs
  */
 
+import { logger } from "../logger";
 import {
   getApiUrl,
   authenticatedFetch,
@@ -44,7 +45,7 @@ export async function createSharedProgram(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("createSharedProgram: Error response:", errorText);
+      logger.error("createSharedProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -65,7 +66,7 @@ export async function createSharedProgram(
   } catch (error) {
     // Don't log AbortErrors - these are expected during cleanup
     if (error.name !== "AbortError") {
-      console.error("createSharedProgram: Exception:", error);
+      logger.error("createSharedProgram: Exception:", error);
     }
     throw error;
   }
@@ -93,7 +94,7 @@ export async function getSharedProgram(sharedProgramId, { signal } = {}) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getSharedProgram: Error response:", errorText);
+      logger.error("getSharedProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -114,7 +115,7 @@ export async function getSharedProgram(sharedProgramId, { signal } = {}) {
   } catch (error) {
     // Don't log AbortErrors - these are expected during cleanup
     if (error.name !== "AbortError") {
-      console.error("getSharedProgram: Exception:", error);
+      logger.error("getSharedProgram: Exception:", error);
     }
     throw error;
   }
@@ -136,7 +137,7 @@ export async function querySharedPrograms(userId) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("querySharedPrograms: Error response:", errorText);
+      logger.error("querySharedPrograms: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -155,7 +156,7 @@ export async function querySharedPrograms(userId) {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("querySharedPrograms: Exception:", error);
+    logger.error("querySharedPrograms: Exception:", error);
     throw error;
   }
 }
@@ -177,7 +178,7 @@ export async function deactivateSharedProgram(userId, sharedProgramId) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("deactivateSharedProgram: Error response:", errorText);
+      logger.error("deactivateSharedProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -199,7 +200,7 @@ export async function deactivateSharedProgram(userId, sharedProgramId) {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("deactivateSharedProgram: Exception:", error);
+    logger.error("deactivateSharedProgram: Exception:", error);
     throw error;
   }
 }
@@ -226,7 +227,7 @@ export async function copySharedProgram(userId, sharedProgramId, coachId) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("copySharedProgram: Error response:", errorText);
+      logger.error("copySharedProgram: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -248,7 +249,7 @@ export async function copySharedProgram(userId, sharedProgramId, coachId) {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("copySharedProgram: Exception:", error);
+    logger.error("copySharedProgram: Exception:", error);
     throw error;
   }
 }
@@ -282,7 +283,7 @@ export async function updateProgramMetadata(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("updateProgramMetadata: Error response:", errorText);
+      logger.error("updateProgramMetadata: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -304,7 +305,7 @@ export async function updateProgramMetadata(
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("updateProgramMetadata: Exception:", error);
+    logger.error("updateProgramMetadata: Exception:", error);
     throw error;
   }
 }

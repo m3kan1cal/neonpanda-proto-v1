@@ -6,6 +6,7 @@ import {
   DynamoDBItem,
 } from "./core";
 import { Subscription } from "../functions/libs/subscription/types";
+import { logger } from "../functions/libs/logger";
 
 // ===========================
 // SUBSCRIPTION OPERATIONS
@@ -39,7 +40,7 @@ export async function saveSubscription(
 
   const result = await saveToDynamoDB(item);
 
-  console.info("Subscription created successfully:", {
+  logger.info("Subscription created successfully:", {
     userId: subscriptionData.userId,
     tier: subscriptionData.tier,
     status: subscriptionData.status,
@@ -89,7 +90,7 @@ export async function updateSubscription(
 
   const result = await saveToDynamoDB(updatedItem, true /* requireExists */);
 
-  console.info("Subscription updated successfully:", {
+  logger.info("Subscription updated successfully:", {
     userId: subscriptionData.userId,
     tier: subscriptionData.tier,
     status: subscriptionData.status,
@@ -133,12 +134,12 @@ export async function getSubscription(
 export async function deleteSubscription(userId: string): Promise<void> {
   try {
     await deleteFromDynamoDB(`user#${userId}`, "subscription", "subscription");
-    console.info("Subscription deleted successfully:", {
+    logger.info("Subscription deleted successfully:", {
       userId,
     });
   } catch (error: any) {
     if (error instanceof Error && error.message.includes("not found")) {
-      console.warn(
+      logger.warn(
         `Subscription not found for user ${userId}, skipping delete`,
       );
       return; // Not an error - subscription might not exist

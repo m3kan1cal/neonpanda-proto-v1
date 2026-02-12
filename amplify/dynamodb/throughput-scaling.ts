@@ -2,6 +2,7 @@ import { DynamoDBClient, UpdateTableCommand, DescribeTableCommand } from "@aws-s
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { ProvisionedThroughputExceededException } from "@aws-sdk/client-dynamodb";
 import { getTableName } from "../functions/libs/branch-naming";
+import { logger } from "../functions/libs/logger";
 
 // DynamoDB client for throughput management
 const dynamoDbClient = new DynamoDBClient({});
@@ -70,7 +71,7 @@ async function getTableCapacity(tableName: string) {
  */
 async function scaleUpThroughput(tableName: string, config: ThroughputScalingConfig): Promise<ScaleResult> {
   try {
-    console.info(`🔄 Scaling up throughput for table: ${tableName}`);
+    logger.info(`🔄 Scaling up throughput for table: ${tableName}`);
 
     const currentCapacity = await getTableCapacity(tableName);
 
@@ -118,11 +119,11 @@ async function scaleUpThroughput(tableName: string, config: ThroughputScalingCon
       newWriteCapacity
     };
 
-    console.info(`✅ Successfully scaled up throughput for ${tableName}:`, result);
+    logger.info(`✅ Successfully scaled up throughput for ${tableName}:`, result);
     return result;
 
   } catch (error) {
-    console.error(`❌ Error scaling up throughput for ${tableName}:`, error);
+    logger.error(`❌ Error scaling up throughput for ${tableName}:`, error);
     return {
       success: false,
       previousReadCapacity: 0,
@@ -139,13 +140,13 @@ async function scaleUpThroughput(tableName: string, config: ThroughputScalingCon
  */
 async function scaleDownThroughput(tableName: string, config: ThroughputScalingConfig): Promise<ScaleResult> {
   try {
-    console.info(`🔽 Scaling down throughput for table: ${tableName}`);
+    logger.info(`🔽 Scaling down throughput for table: ${tableName}`);
 
     const currentCapacity = await getTableCapacity(tableName);
 
     if (currentCapacity.readCapacity <= config.baseReadCapacity &&
         currentCapacity.writeCapacity <= config.baseWriteCapacity) {
-      console.info(`Table ${tableName} already at base capacity, skipping scale down`);
+      logger.info(`Table ${tableName} already at base capacity, skipping scale down`);
       return {
         success: true,
         previousReadCapacity: currentCapacity.readCapacity,
@@ -184,11 +185,11 @@ async function scaleDownThroughput(tableName: string, config: ThroughputScalingC
       newWriteCapacity: config.baseWriteCapacity
     };
 
-    console.info(`✅ Successfully scaled down throughput for ${tableName}:`, result);
+    logger.info(`✅ Successfully scaled down throughput for ${tableName}:`, result);
     return result;
 
   } catch (error) {
-    console.error(`❌ Error scaling down throughput for ${tableName}:`, error);
+    logger.error(`❌ Error scaling down throughput for ${tableName}:`, error);
     return {
       success: false,
       previousReadCapacity: 0,
@@ -214,20 +215,20 @@ async function waitForTableActive(tableName: string, maxWaitTimeMs: number = 600
       const tableStatus = response.Table?.TableStatus;
 
       if (tableStatus === 'ACTIVE') {
-        console.info(`✅ Table ${tableName} is now ACTIVE`);
+        logger.info(`✅ Table ${tableName} is now ACTIVE`);
         return true;
       }
 
-      console.info(`⏳ Table ${tableName} status: ${tableStatus}, waiting...`);
+      logger.info(`⏳ Table ${tableName} status: ${tableStatus}, waiting...`);
       await new Promise(resolve => setTimeout(resolve, pollInterval));
 
     } catch (error) {
-      console.error(`Error checking table status for ${tableName}:`, error);
+      logger.error(`Error checking table status for ${tableName}:`, error);
       await new Promise(resolve => setTimeout(resolve, pollInterval));
     }
   }
 
-  console.warn(`⚠️ Table ${tableName} did not become ACTIVE within ${maxWaitTimeMs}ms`);
+  logger.warn(`⚠️ Table ${tableName} did not become ACTIVE within ${maxWaitTimeMs}ms`);
   return false;
 }
 
@@ -266,19 +267,19 @@ export async function withThroughputScaling<T>(
 
   for (let attempt = 1; attempt <= finalConfig.maxRetries + 1; attempt++) {
     try {
-      console.info(`🔄 Attempting ${operationName} (attempt ${attempt}/${finalConfig.maxRetries + 1})`);
+      logger.info(`🔄 Attempting ${operationName} (attempt ${attempt}/${finalConfig.maxRetries + 1})`);
 
       const result = await operation();
 
       // If we scaled up and succeeded, schedule scale down
       if (scaleUpResult?.success) {
-        console.info(`✅ ${operationName} succeeded after scaling. Scheduling scale-down in ${finalConfig.scaleDownDelayMinutes} minutes`);
+        logger.info(`✅ ${operationName} succeeded after scaling. Scheduling scale-down in ${finalConfig.scaleDownDelayMinutes} minutes`);
 
         setTimeout(async () => {
           try {
             await scaleDownThroughput(tableName, finalConfig);
           } catch (error) {
-            console.error(`Error during scheduled scale-down for ${tableName}:`, error);
+            logger.error(`Error during scheduled scale-down for ${tableName}:`, error);
           }
         }, finalConfig.scaleDownDelayMinutes * 60 * 1000);
       }
@@ -295,21 +296,21 @@ export async function withThroughputScaling<T>(
         (error as any)?.__type?.includes('ProvisionedThroughputExceededException');
 
       if (!isThroughputError) {
-        console.error(`❌ ${operationName} failed with non-throughput error:`, error);
+        logger.error(`❌ ${operationName} failed with non-throughput error:`, error);
         throw error;
       }
 
       if (attempt > finalConfig.maxRetries) {
-        console.error(`❌ ${operationName} failed after ${finalConfig.maxRetries} retries`);
+        logger.error(`❌ ${operationName} failed after ${finalConfig.maxRetries} retries`);
         throw lastError;
       }
 
-      console.warn(`⚠️ ${operationName} hit throughput limit (attempt ${attempt}). Scaling up capacity...`);
+      logger.warn(`⚠️ ${operationName} hit throughput limit (attempt ${attempt}). Scaling up capacity...`);
 
       scaleUpResult = await scaleUpThroughput(tableName, finalConfig);
 
       if (!scaleUpResult.success) {
-        console.error(`❌ Failed to scale up throughput: ${scaleUpResult.error}`);
+        logger.error(`❌ Failed to scale up throughput: ${scaleUpResult.error}`);
         throw new Error(`Failed to scale up throughput: ${scaleUpResult.error}`);
       }
 
@@ -318,7 +319,7 @@ export async function withThroughputScaling<T>(
         throw new Error(`Table ${tableName} did not become active after scaling`);
       }
 
-      console.info(`⏳ Waiting ${retryDelay}ms before retrying ${operationName}...`);
+      logger.info(`⏳ Waiting ${retryDelay}ms before retrying ${operationName}...`);
       await new Promise(resolve => setTimeout(resolve, retryDelay));
 
       retryDelay = Math.min(retryDelay * finalConfig.backoffMultiplier, finalConfig.maxRetryDelay);

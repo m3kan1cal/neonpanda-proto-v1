@@ -5,6 +5,7 @@
  */
 
 import { CoachMessage, CONVERSATION_MODES } from "./types";
+import { logger } from "../logger";
 
 /**
  * Extract the latest continuous Build mode section messages
@@ -56,7 +57,7 @@ export function extractLatestBuildModeSection(
   // Extract from the start of the Build section to the end
   const buildSectionMessages = allMessages.slice(buildSectionStartIndex);
 
-  console.info('📋 Build mode section extraction:', {
+  logger.info('📋 Build mode section extraction:', {
     totalMessages: allMessages.length,
     buildSectionStartIndex,
     extractedMessages: buildSectionMessages.length,

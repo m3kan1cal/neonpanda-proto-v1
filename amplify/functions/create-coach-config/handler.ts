@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse, invokeAsyncLambda } from '../libs/api-helpers';
 import { getCoachCreatorSession, saveCoachCreatorSession } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -12,7 +13,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   try {
-    console.info('Creating coach config from session:', { userId, sessionId });
+    logger.info('Creating coach config from session:', { userId, sessionId });
 
     // Load the session
     const session = await getCoachCreatorSession(userId, sessionId);
@@ -36,7 +37,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     };
     await saveCoachCreatorSession(updatedSession);
 
-    console.info('Session status reset to IN_PROGRESS, triggering build-coach-config Lambda');
+    logger.info('Session status reset to IN_PROGRESS, triggering build-coach-config Lambda');
 
     // Trigger build-coach-config Lambda asynchronously (like stream-coach-creator-session does)
     const buildCoachConfigFunction = process.env.BUILD_COACH_CONFIG_FUNCTION_NAME;
@@ -50,7 +51,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       'coach config generation'
     );
 
-    console.info('✅ Successfully triggered coach config build');
+    logger.info('✅ Successfully triggered coach config build');
 
     return createOkResponse({
       success: true,
@@ -60,7 +61,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
   } catch (error) {
-    console.error('Error creating coach config from session:', error);
+    logger.error('Error creating coach config from session:', error);
     return createErrorResponse(
       500,
       error instanceof Error ? error.message : 'Failed to create coach config'

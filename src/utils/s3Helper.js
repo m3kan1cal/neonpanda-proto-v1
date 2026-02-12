@@ -4,6 +4,7 @@
  */
 
 import outputs from "../../amplify_outputs.json";
+import { logger } from "./logger";
 
 /**
  * Get the S3 bucket name based on the current environment
@@ -14,7 +15,7 @@ export function getAppsBucketName() {
   const bucketName = outputs.custom?.storage?.appsBucket?.bucketName;
 
   if (!bucketName) {
-    console.error('CRITICAL: S3 bucket name not found in amplify_outputs.json. Please redeploy the backend.');
+    logger.error('CRITICAL: S3 bucket name not found in amplify_outputs.json. Please redeploy the backend.');
     throw new Error('S3 bucket configuration missing. Please redeploy the backend with: npx ampx sandbox --outputs-out-dir src');
   }
 
@@ -70,7 +71,7 @@ export async function getPresignedImageUrls(s3Keys, userId) {
     );
 
     if (!response.ok) {
-      console.error('Failed to get presigned URLs:', response.status, response.statusText);
+      logger.error('Failed to get presigned URLs:', response.status, response.statusText);
       return {};
     }
 
@@ -84,7 +85,7 @@ export async function getPresignedImageUrls(s3Keys, userId) {
 
     return urlMap;
   } catch (error) {
-    console.error('Error getting presigned URLs:', error);
+    logger.error('Error getting presigned URLs:', error);
     return {};
   }
 }

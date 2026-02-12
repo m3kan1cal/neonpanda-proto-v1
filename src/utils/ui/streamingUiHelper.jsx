@@ -3,6 +3,7 @@
  * Each function handles a specific aspect of streaming UI without complex state management
  */
 import { avatarPatterns, streamingPatterns } from "./uiPatterns";
+import { logger } from "../logger";
 
 /**
  * Handles message sending with streaming first, fallback to non-streaming
@@ -41,7 +42,7 @@ export async function sendMessageWithStreaming(
       onStreamingStart();
       return await agent.sendMessageStream(messageContent, imageS3Keys);
     } catch (streamingError) {
-      console.warn(
+      logger.warn(
         "⚠️ Streaming failed, falling back to non-streaming:",
         streamingError,
       );
@@ -146,7 +147,7 @@ export function ContextualUpdateIndicator({ content, avatarLabel = "C" }) {
         </div>
       </div>
       <div className={streamingPatterns.avatarRow}>
-        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+        <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
           {avatarLabel}
         </div>
       </div>
@@ -232,7 +233,7 @@ export function handleStreamingError(error, showToast = null) {
     showToast.error(userMessage);
   }
 
-  console.error("Streaming UI error:", error);
+  logger.error("Streaming UI error:", error);
   return userMessage;
 }
 
@@ -243,13 +244,13 @@ export function handleStreamingError(error, showToast = null) {
 export function supportsStreaming() {
   // Check for ReadableStream support (needed for SSE parsing)
   if (typeof ReadableStream === "undefined") {
-    console.warn("ReadableStream not supported, streaming disabled");
+    logger.warn("ReadableStream not supported, streaming disabled");
     return false;
   }
 
   // Check for EventSource support (SSE)
   if (typeof EventSource === "undefined") {
-    console.warn("EventSource not supported, streaming disabled");
+    logger.warn("EventSource not supported, streaming disabled");
     return false;
   }
 

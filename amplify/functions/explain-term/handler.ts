@@ -20,6 +20,7 @@ import type {
   ExplainTermResponse,
 } from "../libs/explain/types";
 import { VALID_TERM_TYPES, TERM_TYPE_LABELS } from "../libs/explain/types";
+import { logger } from "../libs/logger";
 import {
   buildSystemPrompt,
   buildUserPrompt,
@@ -61,7 +62,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   const cleanTerm = term.trim();
 
-  console.info("Explaining term:", {
+  logger.info("Explaining term:", {
     userId,
     term: cleanTerm,
     termType,
@@ -94,7 +95,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     return createOkResponse(response);
   } catch (error) {
-    console.error("Error generating explanation:", error);
+    logger.error("Error generating explanation:", error);
     return createErrorResponse(500, "Failed to generate explanation");
   }
 };

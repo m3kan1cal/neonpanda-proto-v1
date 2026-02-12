@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWeeklyAnalytics } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -60,7 +61,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
     if (sortOrder) options.sortOrder = sortOrder;
 
-    console.info('Querying weekly reports:', {
+    logger.info('Querying weekly reports:', {
       userId,
       options
     });

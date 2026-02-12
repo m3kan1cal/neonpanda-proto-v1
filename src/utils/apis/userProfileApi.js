@@ -1,4 +1,5 @@
 import { getApiUrl, authenticatedFetch } from './apiConfig';
+import { logger } from "../logger";
 
 /**
  * API service for User Profile operations
@@ -19,7 +20,7 @@ export const getUserProfile = async (userId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('getUserProfile: Error response:', errorText);
+      logger.error('getUserProfile: Error response:', errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -33,7 +34,7 @@ export const getUserProfile = async (userId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('getUserProfile: API Error:', error);
+    logger.error('getUserProfile: API Error:', error);
     throw error;
   }
 };
@@ -64,7 +65,7 @@ export const updateUserProfile = async (userId, profileData) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('updateUserProfile: Error response:', errorText);
+      logger.error('updateUserProfile: Error response:', errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -78,7 +79,7 @@ export const updateUserProfile = async (userId, profileData) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('updateUserProfile: API Error:', error);
+    logger.error('updateUserProfile: API Error:', error);
     throw error;
   }
 };

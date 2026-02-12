@@ -6,6 +6,7 @@
  */
 
 import { storeDebugDataInS3 } from "../../api-helpers";
+import { logger } from "../../logger";
 
 /**
  * Enforce blocking decisions from validation
@@ -37,7 +38,7 @@ export const enforceValidationBlocking = (
       toolId === "normalize_workout_data" ||
       toolId === "save_workout_to_database"
     ) {
-      console.error(`⛔ BLOCKING ${toolId}: Validation threw exception`, {
+      logger.error(`⛔ BLOCKING ${toolId}: Validation threw exception`, {
         error: validationResult.error,
         toolAttempted: toolId,
       });
@@ -54,7 +55,7 @@ export const enforceValidationBlocking = (
   if (validationResult.shouldSave === false) {
     // Block normalize_workout_data if validation said don't save
     if (toolId === "normalize_workout_data") {
-      console.error(
+      logger.error(
         "⛔ BLOCKING normalize_workout_data: Validation returned shouldSave=false",
         {
           blockingFlags: validationResult.blockingFlags,
@@ -73,7 +74,7 @@ export const enforceValidationBlocking = (
 
     // Block save_workout_to_database if validation said don't save
     if (toolId === "save_workout_to_database") {
-      console.error(
+      logger.error(
         "⛔ BLOCKING save_workout_to_database: Validation returned shouldSave=false",
         {
           blockingFlags: validationResult.blockingFlags,
@@ -160,8 +161,8 @@ export const storeExtractionDebugData = async (
       "workout-extraction",
     );
 
-    console.info(`✅ Stored ${type} debug data in S3`);
+    logger.info(`✅ Stored ${type} debug data in S3`);
   } catch (err) {
-    console.warn(`⚠️ Failed to store ${type} data in S3 (non-critical):`, err);
+    logger.warn(`⚠️ Failed to store ${type} data in S3 (non-critical):`, err);
   }
 };

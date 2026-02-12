@@ -1,4 +1,5 @@
 import { getApiUrl } from './apiConfig';
+import { logger } from "../logger";
 
 /**
  * API service for User operations (registration, availability checks, etc.)
@@ -27,7 +28,7 @@ export const checkUserAvailability = async (type, value) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('checkUserAvailability: Error response:', errorText);
+      logger.error('checkUserAvailability: Error response:', errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
@@ -41,7 +42,7 @@ export const checkUserAvailability = async (type, value) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('checkUserAvailability: API Error:', error);
+    logger.error('checkUserAvailability: API Error:', error);
     throw error;
   }
 };

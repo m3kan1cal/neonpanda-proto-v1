@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateCoachConfig } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -49,7 +50,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   // Update coach config
   const updatedCoachConfig = await updateCoachConfig(userId, coachId, updates);
 
-  console.info('Coach config updated successfully:', {
+  logger.info('Coach config updated successfully:', {
     coachId,
     userId,
     updates,

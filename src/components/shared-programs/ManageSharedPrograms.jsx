@@ -18,6 +18,7 @@ import {
   buttonPatterns,
   tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
+import { logger } from "../../utils/logger";
 import {
   TrashIcon,
   ShareIconTiny,
@@ -167,7 +168,7 @@ function ManageSharedPrograms() {
       // Backend returns { sharedPrograms: [...] }
       setSharedPrograms(response.sharedPrograms || []);
     } catch (err) {
-      console.error("Failed to load shared programs:", err);
+      logger.error("Failed to load shared programs:", err);
       setError(err.message || "Failed to load shared programs");
       toast.error("Failed to load shared programs");
     } finally {
@@ -203,7 +204,7 @@ function ManageSharedPrograms() {
       // Refresh the list
       await loadSharedPrograms();
     } catch (err) {
-      console.error("Failed to unshare program:", err);
+      logger.error("Failed to unshare program:", err);
       toast.error(err.message || "Failed to unshare program");
     } finally {
       setIsDeleting(false);
@@ -271,7 +272,7 @@ function ManageSharedPrograms() {
 
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
           <h3 className="font-russo font-bold text-white text-lg uppercase">
             {headerText}
           </h3>
@@ -510,7 +511,7 @@ function ManageSharedPrograms() {
                   className={`${containerPatterns.cardMedium} p-6 mb-6`}
                 >
                   <div className="flex items-start space-x-3 mb-2">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
                   <div className="flex flex-wrap gap-4 mb-4">
@@ -534,7 +535,7 @@ function ManageSharedPrograms() {
                     className={`${containerPatterns.cardMedium} p-6 mb-6`}
                   >
                     <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
                     <div className="flex flex-wrap gap-4 mb-4">
@@ -556,7 +557,7 @@ function ManageSharedPrograms() {
                     className={`${containerPatterns.cardMedium} p-6 mb-6`}
                   >
                     <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
                     <div className="flex flex-wrap gap-4 mb-4">

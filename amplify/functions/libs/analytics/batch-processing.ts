@@ -10,6 +10,7 @@ import { fetchUserWeeklyData, fetchUserMonthlyData, generateAnalytics } from "./
 import { UserWeeklyData, UserMonthlyData, WeeklyAnalytics, MonthlyAnalytics } from "./types";
 import { storeDebugDataInS3 } from "../api-helpers";
 import { generateMonthId } from "./date-utils";
+import { logger } from "../logger";
 
 /**
  * Helper function to generate week ID from date range
@@ -55,13 +56,13 @@ export const processBatch = async (
   users: UserProfile[],
   batchNumber: number
 ): Promise<number> => {
-  console.info(`📊 Processing batch ${batchNumber} with ${users.length} users`);
+  logger.info(`📊 Processing batch ${batchNumber} with ${users.length} users`);
 
   let processedCount = 0;
 
   for (const user of users) {
     try {
-      console.info(
+      logger.info(
         `🔍 Processing user: ${user.userId} (${user.email})`
       );
 
@@ -70,7 +71,7 @@ export const processBatch = async (
 
       // Check if user has >= 2 workouts this week (Phase 1 requirement)
       if (weeklyData.workouts.count < 2) {
-        console.info(
+        logger.info(
           `⏭️  Skipping user ${user.userId}: only ${weeklyData.workouts.count} workouts this week (minimum 2 required)`
         );
         continue;
@@ -139,7 +140,7 @@ export const processBatch = async (
             };
 
             await saveWeeklyAnalytics(weeklyAnalytics);
-            console.info(
+            logger.info(
               `✅ User ${user.userId} analytics completed and stored:`,
               {
                 ...logData,
@@ -147,31 +148,31 @@ export const processBatch = async (
               }
             );
           } catch (dynamoError) {
-            console.warn(
+            logger.warn(
               `⚠️ Failed to store analytics in DynamoDB for user ${user.userId}:`,
               dynamoError
             );
 
-            console.warn(
+            logger.warn(
               `⚠️ User ${user.userId} analytics completed (S3 only - DynamoDB failed):`,
               logData
             );
           }
         } catch (s3Error) {
-          console.warn(
+          logger.warn(
             `⚠️ Failed to store analytics in S3 for user ${user.userId}:`,
             s3Error
           );
         }
       } catch (analyticsError) {
-        console.error(
+        logger.error(
           `❌ Failed to generate analytics for user ${user.userId}:`,
           analyticsError
         );
-        console.info(`⚠️  Continuing with next user despite analytics failure`);
+        logger.info(`⚠️  Continuing with next user despite analytics failure`);
 
         // Log data collection success even if analytics failed
-        console.info(
+        logger.info(
           `✅ User ${user.userId} data collected (analytics failed):`,
           {
             workoutCount: weeklyData.workouts.count,
@@ -184,7 +185,7 @@ export const processBatch = async (
 
       processedCount++;
     } catch (userError) {
-      console.error(
+      logger.error(
         `❌ Failed to process user ${user.userId}:`,
         userError
       );
@@ -192,7 +193,7 @@ export const processBatch = async (
     }
   }
 
-  console.info(
+  logger.info(
     `📋 Batch ${batchNumber} completed: ${processedCount}/${users.length} users processed`
   );
   return processedCount;
@@ -237,13 +238,13 @@ export const processMonthlyBatch = async (
   users: UserProfile[],
   batchNumber: number
 ): Promise<number> => {
-  console.info(`📊 Processing monthly batch ${batchNumber} with ${users.length} users`);
+  logger.info(`📊 Processing monthly batch ${batchNumber} with ${users.length} users`);
 
   let processedCount = 0;
 
   for (const user of users) {
     try {
-      console.info(
+      logger.info(
         `🔍 Processing user: ${user.userId} (${user.email})`
       );
 
@@ -252,7 +253,7 @@ export const processMonthlyBatch = async (
 
       // Check if user has >= 4 workouts this month (Phase 1 requirement)
       if (monthlyData.workouts.count < 4) {
-        console.info(
+        logger.info(
           `⏭️  Skipping user ${user.userId}: only ${monthlyData.workouts.count} workouts this month (minimum 4 required)`
         );
         continue;
@@ -321,7 +322,7 @@ export const processMonthlyBatch = async (
             };
 
             await saveMonthlyAnalytics(monthlyAnalytics);
-            console.info(
+            logger.info(
               `✅ User ${user.userId} monthly analytics completed and stored:`,
               {
                 ...logData,
@@ -329,31 +330,31 @@ export const processMonthlyBatch = async (
               }
             );
           } catch (dynamoError) {
-            console.warn(
+            logger.warn(
               `⚠️ Failed to store monthly analytics in DynamoDB for user ${user.userId}:`,
               dynamoError
             );
 
-            console.warn(
+            logger.warn(
               `⚠️ User ${user.userId} monthly analytics completed (S3 only - DynamoDB failed):`,
               logData
             );
           }
         } catch (s3Error) {
-          console.warn(
+          logger.warn(
             `⚠️ Failed to store monthly analytics in S3 for user ${user.userId}:`,
             s3Error
           );
         }
       } catch (analyticsError) {
-        console.error(
+        logger.error(
           `❌ Failed to generate monthly analytics for user ${user.userId}:`,
           analyticsError
         );
-        console.info(`⚠️  Continuing with next user despite analytics failure`);
+        logger.info(`⚠️  Continuing with next user despite analytics failure`);
 
         // Log data collection success even if analytics failed
-        console.info(
+        logger.info(
           `✅ User ${user.userId} monthly data collected (analytics failed):`,
           {
             workoutCount: monthlyData.workouts.count,
@@ -366,7 +367,7 @@ export const processMonthlyBatch = async (
 
       processedCount++;
     } catch (userError) {
-      console.error(
+      logger.error(
         `❌ Failed to process user ${user.userId}:`,
         userError
       );
@@ -374,7 +375,7 @@ export const processMonthlyBatch = async (
     }
   }
 
-  console.info(
+  logger.info(
     `📋 Monthly batch ${batchNumber} completed: ${processedCount}/${users.length} users processed`
   );
   return processedCount;

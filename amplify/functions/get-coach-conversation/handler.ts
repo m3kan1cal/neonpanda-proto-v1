@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getCoachConversation } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -29,7 +30,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const sizePercentage = Math.min(Math.round((itemSizeKB / 400) * 100), 100);
     const isApproachingLimit = itemSizeKB > 350; // 87.5% threshold
 
-    console.info('📊 Conversation size on load:', {
+    logger.info('📊 Conversation size on load:', {
       sizeKB: itemSizeKB.toFixed(2),
       percentage: sizePercentage,
       isApproachingLimit,
