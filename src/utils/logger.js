@@ -2,14 +2,15 @@
  * Centralized logging utility for frontend React application
  * Uses loglevel for structured logging with configurable levels
  *
- * Production default: ERROR (only errors, minimize browser console noise)
- * Development default: DEBUG (all messages)
+ * Current default: DEBUG (all environments)
+ * We're in active development and rely on logs for troubleshooting.
+ * Can be tightened later via VITE_LOG_LEVEL env var.
  *
  * Override via VITE_LOG_LEVEL environment variable:
- * - debug: Most verbose (development)
+ * - debug: Most verbose (current default)
  * - info: General operational messages
  * - warn: Warnings and errors
- * - error: Errors only (production default)
+ * - error: Errors only
  * - silent: No logging
  *
  * Temporary override in browser console:
@@ -20,10 +21,8 @@
 import log from "loglevel";
 
 // Set log level based on environment
-// Production: Default to ERROR to keep browser console clean
-// Development: Default to DEBUG for full visibility
-const isDevelopment = import.meta.env.MODE === "development";
-const defaultLevel = isDevelopment ? "debug" : "error";
+// Default to DEBUG for maximum observability during active development
+const defaultLevel = "debug";
 const logLevel = import.meta.env.VITE_LOG_LEVEL || defaultLevel;
 
 try {
@@ -36,12 +35,10 @@ try {
   );
 }
 
-// Log the current configuration (only in development)
-if (isDevelopment) {
-  log.info(
-    `Logger initialized: level=${log.getLevel()} (${logLevel}), mode=${import.meta.env.MODE}`,
-  );
-}
+// Log the current configuration
+log.info(
+  `Logger initialized: level=${log.getLevel()} (${logLevel}), mode=${import.meta.env.MODE}`,
+);
 
 // Create a logger instance
 export const logger = log;

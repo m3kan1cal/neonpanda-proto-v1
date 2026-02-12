@@ -2,13 +2,14 @@
  * Centralized logging utility for backend Lambda functions
  * Uses loglevel for structured logging with configurable levels
  *
- * Production default: WARN (only warnings and errors)
- * Development default: DEBUG (all messages)
+ * Current default: DEBUG (all environments)
+ * We're in active development and rely on logs for troubleshooting backend issues.
+ * Can be tightened later via LOG_LEVEL env var for production cost optimization.
  *
  * Override via LOG_LEVEL environment variable:
- * - debug: Most verbose (development)
+ * - debug: Most verbose (current default)
  * - info: General operational messages
- * - warn: Warnings and errors only (production default)
+ * - warn: Warnings and errors only
  * - error: Errors only
  * - silent: No logging
  */
@@ -16,10 +17,8 @@
 import log from "loglevel";
 
 // Set log level based on environment
-// Production: Default to WARN to minimize CloudWatch costs
-// Development: Default to DEBUG for full visibility
-const isProduction = process.env.NODE_ENV === "production";
-const defaultLevel = isProduction ? "warn" : "debug";
+// Default to DEBUG for maximum observability during active development
+const defaultLevel = "debug";
 const logLevel = process.env.LOG_LEVEL || defaultLevel;
 
 try {
@@ -30,10 +29,8 @@ try {
   log.warn(`Invalid LOG_LEVEL "${logLevel}", using default "${defaultLevel}"`);
 }
 
-// Log the current configuration (only in development)
-if (!isProduction) {
-  log.info(`Logger initialized: level=${log.getLevel()} (${logLevel})`);
-}
+// Log the current configuration
+log.info(`Logger initialized: level=${log.getLevel()} (${logLevel})`);
 
 // Create a logger instance
 export const logger = log;
