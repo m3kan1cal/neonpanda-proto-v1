@@ -233,12 +233,9 @@ export async function* handleWorkoutCreatorFlow(
       collectedDataBefore: getCollectedDataSummary(fullWorkoutSession.todoList),
     });
 
-    // Yield metadata event to inform UI we're still in workout_log mode
-    yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
-    console.info("📋 Metadata event sent: mode=workout_log (session continue)");
-
     // GOODBYE GUARD: If the user sends a closing/goodbye message and we have
     // substantial data, auto-complete the session rather than losing the data.
+    // Check this BEFORE sending metadata to avoid sending stale mode signal.
     const goodbyeResult = yield* handleGoodbyeAutoComplete({
       params,
       conversationData,
@@ -246,6 +243,11 @@ export async function* handleWorkoutCreatorFlow(
       workoutSession,
     });
     if (goodbyeResult.handled) return;
+
+    // Yield metadata event to inform UI we're still in workout_log mode
+    // (only after confirming goodbye handler didn't auto-complete)
+    yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
+    console.info("📋 Metadata event sent: mode=workout_log (session continue)");
 
     // Prepare user context from conversation data
     const userContext = {
