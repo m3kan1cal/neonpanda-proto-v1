@@ -80,8 +80,43 @@ Please respond in a professional, measured tone without excessive enthusiasm or 
 - All DynamoDB operations in `amplify/dynamodb/operations.ts`
 - Centralized utilities in `amplify/functions/libs/` (api-helpers, s3-utils, date-utils, response-utils)
 
+## API Documentation (Swagger/OpenAPI)
+
+### Overview
+
+All API endpoints are documented in an OpenAPI 3.0 spec at `amplify/swagger/openapi.yaml`. A Swagger UI page is generated from this spec and served at `/api-docs` when deployed.
+
+### When adding or modifying API endpoints
+
+1. Update the handler code in `amplify/functions/<function-name>/handler.ts`
+2. Update the route in `amplify/api/resource.ts` if needed
+3. Update the OpenAPI spec in `amplify/swagger/openapi.yaml` to match:
+   - Add the new path under the `paths:` section
+   - Include request body schemas, response schemas, query/path parameters
+   - Mark public endpoints with `security: []`
+   - Use existing `$ref` components from `components/schemas/` and `components/parameters/` where possible
+4. Run `npm run swagger:check` to verify all routes in `resource.ts` are documented in the spec
+5. Run `npm run swagger:generate` to regenerate the Swagger UI HTML
+
+### Spec structure
+
+- `amplify/swagger/openapi.yaml` - Source of truth for API documentation
+- `scripts/generate-swagger.js` - Generates self-contained Swagger UI HTML from the YAML spec
+- `public/api-docs/index.html` - Generated output (do not edit directly; regenerated on each build)
+
+### NPM scripts
+
+- `npm run swagger:generate` - Generate Swagger UI HTML from the spec
+- `npm run swagger:validate` - Validate spec structure only
+- `npm run swagger:check` - Cross-reference spec paths against `amplify/api/resource.ts`
+
+### Build pipeline
+
+The `amplify.yml` pipeline runs `npm run swagger:generate` before `npm run build` on every deployment, so docs are always current.
+
 ## Key Reference Files
 
+- `amplify/swagger/openapi.yaml` - OpenAPI 3.0 spec (API documentation source of truth)
 - `amplify/functions/libs/api-helpers.ts` - Bedrock, Pinecone patterns
 - `amplify/dynamodb/operations.ts` - DynamoDB operations
 - `amplify/functions/build-workout/handler.ts` - Async Lambda pattern
