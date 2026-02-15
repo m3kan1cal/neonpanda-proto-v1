@@ -20,6 +20,7 @@ import FormInput from "./shared/FormInput";
 import AppFooter from "./shared/AppFooter";
 import AuthInput from "../auth/components/AuthInput";
 import AuthButton from "../auth/components/AuthButton";
+import TiptapEditor from "./shared/TiptapEditor";
 import { useToast } from "../contexts/ToastContext";
 import {
   getUserProfile,
@@ -1527,16 +1528,19 @@ function Settings() {
                     >
                       Directive Content ({directiveCharCount}/500 characters)
                     </label>
-                    <textarea
-                      id="directive-content"
-                      name="content"
-                      value={directiveData.content}
-                      onChange={handleDirectiveChange}
+                    <TiptapEditor
+                      content={directiveData.content}
+                      onUpdate={(html, text) => {
+                        // Enforce maxLength of 500 characters
+                        const truncated = text.length > 500 ? text.slice(0, 500) : text;
+                        handleDirectiveChange({ target: { name: "content", value: truncated } });
+                      }}
                       disabled={isSavingDirective}
-                      maxLength={500}
-                      rows={4}
+                      mode="plain"
                       placeholder="e.g., Always provide concise, technically precise coaching with minimal fluff. Focus on systematic progression and data-driven decisions."
-                      className={`${inputPatterns.textarea} ${scrollbarPatterns.pink} resize-none`}
+                      className={`${inputPatterns.textarea} ${scrollbarPatterns.pink}`}
+                      minHeight="96px"
+                      maxHeight="200px"
                     />
 
                     <div className="mt-3 mb-4 space-y-2">
