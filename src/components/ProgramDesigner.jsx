@@ -532,57 +532,6 @@ function ProgramDesigner() {
 
   // Polling removed - not needed for program designer sessions (mirrors CoachCreator)
 
-  const autoResizeTextarea = (textarea) => {
-    if (!textarea) return;
-
-    const minHeight = 48; // 3rem = 48px
-    const maxHeight = 120; // Max 120px as per requirements
-
-    // Get current height to avoid unnecessary changes
-    const currentHeight = parseInt(textarea.style.height) || minHeight;
-
-    // If textarea is disabled and input is empty, force reset to minimum
-    if (textarea.disabled && !inputMessage.trim()) {
-      textarea.style.height = minHeight + "px";
-      textarea.style.overflowY = "hidden";
-      return;
-    }
-
-    // Temporarily enable textarea to get accurate scrollHeight if needed
-    const wasDisabled = textarea.disabled;
-    if (wasDisabled) {
-      textarea.disabled = false;
-    }
-
-    const scrollHeight = textarea.scrollHeight;
-
-    // Restore disabled state
-    if (wasDisabled) {
-      textarea.disabled = true;
-    }
-
-    // Determine target height
-    let targetHeight;
-    let targetOverflow;
-
-    if (scrollHeight <= minHeight) {
-      targetHeight = minHeight;
-      targetOverflow = "hidden";
-    } else if (scrollHeight <= maxHeight) {
-      targetHeight = scrollHeight;
-      targetOverflow = "hidden";
-    } else {
-      targetHeight = maxHeight;
-      targetOverflow = "auto";
-    }
-
-    // Only update if height actually needs to change (avoid micro-adjustments)
-    if (Math.abs(currentHeight - targetHeight) > 1) {
-      textarea.style.height = targetHeight + "px";
-      textarea.style.overflowY = targetOverflow;
-    }
-  };
-
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -648,7 +597,7 @@ function ProgramDesigner() {
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          // Don't call autoResizeTextarea on focus to prevent height jumps
+          // Focus the editor via textareaRef compatibility layer
         }
       }, 100);
     }
@@ -660,29 +609,11 @@ function ProgramDesigner() {
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          // Don't call autoResizeTextarea on focus to prevent height jumps
+          // Focus the editor via textareaRef compatibility layer
         }
       }, 100);
     }
   }, [agentState.coach, agentState.isLoadingItem]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      autoResizeTextarea(textareaRef.current);
-    }
-  }, [inputMessage]);
-
-  // Additional effect to ensure textarea resizes properly when AI stops typing
-  useEffect(() => {
-    if (textareaRef.current && !agentState.isTyping) {
-      // Small delay to ensure the textarea is re-enabled before resizing
-      setTimeout(() => {
-        if (textareaRef.current) {
-          autoResizeTextarea(textareaRef.current);
-        }
-      }, 10);
-    }
-  }, [agentState.isTyping]);
 
   // Handle coach card click - navigate to training grounds
   const handleCoachCardClick = () => {
@@ -745,15 +676,10 @@ function ProgramDesigner() {
     const messageToSend = inputMessage.trim();
     setInputMessage("");
 
-    // Refocus input and reset size after clearing it
+    // Refocus input after clearing
     setTimeout(() => {
       if (textareaRef.current) {
-        // Force reset to minimum height after clearing content
-        textareaRef.current.style.height = "48px";
-        textareaRef.current.style.overflowY = "hidden";
         textareaRef.current.focus();
-        // Call autoResize to ensure proper state
-        autoResizeTextarea(textareaRef.current);
       }
     }, 50);
 

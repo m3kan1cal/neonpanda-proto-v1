@@ -27,6 +27,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import { explainTerm } from "../../utils/apis/explainApi";
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
+import TiptapEditor from "../shared/TiptapEditor";
 import AppFooter from "../shared/AppFooter";
 import { logger } from "../../utils/logger";
 
@@ -1200,43 +1201,16 @@ General thoughts: `;
                           <h4 className="font-rajdhani text-sm text-synthwave-neon-pink uppercase font-semibold mb-2">
                             What You Did
                           </h4>
-                          <textarea
-                            value={editedPerformance}
-                            onChange={(e) =>
-                              setEditedPerformance(e.target.value)
+                          <TiptapEditor
+                            content={editedPerformance}
+                            onUpdate={(html, text) =>
+                              setEditedPerformance(text)
                             }
                             className={`${containerPatterns.workoutDescriptionEditable} text-sm`}
                             placeholder="Edit to record what you actually did..."
-                            rows={8}
-                            style={{
-                              resize: "none",
-                              overflow: "hidden",
-                              // Use min-height to prevent collapse during typing
-                              minHeight: "200px",
-                            }}
-                            ref={(el) => {
-                              if (el) {
-                                // Set initial height based on content when textarea first renders
-                                // Use requestAnimationFrame to avoid layout thrashing
-                                requestAnimationFrame(() => {
-                                  if (el.scrollHeight > el.clientHeight) {
-                                    el.style.height = el.scrollHeight + "px";
-                                  }
-                                });
-                              }
-                            }}
-                            onInput={(e) => {
-                              // Avoid resetting to "auto" which causes iOS Safari to scroll to top
-                              // Instead, only grow the textarea if content exceeds current height
-                              const target = e.target;
-                              // Temporarily set overflow to get accurate scrollHeight
-                              const currentHeight = target.clientHeight;
-                              const scrollHeight = target.scrollHeight;
-
-                              if (scrollHeight > currentHeight) {
-                                target.style.height = scrollHeight + "px";
-                              }
-                            }}
+                            mode="plain"
+                            minHeight="60px"
+                            maxHeight="150px"
                           />
                           {/* Helper text and legends container with proper spacing */}
                           <div className="mt-3 space-y-2">

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Tooltip } from "react-tooltip";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -23,6 +23,7 @@ import {
 } from "../themes/SynthwaveComponents";
 import { useImageUpload } from "../../hooks/useImageUpload";
 import { logger } from "../../utils/logger";
+import TiptapEditor from "./TiptapEditor";
 
 // Question mark icon for tips (standardized size)
 const QuestionIcon = () => (
@@ -288,12 +289,8 @@ function ChatInput({
   const [showQuickActionsPopup, setShowQuickActionsPopup] = useState(false);
   const [showQuickPromptsSubmenu, setShowQuickPromptsSubmenu] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const internalTextareaRef = useRef(null);
   const isSendingMessage = useRef(false);
   const photoInputRef = useRef(null);
-
-  // Use provided ref or internal ref
-  const activeTextareaRef = textareaRef || internalTextareaRef;
 
   // Image upload hook
   const {
@@ -309,57 +306,25 @@ function ChatInput({
     setError: setImageError,
   } = useImageUpload();
 
-  // Auto-resize textarea logic
-  const autoResizeTextarea = (textarea) => {
-    if (!textarea) return;
+  // Tiptap editor ref
+  const editorRef = useRef(null);
 
-    const minHeight = 48; // 3rem = 48px
-    const maxHeight = 120; // Max 120px as per requirements
-
-    // Get current height to avoid unnecessary changes
-    const currentHeight = parseInt(textarea.style.height) || minHeight;
-
-    // If textarea is disabled and input is empty, force reset to minimum
-    if (textarea.disabled && !inputMessage.trim()) {
-      textarea.style.height = minHeight + "px";
-      textarea.style.overflowY = "hidden";
-      return;
+  // Sync parent textareaRef with editorRef for backwards compatibility
+  // Parent components call textareaRef.current.focus() - redirect to editor
+  useEffect(() => {
+    if (textareaRef && editorRef.current) {
+      textareaRef.current = {
+        focus: () => editorRef.current?.focus(),
+        // Provide disabled property for parent checks
+        get disabled() {
+          return !editorRef.current?.editor?.isEditable;
+        },
+        set disabled(val) {
+          // no-op, controlled by props
+        },
+      };
     }
-
-    // Temporarily enable textarea to get accurate scrollHeight if needed
-    const wasDisabled = textarea.disabled;
-    if (wasDisabled) {
-      textarea.disabled = false;
-    }
-
-    // Reset height to auto to get accurate scrollHeight measurement
-    textarea.style.height = "auto";
-    const scrollHeight = textarea.scrollHeight;
-
-    // Restore disabled state
-    if (wasDisabled) {
-      textarea.disabled = true;
-    }
-
-    // Determine target height
-    let targetHeight;
-    let targetOverflow;
-
-    if (scrollHeight <= minHeight) {
-      targetHeight = minHeight;
-      targetOverflow = "hidden";
-    } else if (scrollHeight <= maxHeight) {
-      targetHeight = scrollHeight;
-      targetOverflow = "hidden";
-    } else {
-      targetHeight = maxHeight;
-      targetOverflow = "auto";
-    }
-
-    // Always update height to ensure proper resizing (especially when shrinking)
-    textarea.style.height = targetHeight + "px";
-    textarea.style.overflowY = targetOverflow;
-  };
+  }, [textareaRef, editorRef.current?.editor]);
 
   // Recording functions
   const handleStartRecording = () => {
@@ -378,26 +343,30 @@ function ChatInput({
     setShowQuickActionsPopup(false);
     setShowQuickPromptsSubmenu(false);
 
-    // Focus the textarea after a brief delay
+    // Focus the editor after a brief delay
     setTimeout(() => {
-      if (activeTextareaRef.current) {
-        activeTextareaRef.current.focus();
-        // Move cursor to end of text
-        const textLength = prompt.length;
-        activeTextareaRef.current.setSelectionRange(textLength, textLength);
+      if (editorRef.current) {
+        editorRef.current.focus();
       }
     }, 50);
   };
 
   // Handle emoji selection
   const handleEmojiClick = (emojiData) => {
-    setInputMessage((prevMessage) => prevMessage + emojiData.emoji);
+    // Insert emoji into editor directly
+    if (editorRef.current?.editor) {
+      editorRef.current.editor.commands.insertContent(emojiData.emoji);
+      // Sync state from editor content
+      setInputMessage(editorRef.current.getText());
+    } else {
+      setInputMessage((prevMessage) => prevMessage + emojiData.emoji);
+    }
     setShowEmojiPicker(false);
 
-    // Focus the textarea after emoji selection
+    // Focus the editor after emoji selection
     setTimeout(() => {
-      if (activeTextareaRef.current) {
-        activeTextareaRef.current.focus();
+      if (editorRef.current) {
+        editorRef.current.focus();
       }
     }, 50);
   };
@@ -466,22 +435,12 @@ function ChatInput({
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  // Auto-resize when input message changes
+  // Refocus the editor when AI stops typing
   useEffect(() => {
-    if (activeTextareaRef.current) {
-      autoResizeTextarea(activeTextareaRef.current);
-    }
-  }, [inputMessage]);
-
-  // Additional effect to ensure textarea resizes properly when typing stops
-  useEffect(() => {
-    if (activeTextareaRef.current && !isTyping) {
-      // Small delay to ensure the textarea is re-enabled before resizing and refocusing
+    if (!isTyping) {
       setTimeout(() => {
-        if (activeTextareaRef.current) {
-          autoResizeTextarea(activeTextareaRef.current);
-          // Refocus the textarea so user can immediately start typing
-          activeTextareaRef.current.focus();
+        if (editorRef.current) {
+          editorRef.current.focus();
         }
       }, 10);
     }
@@ -559,17 +518,7 @@ function ChatInput({
 
   // Debug log for progress changes
 
-  // Add paste event listener for images
-  useEffect(() => {
-    const textarea = activeTextareaRef.current;
-    if (!textarea) return;
-
-    textarea.addEventListener("paste", handlePaste);
-
-    return () => {
-      textarea.removeEventListener("paste", handlePaste);
-    };
-  }, [selectedImages]);
+  // Paste handling is now done through TiptapEditor's onPaste prop
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -595,15 +544,11 @@ function ChatInput({
       setInputMessage("");
       clearImages();
 
-      // Refocus input and reset size after clearing it
+      // Clear editor and refocus
       setTimeout(() => {
-        if (activeTextareaRef.current) {
-          // Force reset to minimum height after clearing content
-          activeTextareaRef.current.style.height = "48px";
-          activeTextareaRef.current.style.overflowY = "hidden";
-          activeTextareaRef.current.focus();
-          // Call autoResize to ensure proper state
-          autoResizeTextarea(activeTextareaRef.current);
+        if (editorRef.current) {
+          editorRef.current.clear();
+          editorRef.current.focus();
         }
       }, 50);
 
@@ -629,49 +574,62 @@ function ChatInput({
     );
   };
 
-  const handleKeyPress = (e) => {
-    // Handle slash command navigation when tooltip is visible
-    if (showSlashCommandTooltip && enableSlashCommands) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedCommandIndex((prev) =>
-          prev < availableSlashCommands.length - 1 ? prev + 1 : 0,
-        );
-        return;
+  // Key handler passed to TiptapEditor - returns true if the key was handled
+  const handleKeyDown = useCallback(
+    (e) => {
+      // Handle slash command navigation when tooltip is visible
+      if (showSlashCommandTooltip && enableSlashCommands) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setSelectedCommandIndex((prev) =>
+            prev < availableSlashCommands.length - 1 ? prev + 1 : 0,
+          );
+          return true;
+        }
+
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setSelectedCommandIndex((prev) =>
+            prev > 0 ? prev - 1 : availableSlashCommands.length - 1,
+          );
+          return true;
+        }
+
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          const selectedCommand = availableSlashCommands[selectedCommandIndex];
+          setInputMessage(selectedCommand.command + " ");
+          setShowSlashCommandTooltip(false);
+          if (onSlashCommandSelect) {
+            onSlashCommandSelect(selectedCommand);
+          }
+          return true;
+        }
+
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setShowSlashCommandTooltip(false);
+          return true;
+        }
       }
 
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedCommandIndex((prev) =>
-          prev > 0 ? prev - 1 : availableSlashCommands.length - 1,
-        );
-        return;
-      }
-
+      // Enter to send, Shift+Enter for newline
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        const selectedCommand = availableSlashCommands[selectedCommandIndex];
-        setInputMessage(selectedCommand.command + " ");
-        setShowSlashCommandTooltip(false);
-        if (onSlashCommandSelect) {
-          onSlashCommandSelect(selectedCommand);
-        }
-        return;
+        handleSendMessage(e);
+        return true;
       }
 
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setShowSlashCommandTooltip(false);
-        return;
-      }
-    }
-
-    // Default behavior for sending messages
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
-    }
-  };
+      return false;
+    },
+    [
+      showSlashCommandTooltip,
+      enableSlashCommands,
+      availableSlashCommands,
+      selectedCommandIndex,
+      onSlashCommandSelect,
+    ],
+  );
 
   // Update CSS custom property for chat input height
   React.useEffect(() => {
@@ -1073,25 +1031,22 @@ function ChatInput({
 
           {/* Text input */}
           <div className="flex-1 relative">
-            <textarea
-              ref={activeTextareaRef}
-              value={inputMessage}
-              onChange={(e) => {
-                setInputMessage(e.target.value);
-                autoResizeTextarea(e.target);
+            <TiptapEditor
+              ref={editorRef}
+              content={inputMessage}
+              onUpdate={(html, text) => {
+                setInputMessage(text);
               }}
-              onKeyDown={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder={
                 window.innerWidth < 768 ? "Talk to me..." : placeholder
               }
-              rows={1}
-              className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
-              style={{
-                outline: "none !important",
-                boxShadow: "none !important",
-                WebkitTapHighlightColor: "transparent",
-              }}
               disabled={isTyping}
+              mode="rich"
+              className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
+              minHeight="60px"
+              maxHeight="200px"
+              onPaste={handlePaste}
             />
             <div className="relative" data-emoji-picker-container>
               <button
@@ -1281,8 +1236,8 @@ function ChatInput({
                       onClick={() => {
                         setInputMessage(cmd.command + " ");
                         setShowSlashCommandTooltip(false);
-                        if (activeTextareaRef.current) {
-                          activeTextareaRef.current.focus();
+                        if (editorRef.current) {
+                          editorRef.current.focus();
                         }
                         if (onSlashCommandSelect) {
                           onSlashCommandSelect(cmd);

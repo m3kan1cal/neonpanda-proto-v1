@@ -173,6 +173,54 @@
 }
 
 /* =====================================================================
+   Tiptap Editor Styles
+   ===================================================================== */
+
+/* Tiptap placeholder styling */
+.tiptap-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #666666;
+  pointer-events: none;
+  height: 0;
+  font-family: "Rajdhani", sans-serif;
+}
+
+/* Tiptap content area reset */
+.tiptap-content {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "Rajdhani", sans-serif;
+}
+
+.tiptap-content p {
+  margin: 0;
+}
+
+.tiptap-content:focus {
+  outline: none;
+}
+
+/* Tiptap scrollbar inside editor */
+.tiptap-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tiptap-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-content::-webkit-scrollbar-thumb {
+  background: #ff007f40;
+  border-radius: 3px;
+}
+
+.tiptap-content::-webkit-scrollbar-thumb:hover {
+  background: #ff007f60;
+}
+
+/* =====================================================================
    Global styles
    ===================================================================== */
 
