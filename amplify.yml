@@ -18,6 +18,9 @@ applications:
             - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
         build:
           commands:
+            # Generate Swagger API documentation (reads amplify/swagger/openapi.yaml -> public/api-docs/index.html)
+            - npm run swagger:generate
+
             # Build the frontend
             - npm run build
       artifacts:
@@ -80,6 +83,11 @@ applications:
       - source: "/training-grounds/"
         target: "/training-grounds"
         status: "301"
+
+      # API docs - serve static Swagger UI (before SPA fallback)
+      - source: "/api-docs"
+        target: "/api-docs/index.html"
+        status: "200"
 
       # SPA fallback - serve index.html for all other routes
       - source: "/<*>"
