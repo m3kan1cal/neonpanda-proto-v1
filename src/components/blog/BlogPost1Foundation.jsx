@@ -446,7 +446,7 @@ function BlogPost1Foundation() {
                   Complexity:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
-                  Does this need deep reasoning (Sonnet 4.5) or a quick response
+                  Does this need deep reasoning (Sonnet 4.6) or a quick response
                   (Haiku 4.5)?
                 </span>
               </div>
@@ -495,7 +495,7 @@ function BlogPost1Foundation() {
               {`if (route.isProgramDesign) → ProgramDesignerAgent`}
             </div>
             <div className="text-synthwave-neon-cyan">
-              {`if (route.isComplex) → Sonnet 4.5`}
+              {`if (route.isComplex) → Sonnet 4.6`}
             </div>
             <div className="text-synthwave-text-secondary">
               {`else → Haiku 4.5 (fast response)`}
@@ -631,7 +631,7 @@ function BlogPost1Foundation() {
                   <span className="text-synthwave-text-secondary font-rajdhani text-sm">
                     Complex →{" "}
                     <span className="text-synthwave-neon-purple">
-                      Sonnet 4.5
+                      Sonnet 4.6
                     </span>
                   </span>
                   <span className="text-synthwave-text-muted">|</span>
@@ -669,14 +669,14 @@ function BlogPost1Foundation() {
               {`if (routerAnalysis.workoutDetection.isWorkoutLog) {`}
             </div>
             <div className="text-synthwave-neon-pink pl-4">
-              {`  → WorkoutLoggerAgent (Sonnet 4.5 for extraction)`}
+              {`  → WorkoutLoggerAgent (Sonnet 4.6 for extraction)`}
             </div>
             <div className="text-synthwave-text-secondary">{`}`}</div>
             <div className="text-synthwave-text-secondary">
               {`if (routerAnalysis.conversationComplexity.requiresDeepReasoning) {`}
             </div>
             <div className="text-synthwave-neon-purple pl-4">
-              {`  → Sonnet 4.5 (deep analysis, program design)`}
+              {`  → Sonnet 4.6 (deep analysis, program design)`}
             </div>
             <div className="text-synthwave-text-secondary">{`} else {`}</div>
             <div className="text-synthwave-neon-cyan pl-4">
@@ -878,7 +878,7 @@ function BlogPost1Foundation() {
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-purple">→</span>
                 <span>
-                  Claude Sonnet 4.5 for complex reasoning and extraction
+                  Claude Sonnet 4.6 for complex reasoning and extraction
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -888,7 +888,8 @@ function BlogPost1Foundation() {
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-purple">→</span>
                 <span>
-                  Amazon Nova 2 Lite for contextual updates (ultra-low latency)
+                  Nvidia Nemotron / Amazon Nova 2 Lite for contextual updates
+                  (ultra-low latency)
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -997,7 +998,7 @@ function BlogPost1Foundation() {
             >
               <div>
                 <h3 className="font-russo text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
-                  Your Coach, Your Way
+                  Your Coach, Built Your Way
                 </h3>
                 <p className="font-rajdhani text-synthwave-text-secondary">
                   The Coach Creator Agent & Hybrid Data Architecture

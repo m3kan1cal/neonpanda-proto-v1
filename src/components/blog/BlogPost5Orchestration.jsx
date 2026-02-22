@@ -14,23 +14,24 @@ function BlogPost5Orchestration() {
       <section className="mb-16">
         <div className={`${containerPatterns.boldGradient} mb-8`}>
           <p className="font-rajdhani text-xl text-white leading-relaxed italic">
-            "Hey coach, I just finished the bench press from today's program—hit
-            225 for a triple, felt smooth. Also, my left shoulder has been
-            clicking during overhead work. Can you pull up my last few overhead
-            sessions and remind me what we said about that shoulder thing last
-            month?"
+            "Just got back from the gym—hit 275 for a clean double on squat,
+            then ran through the MetCon in 11:40. Legs are fried but I feel
+            great. Oh, and my knee was bugging me on the box jumps again. Can
+            you check my squat numbers from the last few weeks and remind me
+            what we talked about with that knee?"
           </p>
         </div>
 
         <p
           className={`${typographyPatterns.description} text-xl leading-relaxed mb-6`}
         >
-          One message. Three distinct intents. Behind the scenes, the
-          Conversation Agent just orchestrated a symphony: it logged a workout,
-          marked a program day complete, saved a new injury memory, queried
-          exercise history for overhead movements, retrieved past shoulder
-          memories from semantic search, and streamed a personalized
-          response—all in your coach's unique voice, all in real time.
+          One message. Four distinct intents. Behind the scenes, the
+          Conversation Agent just orchestrated a symphony: it logged the full
+          workout, marked a program day complete, saved a knee concern as a
+          persistent memory, queried squat history to surface a 15lb PR trend,
+          retrieved the knee memory from two weeks ago, and streamed a
+          personalized response—all in your coach's unique voice, all in real
+          time. Six tool calls. One natural reply.
         </p>
         <p
           className={`${typographyPatterns.description} text-xl leading-relaxed mb-6`}
@@ -47,9 +48,10 @@ function BlogPost5Orchestration() {
             This is the Conversation Agent.
           </span>{" "}
           Armed with 11 specialized tools and a streaming-first architecture, it
-          is the orchestration layer that pulls, pushes, queries, logs, and
-          searches data across the entire platform—transforming every
-          conversation into an intelligent, context-rich coaching experience.
+          pulls, pushes, queries, logs, and searches data across the entire
+          platform—transforming every conversation into an intelligent,
+          context-rich coaching experience. This is the post where all the
+          agents come together.
         </p>
       </section>
 
@@ -350,9 +352,11 @@ function BlogPost5Orchestration() {
           </div>
 
           {/* Exercise History Tools */}
-          <div className={`${containerPatterns.mediumGlassCyan}`}>
+          <div className={`${containerPatterns.mediumGlassPurple}`}>
             <div className="flex items-center gap-2 mb-4">
-              <span className={badgePatterns.cyan}>Exercise Intelligence</span>
+              <span className={badgePatterns.purple}>
+                Exercise Intelligence
+              </span>
             </div>
             <div className="space-y-4">
               <div>
@@ -477,13 +481,13 @@ function BlogPost5Orchestration() {
                 <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-synthwave-neon-cyan"></div>
               </div>
 
-              {/* Smart Router */}
+              {/* Context Assembly */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-lg px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
-                  Smart Request Router (Parallel Burst)
+                  Context Assembly (Parallel Burst)
                 </span>
                 <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
-                  Intent analysis + DynamoDB reads + Pinecone search
+                  DynamoDB reads + Pinecone search + coach personality
                   (simultaneous)
                 </p>
               </div>
@@ -579,8 +583,8 @@ function BlogPost5Orchestration() {
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
                   When the agent calls a tool, the user sees contextual updates
-                  like "Looking up your squat history..." powered by Amazon Nova
-                  2 Lite. Tool execution feels like a natural part of the
+                  like "Looking up your squat history..." powered by Nvidia
+                  Nemotron. Tool execution feels like a natural part of the
                   conversation, not a loading state.
                 </span>
               </div>
@@ -855,9 +859,8 @@ function BlogPost5Orchestration() {
         <p className={`${typographyPatterns.description} mb-6`}>
           Throughout this series, we've explored six agentic AI patterns that
           power NeonPanda. The Conversation Agent is the culmination—it uses the
-          Tool-Use Pattern to execute actions, the Router Pattern to classify
-          intent, and draws on data created by agents using every other pattern.
-          Here's the complete picture:
+          Tool-Use Pattern to execute actions and draws on data created by
+          agents using every other pattern. Here's the complete picture:
         </p>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
@@ -951,7 +954,7 @@ function BlogPost5Orchestration() {
                 />
               </div>
               <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
-                Claude Sonnet 4.5
+                Claude Sonnet 4.6
               </h3>
             </div>
             <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
@@ -1003,18 +1006,18 @@ function BlogPost5Orchestration() {
             <div className="flex items-center gap-3 mb-4">
               <img
                 src="/images/icons/Arch_Amazon-Nova_64.svg"
-                alt="Nova"
+                alt="Nemotron / Nova"
                 className="w-12 h-12"
               />
               <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
-                Amazon Nova 2 Lite
+                Nvidia Nemotron / Amazon Nova 2 Lite
               </h3>
             </div>
             <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
-              The Contextual Narrator
+              The Contextual Narrators
             </p>
             <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
-              Generates real-time contextual updates during tool execution.
+              Generate real-time contextual updates during tool execution.
               Coach-personality-aware ephemeral messages that keep the
               conversation feeling alive during processing.
             </p>
@@ -1066,16 +1069,16 @@ function BlogPost5Orchestration() {
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
-              // Smart Router decides model based on intent analysis
+              // Handler selects model based on conversation complexity
             </div>
             <div className="text-synthwave-neon-cyan">
               {`"What's my workout today?"        → Haiku 4.5 (fast, simple)`}
             </div>
             <div className="text-synthwave-neon-purple mt-1">
-              {`"Should I deload? Feeling beat up" → Sonnet 4.5 (deep reasoning)`}
+              {`"Should I deload? Feeling beat up" → Sonnet 4.6 (deep reasoning)`}
             </div>
             <div className="text-synthwave-neon-pink mt-1">
-              {`"Log that workout"                 → Sonnet 4.5 (tool orchestration)`}
+              {`"Log that workout"                 → Sonnet 4.6 (tool orchestration)`}
             </div>
             <div className="text-synthwave-neon-cyan mt-1">
               {`"You got this!"                    → Haiku 4.5 (quick response)`}
@@ -1277,48 +1280,25 @@ function BlogPost5Orchestration() {
         </div>
       </section>
 
-      {/* Five Agents in Concert */}
+      {/* Agents in Concert */}
       <section className="mb-16">
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-6`}
         >
-          Five Agents, One Seamless Experience
+          Multiple Agents, One Seamless Experience
         </h2>
         <p className={`${typographyPatterns.description} mb-8`}>
           The Conversation Agent doesn't work alone. It's the front-line agent
-          that users interact with, but it coordinates with every other agent in
-          the platform. Here's the full agent roster and how they connect:
+          that users interact with, but it coordinates with every specialized
+          agent in the platform. Here's the full roster and how they connect:
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className={containerPatterns.mediumGlassPink}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-synthwave-neon-pink/30 flex items-center justify-center">
-                <span className="font-inter font-bold text-synthwave-neon-pink">
-                  1
-                </span>
-              </div>
-              <div>
-                <h3 className="font-russo text-lg text-synthwave-neon-pink">
-                  Smart Request Router
-                </h3>
-                <p className="text-synthwave-text-muted text-sm font-rajdhani">
-                  The Traffic Controller
-                </p>
-              </div>
-            </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm">
-              Analyzes every message to determine intent, complexity, and
-              context needs. Decides whether the Conversation Agent uses Sonnet
-              or Haiku, and what context to preload.
-            </p>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/30 flex items-center justify-center">
                 <span className="font-inter font-bold text-synthwave-neon-cyan">
-                  2
+                  1
                 </span>
               </div>
               <div>
@@ -1341,7 +1321,7 @@ function BlogPost5Orchestration() {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-synthwave-neon-purple/30 flex items-center justify-center">
                 <span className="font-inter font-bold text-synthwave-neon-purple">
-                  3
+                  2
                 </span>
               </div>
               <div>
@@ -1368,7 +1348,7 @@ function BlogPost5Orchestration() {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-synthwave-neon-pink/30 flex items-center justify-center">
                 <span className="font-inter font-bold text-synthwave-neon-pink">
-                  4
+                  3
                 </span>
               </div>
               <div>
@@ -1393,32 +1373,32 @@ function BlogPost5Orchestration() {
               Agent tracks progress in real time.
             </p>
           </div>
-        </div>
 
-        <div
-          className={`${containerPatterns.mediumGlassCyan} mb-8 text-center`}
-        >
-          <div className="flex items-center gap-3 justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-synthwave-neon-cyan/30 flex items-center justify-center">
-              <span className="font-inter font-bold text-lg text-synthwave-neon-cyan">
-                5
-              </span>
+          <div
+            className={`${containerPatterns.mediumGlass} border-synthwave-neon-cyan`}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/30 flex items-center justify-center">
+                <span className="font-inter font-bold text-synthwave-neon-cyan">
+                  4
+                </span>
+              </div>
+              <div>
+                <h3 className="font-russo text-lg text-synthwave-neon-cyan">
+                  Conversation Agent
+                </h3>
+                <p className="text-synthwave-text-muted text-sm font-rajdhani">
+                  The Orchestration Layer — 11 Tools, Streaming, Real-Time
+                </p>
+              </div>
             </div>
-            <div className="text-left">
-              <h3 className="font-russo text-xl text-synthwave-neon-cyan">
-                Conversation Agent
-              </h3>
-              <p className="text-synthwave-text-muted text-sm font-rajdhani">
-                The Orchestration Layer — 11 Tools, Streaming, Real-Time
-              </p>
-            </div>
+            <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              The agent users talk to every day. It orchestrates across the
+              entire platform—pulling from programs, logging workouts, searching
+              memories, querying history, saving context—all streamed in your
+              coach's unique voice.
+            </p>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani">
-            The agent users talk to every day. It orchestrates across the entire
-            platform—pulling from programs, logging workouts, searching
-            memories, querying history, saving context—all streamed in your
-            coach's unique voice.
-          </p>
         </div>
       </section>
 
@@ -1548,7 +1528,7 @@ function BlogPost5Orchestration() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-pulse"></div>
-              <span>5 Specialized AI Agents</span>
+              <span>Multiple Specialized AI Agents</span>
             </div>
           </div>
         </div>
@@ -1572,7 +1552,7 @@ function BlogPost5Orchestration() {
                   </span>
                 </div>
                 <span className="font-rajdhani text-synthwave-text-primary group-hover:text-synthwave-neon-pink transition-colors">
-                  The Foundation
+                  The Foundation of Everything
                 </span>
               </Link>
               <Link
@@ -1585,7 +1565,7 @@ function BlogPost5Orchestration() {
                   </span>
                 </div>
                 <span className="font-rajdhani text-synthwave-text-primary group-hover:text-synthwave-neon-cyan transition-colors">
-                  Your Coach, Your Way
+                  Your Coach, Built Your Way
                 </span>
               </Link>
               <Link
@@ -1598,7 +1578,7 @@ function BlogPost5Orchestration() {
                   </span>
                 </div>
                 <span className="font-rajdhani text-synthwave-text-primary group-hover:text-synthwave-neon-purple transition-colors">
-                  Every Rep Counts
+                  Every Rep Counts, Every Time
                 </span>
               </Link>
               <Link

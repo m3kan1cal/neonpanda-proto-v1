@@ -985,7 +985,7 @@ function BlogPost4ProgramDesigner() {
           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
             While your program builds in the background, you receive
             AI-generated contextual updates—brief, coach-like progress messages
-            powered by Amazon Nova 2 Lite. These aren't generic "Loading..."
+            powered by Nvidia Nemotron. These aren't generic "Loading..."
             messages. They're personality-aware updates that match your coach's
             communication style:
           </p>
@@ -1059,7 +1059,7 @@ function BlogPost4ProgramDesigner() {
                 />
               </div>
               <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
-                Claude Sonnet 4.5
+                Claude Sonnet 4.6
               </h3>
             </div>
             <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
@@ -1116,11 +1116,11 @@ function BlogPost4ProgramDesigner() {
                 className="w-12 h-12"
               />
               <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
-                Amazon Nova 2 Lite
+                Nvidia Nemotron / Amazon Nova 2 Lite
               </h3>
             </div>
             <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
-              The Narrator
+              The Narrators
             </p>
             <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
               Generates those real-time contextual updates during the build
@@ -1180,16 +1180,16 @@ function BlogPost4ProgramDesigner() {
               // Model selection in program generation
             </div>
             <div className="text-synthwave-neon-purple">
-              {`Sonnet 4.5  → Phase design, periodization, constraint solving`}
+              {`Sonnet 4.6  → Phase design, periodization, constraint solving`}
             </div>
             <div className="text-synthwave-neon-cyan mt-1">
               {`Haiku 4.5   → Individual workout generation (36× calls)`}
             </div>
             <div className="text-synthwave-neon-pink mt-1">
-              {`Nova 2 Lite → Contextual updates (12-15× calls)`}
+              {`Nemotron  → Contextual updates (12-15× calls)`}
             </div>
             <div className="text-synthwave-text-secondary mt-1">
-              {`NV-Embed    → Program embedding (1× call)`}
+              {`NV-Embed   → Program embedding (1× call)`}
             </div>
             <div className="text-synthwave-text-muted mt-3">
               {`// Result: Sonnet quality where it matters, Haiku speed everywhere else`}
@@ -1612,7 +1612,7 @@ function BlogPost4ProgramDesigner() {
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan mb-6`}
         >
-          What's Next: The Symphony
+          What's Next: When All Agents Converge
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
           We've now explored four specialized agents: the Smart Request Router,
@@ -1627,8 +1627,8 @@ function BlogPost4ProgramDesigner() {
           Spoiler: when you log a workout that's part of an active program, the
           Conversation Agent calls three tools in a single streaming
           response—logging the workout, marking the program day complete, and
-          querying your exercise history to celebrate the PR. Five agents, 11
-          tools, one seamless experience.
+          querying your exercise history to celebrate the PR. Multiple agents,
+          11 tools, one seamless experience.
         </p>
 
         <div className={containerPatterns.cardLight}>
@@ -1642,7 +1642,7 @@ function BlogPost4ProgramDesigner() {
             >
               <div>
                 <h3 className="font-russo text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
-                  The Symphony
+                  When All Agents Converge
                 </h3>
                 <p className="font-rajdhani text-synthwave-text-secondary">
                   The Conversation Agent & Streaming Orchestration

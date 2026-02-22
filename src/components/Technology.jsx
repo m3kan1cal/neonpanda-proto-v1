@@ -176,8 +176,8 @@ function Technology() {
                     <strong className="text-synthwave-neon-purple">
                       The magic:
                     </strong>{" "}
-                    Uses planner models (Sonnet 4.5) for complex reasoning and
-                    executor models (Haiku 4.5, Nova 2 Lite) for fast
+                    Uses planner models (Sonnet 4.6) for complex reasoning and
+                    executor models (Haiku 4.5, Nemotron) for fast
                     operations—intelligently deciding template selection, prompt
                     generation, and configuration assembly to create coaches
                     that feel genuinely personal, not cookie-cutter
@@ -231,7 +231,7 @@ function Technology() {
                     <strong className="text-synthwave-neon-purple">
                       The magic:
                     </strong>{" "}
-                    Uses planner models (Sonnet 4.5) for program architecture
+                    Uses planner models (Sonnet 4.6) for program architecture
                     and executor models for validation and parallel
                     processing—ensuring your training follows intelligent
                     progression principles whether you're doing CrossFit,
@@ -285,7 +285,7 @@ function Technology() {
                     <strong className="text-synthwave-neon-purple">
                       The magic:
                     </strong>{" "}
-                    Uses planner models (Sonnet 4.5) for complex extraction and
+                    Uses planner models (Sonnet 4.6) for complex extraction and
                     executor models for fast validation—with built-in blocking
                     to prevent incomplete data. Supports multimodal input—send a
                     photo of your gym's whiteboard and it extracts the workout
@@ -332,7 +332,7 @@ function Technology() {
                     Consolidates multiple AI detection calls into a single
                     intelligent routing decision—understanding whether you're
                     logging a workout, asking for advice, designing a program,
-                    or just chatting. Routes complex reasoning to Sonnet 4.5,
+                    or just chatting. Routes complex reasoning to Sonnet 4.6,
                     quick responses to Haiku 4.5, and efficient background tasks
                     to Nova
                   </p>
@@ -470,9 +470,9 @@ function Technology() {
                       <strong className="text-synthwave-neon-cyan">
                         Smart Model Selection:
                       </strong>{" "}
-                      Opus 4.5 for deep reasoning tasks, Sonnet 4.5 for
-                      orchestration, Haiku 4.5 and Nova 2 Lite for fast
-                      responses, Nova 2 Lite for efficient background processing
+                      Opus 4.6 for deep reasoning tasks, Sonnet 4.6 for
+                      orchestration, Haiku 4.5 and Nemotron for fast responses,
+                      Nemotron for efficient background processing
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
@@ -887,7 +887,7 @@ function Technology() {
                       </span>
                       <span>
                         <strong className="text-synthwave-neon-pink">
-                          Claude Sonnet 4.5:
+                          Claude Sonnet 4.6:
                         </strong>{" "}
                         Our primary conversational engine for natural coaching
                         interactions and complex orchestration
@@ -911,7 +911,7 @@ function Technology() {
                       </span>
                       <span>
                         <strong className="text-synthwave-neon-pink">
-                          Claude Opus 4.5:
+                          Claude Opus 4.6:
                         </strong>{" "}
                         Deep reasoning for complex program design and
                         methodology application
@@ -923,22 +923,10 @@ function Technology() {
                       </span>
                       <span>
                         <strong className="text-synthwave-neon-pink">
-                          Nova 2 Lite:
+                          Nvidia Nemotron / Amazon Nova 2 Lite:
                         </strong>{" "}
-                        Ultra-efficient processing for contextual updates and
-                        intent classification
-                      </span>
-                    </li>
-                    <li className="flex items-start space-x-3">
-                      <span className="text-synthwave-neon-pink mt-1 shrink-0">
-                        •
-                      </span>
-                      <span>
-                        <strong className="text-synthwave-neon-pink">
-                          Nova 2 Lite:
-                        </strong>{" "}
-                        High-speed parallel task execution for background
-                        operations
+                        Ultra-efficient processing for contextual updates,
+                        intent classification, and background operations
                       </span>
                     </li>
                     <li className="flex items-start space-x-3">
@@ -972,7 +960,7 @@ function Technology() {
                         AWS Bedrock Integration:
                       </strong>{" "}
                       Seamless access to multiple AI models through unified
-                      APIs, enabling intelligent model selection—Sonnet 4.5 for
+                      APIs, enabling intelligent model selection—Sonnet 4.6 for
                       complex reasoning, Haiku 4.5 for speed, Nova for
                       efficiency—without you ever noticing the orchestration
                     </p>
@@ -983,7 +971,7 @@ function Technology() {
                       Hundreds of hours fine-tuning each model's coaching
                       personalities to feel authentic, not robotic—whether
                       you're getting quick motivation from Haiku 4.5 or deep
-                      program analysis from Opus 4.5
+                      program analysis from Opus 4.6
                     </p>
                   </div>
                 </div>

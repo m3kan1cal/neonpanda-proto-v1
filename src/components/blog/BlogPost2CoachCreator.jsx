@@ -422,7 +422,7 @@ function BlogPost2CoachCreator() {
           form—it's a sophisticated AI interviewer that discovers who you are
           and builds a coach configuration that actually matches. Think of it as
           a personality assessment meets coaching consultation, powered by
-          Claude Sonnet 4.5.
+          Claude Sonnet 4.6.
         </p>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
@@ -537,7 +537,7 @@ function BlogPost2CoachCreator() {
                   4. Personality Prompt Generation
                 </span>
                 <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
-                  Sonnet 4.5 synthesizes a unique coaching personality
+                  Sonnet 4.6 synthesizes a unique coaching personality
                 </p>
               </div>
             </div>
@@ -674,7 +674,7 @@ function BlogPost2CoachCreator() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
-                Claude Sonnet 4.5
+                Claude Sonnet 4.6
               </h4>
               <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                 Complex reasoning, personality synthesis, and final coach prompt
@@ -692,20 +692,13 @@ function BlogPost2CoachCreator() {
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
-                Amazon Nova Lite
+                Nvidia Nemotron / Amazon Nova 2 Lite
               </h4>
               <p className="text-synthwave-text-secondary font-rajdhani text-sm">
-                Template matching and preference classification. Efficient
-                analysis of user responses against our methodology database.
-              </p>
-            </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
-                Amazon Nova 2 Lite
-              </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
-                Real-time contextual updates and progress feedback. Ultra-low
-                latency for ephemeral UI messages during coach creation.
+                Template matching, preference classification, and real-time
+                contextual updates. Efficient analysis of user responses and
+                ultra-low latency for ephemeral UI messages during coach
+                creation.
               </p>
             </div>
           </div>
@@ -1014,7 +1007,7 @@ function BlogPost2CoachCreator() {
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-6`}
         >
-          What's Next: Every Rep Counts
+          What's Next: Every Rep Counts, Every Time
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
           Now that you have a personalized coach, it's time to actually train.
@@ -1042,7 +1035,7 @@ function BlogPost2CoachCreator() {
             >
               <div>
                 <h3 className="font-russo text-xl text-synthwave-neon-purple group-hover:text-synthwave-neon-pink transition-colors">
-                  Every Rep Counts
+                  Every Rep Counts, Every Time
                 </h3>
                 <p className="font-rajdhani text-synthwave-text-secondary">
                   The Workout Logger Agent & Multi-Model Orchestration

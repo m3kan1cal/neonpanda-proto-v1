@@ -14,7 +14,7 @@ const blogPosts = [
   {
     id: 1,
     slug: "the-foundation",
-    title: "The Foundation",
+    title: "The Foundation of Everything",
     subtitle: "Building a Serverless Fitness Platform",
     description:
       "How we built an enterprise-grade serverless architecture that scales from zero to thousands of users without breaking a sweat. Introducing the Training Grounds and the Smart Request Router.",
@@ -27,7 +27,7 @@ const blogPosts = [
   {
     id: 2,
     slug: "your-coach-your-way",
-    title: "Your Coach, Your Way",
+    title: "Your Coach, Built Your Way",
     subtitle: "The Coach Creator Agent",
     description:
       "Discover how our hybrid data architecture and Coach Creator Agent work together to build AI coaches that feel genuinely personal, not cookie-cutter.",
@@ -40,7 +40,7 @@ const blogPosts = [
   {
     id: 3,
     slug: "every-rep-counts",
-    title: "Every Rep Counts",
+    title: "Every Rep Counts, Every Time",
     subtitle: "The Workout Logger Agent",
     description:
       "Multi-model AI orchestration meets natural language workout logging. How we turn 'Did Fran in 8:45' into structured data and actionable insights.",
@@ -71,10 +71,10 @@ const blogPosts = [
   {
     id: 5,
     slug: "the-symphony",
-    title: "The Symphony",
+    title: "When All Agents Converge",
     subtitle: "The Conversation Agent & Streaming Orchestration",
     description:
-      "Meet the Conversation Agent—armed with 11 specialized tools and a streaming-first architecture, it pulls, pushes, queries, logs, and searches data across the entire platform in real time. This is where all five agents work in concert.",
+      "Meet the Conversation Agent—armed with 11 specialized tools and a streaming-first architecture, it pulls, pushes, queries, logs, and searches data across the entire platform in real time. This is where all the agents work in concert.",
     readTime: "15 min read",
     agent: "Conversation Agent",
     pattern: "Streaming Tool-Use",
@@ -175,7 +175,7 @@ function BlogIndex() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full"></div>
               <span className="text-synthwave-text-secondary">
-                5 Specialized AI Agents
+                Multiple Specialized AI Agents
               </span>
             </div>
             <div className="flex items-center gap-2">
