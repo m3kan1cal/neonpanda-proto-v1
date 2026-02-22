@@ -34,21 +34,19 @@ export type {
 export const WORKOUT_SCHEMA = {
   type: "object",
   required: ["date", "discipline", "workout_type", "metadata"],
+  additionalProperties: false,
   properties: {
     workout_id: {
       type: "string",
-      pattern: "^workout_.*$",
       description:
         "Unique workout identifier following pattern: workout_{userId}_{timestamp}_{shortId}",
     },
     user_id: {
       type: "string",
-      pattern: "^[a-zA-Z0-9_-]+$",
       description: "User identifier (raw user ID without prefix)",
     },
     date: {
       type: "string",
-      pattern: "^\\d{4}-\\d{2}-\\d{2}$",
       description: "Workout date in YYYY-MM-DD format",
     },
     discipline: {
@@ -123,21 +121,19 @@ export const WORKOUT_SCHEMA = {
     // Performance Metrics
     performance_metrics: {
       type: "object",
+      additionalProperties: false,
       properties: {
         intensity: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Overall intensity rating (1-10 scale)",
         },
         perceived_exertion: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Rate of perceived exertion (1-10 scale)",
         },
         heart_rate: {
           type: "object",
+          additionalProperties: false,
           properties: {
             avg: {
               type: ["number", "null"],
@@ -149,6 +145,7 @@ export const WORKOUT_SCHEMA = {
             },
             zones: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 zone_1: {
                   type: ["number", "null"],
@@ -180,26 +177,18 @@ export const WORKOUT_SCHEMA = {
         },
         mood_pre: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Mood before workout (1-10 scale)",
         },
         mood_post: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Mood after workout (1-10 scale)",
         },
         energy_level_pre: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Energy level before workout (1-10 scale)",
         },
         energy_level_post: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Energy level after workout (1-10 scale)",
         },
       },
@@ -208,10 +197,12 @@ export const WORKOUT_SCHEMA = {
     // Discipline-Specific Data
     discipline_specific: {
       type: "object",
+      additionalProperties: false,
       properties: {
         // CrossFit
         crossfit: {
           type: "object",
+          additionalProperties: false,
           required: ["workout_format", "rx_status", "rounds"],
           properties: {
             workout_format: {
@@ -244,6 +235,7 @@ export const WORKOUT_SCHEMA = {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["round_number", "exercises"],
                 properties: {
                   round_number: {
@@ -258,6 +250,7 @@ export const WORKOUT_SCHEMA = {
                     type: "array",
                     items: {
                       type: "object",
+                      additionalProperties: false,
                       required: ["exercise_name", "movement_type"],
                       properties: {
                         exercise_name: {
@@ -289,6 +282,7 @@ export const WORKOUT_SCHEMA = {
                         },
                         weight: {
                           type: "object",
+                          additionalProperties: false,
                           properties: {
                             value: {
                               type: ["number", "null"],
@@ -315,6 +309,7 @@ export const WORKOUT_SCHEMA = {
                         },
                         reps: {
                           type: "object",
+                          additionalProperties: false,
                           properties: {
                             prescribed: {
                               type: ["number", "string"],
@@ -363,6 +358,7 @@ export const WORKOUT_SCHEMA = {
             },
             performance_data: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 total_time: {
                   type: ["number", "null"],
@@ -383,6 +379,7 @@ export const WORKOUT_SCHEMA = {
                 },
                 score: {
                   type: "object",
+                  additionalProperties: false,
                   properties: {
                     value: {
                       type: ["number", "string"],
@@ -401,8 +398,9 @@ export const WORKOUT_SCHEMA = {
                       description: "Type of score",
                     },
                     unit: {
-                      type: ["string", "null"],
-                      description: "Score unit if applicable",
+                      type: "string",
+                      description:
+                        "Score unit if applicable (omit if not applicable)",
                     },
                   },
                 },
@@ -414,6 +412,7 @@ export const WORKOUT_SCHEMA = {
         // Powerlifting
         powerlifting: {
           type: "object",
+          additionalProperties: false,
           required: ["session_type", "competition_prep", "exercises"],
           properties: {
             session_type: {
@@ -434,6 +433,7 @@ export const WORKOUT_SCHEMA = {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["exercise_name", "movement_category", "sets"],
                 properties: {
                   exercise_name: {
@@ -456,6 +456,7 @@ export const WORKOUT_SCHEMA = {
                   },
                   attempts: {
                     type: "object",
+                    additionalProperties: false,
                     properties: {
                       opener: {
                         type: ["number", "null"],
@@ -490,6 +491,7 @@ export const WORKOUT_SCHEMA = {
                     type: "array",
                     items: {
                       type: "object",
+                      additionalProperties: false,
                       required: ["set_type", "weight", "reps"],
                       properties: {
                         set_type: {
@@ -514,8 +516,6 @@ export const WORKOUT_SCHEMA = {
                         },
                         rpe: {
                           type: ["number", "null"],
-                          minimum: 1,
-                          maximum: 10,
                           description: "Rate of perceived exertion (1-10)",
                         },
                         rest_time: {
@@ -527,9 +527,9 @@ export const WORKOUT_SCHEMA = {
                           description: "Percentage of 1RM",
                         },
                         bar_speed: {
-                          type: ["string", "null"],
-                          enum: ["slow", "moderate", "fast", "explosive", null],
-                          description: "Bar speed",
+                          type: "string",
+                          enum: ["slow", "moderate", "fast", "explosive"],
+                          description: "Bar speed (omit if not tracked)",
                         },
                         competition_commands: {
                           type: "boolean",
@@ -547,6 +547,7 @@ export const WORKOUT_SCHEMA = {
         // Bodybuilding
         bodybuilding: {
           type: "object",
+          additionalProperties: false,
           required: ["split_type", "exercises"],
           properties: {
             split_type: {
@@ -586,6 +587,7 @@ export const WORKOUT_SCHEMA = {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["exercise_name", "movement_category", "sets"],
                 properties: {
                   exercise_name: { type: "string" },
@@ -610,6 +612,7 @@ export const WORKOUT_SCHEMA = {
                     type: "array",
                     items: {
                       type: "object",
+                      additionalProperties: false,
                       required: ["set_number", "reps", "weight"],
                       properties: {
                         set_number: { type: "number" },
@@ -629,15 +632,14 @@ export const WORKOUT_SCHEMA = {
                         weight_unit: { type: "string", enum: ["lbs", "kg"] },
                         rpe: {
                           type: ["number", "null"],
-                          minimum: 1,
-                          maximum: 10,
+                          description:
+                            "Rate of perceived exertion (1-10 scale)",
                         },
                         rest_time: { type: ["number", "null"] },
                         tempo: {
                           type: ["string", "null"],
-                          pattern: "^\\d-\\d-\\d-\\d$",
                           description:
-                            "Tempo (eccentric-pause-concentric-rest)",
+                            "Tempo in eccentric-pause-concentric-rest format (e.g., 3-1-2-0)",
                         },
                         time_under_tension: { type: ["number", "null"] },
                         failure: { type: "boolean" },
@@ -655,12 +657,15 @@ export const WORKOUT_SCHEMA = {
         // HIIT (placeholder for future implementation)
         hiit: {
           type: "object",
+          additionalProperties: false,
           description: "HIIT-specific data (to be implemented)",
+          properties: {},
         },
 
         // Running
         running: {
           type: "object",
+          additionalProperties: false,
           required: [
             "run_type",
             "total_distance",
@@ -702,7 +707,6 @@ export const WORKOUT_SCHEMA = {
             },
             average_pace: {
               type: "string",
-              pattern: "^\\d{1,2}:\\d{2}$",
               description: "Average pace in MM:SS format per mile or km",
             },
             elevation_gain: {
@@ -720,18 +724,20 @@ export const WORKOUT_SCHEMA = {
             },
             weather: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 temperature: {
                   type: ["number", "null"],
                   description: "Temperature (fahrenheit or celsius)",
                 },
                 temperature_unit: {
-                  type: ["string", "null"],
-                  enum: ["F", "C", null],
-                  description: "Temperature unit",
+                  type: "string",
+                  enum: ["F", "C"],
+                  description:
+                    "Temperature unit (omit if temperature not tracked)",
                 },
                 conditions: {
-                  type: ["string", "null"],
+                  type: "string",
                   enum: [
                     "sunny",
                     "cloudy",
@@ -740,9 +746,8 @@ export const WORKOUT_SCHEMA = {
                     "windy",
                     "foggy",
                     "clear",
-                    null,
                   ],
-                  description: "Weather conditions",
+                  description: "Weather conditions (omit if not applicable)",
                 },
                 wind_speed: {
                   type: ["number", "null"],
@@ -756,6 +761,7 @@ export const WORKOUT_SCHEMA = {
             },
             equipment: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 shoes: {
                   type: ["string", "null"],
@@ -774,6 +780,7 @@ export const WORKOUT_SCHEMA = {
             },
             warmup: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 distance: {
                   type: ["number", "null"],
@@ -791,6 +798,7 @@ export const WORKOUT_SCHEMA = {
             },
             cooldown: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 distance: {
                   type: ["number", "null"],
@@ -810,6 +818,7 @@ export const WORKOUT_SCHEMA = {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: [
                   "segment_number",
                   "segment_type",
@@ -846,7 +855,6 @@ export const WORKOUT_SCHEMA = {
                   },
                   pace: {
                     type: "string",
-                    pattern: "^\\d{1,2}:\\d{2}$",
                     description: "Segment pace in MM:SS format",
                   },
                   heart_rate_avg: {
@@ -884,6 +892,7 @@ export const WORKOUT_SCHEMA = {
             },
             route: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 name: {
                   type: ["string", "null"],
@@ -894,14 +903,15 @@ export const WORKOUT_SCHEMA = {
                   description: "Route description",
                 },
                 type: {
-                  type: ["string", "null"],
-                  enum: ["out_and_back", "loop", "point_to_point", null],
-                  description: "Route type",
+                  type: "string",
+                  enum: ["out_and_back", "loop", "point_to_point"],
+                  description: "Route type (omit if not applicable)",
                 },
               },
             },
             fueling: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 pre_run: {
                   type: ["string", "null"],
@@ -924,6 +934,7 @@ export const WORKOUT_SCHEMA = {
         // Hyrox
         hyrox: {
           type: "object",
+          additionalProperties: false,
           required: ["race_or_training", "stations", "runs"],
           properties: {
             race_or_training: {
@@ -931,17 +942,22 @@ export const WORKOUT_SCHEMA = {
               enum: ["race", "simulation", "training", "partial"],
             },
             division: {
-              type: ["string", "null"],
-              enum: ["open", "pro", "doubles", "relay", null],
+              type: "string",
+              enum: ["open", "pro", "doubles", "relay"],
+              description: "Competition division (omit if not applicable)",
             },
             total_time: { type: ["number", "null"] },
             stations: {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["station_number", "station_name"],
                 properties: {
-                  station_number: { type: "number", minimum: 1, maximum: 8 },
+                  station_number: {
+                    type: "number",
+                    description: "Station number in race order (1-8)",
+                  },
                   station_name: {
                     type: "string",
                     enum: [
@@ -959,8 +975,9 @@ export const WORKOUT_SCHEMA = {
                   reps: { type: ["number", "null"] },
                   weight: { type: ["number", "null"] },
                   weight_unit: {
-                    type: ["string", "null"],
-                    enum: ["kg", "lbs", null],
+                    type: "string",
+                    enum: ["kg", "lbs"],
+                    description: "Weight unit (omit if no weight used)",
                   },
                   time: { type: ["number", "null"] },
                   notes: { type: ["string", "null"] },
@@ -971,14 +988,19 @@ export const WORKOUT_SCHEMA = {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["run_number", "distance"],
                 properties: {
-                  run_number: { type: "number", minimum: 1, maximum: 9 },
+                  run_number: {
+                    type: "number",
+                    description: "Run number in race sequence (1-9)",
+                  },
                   distance: { type: "number" },
                   time: { type: ["number", "null"] },
                   pace: {
                     type: ["string", "null"],
-                    pattern: "^\\d{1,2}:\\d{2}$",
+                    description:
+                      "Pace in MM:SS format per km or mile (e.g., 5:30)",
                   },
                   notes: { type: ["string", "null"] },
                 },
@@ -991,6 +1013,7 @@ export const WORKOUT_SCHEMA = {
         // Olympic Weightlifting
         olympic_weightlifting: {
           type: "object",
+          additionalProperties: false,
           required: ["session_type", "lifts"],
           properties: {
             session_type: {
@@ -1008,6 +1031,7 @@ export const WORKOUT_SCHEMA = {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["lift_name", "lift_category", "sets"],
                 properties: {
                   lift_name: { type: "string" },
@@ -1028,6 +1052,7 @@ export const WORKOUT_SCHEMA = {
                   position: { type: ["string", "null"] },
                   attempts: {
                     type: "object",
+                    additionalProperties: false,
                     properties: {
                       opener: { type: ["number", "null"] },
                       second_attempt: { type: ["number", "null"] },
@@ -1050,6 +1075,7 @@ export const WORKOUT_SCHEMA = {
                     type: "array",
                     items: {
                       type: "object",
+                      additionalProperties: false,
                       required: ["set_number", "weight", "reps"],
                       properties: {
                         set_number: { type: "number" },
@@ -1085,6 +1111,7 @@ export const WORKOUT_SCHEMA = {
         // Functional Bodybuilding
         functional_bodybuilding: {
           type: "object",
+          additionalProperties: false,
           required: ["session_focus", "exercises"],
           properties: {
             session_focus: {
@@ -1099,18 +1126,15 @@ export const WORKOUT_SCHEMA = {
               ],
             },
             methodology: {
-              type: ["string", "null"],
-              enum: [
-                "functional_bodybuilding",
-                "persist",
-                "marcus_filly",
-                null,
-              ],
+              type: "string",
+              enum: ["functional_bodybuilding", "persist", "marcus_filly"],
+              description: "Specific FBB methodology (omit if not applicable)",
             },
             exercises: {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["exercise_name", "movement_pattern", "sets"],
                 properties: {
                   exercise_name: { type: "string" },
@@ -1151,6 +1175,7 @@ export const WORKOUT_SCHEMA = {
                   },
                   emom_details: {
                     type: ["object", "null"],
+                    additionalProperties: false,
                     properties: {
                       interval: { type: "number" },
                       rounds: { type: "number" },
@@ -1161,6 +1186,7 @@ export const WORKOUT_SCHEMA = {
                     type: "array",
                     items: {
                       type: "object",
+                      additionalProperties: false,
                       required: ["set_number", "reps", "weight"],
                       properties: {
                         set_number: { type: "number" },
@@ -1170,7 +1196,8 @@ export const WORKOUT_SCHEMA = {
                         rest_time: { type: ["number", "null"] },
                         tempo: {
                           type: ["string", "null"],
-                          pattern: "^\\d-\\d-\\d-\\d$",
+                          description:
+                            "Tempo in eccentric-pause-concentric-rest format (e.g., 3-1-2-0)",
                         },
                         quality_focus: { type: ["string", "null"] },
                         notes: { type: ["string", "null"] },
@@ -1187,6 +1214,7 @@ export const WORKOUT_SCHEMA = {
         // Calisthenics
         calisthenics: {
           type: "object",
+          additionalProperties: false,
           required: ["session_focus", "exercises"],
           properties: {
             session_focus: {
@@ -1197,6 +1225,7 @@ export const WORKOUT_SCHEMA = {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["exercise_name", "skill_category"],
                 properties: {
                   exercise_name: { type: "string" },
@@ -1218,6 +1247,7 @@ export const WORKOUT_SCHEMA = {
                     type: "array",
                     items: {
                       type: "object",
+                      additionalProperties: false,
                       required: ["set_number"],
                       properties: {
                         set_number: { type: "number" },
@@ -1237,8 +1267,8 @@ export const WORKOUT_SCHEMA = {
                         success: { type: "boolean" },
                         quality_rating: {
                           type: ["number", "null"],
-                          minimum: 1,
-                          maximum: 10,
+                          description:
+                            "Movement quality rating for the set (1-10 scale)",
                         },
                         notes: { type: ["string", "null"] },
                       },
@@ -1257,6 +1287,7 @@ export const WORKOUT_SCHEMA = {
       type: "array",
       items: {
         type: "object",
+        additionalProperties: false,
         required: [
           "exercise",
           "discipline",
@@ -1302,7 +1333,6 @@ export const WORKOUT_SCHEMA = {
           },
           date_previous: {
             type: ["string", "null"],
-            pattern: "^\\d{4}-\\d{2}-\\d{2}$",
             description: "Date of previous PR (YYYY-MM-DD)",
           },
           significance: {
@@ -1321,39 +1351,30 @@ export const WORKOUT_SCHEMA = {
     // Subjective Feedback
     subjective_feedback: {
       type: "object",
+      additionalProperties: false,
       properties: {
         enjoyment: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Enjoyment level (1-10)",
         },
         difficulty: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Difficulty level (1-10)",
         },
         form_quality: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Form quality (1-10)",
         },
         motivation: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Motivation level (1-10)",
         },
         confidence: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Confidence level (1-10)",
         },
         mental_state: {
-          type: ["string", "null"],
+          type: "string",
           enum: [
             "focused",
             "distracted",
@@ -1362,97 +1383,77 @@ export const WORKOUT_SCHEMA = {
             "energetic",
             "stressed",
             "calm",
-            null,
           ],
-          description: "Mental state during workout",
+          description: "Mental state during workout (omit if not tracked)",
         },
         pacing_strategy: {
-          type: ["string", "null"],
+          type: "string",
           enum: [
             "even_split",
             "negative_split",
             "positive_split",
             "went_out_too_fast",
             "conservative",
-            null,
           ],
-          description: "Pacing strategy used",
+          description: "Pacing strategy used (omit if not applicable)",
         },
         nutrition_pre_workout: {
           type: ["string", "null"],
           description: "Pre-workout nutrition",
         },
         hydration_level: {
-          type: ["string", "null"],
-          enum: ["poor", "fair", "good", "excellent", null],
-          description: "Hydration level",
+          type: "string",
+          enum: ["poor", "fair", "good", "excellent"],
+          description: "Hydration level (omit if not tracked)",
         },
         sleep_quality_previous: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Sleep quality previous night (1-10)",
         },
         stress_level: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Stress level (1-10)",
         },
         soreness_pre: {
           type: "object",
+          additionalProperties: false,
           properties: {
             overall: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Overall soreness before workout (1-10)",
             },
             legs: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Leg soreness before workout (1-10)",
             },
             arms: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Arm soreness before workout (1-10)",
             },
             back: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Back soreness before workout (1-10)",
             },
           },
         },
         soreness_post: {
           type: "object",
+          additionalProperties: false,
           properties: {
             overall: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Overall soreness after workout (1-10)",
             },
             legs: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Leg soreness after workout (1-10)",
             },
             arms: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Arm soreness after workout (1-10)",
             },
             back: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Back soreness after workout (1-10)",
             },
           },
@@ -1467,6 +1468,7 @@ export const WORKOUT_SCHEMA = {
     // Environmental Factors
     environmental_factors: {
       type: "object",
+      additionalProperties: false,
       properties: {
         temperature: {
           type: ["number", "null"],
@@ -1481,14 +1483,14 @@ export const WORKOUT_SCHEMA = {
           description: "Altitude (feet or meters)",
         },
         equipment_condition: {
-          type: ["string", "null"],
-          enum: ["poor", "fair", "good", "excellent", null],
-          description: "Condition of equipment",
+          type: "string",
+          enum: ["poor", "fair", "good", "excellent"],
+          description: "Condition of equipment (omit if not relevant)",
         },
         gym_crowding: {
-          type: ["string", "null"],
-          enum: ["empty", "light", "moderate", "busy", "packed", null],
-          description: "Gym crowding level",
+          type: "string",
+          enum: ["empty", "light", "moderate", "busy", "packed"],
+          description: "Gym crowding level (omit if not relevant)",
         },
       },
     },
@@ -1496,6 +1498,7 @@ export const WORKOUT_SCHEMA = {
     // Recovery Metrics
     recovery_metrics: {
       type: "object",
+      additionalProperties: false,
       properties: {
         hrv_morning: {
           type: ["number", "null"],
@@ -1511,14 +1514,10 @@ export const WORKOUT_SCHEMA = {
         },
         stress_level: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Overall stress level (1-10)",
         },
         readiness_score: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Readiness score (1-10)",
         },
       },
@@ -1527,6 +1526,7 @@ export const WORKOUT_SCHEMA = {
     // Coach Notes
     coach_notes: {
       type: "object",
+      additionalProperties: false,
       properties: {
         programming_intent: {
           type: ["string", "null"],
@@ -1581,6 +1581,7 @@ export const WORKOUT_SCHEMA = {
         "extraction_method",
         "validation_flags",
       ],
+      additionalProperties: false,
       properties: {
         logged_via: {
           type: "string",
@@ -1593,8 +1594,6 @@ export const WORKOUT_SCHEMA = {
         },
         data_confidence: {
           type: "number",
-          minimum: 0,
-          maximum: 1,
           description: "Confidence in extracted data (0-1)",
         },
         ai_extracted: {
@@ -1615,8 +1614,6 @@ export const WORKOUT_SCHEMA = {
         },
         data_completeness: {
           type: "number",
-          minimum: 0,
-          maximum: 1,
           description: "Completeness of data (0-1)",
         },
         extraction_method: {
@@ -1641,8 +1638,8 @@ export const WORKOUT_SCHEMA = {
         },
         generation_timestamp: {
           type: "string",
-          format: "date-time",
-          description: "Timestamp when workout data was generated",
+          description:
+            "Timestamp when workout data was generated (ISO 8601 date-time format, e.g., 2026-02-11T12:00:00Z)",
         },
       },
     },

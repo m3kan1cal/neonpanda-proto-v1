@@ -50,6 +50,21 @@ export async function normalizeExerciseName(
 }
 
 /**
+ * Normalize a single exercise name using AI with context from stored exercise names
+ * More accurate than normalizeExerciseName when the user has existing exercise data
+ */
+export async function normalizeExerciseNameWithContext(
+  originalName: string,
+  storedNames: string[],
+): Promise<NormalizedExerciseName> {
+  const result = await normalizeExerciseNamesBatchWithContext(
+    [originalName],
+    storedNames,
+  );
+  return result.normalizations[0];
+}
+
+/**
  * Batch normalize multiple exercise names in a single AI call
  * More efficient than individual calls when processing a workout
  */
@@ -170,6 +185,118 @@ function fallbackNormalize(name: string): string {
     .replace(/[^a-z0-9_]/g, "") // Remove special characters (keep underscores)
     .replace(/_+/g, "_") // Collapse multiple underscores
     .replace(/^_|_$/g, ""); // Trim leading/trailing underscores
+}
+
+/**
+ * Batch normalize multiple exercise names with context from stored exercise names
+ * More efficient and accurate when the user has existing exercise data
+ */
+export async function normalizeExerciseNamesBatchWithContext(
+  originalNames: string[],
+  storedNames: string[],
+): Promise<BatchNormalizationResult> {
+  const startTime = Date.now();
+
+  if (originalNames.length === 0) {
+    return {
+      normalizations: [],
+      processingTimeMs: 0,
+    };
+  }
+
+  // If no stored names provided, fall back to standard normalization
+  if (!storedNames || storedNames.length === 0) {
+    return normalizeExerciseNamesBatch(originalNames);
+  }
+
+  // Deduplicate names to avoid redundant processing
+  const uniqueNames = Array.from(new Set(originalNames));
+
+  const userPrompt = `Normalize these exercise names to canonical snake_case format:
+
+${uniqueNames.map((name, i) => `${i + 1}. "${name}"`).join("\n")}
+
+For each exercise name, determine the canonical normalized form and provide a confidence score based on how clear the mapping is.
+
+IMPORTANT: The user's database contains these exercise names: [${storedNames.join(", ")}]. When the exercise being normalized matches or closely relates to a stored name, prefer the stored name. For example, 'Conventional Deadlift' should map to 'deadlift' if 'deadlift' exists in the stored list, because conventional is the default deadlift variation. Similarly, 'Barbell Back Squat' should map to 'back_squat' if that exists, removing the redundant 'barbell' modifier.`;
+
+  try {
+    const response = await callBedrockApi(
+      NORMALIZATION_SYSTEM_PROMPT,
+      userPrompt,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        tools: NORMALIZE_EXERCISES_TOOL,
+        strictSchema: true, // Enable strict mode for guaranteed JSON
+      },
+    );
+
+    // callBedrockApi already extracts tool use when tools are provided
+    // Response is a BedrockToolUseResult with input property
+    const toolResult = response as BedrockToolUseResult;
+    const parsed = toolResult.input;
+
+    // Build result map from unique names
+    const resultMap = new Map<string, NormalizedExerciseName>();
+    if (parsed.exercises && Array.isArray(parsed.exercises)) {
+      for (const item of parsed.exercises) {
+        if (item.original && item.normalized) {
+          resultMap.set(item.original, {
+            originalName: item.original,
+            normalizedName: item.normalized,
+            confidence: item.confidence ?? 0.9,
+          });
+        }
+      }
+    }
+
+    // Map back to original order, using fallback for any missing
+    const normalizations: NormalizedExerciseName[] = originalNames.map(
+      (name) => {
+        const cached = resultMap.get(name);
+        if (cached) {
+          return cached;
+        }
+        // Fallback: simple snake_case conversion
+        return {
+          originalName: name,
+          normalizedName: fallbackNormalize(name),
+          confidence: 0.5,
+        };
+      },
+    );
+
+    const processingTimeMs = Date.now() - startTime;
+
+    logger.info("✅ Context-aware exercise name normalization completed:", {
+      inputCount: originalNames.length,
+      uniqueCount: uniqueNames.length,
+      storedNamesCount: storedNames.length,
+      processingTimeMs,
+    });
+
+    return {
+      normalizations,
+      processingTimeMs,
+    };
+  } catch (error) {
+    logger.error("❌ Context-aware exercise name normalization failed:", error);
+
+    // Fallback: use simple normalization for all names
+    const normalizations: NormalizedExerciseName[] = originalNames.map(
+      (name) => ({
+        originalName: name,
+        normalizedName: fallbackNormalize(name),
+        confidence: 0.3,
+      }),
+    );
+
+    return {
+      normalizations,
+      processingTimeMs: Date.now() - startTime,
+    };
+  }
 }
 
 /**

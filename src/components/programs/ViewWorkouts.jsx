@@ -1206,11 +1206,13 @@ General thoughts: `;
                             onUpdate={(html, text) =>
                               setEditedPerformance(text)
                             }
-                            className={`${containerPatterns.workoutDescriptionEditable} text-sm`}
+                            className={`${containerPatterns.workoutDescriptionEditable.replace("px-4 ", "").replace("py-4 ", "")} text-sm`}
+                            contentClassName="px-4 py-3"
                             placeholder="Edit to record what you actually did..."
-                            mode="plain"
+                            mode="rich"
+                            showToolbar={true}
                             minHeight="60px"
-                            maxHeight="150px"
+                            maxHeight="260px"
                           />
                           {/* Helper text and legends container with proper spacing */}
                           <div className="mt-3 space-y-2">
@@ -1857,20 +1859,20 @@ General thoughts: `;
 function ExplanationPopup({ isLoading, explanation, onClose }) {
   return (
     <div
-      className="mt-3 relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg"
+      className={containerPatterns.explanationPopupWrapper}
       style={{
         backgroundSize: "200% 200%",
         animation:
           "slideDown 0.3s ease-out forwards, gradient-flow 3s ease infinite",
       }}
     >
-      <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
+      <div className={containerPatterns.explanationPopupInner}>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
+          className={containerPatterns.explanationPopupCloseButton}
         >
           <XIcon className="w-4 h-4" />
         </button>
@@ -1881,7 +1883,7 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
             <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
           </div>
         ) : (
-          <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+          <div className={containerPatterns.aiResponseContent}>
             <MarkdownRenderer content={explanation} />
           </div>
         )}

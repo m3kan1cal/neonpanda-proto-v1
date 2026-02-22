@@ -7,6 +7,17 @@
 
 import type { Tool } from "../core/types";
 import type { ProgramDesignerContext } from "./types";
+import {
+  LOAD_PROGRAM_REQUIREMENTS_SCHEMA,
+  GENERATE_PHASE_STRUCTURE_TOOL_SCHEMA,
+  GENERATE_PHASE_WORKOUTS_SCHEMA,
+  VALIDATE_PROGRAM_STRUCTURE_SCHEMA,
+  PRUNE_EXCESS_WORKOUTS_SCHEMA,
+  SELECT_DAYS_TO_REMOVE_SCHEMA,
+  NORMALIZE_PROGRAM_DATA_SCHEMA,
+  GENERATE_PROGRAM_SUMMARY_SCHEMA,
+  SAVE_PROGRAM_TO_DATABASE_SCHEMA,
+} from "../../schemas/program-designer-tool-schemas";
 import type {
   Program,
   WorkoutTemplate,
@@ -134,6 +145,14 @@ export interface PhaseWorkoutsResult {
     method: "tool" | "text_fallback";
     duration: number;
   };
+  /** Compact version used for conversation history. Full data stored internally. */
+  conversationSummary?: {
+    phaseId: string;
+    phaseName: string;
+    workoutCount: number;
+    workoutNames: string[];
+    status: string;
+  };
 }
 
 /**
@@ -230,24 +249,7 @@ This tool:
 
 Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trainingFrequency (days/week)`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      userId: {
-        type: "string",
-        description: "User ID",
-      },
-      coachId: {
-        type: "string",
-        description: "Coach ID",
-      },
-      todoList: {
-        type: "object",
-        description: "Program requirements from todo-list conversation",
-      },
-    },
-    required: ["userId", "coachId", "todoList"],
-  },
+  inputSchema: LOAD_PROGRAM_REQUIREMENTS_SCHEMA,
 
   async execute(
     input: any,
@@ -385,66 +387,55 @@ This tool:
 - Considers program duration, goals, and user experience level
 - Uses AI with toolConfig for structured output
 
-Returns: Array of phase definitions with phaseId, name, description, startDay, endDay, focusAreas`,
+For each phase, include your estimated expectedWorkoutCount -- how many workout templates
+you anticipate the phase will need. A helpful baseline is floor(durationDays / 7) * trainingFrequency,
+but use your judgment: a deload phase might need fewer sessions, a high-frequency phase more variety.
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      todoList: {
-        type: "object",
-        description: "Program requirements from todo-list",
-      },
-      coachConfig: {
-        type: "object",
-        description: "Coach configuration",
-      },
-      userProfile: {
-        type: "object",
-        description: "User profile (can be null)",
-      },
-      conversationContext: {
-        type: "string",
-        description: "Full conversation history",
-      },
-      pineconeContext: {
-        type: "string",
-        description: "Relevant context from Pinecone",
-      },
-      totalDays: {
-        type: "number",
-        description: "Total program duration in days",
-      },
-      trainingFrequency: {
-        type: "number",
-        description: "Training frequency (days per week)",
-      },
-    },
-    required: [
-      "todoList",
-      "coachConfig",
-      "conversationContext",
-      "pineconeContext",
-      "totalDays",
-      "trainingFrequency",
-    ],
-  },
+NOTE: coachConfig, userProfile, and pineconeContext are automatically retrieved
+from stored load_program_requirements results. Do NOT pass them as input.
+
+Returns: Array of phase definitions with phaseId, name, description, startDay, endDay, focusAreas, expectedWorkoutCount`,
+
+  inputSchema: GENERATE_PHASE_STRUCTURE_TOOL_SCHEMA,
 
   async execute(
     input: any,
-    context: ProgramDesignerContext,
+    context: ProgramDesignerContext & { getToolResult?: (key: string) => any },
   ): Promise<PhaseStructureResult> {
     logger.info("🎯 Executing generate_phase_structure tool");
+
+    // ============================================================
+    // Retrieve coachConfig/userProfile/pineconeContext from stored
+    // tool results set by load_program_requirements.
+    // This prevents Claude from echoing the large coachConfig object
+    // through tool parameters (which causes field truncation/loss).
+    // ============================================================
+    const requirementsResult = context.getToolResult?.("requirements");
+
+    if (requirementsResult) {
+      logger.info(
+        "✅ Using stored requirements from load_program_requirements",
+      );
+    } else {
+      logger.warn(
+        "⚠️ No stored requirements found - falling back to input parameters",
+      );
+    }
 
     const phaseContext = {
       userId: context.userId,
       programId: context.programId,
-      todoList: input.todoList,
-      coachConfig: input.coachConfig,
-      userProfile: input.userProfile,
-      conversationContext: input.conversationContext,
-      pineconeContext: input.pineconeContext,
+      todoList:
+        requirementsResult?.todoList || context.todoList || input.todoList,
+      coachConfig: requirementsResult?.coachConfig || input.coachConfig,
+      userProfile: requirementsResult?.userProfile ?? input.userProfile,
+      conversationContext:
+        context.conversationContext || input.conversationContext,
+      pineconeContext:
+        requirementsResult?.pineconeContext ?? input.pineconeContext,
       totalDays: input.totalDays,
-      trainingFrequency: input.trainingFrequency,
+      trainingFrequency:
+        requirementsResult?.trainingFrequency || input.trainingFrequency,
     };
 
     const result = await generatePhaseStructure(phaseContext);
@@ -514,34 +505,13 @@ Example:
     allPhases: phaseStructureResult.phases
   })
 
-Input: Single phase definition from phase structure
+Input: Single phase definition from phase structure (including expectedWorkoutCount if set during phase structure generation)
 Returns: Phase with complete workout templates
 Note: Program requirements (coach config, training frequency, etc.) are automatically
-retrieved from the stored load_program_requirements result.`,
+retrieved from the stored load_program_requirements result. The phase's expectedWorkoutCount
+is used as the workout target for this phase -- aim to generate approximately that many templates.`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      phase: {
-        type: "object",
-        description: "Single phase definition from phase structure",
-        properties: {
-          phaseId: { type: "string" },
-          name: { type: "string" },
-          description: { type: "string" },
-          startDay: { type: "number" },
-          endDay: { type: "number" },
-          durationDays: { type: "number" },
-          focusAreas: { type: "array", items: { type: "string" } },
-        },
-      },
-      allPhases: {
-        type: "array",
-        description: "All phases from phase structure (for context)",
-      },
-    },
-    required: ["phase", "allPhases"],
-  },
+  inputSchema: GENERATE_PHASE_WORKOUTS_SCHEMA,
 
   async execute(
     input: any,
@@ -660,11 +630,22 @@ retrieved from the stored load_program_requirements result.`,
       workoutCount: result.phaseWithWorkouts.workouts.length,
     });
 
+    const workouts = result.phaseWithWorkouts.workouts;
+
     return {
       phaseId: result.phaseWithWorkouts.phaseId,
       phaseName: result.phaseWithWorkouts.name,
-      workoutTemplates: result.phaseWithWorkouts.workouts,
+      workoutTemplates: workouts,
       debugData: result.debugData,
+      // Compact version for conversation history — full workout data is stored
+      // internally via storeToolResult() and retrieved by downstream tools.
+      conversationSummary: {
+        phaseId: result.phaseWithWorkouts.phaseId,
+        phaseName: result.phaseWithWorkouts.name,
+        workoutCount: workouts.length,
+        workoutNames: workouts.map((w: any) => w.name),
+        status: `Generated ${workouts.length} workout templates for "${result.phaseWithWorkouts.name}". Full workout data stored internally and accessible by downstream tools.`,
+      },
     };
   },
 };
@@ -696,23 +677,7 @@ The tool will automatically retrieve full phase workout data from storage.
 
 Returns: isValid, shouldNormalize, confidence, validationIssues`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      program: {
-        type: "object",
-        description:
-          "LIGHTWEIGHT program object with basic fields: name, programId, totalDays, startDate, trainingGoals (array), equipmentConstraints (array), description, trainingFrequency. Do NOT include phases array or full workout data.",
-      },
-      phaseIds: {
-        type: "array",
-        description:
-          "Array of phaseIds from generated phases - tool will retrieve full data from storage",
-        items: { type: "string" },
-      },
-    },
-    required: ["program", "phaseIds"],
-  },
+  inputSchema: VALIDATE_PROGRAM_STRUCTURE_SCHEMA,
 
   async execute(
     input: any,
@@ -923,26 +888,7 @@ consistency between S3 storage and DynamoDB program structure.
 
 Returns: prunedWorkoutTemplates, removedCount, keptCount, removalReasoning, phaseUpdates`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      phaseIds: {
-        type: "array",
-        description:
-          "Array of phaseIds - tool will retrieve full workout data from storage",
-        items: { type: "string" },
-      },
-      targetTrainingDays: {
-        type: "number",
-        description: "Target number of training days (from pruningMetadata)",
-      },
-      currentTrainingDays: {
-        type: "number",
-        description: "Current number of training days (from pruningMetadata)",
-      },
-    },
-    required: ["phaseIds", "targetTrainingDays", "currentTrainingDays"],
-  },
+  inputSchema: PRUNE_EXCESS_WORKOUTS_SCHEMA,
 
   async execute(
     input: any,
@@ -1083,23 +1029,7 @@ Return an array of dayNumber values to REMOVE (not keep).`;
           {
             name: "select_days_to_remove",
             description: "Select training days to remove from the program",
-            inputSchema: {
-              type: "object",
-              properties: {
-                daysToRemove: {
-                  type: "array",
-                  description:
-                    "Array of dayNumber values to remove from the program",
-                  items: { type: "number" },
-                },
-                reasoning: {
-                  type: "string",
-                  description:
-                    "Brief explanation of why these days were selected for removal",
-                },
-              },
-              required: ["daysToRemove", "reasoning"],
-            },
+            inputSchema: SELECT_DAYS_TO_REMOVE_SCHEMA,
           },
         ],
       },
@@ -1309,20 +1239,7 @@ Common issues fixed:
 
 Returns: normalizedProgram, normalizationSummary, issuesFixed, confidence`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      program: {
-        type: "object",
-        description: "The program object to normalize",
-      },
-      enableThinking: {
-        type: "boolean",
-        description: "Whether to enable extended thinking for normalization",
-      },
-    },
-    required: ["program"],
-  },
+  inputSchema: NORMALIZE_PROGRAM_DATA_SCHEMA,
 
   async execute(
     input: any,
@@ -1398,16 +1315,7 @@ The summary is used for:
 
 Returns: summary (string)`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      program: {
-        type: "object",
-        description: "The finalized program object",
-      },
-    },
-    required: ["program"],
-  },
+  inputSchema: GENERATE_PROGRAM_SUMMARY_SCHEMA,
 
   async execute(
     input: any,
@@ -1462,24 +1370,7 @@ DO NOT call this if:
 
 Returns: success, programId, s3Key, pineconeRecordId`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      program: {
-        type: "object",
-        description: "The finalized program object",
-      },
-      summary: {
-        type: "string",
-        description: "The AI-generated program summary",
-      },
-      debugData: {
-        type: "object",
-        description: "Optional debug data collected during generation",
-      },
-    },
-    required: ["program", "summary"],
-  },
+  inputSchema: SAVE_PROGRAM_TO_DATABASE_SCHEMA,
 
   async execute(
     input: any,
@@ -1534,8 +1425,11 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       })
       .filter(Boolean);
 
-    const workoutTemplates = phaseWorkoutResults.flatMap(
-      (result: any) => result.workoutTemplates || [],
+    const workoutTemplates = phaseWorkoutResults.flatMap((result: any) =>
+      (result.workoutTemplates || []).map((t: any) => ({
+        ...t,
+        phaseId: result.phaseId, // Enforce authoritative phaseId from stored phase result
+      })),
     );
 
     logger.info(

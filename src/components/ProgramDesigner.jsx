@@ -6,7 +6,6 @@ import React, {
   useCallback,
   memo,
 } from "react";
-import { flushSync } from "react-dom";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
@@ -322,6 +321,7 @@ function ProgramDesigner() {
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const coachAgentRef = useRef(null);
+  const lastScrollTimeRef = useRef(0); // For throttling scroll during streaming
   const { success: showSuccess, error: showError } = useToast();
 
   // Delete modal state
@@ -474,15 +474,8 @@ function ProgramDesigner() {
         coachId,
         sessionId: programDesignerSessionId, // Pass sessionId to agent
         onStateChange: (newState) => {
-          // Use flushSync for streaming updates to force immediate synchronous rendering
-          if (newState.isStreaming || newState.streamingMessage) {
-            flushSync(() => {
-              setAgentState(newState);
-            });
-          } else {
-            // Normal async update for non-streaming changes
-            setAgentState(newState);
-          }
+          // Normal React batching handles streaming updates efficiently
+          setAgentState(newState);
         },
         onNavigation: (type, data) => {
           if (type === "program-complete") {
@@ -533,8 +526,13 @@ function ProgramDesigner() {
   // Polling removed - not needed for program designer sessions (mirrors CoachCreator)
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+    // During streaming, always use instant scroll to prevent animation interruption
+    const isStreaming = agentState.isStreaming || agentState.streamingMessage;
+
+    messagesEndRef.current?.scrollIntoView({
+      behavior: isStreaming ? "auto" : "smooth",
+    });
+  }, [agentState.isStreaming, agentState.streamingMessage]);
 
   // Handle scroll events to show/hide scroll button
   const handleScroll = useCallback(() => {
@@ -554,13 +552,28 @@ function ProgramDesigner() {
   // Auto-scroll to bottom when new messages arrive (only if user is already at bottom)
   useEffect(() => {
     if (!showScrollButton) {
-      scrollToBottom();
+      const isStreaming = agentState.isStreaming || agentState.streamingMessage;
+
+      // Throttle scroll during streaming to ~100ms intervals
+      if (isStreaming) {
+        const now = Date.now();
+        const timeSinceLastScroll = now - lastScrollTimeRef.current;
+
+        if (timeSinceLastScroll >= 100) {
+          lastScrollTimeRef.current = now;
+          scrollToBottom();
+        }
+      } else {
+        // No throttling for non-streaming updates
+        scrollToBottom();
+      }
     }
   }, [
     agentState.messages,
     agentState.isTyping,
     agentState.contextualUpdate,
     agentState.streamingMessage,
+    agentState.isStreaming,
     showScrollButton,
     scrollToBottom,
   ]);
@@ -856,11 +869,8 @@ function ProgramDesigner() {
                   {[1, 2].map((i) => (
                     <div
                       key={i}
-                      className={`flex items-end gap-2 ${i % 2 === 1 ? "flex-row-reverse" : "flex-row"}`}
+                      className={`flex flex-col mb-1 ${i % 2 === 1 ? "items-end" : "items-start"}`}
                     >
-                      {/* Avatar skeleton */}
-                      <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-
                       {/* Message bubble skeleton */}
                       <div
                         className={`max-w-[95%] md:max-w-[80%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
@@ -876,15 +886,25 @@ function ProgramDesigner() {
                           </div>
                         </div>
 
-                        {/* Timestamp and status skeleton */}
+                        {/* Avatar, timestamp, and status skeleton - all on same line below message */}
                         <div
-                          className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 1 ? "justify-end" : "justify-start"}`}
+                          className={`flex items-start gap-2 px-2 mt-2 ${i % 2 === 1 ? "justify-end" : "justify-start"}`}
                         >
+                          {/* Avatar skeleton for AI (left side) */}
+                          {i % 2 === 0 && (
+                            <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          )}
+
                           <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
                           <div className="flex gap-1">
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                           </div>
+
+                          {/* Avatar skeleton for user (right side) */}
+                          {i % 2 === 1 && (
+                            <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -997,7 +1017,7 @@ function ProgramDesigner() {
               {/* Messages Area - with bottom padding for floating input */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-40 sm:pb-56 space-y-4"
+                className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-56 sm:pb-64 space-y-4"
               >
                 {/* Empty State - Show tips when no messages */}
                 {agentState.messages.length === 0 &&
@@ -1275,9 +1295,7 @@ function ProgramDesigner() {
                         </div>
                       </div>
                       <div className="flex items-start gap-2 px-2 mt-2">
-                        <div
-                          className={`shrink-0 ${avatarPatterns.aiSmall}`}
-                        >
+                        <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
                           {agentState.coach?.name?.charAt(0) || "C"}
                         </div>
                       </div>

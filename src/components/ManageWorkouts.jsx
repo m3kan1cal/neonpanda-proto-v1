@@ -386,7 +386,7 @@ function ManageWorkouts() {
               e.stopPropagation();
               handleDeleteClick(workout);
             }}
-            className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50"
+            className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
             title="Delete workout"
           >
             <TrashIcon className="w-4 h-4" />
@@ -451,7 +451,7 @@ function ManageWorkouts() {
           <div onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => toggleSummaryCollapse(workout.workoutId)}
-              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
             >
               <span>Workout Summary</span>
               <svg

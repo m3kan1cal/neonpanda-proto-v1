@@ -19,7 +19,7 @@
   /* Synthwave color palette - Neon colors */
   --color-synthwave-neon-pink: #ff0080;
   --color-synthwave-neon-cyan: #00ffff;
-  --color-synthwave-neon-purple: #9F00FF;
+  --color-synthwave-neon-purple: #9f00ff;
   --color-synthwave-neon-green: #39ff14;
   --color-synthwave-neon-orange: #ff6b35;
   --color-synthwave-neon-maroon: #8b0045;
@@ -38,8 +38,9 @@
   /* Box shadows */
   --shadow-neon-pink: 0 0 20px #ff0080, 0 0 40px #ff0080, 0 0 60px #ff0080;
   --shadow-neon-cyan: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff;
-  --shadow-neon-purple: 0 0 20px #9F00FF, 0 0 40px #9F00FF, 0 0 60px #9F00FF;
-  --shadow-neon-maroon: 0 0 15px rgba(139, 0, 69, 0.5), 0 0 30px rgba(139, 0, 69, 0.3);
+  --shadow-neon-purple: 0 0 20px #9f00ff, 0 0 40px #9f00ff, 0 0 60px #9f00ff;
+  --shadow-neon-maroon:
+    0 0 15px rgba(139, 0, 69, 0.5), 0 0 30px rgba(139, 0, 69, 0.3);
   --shadow-glow: 0 0 30px rgba(255, 0, 128, 0.3);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
 
@@ -51,28 +52,52 @@
 
 /* Keyframes for theme animations */
 @keyframes pulse-glow {
-  from { box-shadow: 0 0 20px rgba(255, 0, 128, 0.4); }
-  to { box-shadow: 0 0 40px rgba(255, 0, 128, 0.8); }
+  from {
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.4);
+  }
+  to {
+    box-shadow: 0 0 40px rgba(255, 0, 128, 0.8);
+  }
 }
 
 @keyframes glitch {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
 }
 
 @keyframes scroll-grid {
-  0% { background-position: 0 0; }
-  100% { background-position: 50px 50px; }
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
 }
 
 /* =====================================================================
    Custom background image utilities (no @theme namespace for bg-image)
    ===================================================================== */
 @utility bg-synthwave-gradient {
-  background-image: linear-gradient(135deg, #16213e 0%, #16213e 50%, #16213e 100%);
+  background-image: linear-gradient(
+    135deg,
+    #16213e 0%,
+    #16213e 50%,
+    #16213e 100%
+  );
 }
 
 @utility bg-neon-gradient {
@@ -80,7 +105,7 @@
 }
 
 @utility bg-purple-gradient {
-  background-image: linear-gradient(45deg, #9F00FF 0%, #ff0080 100%);
+  background-image: linear-gradient(45deg, #9f00ff 0%, #ff0080 100%);
 }
 
 @utility bg-card-gradient {
@@ -198,6 +223,22 @@
   margin: 0;
 }
 
+.tiptap-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+.tiptap-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+.tiptap-content li {
+  margin: 0;
+}
+
 .tiptap-content:focus {
   outline: none;
 }
@@ -212,12 +253,12 @@
 }
 
 .tiptap-content::-webkit-scrollbar-thumb {
-  background: #ff007f40;
+  background: #00ffff25;
   border-radius: 3px;
 }
 
 .tiptap-content::-webkit-scrollbar-thumb:hover {
-  background: #ff007f60;
+  background: #00ffff50;
 }
 
 /* =====================================================================

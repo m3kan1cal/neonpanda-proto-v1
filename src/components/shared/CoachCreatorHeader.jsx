@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 function CoachCreatorHeader({ isOnline = true }) {
   const coachName = "Vesper the Coach Creator";
@@ -8,7 +8,7 @@ function CoachCreatorHeader({ isOnline = true }) {
     <div className="flex items-center justify-center gap-3 mb-4">
       {/* Coach Avatar with Online Status */}
       <div className="relative">
-        <div className="w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg">
+        <div className="w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg">
           V
         </div>
         {isOnline && (

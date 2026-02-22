@@ -54,7 +54,7 @@ Be conservative - only mark as complex if extended reasoning would genuinely imp
  * AI-based workout complexity detection using Bedrock
  *
  * Determines whether a workout requires extended thinking for accurate extraction.
- * Uses the executor model for fast, cost-effective classification.
+ * Uses the contextual model for fast, cost-effective classification.
  *
  * @param workoutContent - The workout description to analyze
  * @returns Promise<WorkoutComplexityResult> with complexity assessment
@@ -68,7 +68,7 @@ export const checkWorkoutComplexity = async (
     const result = await callBedrockApi(
       WORKOUT_COMPLEXITY_PROMPT,
       workoutContent,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.CONTEXTUAL_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {

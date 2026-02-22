@@ -54,14 +54,11 @@ export async function extractAndUpdateTodoList(
     activeProgram?: any;
   },
 ): Promise<ProgramExtractionResult> {
-  logger.info(
-    "🔍 Extracting training program information from user response",
-    {
-      userResponseLength: userResponse.length,
-      conversationHistoryLength: conversationHistory.length,
-      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
-    },
-  );
+  logger.info("🔍 Extracting training program information from user response", {
+    userResponseLength: userResponse.length,
+    conversationHistoryLength: conversationHistory.length,
+    hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+  });
 
   // Check if images are present (same pattern as build-workout)
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
@@ -126,6 +123,10 @@ Return ONLY the fields you found information for using the tool. If no informati
         });
 
         // Create the extraction promise
+        // STRUCTURED OUTPUT EXEMPTION: PROGRAM_TODO_SCHEMA exceeds Bedrock's grammar
+        // compilation limits (grammar compilation timed out in warmup). The model follows
+        // the schema voluntarily via the tool definition context.
+        // See: docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md
         const extractionPromise = hasImages
           ? (async () => {
               const currentMessage = {
@@ -152,6 +153,7 @@ Return ONLY the fields you found information for using the tool. If no informati
                     inputSchema: PROGRAM_TODO_SCHEMA,
                   },
                   expectedToolName: "extract_program_info",
+                  strictSchema: false,
                 },
               );
             })()
@@ -168,6 +170,7 @@ Return ONLY the fields you found information for using the tool. If no informati
                   inputSchema: PROGRAM_TODO_SCHEMA,
                 },
                 expectedToolName: "extract_program_info",
+                strictSchema: false,
               },
             );
 
@@ -233,7 +236,6 @@ Return ONLY the fields you found information for using the tool. If no informati
         "🔎 Raw tool input:",
         JSON.stringify(extractionResponse.input, null, 2),
       );
-      // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
       extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
@@ -328,7 +330,6 @@ Return ONLY the fields you found information for using the tool. If no informati
             status: "complete",
             value: normalizedItem.value,
             confidence: normalizedItem.confidence || "medium",
-            notes: normalizedItem.notes,
             extractedFrom: `message_${messageIndex}`,
             // Store image references for fields that commonly benefit from images
             imageRefs:

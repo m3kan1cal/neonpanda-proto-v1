@@ -13,10 +13,12 @@ import { logger } from "../../utils/logger";
  * - Autolinks
  * - Code blocks
  *
+ * Wrapped with React.memo to prevent unnecessary re-renders during streaming.
+ *
  * @param {string} content - The markdown content to render
  * @param {string} className - Optional additional CSS classes
  */
-export const MarkdownRenderer = ({ content, className = "" }) => {
+const MarkdownRendererComponent = ({ content, className = "" }) => {
   // Guard against non-string content
   if (!content) return null;
   if (typeof content !== "string") {
@@ -217,5 +219,8 @@ export const MarkdownRenderer = ({ content, className = "" }) => {
     </div>
   );
 };
+
+// Memoize to prevent unnecessary re-renders during streaming
+export const MarkdownRenderer = React.memo(MarkdownRendererComponent);
 
 export default MarkdownRenderer;

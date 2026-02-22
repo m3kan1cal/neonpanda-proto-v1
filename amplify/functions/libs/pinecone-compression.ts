@@ -123,7 +123,21 @@ export function deterministicCompressSummary(
     );
   }
 
-  // Truncate nested preference arrays
+  // Truncate flat v2 fields
+  if (compressed.training_preferences) {
+    compressed.training_preferences = truncateArray(
+      compressed.training_preferences,
+      4,
+    );
+  }
+  if (compressed.schedule_constraints) {
+    compressed.schedule_constraints = truncateArray(
+      compressed.schedule_constraints,
+      2,
+    );
+  }
+
+  // Legacy v1 nested preference arrays (backward compat)
   if (compressed.preferences) {
     if (compressed.preferences.training_preferences) {
       compressed.preferences.training_preferences = truncateArray(
@@ -139,7 +153,6 @@ export function deterministicCompressSummary(
     }
   }
 
-  // Truncate methodology preferences
   if (compressed.methodology_preferences) {
     if (compressed.methodology_preferences.mentioned_methodologies) {
       compressed.methodology_preferences.mentioned_methodologies =
@@ -263,14 +276,11 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
             (targetSize / finalSize) *
             TRUNCATION_SAFETY_MARGIN,
         );
-        logger.warn(
-          "⚠️ AI compression still too large, applying truncation:",
-          {
-            compressedSize: finalSize,
-            targetSize,
-            truncatingTo: truncateAt,
-          },
-        );
+        logger.warn("⚠️ AI compression still too large, applying truncation:", {
+          compressedSize: finalSize,
+          targetSize,
+          truncatingTo: truncateAt,
+        });
         return compressedContent.substring(0, truncateAt) + "...";
       }
 

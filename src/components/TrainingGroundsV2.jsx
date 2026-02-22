@@ -416,10 +416,7 @@ function TrainingGroundsV2() {
           return programAgentRef.current?.loadAllTodaysWorkouts();
         })
         .catch((error) => {
-          logger.error(
-            "TrainingGroundsV2: Error loading program data:",
-            error,
-          );
+          logger.error("TrainingGroundsV2: Error loading program data:", error);
           // Reset loading flags so the AI greeting effect and UI aren't stuck
           setIsLoadingPrograms(false);
           setIsLoadingTodaysWorkouts(false);
@@ -1417,7 +1414,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleStartNewConversation}
               disabled={conversationAgentState.isLoadingItem}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1433,7 +1430,7 @@ function TrainingGroundsV2() {
             </button>
             <button
               onClick={handleLogWorkout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1453,7 +1450,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleDesignProgram}
               disabled={isCreatingProgram}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"

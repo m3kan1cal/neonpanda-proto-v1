@@ -6,7 +6,12 @@
  */
 
 import { ProgramGenerationData } from "./types";
-import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
+import {
+  callBedrockApi,
+  callBedrockApiWithJsonOutput,
+  MODEL_IDS,
+  TEMPERATURE_PRESETS,
+} from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getCondensedSchema } from "../object-utils";
 import { PROGRAM_SCHEMA } from "../schemas/program-schema";
@@ -282,35 +287,25 @@ const performNormalization = async (
     let normalizationResult: any;
     let normalizationMethod: "tool" | "fallback" = "tool";
 
-    // PRIMARY: Tool-based normalization with schema enforcement
-    logger.info("🎯 Attempting tool-based program normalization");
+    // PRIMARY: JSON output format normalization (schema too large for strict tool use)
+    logger.info("🎯 Attempting JSON output program normalization");
 
     try {
-      const result = await callBedrockApi(
+      const result = await callBedrockApiWithJsonOutput(
         normalizationPrompt,
         "program_normalization",
-        selectedModel, // Use tier-selected model
+        selectedModel,
         {
+          schemaName: "normalize_program",
+          schema: NORMALIZATION_RESPONSE_SCHEMA,
           temperature: TEMPERATURE_PRESETS.STRUCTURED,
           enableThinking,
-          tools: {
-            name: "normalize_program",
-            description:
-              "Normalize training program data to conform to the Program Schema",
-            inputSchema: NORMALIZATION_RESPONSE_SCHEMA,
-          },
-          expectedToolName: "normalize_program",
         },
       );
 
-      if (typeof result === "object" && result !== null) {
-        logger.info("✅ Tool-based program normalization succeeded");
-        // Extract the input from tool use result (callBedrockApi returns { toolName, input, stopReason })
-        normalizationResult = result.input || result;
-        normalizationMethod = "tool";
-      } else {
-        throw new Error("Tool did not return structured data");
-      }
+      logger.info("✅ JSON output program normalization succeeded");
+      normalizationResult = result;
+      normalizationMethod = "tool";
     } catch (toolError) {
       // FALLBACK: Text-based normalization with parsing (using same tier-selected model)
       logger.warn(

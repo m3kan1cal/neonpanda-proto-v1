@@ -127,6 +127,7 @@ export interface TestExpectations {
   blockingFlags?: string[];
   toolsUsed?: string[];
   shouldNotUseTool?: string;
+  maxErrors?: number; // Maximum allowed error log entries (defaults to 0)
   workoutValidation?: WorkoutValidationExpectations;
   imageProcessing?: ImageProcessingExpectations;
   multiWorkoutValidation?: MultiWorkoutValidationExpectations;

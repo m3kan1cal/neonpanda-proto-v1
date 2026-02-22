@@ -47,15 +47,8 @@ PREVIOUS SUMMARY TO BUILD UPON:
 Narrative: ${existingSummary.narrative}
 Current Goals: ${existingSummary.structuredData.current_goals.join(", ")}
 Recent Progress: ${existingSummary.structuredData.recent_progress.join(", ")}
-Communication Style: ${existingSummary.structuredData.preferences.communication_style}
-Training Preferences: ${existingSummary.structuredData.preferences.training_preferences.join(", ")}
-Methodology Preferences: ${
-        existingSummary.structuredData.methodology_preferences
-          ? `Mentioned: ${existingSummary.structuredData.methodology_preferences.mentioned_methodologies?.join(", ") || "None"},
-          Preferred: ${existingSummary.structuredData.methodology_preferences.preferred_approaches?.join(", ") || "None"}`
-          : "None captured yet"
-      }
-Emotional State: ${existingSummary.structuredData.emotional_state.current_mood} (motivation: ${existingSummary.structuredData.emotional_state.motivation_level})
+Training Preferences: ${existingSummary.structuredData.training_preferences?.join(", ") || existingSummary.structuredData.preferences?.training_preferences?.join(", ") || "None captured yet"}
+Schedule Constraints: ${existingSummary.structuredData.schedule_constraints?.join(", ") || existingSummary.structuredData.preferences?.schedule_constraints?.join(", ") || "None captured yet"}
 Key Insights: ${existingSummary.structuredData.key_insights.join(", ")}
 Important Context: ${existingSummary.structuredData.important_context.join(", ")}
 
@@ -67,7 +60,7 @@ INSTRUCTIONS: This is the first summary for this conversation. Create a comprehe
 
   return `${directiveSection}You are an AI assistant helping to create conversation memory summaries for fitness coaches.
 
-Analyze the conversation between a user and their AI fitness coach "${coachName}" (${coachPersonality} personality, specializing in ${coachSpecializations}) and create a dual-format summary using the generate_conversation_summary tool.
+Analyze the conversation between a user and their AI fitness coach "${coachName}" (${coachPersonality} personality, specializing in ${coachSpecializations}) and create a structured summary using the generate_conversation_summary tool.
 
 ${existingSummaryContext}
 
@@ -78,38 +71,35 @@ ${messages}
 
 ## SUMMARY CREATION GUIDELINES
 
-### FULL_SUMMARY (Complete Storage Version)
-Create a comprehensive summary with:
-- **Narrative (150-300 words)**: Flowing narrative capturing the essence of the coaching relationship, communication dynamic, goals/challenges/progress, personal context and constraints, emotional/motivation patterns, notable insights or breakthroughs, communication style, and training methodologies discussed
-- **Complete Arrays**: Include all relevant items for goals, progress, insights, context, preferences
-- **Professional Coaching Context**: Maintain focus on actionable coaching insights
-- **Evolution Over Time**: If building on an existing summary, update and evolve information rather than repeating old information unless still relevant or changed
-- **Specific Examples**: Use concrete details when they add value
+### NARRATIVE (150-300 words)
+Write a flowing narrative capturing:
+- The essence of the coaching relationship and communication dynamic
+- Goals, challenges, and progress discussed
+- Emotional state and motivation patterns (include mood, motivation level, confidence level)
+- Communication style preferences
+- Training methodologies discussed (5/3/1, CrossFit, Starting Strength, etc.)
+- Personal context and constraints
+- Notable insights or breakthroughs
 
-### COMPACT_SUMMARY (Semantic Search Version, ~25KB Target)
-Create an optimized version for semantic search:
-- **Concise Narrative (75-150 words)**: Focus on core coaching context, goals, and critical information
-- **Limited Arrays**: Top 2-3 most important items per field only
-- **Preserve Searchability**: Keep ALL key searchable terms, numbers, dates, names that someone would search for
-- **Shorter Phrasing**: Remove redundancy and verbose explanations while preserving meaning
-- **Prioritize Keywords**: This version powers semantic search - ensure all important concepts are present
+### TRAINING PREFERENCES
+Merge all of these into a single comprehensive list:
+- Training style preferences (e.g., "prefers compound movements", "likes high intensity")
+- Methodology names mentioned (e.g., "uses 5/3/1 programming", "follows CrossFit methodology")
+- Preferred approaches (e.g., "responds well to linear progression")
+- Programming principles they referenced or responded positively to
 
-### CONVERSATION TAGS (Both Summaries)
+### CONVERSATION TAGS
 Generate 2-5 descriptive tags:
 - **Format**: Lowercase with hyphens (e.g., "strength-training", "weekly-wods", "crossfit")
 - **Content**: Main topics, methodologies, or themes discussed
-- **Purpose**: Useful for filtering and organizing conversations
-- **Examples**: "strength-training", "cardio", "nutrition", "motivation", "injury-recovery", "crossfit", "powerlifting", "bodybuilding", "goal-setting", "progress-review", "technique-focus", "equipment-questions", "scheduling", "methodology-comparison"
+- **Examples**: "strength-training", "cardio", "nutrition", "motivation", "injury-recovery", "crossfit", "powerlifting", "bodybuilding", "goal-setting", "progress-review", "technique-focus", "equipment-questions", "scheduling"
 
-### METHODOLOGY FOCUS (Critical for Both)
-Pay special attention to capturing:
-- **Specific Methodologies**: 5/3/1, CrossFit, Starting Strength, Westside Barbell, etc.
-- **Programming Concepts**: Periodization, autoregulation, linear progression, conjugate method, block periodization, etc.
-- **Training Philosophy**: High frequency, volume, intensity preferences, rest-pause, cluster sets, etc.
-- **Questions & Discussions**: Methodology comparisons, implementation questions, principle questions
-- **Authority References**: Creator names (Jim Wendler, Louie Simmons, Mark Rippetoe, etc.)
-- **Discipline Preferences**: Powerlifting, CrossFit, bodybuilding, Olympic lifting, hybrid approaches
-- **User Responses**: How they respond to methodology-based coaching advice
+### METHODOLOGY FOCUS
+Pay special attention to capturing in narrative and training_preferences:
+- Specific methodologies: 5/3/1, CrossFit, Starting Strength, Westside Barbell, etc.
+- Programming concepts: periodization, autoregulation, linear progression, conjugate method
+- Training philosophy: frequency, volume, intensity preferences
+- Authority references: Jim Wendler, Louie Simmons, Mark Rippetoe, etc.
 
 ---
 
@@ -117,116 +107,85 @@ IMPORTANT: The summary should help the coach remember and build upon the relatio
 }
 
 /**
- * Parse and validate the coach conversation summary
- * Accepts either a tool result data object (preferred) or JSON string (legacy)
- * Now supports dual-format responses (full_summary + compact_summary)
+ * Parse and validate the coach conversation summary.
+ * Supports the new flat format (v2) and backward compat with old nested format (v1)
+ * and dual-format (full_summary + compact_summary) from the previous iteration.
  */
 export function parseCoachConversationSummary(
   dataOrString: any | string,
   event: BuildCoachConversationSummaryEvent,
   conversation: CoachConversation,
-): CoachConversationSummary & { compactSummary?: any } {
+): CoachConversationSummary {
   try {
-    // Determine if we have a string or already-parsed data
     let parsedData: any;
     if (typeof dataOrString === "string") {
       logger.info("Parsing JSON string (legacy mode)..", {
         responseLength: dataOrString.length,
         responsePreview: dataOrString.substring(0, 200),
       });
-      // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
       parsedData = parseJsonWithFallbacks(dataOrString);
     } else {
       logger.info("Processing tool result data (toolConfig mode)..");
       parsedData = dataOrString;
     }
 
-    // Check if this is the new dual-format response
     let narrative: string;
     let structuredData: any;
-    let compactSummary: any = undefined;
 
-    if (parsedData.full_summary && parsedData.compact_summary) {
-      // New dual format (from toolConfig)
-      logger.info("✅ Detected dual-format response (full + compact)");
-      narrative = parsedData.full_summary.narrative || "";
-      structuredData = { ...parsedData.full_summary };
-      delete structuredData.narrative;
-      compactSummary = parsedData.compact_summary;
-    } else {
-      // Legacy single format (backwards compatibility)
-      logger.info("⚠️ Legacy single-format response detected");
+    if (parsedData.full_summary) {
+      // Old dual-format response (v1 schema) - migrate to flat
+      logger.info("Migrating from old dual-format response to flat structure");
+      const full = parsedData.full_summary;
+      narrative = full.narrative || "";
+      structuredData = migrateLegacyStructuredData(full);
+    } else if (
+      parsedData.preferences ||
+      parsedData.methodology_preferences ||
+      parsedData.emotional_state
+    ) {
+      // Old single nested format (v1) - migrate to flat
+      logger.info("Migrating from old nested single-format to flat structure");
       narrative = parsedData.narrative || parsedData.narrative_summary || "";
+      structuredData = migrateLegacyStructuredData(parsedData);
+    } else {
+      // New flat format (v2)
+      logger.info("Processing new flat-format response (v2)");
+      narrative = parsedData.narrative || "";
       structuredData = { ...parsedData };
       if (structuredData.narrative) delete structuredData.narrative;
-      if (structuredData.narrative_summary)
-        delete structuredData.narrative_summary;
     }
 
     logger.info("Parsed conversation data:", {
       narrativeLength: narrative.length,
       hasGoals: !!structuredData.current_goals,
       hasProgress: !!structuredData.recent_progress,
-      hasCompactSummary: !!compactSummary,
     });
 
-    // Validate required fields
-    if (
-      !structuredData.current_goals ||
-      !Array.isArray(structuredData.current_goals)
-    ) {
+    // Validate and default required fields
+    if (!Array.isArray(structuredData.current_goals)) {
       structuredData.current_goals = [];
     }
-    if (
-      !structuredData.recent_progress ||
-      !Array.isArray(structuredData.recent_progress)
-    ) {
+    if (!Array.isArray(structuredData.recent_progress)) {
       structuredData.recent_progress = [];
     }
-    if (!structuredData.preferences) {
-      structuredData.preferences = {
-        communication_style: "",
-        training_preferences: [],
-        schedule_constraints: [],
-      };
+    if (!Array.isArray(structuredData.training_preferences)) {
+      structuredData.training_preferences = [];
     }
-    if (!structuredData.methodology_preferences) {
-      structuredData.methodology_preferences = {
-        mentioned_methodologies: [],
-        preferred_approaches: [],
-        methodology_questions: [],
-      };
+    if (!Array.isArray(structuredData.schedule_constraints)) {
+      structuredData.schedule_constraints = [];
     }
-    if (!structuredData.emotional_state) {
-      structuredData.emotional_state = {
-        current_mood: "",
-        motivation_level: "",
-        confidence_level: "",
-      };
-    }
-    if (
-      !structuredData.key_insights ||
-      !Array.isArray(structuredData.key_insights)
-    ) {
+    if (!Array.isArray(structuredData.key_insights)) {
       structuredData.key_insights = [];
     }
-    if (
-      !structuredData.important_context ||
-      !Array.isArray(structuredData.important_context)
-    ) {
+    if (!Array.isArray(structuredData.important_context)) {
       structuredData.important_context = [];
     }
-    if (
-      !structuredData.conversation_tags ||
-      !Array.isArray(structuredData.conversation_tags)
-    ) {
+    if (!Array.isArray(structuredData.conversation_tags)) {
       structuredData.conversation_tags = [];
     }
 
-    // Calculate confidence based on narrative length and structured data completeness
     const confidence = calculateSummaryConfidence(narrative, structuredData);
 
-    // Get message range
     const messages = conversation.messages;
     const messageRange = {
       startMessageId: messages[0]?.id || "",
@@ -234,8 +193,7 @@ export function parseCoachConversationSummary(
       totalMessages: messages.length,
     };
 
-    const summary: CoachConversationSummary = {
-      // Use conversationId as stable ID to enable proper Pinecone upsert (no duplicates)
+    return {
       summaryId: `conversation_summary_${event.conversationId}`,
       userId: event.userId,
       coachId: event.coachId,
@@ -246,7 +204,6 @@ export function parseCoachConversationSummary(
         createdAt: new Date(),
         messageRange,
         triggerReason: event.triggerReason,
-        // Only include complexityIndicators if it's defined and not empty
         ...(event.complexityIndicators &&
           event.complexityIndicators.length > 0 && {
             complexityIndicators: event.complexityIndicators,
@@ -254,9 +211,6 @@ export function parseCoachConversationSummary(
         confidence,
       },
     };
-
-    // Return with compact summary if available (for Pinecone optimization)
-    return compactSummary ? { ...summary, compactSummary } : summary;
   } catch (error) {
     logger.error("Error parsing conversation summary:", error);
     logger.error(
@@ -269,6 +223,75 @@ export function parseCoachConversationSummary(
       `Failed to parse conversation summary: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
+}
+
+/**
+ * Migrate old nested structuredData format (v1) to the new flat format (v2).
+ * Handles backward compatibility for existing DynamoDB records and old AI responses.
+ */
+function migrateLegacyStructuredData(data: any): any {
+  const preferences = data.preferences || {};
+  const methodologyPrefs = data.methodology_preferences || {};
+  const emotionalState = data.emotional_state || {};
+
+  // Merge all training-related arrays into the flat training_preferences field
+  const trainingPreferences: string[] = [
+    ...(Array.isArray(preferences.training_preferences)
+      ? preferences.training_preferences
+      : []),
+    ...(Array.isArray(methodologyPrefs.mentioned_methodologies)
+      ? methodologyPrefs.mentioned_methodologies
+      : []),
+    ...(Array.isArray(methodologyPrefs.preferred_approaches)
+      ? methodologyPrefs.preferred_approaches
+      : []),
+  ].filter((v, i, arr) => v && arr.indexOf(v) === i); // deduplicate
+
+  return {
+    current_goals: Array.isArray(data.current_goals) ? data.current_goals : [],
+    recent_progress: Array.isArray(data.recent_progress)
+      ? data.recent_progress
+      : [],
+    training_preferences: trainingPreferences,
+    schedule_constraints: Array.isArray(preferences.schedule_constraints)
+      ? preferences.schedule_constraints
+      : [],
+    key_insights: Array.isArray(data.key_insights) ? data.key_insights : [],
+    important_context: Array.isArray(data.important_context)
+      ? data.important_context
+      : [],
+    conversation_tags: Array.isArray(data.conversation_tags)
+      ? data.conversation_tags
+      : [],
+  };
+}
+
+/**
+ * Derive a compact summary for Pinecone storage by programmatically truncating the full summary.
+ * Takes at most 2-3 items per array and trims the narrative to ~150 words.
+ */
+export function deriveCompactSummary(
+  summary: CoachConversationSummary,
+): CoachConversationSummary["structuredData"] & { narrative: string } {
+  const sd = summary.structuredData;
+
+  // Trim narrative to ~150 words
+  const words = summary.narrative.split(/\s+/);
+  const compactNarrative =
+    words.length > 150
+      ? words.slice(0, 150).join(" ") + "..."
+      : summary.narrative;
+
+  return {
+    narrative: compactNarrative,
+    current_goals: sd.current_goals.slice(0, 3),
+    recent_progress: sd.recent_progress.slice(0, 3),
+    training_preferences: sd.training_preferences.slice(0, 5),
+    schedule_constraints: sd.schedule_constraints.slice(0, 2),
+    key_insights: sd.key_insights.slice(0, 3),
+    important_context: sd.important_context.slice(0, 3),
+    conversation_tags: sd.conversation_tags.slice(0, 5),
+  };
 }
 
 /**
@@ -289,22 +312,14 @@ function calculateSummaryConfidence(
     confidence += 20;
   }
 
-  // Structured data completeness (0-60 points)
+  // Structured data completeness (0-60 points) - flat v2 fields
   const fields = [
-    { field: structuredData.current_goals, weight: 12 },
-    { field: structuredData.recent_progress, weight: 10 },
-    { field: structuredData.preferences?.communication_style, weight: 8 },
-    { field: structuredData.preferences?.training_preferences, weight: 7 },
-    {
-      field: structuredData.methodology_preferences?.mentioned_methodologies,
-      weight: 6,
-    },
-    {
-      field: structuredData.methodology_preferences?.preferred_approaches,
-      weight: 5,
-    },
-    { field: structuredData.emotional_state?.current_mood, weight: 7 },
-    { field: structuredData.emotional_state?.motivation_level, weight: 5 },
+    { field: structuredData.current_goals, weight: 15 },
+    { field: structuredData.recent_progress, weight: 12 },
+    { field: structuredData.training_preferences, weight: 13 },
+    { field: structuredData.schedule_constraints, weight: 5 },
+    { field: structuredData.key_insights, weight: 10 },
+    { field: structuredData.important_context, weight: 5 },
   ];
 
   fields.forEach(({ field, weight }) => {

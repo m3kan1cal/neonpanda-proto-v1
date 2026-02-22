@@ -4,11 +4,18 @@
  *
  * Determines whether a workout description requires extended thinking
  * for accurate data extraction.
+ *
+ * Field ordering follows reasoning-first pattern: reasoning before isComplex and confidence.
  */
 export const WORKOUT_COMPLEXITY_SCHEMA = {
   type: "object",
-  required: ["isComplex", "confidence", "reasoning"],
+  required: ["reasoning", "isComplex", "confidence"],
+  additionalProperties: false,
   properties: {
+    reasoning: {
+      type: "string",
+      description: "Brief 1-sentence explanation for the classification",
+    },
     isComplex: {
       type: "boolean",
       description:
@@ -16,13 +23,7 @@ export const WORKOUT_COMPLEXITY_SCHEMA = {
     },
     confidence: {
       type: "number",
-      minimum: 0,
-      maximum: 1,
       description: "Confidence score from 0.0 to 1.0",
-    },
-    reasoning: {
-      type: "string",
-      description: "Brief 1-sentence explanation for the classification",
     },
     complexityFactors: {
       type: "array",
@@ -50,8 +51,8 @@ export const WORKOUT_COMPLEXITY_SCHEMA = {
  * TypeScript interface matching the schema
  */
 export interface WorkoutComplexityResult {
+  reasoning: string;
   isComplex: boolean;
   confidence: number;
-  reasoning: string;
   complexityFactors?: string[];
 }

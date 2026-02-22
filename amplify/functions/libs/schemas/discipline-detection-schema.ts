@@ -1,11 +1,18 @@
 /**
  * JSON Schema for AI discipline detection result
  * Used with Bedrock toolConfig for schema enforcement
+ *
+ * Field ordering follows reasoning-first pattern: reasoning before conclusion and confidence.
  */
 export const DISCIPLINE_DETECTION_SCHEMA = {
   type: "object",
-  required: ["discipline", "confidence", "reasoning"],
+  required: ["reasoning", "discipline", "confidence"],
+  additionalProperties: false,
   properties: {
+    reasoning: {
+      type: "string",
+      description: "Brief 1-sentence explanation for the classification",
+    },
     discipline: {
       type: "string",
       enum: [
@@ -25,13 +32,7 @@ export const DISCIPLINE_DETECTION_SCHEMA = {
     },
     confidence: {
       type: "number",
-      minimum: 0,
-      maximum: 1,
       description: "Confidence score from 0.0 to 1.0",
-    },
-    reasoning: {
-      type: "string",
-      description: "Brief 1-sentence explanation for the classification",
     },
   },
 };

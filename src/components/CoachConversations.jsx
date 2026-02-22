@@ -6,7 +6,6 @@ import React, {
   useCallback,
   memo,
 } from "react";
-import { flushSync } from "react-dom";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
@@ -136,7 +135,7 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex flex-col mb-1 group animate-message-in ${
+        className={`flex flex-col mb-4 md:mb-1 group animate-message-in ${
           message.type === "user" ? "items-end" : "items-start"
         }`}
       >
@@ -322,6 +321,7 @@ function CoachConversations() {
   const agentRef = useRef(null);
   const coachAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
+  const lastScrollTimeRef = useRef(0); // For throttling scroll during streaming
   const { success: showSuccess, error: showError } = useToast();
 
   // Agent state (managed by CoachConversationAgent)
@@ -349,11 +349,6 @@ function CoachConversations() {
       example: "/log-workout I did Fran in 8:57",
     },
     {
-      command: "/design-program",
-      description: "Start designing a new training program",
-      example: "/design-program I want to train for a marathon",
-    },
-    {
       command: "/save-memory",
       description: "Save a memory or note",
       example: "/save-memory I prefer morning workouts",
@@ -363,7 +358,6 @@ function CoachConversations() {
   // Quick suggestions configuration
   const quickSuggestions = [
     { label: "Log Workout", message: "/log-workout " },
-    { label: "Design Program", message: "/design-program " },
     {
       label: "Daily Check-in",
       message: "I'm checking in for the day. What do I need to be aware of?",
@@ -388,7 +382,7 @@ function CoachConversations() {
       {
         title: "Slash Commands",
         description:
-          "Type '/' to see available commands like /log-workout, /design-program, or /save-memory for quick actions.",
+          "Type '/' to see available commands like /log-workout or /save-memory for quick actions.",
       },
       {
         title: "Be Specific",
@@ -498,15 +492,8 @@ function CoachConversations() {
         coachId,
         conversationId,
         onStateChange: (newState) => {
-          // Use flushSync for streaming updates to force immediate synchronous rendering
-          if (newState.isStreaming || newState.streamingMessage) {
-            flushSync(() => {
-              setCoachConversationAgentState(newState);
-            });
-          } else {
-            // Normal async update for non-streaming changes
-            setCoachConversationAgentState(newState);
-          }
+          // Normal React batching handles streaming updates efficiently
+          setCoachConversationAgentState(newState);
         },
         onNavigation: (type, data) => {
           if (type === "conversation-not-found") {
@@ -671,13 +658,23 @@ function CoachConversations() {
   }, [coachConversationAgentState.messages.length]);
 
   // Check if user is at bottom of scroll
-  const scrollToBottom = useCallback((instant = false) => {
-    if (instant) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-    } else {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, []);
+  const scrollToBottom = useCallback(
+    (instant = false) => {
+      // During streaming, always use instant scroll to prevent animation interruption
+      const isStreaming =
+        coachConversationAgentState.isStreaming ||
+        coachConversationAgentState.streamingMessage;
+      const shouldUseInstant = instant || isStreaming;
+
+      messagesEndRef.current?.scrollIntoView({
+        behavior: shouldUseInstant ? "auto" : "smooth",
+      });
+    },
+    [
+      coachConversationAgentState.isStreaming,
+      coachConversationAgentState.streamingMessage,
+    ],
+  );
 
   // Handle scroll events to show/hide scroll button
   const handleScroll = useCallback(() => {
@@ -697,13 +694,30 @@ function CoachConversations() {
   // Auto-scroll to bottom when new messages arrive (only if user is already at bottom)
   useEffect(() => {
     if (!showScrollButton) {
-      scrollToBottom();
+      const isStreaming =
+        coachConversationAgentState.isStreaming ||
+        coachConversationAgentState.streamingMessage;
+
+      // Throttle scroll during streaming to ~100ms intervals
+      if (isStreaming) {
+        const now = Date.now();
+        const timeSinceLastScroll = now - lastScrollTimeRef.current;
+
+        if (timeSinceLastScroll >= 100) {
+          lastScrollTimeRef.current = now;
+          scrollToBottom();
+        }
+      } else {
+        // No throttling for non-streaming updates
+        scrollToBottom();
+      }
     }
   }, [
     coachConversationAgentState.messages,
     coachConversationAgentState.isTyping,
     coachConversationAgentState.contextualUpdate,
     coachConversationAgentState.streamingMessage, // Added to scroll during streaming
+    coachConversationAgentState.isStreaming,
     showScrollButton,
     scrollToBottom,
   ]);
@@ -1045,11 +1059,8 @@ function CoachConversations() {
                   {[1, 2].map((i) => (
                     <div
                       key={i}
-                      className={`flex items-end gap-2 ${i % 2 === 1 ? "flex-row-reverse" : "flex-row"}`}
+                      className={`flex flex-col mb-1 ${i % 2 === 1 ? "items-end" : "items-start"}`}
                     >
-                      {/* Avatar skeleton */}
-                      <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-
                       {/* Message bubble skeleton */}
                       <div
                         className={`max-w-[95%] md:max-w-[80%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
@@ -1065,15 +1076,25 @@ function CoachConversations() {
                           </div>
                         </div>
 
-                        {/* Timestamp and status skeleton */}
+                        {/* Avatar, timestamp, and status skeleton - all on same line below message */}
                         <div
-                          className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 1 ? "justify-end" : "justify-start"}`}
+                          className={`flex items-start gap-2 px-2 mt-2 ${i % 2 === 1 ? "justify-end" : "justify-start"}`}
                         >
+                          {/* Avatar skeleton for AI (left side) */}
+                          {i % 2 === 0 && (
+                            <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          )}
+
                           <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
                           <div className="flex gap-1">
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                           </div>
+
+                          {/* Avatar skeleton for user (right side) */}
+                          {i % 2 === 1 && (
+                            <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1186,7 +1207,7 @@ function CoachConversations() {
               {/* Messages Area - with bottom padding for floating input */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-3 sm:py-6 pb-40 sm:pb-56 synthwave-scrollbar-cyan"
+                className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-3 sm:py-6 pb-56 sm:pb-64 synthwave-scrollbar-cyan"
               >
                 <div className="space-y-4">
                   {/* Empty State - Show tips when no messages */}

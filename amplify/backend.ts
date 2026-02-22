@@ -101,6 +101,10 @@ import { deleteSharedProgram } from "./functions/delete-shared-program/resource"
 import { copySharedProgram } from "./functions/copy-shared-program/resource";
 import { explainTerm } from "./functions/explain-term/resource";
 import { generateGreeting } from "./functions/generate-greeting/resource";
+import {
+  warmupPlatform,
+  createWarmupPlatformSchedule,
+} from "./functions/warmup-platform/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -207,6 +211,7 @@ const backend = defineBackend({
   copySharedProgram,
   explainTerm,
   generateGreeting,
+  warmupPlatform,
 });
 
 // Disable retries for stateful async generation functions
@@ -473,6 +478,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
   backend.explainTerm, // Added: Needs Bedrock for term explanations (Haiku 4.5)
   backend.generateGreeting, // Added: Needs Bedrock for AI-generated dashboard greetings (Nova 2 Lite)
+  backend.warmupPlatform, // Pre-compiles Bedrock grammar caches every 12 hours
 ].forEach((func) => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
 });
@@ -797,6 +803,7 @@ const allFunctions = [
   backend.copySharedProgram,
   backend.explainTerm,
   backend.generateGreeting,
+  backend.warmupPlatform,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 
@@ -945,6 +952,19 @@ backend.streamCoachConversation.addEnvironment(
 backend.streamCoachConversation.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
   backend.buildConversationSummary.resources.lambda.functionName,
+);
+backend.streamCoachConversation.addEnvironment(
+  "V1_FALLBACK_USERS_PARAM",
+  `/${branchName}/neonpanda-proto-v1/config/V1_FALLBACK_USERS`,
+);
+backend.streamCoachConversation.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["ssm:GetParameter"],
+    resources: [
+      `arn:aws:ssm:*:*:parameter/${branchName}/neonpanda-proto-v1/config/*`,
+    ],
+  }),
 );
 
 backend.streamCoachCreatorSession.addEnvironment(
@@ -1166,7 +1186,19 @@ const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
   backend.notifyInactiveUsers.resources.lambda,
 );
 
-console.info("✅ Inactive user notifications scheduled (every 14 days)");
+console.info(
+  "✅ User notification check scheduled (daily): inactivity + program adherence",
+);
+
+// Create EventBridge schedule for platform warmup (every 12 hours)
+const warmupPlatformSchedule = createWarmupPlatformSchedule(
+  backend.warmupPlatform.stack,
+  backend.warmupPlatform.resources.lambda,
+);
+
+console.info(
+  "✅ Platform warmup scheduled (every 12 hours): pre-compiles Bedrock grammar caches",
+);
 
 // ============================================================================
 // COGNITO USER POOL CONFIGURATION

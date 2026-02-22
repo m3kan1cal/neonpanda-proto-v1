@@ -26,6 +26,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
+import MarkdownRenderer from "./shared/MarkdownRenderer";
 import { logger } from "../utils/logger";
 import {
   StackIcon,
@@ -434,7 +435,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => toggleMonthlySummaryCollapse(report.monthId)}
-              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
             >
               <span>Report Summary</span>
               <svg
@@ -455,9 +456,10 @@ function ViewReports() {
             </button>
             {!isSummaryCollapsed && (
               <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3 animate-fadeIn">
-                <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed">
-                  {humanSummary || summaryPreview}
-                </p>
+                <MarkdownRenderer
+                  content={humanSummary || summaryPreview}
+                  className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
+                />
               </div>
             )}
           </div>
@@ -602,7 +604,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => toggleWeeklySummaryCollapse(report.weekId)}
-              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
             >
               <span>Report Summary</span>
               <svg
@@ -623,9 +625,10 @@ function ViewReports() {
             </button>
             {!isSummaryCollapsed && (
               <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3 animate-fadeIn">
-                <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed">
-                  {humanSummary || summaryPreview}
-                </p>
+                <MarkdownRenderer
+                  content={humanSummary || summaryPreview}
+                  className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
+                />
               </div>
             )}
           </div>

@@ -92,17 +92,24 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
   }
 
   /**
-   * Build standardized tool result structure for Bedrock conversation
+   * Build standardized tool result structure for Bedrock conversation.
+   *
+   * If the tool result includes a `conversationSummary` property, that compact
+   * version is used for conversation history instead of the full result. This
+   * keeps conversation context lean for data-heavy tools (e.g., generate_phase_workouts)
+   * while the full result remains accessible via getToolResult().
    */
   private buildToolResult(
     toolUse: any,
     result: any,
     status: "success" | "error",
   ): any {
+    const conversationContent = result?.conversationSummary ?? result;
+
     return {
       toolResult: {
         toolUseId: toolUse.toolUseId,
-        content: [{ json: result }],
+        content: [{ json: conversationContent }],
         status,
       },
     };
@@ -472,9 +479,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
         // If retry also failed, fall back to original result
         if (!retryResult.success && retryResult.skipped) {
-          logger.warn(
-            "⚠️ Retry also resulted in skip - using original result",
-          );
+          logger.warn("⚠️ Retry also resulted in skip - using original result");
           return result;
         }
 

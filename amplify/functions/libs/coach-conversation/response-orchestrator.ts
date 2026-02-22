@@ -69,7 +69,9 @@ export function selectModelForConversation(
  * @param existingMessages - All existing conversation messages
  * @returns Messages array with cache point inserted at stepped boundaries
  */
-function buildMessagesWithHistoryCaching(existingMessages: any[]): any[] {
+export function buildMessagesWithHistoryCaching(
+  existingMessages: any[],
+): any[] {
   const messageCount = existingMessages.length;
 
   // Don't cache short conversations
