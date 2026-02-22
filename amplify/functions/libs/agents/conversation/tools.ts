@@ -603,6 +603,16 @@ advancement, adherenceRate) and marks the specific workout template as "complete
         };
       }
 
+      // Idempotency guard — matches pattern in log-workout-template and skip-workout-template handlers
+      if (template.status === "completed") {
+        return {
+          completed: true,
+          alreadyCompleted: true,
+          workoutName: template.name || "Workout",
+          message: "This workout was already marked as completed.",
+        };
+      }
+
       // Update the template status
       template.status = "completed";
       template.completedAt = new Date().toISOString();

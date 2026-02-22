@@ -56,10 +56,10 @@ const blogPosts = [
     id: 5,
     slug: "the-symphony",
     title: "The Symphony",
-    subtitle: "Multi-Agent Orchestration",
+    subtitle: "The Conversation Agent & Streaming Orchestration",
     readTime: "15 min read",
-    agent: "All Agents",
-    pattern: "Full Orchestration",
+    agent: "Conversation Agent",
+    pattern: "Streaming Tool-Use",
     color: "cyan",
   },
 ];
@@ -231,6 +231,11 @@ function BlogPost({ children }) {
                 <span className="text-white">Training Programs </span>
                 <span className={colors.text}>That Think</span>
               </>
+            ) : currentPost.slug === "the-symphony" ? (
+              <>
+                <span className="text-white">The </span>
+                <span className={colors.text}>Symphony</span>
+              </>
             ) : (
               <span className={colors.text}>{currentPost.title}</span>
             )}
@@ -244,36 +249,22 @@ function BlogPost({ children }) {
             {blogPosts.map((post) => {
               const postColors = getColorClasses(post.color);
               const isCurrent = post.slug === slug;
-              if (post.id <= 4) {
-                return (
-                  <Link
-                    key={post.id}
-                    to={`/blog/${post.slug}`}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      isCurrent
-                        ? `${postColors.bg} ${postColors.border} border-2 ${postColors.text}`
-                        : "bg-synthwave-bg-primary/30 border border-synthwave-text-muted/30 text-synthwave-text-muted hover:border-synthwave-text-muted"
-                    }`}
-                    title={post.title}
-                  >
-                    <span className="font-inter font-bold text-sm">
-                      {post.id}
-                    </span>
-                  </Link>
-                );
-              } else {
-                return (
-                  <div
-                    key={post.id}
-                    className="w-10 h-10 rounded-full flex items-center justify-center bg-synthwave-bg-primary/30 border border-synthwave-text-muted/30 text-synthwave-text-muted/40 cursor-not-allowed"
-                    title="Coming Soon"
-                  >
-                    <span className="font-inter font-bold text-sm">
-                      {post.id}
-                    </span>
-                  </div>
-                );
-              }
+              return (
+                <Link
+                  key={post.id}
+                  to={`/blog/${post.slug}`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isCurrent
+                      ? `${postColors.bg} ${postColors.border} border-2 ${postColors.text}`
+                      : "bg-synthwave-bg-primary/30 border border-synthwave-text-muted/30 text-synthwave-text-muted hover:border-synthwave-text-muted"
+                  }`}
+                  title={post.title}
+                >
+                  <span className="font-inter font-bold text-sm">
+                    {post.id}
+                  </span>
+                </Link>
+              );
             })}
           </div>
         </div>

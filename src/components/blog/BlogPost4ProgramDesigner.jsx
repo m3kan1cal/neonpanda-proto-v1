@@ -1615,20 +1615,20 @@ function BlogPost4ProgramDesigner() {
           What's Next: The Symphony
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
-          We've now explored all four specialized agents: the Smart Request
-          Router, Coach Creator, Workout Logger, and Program Designer. Each is
-          powerful on its own—but the real magic happens when they work
-          together. In the final post, we'll see the full symphony of
-          multi-agent orchestration, cross-agent context sharing, multi-layer
-          safety validation, and the future of AI coaching.
+          We've now explored four specialized agents: the Smart Request Router,
+          Coach Creator, Workout Logger, and Program Designer. But there's a
+          fifth agent that ties them all together—the one users talk to every
+          day. In the final post, we'll meet the Conversation Agent, armed with
+          11 specialized tools and a streaming-first architecture that
+          orchestrates across the entire platform in real time.
         </p>
 
         <p className={`${typographyPatterns.description} mb-8`}>
           Spoiler: when you log a workout that's part of an active program, the
-          Workout Logger, Program Designer, and Coach Creator agents all
-          coordinate—updating program progress, adjusting future coaching based
-          on performance, and delivering feedback in your coach's unique voice.
-          Four agents, one seamless experience.
+          Conversation Agent calls three tools in a single streaming
+          response—logging the workout, marking the program day complete, and
+          querying your exercise history to celebrate the PR. Five agents, 11
+          tools, one seamless experience.
         </p>
 
         <div className={containerPatterns.cardLight}>
@@ -1645,7 +1645,7 @@ function BlogPost4ProgramDesigner() {
                   The Symphony
                 </h3>
                 <p className="font-rajdhani text-synthwave-text-secondary">
-                  Multi-Agent Orchestration & The Future of AI Coaching
+                  The Conversation Agent & Streaming Orchestration
                 </p>
               </div>
               <svg

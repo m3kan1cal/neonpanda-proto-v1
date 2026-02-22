@@ -72,18 +72,18 @@ const blogPosts = [
     id: 5,
     slug: "the-symphony",
     title: "The Symphony",
-    subtitle: "Multi-Agent Orchestration",
+    subtitle: "The Conversation Agent & Streaming Orchestration",
     description:
-      "All four specialized agents working in concert. Multi-layer safety validation, semantic memory, and the future of AI coaching.",
+      "Meet the Conversation Agent—armed with 11 specialized tools and a streaming-first architecture, it pulls, pushes, queries, logs, and searches data across the entire platform in real time. This is where all five agents work in concert.",
     readTime: "15 min read",
-    agent: "All Agents",
-    pattern: "Full Orchestration",
+    agent: "Conversation Agent",
+    pattern: "Streaming Tool-Use",
     color: "cyan",
     topics: [
-      "Multi-Agent Architecture",
-      "Safety Validation",
+      "11 Agent Tools",
+      "Streaming SSE",
+      "Multi-Agent Orchestration",
       "Semantic Memory",
-      "Future Vision",
     ],
   },
 ];
@@ -175,7 +175,7 @@ function BlogIndex() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full"></div>
               <span className="text-synthwave-text-secondary">
-                4 Specialized AI Agents
+                5 Specialized AI Agents
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ function BlogIndex() {
                       <div
                         className={`lg:w-[calc(50%-3rem)] ${isEven ? "lg:mr-auto" : "lg:ml-auto"}`}
                       >
-                        {post.id <= 4 ? (
+                        {post.id <= 5 ? (
                           <Link
                             to={`/blog/${post.slug}`}
                             className={`block ${containerPatterns.cardLight} p-6 hover:${colors.border} transition-all duration-300 group`}
