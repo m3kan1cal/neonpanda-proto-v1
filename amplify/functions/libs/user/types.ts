@@ -24,6 +24,7 @@ export interface UserProfile {
       monthlyReports?: boolean; // Receive monthly progress reports
       programUpdates?: boolean; // Receive notifications about training program updates
       featureAnnouncements?: boolean; // Receive notifications about new features and app releases
+      programAdherence?: boolean; // Receive reminders when falling behind on an active training program
     };
     lastSent?: {
       coachCheckIns?: Date; // When the last coach check-in was sent
@@ -31,6 +32,7 @@ export interface UserProfile {
       monthlyReports?: Date; // When the last monthly report was sent
       programUpdates?: Date; // When the last program update notification was sent
       featureAnnouncements?: Date; // When the last feature announcement was sent
+      programAdherence?: Date; // When the last program adherence reminder was sent
     };
   };
   subscription: {};

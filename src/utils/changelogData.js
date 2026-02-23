@@ -11,6 +11,65 @@ import { logger } from "./logger";
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260221-beta",
+    date: "2026-02-21",
+    changes: {
+      added: [
+        "Agentic coach conversations: your coach now uses a ReAct reasoning loop to intelligently decide when to look things up, search your history, retrieve memories, or take action — rather than relying solely on pre-loaded context from the start of each message",
+        "Coach can now search your knowledge base mid-conversation, retrieving relevant workout history, past conversations, program summaries, stored memories, and coach creator session data to give more informed, personalized responses",
+        "Coach can now search the methodology knowledge base for training philosophy, programming principles, exercise technique guidance, and periodization science using AI-driven intent analysis with categorized results",
+        "Coach can now complete program workouts directly from the chat — say you finished today's workout and your coach will mark it complete, update your program progress, and log your performance",
+        "Coach can now query your active training programs from chat, giving accurate, real-time program status without requiring a separate screen visit",
+        "Coach can now look up your exercise history for any movement — frequency, volume, recent sets and reps, personal records — while mid-conversation to give context-aware programming advice",
+        "Rich text formatting in chat input: bold and italic text supported via Markdown shortcuts or toolbar in coach conversations; all other text inputs (workout logs, notes, descriptions) use a clean plain-text editor with consistent rendering",
+        "AI-powered Pinecone metadata compression using Claude Sonnet 4.5 to intelligently summarize context that exceeds Pinecone's 40KB storage limit, preserving semantic meaning and searchability instead of truncating content",
+        "Schema composition pattern for program storage: lean AI generation schemas and full DynamoDB storage schemas are now composed separately, ensuring AI output constraints are not conflated with server-side storage validation",
+        "expectedWorkoutCount field in program phase structure: AI now plans and communicates a workout target per phase during phase structure generation, improving downstream workout generation accuracy",
+        "workoutCount field on program phases: the number of generated workout templates is tracked directly on each phase for accurate program analysis and validation",
+      ],
+      changed: [
+        "Coach conversation backend migrated from a fixed-step Smart Router pipeline (detect workout → detect memory → generate response) to a streaming agent that reasons about which tools to use based on the actual content of each message",
+        "Tiptap replaces native browser textareas across all input areas in the app — chat inputs support rich formatting, all other inputs use a clean plain-text Tiptap editor with consistent styling and keyboard behavior",
+        "Program phase structure generation now retrieves coach configuration, user profile, and Pinecone context from internal agent storage instead of requiring the AI to re-echo these large objects as input, significantly reducing input token usage and eliminating a class of coachConfig truncation errors",
+        "Program phase workout generation returns a compact conversation summary (phase name, workout count, workout names) to the agent's conversation history while full workout data is stored internally — prevents context bloat for programs with many phases and workouts",
+        "Workout count guidance in phase generation now shows explicit math (N weeks × F workouts/week = target) so the AI understands the derivation rather than just seeing an abstract number",
+        "Program phase workout schema description updated to clarify that one template per training day is expected across the full phase duration, with a concrete example (21-day phase at 3x/week = ~9 templates)",
+        "Bedrock API calls in the program designer agent now have a 180-second client-side timeout via AbortController, preventing indefinite Lambda hangs on large programs with many phases",
+        "Dropdown menu options (Delete, Rename) on program and coach management pages now show pointer cursor on hover for consistent interactive element behavior",
+      ],
+      fixed: [
+        "Program generation failure: coachConfig missing required field: selected_personality.primary_template — caused when the AI was asked to echo large coach configuration objects as tool input parameters and truncated them; fixed by retrieving coachConfig directly from internal agent storage",
+        "powerlifting-prep and other large programs hitting Lambda timeouts — caused by conversation history accumulating full workout details for many phases (60+ workouts), making subsequent Bedrock API calls stall; fixed by summarizing phase workout results in conversation history",
+        "Workout templates in generated programs having incorrect phaseId references (e.g., phase_usr_ instead of phase_user_) — fixed by enforcing the authoritative phaseId from stored phase results when assembling the workout template array, matching the behavior of the standalone program assembler",
+        "Schema validation failures for workoutCount field on program phase objects — fixed by explicitly including workoutCount in the phase item schema",
+        "Programs failing DynamoDB schema validation due to runtime fields (completedWorkouts, adherenceRate, s3DetailKey, etc.) being rejected by the AI-facing schema's additionalProperties: false constraint — resolved via schema composition, where the AI schema stays lean and a separate storage schema covers the full persisted entity",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260218-beta",
+    date: "2026-02-18",
+    changes: {
+      added: [
+        "Program adherence email notifications: users with an active training program who haven't logged a session in 5+ days now receive a targeted reminder referencing their specific program name, current day, coach, and weekly frequency",
+        "isProgramLagging utility in libs/notifications/program-adherence-email.ts: determines whether a program is behind using lastActivityAt (or startDate with a grace period for brand-new programs with no sessions yet)",
+        "Program adherence email template with single-program and multi-program rendering paths: single program shows a dedicated card with program name, day progress, and coach name in the subject line; multiple programs render as a list",
+        "programAdherence boolean added to UserProfile.preferences.emailNotifications for per-user opt-out control",
+        "programAdherence Date added to UserProfile.preferences.lastSent for rate-limiting adherence reminders (minimum 7 days between sends)",
+        "program-adherence unsubscribe type added to the unsubscribe-email handler, mapped to the programAdherence preference key and included in the 'unsubscribe all' flow",
+        "libs/notifications/ directory with dedicated email modules: inactivity-email.ts (general 14-day reminder) and program-adherence-email.ts (5-day program-specific reminder), keeping email template logic out of the Lambda handler",
+      ],
+      changed: [
+        "notify-inactive-users Lambda schedule changed from every 14 days to daily; both inactivity and program adherence checks self-rate-limit via lastSent timestamps so the increased frequency has no user-facing impact",
+        "notify-inactive-users handler refactored from a single-purpose inactivity checker into a general daily notification runner with two independent checks (checkGeneralInactivity, checkProgramAdherence) that run per user regardless of each other's outcome",
+        "processUser() restructured so the no-email guard is the only shared early exit; coachCheckIns opt-out only gates the inactivity check, not the program adherence check",
+        "InactivityStats interface renamed to NotificationStats and extended with programAdherenceEmailsSent and programAdherenceSkipped counters",
+        "Duplicate updateLastSentTimestamp logic consolidated into a single parameterized function accepting a union key type ('coachCheckIns' | 'programAdherence')",
+        "daysSinceDate extracted as a shared internal utility in the handler, replacing two copies of the same floor-division calculation",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260211-beta",
     date: "2026-02-11",
     changes: {

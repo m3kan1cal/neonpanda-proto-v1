@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 /**
  * Simple MD5 implementation for browser (without external dependencies)
@@ -72,7 +72,8 @@ function md5(string) {
       lWordCount = (lByteCount - (lByteCount % 4)) / 4;
       lBytePosition = (lByteCount % 4) * 8;
       lWordArray[lWordCount] =
-        lWordArray[lWordCount] | (string.charCodeAt(lByteCount) << lBytePosition);
+        lWordArray[lWordCount] |
+        (string.charCodeAt(lByteCount) << lBytePosition);
       lByteCount++;
     }
     lWordCount = (lByteCount - (lByteCount % 4)) / 4;
@@ -84,21 +85,23 @@ function md5(string) {
   }
 
   function wordToHex(lValue) {
-    let wordToHexValue = '',
-      wordToHexValueTemp = '',
+    let wordToHexValue = "",
+      wordToHexValueTemp = "",
       lByte,
       lCount;
     for (lCount = 0; lCount <= 3; lCount++) {
       lByte = (lValue >>> (lCount * 8)) & 255;
-      wordToHexValueTemp = '0' + lByte.toString(16);
-      wordToHexValue = wordToHexValue + wordToHexValueTemp.substr(wordToHexValueTemp.length - 2, 2);
+      wordToHexValueTemp = "0" + lByte.toString(16);
+      wordToHexValue =
+        wordToHexValue +
+        wordToHexValueTemp.substr(wordToHexValueTemp.length - 2, 2);
     }
     return wordToHexValue;
   }
 
   function utf8Encode(string) {
-    string = string.replace(/\r\n/g, '\n');
-    let utftext = '';
+    string = string.replace(/\r\n/g, "\n");
+    let utftext = "";
     for (let n = 0; n < string.length; n++) {
       const c = string.charCodeAt(n);
       if (c < 128) {
@@ -226,7 +229,7 @@ function md5(string) {
  * @returns {string} First character in uppercase, defaults to 'U'
  */
 export function getUserInitial(username) {
-  if (!username) return 'U';
+  if (!username) return "U";
   return username.charAt(0).toUpperCase();
 }
 
@@ -256,7 +259,7 @@ export function getGravatarUrl(email, size = 40) {
  * @param {number} props.size - Avatar size in pixels (default 40)
  * @param {string} props.className - Additional CSS classes
  */
-function UserAvatar({ email, username, size = 40, className = '' }) {
+function UserAvatar({ email, username, size = 40, className = "" }) {
   const [useGravatar, setUseGravatar] = useState(true);
   const [gravatarUrl, setGravatarUrl] = useState(null);
 
@@ -287,12 +290,12 @@ function UserAvatar({ email, username, size = 40, className = '' }) {
     return (
       <img
         src={gravatarUrl}
-        alt={`${username || 'User'} avatar`}
+        alt={`${username || "User"} avatar`}
         className={`rounded-full shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30 ${className}`}
         style={{
           width: `${size}px`,
           height: `${size}px`,
-          objectFit: 'cover'
+          objectFit: "cover",
         }}
         onError={handleGravatarError}
       />
@@ -302,11 +305,11 @@ function UserAvatar({ email, username, size = 40, className = '' }) {
   // Fallback to gradient initial avatar
   return (
     <div
-      className={`bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30 ${className}`}
+      className={`bg-gradient-to-br from-synthwave-neon-pink via-synthwave-neon-purple to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30 ${className}`}
       style={{
         width: `${size}px`,
         height: `${size}px`,
-        fontSize: `${fontSize}px`
+        fontSize: `${fontSize}px`,
       }}
     >
       {initial}

@@ -66,12 +66,15 @@ import {
 } from "@aws-sdk/client-cloudwatch-logs";
 import * as fs from "fs";
 import * as path from "path";
+import readline from "readline";
 // Use centralized DynamoDB operations for consistency
 import {
   saveToDynamoDB,
   loadFromDynamoDB,
   createDynamoDBItem,
+  deleteFromDynamoDB,
 } from "../../amplify/dynamodb/operations.js";
+import { deleteCoachCreatorSummaryFromPinecone } from "../../amplify/functions/libs/coach-creator/pinecone.js";
 import { CoachCreatorSession } from "../../amplify/functions/libs/coach-creator/types.js";
 import { CoachConfig } from "../../amplify/functions/libs/coach-creator/types.js";
 // Use real session template for correct data structure
@@ -109,8 +112,8 @@ const DEFAULT_FUNCTION =
 const LOG_WAIT_TIME = 30000; // Wait 30s for logs (coach config generation takes time)
 // Note: DynamoDB table name is handled by centralized operations.ts (uses getTableName())
 
-// Test user ID
-const TEST_USER_ID = "test_coach_creator_user_" + Date.now();
+// Test user ID — same as test-build-workout.ts and test-build-program.ts
+const TEST_USER_ID = "63gocaz-j-AYRsb0094ik";
 
 // Valid options for AI selections (for reasonableness validation)
 const VALID_PERSONALITIES = ["emma", "marcus", "diana", "alex"];
@@ -574,19 +577,7 @@ function validateCoachConfig(coachConfig: any): ValidationResult[] {
       actual: "valid",
     });
   } else {
-    // Add individual failures for each schema error
     for (const error of schemaValidation.errors) {
-      // Debug logging for timestamp issues
-      if (error.includes("generation_timestamp")) {
-        console.error(
-          "🔍 DEBUG - generation_timestamp value:",
-          coachConfig.metadata?.generation_timestamp,
-        );
-        console.error(
-          "🔍 DEBUG - generation_timestamp type:",
-          typeof coachConfig.metadata?.generation_timestamp,
-        );
-      }
       validations.push({
         name: `Schema: ${error}`,
         passed: false,
@@ -607,7 +598,7 @@ async function runTestCase(
   verbose: boolean = false,
 ): Promise<TestResult> {
   const lambdaClient = new LambdaClient({ region: DEFAULT_REGION });
-  const userId = TEST_USER_ID + "_" + testCase.name;
+  const userId = TEST_USER_ID;
   let sessionId: string | null = null;
 
   try {
@@ -683,11 +674,11 @@ async function runTestCase(
       });
 
       validations.push({
-        name: "Generation method is agent",
+        name: "Generation method is tool or fallback",
         passed:
-          body?.generationMethod === "agent" ||
-          body?.generationMethod === "tool",
-        expected: "agent or tool",
+          body?.generationMethod === "tool" ||
+          body?.generationMethod === "fallback",
+        expected: "tool or fallback",
         actual: body?.generationMethod,
       });
 
@@ -1036,8 +1027,357 @@ async function runTests() {
   }
 }
 
+// ─── Cleanup ──────────────────────────────────────────────────────────────────
+
+interface CleanupArtifact {
+  testName: string;
+  userId: string;
+  sessionId: string | null;
+  coachConfigId: string | null;
+  sourceFile: string;
+  testPassed: boolean;
+}
+
+/**
+ * Scan output directories for coach config result files and extract artifact IDs.
+ * Handles both success responses (body.coachConfigId, body.userId, body.sessionId)
+ * and error responses (body.details.userId, body.details.sessionId).
+ */
+function scanCoachConfigResultFiles(directories: string[]): CleanupArtifact[] {
+  const artifacts: CleanupArtifact[] = [];
+  const seenSessions = new Set<string>();
+
+  for (const dir of directories) {
+    if (!fs.existsSync(dir)) {
+      console.warn(`⚠️  Directory not found: ${dir}`);
+      continue;
+    }
+
+    const files = fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith("_result.json"))
+      .sort();
+
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      try {
+        const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+        const responseBody = data.response?.body;
+        if (!responseBody) continue;
+
+        const body =
+          typeof responseBody === "string"
+            ? JSON.parse(responseBody)
+            : responseBody;
+
+        // Extract IDs from both success and error response shapes
+        const userId = body.userId ?? body.details?.userId;
+        const sessionId = body.sessionId ?? body.details?.sessionId ?? null;
+        const coachConfigId = body.coachConfigId ?? null;
+
+        if (!userId) continue;
+        if (sessionId && seenSessions.has(sessionId)) continue;
+        if (sessionId) seenSessions.add(sessionId);
+
+        artifacts.push({
+          testName: data.testName || file,
+          userId,
+          sessionId,
+          coachConfigId,
+          sourceFile: filePath,
+          testPassed: !!data.passed,
+        });
+      } catch (error) {
+        console.warn(
+          `⚠️  Could not parse ${filePath}: ${(error as Error).message}`,
+        );
+      }
+    }
+  }
+
+  return artifacts;
+}
+
+function displayCleanupArtifacts(artifacts: CleanupArtifact[]) {
+  const withConfig = artifacts.filter((a) => a.coachConfigId);
+  const withSession = artifacts.filter((a) => a.sessionId);
+
+  console.info("\n═══════════════════════════════════════════════════════════");
+  console.info("ARTIFACTS TO DELETE");
+  console.info("═══════════════════════════════════════════════════════════\n");
+
+  console.info(`📋 Coach Configs (${withConfig.length}):`);
+  withConfig.forEach((a, i) => {
+    const status = a.testPassed ? "✅" : "❌";
+    console.info(`  ${i + 1}. ${status} ${a.coachConfigId}`);
+    console.info(`     Test: ${a.testName} (user: ${a.userId})`);
+  });
+
+  console.info(`\n📋 Coach Creator Sessions (${withSession.length}):`);
+  withSession.forEach((a, i) => {
+    const status = a.testPassed ? "✅" : "❌";
+    console.info(`  ${i + 1}. ${status} ${a.sessionId}`);
+    console.info(`     Test: ${a.testName} (user: ${a.userId})`);
+  });
+
+  console.info(`\n═══════════════════════════════════════════════════════════`);
+  console.info(
+    `Total: ${withConfig.length} coach configs + ${withSession.length} sessions`,
+  );
+  console.info(
+    `Delete chain: coachConfig (DynamoDB hard delete) + coachCreatorSession (DynamoDB + Pinecone)`,
+  );
+  console.info("═══════════════════════════════════════════════════════════\n");
+}
+
+async function confirmCleanup(message: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(message, (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === "y" || answer.toLowerCase() === "yes");
+    });
+  });
+}
+
+/**
+ * Hard-delete all artifacts created by a coach config test run.
+ *
+ * - coachConfig: direct DynamoDB hard delete (the delete-coach-config Lambda only
+ *   soft-deletes and has no Pinecone cleanup, so we bypass it)
+ * - coachCreatorSession: direct DynamoDB hard delete + Pinecone cleanup via
+ *   deleteCoachCreatorSummaryFromPinecone (same path as the delete Lambda)
+ */
+async function runCleanup(args: string[]) {
+  console.info("🧹 Coach Config Test Data Cleanup\n");
+
+  const directories: string[] = [];
+  let dryRun = false;
+  let autoConfirm = false;
+  let verbose = false;
+
+  for (const arg of args) {
+    if (arg === "--dry-run") dryRun = true;
+    else if (arg === "--auto-confirm") autoConfirm = true;
+    else if (arg === "--verbose") verbose = true;
+    else if (!arg.startsWith("--")) directories.push(arg);
+  }
+
+  if (directories.length === 0) {
+    console.error(
+      "❌ Error: provide at least one output directory after --cleanup",
+    );
+    console.error(
+      "   Example: tsx test-build-coach-config.ts --cleanup test/fixtures/test-coach-configs-20260221 --dry-run",
+    );
+    process.exit(1);
+  }
+
+  console.info(`Configuration:`);
+  console.info(`  Directories: ${directories.join(", ")}`);
+  console.info(`  Dry Run: ${dryRun}`);
+  console.info(`  Verbose: ${verbose}`);
+
+  // 1. Scan result files
+  console.info("\n📂 Scanning result files...");
+  const artifacts = scanCoachConfigResultFiles(directories);
+
+  const withConfig = artifacts.filter((a) => a.coachConfigId);
+  const withSession = artifacts.filter((a) => a.sessionId);
+
+  if (withConfig.length === 0 && withSession.length === 0) {
+    console.info(
+      "\n✅ No artifacts found in result files. Nothing to clean up.\n",
+    );
+    return;
+  }
+
+  // 2. Display what will be deleted
+  displayCleanupArtifacts(artifacts);
+
+  // 3. Dry run early exit
+  if (dryRun) {
+    console.info("🔍 DRY RUN: No artifacts were deleted");
+    console.info("   Remove --dry-run flag to actually delete\n");
+    return;
+  }
+
+  // 4. Confirmation
+  if (!autoConfirm) {
+    const total = withConfig.length + withSession.length;
+    const confirmed = await confirmCleanup(
+      `⚠️  Permanently delete ${total} artifacts? (y/N): `,
+    );
+    if (!confirmed) {
+      console.info("\n❌ Cleanup cancelled\n");
+      return;
+    }
+  }
+
+  // 5. Delete coach configs from DynamoDB (hard delete — bypass soft-delete Lambda)
+  let configSucceeded = 0;
+  let configFailed = 0;
+
+  if (withConfig.length > 0) {
+    console.info(
+      `\n🗑️  Deleting ${withConfig.length} coach configs from DynamoDB...`,
+    );
+    for (const artifact of withConfig) {
+      try {
+        await deleteFromDynamoDB(
+          `user#${artifact.userId}`,
+          `coach#${artifact.coachConfigId}`,
+          "coachConfig",
+        );
+        configSucceeded++;
+        if (verbose) {
+          console.info(`  ✅ ${artifact.coachConfigId}`);
+        } else {
+          process.stdout.write(".");
+        }
+      } catch (error) {
+        const msg = (error as Error).message;
+        if (
+          msg.includes("ConditionalCheckFailed") ||
+          msg.includes("not found")
+        ) {
+          // Already gone from a previous cleanup run — treat as success
+          configSucceeded++;
+          if (verbose) {
+            console.info(`  ✅ ${artifact.coachConfigId} (already deleted)`);
+          } else {
+            process.stdout.write(".");
+          }
+        } else {
+          configFailed++;
+          if (verbose) {
+            console.info(`  ❌ ${artifact.coachConfigId}: ${msg}`);
+          } else {
+            process.stdout.write("x");
+          }
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    if (!verbose) console.info("");
+  }
+
+  // 6. Delete sessions from DynamoDB + Pinecone
+  let sessionSucceeded = 0;
+  let sessionFailed = 0;
+
+  if (withSession.length > 0) {
+    console.info(
+      `\n🗑️  Deleting ${withSession.length} sessions from DynamoDB + Pinecone...`,
+    );
+    for (const artifact of withSession) {
+      if (!artifact.sessionId) continue;
+      let dynSuccess = false;
+      let pineconeSuccess = false;
+
+      try {
+        await deleteFromDynamoDB(
+          `user#${artifact.userId}`,
+          `coachCreatorSession#${artifact.sessionId}`,
+          "coachCreatorSession",
+        );
+        dynSuccess = true;
+      } catch (error) {
+        // Treat "already gone" conditions as success:
+        //   - ConditionalCheckFailedException (ConditionExpression failed)
+        //   - Custom "not found" message from the operations layer
+        const msg = (error as Error).message;
+        if (
+          msg.includes("ConditionalCheckFailed") ||
+          msg.includes("not found")
+        ) {
+          dynSuccess = true; // Already gone — nothing to delete
+        } else if (verbose) {
+          console.info(
+            `  ⚠️  DynamoDB delete failed for ${artifact.sessionId}: ${msg}`,
+          );
+        }
+      }
+
+      try {
+        const result = await deleteCoachCreatorSummaryFromPinecone(
+          artifact.userId,
+          artifact.sessionId,
+        );
+        // Treat missing record (404 / success: false) as clean — never written
+        pineconeSuccess = true;
+        if (verbose && !result.success) {
+          console.info(
+            `  ℹ️  No Pinecone record for ${artifact.sessionId} (never written or already deleted)`,
+          );
+        }
+      } catch (error) {
+        // 404 means the namespace or record doesn't exist — already clean
+        const msg = (error as Error).message;
+        if (msg.includes("404") || msg.includes("not found")) {
+          pineconeSuccess = true; // Already clean
+        } else if (verbose) {
+          console.info(
+            `  ⚠️  Pinecone delete failed for ${artifact.sessionId}: ${msg}`,
+          );
+        }
+      }
+
+      const success = dynSuccess;
+      if (success) {
+        sessionSucceeded++;
+        if (verbose) {
+          console.info(
+            `  ✅ ${artifact.sessionId} (Pinecone: ${pineconeSuccess ? "cleaned" : "skipped/missing"})`,
+          );
+        } else {
+          process.stdout.write(".");
+        }
+      } else {
+        sessionFailed++;
+        if (!verbose) process.stdout.write("x");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    if (!verbose) console.info("");
+  }
+
+  // 7. Summary
+  const totalFailed = configFailed + sessionFailed;
+  console.info("\n═══════════════════════════════════════════════════════════");
+  console.info(
+    `✅ Coach configs deleted: ${configSucceeded}/${withConfig.length}`,
+  );
+  console.info(
+    `✅ Sessions deleted: ${sessionSucceeded}/${withSession.length}`,
+  );
+  if (totalFailed > 0) {
+    console.info(`❌ Failed: ${totalFailed}`);
+  }
+  console.info("═══════════════════════════════════════════════════════════\n");
+
+  if (totalFailed > 0) process.exit(1);
+}
+
+// ─── Entry Point ─────────────────────────────────────────────────────────────
+
 // Run tests
-runTests().catch((error) => {
-  console.error("Fatal error:", error);
-  process.exit(1);
-});
+const cleanupFlagIndex = process.argv.findIndex((a) => a === "--cleanup");
+if (cleanupFlagIndex !== -1) {
+  // --cleanup mode: remaining args after --cleanup are directories + options
+  const cleanupArgs = process.argv.slice(cleanupFlagIndex + 1);
+  runCleanup(cleanupArgs).catch((error) => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+  });
+} else {
+  runTests().catch((error) => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+  });
+}

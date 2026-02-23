@@ -87,6 +87,7 @@ Returns: session, userProfile, safetyProfile, methodologyPreferences, genderPref
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       userId: {
         type: "string",
@@ -193,6 +194,7 @@ Returns: primaryTemplate, secondaryInfluences, selectionReasoning, blendingWeigh
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       // No inputs needed - retrieves from stored requirements
     },
@@ -289,6 +291,7 @@ Returns: primaryMethodology, methodologyReasoning, programmingEmphasis, periodiz
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       // No inputs needed - retrieves from stored requirements and personality selection
     },
@@ -382,6 +385,7 @@ Returns: All 7 prompts as strings`,
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       // No inputs needed - retrieves from stored results
     },
@@ -465,6 +469,7 @@ Returns: coachConfig (complete assembled structure)`,
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       creationTimestamp: {
         type: "string",
@@ -547,6 +552,7 @@ Returns: isValid, shouldNormalize, confidence, validationIssues, safetyValidatio
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       // No inputs needed - retrieves from stored results
     },
@@ -773,6 +779,7 @@ Returns: normalizedConfig, issuesFixed, normalizationSummary`,
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       // No inputs needed - retrieves from stored results
     },
@@ -975,6 +982,7 @@ Return JSON:
                 description: "The fixed prompt text and a summary of changes.",
                 inputSchema: {
                   type: "object",
+                  additionalProperties: false,
                   properties: {
                     fixed_prompt: {
                       type: "string",
@@ -1096,6 +1104,7 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
 
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       // No inputs needed - retrieves from stored results
     },

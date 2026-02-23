@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Tooltip } from "react-tooltip";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -23,6 +23,47 @@ import {
 } from "../themes/SynthwaveComponents";
 import { useImageUpload } from "../../hooks/useImageUpload";
 import { logger } from "../../utils/logger";
+import TiptapEditor from "./TiptapEditor";
+
+// Progress ring for inline indicators (inside textarea)
+const ProgressRing = ({
+  percentage,
+  size = 28,
+  strokeWidth = 3,
+  isWarning = false,
+}) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <svg width={size} height={size} className="transform -rotate-90 shrink-0">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        className="text-synthwave-neon-cyan/20"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        className={`transition-all duration-500 ${
+          isWarning ? "text-synthwave-neon-pink" : "text-synthwave-neon-cyan"
+        }`}
+      />
+    </svg>
+  );
+};
 
 // Question mark icon for tips (standardized size)
 const QuestionIcon = () => (
@@ -225,51 +266,34 @@ function ChatInput({
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
           {/* Input area skeleton */}
           <div className="flex items-end gap-2 sm:gap-3">
-            {/* Action buttons skeleton - 1 button on mobile, 3 on desktop */}
-            <div className="flex items-center gap-2">
-              {/* Mobile: 1 button */}
-              <div className="md:hidden w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-              {/* Desktop: 3 buttons */}
+            {/* Action buttons skeleton — mobile: 1 (quick actions), desktop: 3 (tips + quick actions + delete) */}
+            <div className="flex items-center gap-2 self-end mb-2">
+              <div className="md:hidden w-10 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
               <div className="hidden md:flex items-center gap-2">
-                {[1, 2, 3].map((i) => (
+                {[0, 1, 2].map((i) => (
                   <div
                     key={i}
-                    className="w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"
+                    className="w-10 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"
                   ></div>
                 ))}
               </div>
             </div>
 
-            {/* Text input skeleton */}
+            {/* Text input skeleton — matches TipTap minHeight 60px + rounded-2xl */}
             <div className="flex-1 relative">
-              <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
+              <div className="w-full h-[80px] bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
+              {/* Emoji button placeholder (absolute right-3 bottom-3, desktop only) */}
+              <div className="absolute right-3 bottom-3 w-6 h-6 bg-synthwave-text-muted/10 rounded-lg animate-pulse hidden md:block"></div>
             </div>
 
-            {/* Send button skeleton */}
-            <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
+            {/* Send/Voice button skeleton */}
+            <div className="self-end mb-[6px] w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
           </div>
 
           {/* AI disclaimer and keyboard shortcuts skeleton */}
-          <div className="flex items-center justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani pl-[90px] md:pl-[168px] pr-12 md:pr-[74px]">
-            {/* Left: AI disclaimer skeleton */}
+          <div className="flex items-center justify-between gap-2 mt-3 pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
             <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-            {/* Right: Keyboard shortcuts skeleton */}
-            <div className="flex items-center">
-              {/* Desktop: Show keyboard shortcuts */}
-              <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
-            </div>
-          </div>
-
-          {/* Progress/Size Indicator skeleton - hide on mobile */}
-          <div className="mt-4 flex items-start justify-end gap-4 hidden md:flex pr-[74px] min-h-[32px]">
-            {/* Progress/Size Indicator skeleton */}
-            <div className="max-w-xs w-full">
-              <div className="flex items-center justify-between mb-1">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-8"></div>
-              </div>
-              <div className="w-full h-1.5 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-            </div>
+            <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
           </div>
         </div>
       </div>
@@ -288,12 +312,8 @@ function ChatInput({
   const [showQuickActionsPopup, setShowQuickActionsPopup] = useState(false);
   const [showQuickPromptsSubmenu, setShowQuickPromptsSubmenu] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const internalTextareaRef = useRef(null);
   const isSendingMessage = useRef(false);
   const photoInputRef = useRef(null);
-
-  // Use provided ref or internal ref
-  const activeTextareaRef = textareaRef || internalTextareaRef;
 
   // Image upload hook
   const {
@@ -309,57 +329,25 @@ function ChatInput({
     setError: setImageError,
   } = useImageUpload();
 
-  // Auto-resize textarea logic
-  const autoResizeTextarea = (textarea) => {
-    if (!textarea) return;
+  // Tiptap editor ref
+  const editorRef = useRef(null);
 
-    const minHeight = 48; // 3rem = 48px
-    const maxHeight = 120; // Max 120px as per requirements
-
-    // Get current height to avoid unnecessary changes
-    const currentHeight = parseInt(textarea.style.height) || minHeight;
-
-    // If textarea is disabled and input is empty, force reset to minimum
-    if (textarea.disabled && !inputMessage.trim()) {
-      textarea.style.height = minHeight + "px";
-      textarea.style.overflowY = "hidden";
-      return;
+  // Sync parent textareaRef with editorRef for backwards compatibility
+  // Parent components call textareaRef.current.focus() - redirect to editor
+  useEffect(() => {
+    if (textareaRef && editorRef.current) {
+      textareaRef.current = {
+        focus: () => editorRef.current?.focus(),
+        // Provide disabled property for parent checks
+        get disabled() {
+          return !editorRef.current?.editor?.isEditable;
+        },
+        set disabled(val) {
+          // no-op, controlled by props
+        },
+      };
     }
-
-    // Temporarily enable textarea to get accurate scrollHeight if needed
-    const wasDisabled = textarea.disabled;
-    if (wasDisabled) {
-      textarea.disabled = false;
-    }
-
-    // Reset height to auto to get accurate scrollHeight measurement
-    textarea.style.height = "auto";
-    const scrollHeight = textarea.scrollHeight;
-
-    // Restore disabled state
-    if (wasDisabled) {
-      textarea.disabled = true;
-    }
-
-    // Determine target height
-    let targetHeight;
-    let targetOverflow;
-
-    if (scrollHeight <= minHeight) {
-      targetHeight = minHeight;
-      targetOverflow = "hidden";
-    } else if (scrollHeight <= maxHeight) {
-      targetHeight = scrollHeight;
-      targetOverflow = "hidden";
-    } else {
-      targetHeight = maxHeight;
-      targetOverflow = "auto";
-    }
-
-    // Always update height to ensure proper resizing (especially when shrinking)
-    textarea.style.height = targetHeight + "px";
-    textarea.style.overflowY = targetOverflow;
-  };
+  }, [textareaRef, editorRef.current?.editor]);
 
   // Recording functions
   const handleStartRecording = () => {
@@ -378,26 +366,30 @@ function ChatInput({
     setShowQuickActionsPopup(false);
     setShowQuickPromptsSubmenu(false);
 
-    // Focus the textarea after a brief delay
+    // Focus the editor after a brief delay
     setTimeout(() => {
-      if (activeTextareaRef.current) {
-        activeTextareaRef.current.focus();
-        // Move cursor to end of text
-        const textLength = prompt.length;
-        activeTextareaRef.current.setSelectionRange(textLength, textLength);
+      if (editorRef.current) {
+        editorRef.current.focus();
       }
     }, 50);
   };
 
   // Handle emoji selection
   const handleEmojiClick = (emojiData) => {
-    setInputMessage((prevMessage) => prevMessage + emojiData.emoji);
+    // Insert emoji into editor directly
+    if (editorRef.current?.editor) {
+      editorRef.current.editor.commands.insertContent(emojiData.emoji);
+      // Sync state from editor content
+      setInputMessage(editorRef.current.getText());
+    } else {
+      setInputMessage((prevMessage) => prevMessage + emojiData.emoji);
+    }
     setShowEmojiPicker(false);
 
-    // Focus the textarea after emoji selection
+    // Focus the editor after emoji selection
     setTimeout(() => {
-      if (activeTextareaRef.current) {
-        activeTextareaRef.current.focus();
+      if (editorRef.current) {
+        editorRef.current.focus();
       }
     }, 50);
   };
@@ -466,22 +458,12 @@ function ChatInput({
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  // Auto-resize when input message changes
+  // Refocus the editor when AI stops typing
   useEffect(() => {
-    if (activeTextareaRef.current) {
-      autoResizeTextarea(activeTextareaRef.current);
-    }
-  }, [inputMessage]);
-
-  // Additional effect to ensure textarea resizes properly when typing stops
-  useEffect(() => {
-    if (activeTextareaRef.current && !isTyping) {
-      // Small delay to ensure the textarea is re-enabled before resizing and refocusing
+    if (!isTyping) {
       setTimeout(() => {
-        if (activeTextareaRef.current) {
-          autoResizeTextarea(activeTextareaRef.current);
-          // Refocus the textarea so user can immediately start typing
-          activeTextareaRef.current.focus();
+        if (editorRef.current) {
+          editorRef.current.focus();
         }
       }, 10);
     }
@@ -559,17 +541,7 @@ function ChatInput({
 
   // Debug log for progress changes
 
-  // Add paste event listener for images
-  useEffect(() => {
-    const textarea = activeTextareaRef.current;
-    if (!textarea) return;
-
-    textarea.addEventListener("paste", handlePaste);
-
-    return () => {
-      textarea.removeEventListener("paste", handlePaste);
-    };
-  }, [selectedImages]);
+  // Paste handling is now done through TiptapEditor's onPaste prop
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -595,15 +567,11 @@ function ChatInput({
       setInputMessage("");
       clearImages();
 
-      // Refocus input and reset size after clearing it
+      // Clear editor and refocus
       setTimeout(() => {
-        if (activeTextareaRef.current) {
-          // Force reset to minimum height after clearing content
-          activeTextareaRef.current.style.height = "48px";
-          activeTextareaRef.current.style.overflowY = "hidden";
-          activeTextareaRef.current.focus();
-          // Call autoResize to ensure proper state
-          autoResizeTextarea(activeTextareaRef.current);
+        if (editorRef.current) {
+          editorRef.current.clear();
+          editorRef.current.focus();
         }
       }, 50);
 
@@ -629,49 +597,62 @@ function ChatInput({
     );
   };
 
-  const handleKeyPress = (e) => {
-    // Handle slash command navigation when tooltip is visible
-    if (showSlashCommandTooltip && enableSlashCommands) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedCommandIndex((prev) =>
-          prev < availableSlashCommands.length - 1 ? prev + 1 : 0,
-        );
-        return;
+  // Key handler passed to TiptapEditor - returns true if the key was handled
+  const handleKeyDown = useCallback(
+    (e) => {
+      // Handle slash command navigation when tooltip is visible
+      if (showSlashCommandTooltip && enableSlashCommands) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setSelectedCommandIndex((prev) =>
+            prev < availableSlashCommands.length - 1 ? prev + 1 : 0,
+          );
+          return true;
+        }
+
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setSelectedCommandIndex((prev) =>
+            prev > 0 ? prev - 1 : availableSlashCommands.length - 1,
+          );
+          return true;
+        }
+
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          const selectedCommand = availableSlashCommands[selectedCommandIndex];
+          setInputMessage(selectedCommand.command + " ");
+          setShowSlashCommandTooltip(false);
+          if (onSlashCommandSelect) {
+            onSlashCommandSelect(selectedCommand);
+          }
+          return true;
+        }
+
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setShowSlashCommandTooltip(false);
+          return true;
+        }
       }
 
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedCommandIndex((prev) =>
-          prev > 0 ? prev - 1 : availableSlashCommands.length - 1,
-        );
-        return;
-      }
-
+      // Enter to send, Shift+Enter for newline
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        const selectedCommand = availableSlashCommands[selectedCommandIndex];
-        setInputMessage(selectedCommand.command + " ");
-        setShowSlashCommandTooltip(false);
-        if (onSlashCommandSelect) {
-          onSlashCommandSelect(selectedCommand);
-        }
-        return;
+        handleSendMessage(e);
+        return true;
       }
 
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setShowSlashCommandTooltip(false);
-        return;
-      }
-    }
-
-    // Default behavior for sending messages
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
-    }
-  };
+      return false;
+    },
+    [
+      showSlashCommandTooltip,
+      enableSlashCommands,
+      availableSlashCommands,
+      selectedCommandIndex,
+      onSlashCommandSelect,
+    ],
+  );
 
   // Update CSS custom property for chat input height
   React.useEffect(() => {
@@ -811,7 +792,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowTipsModal(true)}
-                className={`${iconButtonPatterns.actionSmallCyan} hidden md:flex`}
+                className={`${iconButtonPatterns.actionSmallCyan} hidden md:flex cursor-pointer`}
                 data-tooltip-id="tips-tooltip"
                 data-tooltip-content={tipsTitle}
                 data-tooltip-place="top"
@@ -830,7 +811,7 @@ function ChatInput({
                   onClick={() =>
                     setShowQuickActionsPopup(!showQuickActionsPopup)
                   }
-                  className={`${iconButtonPatterns.actionSmallBlue} ${showQuickActionsPopup ? "bg-blue-400/20 text-blue-400" : ""}`}
+                  className={`${iconButtonPatterns.actionSmallBlue} ${showQuickActionsPopup ? "bg-blue-400/20 text-blue-400" : ""} cursor-pointer`}
                   data-tooltip-id="quick-actions-tooltip"
                   data-tooltip-content="Quick actions"
                   data-tooltip-place="top"
@@ -1040,7 +1021,7 @@ function ChatInput({
                 type="button"
                 onClick={onDeleteClick}
                 disabled={isTyping}
-                className={`${iconButtonPatterns.actionSmallPink} hidden md:flex`}
+                className={`${iconButtonPatterns.actionSmallPink} hidden md:flex cursor-pointer`}
                 data-tooltip-id="delete-conversation-tooltip"
                 data-tooltip-content={
                   context === "creation" || context === "program-design"
@@ -1073,31 +1054,70 @@ function ChatInput({
 
           {/* Text input */}
           <div className="flex-1 relative">
-            <textarea
-              ref={activeTextareaRef}
-              value={inputMessage}
-              onChange={(e) => {
-                setInputMessage(e.target.value);
-                autoResizeTextarea(e.target);
+            <TiptapEditor
+              ref={editorRef}
+              content={inputMessage}
+              onUpdate={(html, text) => {
+                setInputMessage(text);
               }}
-              onKeyDown={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder={
                 window.innerWidth < 768 ? "Talk to me..." : placeholder
               }
-              rows={1}
-              className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
-              style={{
-                outline: "none !important",
-                boxShadow: "none !important",
-                WebkitTapHighlightColor: "transparent",
-              }}
               disabled={isTyping}
+              mode="rich"
+              className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
+              minHeight="60px"
+              maxHeight="150px"
+              scrollOnWrapper={true}
+              onPaste={handlePaste}
             />
+            {/* Progress ring (CoachCreator / ProgramDesigner) */}
+            {progressData &&
+              (() => {
+                const ringCompleted =
+                  progressData.questionsCompleted ??
+                  progressData.itemsCompleted ??
+                  0;
+                const ringTotal =
+                  progressData.estimatedTotal ?? progressData.totalItems ?? 0;
+                const ringPct = progressData.percentage ?? 0;
+                return (
+                  <div
+                    className="absolute right-[38px] bottom-[10px]"
+                    data-tooltip-id="progress-ring-tooltip"
+                    data-tooltip-content={`Progress: ${ringCompleted}/${ringTotal} (${ringPct}%)`}
+                  >
+                    <ProgressRing
+                      percentage={ringPct}
+                      size={20}
+                      strokeWidth={2}
+                    />
+                  </div>
+                );
+              })()}
+
+            {/* Conversation size ring (CoachConversations) */}
+            {!progressData && conversationSize && (
+              <div
+                className="absolute right-[38px] bottom-[10px]"
+                data-tooltip-id="progress-ring-tooltip"
+                data-tooltip-content={`Conversation: ${conversationSize.sizeKB?.toFixed(1)}KB / ${conversationSize.maxSizeKB}KB (${conversationSize.percentage}%)`}
+              >
+                <ProgressRing
+                  percentage={conversationSize.percentage}
+                  size={20}
+                  strokeWidth={2}
+                  isWarning={conversationSize.isApproachingLimit}
+                />
+              </div>
+            )}
+
             <div className="relative" data-emoji-picker-container>
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`absolute right-3 bottom-3 p-1.5 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 ${
+                className={`absolute right-[8px] bottom-[7px] p-1 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                   showEmojiPicker
                     ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                     : ""
@@ -1262,6 +1282,12 @@ function ChatInput({
               )}
             </div>
             <Tooltip id="emoji-tooltip" {...tooltipPatterns.standard} />
+            {(progressData || conversationSize) && (
+              <Tooltip
+                id="progress-ring-tooltip"
+                {...tooltipPatterns.standard}
+              />
+            )}
 
             {/* Slash Command Tooltip */}
             {showSlashCommandTooltip && enableSlashCommands && (
@@ -1281,8 +1307,8 @@ function ChatInput({
                       onClick={() => {
                         setInputMessage(cmd.command + " ");
                         setShowSlashCommandTooltip(false);
-                        if (activeTextareaRef.current) {
-                          activeTextareaRef.current.focus();
+                        if (editorRef.current) {
+                          editorRef.current.focus();
                         }
                         if (onSlashCommandSelect) {
                           onSlashCommandSelect(cmd);
@@ -1372,7 +1398,7 @@ function ChatInput({
         </form>
 
         {/* AI disclaimer and keyboard shortcuts */}
-        <div className="flex items-center justify-between gap-2 -mt-0.5 text-xs text-synthwave-text-muted font-rajdhani pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
+        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-synthwave-text-muted font-rajdhani pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
           {/* Left: AI disclaimer - aligned with text input left edge */}
           <div className="flex items-center">
             <span className="text-synthwave-text-muted/80">
@@ -1387,119 +1413,6 @@ function ChatInput({
             </span>
           </div>
         </div>
-
-        {/* Progress Indicator - hide on mobile */}
-        {progressData &&
-          (() => {
-            // Normalize progress data to handle both coach creator and program designer formats
-            const completed =
-              progressData.questionsCompleted ??
-              progressData.itemsCompleted ??
-              0;
-            const total =
-              progressData.estimatedTotal ?? progressData.totalItems ?? 0;
-            const percentage = progressData.percentage ?? 0;
-            const sophisticationLevel = progressData.sophisticationLevel;
-
-            return (
-              <div className="mt-4 flex items-start justify-end hidden md:flex pr-[74px] min-h-[32px]">
-                <div className="max-w-xs w-full">
-                  <div className="flex items-center justify-between">
-                    <span className="font-rajdhani text-xs">
-                      {percentage === 100 ? (
-                        <>
-                          <span className="text-synthwave-text-muted">
-                            Progress:
-                          </span>{" "}
-                          <span className="text-synthwave-neon-cyan">
-                            {context === "creation"
-                              ? "Fine-tuning your coach"
-                              : "Finalizing details"}
-                          </span>
-                          {sophisticationLevel &&
-                            sophisticationLevel !== "UNKNOWN" && (
-                              <span className="ml-1 text-synthwave-text-muted">
-                                ({sophisticationLevel.toLowerCase()})
-                              </span>
-                            )}
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-synthwave-text-muted">
-                            Progress:
-                          </span>{" "}
-                          <span className="text-synthwave-neon-cyan">
-                            {completed}/{total}
-                          </span>
-                          {sophisticationLevel &&
-                            sophisticationLevel !== "UNKNOWN" && (
-                              <span className="ml-1 text-synthwave-text-muted">
-                                ({sophisticationLevel.toLowerCase()})
-                              </span>
-                            )}
-                        </>
-                      )}
-                    </span>
-                    <span className="font-rajdhani text-xs text-synthwave-neon-cyan font-medium">
-                      {percentage === 100 ? "✓ 100%" : `${percentage}%`}
-                    </span>
-                  </div>
-
-                  {/* Cyan Progress Bar */}
-                  <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border border-synthwave-neon-cyan/20">
-                    <div
-                      className="bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan h-full rounded-full transition-all duration-500 shadow-synthwave-neon-cyan/10"
-                      style={{ width: `${percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-        {/* Conversation Size Indicator - hide on mobile */}
-        {conversationSize && (
-          <div className="mt-4 flex items-start justify-end gap-4 hidden md:flex pr-[74px] min-h-[32px]">
-            {conversationSize && (
-              <div className="max-w-xs w-full">
-                <div className="flex items-center justify-between">
-                  <span className="font-rajdhani text-xs text-synthwave-text-muted">
-                    {conversationSize.isApproachingLimit && "⚠️ "}
-                    Conversation Size: {conversationSize.sizeKB.toFixed(1)}KB /{" "}
-                    {conversationSize.maxSizeKB}KB
-                  </span>
-                  <span
-                    className={`font-rajdhani text-xs font-medium ${
-                      conversationSize.isApproachingLimit
-                        ? "text-synthwave-neon-pink"
-                        : "text-synthwave-neon-cyan"
-                    }`}
-                  >
-                    {conversationSize.percentage}%
-                  </span>
-                </div>
-
-                {/* Size Progress Bar - changes color when approaching limit */}
-                <div
-                  className={`w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border ${
-                    conversationSize.isApproachingLimit
-                      ? "border-synthwave-neon-pink/20"
-                      : "border-synthwave-neon-cyan/20"
-                  }`}
-                >
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      conversationSize.isApproachingLimit
-                        ? "bg-gradient-to-r from-synthwave-neon-pink/60 to-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/20"
-                        : "bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan shadow-synthwave-neon-cyan/10"
-                    }`}
-                    style={{ width: `${conversationSize.percentage}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Tips Popover - positioned above chat input */}

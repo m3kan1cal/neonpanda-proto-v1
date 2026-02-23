@@ -45,6 +45,7 @@ export const handler = async (event: any) => {
     "weekly",
     "monthly",
     "program",
+    "program-adherence",
     "features",
     "all",
   ];
@@ -75,6 +76,7 @@ export const handler = async (event: any) => {
         monthlyReports: false,
         programUpdates: false,
         featureAnnouncements: false,
+        programAdherence: false,
       };
     } else {
       // Unsubscribe from specific type
@@ -87,6 +89,8 @@ export const handler = async (event: any) => {
         preferenceKey = "monthlyReports";
       } else if (notificationType === "program") {
         preferenceKey = "programUpdates";
+      } else if (notificationType === "program-adherence") {
+        preferenceKey = "programAdherence";
       } else if (notificationType === "features") {
         preferenceKey = "featureAnnouncements";
       } else {
@@ -152,6 +156,8 @@ function getNotificationDisplayName(type: string): string {
       return "monthly report";
     case "program":
       return "training program update";
+    case "program-adherence":
+      return "program adherence reminder";
     case "features":
       return "feature announcement";
     case "all":

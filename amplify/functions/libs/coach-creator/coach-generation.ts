@@ -1141,10 +1141,14 @@ export const generateCoachConfig = async (
   let coachConfigResponse: string = "";
 
   try {
-    // PRIMARY: Tool-based generation with schema enforcement
+    // STRUCTURED OUTPUT EXEMPTION: COACH_CONFIG_SCHEMA exceeds Bedrock's grammar
+    // compilation limit ("grammar too large" error). Both strict tool use and JSON
+    // output format share the same grammar compiler and hit the same limit.
+    // The model follows the schema voluntarily via the tool definition context.
+    // See: docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md
     logger.info("🎯 Attempting tool-based coach config generation");
 
-    const result = await callBedrockApi(
+    const toolResult = await callBedrockApi(
       systemPrompt,
       userPrompt,
       MODEL_IDS.PLANNER_MODEL_FULL, // Claude Sonnet 4.5 for complex orchestration
@@ -1152,17 +1156,16 @@ export const generateCoachConfig = async (
         temperature: TEMPERATURE_PRESETS.BALANCED,
         tools: {
           name: "generate_coach_config",
-          description:
-            "Generate a comprehensive AI coach configuration based on user profile and preferences",
+          description: "Generate a complete AI coach configuration",
           inputSchema: COACH_CONFIG_SCHEMA,
         },
         expectedToolName: "generate_coach_config",
+        strictSchema: false,
       },
     );
 
-    // Extract coach config from tool use result
-    if (typeof result !== "string") {
-      coachConfig = result.input as CoachConfig;
+    if (typeof toolResult !== "string") {
+      coachConfig = toolResult.input as unknown as CoachConfig;
       logger.info("✅ Tool-based generation succeeded");
 
       // Store successful tool generation for analysis
@@ -1185,7 +1188,7 @@ export const generateCoachConfig = async (
         );
       }
     } else {
-      throw new Error("Tool use expected but received text response");
+      throw new Error("Tool call returned text instead of tool use block");
     }
   } catch (toolError) {
     // FALLBACK: Prompt-based generation with JSON parsing

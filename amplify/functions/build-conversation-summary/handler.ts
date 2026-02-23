@@ -182,11 +182,9 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     const summaryData = toolResult.input;
     logger.info("Claude summarization completed. Tool result:", {
       toolName: toolResult.toolName,
-      hasFullSummary: !!summaryData.full_summary,
-      hasCompactSummary: !!summaryData.compact_summary,
-      fullNarrativeLength: summaryData.full_summary?.narrative?.length || 0,
-      compactNarrativeLength:
-        summaryData.compact_summary?.narrative?.length || 0,
+      narrativeLength: summaryData.narrative?.length || 0,
+      hasGoals: Array.isArray(summaryData.current_goals),
+      hasTrainingPreferences: Array.isArray(summaryData.training_preferences),
     });
 
     // Store tool result in S3 for debugging
@@ -224,12 +222,9 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       confidence: summary.metadata.confidence,
       goalCount: summary.structuredData.current_goals.length,
       progressCount: summary.structuredData.recent_progress.length,
-      hasEmotionalState: !!summary.structuredData.emotional_state.current_mood,
+      trainingPreferencesCount:
+        summary.structuredData.training_preferences.length,
       insightCount: summary.structuredData.key_insights.length,
-      hasDualFormat: !!(summary as any).compactSummary,
-      compactSummarySize: (summary as any).compactSummary
-        ? JSON.stringify((summary as any).compactSummary).length
-        : 0,
     });
 
     // Save the conversation summary to DynamoDB
@@ -274,15 +269,11 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       confidence: summary.metadata.confidence,
       triggerReason: summary.metadata.triggerReason,
       messageCount: summary.metadata.messageRange.totalMessages,
-      usedDualFormatGeneration: !!(summary as any).compactSummary,
       pineconeStored: pineconeResult.success,
       pineconeRecordId:
         pineconeResult.success && "recordId" in pineconeResult
           ? pineconeResult.recordId
           : null,
-      approachUsed: (summary as any).compactSummary
-        ? "dual-format-single-pass"
-        : "legacy-single-format",
     });
 
     return createOkResponse({
@@ -295,9 +286,8 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       structuredDataComplete: {
         goals: summary.structuredData.current_goals.length,
         progress: summary.structuredData.recent_progress.length,
+        trainingPreferences: summary.structuredData.training_preferences.length,
         insights: summary.structuredData.key_insights.length,
-        hasEmotionalState:
-          !!summary.structuredData.emotional_state.current_mood,
       },
     });
   } catch (error) {

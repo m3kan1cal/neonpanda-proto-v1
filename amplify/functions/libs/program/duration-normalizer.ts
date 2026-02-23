@@ -10,8 +10,9 @@ import { logger } from "../logger";
 /**
  * Schema for the normalize_duration tool response
  */
-const DURATION_NORMALIZATION_SCHEMA = {
+export const DURATION_NORMALIZATION_SCHEMA = {
   type: "object" as const,
+  additionalProperties: false,
   properties: {
     normalizedDuration: {
       type: "string",

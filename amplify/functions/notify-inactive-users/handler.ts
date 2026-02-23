@@ -2,22 +2,25 @@ import { UserProfile } from "../libs/user/types";
 import {
   queryAllUsers,
   queryWorkoutsCount,
+  queryPrograms,
   updateUserProfile,
 } from "../../dynamodb/operations";
 import { withHeartbeat } from "../libs/heartbeat";
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { logger } from "../libs/logger";
+import { sendInactivityReminderEmail } from "../libs/notifications/inactivity-email";
 import {
-  sendEmail,
-  buildEmailFooterHtml,
-  buildEmailFooterText,
-  getAppUrl,
-} from "../libs/email-utils";
+  isProgramLagging,
+  sendProgramAdherenceEmail,
+} from "../libs/notifications/program-adherence-email";
 
-const INACTIVITY_PERIOD_DAYS = 14; // 2 weeks
-const MIN_DAYS_BETWEEN_REMINDERS = 28; // Don't send more than once per month
+const INACTIVITY_PERIOD_DAYS = 14;
+const MIN_DAYS_BETWEEN_REMINDERS = 28;
 
-interface InactivityStats {
+const PROGRAM_INACTIVITY_DAYS = 5;
+const MIN_DAYS_BETWEEN_PROGRAM_REMINDERS = 7;
+
+interface NotificationStats {
   totalUsers: number;
   activeUsers: number;
   inactiveUsers: number;
@@ -28,21 +31,31 @@ interface InactivityStats {
     noEmail: number;
   };
   errors: number;
+  programAdherenceEmailsSent: number;
+  programAdherenceSkipped: {
+    optedOut: number;
+    recentReminder: number;
+    noActivePrograms: number;
+    allRecentlyActive: number;
+  };
 }
 
 /**
- * EventBridge handler to notify inactive users via email
- * Triggered every 2 weeks
+ * EventBridge handler to run daily user notification checks:
+ * 1. General inactivity reminder (no workouts in 14 days)
+ * 2. Program adherence reminder (active program with no workouts logged in 5 days)
  */
 export const handler = async () => {
-  return withHeartbeat("Inactive User Notification Check", async () => {
-    logger.info("📧 Starting inactive user notification check", {
+  return withHeartbeat("Daily User Notification Check", async () => {
+    logger.info("📧 Starting daily user notification check", {
       timestamp: new Date().toISOString(),
       inactivityPeriodDays: INACTIVITY_PERIOD_DAYS,
       minDaysBetweenReminders: MIN_DAYS_BETWEEN_REMINDERS,
+      programInactivityDays: PROGRAM_INACTIVITY_DAYS,
+      minDaysBetweenProgramReminders: MIN_DAYS_BETWEEN_PROGRAM_REMINDERS,
     });
 
-    const stats: InactivityStats = {
+    const stats: NotificationStats = {
       totalUsers: 0,
       activeUsers: 0,
       inactiveUsers: 0,
@@ -53,16 +66,22 @@ export const handler = async () => {
         noEmail: 0,
       },
       errors: 0,
+      programAdherenceEmailsSent: 0,
+      programAdherenceSkipped: {
+        optedOut: 0,
+        recentReminder: 0,
+        noActivePrograms: 0,
+        allRecentlyActive: 0,
+      },
     };
 
     try {
-      // Process all users in batches using pagination
       let lastEvaluatedKey: any = undefined;
       let batchNumber = 0;
 
       do {
         batchNumber++;
-        const result = await queryAllUsers(50, lastEvaluatedKey); // Process 50 users at a time
+        const result = await queryAllUsers(50, lastEvaluatedKey);
         const users = result.users;
 
         logger.info(
@@ -70,7 +89,6 @@ export const handler = async () => {
         );
         stats.totalUsers += users.length;
 
-        // Process each user in the batch
         for (const user of users) {
           try {
             await processUser(user, stats);
@@ -83,21 +101,18 @@ export const handler = async () => {
         lastEvaluatedKey = result.lastEvaluatedKey;
       } while (lastEvaluatedKey);
 
-      logger.info(
-        "✅ Inactive user notification check completed successfully",
-        {
-          ...stats,
-          completedAt: new Date().toISOString(),
-        },
-      );
+      logger.info("✅ Daily user notification check completed successfully", {
+        ...stats,
+        completedAt: new Date().toISOString(),
+      });
 
       return createOkResponse({
-        message: "Inactive user notification check completed successfully",
+        message: "Daily user notification check completed successfully",
         stats,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      logger.error("❌ Fatal error in inactive user notification:", error);
+      logger.error("❌ Fatal error in daily user notification check:", error);
 
       return createErrorResponse(
         500,
@@ -109,49 +124,53 @@ export const handler = async () => {
         },
       );
     }
-  }); // 10 second default heartbeat interval
+  });
 };
 
 /**
- * Process a single user: check activity and send email if needed
+ * Process a single user: run both inactivity and program adherence checks.
+ * Both checks require an email address; each has its own opt-out preference.
  */
 async function processUser(
   user: UserProfile,
-  stats: InactivityStats,
+  stats: NotificationStats,
 ): Promise<void> {
-  // Skip if user has opted out of coach check-ins
-  const emailNotificationsEnabled =
-    user.preferences?.emailNotifications?.coachCheckIns ?? true;
-  if (!emailNotificationsEnabled) {
-    logger.info(`⏭️  User ${user.userId} has opted out of coach check-ins`);
-    stats.emailsSkipped.optedOut++;
-    return;
-  }
-
-  // Skip if no email address
   if (!user.email) {
     logger.warn(`⚠️  User ${user.userId} has no email address`);
     stats.emailsSkipped.noEmail++;
     return;
   }
 
-  // Skip if we sent a reminder recently
+  await checkGeneralInactivity(user, stats);
+  await checkProgramAdherence(user, stats);
+}
+
+// ─── General Inactivity Check ─────────────────────────────────────────────────
+
+async function checkGeneralInactivity(
+  user: UserProfile,
+  stats: NotificationStats,
+): Promise<void> {
+  const coachCheckInsEnabled =
+    user.preferences?.emailNotifications?.coachCheckIns ?? true;
+  if (!coachCheckInsEnabled) {
+    logger.info(`⏭️  User ${user.userId} has opted out of coach check-ins`);
+    stats.emailsSkipped.optedOut++;
+    return;
+  }
+
   const lastReminderSent = user.preferences?.lastSent?.coachCheckIns;
   if (lastReminderSent) {
-    const daysSinceLastReminder = Math.floor(
-      (Date.now() - new Date(lastReminderSent).getTime()) /
-        (1000 * 60 * 60 * 24),
-    );
-    if (daysSinceLastReminder < MIN_DAYS_BETWEEN_REMINDERS) {
+    const daysSince = daysSinceDate(lastReminderSent);
+    if (daysSince < MIN_DAYS_BETWEEN_REMINDERS) {
       logger.info(
-        `⏭️ User ${user.userId} received reminder ${daysSinceLastReminder} days ago, skipping`,
+        `⏭️ User ${user.userId} received check-in ${daysSince} days ago, skipping`,
       );
       stats.emailsSkipped.recentReminder++;
       return;
     }
   }
 
-  // Check workout activity
   const workoutCount = await queryWorkoutsCount(user.userId, {
     fromDate: new Date(
       Date.now() - INACTIVITY_PERIOD_DAYS * 24 * 60 * 60 * 1000,
@@ -160,195 +179,99 @@ async function processUser(
 
   if (workoutCount > 0) {
     logger.info(
-      `✅ User ${user.userId} has logged ${workoutCount} workouts, active`,
+      `✅ User ${user.userId} has logged ${workoutCount} workouts in last ${INACTIVITY_PERIOD_DAYS} days, active`,
     );
     stats.activeUsers++;
     return;
   }
 
-  // User is inactive, send reminder email
   logger.info(
-    `📧 User ${user.userId} is inactive, sending reminder email to ${user.email}`,
+    `📧 User ${user.userId} is inactive, sending reminder to ${user.email}`,
   );
   stats.inactiveUsers++;
 
   await sendInactivityReminderEmail(user);
-  await updateLastReminderSent(user.userId);
+  await updateLastSentTimestamp(user.userId, "coachCheckIns");
 
   stats.emailsSent++;
-  logger.info(`✅ Successfully sent reminder to ${user.email}`);
+  logger.info(`✅ Inactivity reminder sent to ${user.email}`);
 }
 
-/**
- * Send inactivity reminder email via SES
- */
-async function sendInactivityReminderEmail(user: UserProfile): Promise<void> {
-  const firstName = user.firstName || user.username;
+// ─── Program Adherence Check ──────────────────────────────────────────────────
 
-  const htmlBody = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>We Miss You at NeonPanda!</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-      line-height: 1.6;
-      color: #333;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-      font-size: 16px;
-    }
-    p {
-      font-size: 16px;
-      margin: 15px 0;
-      color: #333;
-    }
-    .email-wrapper {
-      width: 100%;
-      background-color: #f9f9f9;
-      padding: 20px 0;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    .logo-header {
-      background-color: #0a0a0a;
-      padding: 10px;
-      margin: -30px -30px 30px -30px;
-      border-radius: 8px 8px 0 0;
-      text-align: center;
-    }
-    .logo-header img {
-      max-width: 400px;
-      height: auto;
-    }
-    h1 {
-      color: #ff6ec7;
-      font-size: 28px;
-      margin-bottom: 20px;
-      margin-top: 0;
-    }
-    .feature-box {
-      background-color: #fff5f8;
-      border-left: 4px solid #FF10F0;
-      padding: 15px;
-      margin: 20px 0;
-      border-radius: 4px;
-    }
-    .feature-box h2 {
-      color: #FF10F0;
-      margin-top: 0;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-    .feature-box p {
-      color: #333;
-      margin: 0;
-    }
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-      font-size: 14px;
-      color: #666;
-    }
-    .footer p {
-      margin: 10px 0;
-    }
-    .footer a {
-      color: #00ffff;
-      text-decoration: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="email-wrapper">
-    <div class="container">
-      <div class="logo-header">
-        <img src="https://neonpanda.ai/images/logo-dark-sm.webp" alt="NeonPanda Logo">
-      </div>
-
-      <h1>Hey ${firstName}! 👋</h1>
-
-      <p>It's been a few weeks since your last workout, and we wanted to check in – not to pile on pressure, but to let you know we're still in your corner.</p>
-
-      <p>Maybe life got hectic. Maybe motivation dipped. Maybe the app didn't click. Whatever the reason, no judgment. We get it. Training is hard, staying consistent is harder.</p>
-
-      <div class="feature-box">
-        <h2>💪 Here's the Thing:</h2>
-        <p><strong>You don't need to be perfect to come back.</strong> You don't need a grand plan or a fresh start on Monday. Just one workout. That's all it takes. Your coach is still here, and we'd love to see you again.</p>
-      </div>
-
-      <p>If now's not the time, that's okay too. But whenever you're ready – your NeonPanda coaches will be here. Keep training hard, and remember – we're still in your corner, even if we're a little quieter now. 💪</p>
-
-      <p style="margin-top: 30px; font-style: italic; color: #333;">– The NeonPanda Team</p>
-
-${buildEmailFooterHtml(user.email, "coach-checkins", user.userId)}
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
-
-  const textBody = `
-Hey ${firstName}! 👋
-
-It's been a few weeks since your last workout, and we wanted to check in – not to pile on pressure, but to let you know we're still in your corner.
-
-Maybe life got hectic. Maybe motivation dipped. Maybe the app didn't click. Whatever the reason, no judgment. We get it. Training is hard, staying consistent is harder.
-
-💪 Here's the Thing:
-
-You don't need to be perfect to come back. You don't need a grand plan or a fresh start on Monday. Just one workout. That's all it takes. Your coach is still here, and we'd love to see you again.
-
-If now's not the time, that's okay too. But whenever you're ready – your NeonPanda coaches will be here. Keep training hard, and remember – we're still in your corner, even if we're a little quieter now. 💪
-
-– The NeonPanda Team
-
-Visit NeonPanda: ${getAppUrl()}
-${buildEmailFooterText(user.email, "coach-checkins", user.userId)}
-  `.trim();
-
-  const result = await sendEmail({
-    to: user.email,
-    subject: `NeonPanda - ${firstName}, we miss you!`,
-    htmlBody,
-    textBody,
-  });
-
-  if (!result.success) {
-    throw new Error(`Failed to send email: ${result.error?.message}`);
+async function checkProgramAdherence(
+  user: UserProfile,
+  stats: NotificationStats,
+): Promise<void> {
+  const programAdherenceEnabled =
+    user.preferences?.emailNotifications?.programAdherence ?? true;
+  if (!programAdherenceEnabled) {
+    logger.info(
+      `⏭️  User ${user.userId} has opted out of program adherence reminders`,
+    );
+    stats.programAdherenceSkipped.optedOut++;
+    return;
   }
 
-  logger.info(`✅ Successfully sent inactivity reminder to ${user.email}`, {
-    messageId: result.messageId,
-    requestId: result.requestId,
-  });
+  const lastProgramReminderSent = user.preferences?.lastSent?.programAdherence;
+  if (lastProgramReminderSent) {
+    const daysSince = daysSinceDate(lastProgramReminderSent);
+    if (daysSince < MIN_DAYS_BETWEEN_PROGRAM_REMINDERS) {
+      logger.info(
+        `⏭️ User ${user.userId} received program adherence reminder ${daysSince} days ago, skipping`,
+      );
+      stats.programAdherenceSkipped.recentReminder++;
+      return;
+    }
+  }
+
+  const activePrograms = await queryPrograms(user.userId, { status: "active" });
+  if (activePrograms.length === 0) {
+    logger.info(`⏭️ User ${user.userId} has no active programs`);
+    stats.programAdherenceSkipped.noActivePrograms++;
+    return;
+  }
+
+  const laggingPrograms = activePrograms.filter(isProgramLagging);
+
+  if (laggingPrograms.length === 0) {
+    logger.info(
+      `✅ User ${user.userId} is on track across all ${activePrograms.length} active program(s)`,
+    );
+    stats.programAdherenceSkipped.allRecentlyActive++;
+    return;
+  }
+
+  logger.info(
+    `📧 User ${user.userId} is behind on ${laggingPrograms.length} program(s), sending adherence reminder to ${user.email}`,
+  );
+
+  await sendProgramAdherenceEmail(user, laggingPrograms);
+  await updateLastSentTimestamp(user.userId, "programAdherence");
+
+  stats.programAdherenceEmailsSent++;
+  logger.info(`✅ Program adherence reminder sent to ${user.email}`);
 }
 
-/**
- * Update the lastSent.coachCheckIns timestamp for the user
- */
-async function updateLastReminderSent(userId: string): Promise<void> {
+// ─── Shared Utilities ─────────────────────────────────────────────────────────
+
+function daysSinceDate(date: Date | string): number {
+  return Math.floor(
+    (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24),
+  );
+}
+
+async function updateLastSentTimestamp(
+  userId: string,
+  key: "coachCheckIns" | "programAdherence",
+): Promise<void> {
   await updateUserProfile(userId, {
     preferences: {
       lastSent: {
-        coachCheckIns: new Date(),
+        [key]: new Date(),
       },
     },
   });
 
-  logger.info(`Updated preferences.lastSent.coachCheckIns for user ${userId}`);
+  logger.info(`Updated preferences.lastSent.${key} for user ${userId}`);
 }

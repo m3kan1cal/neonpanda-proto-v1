@@ -369,11 +369,15 @@ export class Agent<TContext extends AgentContext = AgentContext> {
           resultSize: JSON.stringify(result).length,
         });
 
+        // If the tool provides a conversationSummary, use it for conversation context
+        // to keep conversation history lean while the full result is stored internally.
+        const conversationContent = result?.conversationSummary ?? result;
+
         // Add successful result
         toolResults.push({
           toolResult: {
             toolUseId: toolUse.toolUseId,
-            content: [{ json: result }],
+            content: [{ json: conversationContent }],
             status: "success",
           },
         });

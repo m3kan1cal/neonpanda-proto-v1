@@ -748,7 +748,7 @@ function BlogPost3WorkoutLogger() {
                 />
               </div>
               <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
-                Claude Sonnet 4.5
+                Claude Sonnet 4.6
               </h3>
             </div>
             <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
@@ -797,16 +797,16 @@ function BlogPost3WorkoutLogger() {
             </ul>
           </div>
 
-          {/* Nova 2 Lite */}
+          {/* Nemotron / Nova Lite */}
           <div className={containerPatterns.mediumGlassPink}>
             <div className="flex items-center gap-3 mb-4">
               <img
                 src="/images/icons/Arch_Amazon-Nova_64.svg"
-                alt="Nova"
+                alt="Nemotron / Nova"
                 className="w-12 h-12"
               />
               <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
-                Amazon Nova 2 Lite
+                Nvidia Nemotron / Amazon Nova 2 Lite
               </h3>
             </div>
             <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
@@ -865,13 +865,13 @@ function BlogPost3WorkoutLogger() {
               {`const selectModel = (task) => {`}
             </div>
             <div className="text-synthwave-neon-pink pl-4 mt-1">
-              {`if (task.requiresStructuredExtraction) → Sonnet 4.5`}
+              {`if (task.requiresStructuredExtraction) → Sonnet 4.6`}
             </div>
             <div className="text-synthwave-neon-purple pl-4 mt-1">
               {`if (task.isSimpleConfirmation) → Haiku 4.5`}
             </div>
             <div className="text-synthwave-neon-cyan pl-4 mt-1">
-              {`if (task.isContextualUpdate) → Nova 2 Lite`}
+              {`if (task.isContextualUpdate) → Nemotron`}
             </div>
             <div className="text-synthwave-neon-pink pl-4 mt-1">
               {`if (task.needsEmbedding) → NV-Embed-V2`}

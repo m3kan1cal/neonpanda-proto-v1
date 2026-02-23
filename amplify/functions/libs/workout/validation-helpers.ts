@@ -69,7 +69,7 @@ Classify this workout and provide reasoning.`;
     const result = await callBedrockApi(
       prompt,
       "Classify workout as qualitative or quantitative",
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.CONTEXTUAL_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {

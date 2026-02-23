@@ -14,32 +14,33 @@ export const SAFETY_PROFILE_EXTRACTION_SCHEMA = {
   description: "Structured safety profile extracted from user data",
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       injuries: {
         type: "array",
         items: { type: "string" },
-        description: "Specific injuries or conditions",
+        description: "Specific injuries or conditions"
       },
       contraindications: {
         type: "array",
         items: { type: "string" },
-        description: "Exercises or movements to avoid",
+        description: "Exercises or movements to avoid"
       },
       equipment: {
         type: "array",
         items: { type: "string" },
-        description: "Available equipment",
+        description: "Available equipment"
       },
       modifications: {
         type: "array",
         items: { type: "string" },
-        description: "Required modifications",
+        description: "Required modifications"
       },
       recoveryNeeds: {
         type: "array",
         items: { type: "string" },
-        description: "Recovery requirements",
-      },
+        description: "Recovery requirements"
+      }
     },
     required: [
       "injuries",
@@ -47,8 +48,8 @@ export const SAFETY_PROFILE_EXTRACTION_SCHEMA = {
       "equipment",
       "modifications",
       "recoveryNeeds",
-    ],
-  },
+    ]
+  }
 };
 
 /**
@@ -65,26 +66,27 @@ export const METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA = {
         type: "array",
         items: { type: "string" },
         description:
-          'Primary training focus areas (e.g., "strength", "conditioning")',
+          'Primary training focus areas (e.g., "strength", "conditioning")'
       },
       preferences: {
         type: "array",
         items: { type: "string" },
-        description: "Specific movement or training preferences",
+        description: "Specific movement or training preferences"
       },
       avoidances: {
         type: "array",
         items: { type: "string" },
-        description: "Things to avoid",
+        description: "Things to avoid"
       },
       experience: {
         type: "string",
         enum: ["beginner", "intermediate", "advanced", "expert"],
-        description: "Training experience level",
-      },
+        description: "Training experience level"
+      }
     },
     required: ["focus", "preferences", "avoidances", "experience"],
-  },
+    additionalProperties: false
+  }
 };
 
 /**
@@ -101,9 +103,10 @@ export const SPECIALIZATIONS_EXTRACTION_SCHEMA = {
         type: "array",
         items: { type: "string" },
         description:
-          "Relevant fitness specializations (e.g., Olympic Weightlifting, CrossFit)",
-      },
+          "Relevant fitness specializations (e.g., Olympic Weightlifting, CrossFit)"
+      }
     },
     required: ["specializations"],
-  },
+    additionalProperties: false
+  }
 };

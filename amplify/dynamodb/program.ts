@@ -264,17 +264,27 @@ export async function queryPrograms(
         expressionAttributeValues[":archivedStatus"] = "archived";
       }
 
+      // Build ExpressionAttributeNames dynamically to avoid DynamoDB
+      // ValidationException for unused keys when no status filter is applied
+      const expressionAttributeNames: Record<string, string> = {
+        "#entityType": "entityType",
+      };
+      const statusFilterActive =
+        (options?.includeStatus && options.includeStatus.length > 0) ||
+        !!options?.status ||
+        !includeArchived;
+      if (statusFilterActive) {
+        expressionAttributeNames["#attributes"] = "attributes";
+        expressionAttributeNames["#status"] = "status";
+      }
+
       const command = new QueryCommand({
         TableName: tableName,
         IndexName: "gsi1",
         KeyConditionExpression:
           "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1skPrefix)",
         FilterExpression: filterExpression,
-        ExpressionAttributeNames: {
-          "#entityType": "entityType",
-          "#attributes": "attributes",
-          "#status": "status",
-        },
+        ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
         ExclusiveStartKey: lastEvaluatedKey,
       });
@@ -530,10 +540,7 @@ export async function queryProgramsCount(
 
     return { totalCount };
   } catch (error) {
-    logger.error(
-      `Error counting training programs for user ${userId}:`,
-      error,
-    );
+    logger.error(`Error counting training programs for user ${userId}:`, error);
     throw error;
   }
 }

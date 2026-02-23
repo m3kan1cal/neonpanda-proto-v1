@@ -160,7 +160,8 @@ export interface BuildCoachConversationSummaryEvent {
 }
 
 /**
- * AI-generated coach conversation summary for semantic search and coach context
+ * AI-generated coach conversation summary for semantic search and coach context.
+ * Uses flat v2 structure. Old nested v1 records are migrated on read via migrateLegacyStructuredData().
  */
 export interface CoachConversationSummary {
   summaryId: string;
@@ -171,24 +172,27 @@ export interface CoachConversationSummary {
   structuredData: {
     current_goals: string[];
     recent_progress: string[];
-    preferences: {
-      communication_style: string;
-      training_preferences: string[];
-      schedule_constraints: string[];
-    };
-    methodology_preferences: {
-      mentioned_methodologies: string[];
-      preferred_approaches: string[];
-      methodology_questions: string[];
-    };
-    emotional_state: {
-      current_mood: string;
-      motivation_level: string;
-      confidence_level: string;
-    };
+    training_preferences: string[]; // merged: training prefs + methodologies + preferred approaches
+    schedule_constraints: string[];
     key_insights: string[];
     important_context: string[];
     conversation_tags: string[];
+    // Legacy v1 nested fields - present on old DynamoDB records, migrated on read
+    preferences?: {
+      communication_style?: string;
+      training_preferences?: string[];
+      schedule_constraints?: string[];
+    };
+    methodology_preferences?: {
+      mentioned_methodologies?: string[];
+      preferred_approaches?: string[];
+      methodology_questions?: string[];
+    };
+    emotional_state?: {
+      current_mood?: string;
+      motivation_level?: string;
+      confidence_level?: string;
+    };
   };
   metadata: {
     createdAt: Date;

@@ -38,25 +38,22 @@ export const COACH_CONFIG_SCHEMA = {
     "modification_capabilities",
     "metadata",
   ],
+  additionalProperties: false,
   properties: {
     coach_id: {
       type: "string",
-      pattern: "^user_.*_coach_.*$",
       description:
         "Unique identifier following pattern: user_{userId}_coach_{timestamp}",
     },
     coach_name: {
       type: "string",
-      minLength: 1,
-      maxLength: 50,
       description:
-        'Creative, playful coach name (e.g., "Marcus_the_Form_Master")',
+        'Creative, playful coach name, up to 50 characters (e.g., "Marcus_the_Form_Master")',
     },
     coach_description: {
       type: "string",
-      maxLength: 50,
       description:
-        'Concise 3-5 word specialty description (e.g., "Technical Excellence & Body Recomp")',
+        'Concise 3-5 word specialty description, up to 50 characters (e.g., "Technical Excellence & Body Recomp")',
     },
     status: {
       type: "string",
@@ -71,6 +68,7 @@ export const COACH_CONFIG_SCHEMA = {
     selected_personality: {
       type: "object",
       required: ["primary_template", "selection_reasoning", "blending_weights"],
+      additionalProperties: false,
       properties: {
         primary_template: {
           type: "string",
@@ -88,9 +86,18 @@ export const COACH_CONFIG_SCHEMA = {
         },
         blending_weights: {
           type: "object",
+          additionalProperties: false,
+          description:
+            "Weighting of personality templates (primary + secondary should sum to 1.0)",
           properties: {
-            primary: { type: "number", minimum: 0, maximum: 1 },
-            secondary: { type: "number", minimum: 0, maximum: 1 },
+            primary: {
+              type: "number",
+              description: "Weight for primary template (0.0 to 1.0)",
+            },
+            secondary: {
+              type: "number",
+              description: "Weight for secondary influences (0.0 to 1.0)",
+            },
           },
         },
       },
@@ -105,6 +112,7 @@ export const COACH_CONFIG_SCHEMA = {
         "creativity_emphasis",
         "workout_innovation",
       ],
+      additionalProperties: false,
       properties: {
         primary_methodology: {
           type: "string",
@@ -147,6 +155,7 @@ export const COACH_CONFIG_SCHEMA = {
         "time_constraints",
         "safety_constraints",
       ],
+      additionalProperties: false,
       properties: {
         methodology: { type: "string" },
         programming_focus: {
@@ -159,8 +168,6 @@ export const COACH_CONFIG_SCHEMA = {
         },
         training_frequency: {
           type: "number",
-          minimum: 1,
-          maximum: 7,
         },
         specializations: {
           type: "array",
@@ -183,6 +190,7 @@ export const COACH_CONFIG_SCHEMA = {
             session_duration: { type: "string" },
             weekly_frequency: { type: "string" },
           },
+          additionalProperties: false,
         },
         safety_constraints: {
           type: "object",
@@ -193,6 +201,7 @@ export const COACH_CONFIG_SCHEMA = {
             "recovery_requirements",
             "safety_monitoring",
           ],
+          additionalProperties: false,
           properties: {
             volume_progression_limit: { type: "string" },
             contraindicated_exercises: {
@@ -225,6 +234,7 @@ export const COACH_CONFIG_SCHEMA = {
         "communication_style",
         "learning_adaptation_prompt",
       ],
+      additionalProperties: false,
       properties: {
         personality_prompt: {
           type: "string",
@@ -266,6 +276,7 @@ export const COACH_CONFIG_SCHEMA = {
         "workout_variety_emphasis",
         "safety_override_level",
       ],
+      additionalProperties: false,
       properties: {
         enabled_modifications: {
           type: "array",
@@ -303,28 +314,34 @@ export const COACH_CONFIG_SCHEMA = {
         "methodology_profile",
         "coach_creator_session_summary",
       ],
+      additionalProperties: false,
       properties: {
         version: { type: "string" },
         created_date: {
           type: "string",
-          format: "date-time",
         },
         user_satisfaction: {
           type: ["number", "null"],
-          minimum: 0,
-          maximum: 10,
         },
         total_conversations: {
           type: "number",
-          minimum: 0,
         },
         safety_profile: {
           type: "object",
           description: "Extracted safety profile from coach creator session",
+          additionalProperties: false,
+          properties: {
+            injuries: { type: "array", items: { type: "string" } },
+            contraindications: { type: "array", items: { type: "string" } },
+            equipment: { type: "array", items: { type: "string" } },
+            modifications: { type: "array", items: { type: "string" } },
+            recoveryNeeds: { type: "array", items: { type: "string" } },
+          },
         },
         methodology_profile: {
           type: "object",
           description: "Methodology preferences and focus areas",
+          additionalProperties: false,
           properties: {
             primary: { type: "string" },
             focus: {
@@ -358,8 +375,8 @@ export const COACH_CONFIG_SCHEMA = {
         },
         generation_timestamp: {
           type: "string",
-          format: "date-time",
-          description: "Timestamp when config was generated",
+          description:
+            "Timestamp when config was generated (ISO 8601 date-time format, e.g., 2026-02-11T12:00:00Z)",
         },
       },
     },
@@ -372,6 +389,7 @@ export const COACH_CONFIG_SCHEMA = {
  */
 export const COACH_CONFIG_SUMMARY_SCHEMA = {
   type: "object",
+  additionalProperties: false,
   required: [
     "coach_id",
     "coach_name",
@@ -393,6 +411,7 @@ export const COACH_CONFIG_SUMMARY_SCHEMA = {
     },
     selected_personality: {
       type: "object",
+      additionalProperties: false,
       properties: {
         primary_template: { type: "string" },
         selection_reasoning: { type: "string" },
@@ -400,6 +419,7 @@ export const COACH_CONFIG_SUMMARY_SCHEMA = {
     },
     technical_config: {
       type: "object",
+      additionalProperties: false,
       properties: {
         programming_focus: {
           type: "array",
@@ -419,12 +439,14 @@ export const COACH_CONFIG_SUMMARY_SCHEMA = {
     },
     metadata: {
       type: "object",
+      additionalProperties: false,
       properties: {
         created_date: { type: "string" },
         total_conversations: { type: "number" },
         methodology_profile: {
           type: "object",
           description: "Rich methodology metadata for UI display",
+          additionalProperties: false,
           properties: {
             primary: { type: "string" },
             focus: {

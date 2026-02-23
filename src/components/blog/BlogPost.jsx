@@ -15,7 +15,7 @@ const blogPosts = [
   {
     id: 1,
     slug: "the-foundation",
-    title: "The Foundation",
+    title: "The Foundation of Everything",
     subtitle: "Building a Serverless Fitness Platform",
     readTime: "8 min read",
     agent: "Smart Request Router",
@@ -25,7 +25,7 @@ const blogPosts = [
   {
     id: 2,
     slug: "your-coach-your-way",
-    title: "Your Coach, Your Way",
+    title: "Your Coach, Built Your Way",
     subtitle: "The Coach Creator Agent",
     readTime: "10 min read",
     agent: "Coach Creator Agent",
@@ -35,7 +35,7 @@ const blogPosts = [
   {
     id: 3,
     slug: "every-rep-counts",
-    title: "Every Rep Counts",
+    title: "Every Rep Counts, Every Time",
     subtitle: "The Workout Logger Agent",
     readTime: "12 min read",
     agent: "Workout Logger Agent",
@@ -55,11 +55,11 @@ const blogPosts = [
   {
     id: 5,
     slug: "the-symphony",
-    title: "The Symphony",
-    subtitle: "Multi-Agent Orchestration",
+    title: "When All Agents Converge",
+    subtitle: "The Conversation Agent & Streaming Orchestration",
     readTime: "15 min read",
-    agent: "All Agents",
-    pattern: "Full Orchestration",
+    agent: "Conversation Agent",
+    pattern: "Streaming Tool-Use",
     color: "cyan",
   },
 ];
@@ -175,9 +175,15 @@ function BlogPost({ children }) {
           className="absolute inset-0 z-0"
           style={{
             backgroundImage: `url(/images/blog-posts/${
-              currentPost.slug === "training-programs-that-think"
-                ? "training-program.jpg"
-                : "barbells-plates.jpg"
+              currentPost.slug === "the-foundation"
+                ? "home-gym.jpg"
+                : currentPost.slug === "your-coach-your-way"
+                  ? "chalk-hands.jpg"
+                  : currentPost.slug === "training-programs-that-think"
+                    ? "training-program.jpg"
+                    : currentPost.slug === "the-symphony"
+                      ? "functional-gym.jpg"
+                      : "barbells-plates.jpg"
             })`,
             backgroundSize: "cover",
             backgroundPosition: "center",
@@ -213,23 +219,28 @@ function BlogPost({ children }) {
           <h1 className={`${typographyPatterns.heroTitle} mb-4`}>
             {currentPost.slug === "the-foundation" ? (
               <>
-                <span className="text-white">The </span>
-                <span className={colors.text}>Foundation</span>
+                <span className="text-white">The Foundation of </span>
+                <span className={colors.text}>Everything</span>
               </>
             ) : currentPost.slug === "your-coach-your-way" ? (
               <>
                 <span className="text-white">Your Coach, </span>
-                <span className={colors.text}>Your Way</span>
+                <span className={colors.text}>Built Your Way</span>
               </>
             ) : currentPost.slug === "every-rep-counts" ? (
               <>
-                <span className="text-white">Every </span>
-                <span className={colors.text}>Rep Counts</span>
+                <span className="text-white">Every Rep Counts, </span>
+                <span className={colors.text}>Every Time</span>
               </>
             ) : currentPost.slug === "training-programs-that-think" ? (
               <>
                 <span className="text-white">Training Programs </span>
                 <span className={colors.text}>That Think</span>
+              </>
+            ) : currentPost.slug === "the-symphony" ? (
+              <>
+                <span className="text-white">When All Agents </span>
+                <span className={colors.text}>Converge</span>
               </>
             ) : (
               <span className={colors.text}>{currentPost.title}</span>
@@ -244,36 +255,22 @@ function BlogPost({ children }) {
             {blogPosts.map((post) => {
               const postColors = getColorClasses(post.color);
               const isCurrent = post.slug === slug;
-              if (post.id <= 4) {
-                return (
-                  <Link
-                    key={post.id}
-                    to={`/blog/${post.slug}`}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      isCurrent
-                        ? `${postColors.bg} ${postColors.border} border-2 ${postColors.text}`
-                        : "bg-synthwave-bg-primary/30 border border-synthwave-text-muted/30 text-synthwave-text-muted hover:border-synthwave-text-muted"
-                    }`}
-                    title={post.title}
-                  >
-                    <span className="font-inter font-bold text-sm">
-                      {post.id}
-                    </span>
-                  </Link>
-                );
-              } else {
-                return (
-                  <div
-                    key={post.id}
-                    className="w-10 h-10 rounded-full flex items-center justify-center bg-synthwave-bg-primary/30 border border-synthwave-text-muted/30 text-synthwave-text-muted/40 cursor-not-allowed"
-                    title="Coming Soon"
-                  >
-                    <span className="font-inter font-bold text-sm">
-                      {post.id}
-                    </span>
-                  </div>
-                );
-              }
+              return (
+                <Link
+                  key={post.id}
+                  to={`/blog/${post.slug}`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isCurrent
+                      ? `${postColors.bg} ${postColors.border} border-2 ${postColors.text}`
+                      : "bg-synthwave-bg-primary/30 border border-synthwave-text-muted/30 text-synthwave-text-muted hover:border-synthwave-text-muted"
+                  }`}
+                  title={post.title}
+                >
+                  <span className="font-inter font-bold text-sm">
+                    {post.id}
+                  </span>
+                </Link>
+              );
             })}
           </div>
         </div>

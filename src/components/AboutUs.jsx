@@ -150,7 +150,7 @@ function AboutUs() {
               <p className={typographyPatterns.description}>
                 Today, NeonPanda represents the intersection of deep AI
                 expertise and genuine athletic passion—best-in-class models like
-                Claude Sonnet 4.5, Claude Opus 4.5, and Nvidia embeddings,
+                Claude Sonnet 4.6, Claude Opus 4.6, and Nvidia embeddings,
                 orchestrated through sophisticated agentic workflows, all in
                 service of making you a better athlete.
               </p>
@@ -202,8 +202,8 @@ function AboutUs() {
               <div className="space-y-6 text-lg leading-relaxed">
                 <p className={typographyPatterns.description}>
                   Every architectural decision at NeonPanda comes from hands-on
-                  experience. We use the latest Claude models (Sonnet 4.5, Haiku
-                  4.5, Opus 4.5), Amazon Nova for efficient processing, and
+                  experience. We use the latest Claude models (Sonnet 4.6, Haiku
+                  4.5, Opus 4.6), Amazon Nova for efficient processing, and
                   Nvidia NV-Embed-V2 for best-in-class semantic search—not
                   because they're trendy, but because real-world testing proved
                   they deliver the best coaching experiences.
@@ -302,8 +302,8 @@ function AboutUs() {
                   </h3>
                 </div>
                 <p className={`${typographyPatterns.description} text-lg`}>
-                  We use the most advanced AI available—Claude Sonnet 4.5, Opus
-                  4.5, Haiku 4.5, Nova, Nvidia embeddings—but you never have to
+                  We use the most advanced AI available—Claude Sonnet 4.6, Opus
+                  4.6, Haiku 4.5, Nova, Nvidia embeddings—but you never have to
                   think about any of it. The technology disappears into the
                   experience.
                 </p>

@@ -356,6 +356,18 @@ ${todoList.equipmentAccess?.imageRefs ? `Equipment images provided: ${todoList.e
 ${todoList.injuryConsiderations?.value || "No injury considerations specified"}
 ${todoList.injuryConsiderations?.imageRefs ? `Injury documentation images: ${todoList.injuryConsiderations.imageRefs.length} image(s)` : ""}
 
+## WORKOUT PLANNING PER PHASE:
+For each phase, include your estimated expectedWorkoutCount -- the number of workout
+templates you anticipate this phase will need. A helpful baseline:
+  expectedWorkoutCount = floor(durationDays / 7) * trainingFrequency
+
+Use your judgment to adjust: shorter deload phases may warrant fewer sessions,
+while high-intensity phases may benefit from more variety. This count is passed
+to the workout generator as its target for the phase.
+
+Example: A 28-day phase with ${context.trainingFrequency}x/week training would typically
+need ~${Math.floor((28 / 7) * context.trainingFrequency)} workouts.
+
 ## CRITICAL REQUIREMENTS:
 - Phases MUST be consecutive (no gaps, no overlaps)
 - Phase 1 MUST start on day 1
@@ -427,10 +439,7 @@ Generate the phase structure using the tool.`;
       throw new Error("Tool did not return valid phase structure");
     }
   } catch (toolError) {
-    logger.error(
-      "❌ Tool-based phase structure generation failed:",
-      toolError,
-    );
+    logger.error("❌ Tool-based phase structure generation failed:", toolError);
 
     // FALLBACK: Text-based generation with parsing
     logger.info("⚠️ Falling back to text-based phase structure generation");
@@ -558,10 +567,11 @@ export async function generateSinglePhaseWorkouts(
     todoList.restDaysPreference?.value,
   );
 
-  // Calculate expected workout count
-  const expectedWorkouts = Math.floor(
-    (phase.durationDays / 7) * context.trainingFrequency,
-  );
+  // Use the phase's own estimate if available (set during phase structure generation),
+  // otherwise calculate from duration and frequency as a fallback.
+  const expectedWorkouts =
+    (phase as any).expectedWorkoutCount ||
+    Math.floor((phase.durationDays / 7) * context.trainingFrequency);
 
   // Build phase context (where this phase fits in the program)
   const phaseContext = allPhases.map((p, idx) => ({
@@ -670,10 +680,11 @@ ${(() => {
 **Validation:** Count workout days per week. If any week has fewer than ${context.trainingFrequency} workout days, you FAILED the constraint.
 
 ### Workout Count & Distribution:
-- Generate approximately ${expectedWorkouts} workouts for this ${phase.durationDays}-day phase
-- Training Frequency: ${context.trainingFrequency} days per week (STRICTLY ENFORCED)
-- Distribute workouts evenly across the phase duration
-- Each week must have ${context.trainingFrequency} workout days minimum
+- Target: ${expectedWorkouts} workout templates for this phase
+  (${Math.floor(phase.durationDays / 7)} weeks × ${context.trainingFrequency} workouts/week = ${expectedWorkouts})
+- One template per training day — each training day in the phase needs its own workout template
+- Distribute evenly: aim for ${context.trainingFrequency} workout days per week throughout the phase
+- Deload phases or phases with a specific recovery purpose may warrant slight variation
 
 ### Workout Template Structure (CRITICAL):
 Each workout must follow the segmented, implicitly grouped structure:
