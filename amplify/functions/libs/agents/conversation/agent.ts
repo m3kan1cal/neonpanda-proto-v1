@@ -128,6 +128,7 @@ export class StreamingConversationAgent {
       const tempMessage = {
         role: "user" as const,
         content: userMessage,
+        messageType: "text_with_images" as const,
         imageS3Keys,
       };
       const multimodalMessages = await buildMultimodalContent([tempMessage]);
