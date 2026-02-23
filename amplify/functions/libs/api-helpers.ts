@@ -6,6 +6,7 @@ import {
   BedrockRuntimeClient,
   ConverseCommand,
   ConverseStreamCommand,
+  OutputFormatType,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   LambdaClient,
@@ -20,17 +21,17 @@ import { parseJsonWithFallbacks } from "./response-utils";
 import { logger } from "./logger";
 
 // Amazon Bedrock Converse API configuration
-const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
-const CLAUDE_SONNET_4_DISPLAY = "claude-sonnet-4.5";
+const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-6";
+const CLAUDE_SONNET_4_DISPLAY = "claude-sonnet-4.6";
 
 const CLAUDE_HAIKU_4_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0";
 const CLAUDE_HAIKU_4_DISPLAY = "claude-4.5-haiku";
 
-const NOVA_MICRO_MODEL_ID = "us.amazon.nova-micro-v1:0";
-const NOVA_MICRO_DISPLAY = "nova-micro";
-
 const NOVA_2_LITE_MODEL_ID = "us.amazon.nova-2-lite-v1:0";
 const NOVA_2_LITE_DISPLAY = "nova-2-lite";
+
+const NEMOTRON_NANO_12B_MODEL_ID = "nvidia.nemotron-nano-12b-v2";
+const NEMOTRON_NANO_12B_DISPLAY = "nemotron-nano-12b";
 
 // Increased for complex workout extractions with many rounds (Claude 4 supports much higher limits)
 const MAX_TOKENS = 32768;
@@ -85,9 +86,11 @@ export const TEMPERATURE_PRESETS = {
 // Model constants for external use
 // MODEL_IDS.PLANNER_MODEL_DISPLAY
 export const MODEL_IDS = {
-  // The Contextual Model. It is used for contextual updates and intent classification.
-  CONTEXTUAL_MODEL_FULL: NOVA_2_LITE_MODEL_ID,
-  CONTEXTUAL_MODEL_DISPLAY: NOVA_2_LITE_DISPLAY,
+  // The Contextual Model. Used for contextual updates, intent classification, and simple
+  // classification tasks. NVIDIA Nemotron Nano 12B v2 supports strict schema mode (unlike
+  // Nova 2 Lite) while remaining fast and cost-effective. Note: no prompt caching.
+  CONTEXTUAL_MODEL_FULL: CLAUDE_HAIKU_4_MODEL_ID,
+  CONTEXTUAL_MODEL_DISPLAY: CLAUDE_HAIKU_4_DISPLAY,
 
   // The Executor. It is used as a sub-agent to carry out those discrete instructions in parallel,
   // benefiting from its speed and near-frontier coding accuracy.
@@ -103,13 +106,13 @@ export const MODEL_IDS = {
 /**
  * Check if a model ID is a strict schema model (supports guaranteed JSON with strict mode)
  * @param modelId - The model ID to check
- * @returns true if the model is Claude 4.5 Sonnet or Haiku or Nova 2 Lite
+ * @returns true if the model supports Bedrock strict tool use schema enforcement
  */
 export function isStrictCapableModel(modelId: string): boolean {
   return (
-    modelId === CLAUDE_SONNET_4_MODEL_ID ||
-    modelId === CLAUDE_HAIKU_4_MODEL_ID ||
-    modelId === NOVA_2_LITE_MODEL_ID
+    modelId === CLAUDE_SONNET_4_MODEL_ID || modelId === CLAUDE_HAIKU_4_MODEL_ID
+    // Note: Nova 2 Lite and Nemotron do NOT support strict tool use via Converse API.
+    // Open-weight models use InvokeModel + response_format instead.
   );
 }
 
@@ -412,6 +415,7 @@ interface BedrockCallLogDetails {
   messagesCount?: number;
   hasImages?: boolean;
   toolsCount?: number;
+  schemaName?: string;
 }
 
 const logBedrockCallStart = (
@@ -622,11 +626,13 @@ function buildToolConfig(
       toolSpec: {
         name: t.name,
         description: t.description,
-        inputSchema: { json: t.inputSchema },
+        inputSchema: {
+          json: t.inputSchema,
+        },
+        // strict: true belongs on each toolSpec per Bedrock structured outputs docs
+        ...(strictSchema && { strict: true }),
       },
     })),
-    // Enable strict mode for guaranteed JSON output (Claude 4.5+)
-    ...(strictSchema && { strict: true }),
   };
 
   // If enforcing tool use and exactly one tool provided, add toolChoice to force its use
@@ -643,6 +649,39 @@ function buildToolConfig(
   }
 
   return config;
+}
+
+/**
+ * Helper to build toolConfig for agent Bedrock commands
+ *
+ * Similar to buildToolConfig but for multi-tool agents:
+ * - Never enforces single-tool use (no toolChoice)
+ * - Supports optional cache point injection after tools
+ * - Places strict: true on each toolSpec per Bedrock structured outputs docs
+ *
+ * Used by callBedrockApiForAgent and callBedrockApiStreamForAgent.
+ */
+function buildToolConfigForAgent(
+  tools: BedrockToolConfig[],
+  strictSchema: boolean = false,
+  useCaching: boolean = false,
+): any {
+  const toolSpecs = tools.map((t) => ({
+    toolSpec: {
+      name: t.name,
+      description: t.description,
+      inputSchema: {
+        json: t.inputSchema,
+      },
+      ...(strictSchema && { strict: true }),
+    },
+  }));
+
+  return {
+    tools: useCaching
+      ? [...toolSpecs, { cachePoint: { type: "default" } } as any]
+      : toolSpecs,
+  };
 }
 
 /**
@@ -1492,6 +1531,247 @@ export const callBedrockApiMultimodal = async (
   }
 };
 
+// ─── JSON Schema Output Format helpers ───────────────────────────────────────
+//
+// Use these for DATA EXTRACTION tasks (normalization, todo extraction, config
+// generation). The `outputConfig.textFormat` approach is the architecturally
+// correct choice for extraction pipelines: no grammar size limits, same 24-hour
+// grammar cache as strict tool use, and the model returns JSON directly in the
+// text content block.
+//
+// Use callBedrockApi with tools+strict for AGENTIC tool calls (validating
+// function parameters before calling external systems).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface JsonOutputOptions {
+  /** Identifier used for logging and grammar cache keying */
+  schemaName: string;
+  /** JSON Schema definition object -- must satisfy Bedrock Draft 2020-12 subset */
+  schema: Record<string, unknown>;
+  temperature?: number;
+  staticPrompt?: string;
+  dynamicPrompt?: string;
+  enableThinking?: boolean;
+}
+
+/**
+ * Bedrock Converse API call using JSON Schema output format.
+ *
+ * Constructs the request with `outputConfig.textFormat` instead of `toolConfig`,
+ * then parses the JSON text response. Use this for extraction and normalization
+ * tasks whose schemas are too large for strict tool use grammar compilation.
+ */
+export const callBedrockApiWithJsonOutput = async (
+  systemPrompt: string,
+  userMessage: string,
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
+  options: JsonOutputOptions,
+): Promise<Record<string, unknown>> => {
+  try {
+    const { systemParams, enableThinking, useNativeReasoning } =
+      buildSystemParams(systemPrompt, options as any, modelId);
+
+    const finalTemperature =
+      options.temperature ?? TEMPERATURE_PRESETS.STRUCTURED;
+
+    logBedrockCallStart("BEDROCK JSON OUTPUT API CALL", {
+      modelId,
+      schemaName: options.schemaName,
+      temperature: finalTemperature,
+      systemPromptLength: systemPrompt.length,
+      userMessageLength: userMessage.length,
+      enableThinking,
+      useNativeReasoning,
+    });
+
+    const effectiveUserMessage = userMessage.trim() || "Please proceed.";
+
+    const command = new ConverseCommand({
+      modelId,
+      messages: [
+        {
+          role: "user",
+          content: [{ text: effectiveUserMessage }],
+        },
+      ],
+      ...(systemParams.length > 0 && { system: systemParams }),
+      outputConfig: {
+        textFormat: {
+          type: OutputFormatType.JSON_SCHEMA,
+          structure: {
+            jsonSchema: {
+              schema: JSON.stringify(options.schema),
+              name: options.schemaName,
+            },
+          },
+        },
+      },
+      inferenceConfig: {
+        maxTokens: getMaxTokensForModel(modelId),
+        temperature: finalTemperature,
+      },
+      ...buildNativeReasoningFields(useNativeReasoning),
+    });
+
+    const heartbeatInterval = setInterval(() => {
+      logger.info(
+        "HEARTBEAT: JSON output call still running, waiting for Bedrock response..",
+      );
+    }, 5000);
+
+    let response;
+    try {
+      response = await bedrockClient.send(command);
+      clearInterval(heartbeatInterval);
+    } catch (sendError) {
+      clearInterval(heartbeatInterval);
+      throw sendError;
+    }
+
+    if (response.usage) {
+      logCachePerformance(response.usage, "JSON Output API");
+    }
+
+    const contentItem = response.output?.message?.content?.[0];
+    if (!contentItem) {
+      throw new Error(
+        "Invalid response format from Bedrock JSON output -- no content",
+      );
+    }
+
+    const rawText =
+      typeof contentItem === "string" ? contentItem : (contentItem as any).text;
+    if (!rawText) {
+      throw new Error(
+        "Invalid response format from Bedrock JSON output -- no text",
+      );
+    }
+
+    logger.info("JSON output response received, parsing...", {
+      schemaName: options.schemaName,
+      textLength: rawText.length,
+    });
+
+    const parsed = parseJsonWithFallbacks(rawText);
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error(
+        `Failed to parse JSON output response for schema: ${options.schemaName}`,
+      );
+    }
+
+    logger.info("JSON output parsed successfully", {
+      schemaName: options.schemaName,
+    });
+    return parsed as Record<string, unknown>;
+  } catch (error: any) {
+    logAwsError(error, "BEDROCK JSON OUTPUT API CALL");
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Bedrock JSON Output API failed: ${errorMessage}`);
+  }
+};
+
+/**
+ * Multimodal variant of callBedrockApiWithJsonOutput.
+ * Use when the extraction input includes images (e.g. workout photos).
+ */
+export const callBedrockApiMultimodalWithJsonOutput = async (
+  systemPrompt: string,
+  messages: any[],
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
+  options: JsonOutputOptions,
+): Promise<Record<string, unknown>> => {
+  try {
+    const { systemParams, enableThinking, useNativeReasoning } =
+      buildSystemParams(systemPrompt, options as any, modelId);
+
+    const finalTemperature =
+      options.temperature ?? TEMPERATURE_PRESETS.STRUCTURED;
+
+    const hasImages = messages.some((m) =>
+      m.content?.some((c: any) => c.image),
+    );
+
+    logBedrockCallStart("BEDROCK MULTIMODAL JSON OUTPUT API CALL", {
+      modelId,
+      schemaName: options.schemaName,
+      temperature: finalTemperature,
+      systemPromptLength: systemPrompt.length,
+      messagesCount: messages.length,
+      enableThinking,
+      useNativeReasoning,
+      hasImages,
+    });
+
+    const command = new ConverseCommand({
+      modelId,
+      messages,
+      system: systemParams,
+      outputConfig: {
+        textFormat: {
+          type: OutputFormatType.JSON_SCHEMA,
+          structure: {
+            jsonSchema: {
+              schema: JSON.stringify(options.schema),
+              name: options.schemaName,
+            },
+          },
+        },
+      },
+      inferenceConfig: {
+        maxTokens: getMaxTokensForModel(modelId),
+        temperature: finalTemperature,
+      },
+      ...buildNativeReasoningFields(useNativeReasoning),
+    });
+
+    const response = await bedrockClient.send(command);
+
+    if (response.usage) {
+      logCachePerformance(response.usage, "Multimodal JSON Output API");
+    }
+
+    const contentItem = response.output?.message?.content?.[0];
+    if (!contentItem) {
+      throw new Error(
+        "Invalid response format from Bedrock multimodal JSON output -- no content",
+      );
+    }
+
+    const rawText =
+      typeof contentItem === "string" ? contentItem : (contentItem as any).text;
+    if (!rawText) {
+      throw new Error(
+        "Invalid response format from Bedrock multimodal JSON output -- no text",
+      );
+    }
+
+    logger.info("Multimodal JSON output response received, parsing...", {
+      schemaName: options.schemaName,
+      textLength: rawText.length,
+    });
+
+    const parsed = parseJsonWithFallbacks(rawText);
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error(
+        `Failed to parse multimodal JSON output response for schema: ${options.schemaName}`,
+      );
+    }
+
+    logger.info("Multimodal JSON output parsed successfully", {
+      schemaName: options.schemaName,
+    });
+    return parsed as Record<string, unknown>;
+  } catch (error: any) {
+    logAwsError(error, "BEDROCK MULTIMODAL JSON OUTPUT API CALL");
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(
+      `Bedrock Multimodal JSON Output API failed: ${errorMessage}`,
+    );
+  }
+};
+
 /**
  * Agent-optimized Bedrock call with full response and caching
  * Returns raw Bedrock response for conversation loop management
@@ -1546,40 +1826,21 @@ export const callBedrockApiForAgent = async (
   logger.info("Caching enabled:", useCaching);
 
   // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
-  const useStrictSchema =
-    options?.strictSchema ??
-    (tools.length > 0 && isStrictCapableModel(modelId));
-
-  if (useStrictSchema) {
-    logger.info("🔐 Guaranteed JSON mode enabled (strict schema) - agent");
-  }
-
-  // Build tool config with cache point
-  const toolSpecs = tools.map((t) => ({
-    toolSpec: {
-      name: t.name,
-      description: t.description,
-      inputSchema: { json: t.inputSchema },
-    },
-  }));
+  // Agent calls with multiple complex tool schemas must NOT use strict: true —
+  // Bedrock grammar compilation times out when the combined schema is too large.
+  // additionalProperties: false in schemas still guides the model without enforcement.
+  const useStrictSchema = false;
 
   if (useCaching) {
     logger.info("🔥 AGENT CACHE OPTIMIZATION: Adding cache point after tools");
   }
 
-  // Add cache point after tools if caching is enabled, plus strict mode for guaranteed JSON
-  const toolConfig = useCaching
-    ? {
-        tools: [
-          ...toolSpecs,
-          { cachePoint: { type: "default" } } as any, // Cache tools (AWS SDK types not updated)
-        ],
-        ...(useStrictSchema && { strict: true }),
-      }
-    : {
-        tools: toolSpecs,
-        ...(useStrictSchema && { strict: true }),
-      };
+  // Build tool config using centralized helper (strict: false for multi-tool agents)
+  const toolConfig = buildToolConfigForAgent(
+    tools,
+    useStrictSchema,
+    useCaching,
+  );
 
   const command = new ConverseCommand({
     modelId: modelId,
@@ -1600,7 +1861,30 @@ export const callBedrockApiForAgent = async (
     }),
   });
 
-  const response = await bedrockClient.send(command);
+  // Safety net: abort after 180s to prevent indefinite hangs that silently
+  // consume the entire Lambda timeout. Normal agent iterations complete in ~18s;
+  // the most complex tool-level calls take ~156s.
+  const AGENT_CALL_TIMEOUT_MS = 180_000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AGENT_CALL_TIMEOUT_MS);
+
+  let response;
+  try {
+    response = await bedrockClient.send(command, {
+      abortSignal: controller.signal,
+    });
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      throw new Error(
+        `Bedrock agent API call timed out after ${AGENT_CALL_TIMEOUT_MS / 1000}s. ` +
+          `This may indicate excessive conversation context size. ` +
+          `Messages: ${messages.length}, Model: ${modelId}`,
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   // Log cache performance if usage data available
   if (response.usage) {
@@ -1616,6 +1900,313 @@ export const callBedrockApiForAgent = async (
   logger.info("Output tokens:", response.usage?.outputTokens);
 
   return response; // Return full response for agent loop
+};
+
+/**
+ * Amazon Bedrock Converse Stream API call for streaming agents with tool support
+ *
+ * Streams text deltas and parses tool_use blocks as they arrive, yielding StreamAgentEvent
+ * discriminated unions. Used by StreamingConversationAgent to implement the streaming ReAct loop.
+ *
+ * Key differences from callBedrockApiMultimodalStream:
+ * - Yields StreamAgentEvent discriminated unions (text_delta, tool_use_start/delta/stop, message_complete)
+ * - Reconstructs full assistant content array (text blocks + toolUse blocks)
+ * - Supports prompt caching with cache points after tools (like callBedrockApiForAgent)
+ *
+ * @param systemPrompt - Full system prompt (or use staticPrompt/dynamicPrompt for caching)
+ * @param messages - Bedrock-format conversation history
+ * @param tools - Tool definitions for the agent
+ * @param modelId - Bedrock model ID
+ * @param options - Caching, strict schema, and beta features
+ * @returns AsyncGenerator yielding StreamAgentEvent discriminated unions
+ */
+export const callBedrockApiStreamForAgent = async function* (
+  systemPrompt: string,
+  messages: any[],
+  tools: BedrockToolConfig[],
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
+  options?: {
+    staticPrompt?: string;
+    dynamicPrompt?: string;
+    strictSchema?: boolean;
+    anthropicBeta?: string[];
+  },
+): AsyncGenerator<any, void, unknown> {
+  try {
+    const finalTemperature = TEMPERATURE_PRESETS.BALANCED;
+
+    // Build system parameters with caching support (same as callBedrockApiForAgent)
+    const { systemParams, useNativeReasoning } = buildSystemParams(
+      systemPrompt,
+      options,
+      modelId,
+    );
+
+    logBedrockCallStart("BEDROCK STREAMING AGENT API CALL", {
+      modelId,
+      temperature: finalTemperature,
+      systemPromptLength: systemPrompt.length,
+      messagesCount: messages.length,
+      toolsCount: tools.length,
+      enableThinking: false,
+      useNativeReasoning,
+    });
+
+    const useCaching = !!(options?.staticPrompt && options?.dynamicPrompt);
+    logger.info("Caching enabled:", useCaching);
+
+    // Agent calls with multiple complex tool schemas must NOT use strict: true —
+    // Bedrock grammar compilation times out when the combined schema is too large.
+    // additionalProperties: false in schemas still guides the model without enforcement.
+    const useStrictSchema = false;
+
+    if (useCaching) {
+      logger.info(
+        "🔥 STREAMING AGENT CACHE OPTIMIZATION: Adding cache point after tools",
+      );
+    }
+
+    // Build tool config using centralized helper (strict: false for multi-tool agents)
+    const toolConfig = buildToolConfigForAgent(
+      tools,
+      useStrictSchema,
+      useCaching,
+    );
+
+    const command = new ConverseStreamCommand({
+      modelId: modelId,
+      messages: messages,
+      system: systemParams,
+      toolConfig: toolConfig as any,
+      inferenceConfig: {
+        maxTokens: getMaxTokensForModel(modelId),
+        temperature: finalTemperature,
+      },
+      ...buildNativeReasoningFields(useNativeReasoning),
+      ...(options?.anthropicBeta && {
+        additionalModelRequestFields: {
+          anthropic_beta: options.anthropicBeta,
+        },
+      }),
+    });
+
+    const response = await bedrockClient.send(command);
+
+    if (!response.stream) {
+      throw new Error("No stream received from Bedrock");
+    }
+
+    // Stream processing: yield StreamAgentEvent discriminated unions
+    let fullTextResponse = "";
+    let streamEnded = false;
+    let reasoningLength = 0;
+    let stopReason = "";
+    let usage: { inputTokens: number; outputTokens: number } | null = null;
+
+    // Track content blocks as they're built
+    const contentBlocks: any[] = [];
+    let currentBlockIndex = -1;
+    const toolUseBlocks: Map<
+      string,
+      { toolUseId: string; name: string; input: string }
+    > = new Map();
+
+    for await (const chunk of response.stream!) {
+      // Handle Nova reasoning content (log but don't yield)
+      if (
+        useNativeReasoning &&
+        (chunk as any).contentBlockDelta?.delta?.reasoningContent
+      ) {
+        const reasoningText = (chunk as any).contentBlockDelta.delta
+          .reasoningContent?.text;
+        if (reasoningText) {
+          reasoningLength += reasoningText.length;
+        }
+      }
+
+      // Handle content block start (text or tool_use)
+      if ((chunk as any).contentBlockStart) {
+        currentBlockIndex++;
+        const start = (chunk as any).contentBlockStart.start;
+
+        if (start.toolUse) {
+          // Tool use block starting
+          const toolUseId = start.toolUse.toolUseId;
+          const toolName = start.toolUse.name;
+
+          toolUseBlocks.set(toolUseId, {
+            toolUseId,
+            name: toolName,
+            input: "",
+          });
+
+          contentBlocks.push({
+            toolUse: {
+              toolUseId,
+              name: toolName,
+              input: {}, // Will be populated from deltas
+            },
+          });
+
+          yield {
+            type: "tool_use_start",
+            toolUseId,
+            toolName,
+          };
+        } else {
+          // Text block starting
+          contentBlocks.push({ text: "" });
+        }
+      }
+
+      // Handle content block delta (text or tool input)
+      if ((chunk as any).contentBlockDelta) {
+        const delta = (chunk as any).contentBlockDelta.delta;
+
+        if (delta.text) {
+          // Text delta
+          const textDelta = delta.text;
+          fullTextResponse += textDelta;
+
+          // Update the current text block
+          if (
+            contentBlocks[currentBlockIndex] &&
+            contentBlocks[currentBlockIndex].text !== undefined
+          ) {
+            contentBlocks[currentBlockIndex].text += textDelta;
+          }
+
+          yield {
+            type: "text_delta",
+            text: textDelta,
+          };
+        }
+
+        if (delta.toolUse) {
+          // Tool input delta (JSON fragment)
+          // Note: contentBlockDelta doesn't include toolUseId, so we need to look it up
+          // using the currentBlockIndex from the contentBlocks array
+          const inputFragment = delta.toolUse.input || "";
+
+          // Find the toolUseId for the current block
+          const currentBlock = contentBlocks[currentBlockIndex];
+          const toolUseId = currentBlock?.toolUse?.toolUseId;
+
+          if (toolUseId) {
+            const toolUseData = toolUseBlocks.get(toolUseId);
+            if (toolUseData) {
+              toolUseData.input += inputFragment;
+            }
+
+            yield {
+              type: "tool_use_delta",
+              toolUseId,
+              inputFragment,
+            };
+          } else {
+            logger.warn(
+              "⚠️ Received tool_use delta but couldn't find toolUseId for current block",
+              {
+                currentBlockIndex,
+                totalBlocks: contentBlocks.length,
+                hasCurrentBlock: !!currentBlock,
+              },
+            );
+          }
+        }
+      }
+
+      // Handle content block stop
+      if ((chunk as any).contentBlockStop) {
+        // Note: Bedrock's contentBlockIndex is an absolute index (0, 1, 2...) across all blocks in the message
+        // But our contentBlocks array uses sequential indices as we build it
+        // We need to use currentBlockIndex (our tracking) to find the right block
+        const stoppedBlock = contentBlocks[currentBlockIndex];
+        const toolUseId = stoppedBlock?.toolUse?.toolUseId;
+
+        if (toolUseId) {
+          // Tool use block complete - parse the accumulated JSON input
+          const toolUseData = toolUseBlocks.get(toolUseId);
+          if (toolUseData) {
+            try {
+              // Empty input is valid for tools with no required parameters (e.g., get_todays_workout,
+              // query_programs). When the model calls such tools with no arguments, Bedrock's streaming
+              // response produces an empty string rather than "{}". JSON.parse("") throws, so we
+              // normalise empty/whitespace input to {} before parsing.
+              const rawInput = toolUseData.input;
+              const parsedInput =
+                rawInput && rawInput.trim() ? JSON.parse(rawInput) : {};
+              // Update the content block with the parsed input
+              const block = contentBlocks.find(
+                (b) => b.toolUse?.toolUseId === toolUseId,
+              );
+              if (block) {
+                block.toolUse.input = parsedInput;
+              }
+            } catch (parseError) {
+              logger.error("Failed to parse tool input JSON:", parseError);
+              logger.error("Raw input:", toolUseData.input);
+            }
+          }
+
+          yield {
+            type: "tool_use_stop",
+            toolUseId,
+          };
+        }
+      }
+
+      // Handle message stop
+      if (chunk.messageStop) {
+        stopReason = chunk.messageStop.stopReason || "end_turn";
+        logger.info("=== BEDROCK STREAMING AGENT API CALL SUCCESS ===");
+        logger.info("Stream complete. Stop reason:", stopReason);
+        logger.info("Total text response length:", fullTextResponse.length);
+        if (useNativeReasoning && reasoningLength > 0) {
+          logger.info(
+            "🧠 Nova reasoning received during stream, length:",
+            reasoningLength,
+          );
+        }
+        streamEnded = true;
+      }
+
+      // Capture metadata (comes after messageStop)
+      if ((chunk as any).metadata) {
+        const metadata = (chunk as any).metadata;
+
+        if (metadata.usage) {
+          usage = {
+            inputTokens: metadata.usage.inputTokens || 0,
+            outputTokens: metadata.usage.outputTokens || 0,
+          };
+          logCachePerformance(metadata.usage, "Streaming Agent API");
+        }
+
+        if (metadata.metrics) {
+          logger.info("📊 Stream metrics:", metadata.metrics);
+        }
+
+        // Break after capturing metadata
+        if (streamEnded) {
+          break;
+        }
+      }
+    }
+
+    // Yield final message_complete event with reconstructed assistant content
+    yield {
+      type: "message_complete",
+      stopReason,
+      assistantContent: contentBlocks,
+      usage: usage || { inputTokens: 0, outputTokens: 0 },
+    };
+  } catch (error: any) {
+    logAwsError(error, "BEDROCK STREAMING AGENT API CALL");
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Bedrock Streaming Agent API failed: ${errorMessage}`);
+  }
 };
 
 /**
@@ -2570,21 +3161,30 @@ export const deletePineconeContext = async (
     const { index } = await getPineconeClient();
     const userNamespace = getUserNamespace(userId);
 
+    // Convert simple filter to Pinecone query format with $eq operators
+    // Pinecone requires filters like: {field: {$eq: value}} not {field: value}
+    const pineconeFilter: Record<string, any> = {};
+    for (const [key, value] of Object.entries(filter)) {
+      pineconeFilter[key] = { $eq: value };
+    }
+
     logger.info("🗑️ Deleting records from Pinecone by metadata filter:", {
       userId,
       namespace: userNamespace,
-      filter,
+      inputFilter: filter,
+      pineconeFilter,
     });
 
-    // Delete directly by metadata filter - much simpler approach
-    await index.namespace(userNamespace).deleteMany(filter);
+    // Delete directly by metadata filter using proper Pinecone query syntax
+    // Note: deleteMany expects an object with a 'filter' property when using metadata filters
+    await index.namespace(userNamespace).deleteMany({ filter: pineconeFilter });
 
     logger.info(
       "✅ Successfully deleted records from Pinecone by metadata filter:",
       {
         userId,
         namespace: userNamespace,
-        filter,
+        filter: pineconeFilter,
       },
     );
 

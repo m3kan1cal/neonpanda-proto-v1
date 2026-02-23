@@ -13,6 +13,8 @@
  * - amplify/functions/libs/program/phase-generator.ts (Phase generation logic)
  */
 
+import { composeStorageSchema } from "./schema-composer";
+
 // Re-export types from program module for convenience
 export type {
   Program,
@@ -28,6 +30,7 @@ export type {
  */
 const WORKOUT_TEMPLATE_SCHEMA = {
   type: "object",
+  additionalProperties: false,
   required: [
     "templateId",
     "groupId",
@@ -42,19 +45,16 @@ const WORKOUT_TEMPLATE_SCHEMA = {
   properties: {
     templateId: {
       type: "string",
-      pattern: "^template_.*$",
       description:
         "Unique template identifier: template_{userId}_{timestamp}_{shortId}",
     },
     groupId: {
       type: "string",
-      pattern: "^group_.*$",
       description:
         "Groups templates for same day: group_{userId}_{timestamp}_{shortId}",
     },
     dayNumber: {
       type: "number",
-      minimum: 1,
       description: "Day number in program (1-indexed)",
     },
     phaseId: {
@@ -119,12 +119,10 @@ const WORKOUT_TEMPLATE_SCHEMA = {
     },
     estimatedDuration: {
       type: "number",
-      minimum: 1,
       description: "Expected duration in minutes",
     },
     restAfter: {
       type: "number",
-      minimum: 0,
       description: "Rest after this workout in minutes",
     },
     equipment: {
@@ -138,6 +136,7 @@ const WORKOUT_TEMPLATE_SCHEMA = {
     },
     metadata: {
       type: ["object", "null"],
+      additionalProperties: false,
       properties: {
         difficulty: {
           type: "string",
@@ -169,10 +168,10 @@ export const PHASE_SCHEMA = {
     "focusAreas",
     "workouts",
   ],
+  additionalProperties: false,
   properties: {
     phaseId: {
       type: "string",
-      pattern: "^phase_.*$",
       description:
         "Unique phase identifier: phase_{userId}_{timestamp}_{shortId}",
     },
@@ -186,29 +185,36 @@ export const PHASE_SCHEMA = {
     },
     startDay: {
       type: "number",
-      minimum: 1,
       description: "First day of phase (1-indexed)",
     },
     endDay: {
       type: "number",
-      minimum: 1,
       description: "Last day of phase (1-indexed)",
     },
     durationDays: {
       type: "number",
-      minimum: 1,
       description: "Total days in phase (endDay - startDay + 1)",
     },
     focusAreas: {
       type: "array",
       items: { type: "string" },
-      minItems: 1,
       description: "Primary training focuses for this phase",
+    },
+    expectedWorkoutCount: {
+      type: "number",
+      description:
+        "Your estimated number of workout templates this phase needs, " +
+        "based on the phase duration and training frequency. " +
+        "A good guideline: floor(durationDays / 7) * trainingFrequency. " +
+        "Adjust if the phase purpose warrants it (e.g., deload phases may have fewer).",
     },
     workouts: {
       type: "array",
       items: WORKOUT_TEMPLATE_SCHEMA,
-      description: "All workout templates for this phase (one or more per day)",
+      description:
+        "All workout templates for this phase — one template per training day across the full phase duration. " +
+        "Example: a 21-day phase at 3x/week needs approximately 9 workout templates. " +
+        "Generate templates for every training day in the phase, not just a representative sample.",
     },
   },
 };
@@ -221,11 +227,13 @@ export const PHASE_SCHEMA = {
 export const PHASE_STRUCTURE_SCHEMA = {
   type: "object",
   required: ["phases"],
+  additionalProperties: false,
   properties: {
     phases: {
       type: "array",
       items: {
         type: "object",
+        additionalProperties: false,
         required: [
           "phaseId",
           "name",
@@ -234,11 +242,11 @@ export const PHASE_STRUCTURE_SCHEMA = {
           "endDay",
           "durationDays",
           "focusAreas",
+          "expectedWorkoutCount",
         ],
         properties: {
           phaseId: {
             type: "string",
-            pattern: "^phase_.*$",
             description:
               "Unique phase identifier: phase_{userId}_{timestamp}_{shortId}",
           },
@@ -252,29 +260,35 @@ export const PHASE_STRUCTURE_SCHEMA = {
           },
           startDay: {
             type: "number",
-            minimum: 1,
             description: "First day of phase (1-indexed)",
           },
           endDay: {
             type: "number",
-            minimum: 1,
             description: "Last day of phase (1-indexed)",
           },
           durationDays: {
             type: "number",
-            minimum: 1,
             description: "Total days in phase (endDay - startDay + 1)",
           },
           focusAreas: {
             type: "array",
             items: { type: "string" },
-            minItems: 1,
             description: "Primary training focuses for this phase",
+          },
+          expectedWorkoutCount: {
+            type: "number",
+            description:
+              "Your estimated number of workout templates this phase needs, " +
+              "based on the phase duration and training frequency. " +
+              "A good guideline: floor(durationDays / 7) * trainingFrequency. " +
+              "Adjust if the phase purpose warrants it (e.g., deload phases may have fewer).",
+          },
+          workoutCount: {
+            type: "number",
+            description: "Number of workout templates in this phase",
           },
         },
       },
-      minItems: 1,
-      maxItems: 10,
       description: "Chronological list of phases (without workouts)",
     },
   },
@@ -301,10 +315,10 @@ export const PROGRAM_SCHEMA = {
     "trainingGoals",
     "trainingFrequency",
   ],
+  additionalProperties: false,
   properties: {
     programId: {
       type: "string",
-      pattern: "^program_.*$",
       description:
         "Unique program identifier: program_{userId}_{timestamp}_{shortId}",
     },
@@ -314,7 +328,7 @@ export const PROGRAM_SCHEMA = {
     },
     coachIds: {
       type: "array",
-      items: { type: "string", pattern: "^user_.*_coach_.*$" },
+      items: { type: "string" },
       description:
         "IDs of coaches involved in programming (format: user_{userId}_coach_{timestamp})",
     },
@@ -329,14 +343,11 @@ export const PROGRAM_SCHEMA = {
     },
     name: {
       type: "string",
-      minLength: 3,
-      maxLength: 60,
       description:
         'Program name - MUST be concise and memorable (50-60 characters max). Examples: "42-Day Strength Builder", "6-Week Powerlifting Prep", "12-Week CrossFit Competition". Do NOT include full training goals or long descriptions in the name - keep it short and punchy.',
     },
     description: {
       type: "string",
-      minLength: 10,
       description: "Comprehensive program description",
     },
     status: {
@@ -346,29 +357,25 @@ export const PROGRAM_SCHEMA = {
     },
     startDate: {
       type: "string",
-      pattern: "^\\d{4}-\\d{2}-\\d{2}$",
       description: "Program start date (YYYY-MM-DD)",
     },
     endDate: {
       type: "string",
-      pattern: "^\\d{4}-\\d{2}-\\d{2}$",
       description: "Program end date (YYYY-MM-DD)",
     },
     totalDays: {
       type: "number",
-      minimum: 7,
-      maximum: 365,
       description: "Total program length in days",
     },
     currentDay: {
       type: "number",
-      minimum: 1,
       description: "User current position (1-indexed)",
     },
     phases: {
       type: "array",
       items: {
         type: "object",
+        additionalProperties: false,
         required: [
           "phaseId",
           "name",
@@ -381,22 +388,31 @@ export const PROGRAM_SCHEMA = {
         properties: {
           phaseId: {
             type: "string",
-            pattern: "^phase_.*$",
+            description:
+              "Unique phase identifier: phase_{userId}_{timestamp}_{shortId}",
           },
-          name: { type: "string" },
-          description: { type: "string" },
-          startDay: { type: "number", minimum: 1 },
-          endDay: { type: "number", minimum: 1 },
-          durationDays: { type: "number", minimum: 1 },
+          name: { type: "string", description: "Phase name" },
+          description: { type: "string", description: "Phase description" },
+          startDay: {
+            type: "number",
+            description: "First day of phase (1-indexed)",
+          },
+          endDay: {
+            type: "number",
+            description: "Last day of phase (1-indexed)",
+          },
+          durationDays: { type: "number", description: "Total days in phase" },
           focusAreas: {
             type: "array",
             items: { type: "string" },
-            minItems: 1,
+            description: "Primary training focuses for this phase (at least 1)",
+          },
+          workoutCount: {
+            type: "number",
+            description: "Number of workout templates in this phase",
           },
         },
       },
-      minItems: 1,
-      maxItems: 10,
       description: "Training phases in chronological order",
     },
     equipmentConstraints: {
@@ -407,19 +423,72 @@ export const PROGRAM_SCHEMA = {
     trainingGoals: {
       type: "array",
       items: { type: "string" },
-      minItems: 1,
       description: "Primary training goals",
     },
     trainingFrequency: {
       type: "number",
-      minimum: 1,
-      maximum: 7,
       description: "Training days per week",
     },
     totalWorkouts: {
       type: "number",
-      minimum: 1,
       description: "Total scheduled workouts in program",
     },
   },
 };
+
+/**
+ * Runtime properties added by save_program_to_database tool before DynamoDB persistence.
+ * These are NOT part of the AI generation contract — the model never produces them.
+ * See docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md — "Schema Composition"
+ */
+export const PROGRAM_RUNTIME_PROPERTIES: Record<string, any> = {
+  completedWorkouts: {
+    type: "number",
+    description: "Number of completed workouts (initialized to 0)",
+  },
+  skippedWorkouts: {
+    type: "number",
+    description: "Number of skipped workouts (initialized to 0)",
+  },
+  adherenceRate: {
+    type: "number",
+    description: "Program adherence rate: completedWorkouts / totalWorkouts",
+  },
+  lastActivityAt: {
+    type: ["string", "null"],
+    description: "ISO timestamp of last user activity on this program",
+  },
+  pausedAt: {
+    type: ["string", "null"],
+    description: "ISO timestamp when program was paused",
+  },
+  pausedDuration: {
+    type: "number",
+    description: "Total paused duration in days (cumulative)",
+  },
+  s3DetailKey: {
+    type: "string",
+    description:
+      "S3 key path to full program details JSON with workout templates",
+  },
+  adaptationLog: {
+    type: "array",
+    items: { type: "object" },
+    description: "Log of program adaptations and modifications",
+  },
+  dayCompletionStatus: {
+    type: "object",
+    description:
+      "Map of day number to completion status for multi-template days",
+  },
+};
+
+/**
+ * Full program storage schema — AI schema + runtime tracking fields.
+ * Use for DynamoDB record validation. Never pass to Bedrock.
+ * See docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md — "Schema Composition"
+ */
+export const PROGRAM_STORAGE_SCHEMA = composeStorageSchema(
+  PROGRAM_SCHEMA,
+  PROGRAM_RUNTIME_PROPERTIES,
+);

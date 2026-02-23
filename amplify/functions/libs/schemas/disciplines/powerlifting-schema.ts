@@ -9,6 +9,7 @@ export const POWERLIFTING_SCHEMA_PLUGIN = {
   powerlifting: {
     type: "object",
     required: ["session_type", "competition_prep", "exercises"],
+    additionalProperties: false,
     properties: {
       session_type: {
         type: "string",
@@ -18,72 +19,75 @@ export const POWERLIFTING_SCHEMA_PLUGIN = {
           "repetition_method",
           "competition_prep",
         ],
-        description: "Type of powerlifting session",
+        description: "Type of powerlifting session"
       },
       competition_prep: {
         type: "boolean",
-        description: "Whether this is competition preparation",
+        description: "Whether this is competition preparation"
       },
       exercises: {
         type: "array",
         items: {
           type: "object",
+          additionalProperties: false,
           required: ["exercise_name", "movement_category", "sets"],
           properties: {
             exercise_name: {
               type: "string",
-              description: "Name of the lift",
+              description: "Name of the lift"
             },
             movement_category: {
               type: "string",
               enum: ["main_lift", "accessory", "mobility"],
-              description: "Category of movement",
+              description: "Category of movement"
             },
             equipment: {
               type: "array",
               items: { type: "string" },
-              description: "Equipment used (belt, sleeves, wraps, etc.)",
+              description: "Equipment used (belt, sleeves, wraps, etc.)"
             },
             competition_commands: {
               type: "boolean",
-              description: "Whether competition commands were used",
+              description: "Whether competition commands were used"
             },
             attempts: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 opener: {
                   type: ["number", "null"],
-                  description: "Opening attempt weight",
+                  description: "Opening attempt weight"
                 },
                 second_attempt: {
                   type: ["number", "null"],
-                  description: "Second attempt weight",
+                  description: "Second attempt weight"
                 },
                 third_attempt: {
                   type: ["number", "null"],
-                  description: "Third attempt weight",
+                  description: "Third attempt weight"
                 },
                 successful_attempts: {
                   type: "array",
                   items: { type: "number" },
-                  description: "Successful attempt weights",
+                  description: "Successful attempt weights"
                 },
                 missed_attempts: {
                   type: "array",
                   items: { type: "number" },
-                  description: "Missed attempt weights",
+                  description: "Missed attempt weights"
                 },
                 miss_reasons: {
                   type: "array",
                   items: { type: "string" },
-                  description: "Reasons for missed attempts",
-                },
-              },
+                  description: "Reasons for missed attempts"
+                }
+              }
             },
             sets: {
               type: "array",
               items: {
                 type: "object",
+                additionalProperties: false,
                 required: ["set_type", "weight", "reps"],
                 properties: {
                   set_type: {
@@ -96,45 +100,43 @@ export const POWERLIFTING_SCHEMA_PLUGIN = {
                       "working",
                       "accessory",
                     ],
-                    description: "Type of set",
+                    description: "Type of set"
                   },
                   weight: {
                     type: "number",
-                    description: "Weight used",
+                    description: "Weight used"
                   },
                   reps: {
                     type: "number",
-                    description: "Reps performed",
+                    description: "Reps performed"
                   },
                   rpe: {
                     type: ["number", "null"],
-                    minimum: 1,
-                    maximum: 10,
-                    description: "Rate of perceived exertion (1-10)",
+                    description: "Rate of perceived exertion (1-10)"
                   },
                   rest_time: {
                     type: ["number", "null"],
-                    description: "Rest time after set (seconds)",
+                    description: "Rest time after set (seconds)"
                   },
                   percentage_1rm: {
                     type: ["number", "null"],
-                    description: "Percentage of 1RM",
+                    description: "Percentage of 1RM"
                   },
                   bar_speed: {
                     type: ["string", "null"],
                     enum: ["slow", "moderate", "fast", "explosive", null],
-                    description: "Bar speed",
+                    description: "Bar speed"
                   },
                   competition_commands: {
                     type: "boolean",
-                    description: "Competition commands used",
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
+                    description: "Competition commands used"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };

@@ -70,7 +70,7 @@ export function getImageFormat(s3Key: string): "jpeg" | "png" | "gif" | "webp" {
  * Build multimodal content for Bedrock Converse API
  *
  * CRITICAL: Uses Converse API format, NOT Messages API!
- * Compatible with: us.anthropic.claude-sonnet-4-5-20250929-v1:0
+ * Compatible with: us.anthropic.claude-sonnet-4-6
  *
  * @param messages - Array of messages with optional images
  * @returns Formatted messages for Bedrock Converse API

@@ -1,11 +1,18 @@
 /**
  * JSON Schemas for memory detection tool use
  * These enforce structured responses from the AI
+ *
+ * Field ordering follows reasoning-first pattern per Bedrock structured output best practices.
  */
 
 export const MEMORY_REQUEST_DETECTION_SCHEMA = {
   type: "object",
+  additionalProperties: false,
   properties: {
+    reasoning: {
+      type: "string",
+      description: "Brief explanation of the memory detection decision",
+    },
     isMemoryRequest: {
       type: "boolean",
       description:
@@ -14,11 +21,10 @@ export const MEMORY_REQUEST_DETECTION_SCHEMA = {
     confidence: {
       type: "number",
       description: "Confidence level from 0.0 to 1.0",
-      minimum: 0.0,
-      maximum: 1.0,
     },
     extractedMemory: {
       type: "object",
+      additionalProperties: false,
       description: "The memory content if a memory request was detected",
       properties: {
         content: {
@@ -27,7 +33,14 @@ export const MEMORY_REQUEST_DETECTION_SCHEMA = {
         },
         type: {
           type: "string",
-          enum: ["preference", "goal", "constraint", "instruction", "context"],
+          enum: [
+            "preference",
+            "goal",
+            "constraint",
+            "instruction",
+            "context",
+            "other",
+          ],
           description: "Category of the memory content",
         },
         importance: {
@@ -38,25 +51,26 @@ export const MEMORY_REQUEST_DETECTION_SCHEMA = {
       },
       required: ["content", "type", "importance"],
     },
-    reasoning: {
-      type: "string",
-      description: "Brief explanation of the memory detection decision",
-    },
   },
-  required: ["isMemoryRequest", "confidence", "reasoning"],
+  required: ["reasoning", "isMemoryRequest", "confidence"],
 };
 
 export const CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA = {
   type: "object",
+  additionalProperties: false,
   properties: {
+    retrievalReasoning: {
+      type: "string",
+      description: "Brief explanation of retrieval decision",
+    },
     needsRetrieval: {
       type: "boolean",
       description:
         "True if retrieving past memories would enhance the coaching response",
     },
-    retrievalReasoning: {
-      type: "string",
-      description: "Brief explanation of retrieval decision",
+    retrievalConfidence: {
+      type: "number",
+      description: "Confidence level for retrieval decision from 0.0 to 1.0",
     },
     contextTypes: {
       type: "array",
@@ -69,33 +83,36 @@ export const CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA = {
           "progress",
           "techniques",
           "motivation",
+          "other",
         ],
       },
       description: "Types of context that would be beneficial to retrieve",
     },
-    retrievalConfidence: {
-      type: "number",
-      description: "Confidence level for retrieval decision from 0.0 to 1.0",
-      minimum: 0.0,
-      maximum: 1.0,
+    memoryRequestReasoning: {
+      type: "string",
+      description: "Brief explanation of memory request detection",
     },
     isMemoryRequest: {
       type: "boolean",
       description:
         "True if the user wants to save something for future reference",
     },
-    memoryRequestReasoning: {
-      type: "string",
-      description: "Brief explanation of memory request detection",
-    },
     memoryCharacteristics: {
       type: "object",
+      additionalProperties: false,
       description:
         "Characteristics of the memory if a save request was detected",
       properties: {
         type: {
           type: "string",
-          enum: ["preference", "goal", "constraint", "instruction", "context"],
+          enum: [
+            "preference",
+            "goal",
+            "constraint",
+            "instruction",
+            "context",
+            "other",
+          ],
           description: "Primary category of the memory",
         },
         importance: {
@@ -111,8 +128,7 @@ export const CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA = {
         suggestedTags: {
           type: "array",
           items: { type: "string" },
-          description: "Relevant keywords for memory retrieval (max 5)",
-          maxItems: 5,
+          description: "Relevant keywords for memory retrieval (up to 5)",
         },
         reasoning: {
           type: "string",
@@ -130,60 +146,26 @@ export const CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA = {
     overallConfidence: {
       type: "number",
       description: "Overall confidence in the analysis from 0.0 to 1.0",
-      minimum: 0.0,
-      maximum: 1.0,
     },
   },
   required: [
-    "needsRetrieval",
     "retrievalReasoning",
-    "contextTypes",
+    "needsRetrieval",
     "retrievalConfidence",
-    "isMemoryRequest",
+    "contextTypes",
     "memoryRequestReasoning",
+    "isMemoryRequest",
     "overallConfidence",
   ],
 };
 
 export const MEMORY_CHARACTERISTICS_SCHEMA = {
   type: "object",
+  additionalProperties: false,
   properties: {
-    type: {
-      type: "string",
-      enum: ["preference", "goal", "constraint", "instruction", "context"],
-      description: "Primary category of the memory - choose exactly one",
-    },
-    importance: {
-      type: "string",
-      enum: ["high", "medium", "low"],
-      description: "Importance level for coaching context",
-    },
-    isCoachSpecific: {
-      type: "boolean",
-      description:
-        "True if memory is specific to this coaching relationship, false if applicable to any coach",
-    },
-    confidence: {
-      type: "number",
-      description: "Confidence level from 0.0 to 1.0",
-      minimum: 0.0,
-      maximum: 1.0,
-    },
-    suggestedTags: {
-      type: "array",
-      items: { type: "string" },
-      description: "Relevant keywords for memory retrieval (3-5 tags)",
-      minItems: 3,
-      maxItems: 5,
-    },
-    exerciseTags: {
-      type: "array",
-      items: { type: "string" },
-      description:
-        "Exercise-specific tags if the memory mentions specific exercises, body parts, or equipment",
-    },
     reasoning: {
       type: "object",
+      additionalProperties: false,
       properties: {
         type: {
           type: "string",
@@ -209,14 +191,51 @@ export const MEMORY_CHARACTERISTICS_SCHEMA = {
       },
       required: ["type", "importance", "scope", "tags", "exercises"],
     },
+    type: {
+      type: "string",
+      enum: [
+        "preference",
+        "goal",
+        "constraint",
+        "instruction",
+        "context",
+        "other",
+      ],
+      description: "Primary category of the memory - choose exactly one",
+    },
+    importance: {
+      type: "string",
+      enum: ["high", "medium", "low"],
+      description: "Importance level for coaching context",
+    },
+    isCoachSpecific: {
+      type: "boolean",
+      description:
+        "True if memory is specific to this coaching relationship, false if applicable to any coach",
+    },
+    confidence: {
+      type: "number",
+      description: "Confidence level from 0.0 to 1.0",
+    },
+    suggestedTags: {
+      type: "array",
+      items: { type: "string" },
+      description: "Relevant keywords for memory retrieval (3-5 tags)",
+    },
+    exerciseTags: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Exercise-specific tags if the memory mentions specific exercises, body parts, or equipment",
+    },
   },
   required: [
+    "reasoning",
     "type",
     "importance",
     "isCoachSpecific",
     "confidence",
     "suggestedTags",
     "exerciseTags",
-    "reasoning",
   ],
 };

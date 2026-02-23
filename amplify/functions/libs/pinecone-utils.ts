@@ -216,7 +216,10 @@ export const getEnhancedMethodologyContext = async (
         .searchRecords(searchQuery);
       const matches = response.result.hits.map((match: any) => ({
         ...match,
+        content: match.fields?.text || match.content || "",
+        score: match._score || match.score || 0,
         metadata: {
+          ...match.fields,
           ...match.metadata,
           recordType: "methodology",
           queryType: getQueryType(messageAnalysis, query === userMessage),
@@ -314,11 +317,10 @@ const formatMethodologyMatch = (match: any): string => {
   const title = match.metadata?.title || "Methodology";
   const source = match.metadata?.source || "";
   const discipline = match.metadata?.discipline || "";
+  const content = match.content || match.fields?.text || "";
 
   const truncatedContent =
-    match.content.length > 200
-      ? match.content.substring(0, 200) + "..."
-      : match.content;
+    content.length > 200 ? content.substring(0, 200) + "..." : content;
 
   const sourceInfo =
     source && discipline

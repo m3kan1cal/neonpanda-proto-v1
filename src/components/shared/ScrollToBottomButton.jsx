@@ -20,7 +20,7 @@ function ScrollToBottomButton({ onClick, show = true, className = "" }) {
   return (
     <button
       onClick={onClick}
-      className={`fixed left-1/2 -translate-x-1/2 w-12 h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-2xl cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary flex items-center justify-center shrink-0 z-[99999] ${className}`}
+      className={`fixed left-1/2 -translate-x-1/2 w-12 h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-2xl cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary flex items-center justify-center shrink-0 z-40 ${className}`}
       aria-label="Scroll to bottom"
       style={{
         WebkitTapHighlightColor: "transparent",

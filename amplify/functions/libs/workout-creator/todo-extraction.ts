@@ -130,7 +130,10 @@ Return JSON with ONLY the fields you found information for:
       // Convert to Bedrock format
       const converseMessages = await buildMultimodalContent([currentMessage]);
 
-      // Call with images
+      // STRUCTURED OUTPUT EXEMPTION: WORKOUT_CREATOR_TODO_SCHEMA exceeds Bedrock's
+      // grammar compilation limits (grammar compilation timed out in warmup). The model
+      // follows the schema voluntarily via the tool definition context.
+      // See: docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md
       extractionResponse = await callBedrockApiMultimodal(
         systemPrompt,
         converseMessages,
@@ -144,10 +147,11 @@ Return JSON with ONLY the fields you found information for:
             inputSchema: WORKOUT_CREATOR_TODO_SCHEMA,
           },
           expectedToolName: "extract_workout_info",
+          strictSchema: false,
         },
       );
     } else {
-      // Text-only extraction
+      // STRUCTURED OUTPUT EXEMPTION: see multimodal branch above
       extractionResponse = await callBedrockApi(
         systemPrompt,
         userPrompt,
@@ -160,6 +164,7 @@ Return JSON with ONLY the fields you found information for:
             inputSchema: WORKOUT_CREATOR_TODO_SCHEMA,
           },
           expectedToolName: "extract_workout_info",
+          strictSchema: false,
         },
       );
     }
@@ -172,7 +177,6 @@ Return JSON with ONLY the fields you found information for:
       // Tool was used - extract the input and fix any double-encoding
       extracted = extractionResponse.input;
       logger.info("✅ Tool-based extraction successful");
-      // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
       extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
@@ -228,7 +232,6 @@ Return JSON with ONLY the fields you found information for:
             status: "complete",
             value: item.value,
             confidence: item.confidence || "medium",
-            notes: item.notes,
             extractedFrom: `message_${messageIndex}`,
           };
 

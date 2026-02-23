@@ -9,7 +9,7 @@ import {
   fixDoubleEncodedProperties,
 } from "../response-utils";
 import { CoachCreatorTodoList, TodoItem, CoachMessage } from "./types";
-import { COACH_CREATOR_TODO_SCHEMA } from "../schemas/coach-creator-todo-schema";
+import { COACH_CREATOR_EXTRACTION_SCHEMA } from "../schemas/coach-creator-extraction-schema";
 import { logger } from "../logger";
 
 /**
@@ -51,14 +51,20 @@ IMPORTANT:
 
 Return JSON with ONLY the fields you found information for:
 {
-  "coachGenderPreference": { "value": "male|female|neutral", "confidence": "high|medium|low", "notes": "optional context" },
+  "coachGenderPreference": { "value": "male|female|neutral", "confidence": "high|medium|low" },
   "primaryGoals": { "value": "extracted goals", "confidence": "high|medium|low" },
   // ... only include fields you found
 }
 `;
 
   try {
-    // Use tool-based API for schema enforcement
+    // STRUCTURED OUTPUT EXEMPTION: COACH_CREATOR_EXTRACTION_SCHEMA has 22 top-level
+    // optional objects. Even within the 24-param count limit, the grammar compiler
+    // times out on schemas with many optional objects containing nested enum fields
+    // (combinatorial explosion: 2^22 possible presence/absence combinations × enum paths).
+    // This is the same root cause as extract_workout_info and extract_program_info.
+    // The model follows the schema voluntarily via the tool definition context.
+    // See: docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md
     const extractionResponse = await callBedrockApi(
       systemPrompt,
       userPrompt,
@@ -67,29 +73,23 @@ Return JSON with ONLY the fields you found information for:
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: [
           {
-            name: "extract_intake_info",
+            name: "extract_coach_creator_info",
             description:
               "Extract fitness coach intake information from user response",
-            inputSchema: COACH_CREATOR_TODO_SCHEMA,
+            inputSchema: COACH_CREATOR_EXTRACTION_SCHEMA,
           },
         ],
-        expectedToolName: "extract_intake_info",
+        expectedToolName: "extract_coach_creator_info",
+        strictSchema: false,
       },
     );
 
     logger.info("✅ Received extraction response");
 
-    // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
-      // Tool was used - extract the input and fix any double-encoding
-      extracted = extractionResponse.input;
-      logger.info("✅ Tool-based extraction successful");
-      // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
-      extracted = fixDoubleEncodedProperties(extracted);
+      extracted = fixDoubleEncodedProperties(extractionResponse.input);
     } else {
-      // Fallback to parsing (shouldn't happen with tool enforcement)
-      logger.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
@@ -118,7 +118,6 @@ Return JSON with ONLY the fields you found information for:
             status: "complete",
             value: item.value,
             confidence: item.confidence || "medium",
-            notes: item.notes,
             extractedFrom: `message_${messageIndex}`,
           };
 

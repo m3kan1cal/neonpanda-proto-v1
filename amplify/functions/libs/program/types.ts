@@ -5,8 +5,6 @@
  * training program functionality including programs, phases, workouts, and adaptation.
  */
 
-import { TodoItem } from "../todo-types";
-
 /**
  * Training Program entity - main program structure
  */
@@ -470,42 +468,4 @@ export interface ProgramGenerationData {
     focusAreas: string[];
   }>;
   workoutTemplates: WorkoutTemplate[]; // Flat array of templates with groupId/dayNumber
-}
-
-/**
- * Program Creation Todo List
- * Tracks all information needed for training program generation
- * Pattern: Same structure as CoachCreatorTodoList
- */
-export interface ProgramDesignerTodoList {
-  // Core Program Definition (3 fields)
-  trainingGoals: TodoItem;
-  targetEvent: TodoItem;
-  programDuration: TodoItem;
-
-  // Schedule & Logistics (4 fields)
-  trainingFrequency: TodoItem;
-  sessionDuration: TodoItem;
-  startDate: TodoItem;
-  restDaysPreference: TodoItem;
-
-  // Equipment & Environment (2 fields)
-  equipmentAccess: TodoItem;
-  trainingEnvironment: TodoItem;
-
-  // User Context (5 fields)
-  experienceLevel: TodoItem;
-  currentFitnessBaseline: TodoItem;
-  injuryConsiderations: TodoItem;
-  movementPreferences: TodoItem;
-  movementDislikes: TodoItem;
-
-  // Program Structure Preferences (3 fields)
-  programFocus: TodoItem;
-  intensityPreference: TodoItem;
-  volumeTolerance: TodoItem;
-
-  // Optional Advanced (2 fields)
-  deloadPreference: TodoItem;
-  progressionStyle: TodoItem;
 }

@@ -9,6 +9,7 @@ import {
   inlineEditPatterns,
 } from "../utils/ui/uiPatterns";
 import { logger } from "../utils/logger";
+import TiptapEditor from "./shared/TiptapEditor";
 import {
   NeonBorder,
   WorkoutIcon,
@@ -2989,16 +2990,16 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                             Textarea Field
                           </h4>
-                          <textarea
+                          <TiptapEditor
                             className={inputPatterns.textarea}
                             placeholder="Enter your message..."
-                            rows={4}
-                            defaultValue=""
+                            mode="plain"
+                            minHeight="96px"
+                            maxHeight="200px"
                           />
                           <p className="text-synthwave-text-secondary font-rajdhani text-sm">
-                            Multi-line text input with consistent styling,
-                            vertical resize capability, and proper minimum
-                            height.
+                            Multi-line text input with Tiptap rich text editor,
+                            auto-resizing with overflow, and consistent styling.
                           </p>
                         </div>
 

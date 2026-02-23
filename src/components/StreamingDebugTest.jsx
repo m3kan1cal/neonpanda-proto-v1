@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { runAllStreamingTests, testRawStreamingAPI, testStreamingWithManualProcessing, testStreamingApiHelper, testStreamingAgentHelper } from '../utils/debug/streamingDebugTest';
 import { testLambdaStreamingConnection, checkLambdaStreamingHealth } from '../utils/apis/streamingLambdaApi';
 import { logger } from "../utils/logger";
+import TiptapEditor from "./shared/TiptapEditor";
 
 /**
  * Debug test page for streaming functionality
@@ -147,17 +148,13 @@ export default function StreamingDebugTest() {
         <div style={{ marginTop: '10px' }}>
           <label>
             <strong>Test Message:</strong><br/>
-            <textarea
-              value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
-              style={{
-                width: '100%',
-                height: '60px',
-                marginTop: '5px',
-                padding: '8px',
-                border: '1px solid #ccc',
-                borderRadius: '4px'
-              }}
+            <TiptapEditor
+              content={customMessage}
+              onUpdate={(html, text) => setCustomMessage(text)}
+              mode="plain"
+              minHeight="60px"
+              maxHeight="150px"
+              className="mt-1 p-2 border border-gray-300 rounded"
             />
           </label>
         </div>

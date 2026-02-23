@@ -28,6 +28,9 @@ export async function processStreamingChunks(
     onError,
   },
 ) {
+  // Track last paint yield for smooth rendering during fast chunk delivery
+  let lastPaintYield = performance.now();
+
   try {
     for await (const chunk of messageStream) {
       if (chunk.type === "start") {
@@ -45,6 +48,14 @@ export async function processStreamingChunks(
         }
       } else if (chunk.type === "chunk") {
         await onChunk(chunk.content);
+
+        // Yield to browser paint cycle periodically for smooth rendering
+        // Prevents "all at once" rendering when chunks arrive faster than frame rate
+        const now = performance.now();
+        if (now - lastPaintYield > 32) {
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+          lastPaintYield = performance.now();
+        }
       } else if (chunk.type === "complete") {
         return await onComplete(chunk);
       } else if (chunk.type === "fallback") {

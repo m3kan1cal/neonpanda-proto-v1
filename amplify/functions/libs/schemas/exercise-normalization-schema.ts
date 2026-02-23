@@ -16,32 +16,32 @@ export const NORMALIZE_EXERCISES_TOOL: BedrockToolConfig = {
     "Normalize exercise names to canonical snake_case format with confidence scores",
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       exercises: {
         type: "array",
         description: "Array of normalized exercise entries",
         items: {
           type: "object",
+          additionalProperties: false,
           properties: {
             original: {
               type: "string",
-              description: "The original exercise name provided",
+              description: "The original exercise name provided"
             },
             normalized: {
               type: "string",
-              description: "The normalized snake_case exercise name",
+              description: "The normalized snake_case exercise name"
             },
             confidence: {
               type: "number",
-              description: "Confidence score between 0 and 1",
-              minimum: 0,
-              maximum: 1,
-            },
+              description: "Confidence score between 0 and 1"
+            }
           },
-          required: ["original", "normalized", "confidence"],
-        },
-      },
+          required: ["original", "normalized", "confidence"]
+        }
+      }
     },
-    required: ["exercises"],
-  },
+    required: ["exercises"]
+  }
 };

@@ -12,21 +12,19 @@
 export const BASE_WORKOUT_SCHEMA = {
   type: "object",
   required: ["date", "discipline", "workout_type", "metadata"],
+  additionalProperties: false,
   properties: {
     workout_id: {
       type: "string",
-      pattern: "^workout_.*$",
       description:
         "Unique workout identifier following pattern: workout_{userId}_{timestamp}_{shortId}",
     },
     user_id: {
       type: "string",
-      pattern: "^[a-zA-Z0-9_-]+$",
       description: "User identifier (raw user ID without prefix)",
     },
     date: {
       type: "string",
-      pattern: "^\\d{4}-\\d{2}-\\d{2}$",
       description: "Workout date in YYYY-MM-DD format",
     },
     discipline: {
@@ -100,21 +98,19 @@ export const BASE_WORKOUT_SCHEMA = {
     // Performance Metrics (common to all disciplines)
     performance_metrics: {
       type: "object",
+      additionalProperties: false,
       properties: {
         intensity: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Overall intensity rating (1-10 scale)",
         },
         perceived_exertion: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Rate of perceived exertion (1-10 scale)",
         },
         heart_rate: {
           type: "object",
+          additionalProperties: false,
           properties: {
             avg: {
               type: ["number", "null"],
@@ -126,6 +122,7 @@ export const BASE_WORKOUT_SCHEMA = {
             },
             zones: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 zone_1: {
                   type: ["number", "null"],
@@ -157,26 +154,18 @@ export const BASE_WORKOUT_SCHEMA = {
         },
         mood_pre: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Mood before workout (1-10 scale)",
         },
         mood_post: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Mood after workout (1-10 scale)",
         },
         energy_level_pre: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Energy level before workout (1-10 scale)",
         },
         energy_level_post: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Energy level after workout (1-10 scale)",
         },
       },
@@ -194,6 +183,7 @@ export const BASE_WORKOUT_SCHEMA = {
           "new_best",
           "significance",
         ],
+        additionalProperties: false,
         properties: {
           exercise: {
             type: "string",
@@ -232,7 +222,6 @@ export const BASE_WORKOUT_SCHEMA = {
           },
           date_previous: {
             type: ["string", "null"],
-            pattern: "^\\d{4}-\\d{2}-\\d{2}$",
             description: "Date of previous PR (YYYY-MM-DD)",
           },
           significance: {
@@ -256,38 +245,30 @@ export const BASE_WORKOUT_SCHEMA = {
     // Subjective Feedback (common to all disciplines)
     subjective_feedback: {
       type: "object",
+      additionalProperties: false,
       properties: {
         enjoyment: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Enjoyment rating (1-10 scale)",
         },
         difficulty: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Difficulty rating (1-10 scale)",
         },
         energy_pre: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Energy level before workout (1-10 scale)",
         },
         energy_post: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Energy level after workout (1-10 scale)",
         },
         soreness: {
           type: "object",
+          additionalProperties: false,
           properties: {
             level: {
               type: ["number", "null"],
-              minimum: 1,
-              maximum: 10,
               description: "Soreness level (1-10 scale)",
             },
             location: {
@@ -299,8 +280,6 @@ export const BASE_WORKOUT_SCHEMA = {
         },
         sleep_quality: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Sleep quality previous night (1-10 scale)",
         },
         sleep_hours: {
@@ -317,14 +296,10 @@ export const BASE_WORKOUT_SCHEMA = {
         },
         hydration: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Hydration level (1-10 scale)",
         },
         stress_level: {
           type: ["number", "null"],
-          minimum: 1,
-          maximum: 10,
           description: "Stress level before workout (1-10 scale)",
         },
         notes: {
@@ -335,6 +310,7 @@ export const BASE_WORKOUT_SCHEMA = {
           type: ["array", "null"],
           items: {
             type: "object",
+            additionalProperties: false,
             properties: {
               body_part: {
                 type: "string",
@@ -377,6 +353,7 @@ export const BASE_WORKOUT_SCHEMA = {
     // Environmental Factors (common to all disciplines)
     environmental_factors: {
       type: "object",
+      additionalProperties: false,
       properties: {
         temperature: {
           type: ["number", "null"],
@@ -400,6 +377,7 @@ export const BASE_WORKOUT_SCHEMA = {
     // Recovery Metrics (common to all disciplines)
     recovery_metrics: {
       type: "object",
+      additionalProperties: false,
       properties: {
         hrv_morning: {
           type: ["number", "null"],
@@ -423,6 +401,7 @@ export const BASE_WORKOUT_SCHEMA = {
     // Coach Notes (common to all disciplines)
     coach_notes: {
       type: "object",
+      additionalProperties: false,
       properties: {
         programming_intent: {
           type: ["string", "null"],
@@ -463,6 +442,7 @@ export const BASE_WORKOUT_SCHEMA = {
         "extraction_method",
         "validation_flags",
       ],
+      additionalProperties: false,
       properties: {
         logged_via: {
           type: "string",
@@ -475,8 +455,6 @@ export const BASE_WORKOUT_SCHEMA = {
         },
         data_confidence: {
           type: "number",
-          minimum: 0,
-          maximum: 1,
           description: "Confidence in extracted data (0-1)",
         },
         ai_extracted: {
@@ -497,8 +475,6 @@ export const BASE_WORKOUT_SCHEMA = {
         },
         data_completeness: {
           type: "number",
-          minimum: 0,
-          maximum: 1,
           description: "Completeness of data (0-1)",
         },
         extraction_method: {
@@ -523,8 +499,8 @@ export const BASE_WORKOUT_SCHEMA = {
         },
         generation_timestamp: {
           type: "string",
-          format: "date-time",
-          description: "Timestamp when workout data was generated",
+          description:
+            "Timestamp when workout data was generated (ISO 8601 date-time format, e.g., 2026-02-11T12:00:00Z)",
         },
       },
     },

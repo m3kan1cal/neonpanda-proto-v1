@@ -363,7 +363,7 @@ function ManageExercises() {
             e.stopPropagation();
             toggleExerciseCollapse(exercise.exerciseName);
           }}
-          className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+          className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
         >
           <span>{isCollapsed ? "View Sessions" : "Hide Sessions"}</span>
           <div

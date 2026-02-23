@@ -110,7 +110,7 @@ function FAQs() {
     {
       question: "How smart is my AI coach really?",
       answer:
-        "Your AI coach is powered by best-in-class AI models including Claude Sonnet 4.5 and Opus 4.5 for complex coaching decisions, Claude Haiku 4.5 for fast real-time responses, Amazon Nova 2 Lite for efficient background processing, and Nvidia NV-Embed-V2 for intelligent memory retrieval. This multi-model architecture combines deep expertise in exercise science with personalized understanding of your goals across 10 supported disciplines. Think of it as having access to the collective knowledge of expert coaches, orchestrated by sophisticated agentic AI specifically for your journey.",
+        "Your AI coach is powered by best-in-class AI models including Claude Sonnet 4.6 and Opus 4.6 for complex coaching decisions, Claude Haiku 4.5 for fast real-time responses, Nvidia Nemotron and Amazon Nova 2 Lite for efficient background processing, and Nvidia NV-Embed-V2 for intelligent memory retrieval. This multi-model architecture combines deep expertise in exercise science with personalized understanding of your goals across 10 supported disciplines. Think of it as having access to the collective knowledge of expert coaches, orchestrated by sophisticated agentic AI specifically for your journey.",
     },
     {
       question: "Is there a community aspect?",
@@ -151,7 +151,7 @@ function FAQs() {
     {
       question: "Who's behind NeonPanda?",
       answer:
-        "NeonPanda is built by a small, lean team that prioritizes fitness in real life—we're not just building a fitness app, we're actually in the gym using it. Founded by an AI and cloud architect with deep AWS expertise in agentic AI systems and multi-model orchestration, we combine years of professional experience building sophisticated AI platforms with genuine passion for training across multiple disciplines. We saw an opportunity to apply cutting-edge AI technology—like Claude Sonnet 4.5, specialized agents, and intelligent routing—to create coaching experiences that truly rival human trainers.",
+        "NeonPanda is built by a small, lean team that prioritizes fitness in real life—we're not just building a fitness app, we're actually in the gym using it. Founded by an AI and cloud architect with deep AWS expertise in agentic AI systems and multi-model orchestration, we combine years of professional experience building sophisticated AI platforms with genuine passion for training across multiple disciplines. We saw an opportunity to apply cutting-edge AI technology—like Claude Sonnet 4.6, specialized agents, and intelligent routing—to create coaching experiences that truly rival human trainers.",
     },
     {
       question:

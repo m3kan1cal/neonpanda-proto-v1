@@ -14,8 +14,8 @@
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import type { BedrockToolUseResult } from "../api-helpers";
 import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/workout-normalization-schema";
+import { composeWorkoutSchema } from "../schemas/schema-composer";
 import { getCondensedSchema } from "../object-utils";
-import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
 import type { UniversalWorkoutSchema } from "./types";
 import { fixDoubleEncodedProperties } from "../response-utils";
 import { logger } from "../logger";
@@ -47,11 +47,35 @@ export interface NormalizationContext {
 }
 
 /**
- * Build the normalization prompt
+ * Compose a discipline-aware normalization schema by substituting the full
+ * WORKOUT_SCHEMA with a targeted BASE + ONE discipline plugin composed schema.
+ * Reduces token usage by ~70% vs sending all 10 discipline plugins.
+ * Grammar enforcement remains off (strictSchema: false) -- the base schema
+ * still has ~80 optional params after composition, above Bedrock's limit of 24.
  */
-const buildNormalizationPrompt = (workoutData: any): string => {
-  // Compact JSON formatting to reduce prompt size
-  const schemaJson = JSON.stringify(getCondensedSchema(WORKOUT_SCHEMA));
+const composeNormalizationSchema = (
+  discipline: string,
+): typeof NORMALIZATION_RESPONSE_SCHEMA => {
+  const composedWorkoutSchema = composeWorkoutSchema(discipline);
+  return {
+    ...NORMALIZATION_RESPONSE_SCHEMA,
+    properties: {
+      ...NORMALIZATION_RESPONSE_SCHEMA.properties,
+      normalizedData: composedWorkoutSchema,
+    },
+  };
+};
+
+/**
+ * Build the normalization prompt using a discipline-specific schema reference.
+ * The schema JSON in the prompt is composed rather than the full WORKOUT_SCHEMA.
+ */
+const buildNormalizationPrompt = (
+  workoutData: any,
+  composedSchema: any,
+): string => {
+  // Use the composed schema (BASE + ONE discipline) for the schema reference
+  const schemaJson = JSON.stringify(getCondensedSchema(composedSchema));
   const workoutJson = JSON.stringify(workoutData);
 
   return `Normalize workout data to Universal Workout Schema v2.0.
@@ -110,20 +134,33 @@ export async function generateNormalization(
     enableThinking,
   });
 
-  const normalizationPrompt = buildNormalizationPrompt(workoutData);
+  // Compose a discipline-specific normalization schema (BASE + ONE plugin).
+  // Reduces token usage by ~70% vs the full schema with all 10 disciplines.
+  // strictSchema remains false -- ~80 optional params after composition still
+  // exceeds Bedrock's limit of 24 (see docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md).
+  const discipline = workoutData.discipline ?? "hybrid";
+  const composedNormalizationSchema = composeNormalizationSchema(discipline);
+
+  const normalizationPrompt = buildNormalizationPrompt(
+    workoutData,
+    composedNormalizationSchema.properties.normalizedData,
+  );
   const promptSizeKB = (normalizationPrompt.length / 1024).toFixed(1);
 
   logger.info("Normalization prompt built:", {
     promptSizeKB: `${promptSizeKB}KB`,
+    discipline,
     workoutId: workoutData.workout_id,
   });
 
-  // Call Bedrock with tool config - NO fallback
-  // Following Coach Creator pattern exactly
+  // STRUCTURED OUTPUT EXEMPTION: Even with discipline-aware composition the schema
+  // has ~80 optional parameters, exceeding Bedrock's grammar compilation limit of 24.
+  // The model follows the schema voluntarily via the tool definition context.
+  // See: docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md
   const result = (await callBedrockApi(
     normalizationPrompt,
     "Normalize workout data",
-    MODEL_IDS.EXECUTOR_MODEL_FULL, // Nova 2 Lite
+    MODEL_IDS.EXECUTOR_MODEL_FULL,
     {
       temperature: TEMPERATURE_PRESETS.STRUCTURED,
       enableThinking,
@@ -131,9 +168,10 @@ export async function generateNormalization(
         name: "normalize_workout",
         description:
           "Normalize workout data to conform to the Universal Workout Schema v2.0",
-        inputSchema: NORMALIZATION_RESPONSE_SCHEMA,
+        inputSchema: composedNormalizationSchema,
       },
       expectedToolName: "normalize_workout",
+      strictSchema: false,
     },
   )) as BedrockToolUseResult;
 
@@ -235,7 +273,7 @@ Classify this workout into ONE discipline. If mixed or unclear, use "crossfit" a
   const result = (await callBedrockApi(
     prompt,
     "Classify workout discipline",
-    MODEL_IDS.EXECUTOR_MODEL_FULL, // Nova 2 Lite
+    MODEL_IDS.CONTEXTUAL_MODEL_FULL,
     {
       temperature: TEMPERATURE_PRESETS.STRUCTURED,
       tools: {
@@ -243,6 +281,7 @@ Classify this workout into ONE discipline. If mixed or unclear, use "crossfit" a
         description: "Classify workout into a training discipline",
         inputSchema: {
           type: "object",
+          additionalProperties: false,
           properties: {
             discipline: {
               type: "string",

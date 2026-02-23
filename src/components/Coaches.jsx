@@ -937,7 +937,7 @@ function Coaches() {
                               setEditingCoachId(coach.coach_id);
                               setOpenMenuId(null);
                             }}
-                            className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                            className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
                           >
                             <EditIcon />
                             <span className="font-rajdhani font-medium text-sm">
@@ -950,7 +950,7 @@ function Coaches() {
                               handleDeleteCoachClick(coach);
                               setOpenMenuId(null);
                             }}
-                            className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                            className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
                           >
                             <div className="w-4 h-4 flex items-center justify-center">
                               <TrashIcon />

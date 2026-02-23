@@ -242,9 +242,9 @@ export const inputPatterns = {
   standard:
     "w-full px-4 py-3 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-pink focus:bg-synthwave-bg-primary/50 focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[48px] [-webkit-appearance:none] [appearance:none] [&:-webkit-autofill]:!px-4 [&:-webkit-autofill]:!py-3 [&:-webkit-autofill]:!min-h-[48px] [&:-webkit-autofill]:!border-[1px] [&:-webkit-autofill]:!border-solid [&:-webkit-autofill]:!bg-synthwave-bg-primary/30 [&:-webkit-autofill]:!border-synthwave-neon-pink/20 [&:-webkit-autofill]:!rounded-xl [&:-webkit-autofill]:!shadow-none [&:-webkit-autofill]:!outline-none [&:-webkit-autofill]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.47)_inset] [&:-webkit-autofill:hover]:!px-4 [&:-webkit-autofill:hover]:!py-3 [&:-webkit-autofill:hover]:!min-h-[48px] [&:-webkit-autofill:hover]:!border-[1px] [&:-webkit-autofill:hover]:!border-solid [&:-webkit-autofill:hover]:!bg-synthwave-bg-primary/30 [&:-webkit-autofill:hover]:!border-synthwave-neon-pink/20 [&:-webkit-autofill:hover]:!rounded-xl [&:-webkit-autofill:hover]:!shadow-none [&:-webkit-autofill:hover]:!outline-none [&:-webkit-autofill:hover]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.47)_inset] [&:-webkit-autofill:focus]:!px-4 [&:-webkit-autofill:focus]:!py-3 [&:-webkit-autofill:focus]:!min-h-[48px] [&:-webkit-autofill:focus]:!border-[1px] [&:-webkit-autofill:focus]:!border-solid [&:-webkit-autofill:focus]:!bg-synthwave-bg-primary/50 [&:-webkit-autofill:focus]:!border-synthwave-neon-pink [&:-webkit-autofill:focus]:!rounded-xl [&:-webkit-autofill:focus]:!shadow-none [&:-webkit-autofill:focus]:!outline-none [&:-webkit-autofill:focus]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.5)_inset]",
 
-  // Chat input field - matches CoachConversations styling (with right padding for emoji button)
+  // Chat input field - Tiptap editor wrapper styling (with right padding for emoji button)
   chatInput:
-    "w-full px-4 py-3 pr-12 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-2xl text-synthwave-text-primary font-rajdhani outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus:border-synthwave-neon-pink focus:px-4 focus:py-3 hover:border-synthwave-neon-pink/50 transition-colors resize-none placeholder-synthwave-text-muted synthwave-scrollbar max-h-[120px] overflow-y-auto min-h-[48px] box-border",
+    "w-full px-4 py-3 pr-12 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-2xl text-synthwave-text-primary font-rajdhani outline-none ring-0 focus-within:outline-none focus-within:ring-0 focus-within:border-synthwave-neon-pink hover:border-synthwave-neon-pink/50 transition-colors placeholder-synthwave-text-muted synthwave-scrollbar box-border",
 
   // Command palette input field - same styling but without right padding
   commandInput:
@@ -258,13 +258,13 @@ export const inputPatterns = {
   inlineEdit:
     "bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-lg font-rajdhani text-white placeholder-synthwave-text-secondary outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus:border-synthwave-neon-pink hover:border-synthwave-neon-pink/50 transition-all",
 
-  // Textarea input - matches standard input styling but for multi-line text - enhanced for autocomplete stability
+  // Textarea input - Tiptap editor wrapper styling for multi-line text
   textarea:
-    "w-full px-4 py-3 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-pink focus:bg-synthwave-bg-primary/50 focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 min-h-[120px] resize-vertical [-webkit-appearance:none] [appearance:none]",
+    "w-full px-4 py-3 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus-within:outline-none focus-within:border-synthwave-neon-pink focus-within:bg-synthwave-bg-primary/50 focus-within:ring-2 focus-within:ring-synthwave-neon-pink/20 focus-within:ring-offset-0 focus-within:ring-offset-transparent focus-within:shadow-none hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50",
 
-  // Error state textarea - enhanced for autocomplete stability
+  // Error state textarea - Tiptap editor wrapper styling
   textareaError:
-    "w-full px-4 py-3 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-red-400 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-red-500 focus:bg-synthwave-bg-primary/50 focus:ring-2 focus:ring-red-400/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[120px] resize-vertical [-webkit-appearance:none] [appearance:none]",
+    "w-full px-4 py-3 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-red-400 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus-within:outline-none focus-within:border-red-500 focus-within:bg-synthwave-bg-primary/50 focus-within:ring-2 focus-within:ring-red-400/20 focus-within:ring-offset-0 focus-within:ring-offset-transparent focus-within:shadow-none",
 
   // Select dropdown - matches standard input styling but for select elements
   select:
@@ -550,6 +550,23 @@ export const containerPatterns = {
   // Empty State Tip Card - For tutorial/help cards in empty states (cyan themed, no hover)
   emptyStateTipCard:
     "bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg px-4 py-4 font-rajdhani",
+
+  // AI Explanation Popup - Gradient border wrapper (outer shell)
+  // Note: also apply inline style: backgroundSize "200% 200%", animation "slideDown 0.3s ease-out forwards, gradient-flow 3s ease infinite"
+  explanationPopupWrapper:
+    "mt-3 relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg",
+
+  // AI Explanation Popup - Inner card (always paired with explanationPopupWrapper)
+  explanationPopupInner: "bg-synthwave-bg-card rounded-lg p-4 h-full",
+
+  // AI Explanation Popup - Close button (top-right corner overlay)
+  explanationPopupCloseButton:
+    "cursor-pointer absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors",
+
+  // Scrollable AI response content area - for explanation popups, AI text blocks with overflow
+  // Pink scrollbar, 300px max height, standard body text sizing
+  aiResponseContent:
+    "font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed max-h-[300px] overflow-y-auto synthwave-scrollbar pr-1",
 };
 
 export const toastPatterns = {
@@ -655,17 +672,17 @@ export const avatarPatterns = {
 
   // Complete avatar containers with styling
   userSmall:
-    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30",
+    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-pink via-synthwave-neon-purple to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30",
 
   aiSmall:
-    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
+    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
 
   coachLarge:
-    "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg shadow-xl shadow-synthwave-neon-cyan/30 ring-2 ring-synthwave-neon-cyan/30",
+    "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg shadow-xl shadow-synthwave-neon-cyan/30 ring-2 ring-synthwave-neon-cyan/30",
 
   // Compact avatar (24px) - for compact header displays
   coachCompact:
-    "w-6 h-6 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-xs shadow-lg shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
+    "w-6 h-6 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-xs shadow-lg shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
 
   // Skeleton loading states for avatars
   skeletonSmall:
@@ -711,7 +728,7 @@ export const compactCardPatterns = {
 export const commandPalettePatterns = {
   // Command palette trigger button - Minimal button showing just keyboard shortcut (hidden on mobile via component)
   triggerButton:
-    "flex items-center justify-center px-3 py-2 bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 rounded-lg text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+    "flex items-center justify-center px-3 py-2 bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 rounded-lg text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary cursor-pointer",
 
   // Button text (hidden on mobile)
   triggerButtonText: "font-rajdhani text-sm font-medium hidden sm:inline",
@@ -802,7 +819,7 @@ export const navigationPatterns = {
     header: "px-6 py-4 border-b border-synthwave-neon-cyan/10",
     headerTitle: "font-russo font-bold text-2xl text-white uppercase",
     headerCloseButton:
-      "p-2 rounded-lg text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
+      "p-2 rounded-lg text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
 
     // Section headers
     sectionContainer: "py-2",
@@ -811,7 +828,7 @@ export const navigationPatterns = {
       "font-rajdhani font-semibold text-sm text-synthwave-text-muted uppercase tracking-wider",
 
     // Menu items
-    item: "w-full flex items-center gap-4 px-6 py-4 focus:outline-none active:outline-none border-0 transition-[background-color,color,transform] duration-300",
+    item: "w-full flex items-center gap-4 px-6 py-4 focus:outline-none active:outline-none border-0 transition-[background-color,color,transform] duration-300 cursor-pointer",
     itemLabel: "text-lg font-rajdhani uppercase tracking-wide flex-1 text-left",
     itemBadge:
       "absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1.5 rounded-full text-xs font-bold flex items-center justify-center bg-synthwave-neon-pink text-white",
@@ -870,7 +887,7 @@ export const navigationPatterns = {
     profileButton:
       "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 hover:bg-synthwave-bg-card/60 focus:outline-none",
     profileAvatar:
-      "w-10 h-10 rounded-full bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg ring-2 ring-synthwave-neon-cyan/30",
+      "w-10 h-10 rounded-full bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg ring-2 ring-synthwave-neon-cyan/30",
     profileInfo: "flex-1 min-w-0",
     profileName: "font-rajdhani font-semibold text-base text-white truncate",
     profileEmail: "font-rajdhani text-xs text-synthwave-text-muted truncate",
@@ -905,7 +922,7 @@ export const navigationPatterns = {
     container: "fixed right-6 z-50 md:hidden",
     containerStyle: { bottom: "calc(80px + env(safe-area-inset-bottom))" }, // Inline style for calc() support
     button:
-      "w-14 h-14 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full shadow-lg shadow-synthwave-neon-pink/30 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+      "w-14 h-14 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full shadow-lg shadow-synthwave-neon-pink/30 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary cursor-pointer",
     icon: "w-6 h-6",
 
     // Speed dial menu - expands above FAB (right-aligned, shifted left with padding)
@@ -915,7 +932,7 @@ export const navigationPatterns = {
 
     // Speed dial item - wrapper button (minimal styling, hover on children)
     speedDialItem:
-      "flex items-center gap-3 justify-end transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary rounded-full",
+      "flex items-center gap-3 justify-end transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary rounded-full cursor-pointer",
 
     // Speed dial icon button (receives hover effects) - PINK themed
     speedDialButton:
@@ -1395,3 +1412,11 @@ export const streamingPatterns = {
 // </div>
 //
 // Call injectScrollbarStyles() in useEffect to enable scrollbar styling
+//
+// AI Explanation Popup (gradient border via padding trick):
+// <div className={containerPatterns.explanationPopupWrapper} style={{ backgroundSize: "200% 200%", animation: "slideDown 0.3s ease-out forwards, gradient-flow 3s ease infinite" }}>
+//   <div className={containerPatterns.explanationPopupInner}>
+//     <button className={containerPatterns.explanationPopupCloseButton}><XIcon /></button>
+//     <div className={containerPatterns.aiResponseContent}><MarkdownRenderer content={...} /></div>
+//   </div>
+// </div>

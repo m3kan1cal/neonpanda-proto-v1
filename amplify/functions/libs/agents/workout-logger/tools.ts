@@ -21,6 +21,14 @@ import type {
   WorkoutSaveResult,
 } from "./types";
 import {
+  DETECT_DISCIPLINE_SCHEMA,
+  EXTRACT_WORKOUT_DATA_SCHEMA,
+  VALIDATE_WORKOUT_COMPLETENESS_SCHEMA,
+  NORMALIZE_WORKOUT_DATA_SCHEMA,
+  GENERATE_WORKOUT_SUMMARY_SCHEMA,
+  SAVE_WORKOUT_TO_DATABASE_SCHEMA,
+} from "../../schemas/workout-logger-tool-schemas";
+import {
   checkWorkoutComplexity,
   buildWorkoutExtractionPrompt,
   extractCompletedAtTime,
@@ -105,17 +113,7 @@ reducing token usage by ~70% and improving extraction accuracy.
 
 Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      userMessage: {
-        type: "string",
-        description:
-          "The user message describing their workout. If user attached images, YOU must analyze them first and include ALL workout details from the images in this parameter.",
-      },
-    },
-    required: ["userMessage"],
-  },
+  inputSchema: DETECT_DISCIPLINE_SCHEMA,
 
   async execute(
     input: any,
@@ -185,45 +183,7 @@ This tool:
 
 Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod ('tool' or 'fallback')`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      discipline: {
-        type: "string",
-        description:
-          "The detected workout discipline from detect_discipline tool (e.g., 'crossfit', 'powerlifting')",
-      },
-      userMessage: {
-        type: "string",
-        description:
-          "The user message describing their workout. If user attached images, YOU must analyze them first and include ALL workout details from the images in this parameter.",
-      },
-      userTimezone: {
-        type: "string",
-        description:
-          "User timezone for date extraction (e.g., America/Los_Angeles)",
-      },
-      messageTimestamp: {
-        type: "string",
-        description: "ISO timestamp when user sent the message",
-      },
-      isSlashCommand: {
-        type: "boolean",
-        description: "Whether this was triggered by a slash command",
-      },
-      slashCommand: {
-        type: "string",
-        description: "The slash command used (e.g., log-workout)",
-      },
-    },
-    required: [
-      "discipline",
-      "userMessage",
-      "userTimezone",
-      "messageTimestamp",
-      "isSlashCommand",
-    ],
-  },
+  inputSchema: EXTRACT_WORKOUT_DATA_SCHEMA,
 
   async execute(
     input: any,
@@ -298,6 +258,15 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         "🎯 Attempting tool-based workout extraction with targeted schema",
       );
 
+      // STRUCTURED OUTPUT EXEMPTION: generate_workout uses strictSchema: false (Tier 3 - unguarded tool use)
+      // Two reasons strict mode cannot be used here:
+      // 1. Nullable enum validation: Bedrock rejects type: ["string", "null"] combined with enum arrays
+      //    (e.g., movement_pattern, phase_type, weight.unit in discipline schemas). Enums work with scalar
+      //    types but the array-form nullable type causes an immediate 400 validation error.
+      // 2. Optional parameter count: composed schema (base + discipline) has ~88+ optional parameters,
+      //    far exceeding Bedrock's 24-parameter grammar compilation limit.
+      // The model still receives the full schema as guidance — strict enforcement just isn't applied.
+      // See docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md for full details.
       const result = await callBedrockApi(
         extractionPrompt,
         userMessage,
@@ -311,6 +280,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
             inputSchema: targetedSchema,
           },
           expectedToolName: "generate_workout",
+          strictSchema: false,
         },
       );
 
@@ -446,6 +416,21 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       // Parse JSON with fallbacks
       workoutData = parseJsonWithFallbacks(fallbackResult);
 
+      // Unwrap workout_log wrapper if present — fallback extraction occasionally returns
+      // the data nested under a workout_log key (e.g., { workout_log: { ...actual data... } }).
+      // Without unwrapping, workout_id/user_id get set on the wrapper, downstream validation
+      // sees only the single wrapper key, and reports ~10% completeness, blocking the save.
+      if (
+        workoutData &&
+        typeof workoutData === "object" &&
+        "workout_log" in workoutData &&
+        !workoutData.workout_id
+      ) {
+        logger.info("Unwrapping workout_log wrapper from fallback extraction");
+        workoutData = (workoutData as { workout_log: typeof workoutData })
+          .workout_log;
+      }
+
       // Set system-generated fields for fallback
       workoutData.workout_id = generateWorkoutId(context.userId);
       workoutData.user_id = context.userId;
@@ -504,13 +489,27 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       messageTimestamp,
       userTimezone,
     );
-    const completedAt = context.completedAt
-      ? parseCompletedAt(context.completedAt, "extract_workout_data")
-      : extractedTime || new Date();
+
+    // context.completedAt is set from the log_workout tool's workoutDate input,
+    // which is a date-only string (YYYY-MM-DD) resolved from the model's date field.
+    // A date-only string parses as midnight UTC, which loses the actual workout time.
+    // When context.completedAt is date-only and extractedTime is available, prefer
+    // the AI-extracted time (which has the correct hours/minutes from context).
+    const contextIsDateOnly =
+      !!context.completedAt && /^\d{4}-\d{2}-\d{2}$/.test(context.completedAt);
+    const completedAt =
+      context.completedAt && !contextIsDateOnly
+        ? parseCompletedAt(context.completedAt, "extract_workout_data")
+        : extractedTime ||
+          (context.completedAt
+            ? parseCompletedAt(context.completedAt, "extract_workout_data")
+            : new Date());
 
     logger.info("Workout timing analysis:", {
       userMessage: userMessage.substring(0, 100),
       userTimezone,
+      contextCompletedAt: context.completedAt || null,
+      contextIsDateOnly,
       extractedTime: extractedTime ? extractedTime.toISOString() : null,
       finalCompletedAt: completedAt.toISOString(),
       workoutDate: workoutData.date,
@@ -615,22 +614,7 @@ CRITICAL DECISIONS RETURNED:
 
 Returns: validation result with shouldSave, shouldNormalize, confidence, completeness, blockingFlags, reason`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      isSlashCommand: {
-        type: "boolean",
-        description: "Whether this was triggered by a slash command",
-      },
-      workoutIndex: {
-        type: "number",
-        description:
-          "When processing multiple workouts, the 0-based index of which workout to validate. " +
-          "Corresponds to the order extractions were stored. Omit for single-workout messages.",
-      },
-    },
-    required: ["isSlashCommand"],
-  },
+  inputSchema: VALIDATE_WORKOUT_COMPLETENESS_SCHEMA,
 
   async execute(
     input: any,
@@ -957,17 +941,7 @@ This tool:
 
 Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSummary, normalizationConfidence`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      workoutIndex: {
-        type: "number",
-        description:
-          "When processing multiple workouts, the 0-based index of which workout to normalize.",
-      },
-    },
-    required: [],
-  },
+  inputSchema: NORMALIZE_WORKOUT_DATA_SCHEMA,
 
   async execute(
     input: any,
@@ -1106,21 +1080,7 @@ The summary is used for:
 
 Returns: summary (string)`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      originalMessage: {
-        type: "string",
-        description: "The original user message",
-      },
-      workoutIndex: {
-        type: "number",
-        description:
-          "When processing multiple workouts, the 0-based index of which workout to summarize.",
-      },
-    },
-    required: ["originalMessage"],
-  },
+  inputSchema: GENERATE_WORKOUT_SUMMARY_SCHEMA,
 
   async execute(
     input: any,
@@ -1199,17 +1159,7 @@ DO NOT call this if validation returned shouldSave: false.
 
 Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
-  inputSchema: {
-    type: "object",
-    properties: {
-      workoutIndex: {
-        type: "number",
-        description:
-          "When processing multiple workouts, the 0-based index of which workout to save.",
-      },
-    },
-    required: [],
-  },
+  inputSchema: SAVE_WORKOUT_TO_DATABASE_SCHEMA,
 
   async execute(
     input: any,

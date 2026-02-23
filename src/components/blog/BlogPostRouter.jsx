@@ -22,6 +22,7 @@ const publishedSlugs = [
   "your-coach-your-way",
   "every-rep-counts",
   "training-programs-that-think",
+  "the-symphony",
 ];
 
 function BlogPostRouter() {

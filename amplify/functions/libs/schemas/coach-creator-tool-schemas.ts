@@ -15,39 +15,41 @@ export const PERSONALITY_SELECTION_SCHEMA = {
   description: "Select the optimal personality template for the user",
   inputSchema: {
     type: "object",
+    additionalProperties: false,
     properties: {
       primaryTemplate: {
         type: "string",
         enum: ["emma", "marcus", "diana", "alex"],
         description:
-          "Primary personality template ID (emma=encouraging, marcus=technical, diana=competitive, alex=balanced)",
+          "Primary personality template ID (emma=encouraging, marcus=technical, diana=competitive, alex=balanced)"
       },
       secondaryInfluences: {
         type: "array",
         items: { type: "string" },
-        description: "Secondary personality template IDs for blending",
+        description: "Secondary personality template IDs for blending"
       },
       selectionReasoning: {
         type: "string",
-        description: "Detailed explanation of why this personality was chosen",
+        description: "Detailed explanation of why this personality was chosen"
       },
       blendingWeights: {
         type: "object",
+        additionalProperties: false,
         properties: {
           primary: {
             type: "number",
-            description: "Weight for primary personality (0.5-1.0)",
+            description: "Weight for primary personality (0.5-1.0)"
           },
           secondary: {
             type: "number",
-            description: "Weight for secondary influence (0-0.5)",
-          },
+            description: "Weight for secondary influence (0-0.5)"
+          }
         },
-        required: ["primary", "secondary"],
-      },
+        required: ["primary", "secondary"]
+      }
     },
-    required: ["primaryTemplate", "selectionReasoning", "blendingWeights"],
-  },
+    required: ["primaryTemplate", "selectionReasoning", "blendingWeights"]
+  }
 };
 
 /**
@@ -63,32 +65,32 @@ export const METHODOLOGY_SELECTION_SCHEMA = {
       primaryMethodology: {
         type: "string",
         description:
-          "Primary methodology ID (e.g., comptrain_strength, mayhem_conditioning, prvn_fitness)",
+          "Primary methodology ID (e.g., comptrain_strength, mayhem_conditioning, prvn_fitness)"
       },
       methodologyReasoning: {
         type: "string",
-        description: "Detailed explanation of why this methodology was chosen",
+        description: "Detailed explanation of why this methodology was chosen"
       },
       programmingEmphasis: {
         type: "string",
         enum: ["strength", "conditioning", "balanced"],
-        description: "Primary programming emphasis",
+        description: "Primary programming emphasis"
       },
       periodizationApproach: {
         type: "string",
         enum: ["linear", "conjugate", "block", "daily_undulating"],
-        description: "Periodization strategy",
+        description: "Periodization strategy"
       },
       creativityEmphasis: {
         type: "string",
         enum: ["high_variety", "medium_variety", "low_variety"],
-        description: "How much workout variety to include",
+        description: "How much workout variety to include"
       },
       workoutInnovation: {
         type: "string",
         enum: ["enabled", "disabled"],
-        description: "Whether to include novel workout formats",
-      },
+        description: "Whether to include novel workout formats"
+      }
     },
     required: [
       "primaryMethodology",
@@ -98,7 +100,8 @@ export const METHODOLOGY_SELECTION_SCHEMA = {
       "creativityEmphasis",
       "workoutInnovation",
     ],
-  },
+    additionalProperties: false
+  }
 };
 
 /**
@@ -113,34 +116,34 @@ export const COACH_PROMPTS_SCHEMA = {
     properties: {
       personality_prompt: {
         type: "string",
-        description: "Main coaching personality and behavior (100-300 words)",
+        description: "Main coaching personality and behavior (100-300 words)"
       },
       safety_integrated_prompt: {
         type: "string",
         description:
-          "Safety-aware coaching prompt with injury awareness (100-300 words)",
+          "Safety-aware coaching prompt with injury awareness (100-300 words)"
       },
       motivation_prompt: {
         type: "string",
-        description: "Motivation and encouragement approach (100-300 words)",
+        description: "Motivation and encouragement approach (100-300 words)"
       },
       methodology_prompt: {
         type: "string",
         description:
-          "Programming and training methodology prompt (100-300 words)",
+          "Programming and training methodology prompt (100-300 words)"
       },
       communication_style: {
         type: "string",
-        description: "Response format and interaction style (100-300 words)",
+        description: "Response format and interaction style (100-300 words)"
       },
       learning_adaptation_prompt: {
         type: "string",
-        description: "Teaching and progression approach (100-300 words)",
+        description: "Teaching and progression approach (100-300 words)"
       },
       gender_tone_prompt: {
         type: "string",
-        description: "Gender-specific persona and tone (100-300 words)",
-      },
+        description: "Gender-specific persona and tone (100-300 words)"
+      }
     },
     required: [
       "personality_prompt",
@@ -151,7 +154,8 @@ export const COACH_PROMPTS_SCHEMA = {
       "learning_adaptation_prompt",
       "gender_tone_prompt",
     ],
-  },
+    additionalProperties: false
+  }
 };
 
 /**
@@ -166,25 +170,25 @@ export const VALIDATION_RESULT_SCHEMA = {
     properties: {
       gender_consistency: {
         type: "boolean",
-        description: "Whether gender tone is consistent across all prompts",
+        description: "Whether gender tone is consistent across all prompts"
       },
       safety_language_quality: {
         type: "number",
-        description: "Quality score for safety language (0-10)",
+        description: "Quality score for safety language (0-10)"
       },
       brand_voice_score: {
         type: "number",
-        description: "Brand voice compliance score (0-10)",
+        description: "Brand voice compliance score (0-10)"
       },
       prompt_coherence: {
         type: "number",
-        description: "Coherence score across all prompts (0-10)",
+        description: "Coherence score across all prompts (0-10)"
       },
       issues: {
         type: "array",
         items: { type: "string" },
-        description: "Specific issues identified during validation",
-      },
+        description: "Specific issues identified during validation"
+      }
     },
     required: [
       "gender_consistency",
@@ -193,7 +197,8 @@ export const VALIDATION_RESULT_SCHEMA = {
       "prompt_coherence",
       "issues",
     ],
-  },
+    additionalProperties: false
+  }
 };
 
 export const COACH_NAME_SCHEMA = {
@@ -206,20 +211,20 @@ export const COACH_NAME_SCHEMA = {
       coach_name: {
         type: "string",
         description:
-          "Creative coach name incorporating personality template and reflecting user's training focus (e.g., 'Maria_Strength_Architect', 'Diana_the_PR_Hunter', 'Maya_Technical_Master')",
+          "Creative coach name incorporating personality template and reflecting user's training focus (e.g., 'Maria_Strength_Architect', 'Diana_the_PR_Hunter', 'Maya_Technical_Master')"
       },
       name_reasoning: {
         type: "string",
         description:
-          "Brief explanation of why this name fits the user's profile and personality",
+          "Brief explanation of why this name fits the user's profile and personality"
       },
       coach_description: {
         type: "string",
-        maxLength: 50,
         description:
-          "Concise 3-5 word specialty description (e.g., 'Technical Excellence & Body Recomp', 'Elite Performance Coaching')",
-      },
+          "Concise 3-5 word specialty description (e.g., 'Technical Excellence & Body Recomp', 'Elite Performance Coaching')"
+      }
     },
     required: ["coach_name", "name_reasoning", "coach_description"],
-  },
+    additionalProperties: false
+  }
 };

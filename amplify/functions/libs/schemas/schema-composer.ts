@@ -88,6 +88,7 @@ export function composeWorkoutSchema(discipline: string): any {
       ...BASE_WORKOUT_SCHEMA.properties,
       discipline_specific: {
         type: "object",
+        additionalProperties: false,
         properties: plugin, // Only ONE discipline plugin
         description: `Discipline-specific data for ${actualDiscipline.replace("_fallback", "")} workouts`,
       },
@@ -153,4 +154,28 @@ export function getExpectedArrayFields(discipline: string): string[] {
   }
 
   return arrayFields;
+}
+
+/**
+ * Composes a storage schema by merging an AI-facing schema with runtime properties.
+ *
+ * AI schemas stay lean for Bedrock grammar compilation (Tier 1/2).
+ * Storage schemas add runtime/tracking fields for DynamoDB validation.
+ * See docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md — "Schema Composition"
+ *
+ * @param aiSchema - The AI-facing JSON Schema (e.g., PROGRAM_SCHEMA)
+ * @param runtimeProperties - Additional properties added by backend services at save time
+ * @returns Composed schema with all properties, preserving additionalProperties and required constraints
+ */
+export function composeStorageSchema(
+  aiSchema: Record<string, any>,
+  runtimeProperties: Record<string, any>,
+): Record<string, any> {
+  return {
+    ...aiSchema,
+    properties: {
+      ...aiSchema.properties,
+      ...runtimeProperties,
+    },
+  };
 }
