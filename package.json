@@ -9,7 +9,10 @@
     "lint": "eslint \"src/**/*.{js,jsx}\"",
     "preview": "vite preview",
     "upsert-methodologies": "node scripts/upsert-methodologies.js",
-    "seed-coach-templates": "node scripts/seed-coach-templates.js"
+    "seed-coach-templates": "node scripts/seed-coach-templates.js",
+    "swagger:generate": "node scripts/generate-swagger.js",
+    "swagger:validate": "node scripts/generate-swagger.js --validate-only",
+    "swagger:check": "node scripts/generate-swagger.js --check-routes"
   },
   "dependencies": {
     "@aws-amplify/cli": "^14.2.5",
