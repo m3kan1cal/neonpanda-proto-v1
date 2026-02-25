@@ -51,6 +51,7 @@ import { ProgramAgent } from "../utils/agents/ProgramAgent";
 import ExerciseAgent from "../utils/agents/ExerciseAgent";
 import TodaysWorkoutRow from "./programs/TodaysWorkoutRow";
 import ProgramList from "./programs/ProgramList";
+import CoachBriefingCard from "./highlights/CoachBriefingCard";
 import RecentPRsCard from "./highlights/RecentPRsCard";
 import StreakCard from "./highlights/StreakCard";
 import TopExercisesCard from "./highlights/TopExercisesCard";
@@ -1463,6 +1464,19 @@ function TrainingGroundsV2() {
             </button>
           </div>
         </div>
+
+        {/* ================================================================ */}
+        {/* COACH'S BRIEFING                                                 */}
+        {/* ================================================================ */}
+        <CoachBriefingCard
+          recentReports={reportsState.recentReports}
+          recentWorkouts={workoutState.recentWorkouts}
+          isLoading={
+            reportsState.isLoadingRecentItems || workoutState.isLoading
+          }
+          userId={userId}
+          coachId={coachId}
+        />
 
         {/* ================================================================ */}
         {/* TIER 1 -- TODAY                                                  */}
