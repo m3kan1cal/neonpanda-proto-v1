@@ -266,19 +266,6 @@ function ChatInput({
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
           {/* Input area skeleton */}
           <div className="flex items-end gap-2 sm:gap-3">
-            {/* Action buttons skeleton — mobile: 1 (quick actions), desktop: 3 (tips + quick actions + delete) */}
-            <div className="flex items-center gap-2 self-end mb-2">
-              <div className="md:hidden w-10 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-              <div className="hidden md:flex items-center gap-2">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-10 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"
-                  ></div>
-                ))}
-              </div>
-            </div>
-
             {/* Text input skeleton — matches TipTap minHeight 60px + rounded-2xl */}
             <div className="flex-1 relative">
               <div className="w-full h-[80px] bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
@@ -291,7 +278,7 @@ function ChatInput({
           </div>
 
           {/* AI disclaimer and keyboard shortcuts skeleton */}
-          <div className="flex items-center justify-between gap-2 mt-3 pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
+          <div className="flex items-center justify-between gap-2 mt-3 pr-12 md:pr-[74px]">
             <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
             <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
           </div>
@@ -702,7 +689,7 @@ function ChatInput({
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
         {/* Image Preview Grid */}
         {selectedImages.length > 0 && (
-          <div className="mb-2 pl-0 sm:pl-[156px]">
+          <div className="mb-2">
             <div className={imagePreviewPatterns.grid}>
               {selectedImages.map((image) => (
                 <div key={image.id} className={imagePreviewPatterns.container}>
@@ -785,273 +772,6 @@ function ChatInput({
             style={{ display: "none" }}
             onChange={handlePhotoSelect}
           />
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 relative self-end mb-2">
-            {/* Tips button - hide on mobile, show on desktop */}
-            {showTipsButton && tipsContent && (
-              <button
-                type="button"
-                onClick={() => setShowTipsModal(true)}
-                className={`${iconButtonPatterns.actionSmallCyan} hidden md:flex cursor-pointer`}
-                data-tooltip-id="tips-tooltip"
-                data-tooltip-content={tipsTitle}
-                data-tooltip-place="top"
-              >
-                <QuestionIcon />
-              </button>
-            )}
-            {/* Quick Actions button - always show (contains everything on mobile) */}
-            {(enablePhotoAttachment ||
-              enableFileAttachment ||
-              showTipsButton ||
-              showDeleteButton) && (
-              <div className="relative" data-quick-actions-container>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowQuickActionsPopup(!showQuickActionsPopup)
-                  }
-                  className={`${iconButtonPatterns.actionSmallBlue} ${showQuickActionsPopup ? "bg-blue-400/20 text-blue-400" : ""} cursor-pointer`}
-                  data-tooltip-id="quick-actions-tooltip"
-                  data-tooltip-content="Quick actions"
-                  data-tooltip-place="top"
-                >
-                  <PlusIconLarge />
-                </button>
-
-                {/* Quick Actions Popup */}
-                {showQuickActionsPopup && (
-                  <div
-                    className={`absolute bottom-full mb-2 left-0 w-56 z-50 ${containerPatterns.cardMediumOpaque}`}
-                  >
-                    <div className="py-2">
-                      {/* Quick Prompts Menu Item - always show */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowQuickPromptsSubmenu(!showQuickPromptsSubmenu)
-                          }
-                          onMouseEnter={() =>
-                            window.innerWidth >= 768 &&
-                            setShowQuickPromptsSubmenu(true)
-                          }
-                          onMouseLeave={() =>
-                            window.innerWidth >= 768 &&
-                            setShowQuickPromptsSubmenu(false)
-                          }
-                          className="flex items-center justify-between space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                              />
-                            </svg>
-                            <span>Quick Prompts</span>
-                          </div>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </button>
-
-                        {/* Quick Prompts Submenu */}
-                        {showQuickPromptsSubmenu && (
-                          <div
-                            className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
-                            data-quick-prompts-submenu
-                            onMouseEnter={() =>
-                              window.innerWidth >= 768 &&
-                              setShowQuickPromptsSubmenu(true)
-                            }
-                            onMouseLeave={() =>
-                              window.innerWidth >= 768 &&
-                              setShowQuickPromptsSubmenu(false)
-                            }
-                          >
-                            <div className="py-2">
-                              {currentPrompts.map((category, categoryIndex) => (
-                                <div
-                                  key={categoryIndex}
-                                  className="mb-3 last:mb-0"
-                                >
-                                  {/* Category Header */}
-                                  <div
-                                    className={
-                                      navigationPatterns.quickPrompts
-                                        .categoryHeader
-                                    }
-                                  >
-                                    <span>{category.category}</span>
-                                  </div>
-
-                                  {/* Category Prompts */}
-                                  <div className="space-y-0">
-                                    {category.prompts.map(
-                                      (prompt, promptIndex) => (
-                                        <button
-                                          key={promptIndex}
-                                          type="button"
-                                          onClick={() =>
-                                            handleQuickPromptSelect(prompt)
-                                          }
-                                          className={
-                                            navigationPatterns.quickPrompts
-                                              .promptButton
-                                          }
-                                        >
-                                          {prompt}
-                                        </button>
-                                      ),
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Divider - only show if there are attachment options */}
-                      {(enablePhotoAttachment || enableFileAttachment) && (
-                        <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
-                      )}
-
-                      {enablePhotoAttachment && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowQuickActionsPopup(false);
-                            if (onPhotoAttachment) {
-                              onPhotoAttachment();
-                            } else {
-                              // Default: trigger file input
-                              photoInputRef.current?.click();
-                            }
-                          }}
-                          className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
-                        >
-                          <CameraIcon />
-                          <span>Attach Photos</span>
-                        </button>
-                      )}
-
-                      {enableFileAttachment && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowQuickActionsPopup(false);
-                            if (onFileAttachment) {
-                              onFileAttachment();
-                            }
-                          }}
-                          className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-purple-400 hover:bg-purple-400/10 transition-all duration-300 w-full text-left"
-                        >
-                          <PaperclipIcon />
-                          <span>Attach Files</span>
-                        </button>
-                      )}
-
-                      {/* Divider before utility actions */}
-                      {(showTipsButton || showDeleteButton) && (
-                        <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
-                      )}
-
-                      {/* Tips - show in menu on mobile, standalone button on desktop */}
-                      {showTipsButton && tipsContent && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowQuickActionsPopup(false);
-                            setShowTipsModal(true);
-                          }}
-                          className="md:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
-                        >
-                          <QuestionIcon />
-                          <span>Tips & Help</span>
-                        </button>
-                      )}
-
-                      {/* Delete - show in menu on mobile, standalone button on desktop */}
-                      {showDeleteButton && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowQuickActionsPopup(false);
-                            onDeleteClick && onDeleteClick();
-                          }}
-                          className="md:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
-                        >
-                          <TrashIcon />
-                          <span>
-                            {context === "creation" ||
-                            context === "program-design"
-                              ? "Delete Session"
-                              : "Delete Conversation"}
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Delete button - hide on mobile, show on desktop */}
-            {/* Delete button - hide on mobile, show on desktop */}
-            {showDeleteButton && (
-              <button
-                type="button"
-                onClick={onDeleteClick}
-                disabled={isTyping}
-                className={`${iconButtonPatterns.actionSmallPink} hidden md:flex cursor-pointer`}
-                data-tooltip-id="delete-conversation-tooltip"
-                data-tooltip-content={
-                  context === "creation" || context === "program-design"
-                    ? "Delete session"
-                    : "Delete conversation"
-                }
-                data-tooltip-place="top"
-              >
-                <TrashIcon />
-              </button>
-            )}
-
-            {/* React Tooltips */}
-            {showTipsButton && tipsContent && (
-              <Tooltip id="tips-tooltip" {...tooltipPatterns.standard} />
-            )}
-            {(enablePhotoAttachment || enableFileAttachment) && (
-              <Tooltip
-                id="quick-actions-tooltip"
-                {...tooltipPatterns.standard}
-              />
-            )}
-            {showDeleteButton && (
-              <Tooltip
-                id="delete-conversation-tooltip"
-                {...tooltipPatterns.standard}
-              />
-            )}
-          </div>
-
           {/* Text input */}
           <div className="flex-1 relative">
             <TiptapEditor
@@ -1072,6 +792,215 @@ function ChatInput({
               scrollOnWrapper={true}
               onPaste={handlePaste}
             />
+            {/* Actions menu button - inside textarea, left side */}
+            <div
+              className="absolute left-[8px] bottom-[7px]"
+              data-quick-actions-container
+            >
+              <button
+                type="button"
+                onClick={() => setShowQuickActionsPopup(!showQuickActionsPopup)}
+                className={`p-1 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
+                  showQuickActionsPopup ? "text-blue-400 bg-blue-400/20" : ""
+                }`}
+                data-tooltip-id="quick-actions-tooltip"
+                data-tooltip-content="Actions"
+                data-tooltip-place="top"
+              >
+                <PlusIconLarge />
+              </button>
+
+              {/* Quick Actions Popup */}
+              {showQuickActionsPopup && (
+                <div
+                  className={`absolute bottom-full mb-2 left-0 w-56 z-50 ${containerPatterns.cardMediumOpaque}`}
+                >
+                  <div className="py-2">
+                    {/* Quick Prompts Menu Item - always show */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowQuickPromptsSubmenu(!showQuickPromptsSubmenu)
+                        }
+                        onMouseEnter={() =>
+                          window.innerWidth >= 768 &&
+                          setShowQuickPromptsSubmenu(true)
+                        }
+                        onMouseLeave={() =>
+                          window.innerWidth >= 768 &&
+                          setShowQuickPromptsSubmenu(false)
+                        }
+                        className="flex items-center justify-between space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                            />
+                          </svg>
+                          <span>Quick Prompts</span>
+                        </div>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Quick Prompts Submenu */}
+                      {showQuickPromptsSubmenu && (
+                        <div
+                          className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
+                          data-quick-prompts-submenu
+                          onMouseEnter={() =>
+                            window.innerWidth >= 768 &&
+                            setShowQuickPromptsSubmenu(true)
+                          }
+                          onMouseLeave={() =>
+                            window.innerWidth >= 768 &&
+                            setShowQuickPromptsSubmenu(false)
+                          }
+                        >
+                          <div className="py-2">
+                            {currentPrompts.map((category, categoryIndex) => (
+                              <div
+                                key={categoryIndex}
+                                className="mb-3 last:mb-0"
+                              >
+                                {/* Category Header */}
+                                <div
+                                  className={
+                                    navigationPatterns.quickPrompts
+                                      .categoryHeader
+                                  }
+                                >
+                                  <span>{category.category}</span>
+                                </div>
+
+                                {/* Category Prompts */}
+                                <div className="space-y-0">
+                                  {category.prompts.map(
+                                    (prompt, promptIndex) => (
+                                      <button
+                                        key={promptIndex}
+                                        type="button"
+                                        onClick={() =>
+                                          handleQuickPromptSelect(prompt)
+                                        }
+                                        className={
+                                          navigationPatterns.quickPrompts
+                                            .promptButton
+                                        }
+                                      >
+                                        {prompt}
+                                      </button>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Divider - only show if there are attachment options */}
+                    {(enablePhotoAttachment || enableFileAttachment) && (
+                      <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                    )}
+
+                    {enablePhotoAttachment && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowQuickActionsPopup(false);
+                          if (onPhotoAttachment) {
+                            onPhotoAttachment();
+                          } else {
+                            photoInputRef.current?.click();
+                          }
+                        }}
+                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                      >
+                        <CameraIcon />
+                        <span>Attach Photos</span>
+                      </button>
+                    )}
+
+                    {enableFileAttachment && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowQuickActionsPopup(false);
+                          if (onFileAttachment) {
+                            onFileAttachment();
+                          }
+                        }}
+                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-purple-400 hover:bg-purple-400/10 transition-all duration-300 w-full text-left"
+                      >
+                        <PaperclipIcon />
+                        <span>Attach Files</span>
+                      </button>
+                    )}
+
+                    {/* Divider before utility actions */}
+                    {(showTipsButton || showDeleteButton) && (
+                      <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                    )}
+
+                    {showTipsButton && tipsContent && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowQuickActionsPopup(false);
+                          setShowTipsModal(true);
+                        }}
+                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                      >
+                        <QuestionIcon />
+                        <span>Tips & Help</span>
+                      </button>
+                    )}
+
+                    {showDeleteButton && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowQuickActionsPopup(false);
+                          onDeleteClick && onDeleteClick();
+                        }}
+                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                      >
+                        <TrashIcon />
+                        <span>
+                          {context === "creation" ||
+                          context === "program-design"
+                            ? "Delete Session"
+                            : "Delete Conversation"}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             {/* Progress ring (CoachCreator / ProgramDesigner) */}
             {progressData &&
               (() => {
@@ -1282,6 +1211,7 @@ function ChatInput({
               )}
             </div>
             <Tooltip id="emoji-tooltip" {...tooltipPatterns.standard} />
+            <Tooltip id="quick-actions-tooltip" {...tooltipPatterns.standard} />
             {(progressData || conversationSize) && (
               <Tooltip
                 id="progress-ring-tooltip"
@@ -1398,7 +1328,7 @@ function ChatInput({
         </form>
 
         {/* AI disclaimer and keyboard shortcuts */}
-        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-synthwave-text-muted font-rajdhani pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
+        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-synthwave-text-muted font-rajdhani pr-12 md:pr-[74px]">
           {/* Left: AI disclaimer - aligned with text input left edge */}
           <div className="flex items-center">
             <span className="text-synthwave-text-muted/80">
