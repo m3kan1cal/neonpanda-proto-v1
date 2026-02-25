@@ -65,7 +65,7 @@ EXAMPLES:
     const result = await callBedrockApi(
       systemPrompt,
       userMessage,
-      MODEL_IDS.CONTEXTUAL_MODEL_FULL, // Nova 2 Lite - fast and cheap
+      MODEL_IDS.UTILITY_MODEL_FULL, // Nova 2 Lite - fast and cheap
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {

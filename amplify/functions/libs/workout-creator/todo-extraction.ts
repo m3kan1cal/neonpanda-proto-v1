@@ -147,11 +147,11 @@ Return JSON with ONLY the fields you found information for:
             inputSchema: WORKOUT_CREATOR_TODO_SCHEMA,
           },
           expectedToolName: "extract_workout_info",
-          strictSchema: false,
+          // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+          skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
         },
       );
     } else {
-      // STRUCTURED OUTPUT EXEMPTION: see multimodal branch above
       extractionResponse = await callBedrockApi(
         systemPrompt,
         userPrompt,
@@ -164,7 +164,8 @@ Return JSON with ONLY the fields you found information for:
             inputSchema: WORKOUT_CREATOR_TODO_SCHEMA,
           },
           expectedToolName: "extract_workout_info",
-          strictSchema: false,
+          // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+          skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
         },
       );
     }

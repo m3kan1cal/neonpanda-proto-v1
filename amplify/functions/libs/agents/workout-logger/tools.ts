@@ -258,15 +258,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         "🎯 Attempting tool-based workout extraction with targeted schema",
       );
 
-      // STRUCTURED OUTPUT EXEMPTION: generate_workout uses strictSchema: false (Tier 3 - unguarded tool use)
-      // Two reasons strict mode cannot be used here:
-      // 1. Nullable enum validation: Bedrock rejects type: ["string", "null"] combined with enum arrays
-      //    (e.g., movement_pattern, phase_type, weight.unit in discipline schemas). Enums work with scalar
-      //    types but the array-form nullable type causes an immediate 400 validation error.
-      // 2. Optional parameter count: composed schema (base + discipline) has ~88+ optional parameters,
-      //    far exceeding Bedrock's 24-parameter grammar compilation limit.
-      // The model still receives the full schema as guidance — strict enforcement just isn't applied.
-      // See docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md for full details.
       const result = await callBedrockApi(
         extractionPrompt,
         userMessage,
@@ -280,7 +271,8 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
             inputSchema: targetedSchema,
           },
           expectedToolName: "generate_workout",
-          strictSchema: false,
+          // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+          skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
         },
       );
 

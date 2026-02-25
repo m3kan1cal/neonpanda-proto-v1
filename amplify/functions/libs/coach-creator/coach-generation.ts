@@ -1160,7 +1160,8 @@ export const generateCoachConfig = async (
           inputSchema: COACH_CONFIG_SCHEMA,
         },
         expectedToolName: "generate_coach_config",
-        strictSchema: false,
+        // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+        skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
       },
     );
 

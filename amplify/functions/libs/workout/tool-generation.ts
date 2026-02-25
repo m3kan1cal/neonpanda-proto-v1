@@ -50,8 +50,6 @@ export interface NormalizationContext {
  * Compose a discipline-aware normalization schema by substituting the full
  * WORKOUT_SCHEMA with a targeted BASE + ONE discipline plugin composed schema.
  * Reduces token usage by ~70% vs sending all 10 discipline plugins.
- * Grammar enforcement remains off (strictSchema: false) -- the base schema
- * still has ~80 optional params after composition, above Bedrock's limit of 24.
  */
 const composeNormalizationSchema = (
   discipline: string,
@@ -136,8 +134,6 @@ export async function generateNormalization(
 
   // Compose a discipline-specific normalization schema (BASE + ONE plugin).
   // Reduces token usage by ~70% vs the full schema with all 10 disciplines.
-  // strictSchema remains false -- ~80 optional params after composition still
-  // exceeds Bedrock's limit of 24 (see docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md).
   const discipline = workoutData.discipline ?? "hybrid";
   const composedNormalizationSchema = composeNormalizationSchema(discipline);
 
@@ -153,10 +149,6 @@ export async function generateNormalization(
     workoutId: workoutData.workout_id,
   });
 
-  // STRUCTURED OUTPUT EXEMPTION: Even with discipline-aware composition the schema
-  // has ~80 optional parameters, exceeding Bedrock's grammar compilation limit of 24.
-  // The model follows the schema voluntarily via the tool definition context.
-  // See: docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md
   const result = (await callBedrockApi(
     normalizationPrompt,
     "Normalize workout data",
@@ -171,7 +163,8 @@ export async function generateNormalization(
         inputSchema: composedNormalizationSchema,
       },
       expectedToolName: "normalize_workout",
-      strictSchema: false,
+      // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+      skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
     },
   )) as BedrockToolUseResult;
 

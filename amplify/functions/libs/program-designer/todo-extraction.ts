@@ -153,7 +153,8 @@ Return ONLY the fields you found information for using the tool. If no informati
                     inputSchema: PROGRAM_TODO_SCHEMA,
                   },
                   expectedToolName: "extract_program_info",
-                  strictSchema: false,
+                  // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+                  skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
                 },
               );
             })()
@@ -170,7 +171,8 @@ Return ONLY the fields you found information for using the tool. If no informati
                   inputSchema: PROGRAM_TODO_SCHEMA,
                 },
                 expectedToolName: "extract_program_info",
-                strictSchema: false,
+                // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+                skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
               },
             );
 

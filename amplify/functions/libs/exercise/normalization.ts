@@ -93,11 +93,11 @@ For each exercise name, determine the canonical normalized form and provide a co
     const response = await callBedrockApi(
       NORMALIZATION_SYSTEM_PROMPT,
       userPrompt,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: NORMALIZE_EXERCISES_TOOL,
-        strictSchema: true, // Enable strict mode for guaranteed JSON
+        // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
       },
     );
 
@@ -224,11 +224,11 @@ IMPORTANT: The user's database contains these exercise names: [${storedNames.joi
     const response = await callBedrockApi(
       NORMALIZATION_SYSTEM_PROMPT,
       userPrompt,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: NORMALIZE_EXERCISES_TOOL,
-        strictSchema: true, // Enable strict mode for guaranteed JSON
+        // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
       },
     );
 

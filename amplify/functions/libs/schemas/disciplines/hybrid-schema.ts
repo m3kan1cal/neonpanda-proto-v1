@@ -18,16 +18,17 @@ export const HYBRID_SCHEMA_PLUGIN = {
   hybrid: {
     type: "object",
     additionalProperties: false,
+    required: [], // all hybrid fields are optional; schema is flexible by design
     properties: {
       primary_focus: {
         type: ["string", "null"],
         description:
-          "Optional dominant focus (e.g., 'strength', 'conditioning', 'mobility', 'general fitness')"
+          "Optional dominant focus (e.g., 'strength', 'conditioning', 'mobility', 'general fitness')",
       },
       workout_style: {
         type: ["string", "null"],
         description:
-          "Free-form style description (e.g., 'personal training', 'gym class', 'home workout', 'open gym')"
+          "Free-form style description (e.g., 'personal training', 'gym class', 'home workout', 'open gym')",
       },
       phases: {
         type: "array",
@@ -36,11 +37,12 @@ export const HYBRID_SCHEMA_PLUGIN = {
         items: {
           type: "object",
           additionalProperties: false,
+          required: [], // all phase fields are optional
           properties: {
             phase_name: {
               type: ["string", "null"],
               description:
-                "Name of the phase as described by user (e.g., 'Warmup', 'Circuit A', 'Deadlift Work')"
+                "Name of the phase as described by user (e.g., 'Warmup', 'Circuit A', 'Deadlift Work')",
             },
             phase_type: {
               type: ["string", "null"],
@@ -58,19 +60,19 @@ export const HYBRID_SCHEMA_PLUGIN = {
                 "other",
                 null,
               ],
-              description: "Type of phase for categorization"
+              description: "Type of phase for categorization",
             },
             duration: {
               type: ["number", "null"],
-              description: "Duration of phase in seconds"
+              description: "Duration of phase in seconds",
             },
             rounds: {
               type: ["number", "null"],
-              description: "Number of rounds if applicable"
+              description: "Number of rounds if applicable",
             },
             notes: {
               type: ["string", "null"],
-              description: "Additional notes for this phase"
+              description: "Additional notes for this phase",
             },
             exercises: {
               type: "array",
@@ -82,7 +84,7 @@ export const HYBRID_SCHEMA_PLUGIN = {
                 properties: {
                   exercise_name: {
                     type: "string",
-                    description: "Name of the exercise"
+                    description: "Name of the exercise",
                   },
                   movement_pattern: {
                     type: ["string", "null"],
@@ -99,12 +101,12 @@ export const HYBRID_SCHEMA_PLUGIN = {
                       "other",
                       null,
                     ],
-                    description: "Fundamental movement pattern if identifiable"
+                    description: "Fundamental movement pattern if identifiable",
                   },
                   equipment: {
                     type: ["string", "null"],
                     description:
-                      "Equipment used (e.g., barbell, dumbbell, kettlebell, machine, bodyweight)"
+                      "Equipment used (e.g., barbell, dumbbell, kettlebell, machine, bodyweight)",
                   },
                   sets: {
                     type: "array",
@@ -112,58 +114,60 @@ export const HYBRID_SCHEMA_PLUGIN = {
                     items: {
                       type: "object",
                       additionalProperties: false,
+                      required: [], // all set fields are optional
                       properties: {
                         set_number: {
                           type: ["number", "null"],
-                          description: "Set number (1, 2, 3...)"
+                          description: "Set number (1, 2, 3...)",
                         },
                         reps: {
                           type: ["number", "string", "null"],
                           description:
-                            "Reps completed (number or string like 'max' or '8-12')"
+                            "Reps completed (number or string like 'max' or '8-12')",
                         },
                         weight: {
                           type: ["object", "null"],
                           additionalProperties: false,
+                          required: [], // all weight fields are optional
                           description: "Weight used for this set",
                           properties: {
                             value: {
                               type: ["number", "null"],
-                              description: "Weight value"
+                              description: "Weight value",
                             },
                             unit: {
                               type: ["string", "null"],
                               enum: ["lbs", "kg", null],
-                              description: "Weight unit"
-                            }
-                          }
+                              description: "Weight unit",
+                            },
+                          },
                         },
                         duration: {
                           type: ["number", "null"],
                           description:
-                            "Duration in seconds (for timed exercises)"
+                            "Duration in seconds (for timed exercises)",
                         },
                         distance: {
                           type: ["string", "null"],
                           description:
-                            "Distance covered (e.g., '400m', '1 mile')"
+                            "Distance covered (e.g., '400m', '1 mile')",
                         },
                         rpe: {
                           type: ["number", "null"],
-                          description: "Rate of perceived exertion (1-10)"
+                          description: "Rate of perceived exertion (1-10)",
                         },
                         notes: {
                           type: ["string", "null"],
-                          description: "Notes for this set (tempo, cues, etc.)"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                          description: "Notes for this set (tempo, cues, etc.)",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       // Fallback for truly unstructured workouts where phases don't make sense
       exercises: {
@@ -177,7 +181,7 @@ export const HYBRID_SCHEMA_PLUGIN = {
           properties: {
             exercise_name: {
               type: "string",
-              description: "Name of the exercise"
+              description: "Name of the exercise",
             },
             movement_pattern: {
               type: ["string", "null"],
@@ -194,12 +198,12 @@ export const HYBRID_SCHEMA_PLUGIN = {
                 "other",
                 null,
               ],
-              description: "Fundamental movement pattern if identifiable"
+              description: "Fundamental movement pattern if identifiable",
             },
             equipment: {
               type: ["string", "null"],
               description:
-                "Equipment used (e.g., barbell, dumbbell, kettlebell, machine, bodyweight)"
+                "Equipment used (e.g., barbell, dumbbell, kettlebell, machine, bodyweight)",
             },
             sets: {
               type: "array",
@@ -207,54 +211,56 @@ export const HYBRID_SCHEMA_PLUGIN = {
               items: {
                 type: "object",
                 additionalProperties: false,
+                required: [], // all set fields are optional
                 properties: {
                   set_number: {
                     type: ["number", "null"],
-                    description: "Set number (1, 2, 3...)"
+                    description: "Set number (1, 2, 3...)",
                   },
                   reps: {
                     type: ["number", "string", "null"],
                     description:
-                      "Reps completed (number or string like 'max' or '8-12')"
+                      "Reps completed (number or string like 'max' or '8-12')",
                   },
                   weight: {
                     type: ["object", "null"],
                     additionalProperties: false,
+                    required: [], // all weight fields are optional
                     description: "Weight used for this set",
                     properties: {
                       value: {
                         type: ["number", "null"],
-                        description: "Weight value"
+                        description: "Weight value",
                       },
                       unit: {
                         type: ["string", "null"],
                         enum: ["lbs", "kg", null],
-                        description: "Weight unit"
-                      }
-                    }
+                        description: "Weight unit",
+                      },
+                    },
                   },
                   duration: {
                     type: ["number", "null"],
-                    description: "Duration in seconds (for timed exercises)"
+                    description: "Duration in seconds (for timed exercises)",
                   },
                   distance: {
                     type: ["string", "null"],
-                    description: "Distance covered (e.g., '400m', '1 mile')"
+                    description: "Distance covered (e.g., '400m', '1 mile')",
                   },
                   rpe: {
                     type: ["number", "null"],
-                    description: "Rate of perceived exertion (1-10)"
+                    description: "Rate of perceived exertion (1-10)",
                   },
                   notes: {
                     type: ["string", "null"],
-                    description: "Notes for this set (tempo, cues, etc.)"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                    description: "Notes for this set (tempo, cues, etc.)",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 };
