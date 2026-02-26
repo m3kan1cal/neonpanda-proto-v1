@@ -72,7 +72,7 @@ Return ONLY one word: "male", "female", or "neutral"`;
       const response = (await callBedrockApi(
         prompt,
         "", // Empty string will default to "Please proceed."
-        MODEL_IDS.EXECUTOR_MODEL_FULL,
+        MODEL_IDS.UTILITY_MODEL_FULL,
         {
           temperature: TEMPERATURE_PRESETS.STRUCTURED,
         },
@@ -129,7 +129,7 @@ Return ONLY a single number between 1-7. If not found, return 4.`;
       const response = (await callBedrockApi(
         prompt,
         "", // Empty string will default to "Please proceed."
-        MODEL_IDS.EXECUTOR_MODEL_FULL,
+        MODEL_IDS.UTILITY_MODEL_FULL,
         {
           temperature: TEMPERATURE_PRESETS.STRUCTURED,
         },
@@ -180,7 +180,7 @@ Return a simple phrase. If not mentioned, return "6 months"`;
       const response = (await callBedrockApi(
         prompt,
         "", // Empty string will default to "Please proceed."
-        MODEL_IDS.EXECUTOR_MODEL_FULL,
+        MODEL_IDS.UTILITY_MODEL_FULL,
         {
           temperature: TEMPERATURE_PRESETS.STRUCTURED,
         },
@@ -216,7 +216,7 @@ Return ONLY one word: "high", "moderate", or "low"`;
       const response = (await callBedrockApi(
         prompt,
         "", // Empty string will default to "Please proceed."
-        MODEL_IDS.EXECUTOR_MODEL_FULL,
+        MODEL_IDS.UTILITY_MODEL_FULL,
         {
           temperature: TEMPERATURE_PRESETS.STRUCTURED,
         },
@@ -262,7 +262,7 @@ If "none" or empty, use empty arrays. Be specific and helpful.`;
         const response = (await callBedrockApi(
           prompt,
           "Extract safety profile",
-          MODEL_IDS.EXECUTOR_MODEL_FULL,
+          MODEL_IDS.UTILITY_MODEL_FULL, // Simple array-of-strings extraction, output consumed programmatically
           {
             temperature: TEMPERATURE_PRESETS.STRUCTURED,
             tools: SAFETY_PROFILE_EXTRACTION_SCHEMA,
@@ -332,7 +332,7 @@ preferences, avoidances, and experience level.`;
         const response = (await callBedrockApi(
           prompt,
           "Extract methodology preferences",
-          MODEL_IDS.EXECUTOR_MODEL_FULL,
+          MODEL_IDS.UTILITY_MODEL_FULL, // Small schema (4 fields), output consumed programmatically
           {
             temperature: TEMPERATURE_PRESETS.STRUCTURED,
             tools: METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA,
@@ -404,7 +404,7 @@ Identify relevant specializations. If none apply, return an empty array.`;
         const response = (await callBedrockApi(
           prompt,
           "Identify specializations",
-          MODEL_IDS.EXECUTOR_MODEL_FULL,
+          MODEL_IDS.UTILITY_MODEL_FULL, // Single-field string array, output consumed programmatically
           {
             temperature: TEMPERATURE_PRESETS.STRUCTURED,
             tools: SPECIALIZATIONS_EXTRACTION_SCHEMA,

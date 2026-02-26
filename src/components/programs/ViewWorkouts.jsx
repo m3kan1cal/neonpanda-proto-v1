@@ -154,6 +154,17 @@ function ViewWorkouts() {
 
       setProgram(programData.program);
 
+      // Completed programs have no "today's workouts". Trying to load templates
+      // on a completed program will fail. Navigate to the dashboard instead so
+      // the user sees the program's completed status — consistent with
+      // ProgramDashboard's own guard for this case.
+      if (programData.program.status === "completed" && isViewingToday) {
+        navigate(
+          `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+        );
+        return;
+      }
+
       // Load workouts based on query params
       // Note: ProgramAgent returns null for rest days (doesn't throw error)
       if (isViewingToday) {
@@ -337,12 +348,17 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts complete, reload data after celebration
-          // This handles the case where the program advances to a rest day
+          // If viewing today and all workouts are complete/skipped, navigate to the
+          // program dashboard after the celebration ends. The dashboard handles both
+          // mid-program day completion (shows next day) and program completion
+          // (shows completed status) gracefully — avoiding a failed template reload
+          // on a just-completed program.
           if (isViewingToday) {
             setTimeout(() => {
-              loadData();
-            }, 3500); // Slightly after celebration ends
+              navigate(
+                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+              );
+            }, 3500);
           }
         }
 
@@ -423,12 +439,17 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts complete, reload data after celebration
-          // This handles the case where the program advances to a rest day
+          // If viewing today and all workouts are complete/skipped, navigate to the
+          // program dashboard after the celebration ends. The dashboard handles both
+          // mid-program day completion (shows next day) and program completion
+          // (shows completed status) gracefully — avoiding a failed template reload
+          // on a just-completed program.
           if (isViewingToday) {
             setTimeout(() => {
-              loadData();
-            }, 3500); // Slightly after celebration ends
+              navigate(
+                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+              );
+            }, 3500);
           }
         }
 

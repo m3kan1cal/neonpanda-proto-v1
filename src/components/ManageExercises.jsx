@@ -375,7 +375,7 @@ function ManageExercises() {
 
         {/* Expanded Content */}
         {!isCollapsed && (
-          <div className="mt-4 space-y-4 animate-fadeIn">
+          <div className="mt-4 space-y-4 animate-fadeIn cursor-pointer">
             {/* Loading skeleton */}
             {exerciseAgentState.isLoadingExercises && !exerciseData && (
               <div className="space-y-4">
@@ -871,7 +871,7 @@ function ManageExercises() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors cursor-pointer"
                 >
                   <svg
                     className="w-5 h-5"

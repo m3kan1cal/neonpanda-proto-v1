@@ -87,6 +87,7 @@ export const COACH_CONFIG_SCHEMA = {
         blending_weights: {
           type: "object",
           additionalProperties: false,
+          required: ["primary", "secondary"],
           description:
             "Weighting of personality templates (primary + secondary should sum to 1.0)",
           properties: {
@@ -185,12 +186,13 @@ export const COACH_CONFIG_SCHEMA = {
         },
         time_constraints: {
           type: "object",
+          additionalProperties: false,
+          required: [], // all fields are optional schedule details
           properties: {
             preferred_time: { type: "string" },
             session_duration: { type: "string" },
             weekly_frequency: { type: "string" },
           },
-          additionalProperties: false,
         },
         safety_constraints: {
           type: "object",
@@ -330,20 +332,51 @@ export const COACH_CONFIG_SCHEMA = {
           type: "object",
           description: "Extracted safety profile from coach creator session",
           additionalProperties: false,
+          required: [
+            "injuries",
+            "contraindications",
+            "equipment",
+            "modifications",
+            "recoveryNeeds",
+          ],
           properties: {
-            injuries: { type: "array", items: { type: "string" } },
-            contraindications: { type: "array", items: { type: "string" } },
-            equipment: { type: "array", items: { type: "string" } },
-            modifications: { type: "array", items: { type: "string" } },
-            recoveryNeeds: { type: "array", items: { type: "string" } },
+            injuries: {
+              type: "array",
+              items: { type: "string" },
+              description: "Specific injuries or conditions",
+            },
+            contraindications: {
+              type: "array",
+              items: { type: "string" },
+              description: "Exercises or movements to avoid",
+            },
+            equipment: {
+              type: "array",
+              items: { type: "string" },
+              description: "Available training equipment",
+            },
+            modifications: {
+              type: "array",
+              items: { type: "string" },
+              description: "Required exercise modifications",
+            },
+            recoveryNeeds: {
+              type: "array",
+              items: { type: "string" },
+              description: "Recovery requirements and constraints",
+            },
           },
         },
         methodology_profile: {
           type: "object",
           description: "Methodology preferences and focus areas",
           additionalProperties: false,
+          required: [], // all fields are optional display metadata
           properties: {
-            primary: { type: "string" },
+            primary: {
+              type: "string",
+              description: "Primary training methodology ID",
+            },
             focus: {
               type: "array",
               items: { type: "string" },

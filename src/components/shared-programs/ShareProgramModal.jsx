@@ -183,7 +183,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
           {!loading && (
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-1 text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors"
+              className="absolute top-4 right-4 p-1 text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors cursor-pointer"
               aria-label="Close"
             >
               <CloseIcon />

@@ -32,3 +32,6 @@ amplifyconfiguration*
 .env*
 
 test/fixtures/*
+
+# AI Agent development=
+.claude/*

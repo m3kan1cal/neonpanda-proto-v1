@@ -19,6 +19,7 @@ import { putObject } from "./s3-utils";
 import { deepSanitizeNullish } from "./object-utils";
 import { parseJsonWithFallbacks } from "./response-utils";
 import { logger } from "./logger";
+import { validateToolResponse } from "./tool-validation";
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-6";
@@ -87,8 +88,8 @@ export const TEMPERATURE_PRESETS = {
 // MODEL_IDS.PLANNER_MODEL_DISPLAY
 export const MODEL_IDS = {
   // The Contextual Model. Used for contextual updates, intent classification, and simple
-  // classification tasks. NVIDIA Nemotron Nano 12B v2 supports strict schema mode (unlike
-  // Nova 2 Lite) while remaining fast and cost-effective. Note: no prompt caching.
+  // classification tasks. Output is streamed to or surfaced in the user's UI.
+  // Must be streaming-capable.
   CONTEXTUAL_MODEL_FULL: CLAUDE_HAIKU_4_MODEL_ID,
   CONTEXTUAL_MODEL_DISPLAY: CLAUDE_HAIKU_4_DISPLAY,
 
@@ -101,20 +102,16 @@ export const MODEL_IDS = {
   // into a set of discrete instructions.
   PLANNER_MODEL_FULL: CLAUDE_SONNET_4_MODEL_ID,
   PLANNER_MODEL_DISPLAY: CLAUDE_SONNET_4_DISPLAY,
-} as const;
 
-/**
- * Check if a model ID is a strict schema model (supports guaranteed JSON with strict mode)
- * @param modelId - The model ID to check
- * @returns true if the model supports Bedrock strict tool use schema enforcement
- */
-export function isStrictCapableModel(modelId: string): boolean {
-  return (
-    modelId === CLAUDE_SONNET_4_MODEL_ID || modelId === CLAUDE_HAIKU_4_MODEL_ID
-    // Note: Nova 2 Lite and Nemotron do NOT support strict tool use via Converse API.
-    // Open-weight models use InvokeModel + response_format instead.
-  );
-}
+  // The Utility Model. Used for non-streaming, behind-the-scenes classification,
+  // detection, and simple structured extraction tasks. These calls are never surfaced
+  // directly to the user as streaming output. Do NOT use with callBedrockApiStream
+  // or any ConverseStream call path.
+  // Backed by Amazon Nova 2 Lite — cost-optimized, supports tool calling.
+  // Callers should use TEMPERATURE_PRESETS.STRUCTURED (0.2) for reliable tool use.
+  UTILITY_MODEL_FULL: NOVA_2_LITE_MODEL_ID,
+  UTILITY_MODEL_DISPLAY: NOVA_2_LITE_DISPLAY,
+} as const;
 
 // AI error fallback message for streaming handlers
 export const AI_ERROR_FALLBACK_MESSAGE =
@@ -359,10 +356,18 @@ const getMaxTokensForModel = (modelId: string): number => {
 };
 
 /**
- * Check if the model is a Nova model that supports native reasoning
- * Nova 2 and Nova Pro use native reasoningConfig instead of prompt-based thinking
+ * Check if a model ID is an Amazon Nova model.
+ * Nova models support tool calling but not strict tool use schema enforcement.
  */
-const isNovaModel = (modelId: string): boolean => {
+export const isNovaModel = (modelId: string): boolean => {
+  return modelId.includes("amazon.nova");
+};
+
+/**
+ * Check if a Nova model supports native reasoning via reasoningConfig.
+ * Only Nova 2 and Nova Pro support native reasoning; Nova Lite does not.
+ */
+const isNovaReasoningCapableModel = (modelId: string): boolean => {
   return modelId.includes("nova-2") || modelId.includes("nova-pro");
 };
 
@@ -593,17 +598,22 @@ export interface BedrockApiOptions {
   temperature?: number;
 
   /**
-   * Enable strict JSON schema enforcement (guaranteed JSON output)
-   * Defaults to true for Claude 4.5 models when tools are provided
-   * Set to false to disable strict mode for Claude 4.5 models
-   */
-  strictSchema?: boolean;
-
-  /**
    * Beta features to enable for advanced schema handling
    * Example: ['tool-use-examples-2025-10-29'] for improved complex nested object accuracy
    */
   anthropicBeta?: string[];
+
+  /**
+   * Skip client-side ajv schema validation for this call.
+   *
+   * Set to true for large, complex schemas (generate_workout, normalize_workout,
+   * generate_program_phase, generate_coach_config, etc.) that were historically exempt
+   * from strict enforcement. The schema is still sent to the model as guidance;
+   * malformed output is handled downstream by evaluator-optimizer patterns.
+   *
+   * Default: false (validation is on by default)
+   */
+  skipValidation?: boolean;
 }
 
 /**
@@ -612,12 +622,12 @@ export interface BedrockApiOptions {
  *
  * @param tools - Single tool or array of tools
  * @param enforceToolUse - If true and single tool provided, enforce its use with toolChoice
- * @param strictSchema - If true, enable guaranteed JSON mode (strict schema enforcement)
+ *
+ * strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
  */
 function buildToolConfig(
   tools: BedrockToolConfig | BedrockToolConfig[],
   enforceToolUse: boolean = true,
-  strictSchema: boolean = false,
 ): any {
   const toolsArray = Array.isArray(tools) ? tools : [tools];
 
@@ -629,23 +639,18 @@ function buildToolConfig(
         inputSchema: {
           json: t.inputSchema,
         },
-        // strict: true belongs on each toolSpec per Bedrock structured outputs docs
-        ...(strictSchema && { strict: true }),
       },
     })),
   };
 
   // If enforcing tool use and exactly one tool provided, add toolChoice to force its use
-  // This ensures Claude MUST use the tool and follow the schema strictly
   if (enforceToolUse && toolsArray.length === 1) {
     config.toolChoice = {
       tool: {
         name: toolsArray[0].name,
       },
     };
-    logger.info(
-      `🔒 Enforcing strict tool use: ${toolsArray[0].name}${strictSchema ? " (guaranteed JSON)" : ""}`,
-    );
+    logger.info(`🔒 Enforcing tool use: ${toolsArray[0].name}`);
   }
 
   return config;
@@ -657,13 +662,13 @@ function buildToolConfig(
  * Similar to buildToolConfig but for multi-tool agents:
  * - Never enforces single-tool use (no toolChoice)
  * - Supports optional cache point injection after tools
- * - Places strict: true on each toolSpec per Bedrock structured outputs docs
  *
  * Used by callBedrockApiForAgent and callBedrockApiStreamForAgent.
+ *
+ * strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
  */
 function buildToolConfigForAgent(
   tools: BedrockToolConfig[],
-  strictSchema: boolean = false,
   useCaching: boolean = false,
 ): any {
   const toolSpecs = tools.map((t) => ({
@@ -673,7 +678,6 @@ function buildToolConfigForAgent(
       inputSchema: {
         json: t.inputSchema,
       },
-      ...(strictSchema && { strict: true }),
     },
   }));
 
@@ -687,10 +691,17 @@ function buildToolConfigForAgent(
 /**
  * Helper to extract tool use result from Bedrock response
  * Returns BedrockToolUseResult or throws if tool wasn't used
+ *
+ * @param response - Full Bedrock converse response
+ * @param expectedToolName - If provided, throws if a different tool was called
+ * @param tools - Tool config(s) used for this call; when provided, the response is validated
+ *                against the matching tool's inputSchema (client-side enforcement replacing strict mode)
  */
 export function extractToolUseResult(
   response: any,
   expectedToolName?: string,
+  tools?: BedrockToolConfig | BedrockToolConfig[],
+  skipValidation?: boolean,
 ): BedrockToolUseResult {
   // Debug: Log the incoming response structure
   const content = response.output?.message?.content;
@@ -796,6 +807,33 @@ export function extractToolUseResult(
     );
   }
 
+  // Client-side schema validation (replaces server-side strict mode)
+  // skipValidation: true bypasses this for large-schema tools whose output is cleaned
+  // downstream by evaluator-optimizer patterns (generate_workout, normalize_workout, etc.)
+  if (tools && result.input && !skipValidation) {
+    const toolsArray = Array.isArray(tools) ? tools : [tools];
+    const matchingTool = toolsArray.find((t) => t.name === result.toolName);
+    if (matchingTool?.inputSchema) {
+      try {
+        validateToolResponse(
+          result.toolName,
+          result.input,
+          matchingTool.inputSchema,
+        );
+      } catch (validationError: any) {
+        logger.warn("⚠️ Tool response schema validation failed:", {
+          toolName: result.toolName,
+          error: validationError.message,
+        });
+        throw validationError;
+      }
+    }
+  } else if (skipValidation && tools) {
+    logger.info("⏭️ Skipping schema validation (skipValidation: true):", {
+      toolName: result.toolName,
+    });
+  }
+
   return result;
 }
 
@@ -818,9 +856,9 @@ function buildSystemParams(
   useNativeReasoning: boolean;
 } {
   const enableThinking = options?.enableThinking || false;
-  // Nova models use native reasoningConfig instead of prompt-based thinking tags
+  // Nova 2 / Nova Pro use native reasoningConfig instead of prompt-based thinking tags
   const useNativeReasoning =
-    enableThinking && modelId ? isNovaModel(modelId) : false;
+    enableThinking && modelId ? isNovaReasoningCapableModel(modelId) : false;
   // Only apply prompt-based thinking for non-Nova models
   const applyPromptThinking = enableThinking && !useNativeReasoning;
 
@@ -983,22 +1021,13 @@ export const callBedrockApi = async (
       logger.info("🎯 Response prefilling enabled:", options.prefillResponse);
     }
 
-    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
-    const useStrictSchema =
-      options?.strictSchema ??
-      (!!options?.tools && isStrictCapableModel(modelId));
-
-    if (useStrictSchema && options?.tools) {
-      logger.info("🔐 Guaranteed JSON mode enabled (strict schema)");
-    }
-
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
       ...(systemParams.length > 0 && { system: systemParams }), // Only include if not empty
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
-      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
@@ -1080,7 +1109,12 @@ export const callBedrockApi = async (
 
       // Try to extract tool use, but gracefully handle text responses
       if (response.stopReason === "tool_use") {
-        return extractToolUseResult(response, options.expectedToolName);
+        return extractToolUseResult(
+          response,
+          options.expectedToolName,
+          options.tools,
+          options.skipValidation,
+        );
       } else {
         // Model returned text instead of using tool - try to parse as JSON
         logger.warn(
@@ -1252,17 +1286,6 @@ export const callBedrockApiStream = async (
       useNativeReasoning,
     });
 
-    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
-    const useStrictSchema =
-      options?.strictSchema ??
-      (!!options?.tools && isStrictCapableModel(modelId));
-
-    if (useStrictSchema && options?.tools) {
-      logger.info(
-        "🔐 Guaranteed JSON mode enabled (strict schema) - streaming",
-      );
-    }
-
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: [
@@ -1277,8 +1300,8 @@ export const callBedrockApiStream = async (
       ],
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
-      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
@@ -1397,24 +1420,13 @@ export const callBedrockApiMultimodal = async (
       hasImages,
     });
 
-    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
-    const useStrictSchema =
-      options?.strictSchema ??
-      (!!options?.tools && isStrictCapableModel(modelId));
-
-    if (useStrictSchema && options?.tools) {
-      logger.info(
-        "🔐 Guaranteed JSON mode enabled (strict schema) - multimodal",
-      );
-    }
-
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
-      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
@@ -1450,7 +1462,12 @@ export const callBedrockApiMultimodal = async (
 
       // Try to extract tool use, but gracefully handle text responses
       if (response.stopReason === "tool_use") {
-        return extractToolUseResult(response, options.expectedToolName);
+        return extractToolUseResult(
+          response,
+          options.expectedToolName,
+          options.tools,
+          options.skipValidation,
+        );
       } else {
         // Model returned text instead of using tool - try to parse as JSON
         logger.warn(
@@ -1798,7 +1815,6 @@ export const callBedrockApiForAgent = async (
     staticPrompt?: string;
     dynamicPrompt?: string;
     enableThinking?: boolean;
-    strictSchema?: boolean;
     anthropicBeta?: string[];
   },
 ): Promise<any> => {
@@ -1825,22 +1841,12 @@ export const callBedrockApiForAgent = async (
   const useCaching = !!(options?.staticPrompt && options?.dynamicPrompt);
   logger.info("Caching enabled:", useCaching);
 
-  // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
-  // Agent calls with multiple complex tool schemas must NOT use strict: true —
-  // Bedrock grammar compilation times out when the combined schema is too large.
-  // additionalProperties: false in schemas still guides the model without enforcement.
-  const useStrictSchema = false;
-
   if (useCaching) {
     logger.info("🔥 AGENT CACHE OPTIMIZATION: Adding cache point after tools");
   }
 
-  // Build tool config using centralized helper (strict: false for multi-tool agents)
-  const toolConfig = buildToolConfigForAgent(
-    tools,
-    useStrictSchema,
-    useCaching,
-  );
+  // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+  const toolConfig = buildToolConfigForAgent(tools, useCaching);
 
   const command = new ConverseCommand({
     modelId: modelId,
@@ -1928,7 +1934,6 @@ export const callBedrockApiStreamForAgent = async function* (
   options?: {
     staticPrompt?: string;
     dynamicPrompt?: string;
-    strictSchema?: boolean;
     anthropicBeta?: string[];
   },
 ): AsyncGenerator<any, void, unknown> {
@@ -1955,23 +1960,14 @@ export const callBedrockApiStreamForAgent = async function* (
     const useCaching = !!(options?.staticPrompt && options?.dynamicPrompt);
     logger.info("Caching enabled:", useCaching);
 
-    // Agent calls with multiple complex tool schemas must NOT use strict: true —
-    // Bedrock grammar compilation times out when the combined schema is too large.
-    // additionalProperties: false in schemas still guides the model without enforcement.
-    const useStrictSchema = false;
-
     if (useCaching) {
       logger.info(
         "🔥 STREAMING AGENT CACHE OPTIMIZATION: Adding cache point after tools",
       );
     }
 
-    // Build tool config using centralized helper (strict: false for multi-tool agents)
-    const toolConfig = buildToolConfigForAgent(
-      tools,
-      useStrictSchema,
-      useCaching,
-    );
+    // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+    const toolConfig = buildToolConfigForAgent(tools, useCaching);
 
     const command = new ConverseStreamCommand({
       modelId: modelId,
@@ -2247,24 +2243,13 @@ export const callBedrockApiMultimodalStream = async (
       hasImages,
     });
 
-    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
-    const useStrictSchema =
-      options?.strictSchema ??
-      (!!options?.tools && isStrictCapableModel(modelId));
-
-    if (useStrictSchema && options?.tools) {
-      logger.info(
-        "🔐 Guaranteed JSON mode enabled (strict schema) - multimodal streaming",
-      );
-    }
-
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
-      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
@@ -2734,8 +2719,12 @@ const RERANKING_CONFIG = {
   initialTopK: 30, // Higher initial query results for reranking
   finalTopN: 8, // Final number of reranked results
   truncate: "END", // How to handle long documents
-  minScore: 0.3, // Lower threshold since reranking improves relevance
-  fallbackMinScore: 0.5, // Fallback minScore when reranking is disabled
+  // No minScore for the reranked path: pinecone-rerank-v0 returns scores on a
+  // very different (much lower) scale than semantic similarity scores (~0.005
+  // avg vs the ~0.3 threshold previously used), which caused ALL reranked
+  // results to be filtered out. The reranker's value is in relative ordering,
+  // not absolute scoring -- the topN limit already caps result count.
+  fallbackMinScore: 0.5, // minScore used when reranking is disabled
 };
 
 /**
@@ -2984,16 +2973,38 @@ const processAndFilterResults = async (
     processedMatches = normalizedMatches.slice(0, topK);
   }
 
-  // When reranking is enabled, use reranking minScore (different scale: 0.3)
-  // Otherwise, use passed minScore or fallback minScore (0.5)
-  const finalMinScore =
-    enableReranking && originalQuery
-      ? RERANKING_CONFIG.minScore
-      : minScore || RERANKING_CONFIG.fallbackMinScore;
+  const wasReranked =
+    enableReranking && originalQuery && normalizedMatches.length > 1;
+
+  // When reranking was applied, skip absolute score filtering entirely.
+  // The reranker (pinecone-rerank-v0) returns scores on a much lower scale
+  // (~0.005 avg) than semantic similarity scores (~0.43 avg), so any
+  // meaningful threshold filters out all results. The topN cap applied during
+  // reranking already limits result count to the most relevant documents.
+  // When reranking was NOT applied, use the caller-supplied minScore or the
+  // fallback.
+  const finalMinScore = wasReranked
+    ? 0
+    : minScore || RERANKING_CONFIG.fallbackMinScore;
+
+  // Log reranked score range for monitoring
+  if (wasReranked && processedMatches.length > 0) {
+    const scores = processedMatches.map((m: any) => m.score || 0);
+    logger.info("📊 Reranked score range:", {
+      min: Math.min(...scores).toFixed(6),
+      max: Math.max(...scores).toFixed(6),
+      avg: (
+        scores.reduce((a: number, b: number) => a + b, 0) / scores.length
+      ).toFixed(6),
+      count: scores.length,
+    });
+  }
 
   // Filter results by minimum score and format for consumption
   const relevantMatches = processedMatches
-    .filter((match: any) => match.score && match.score >= finalMinScore)
+    .filter(
+      (match: any) => match.score !== undefined && match.score >= finalMinScore,
+    )
     .map((match: any) => ({
       id: match.id,
       score: match.score,
@@ -3005,9 +3016,6 @@ const processAndFilterResults = async (
           ? "methodology"
           : userNamespace,
     }));
-
-  const wasReranked =
-    enableReranking && originalQuery && normalizedMatches.length > 1;
 
   logger.info("✅ Successfully processed Pinecone results:", {
     indexName: PINECONE_INDEX_NAME,
@@ -3289,9 +3297,7 @@ export const querySemanticMemories = async (
         hasMemoryId: !!hit.fields?.memoryId,
       })),
       minScore,
-      effectiveMinScoreWillBe: enableReranking
-        ? RERANKING_CONFIG.minScore
-        : minScore,
+      effectiveMinScoreWillBe: enableReranking ? 0 : minScore,
     });
 
     // Normalize all memory matches - extract record data and combine with score
@@ -3333,11 +3339,25 @@ export const querySemanticMemories = async (
       normalizedHits = normalizedHits.slice(0, topK);
     }
 
-    // Determine effective minimum score based on reranking
-    const effectiveMinScore =
-      enableReranking && normalizedHits.length > 1
-        ? RERANKING_CONFIG.minScore
-        : minScore;
+    // When reranking was applied, skip absolute score filtering -- the
+    // pinecone-rerank-v0 model returns scores on a much lower scale than
+    // semantic similarity scores, so any non-zero threshold filters everything.
+    // The topN cap applied during reranking already limits result count.
+    const wasMemoryReranked = enableReranking && normalizedHits.length > 1;
+    const effectiveMinScore = wasMemoryReranked ? 0 : minScore;
+
+    // Log reranked score range for monitoring
+    if (wasMemoryReranked && normalizedHits.length > 0) {
+      const scores = normalizedHits.map((h: any) => h.score || 0);
+      logger.info("📊 Reranked memory score range:", {
+        min: Math.min(...scores).toFixed(6),
+        max: Math.max(...scores).toFixed(6),
+        avg: (
+          scores.reduce((a: number, b: number) => a + b, 0) / scores.length
+        ).toFixed(6),
+        count: scores.length,
+      });
+    }
 
     // Count filtered results for diagnostics
     let filteredByScore = 0;

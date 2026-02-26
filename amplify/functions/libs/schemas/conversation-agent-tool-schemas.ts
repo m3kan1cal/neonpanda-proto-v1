@@ -112,13 +112,23 @@ export const LOG_WORKOUT_SCHEMA = {
     templateContext: {
       type: "object",
       additionalProperties: false,
-      properties: {
-        programId: { type: "string" },
-        templateId: { type: "string" },
-        dayNumber: { type: "number" },
-      },
+      required: [], // all fields are optional; omit entire object if not linking to a program template
       description:
         "If this workout matches a program template (check context.activeProgram and use get_todays_workout if needed), include this context to link the logged workout to the program.",
+      properties: {
+        programId: {
+          type: "string",
+          description: "The program ID to link against",
+        },
+        templateId: {
+          type: "string",
+          description: "The specific workout template ID",
+        },
+        dayNumber: {
+          type: "number",
+          description: "The day number in the program",
+        },
+      },
     },
   },
   required: ["workoutDescription"],

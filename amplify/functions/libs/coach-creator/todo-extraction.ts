@@ -80,7 +80,8 @@ Return JSON with ONLY the fields you found information for:
           },
         ],
         expectedToolName: "extract_coach_creator_info",
-        strictSchema: false,
+        // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+        skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
       },
     );
 

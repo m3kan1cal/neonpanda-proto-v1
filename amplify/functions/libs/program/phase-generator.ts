@@ -397,6 +397,7 @@ Generate the phase structure using the tool.`;
           inputSchema: PHASE_STRUCTURE_SCHEMA,
         },
         expectedToolName: "generate_phase_structure",
+        skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
       },
     );
 
@@ -800,6 +801,7 @@ Generate the complete phase with all workouts using the tool.`;
           inputSchema: PHASE_SCHEMA,
         },
         expectedToolName: "generate_program_phase",
+        skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
       },
     );
 

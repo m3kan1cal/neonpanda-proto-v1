@@ -463,8 +463,8 @@ const WARMUP_SCHEMAS: WarmupSchemaEntry[] = [
 //
 // Only schemas that reliably compile within Bedrock's grammar limits belong here.
 // All 5 excluded schemas (normalize_workout, extract_workout_info, extract_program_info,
-// extract_coach_creator_info, generate_coach_config) use unguarded tool use
-// (strictSchema: false) and are documented in docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md.
+// extract_coach_creator_info, generate_coach_config) have complex or large schemas
+// and are documented in docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md.
 // ──────────────────────────────────────────────────────────────────────────────
 
 interface JsonOutputWarmupEntry {
@@ -537,7 +537,7 @@ async function warmSingleSchema(
           inputSchema: entry.tool.inputSchema,
         },
         expectedToolName: entry.tool.name,
-        strictSchema: true,
+        // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
       } as BedrockApiOptions,
     );
     return {

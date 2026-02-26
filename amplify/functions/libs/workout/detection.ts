@@ -263,7 +263,7 @@ CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIn
     const response = (await callBedrockApi(
       validationPrompt,
       workoutContent,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         prefillResponse: "{",

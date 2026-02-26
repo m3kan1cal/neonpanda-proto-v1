@@ -185,6 +185,48 @@ node scripts/cleanup-test-namespaces.js --auto-confirm --verbose
 - Detailed error reporting
 - Progress tracking
 
+## API Documentation Scripts
+
+### generate-swagger.js
+
+Reads the OpenAPI 3.0 spec from `amplify/swagger/openapi.yaml` and generates a self-contained Swagger UI HTML page at `public/api-docs/index.html`. Also supports spec validation and route cross-referencing.
+
+**Usage:**
+
+```bash
+# Generate Swagger UI HTML (default)
+npm run swagger:generate
+# or
+node scripts/generate-swagger.js
+
+# Validate the spec without generating HTML
+npm run swagger:validate
+# or
+node scripts/generate-swagger.js --validate-only
+
+# Generate HTML and cross-reference routes against amplify/api/resource.ts
+npm run swagger:check
+# or
+node scripts/generate-swagger.js --check-routes
+```
+
+**Options:**
+
+- `--validate-only` - Only validate the spec structure, skip HTML generation
+- `--check-routes` - Cross-reference spec paths against `amplify/api/resource.ts` to find undocumented or extra endpoints
+
+**What it does:**
+
+1. Reads the OpenAPI YAML spec from `amplify/swagger/openapi.yaml`
+2. Validates the spec has required fields (openapi, info, paths) and no tab characters
+3. Optionally cross-references spec paths against API Gateway route definitions in `amplify/api/resource.ts`
+4. Generates a self-contained HTML page with embedded Swagger UI (loaded from CDN) and the spec inlined as YAML
+5. Writes the output to `public/api-docs/index.html`
+
+**Build pipeline integration:**
+
+This script runs automatically during every Amplify deployment via the `amplify.yml` build configuration. It executes before `npm run build` so the generated HTML is included in the Vite build output.
+
 ## Data Management Scripts
 
 ### seed-coach-templates.js

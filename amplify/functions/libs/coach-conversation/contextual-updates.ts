@@ -347,10 +347,7 @@ Examples: Processing your message.. OR Working through this.. OR Analyzing what 
 
     return update;
   } catch (error) {
-    logger.error(
-      `❌ Error generating ${updateType} update for Vesper:`,
-      error,
-    );
+    logger.error(`❌ Error generating ${updateType} update for Vesper:`, error);
 
     // Fallback messages in Vesper's energetic voice - with variety and specificity
     const fallbacks: Record<string, string[]> = {
@@ -1447,9 +1444,7 @@ export async function shouldShowContextualUpdates(
   }
 
   if (hasFitnessKeywords && message.length > 15) {
-    logger.info(
-      `✅ Rule-based: SHOW updates (fitness keywords + length > 15)`,
-    );
+    logger.info(`✅ Rule-based: SHOW updates (fitness keywords + length > 15)`);
     return true;
   }
 
@@ -1514,7 +1509,7 @@ Does this need detailed coach analysis (COMPLEX) or is it a simple response (SIM
   const response = (await callBedrockApi(
     systemPrompt,
     userPrompt,
-    MODEL_IDS.CONTEXTUAL_MODEL_FULL, // Fastest, cheapest model for intent classification
+    MODEL_IDS.UTILITY_MODEL_FULL, // Non-interactive binary classification, never surfaces to users
     {
       temperature: TEMPERATURE_PRESETS.STRUCTURED,
     },

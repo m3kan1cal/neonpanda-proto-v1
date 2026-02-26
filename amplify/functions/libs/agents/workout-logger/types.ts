@@ -94,7 +94,7 @@ export interface WorkoutValidationResult {
   completeness: number;
   validationFlags: string[];
   blockingFlags: string[];
-  disciplineClassification: any; // DisciplineClassification
+  workoutCharacteristics?: any; // WorkoutCharacteristics
   reason?: string;
 }
 
