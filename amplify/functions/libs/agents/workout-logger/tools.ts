@@ -34,11 +34,11 @@ import {
   extractCompletedAtTime,
   calculateConfidence,
   calculateCompleteness,
-  classifyDiscipline,
+  classifyWorkoutCharacteristics,
   generateWorkoutSummary,
   applyPerformanceMetricDefaults,
   type UniversalWorkoutSchema,
-  type DisciplineClassification,
+  type WorkoutCharacteristics,
 } from "../../workout";
 import { fixDoubleEncodedProperties } from "../../response-utils";
 import {
@@ -482,20 +482,17 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       userTimezone,
     );
 
-    // context.completedAt is set from the log_workout tool's workoutDate input,
-    // which is a date-only string (YYYY-MM-DD) resolved from the model's date field.
-    // A date-only string parses as midnight UTC, which loses the actual workout time.
-    // When context.completedAt is date-only and extractedTime is available, prefer
-    // the AI-extracted time (which has the correct hours/minutes from context).
+    // extractedTime (from extractCompletedAtTime) is derived specifically from the user
+    // message and is the most reliable source for workout completion time. context.completedAt
+    // (from extract_workout_data) can contain model-hallucinated dates, especially wrong years.
+    // Always prefer extractedTime when available; fall back to context, then now.
     const contextIsDateOnly =
       !!context.completedAt && /^\d{4}-\d{2}-\d{2}$/.test(context.completedAt);
     const completedAt =
-      context.completedAt && !contextIsDateOnly
+      extractedTime ||
+      (context.completedAt
         ? parseCompletedAt(context.completedAt, "extract_workout_data")
-        : extractedTime ||
-          (context.completedAt
-            ? parseCompletedAt(context.completedAt, "extract_workout_data")
-            : new Date());
+        : new Date());
 
     logger.info("Workout timing analysis:", {
       userMessage: userMessage.substring(0, 100),
@@ -741,24 +738,24 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     validateAndCorrectWorkoutDate(workoutData, completedAtDate);
 
     // Classify discipline (determines validation strictness)
-    let disciplineClassification: DisciplineClassification;
+    let workoutCharacteristics: WorkoutCharacteristics;
     let isQualitativeDiscipline = false;
 
     try {
-      disciplineClassification = await classifyDiscipline(
+      workoutCharacteristics = await classifyWorkoutCharacteristics(
         workoutData.discipline,
         workoutData,
       );
-      isQualitativeDiscipline = disciplineClassification.isQualitative;
+      isQualitativeDiscipline = workoutCharacteristics.isQualitative;
 
-      logger.info("Discipline classification:", disciplineClassification);
+      logger.info("Workout characteristics:", workoutCharacteristics);
     } catch (error) {
       logger.warn(
         "Failed to classify discipline, defaulting to quantitative:",
         error,
       );
       isQualitativeDiscipline = false;
-      disciplineClassification = {
+      workoutCharacteristics = {
         isQualitative: false,
         requiresPreciseMetrics: true,
         environment: "mixed",
@@ -794,7 +791,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
         completeness,
         validationFlags: workoutData.metadata.validation_flags || [],
         blockingFlags: ["insufficient_data"],
-        disciplineClassification,
+        workoutCharacteristics,
         reason:
           "Workout appears to be a reflection or comment without actual exercise data (completeness < 20%)",
       };
@@ -827,7 +824,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
         completeness,
         validationFlags: workoutData.metadata.validation_flags || [],
         blockingFlags: ["no_exercise_data"],
-        disciplineClassification,
+        workoutCharacteristics,
         reason:
           "No exercise structure found in workout data - unable to log workout without exercises or rounds",
       };
@@ -887,7 +884,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       completeness,
       validationFlags: workoutData.metadata.validation_flags || [],
       blockingFlags: detectedBlockingFlags || [],
-      disciplineClassification,
+      workoutCharacteristics,
       reason,
       // Include workoutData for downstream tools
       workoutData,

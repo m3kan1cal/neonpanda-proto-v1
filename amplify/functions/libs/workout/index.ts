@@ -24,7 +24,7 @@ export {
   extractCompletedAtTime,
   checkWorkoutComplexity,
   generateWorkoutSummary,
-  classifyDiscipline,
+  classifyWorkoutCharacteristics,
   validateWorkoutStructure,
   applyPerformanceMetricDefaults,
 } from "./extraction";
@@ -39,7 +39,7 @@ export { storeWorkoutSummaryInPinecone } from "./pinecone";
 export {
   Workout,
   UniversalWorkoutSchema,
-  DisciplineClassification,
+  WorkoutCharacteristics,
   BuildWorkoutEvent,
   CrossFitExercise,
   CrossFitRound,

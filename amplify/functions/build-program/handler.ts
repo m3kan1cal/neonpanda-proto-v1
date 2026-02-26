@@ -409,9 +409,12 @@ export const handler = async (event: BuildProgramEvent) => {
               // Don't throw - this is optional
             }
           } else {
-            logger.warn("⚠️ Session not found for update:", {
-              sessionId: event.sessionId,
-            });
+            logger.info(
+              "Session not found for update (expected in test/async invocations):",
+              {
+                sessionId: event.sessionId,
+              },
+            );
           }
         } catch (error) {
           logger.error("⚠️ Failed to update session (non-blocking):", error);

@@ -5,7 +5,7 @@
  * Classifies a workout discipline across multiple axes:
  * qualitative vs. quantitative, environment, and primary training focus.
  *
- * Mirrors the DisciplineClassification interface in libs/workout/types.ts.
+ * Mirrors the WorkoutCharacteristics interface in libs/workout/types.ts.
  * Field ordering follows reasoning-first pattern.
  */
 export const DISCIPLINE_CLASSIFICATION_SCHEMA = {
@@ -67,9 +67,9 @@ export const DISCIPLINE_CLASSIFICATION_SCHEMA = {
 
 /**
  * TypeScript interface matching the schema.
- * This is a re-export-friendly duplicate of DisciplineClassification in libs/workout/types.ts.
+ * This is a re-export-friendly duplicate of WorkoutCharacteristics in libs/workout/types.ts.
  */
-export interface DisciplineClassificationResult {
+export interface WorkoutCharacteristicsResult {
   reasoning: string;
   isQualitative: boolean;
   requiresPreciseMetrics: boolean;

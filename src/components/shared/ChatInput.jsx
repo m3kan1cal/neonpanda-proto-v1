@@ -733,7 +733,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setImageError(null)}
-                className="text-red-400 hover:text-red-300"
+                className="text-red-400 hover:text-red-300 cursor-pointer"
               >
                 <XIcon className="w-4 h-4" />
               </button>
@@ -750,7 +750,7 @@ function ChatInput({
               </span>
               <button
                 onClick={handleStopRecording}
-                className="ml-2 hover:bg-red-600 rounded-full p-1 transition-colors"
+                className="ml-2 hover:bg-red-600 rounded-full p-1 transition-colors cursor-pointer"
               >
                 <XIcon />
               </button>
@@ -1364,7 +1364,7 @@ function ChatInput({
                 </h3>
                 <button
                   onClick={() => setShowTipsModal(false)}
-                  className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300 p-1"
+                  className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300 p-1 cursor-pointer"
                 >
                   <svg
                     className="w-5 h-5"

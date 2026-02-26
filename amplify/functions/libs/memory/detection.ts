@@ -72,7 +72,7 @@ Use the analyze_semantic_retrieval tool to provide your analysis of whether retr
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {
@@ -169,7 +169,7 @@ Analyze this message and use the detect_memory_request tool to provide your anal
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {

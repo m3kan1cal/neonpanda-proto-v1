@@ -56,6 +56,7 @@ import {
   generateCoachPrompts as generateCoachPromptsHelper,
   runConfigValidation,
 } from "../../coach-creator/tool-generation";
+import { PROMPT_REPAIR_SCHEMA } from "../../schemas/coach-creator-tool-schemas";
 
 /**
  * Tool 1: Load Session Requirements
@@ -974,30 +975,11 @@ Return JSON:
           const response = (await callBedrockApi(
             aiNormalizationPrompt,
             `Normalize ${key}`,
-            MODEL_IDS.EXECUTOR_MODEL_FULL, // Nova 2 Lite
+            MODEL_IDS.UTILITY_MODEL_FULL, // Small schema {fixed_prompt, changes_made}, output consumed programmatically
             {
               temperature: TEMPERATURE_PRESETS.BALANCED,
-              tools: {
-                name: "fixed_prompt_output",
-                description: "The fixed prompt text and a summary of changes.",
-                inputSchema: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    fixed_prompt: {
-                      type: "string",
-                      description: "The rephrased prompt text",
-                    },
-                    changes_made: {
-                      type: "array",
-                      items: { type: "string" },
-                      description: "List of specific changes made",
-                    },
-                  },
-                  required: ["fixed_prompt", "changes_made"],
-                },
-              },
-              expectedToolName: "fixed_prompt_output",
+              tools: PROMPT_REPAIR_SCHEMA,
+              expectedToolName: PROMPT_REPAIR_SCHEMA.name,
             },
           )) as BedrockToolUseResult;
 

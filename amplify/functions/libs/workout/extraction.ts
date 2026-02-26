@@ -9,7 +9,7 @@ import { CoachConfig } from "../coach-creator/types";
 import {
   TimeIndicator,
   UniversalWorkoutSchema,
-  DisciplineClassification,
+  WorkoutCharacteristics,
 } from "./types";
 import {
   storeDebugDataInS3,
@@ -1269,6 +1269,7 @@ EXAMPLES:
       const messageTime = new Date(messageTimestamp);
       const timeDiff = extractedTime.getTime() - messageTime.getTime();
       const hoursDiff = timeDiff / (1000 * 60 * 60);
+      const daysDiff = hoursDiff / 24;
 
       // AUTO-CORRECT workouts with future dates (more than 1 hour in the future)
       // We never reject workouts, but we do correct impossible dates
@@ -1284,16 +1285,50 @@ EXAMPLES:
           },
         );
 
-        // Use message time as corrected completion time
-        // Workout will still be saved, just with corrected timestamp
         logger.info(
           "✅ Corrected workout time to message timestamp (workout will be saved)",
         );
         return messageTime;
       }
 
+      // AUTO-CORRECT dates that are implausibly far in the past — likely a year
+      // hallucination where the model used the prior year instead of the current one.
+      // Threshold of 180 days preserves legitimate late-logging while catching year errors.
+      if (daysDiff < -180) {
+        const yearCorrected = new Date(extractedTime);
+        yearCorrected.setFullYear(yearCorrected.getFullYear() + 1);
+        const correctedDaysDiff =
+          (yearCorrected.getTime() - messageTime.getTime()) /
+          (1000 * 60 * 60 * 24);
+
+        if (correctedDaysDiff > -30 && correctedDaysDiff <= 1) {
+          // Year +1 produces a reasonable date (within 30 days before message)
+          logger.info(
+            "ℹ️ AUTO-CORRECTING: Year hallucination detected, incrementing year by 1:",
+            {
+              extractedTime: extractedTime.toISOString(),
+              correctedTime: yearCorrected.toISOString(),
+              messageTime: messageTime.toISOString(),
+              daysBeforeMessage: Math.abs(correctedDaysDiff).toFixed(1),
+              originalReasoning: result.reasoning,
+            },
+          );
+          return yearCorrected;
+        }
+
+        // Year correction still doesn't land near the message — fall back to message time
+        logger.info(
+          "ℹ️ AUTO-CORRECTING: Far-past date with no valid year correction, using message time:",
+          {
+            extractedTime: extractedTime.toISOString(),
+            messageTime: messageTime.toISOString(),
+            daysInPast: Math.abs(daysDiff).toFixed(1),
+          },
+        );
+        return messageTime;
+      }
+
       // Allow reasonable past times (workouts logged hours/days after completion)
-      // No upper limit on how far in the past - users often log workouts later
     }
 
     return result.completedAt
@@ -1380,10 +1415,10 @@ SUMMARY:`;
  * @param workoutData - Optional workout data for additional context
  * @returns Promise<object> - Classification result with multiple attributes
  */
-export const classifyDiscipline = async (
+export const classifyWorkoutCharacteristics = async (
   discipline: string,
   workoutData?: UniversalWorkoutSchema,
-): Promise<DisciplineClassification> => {
+): Promise<WorkoutCharacteristics> => {
   if (!discipline || typeof discipline !== "string") {
     return {
       isQualitative: false,
@@ -1461,22 +1496,22 @@ Use confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, below
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {
-          name: "classify_discipline",
+          name: "classify_workout_characteristics",
           description:
-            "Classify a workout discipline across qualitative/quantitative, environment, and primary focus axes",
+            "Classify a workout's characteristics: qualitative vs quantitative, training environment, and primary focus",
           inputSchema: DISCIPLINE_CLASSIFICATION_SCHEMA,
         },
-        expectedToolName: "classify_discipline",
+        expectedToolName: "classify_workout_characteristics",
       },
     );
 
     if (!response || typeof response !== "object" || !("input" in response)) {
       throw new Error(
-        `Unexpected response format from classify_discipline tool for discipline "${discipline}"`,
+        `Unexpected response format from classify_workout_characteristics tool for discipline "${discipline}"`,
       );
     }
 
-    const result = response.input as DisciplineClassification;
+    const result = response.input as WorkoutCharacteristics;
 
     // Store prompt and result in S3 for debugging
     try {

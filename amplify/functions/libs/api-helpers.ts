@@ -2719,8 +2719,12 @@ const RERANKING_CONFIG = {
   initialTopK: 30, // Higher initial query results for reranking
   finalTopN: 8, // Final number of reranked results
   truncate: "END", // How to handle long documents
-  minScore: 0.3, // Lower threshold since reranking improves relevance
-  fallbackMinScore: 0.5, // Fallback minScore when reranking is disabled
+  // No minScore for the reranked path: pinecone-rerank-v0 returns scores on a
+  // very different (much lower) scale than semantic similarity scores (~0.005
+  // avg vs the ~0.3 threshold previously used), which caused ALL reranked
+  // results to be filtered out. The reranker's value is in relative ordering,
+  // not absolute scoring -- the topN limit already caps result count.
+  fallbackMinScore: 0.5, // minScore used when reranking is disabled
 };
 
 /**
@@ -2969,16 +2973,38 @@ const processAndFilterResults = async (
     processedMatches = normalizedMatches.slice(0, topK);
   }
 
-  // When reranking is enabled, use reranking minScore (different scale: 0.3)
-  // Otherwise, use passed minScore or fallback minScore (0.5)
-  const finalMinScore =
-    enableReranking && originalQuery
-      ? RERANKING_CONFIG.minScore
-      : minScore || RERANKING_CONFIG.fallbackMinScore;
+  const wasReranked =
+    enableReranking && originalQuery && normalizedMatches.length > 1;
+
+  // When reranking was applied, skip absolute score filtering entirely.
+  // The reranker (pinecone-rerank-v0) returns scores on a much lower scale
+  // (~0.005 avg) than semantic similarity scores (~0.43 avg), so any
+  // meaningful threshold filters out all results. The topN cap applied during
+  // reranking already limits result count to the most relevant documents.
+  // When reranking was NOT applied, use the caller-supplied minScore or the
+  // fallback.
+  const finalMinScore = wasReranked
+    ? 0
+    : minScore || RERANKING_CONFIG.fallbackMinScore;
+
+  // Log reranked score range for monitoring
+  if (wasReranked && processedMatches.length > 0) {
+    const scores = processedMatches.map((m: any) => m.score || 0);
+    logger.info("📊 Reranked score range:", {
+      min: Math.min(...scores).toFixed(6),
+      max: Math.max(...scores).toFixed(6),
+      avg: (
+        scores.reduce((a: number, b: number) => a + b, 0) / scores.length
+      ).toFixed(6),
+      count: scores.length,
+    });
+  }
 
   // Filter results by minimum score and format for consumption
   const relevantMatches = processedMatches
-    .filter((match: any) => match.score && match.score >= finalMinScore)
+    .filter(
+      (match: any) => match.score !== undefined && match.score >= finalMinScore,
+    )
     .map((match: any) => ({
       id: match.id,
       score: match.score,
@@ -2990,9 +3016,6 @@ const processAndFilterResults = async (
           ? "methodology"
           : userNamespace,
     }));
-
-  const wasReranked =
-    enableReranking && originalQuery && normalizedMatches.length > 1;
 
   logger.info("✅ Successfully processed Pinecone results:", {
     indexName: PINECONE_INDEX_NAME,
@@ -3274,9 +3297,7 @@ export const querySemanticMemories = async (
         hasMemoryId: !!hit.fields?.memoryId,
       })),
       minScore,
-      effectiveMinScoreWillBe: enableReranking
-        ? RERANKING_CONFIG.minScore
-        : minScore,
+      effectiveMinScoreWillBe: enableReranking ? 0 : minScore,
     });
 
     // Normalize all memory matches - extract record data and combine with score
@@ -3318,11 +3339,25 @@ export const querySemanticMemories = async (
       normalizedHits = normalizedHits.slice(0, topK);
     }
 
-    // Determine effective minimum score based on reranking
-    const effectiveMinScore =
-      enableReranking && normalizedHits.length > 1
-        ? RERANKING_CONFIG.minScore
-        : minScore;
+    // When reranking was applied, skip absolute score filtering -- the
+    // pinecone-rerank-v0 model returns scores on a much lower scale than
+    // semantic similarity scores, so any non-zero threshold filters everything.
+    // The topN cap applied during reranking already limits result count.
+    const wasMemoryReranked = enableReranking && normalizedHits.length > 1;
+    const effectiveMinScore = wasMemoryReranked ? 0 : minScore;
+
+    // Log reranked score range for monitoring
+    if (wasMemoryReranked && normalizedHits.length > 0) {
+      const scores = normalizedHits.map((h: any) => h.score || 0);
+      logger.info("📊 Reranked memory score range:", {
+        min: Math.min(...scores).toFixed(6),
+        max: Math.max(...scores).toFixed(6),
+        avg: (
+          scores.reduce((a: number, b: number) => a + b, 0) / scores.length
+        ).toFixed(6),
+        count: scores.length,
+      });
+    }
 
     // Count filtered results for diagnostics
     let filteredByScore = 0;

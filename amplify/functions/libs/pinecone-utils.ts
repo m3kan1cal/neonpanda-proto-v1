@@ -80,7 +80,7 @@ Analyze this message and determine if semantic search would enhance the coaching
     const response = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         prefillResponse: "{",
@@ -134,7 +134,7 @@ Examples:
     const response = (await callBedrockApi(
       analysisPrompt,
       userMessage,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         prefillResponse: "{",

@@ -97,8 +97,8 @@ Legend: **Yes** = strong candidate, **Maybe** = needs testing, **No** = should s
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ | ----------- | ------------ | ------------------------- |
 | `libs/coach-conversation/contextual-updates.ts` | `generateContextualUpdate` — generates a single-sentence ephemeral progress update shown in the UI | 0                        | n/a         | CONTEXTUAL   | **Yes** ⚠️                |
 | `libs/coach-conversation/contextual-updates.ts` | `generateContextualUpdateV2` — generates a single-sentence progress update (newer variant)         | 0                        | n/a         | CONTEXTUAL   | **Yes** ⚠️                |
-| `libs/coach-conversation/contextual-updates.ts` | `classifyUserIntent` — binary COMPLEX/SIMPLE classification of user message                        | 0                        | n/a         | CONTEXTUAL   | **Yes**                   |
-| `libs/coach-conversation/detection.ts`          | `detectComplexity` — classifies message for conversation summarization triggers                    | 1 (`analyze_complexity`) | ~40 lines   | EXECUTOR     | **Yes**                   |
+| `libs/coach-conversation/contextual-updates.ts` | `classifyUserIntent` — binary COMPLEX/SIMPLE classification of user message                        | 0                        | n/a         | **UTILITY**  | ✅ Migrated               |
+| `libs/coach-conversation/detection.ts`          | `detectComplexity` — classifies message for conversation summarization triggers                    | 1 (`analyze_complexity`) | ~40 lines   | **UTILITY**  | ✅ Migrated               |
 | `libs/coach-conversation/detection.ts`          | `analyzeSmartRouterRequest` — comprehensive routing analysis for all processing modules            | 1 (`analyze_request`)    | ~300 lines  | EXECUTOR     | **No** — schema too large |
 
 > ⚠️ **Borderline note for `generateContextualUpdate` and `generateContextualUpdateV2`:** These two calls return text that IS displayed to the user as ephemeral status messages in the UI (e.g. "Analyzing your workout..."). The output never enters the main conversation stream — it is sent as a separate SSE contextual event — but users do read it. Nemotron can handle brief, factual single-sentence outputs, but the coaching persona tone of these updates should be validated before migrating. Recommend testing against a sample of update types before committing. `classifyUserIntent` returns only "COMPLEX" or "SIMPLE" and never surfaces to the user, so it is unambiguously a strong candidate.
@@ -109,8 +109,8 @@ Legend: **Yes** = strong candidate, **Maybe** = needs testing, **No** = should s
 
 | File                       | Function / Purpose                                                                     | Tools                               | Schema Size     | Current Tier | UTILITY?                   |
 | -------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------- | --------------- | ------------ | -------------------------- |
-| `libs/memory/detection.ts` | `analyzeSemanticRetrieval` — determines if memory retrieval would improve the response | 1 (`analyze_semantic_retrieval`)    | ~40 lines       | EXECUTOR     | **Yes**                    |
-| `libs/memory/detection.ts` | `detectMemoryRequest` — detects if user is requesting to save a memory                 | 1 (`detect_memory_request`)         | ~40 lines       | EXECUTOR     | **Yes**                    |
+| `libs/memory/detection.ts` | `analyzeSemanticRetrieval` — determines if memory retrieval would improve the response | 1 (`analyze_semantic_retrieval`)    | ~40 lines       | **UTILITY**  | ✅ Migrated                |
+| `libs/memory/detection.ts` | `detectMemoryRequest` — detects if user is requesting to save a memory                 | 1 (`detect_memory_request`)         | ~40 lines       | **UTILITY**  | ✅ Migrated                |
 | `libs/memory/detection.ts` | `detectMemoryCharacteristics` — classifies memory type, importance, scope, and tags    | 1 (`detect_memory_characteristics`) | ~100 lines      | EXECUTOR     | **Maybe**                  |
 | `libs/memory/detection.ts` | `consolidatedMemoryAnalysis` — combined retrieval + save analysis in a single call     | 1 (`analyze_memory_needs`)          | Largest in file | EXECUTOR     | **No** — schema complexity |
 
@@ -189,25 +189,25 @@ Legend: **Yes** = strong candidate, **Maybe** = needs testing, **No** = should s
 
 | File                                                                             | Function / Purpose                                                                      | Tools                                           | Schema Size                          | Current Tier       | UTILITY?                           |
 | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------ | ------------------ | ---------------------------------- |
-| `libs/coach-creator/data-extraction.ts`                                          | `extractGenderPreference` — returns single word: `"male"`, `"female"`, or `"neutral"`   | 0                                               | n/a                                  | EXECUTOR           | **Yes**                            |
-| `libs/coach-creator/data-extraction.ts`                                          | `extractTrainingDays` — returns single integer 1–7                                      | 0                                               | n/a                                  | EXECUTOR           | **Yes**                            |
-| `libs/coach-creator/data-extraction.ts`                                          | `extractGoalTimeline` — returns short phrase like `"6 months"`                          | 0                                               | n/a                                  | EXECUTOR           | **Yes**                            |
-| `libs/coach-creator/data-extraction.ts`                                          | `extractTrainingIntensity` — returns single word: `"high"`, `"moderate"`, or `"low"`    | 0                                               | n/a                                  | EXECUTOR           | **Yes**                            |
-| `libs/coach-creator/data-extraction.ts`                                          | `extractSafetyProfile` — extracts injuries, contraindications, equipment, modifications | 1 (`SAFETY_PROFILE_EXTRACTION_SCHEMA`)          | Moderate                             | EXECUTOR           | **Maybe**                          |
-| `libs/coach-creator/data-extraction.ts`                                          | `extractMethodologyPreferences` — extracts focus areas, preferences, avoidances         | 1 (`METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA`) | Moderate                             | EXECUTOR           | **Maybe**                          |
-| `libs/coach-creator/data-extraction.ts`                                          | `extractSpecializations` — returns array of specialization enum values                  | 1 (`SPECIALIZATIONS_EXTRACTION_SCHEMA`)         | Small                                | EXECUTOR           | **Maybe**                          |
+| `libs/coach-creator/data-extraction.ts`                                          | `extractGenderPreference` — returns single word: `"male"`, `"female"`, or `"neutral"`   | 0                                               | n/a                                  | **UTILITY**        | ✅ Migrated                        |
+| `libs/coach-creator/data-extraction.ts`                                          | `extractTrainingDays` — returns single integer 1–7                                      | 0                                               | n/a                                  | **UTILITY**        | ✅ Migrated                        |
+| `libs/coach-creator/data-extraction.ts`                                          | `extractGoalTimeline` — returns short phrase like `"6 months"`                          | 0                                               | n/a                                  | **UTILITY**        | ✅ Migrated                        |
+| `libs/coach-creator/data-extraction.ts`                                          | `extractTrainingIntensity` — returns single word: `"high"`, `"moderate"`, or `"low"`    | 0                                               | n/a                                  | **UTILITY**        | ✅ Migrated                        |
+| `libs/coach-creator/data-extraction.ts`                                          | `extractSafetyProfile` — extracts injuries, contraindications, equipment, modifications | 1 (`SAFETY_PROFILE_EXTRACTION_SCHEMA`)          | Moderate                             | **UTILITY**        | ✅ Migrated                        |
+| `libs/coach-creator/data-extraction.ts`                                          | `extractMethodologyPreferences` — extracts focus areas, preferences, avoidances         | 1 (`METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA`) | Moderate                             | **UTILITY**        | ✅ Migrated                        |
+| `libs/coach-creator/data-extraction.ts`                                          | `extractSpecializations` — returns array of specialization enum values                  | 1 (`SPECIALIZATIONS_EXTRACTION_SCHEMA`)         | Small                                | **UTILITY**        | ✅ Migrated                        |
 | `libs/coach-creator/todo-extraction.ts`                                          | `extractCoachCreatorInfo` — extracts all coach intake info from conversation            | 1 (`extract_coach_creator_info`)                | 22 optional objects                  | EXECUTOR           | **No**                             |
 | `libs/coach-creator/tool-generation.ts`                                          | `selectPersonalityTemplate` — selects coach personality from templates                  | 1 (`PERSONALITY_SELECTION_SCHEMA`)              | Moderate                             | PLANNER            | **No** — nuanced matching          |
 | `libs/coach-creator/tool-generation.ts`                                          | `selectMethodologyTemplate` — selects training methodology                              | 1 (`METHODOLOGY_SELECTION_SCHEMA`)              | Moderate                             | PLANNER            | **No** — nuanced matching          |
 | `libs/coach-creator/tool-generation.ts`                                          | `generateCoachPrompts` — generates 7 full coach personality prompts                     | 1 (`COACH_PROMPTS_SCHEMA`)                      | Complex, CREATIVE                    | PLANNER            | **No**                             |
-| `libs/coach-creator/tool-generation.ts`                                          | `validateCoachConfig` — validates coach config quality with scores                      | 1 (`VALIDATION_RESULT_SCHEMA`)                  | Moderate                             | EXECUTOR           | **Maybe**                          |
+| `libs/coach-creator/tool-generation.ts`                                          | `validateCoachConfig` — validates coach config quality with scores                      | 1 (`VALIDATION_RESULT_SCHEMA`)                  | Moderate                             | **UTILITY**        | ✅ Migrated                        |
 | `libs/coach-creator/tool-generation.ts`                                          | `generateCoachName` — generates a creative coach name                                   | 1 (`COACH_NAME_SCHEMA`)                         | Small, temp 1.0                      | EXECUTOR           | **Maybe** — creativity may degrade |
 | `libs/coach-creator/coach-generation.ts`                                         | `generateCoachConfig` primary — full coach config generation                            | 1 (`generate_coach_config`)                     | Very large                           | PLANNER            | **No**                             |
 | `libs/coach-creator/coach-generation.ts`                                         | `generateCoachConfig` fallback                                                          | 0                                               | Complex                              | PLANNER            | **No**                             |
-| `libs/coach-creator/session-management.ts`                                       | `generateSessionSummary` — text paragraph for Pinecone                                  | 0                                               | n/a                                  | EXECUTOR           | **Maybe**                          |
+| `libs/coach-creator/session-management.ts`                                       | `generateSessionSummary` — text paragraph for Pinecone                                  | 0                                               | n/a                                  | **UTILITY**        | ✅ Migrated                        |
 | `libs/coach-creator/question-generator.ts`                                       | `generateNextQuestion` (non-streaming)                                                  | 0                                               | n/a                                  | EXECUTOR, CREATIVE | **Maybe**                          |
-| `libs/coach-creator/question-generator.ts`                                       | `generateCompletionMessage` — short coach message on session complete                   | 0                                               | n/a                                  | EXECUTOR           | **Maybe**                          |
-| `libs/agents/coach-creator/tools.ts`                                             | `normalizeCoachConfig` prompt repair — rephrases a single prompt field                  | 1 (`fixed_prompt_output`)                       | Small `{fixed_prompt, changes_made}` | EXECUTOR           | **Yes**                            |
+| `libs/coach-creator/question-generator.ts`                                       | `generateCompletionMessage` — short coach message on session complete                   | 0                                               | n/a                                  | **UTILITY**        | ✅ Migrated                        |
+| `libs/agents/coach-creator/tools.ts`                                             | `normalizeCoachConfig` prompt repair — rephrases a single prompt field                  | 1 (`fixed_prompt_output`)                       | Small `{fixed_prompt, changes_made}` | **UTILITY**        | ✅ Migrated                        |
 | `libs/agents/core/agent.ts` (`callBedrockApiForAgent`) → **Coach Creator Agent** | Full ReAct loop                                                                         | **8 tools**                                     | Multi-tool agent                     | PLANNER            | **No**                             |
 
 ---
@@ -216,8 +216,8 @@ Legend: **Yes** = strong candidate, **Maybe** = needs testing, **No** = should s
 
 | File                           | Function / Purpose                                                         | Tools          | Schema Size | Current Tier     | UTILITY?                   |
 | ------------------------------ | -------------------------------------------------------------------------- | -------------- | ----------- | ---------------- | -------------------------- |
-| `libs/pinecone-utils.ts`       | `shouldUseSemanticSearch` — binary decision on whether to query Pinecone   | 0, prefill `{` | n/a         | EXECUTOR         | **Yes**                    |
-| `libs/pinecone-utils.ts`       | `analyzeMethodologyIntent` — classifies methodology type from message      | 0, prefill `{` | 5 fields    | EXECUTOR         | **Yes**                    |
+| `libs/pinecone-utils.ts`       | `shouldUseSemanticSearch` — binary decision on whether to query Pinecone   | 0, prefill `{` | n/a         | **UTILITY**      | ✅ Migrated                |
+| `libs/pinecone-utils.ts`       | `analyzeMethodologyIntent` — classifies methodology type from message      | 0, prefill `{` | 5 fields    | **UTILITY**      | ✅ Migrated                |
 | `libs/pinecone-compression.ts` | `compressContent` — intelligent semantic compression for Pinecone metadata | 0              | n/a         | PLANNER (Sonnet) | **No** — quality-sensitive |
 
 ---
@@ -244,40 +244,44 @@ Legend: **Yes** = strong candidate, **Maybe** = needs testing, **No** = should s
 
 ## Migration Candidate Summary
 
-### Strong "Yes" Candidates (23 call sites)
+### Strong "Yes" Candidates (27 call sites)
 
 These are recommended for immediate UTILITY migration with low risk. All are non-streaming, behind-the-scenes, with small or no tool schemas, and outputs that are consumed programmatically.
 
-| #   | File                                            | Function                                |
-| --- | ----------------------------------------------- | --------------------------------------- |
-| 1   | `libs/coach-conversation/contextual-updates.ts` | `classifyUserIntent` (COMPLEX/SIMPLE)   |
-| 2   | `libs/coach-conversation/detection.ts`          | `detectComplexity`                      |
-| 3   | `libs/workout/discipline-detector.ts`           | `detectDiscipline`                      |
-| 4   | `libs/workout/extraction.ts`                    | `checkWorkoutComplexity`                |
-| 5   | `libs/workout/extraction.ts`                    | `extractWorkoutTime`                    |
-| 6   | `libs/workout/extraction.ts`                    | `classifyDisciplineAsQualitative`       |
-| 7   | `libs/workout/validation-helpers.ts`            | `classifyWorkoutType`                   |
-| 8   | `libs/workout/validation-helpers.ts`            | `validateExerciseStructure`             |
-| 9   | `libs/workout/detection.ts`                     | `validateWorkoutContent`                |
-| 10  | `libs/workout/tool-generation.ts`               | `classifyDiscipline`                    |
-| 11  | `libs/exercise/normalization.ts`                | `normalizeExerciseNames`                |
-| 12  | `libs/exercise/normalization.ts`                | `normalizeExerciseNamesWithUserContext` |
-| 13  | `libs/program/duration-normalizer.ts`           | `normalizeDuration` ✅ Migrated         |
-| 14  | `libs/coach-creator/data-extraction.ts`         | `extractGenderPreference`               |
-| 15  | `libs/coach-creator/data-extraction.ts`         | `extractTrainingDays`                   |
-| 16  | `libs/coach-creator/data-extraction.ts`         | `extractGoalTimeline`                   |
-| 17  | `libs/coach-creator/data-extraction.ts`         | `extractTrainingIntensity`              |
-| 18  | `libs/memory/detection.ts`                      | `analyzeSemanticRetrieval`              |
-| 19  | `libs/memory/detection.ts`                      | `detectMemoryRequest`                   |
-| 20  | `libs/pinecone-utils.ts`                        | `shouldUseSemanticSearch`               |
-| 21  | `libs/pinecone-utils.ts`                        | `analyzeMethodologyIntent`              |
-| 22  | `libs/agents/coach-creator/tools.ts`            | prompt repair normalization             |
-| 23  | `libs/coach-conversation/contextual-updates.ts` | `generateContextualUpdate` ⚠️           |
-| 24  | `libs/coach-conversation/contextual-updates.ts` | `generateContextualUpdateV2` ⚠️         |
+| #   | File                                            | Function                                            |
+| --- | ----------------------------------------------- | --------------------------------------------------- |
+| 1   | `libs/coach-conversation/contextual-updates.ts` | `classifyUserIntent` (COMPLEX/SIMPLE) ✅ Migrated   |
+| 2   | `libs/coach-conversation/detection.ts`          | `detectComplexity` ✅ Migrated                      |
+| 3   | `libs/workout/discipline-detector.ts`           | `detectDiscipline` ✅ Migrated                      |
+| 4   | `libs/workout/extraction.ts`                    | `checkWorkoutComplexity` ✅ Migrated                |
+| 5   | `libs/workout/extraction.ts`                    | `extractWorkoutTime` ✅ Migrated                    |
+| 6   | `libs/workout/extraction.ts`                    | `classifyDisciplineAsQualitative` ✅ Migrated       |
+| 7   | `libs/workout/validation-helpers.ts`            | `classifyWorkoutType` ✅ Migrated                   |
+| 8   | `libs/workout/validation-helpers.ts`            | `validateExerciseStructure` ✅ Migrated             |
+| 9   | `libs/workout/detection.ts`                     | `validateWorkoutContent` ✅ Migrated                |
+| 10  | `libs/workout/tool-generation.ts`               | `classifyDiscipline` ✅ Migrated                    |
+| 11  | `libs/exercise/normalization.ts`                | `normalizeExerciseNames` ✅ Migrated                |
+| 12  | `libs/exercise/normalization.ts`                | `normalizeExerciseNamesWithUserContext` ✅ Migrated |
+| 13  | `libs/program/duration-normalizer.ts`           | `normalizeDuration` ✅ Migrated                     |
+| 14  | `libs/coach-creator/data-extraction.ts`         | `extractGenderPreference` ✅ Migrated               |
+| 15  | `libs/coach-creator/data-extraction.ts`         | `extractTrainingDays` ✅ Migrated                   |
+| 16  | `libs/coach-creator/data-extraction.ts`         | `extractGoalTimeline` ✅ Migrated                   |
+| 17  | `libs/coach-creator/data-extraction.ts`         | `extractTrainingIntensity` ✅ Migrated              |
+| 18  | `libs/coach-creator/data-extraction.ts`         | `extractSafetyProfile` ✅ Migrated                  |
+| 19  | `libs/coach-creator/data-extraction.ts`         | `extractMethodologyPreferences` ✅ Migrated         |
+| 20  | `libs/coach-creator/data-extraction.ts`         | `extractSpecializations` ✅ Migrated                |
+| 21  | `libs/coach-creator/tool-generation.ts`         | `validateCoachConfig` ✅ Migrated                   |
+| 22  | `libs/memory/detection.ts`                      | `analyzeSemanticRetrieval` ✅ Migrated              |
+| 23  | `libs/memory/detection.ts`                      | `detectMemoryRequest` ✅ Migrated                   |
+| 24  | `libs/pinecone-utils.ts`                        | `shouldUseSemanticSearch` ✅ Migrated               |
+| 25  | `libs/pinecone-utils.ts`                        | `analyzeMethodologyIntent` ✅ Migrated              |
+| 26  | `libs/agents/coach-creator/tools.ts`            | prompt repair normalization ✅ Migrated             |
+| 27  | `libs/coach-conversation/contextual-updates.ts` | `generateContextualUpdate` ⚠️                       |
+| 28  | `libs/coach-conversation/contextual-updates.ts` | `generateContextualUpdateV2` ⚠️                     |
 
 > ⚠️ Items 23 and 24 (`generateContextualUpdate`, `generateContextualUpdateV2`): These generate text that IS displayed to users as ephemeral status messages in the UI (e.g. "Analyzing your workout..."). The Bedrock call is non-streaming (`ConverseCommand`), but the result surfaces in the UI. Nemotron can produce brief factual sentences, but coaching persona tone should be validated against a representative sample of update types before committing this migration. `classifyUserIntent` (item 1) has no such concern — it returns only `"COMPLEX"` or `"SIMPLE"` and is never shown to users.
 
-### "Maybe" Candidates (10 call sites)
+### "Maybe" Candidates (6 call sites)
 
 These require testing before migration. Primary concerns are coaching persona voice, moderate schema complexity, or creative output requirements.
 
@@ -285,14 +289,10 @@ These require testing before migration. Primary concerns are coaching persona vo
 | --- | ------------------------------------------ | -------------------------------------- | -------------------------------------------------- |
 | 1   | `libs/workout/extraction.ts`               | `generateWorkoutSummary`               | Short free text but factual; quality check needed  |
 | 2   | `libs/workout/detection.ts`                | `extractQuickWorkoutContext`           | ~12 fields extracted; borderline schema complexity |
-| 3   | `libs/coach-creator/data-extraction.ts`    | `extractSafetyProfile`                 | Moderate schema with nested arrays                 |
-| 4   | `libs/coach-creator/data-extraction.ts`    | `extractMethodologyPreferences`        | Moderate schema                                    |
-| 5   | `libs/coach-creator/data-extraction.ts`    | `extractSpecializations`               | Small schema but enum-array output                 |
-| 6   | `libs/coach-creator/tool-generation.ts`    | `validateCoachConfig`                  | Structured scores; depends on schema size          |
-| 7   | `libs/coach-creator/tool-generation.ts`    | `generateCoachName`                    | Creative task at temp 1.0; may degrade             |
-| 8   | `libs/coach-creator/session-management.ts` | `generateSessionSummary`               | Persona-flavored text paragraph                    |
-| 9   | `libs/coach-creator/question-generator.ts` | `generateNextQuestion` (non-streaming) | Coaching persona voice                             |
-| 10  | `libs/memory/detection.ts`                 | `detectMemoryCharacteristics`          | Moderate schema complexity                         |
+| 3   | `libs/coach-creator/tool-generation.ts`    | `generateCoachName`                    | Creative task at temp 1.0; may degrade             |
+| 4   | `libs/coach-creator/session-management.ts` | `generateSessionSummary`               | Persona-flavored text paragraph                    |
+| 5   | `libs/coach-creator/question-generator.ts` | `generateNextQuestion` (non-streaming) | Coaching persona voice                             |
+| 6   | `libs/memory/detection.ts`                 | `detectMemoryCharacteristics`          | Moderate schema complexity                         |
 
 ### Excluded (Not Candidates)
 
@@ -330,11 +330,18 @@ These call sites should remain on their current model. They use complex schemas,
 
 ## Implementation Notes
 
-### UTILITY tier status (2026-02-23, updated 2026-02-24)
+### UTILITY tier status (2026-02-23, updated 2026-02-26)
 
 - **Workout domain (8 call sites):** Migrated. `detectDiscipline`, `checkWorkoutComplexity`, `classifyDisciplineAsQualitative`, `classifyDiscipline`, `classifyWorkoutType`, `validateExerciseStructure`, `extractWorkoutTime`, and `validateWorkoutContent` all use `UTILITY_MODEL_FULL` (Nova 2 Lite). `extractCompletedAtTime` and `classifyDiscipline` (in `extraction.ts`) additionally converted from prefill/text-mode to proper toolConfig/schema pattern.
 - **Exercise domain (2 call sites):** Migrated. `normalizeExerciseNames` and `normalizeExerciseNamesWithUserContext` both use `UTILITY_MODEL_FULL` (Nova 2 Lite).
 - **Program domain (1 call site):** Migrated. `normalizeDuration` in `libs/program/duration-normalizer.ts` moved from `CONTEXTUAL_MODEL_FULL` to `UTILITY_MODEL_FULL` (Nova 2 Lite). All other program domain functions remain on PLANNER or dynamic model tiers.
+- **Coach Creator simple extractors (4 call sites):** Migrated. `extractGenderPreference`, `extractTrainingDays` (frequency), `extractGoalTimeline`, and `extractTrainingIntensity` in `libs/coach-creator/data-extraction.ts` all moved to `UTILITY_MODEL_FULL`. These are AI fallback paths — no tool schemas, single-value outputs.
+- **Coach Creator structured extractors (3 call sites):** Migrated. `extractSafetyProfile` (5 string arrays), `extractMethodologyPreferences` (4 fields: 3 string arrays + 1 enum), and `extractSpecializations` (single `string[]` field) in `libs/coach-creator/data-extraction.ts` moved from `EXECUTOR_MODEL_FULL` to `UTILITY_MODEL_FULL`. All use imported schema constants, output consumed programmatically, never shown to users.
+- **Coach Creator config validation (1 call site):** Migrated. `validateCoachConfig` in `libs/coach-creator/tool-generation.ts` moved from `EXECUTOR_MODEL_FULL` to `UTILITY_MODEL_FULL`. Uses `VALIDATION_RESULT_SCHEMA` (5 flat fields: bool, number, string arrays), output consumed programmatically.
+- **Memory domain (2 call sites):** Migrated. `detectMemoryRetrievalNeed` and `detectMemoryRequest` in `libs/memory/detection.ts` moved to `UTILITY_MODEL_FULL`. Both use small tool schemas (~40 lines). `detectMemoryCharacteristics` (Maybe) and `analyzeMemoryNeeds` (No) remain on EXECUTOR.
+- **Pinecone utilities (2 call sites):** Migrated. `shouldUsePineconeSearch` and `analyzeMethodologyIntent` in `libs/pinecone-utils.ts` moved to `UTILITY_MODEL_FULL`. Both use prefill JSON pattern with no tool schemas.
+- **Coach Conversation domain (2 call sites):** Migrated. `classifyUserIntent` (binary COMPLEX/SIMPLE classification, no tools) in `libs/coach-conversation/contextual-updates.ts` moved from `CONTEXTUAL_MODEL_FULL` to `UTILITY_MODEL_FULL`. `detectConversationComplexity` (1 tool, ~40-line schema) in `libs/coach-conversation/detection.ts` moved from `EXECUTOR_MODEL_FULL` to `UTILITY_MODEL_FULL`. Neither output surfaces to users. `analyzeSmartRouterRequest` (No) and the two contextual update generators (⚠️ pending tone validation) remain unchanged.
+- **Coach Creator agent (1 call site):** Migrated. Prompt repair call in `normalizeCoachConfigTool` (`libs/agents/coach-creator/tools.ts`) moved from `EXECUTOR_MODEL_FULL` to `UTILITY_MODEL_FULL`. Small schema (`{fixed_prompt, changes_made}`), output consumed programmatically.
 - **All other domains:** Remain on their original models pending further testing.
 
 ### Testing the Nova 2 Lite migration

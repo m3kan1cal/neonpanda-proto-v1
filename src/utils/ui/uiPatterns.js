@@ -370,7 +370,7 @@ export const imagePreviewPatterns = {
 
   // Remove button - neon pink themed, positioned on corner border
   removeButton:
-    "absolute -top-2 -right-2 bg-synthwave-neon-pink text-white rounded-full p-1 hover:bg-synthwave-neon-pink/80 transition-colors duration-200 shadow-lg shadow-synthwave-neon-pink/50",
+    "absolute -top-2 -right-2 bg-synthwave-neon-pink text-white rounded-full p-1 hover:bg-synthwave-neon-pink/80 transition-colors duration-200 shadow-lg shadow-synthwave-neon-pink/50 cursor-pointer",
 
   // Size label - bottom overlay with rounded bottom corners
   sizeLabel:
@@ -960,7 +960,7 @@ export const navigationPatterns = {
 
     // Prompt button
     promptButton:
-      "block w-full text-left px-4 py-1.5 font-rajdhani text-base text-synthwave-text-primary hover:text-white hover:bg-synthwave-bg-primary/30 transition-all duration-200 leading-relaxed",
+      "block w-full text-left px-4 py-1.5 font-rajdhani text-base text-synthwave-text-primary hover:text-white hover:bg-synthwave-bg-primary/30 transition-all duration-200 leading-relaxed cursor-pointer",
   },
 
   // Utility Flyout Menu - Hover-based slide-out menu for utility navigation items

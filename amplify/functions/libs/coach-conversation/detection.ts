@@ -82,7 +82,7 @@ Use the analyze_complexity tool to provide your analysis of complexity triggers 
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL, // Non-interactive classification, small schema (~40 lines), output never shown to users
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {

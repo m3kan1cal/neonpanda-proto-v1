@@ -91,13 +91,12 @@ function WeeklyReportViewerV2({
       {viewMode === "raw" && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
           <div
-            className={`flex items-start justify-between p-6 ${collapsedSections.has("raw-json") ? "rounded-2xl" : "rounded-t-2xl"}`}
+            className={`flex items-start justify-between p-6 cursor-pointer ${collapsedSections.has("raw-json") ? "rounded-2xl" : "rounded-t-2xl"}`}
             onClick={() => toggleCollapse("raw-json")}
             role="button"
             tabIndex={0}
             aria-expanded={!collapsedSections.has("raw-json")}
             aria-controls="raw-json-content"
-            style={{ cursor: "pointer" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
