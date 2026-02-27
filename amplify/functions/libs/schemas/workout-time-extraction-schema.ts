@@ -19,9 +19,9 @@ export const WORKOUT_TIME_EXTRACTION_SCHEMA = {
         "Brief explanation of the date/time logic applied, including duration vs. clock-time disambiguation",
     },
     completedAt: {
-      type: "string",
+      type: ["string", "null"],
       description:
-        "ISO 8601 UTC timestamp of when the workout was completed (e.g. 2025-01-14T19:42:00.000Z). Omit this field entirely if no clock time can be determined — do NOT include it as null.",
+        "ISO 8601 UTC timestamp of when the workout was completed (e.g. 2025-01-14T19:42:00.000Z). Use null or omit if no clock time can be determined.",
     },
     confidence: {
       type: "number",
@@ -35,6 +35,6 @@ export const WORKOUT_TIME_EXTRACTION_SCHEMA = {
  */
 export interface WorkoutTimeExtractionResult {
   reasoning: string;
-  completedAt?: string;
+  completedAt?: string | null;
   confidence: number;
 }
