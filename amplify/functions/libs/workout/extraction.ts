@@ -1336,10 +1336,10 @@ EXAMPLES:
       : null;
   } catch (error) {
     logger.error(
-      "AI time extraction failed, using current time as default:",
+      "AI time extraction failed, returning null so caller can use context.completedAt:",
       error,
     );
-    return new Date(); // Simple fallback to current time
+    return null;
   }
 };
 
