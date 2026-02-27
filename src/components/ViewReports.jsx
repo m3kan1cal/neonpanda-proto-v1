@@ -432,7 +432,7 @@ function ViewReports() {
 
         {/* Collapsible Report Summary */}
         {summaryPreview && (
-          <div onClick={(e) => e.stopPropagation()}>
+          <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleMonthlySummaryCollapse(report.monthId)}
               className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
@@ -601,7 +601,7 @@ function ViewReports() {
 
         {/* Collapsible Report Summary */}
         {summaryPreview && (
-          <div onClick={(e) => e.stopPropagation()}>
+          <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleWeeklySummaryCollapse(report.weekId)}
               className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"

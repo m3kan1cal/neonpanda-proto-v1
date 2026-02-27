@@ -613,7 +613,11 @@ export class ProgramAgent {
         isUpdating: false,
       });
 
-      // Reload workout templates to reflect the skip
+      // Reload workout templates to reflect the skip.
+      // This is best-effort: if skipping the last workout caused the backend to
+      // mark the program as completed, the template fetch will fail.  Don't let
+      // that failure propagate — the skip itself succeeded and the UI will handle
+      // navigation to the program dashboard on completion.
       const reloadOptions = {};
       if (options.today) {
         reloadOptions.today = true;
@@ -621,7 +625,14 @@ export class ProgramAgent {
         reloadOptions.day = options.day;
       }
 
-      await this.loadWorkoutTemplates(programId, reloadOptions);
+      try {
+        await this.loadWorkoutTemplates(programId, reloadOptions);
+      } catch (reloadError) {
+        logger.info(
+          "ProgramAgent.skipWorkoutTemplate: Template reload after skip failed (program may be completed):",
+          reloadError.message,
+        );
+      }
 
       return response;
     } catch (error) {

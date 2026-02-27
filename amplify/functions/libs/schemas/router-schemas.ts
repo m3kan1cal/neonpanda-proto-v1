@@ -49,7 +49,7 @@ export const SMART_ROUTER_ANALYSIS_SCHEMA = {
           description: "Confidence level in workout detection from 0.0 to 1.0",
         },
         workoutType: {
-          type: "string",
+          type: ["string", "null"],
           enum: [
             "strength",
             "cardio",
@@ -58,9 +58,10 @@ export const SMART_ROUTER_ANALYSIS_SCHEMA = {
             "competition",
             "recovery",
             "hybrid",
+            null,
           ],
           description:
-            "Type of workout if detected (omit if no workout detected)",
+            "Type of workout if detected. Set to null if no workout was detected.",
         },
         isSlashCommand: {
           type: "boolean",

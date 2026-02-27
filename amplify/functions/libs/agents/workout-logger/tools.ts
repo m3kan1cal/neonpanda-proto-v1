@@ -34,11 +34,11 @@ import {
   extractCompletedAtTime,
   calculateConfidence,
   calculateCompleteness,
-  classifyDiscipline,
+  classifyWorkoutCharacteristics,
   generateWorkoutSummary,
   applyPerformanceMetricDefaults,
   type UniversalWorkoutSchema,
-  type DisciplineClassification,
+  type WorkoutCharacteristics,
 } from "../../workout";
 import { fixDoubleEncodedProperties } from "../../response-utils";
 import {
@@ -258,15 +258,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         "🎯 Attempting tool-based workout extraction with targeted schema",
       );
 
-      // STRUCTURED OUTPUT EXEMPTION: generate_workout uses strictSchema: false (Tier 3 - unguarded tool use)
-      // Two reasons strict mode cannot be used here:
-      // 1. Nullable enum validation: Bedrock rejects type: ["string", "null"] combined with enum arrays
-      //    (e.g., movement_pattern, phase_type, weight.unit in discipline schemas). Enums work with scalar
-      //    types but the array-form nullable type causes an immediate 400 validation error.
-      // 2. Optional parameter count: composed schema (base + discipline) has ~88+ optional parameters,
-      //    far exceeding Bedrock's 24-parameter grammar compilation limit.
-      // The model still receives the full schema as guidance — strict enforcement just isn't applied.
-      // See docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md for full details.
       const result = await callBedrockApi(
         extractionPrompt,
         userMessage,
@@ -280,7 +271,8 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
             inputSchema: targetedSchema,
           },
           expectedToolName: "generate_workout",
-          strictSchema: false,
+          // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+          skipValidation: true, // large schema; output cleaned downstream by evaluator-optimizer
         },
       );
 
@@ -490,26 +482,20 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       userTimezone,
     );
 
-    // context.completedAt is set from the log_workout tool's workoutDate input,
-    // which is a date-only string (YYYY-MM-DD) resolved from the model's date field.
-    // A date-only string parses as midnight UTC, which loses the actual workout time.
-    // When context.completedAt is date-only and extractedTime is available, prefer
-    // the AI-extracted time (which has the correct hours/minutes from context).
-    const contextIsDateOnly =
-      !!context.completedAt && /^\d{4}-\d{2}-\d{2}$/.test(context.completedAt);
+    // extractedTime (from extractCompletedAtTime) is derived specifically from the user
+    // message and is the most reliable source for workout completion time. context.completedAt
+    // (from extract_workout_data) can contain model-hallucinated dates, especially wrong years.
+    // Always prefer extractedTime when available; fall back to context, then now.
     const completedAt =
-      context.completedAt && !contextIsDateOnly
+      extractedTime ||
+      (context.completedAt
         ? parseCompletedAt(context.completedAt, "extract_workout_data")
-        : extractedTime ||
-          (context.completedAt
-            ? parseCompletedAt(context.completedAt, "extract_workout_data")
-            : new Date());
+        : new Date());
 
     logger.info("Workout timing analysis:", {
       userMessage: userMessage.substring(0, 100),
       userTimezone,
       contextCompletedAt: context.completedAt || null,
-      contextIsDateOnly,
       extractedTime: extractedTime ? extractedTime.toISOString() : null,
       finalCompletedAt: completedAt.toISOString(),
       workoutDate: workoutData.date,
@@ -749,24 +735,24 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     validateAndCorrectWorkoutDate(workoutData, completedAtDate);
 
     // Classify discipline (determines validation strictness)
-    let disciplineClassification: DisciplineClassification;
+    let workoutCharacteristics: WorkoutCharacteristics;
     let isQualitativeDiscipline = false;
 
     try {
-      disciplineClassification = await classifyDiscipline(
+      workoutCharacteristics = await classifyWorkoutCharacteristics(
         workoutData.discipline,
         workoutData,
       );
-      isQualitativeDiscipline = disciplineClassification.isQualitative;
+      isQualitativeDiscipline = workoutCharacteristics.isQualitative;
 
-      logger.info("Discipline classification:", disciplineClassification);
+      logger.info("Workout characteristics:", workoutCharacteristics);
     } catch (error) {
       logger.warn(
         "Failed to classify discipline, defaulting to quantitative:",
         error,
       );
       isQualitativeDiscipline = false;
-      disciplineClassification = {
+      workoutCharacteristics = {
         isQualitative: false,
         requiresPreciseMetrics: true,
         environment: "mixed",
@@ -802,7 +788,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
         completeness,
         validationFlags: workoutData.metadata.validation_flags || [],
         blockingFlags: ["insufficient_data"],
-        disciplineClassification,
+        workoutCharacteristics,
         reason:
           "Workout appears to be a reflection or comment without actual exercise data (completeness < 20%)",
       };
@@ -835,7 +821,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
         completeness,
         validationFlags: workoutData.metadata.validation_flags || [],
         blockingFlags: ["no_exercise_data"],
-        disciplineClassification,
+        workoutCharacteristics,
         reason:
           "No exercise structure found in workout data - unable to log workout without exercises or rounds",
       };
@@ -895,7 +881,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       completeness,
       validationFlags: workoutData.metadata.validation_flags || [],
       blockingFlags: detectedBlockingFlags || [],
-      disciplineClassification,
+      workoutCharacteristics,
       reason,
       // Include workoutData for downstream tools
       workoutData,

@@ -8,9 +8,9 @@
 import { CoachConfig } from "../coach-creator/types";
 
 /**
- * Discipline classification result from AI analysis
+ * Workout characteristics from AI analysis — qualitative/quantitative, environment, primary focus
  */
-export interface DisciplineClassification {
+export interface WorkoutCharacteristics {
   isQualitative: boolean;
   requiresPreciseMetrics: boolean;
   environment: "indoor" | "outdoor" | "mixed";

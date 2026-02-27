@@ -154,7 +154,7 @@ export async function detectDiscipline(
     const result = await callBedrockApi(
       DISCIPLINE_DETECTION_PROMPT,
       userMessage,
-      MODEL_IDS.CONTEXTUAL_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {

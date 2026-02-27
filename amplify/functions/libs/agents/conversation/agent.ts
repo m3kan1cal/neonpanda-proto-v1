@@ -199,9 +199,7 @@ export class StreamingConversationAgent {
         {
           staticPrompt: this.config.staticPrompt,
           dynamicPrompt: this.config.dynamicPrompt,
-          // strictSchema is intentionally omitted — multi-tool agents cannot use strict
-          // grammar enforcement due to Bedrock's combined schema compilation limits.
-          // See docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md (Tier 3 — Unguarded Tool Use).
+          // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
         },
       );
 

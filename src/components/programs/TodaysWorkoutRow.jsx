@@ -71,9 +71,9 @@ function TodaysWorkoutRow({
   const activePrograms = programs.filter((p) => p.status === "active");
   if (activePrograms.length === 0) {
     return (
-      <div className={`${containerPatterns.cardMedium} p-6`}>
+      <div className={`${containerPatterns.cardMedium} p-6 max-w-md w-fit`}>
         <div className="text-center pb-2">
-          <div className="max-w-sm mx-auto">
+          <div className="max-w-sm">
             <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
               You don't have any active training programs yet. Design a
               structured program with your coach to see today's workouts here.
@@ -127,7 +127,7 @@ function TodaysWorkoutRow({
 
   if (allRestDays) {
     return (
-      <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 text-center">
+      <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 text-center max-w-xl mx-auto">
         <div className="flex justify-center mb-3">
           <div className="text-synthwave-neon-cyan opacity-50">
             <svg

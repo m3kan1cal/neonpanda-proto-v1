@@ -1,0 +1,2855 @@
+openapi: 3.0.3
+info:
+  title: NeonPanda AI Fitness Coaching API
+  description: |
+    RESTful API for the NeonPanda AI fitness coaching platform.
+    Provides endpoints for managing AI coaches, conversations, training programs,
+    workouts, exercises, analytics, and more.
+
+    ## Authentication
+    Most endpoints require a valid JWT token from AWS Cognito.
+    Include the token in the `Authorization` header as `Bearer <token>`.
+
+    Public endpoints (no auth required) are marked accordingly.
+
+    ## Base URLs
+    - **Production**: `https://api-prod.neonpanda.ai`
+    - **Development**: `https://api-dev.neonpanda.ai`
+    - **Sandbox**: Default AWS Amplify endpoint
+  version: 1.0.0
+  contact:
+    name: NeonPanda Support
+    url: https://neonpanda.ai/contact
+
+servers:
+  - url: https://api-prod.neonpanda.ai
+    description: Production
+  - url: https://api-dev.neonpanda.ai
+    description: Development
+
+tags:
+  - name: Public
+    description: Public endpoints (no authentication required)
+  - name: Coach Creator Sessions
+    description: AI-guided coach creation sessions
+  - name: Coaches
+    description: Coach configuration management
+  - name: Coach Conversations
+    description: Chat conversations with AI coaches
+  - name: Program Designer Sessions
+    description: AI-guided training program design sessions
+  - name: Programs
+    description: Training program management
+  - name: Workout Templates
+    description: Program workout template management
+  - name: Shared Programs
+    description: Program sharing and discovery
+  - name: Workouts
+    description: Workout logging and history
+  - name: Exercises
+    description: Exercise data and history
+  - name: Memories
+    description: User memory and preference management
+  - name: Reports
+    description: Weekly and monthly analytics reports
+  - name: User Profile
+    description: User profile management
+  - name: Subscriptions
+    description: Subscription and billing management
+  - name: Media
+    description: Image upload and download URL generation
+  - name: AI Utilities
+    description: AI-powered utility endpoints
+
+components:
+  securitySchemes:
+    CognitoAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito JWT token
+
+  parameters:
+    UserIdParam:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The user's unique identifier
+    CoachIdParam:
+      name: coachId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The coach configuration ID
+    SessionIdParam:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The session ID
+    ProgramIdParam:
+      name: programId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The training program ID
+    TemplateIdParam:
+      name: templateId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The template ID
+    ConversationIdParam:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The conversation ID
+    WorkoutIdParam:
+      name: workoutId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The workout ID
+    MemoryIdParam:
+      name: memoryId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The memory ID
+    SharedProgramIdParam:
+      name: sharedProgramId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The shared program ID
+    WeekIdParam:
+      name: weekId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The week ID (e.g., 2024-W01)
+    MonthIdParam:
+      name: monthId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The month ID (e.g., 2024-01)
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+      description: Maximum number of items to return
+    OffsetParam:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Number of items to skip
+    SortOrderParam:
+      name: sortOrder
+      in: query
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+      description: Sort direction
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+      required:
+        - success
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        details:
+          type: string
+      required:
+        - success
+        - error
+
+    CoachConfig:
+      type: object
+      properties:
+        coachId:
+          type: string
+        userId:
+          type: string
+        coachName:
+          type: string
+        personality:
+          type: object
+          properties:
+            communicationStyle:
+              type: string
+            motivationApproach:
+              type: string
+            coachingPhilosophy:
+              type: string
+        specializations:
+          type: array
+          items:
+            type: string
+        avatarUrl:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, BUILDING, ERROR]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CoachTemplate:
+      type: object
+      properties:
+        template_id:
+          type: string
+        template_name:
+          type: string
+        persona_category:
+          type: string
+        description:
+          type: string
+        target_audience:
+          type: string
+        metadata:
+          type: object
+
+    CoachCreatorSession:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, ERROR]
+        conversationHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CoachConversation:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        userId:
+          type: string
+        coachId:
+          type: string
+        title:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Program:
+      type: object
+      properties:
+        programId:
+          type: string
+        userId:
+          type: string
+        coachId:
+          type: string
+        programName:
+          type: string
+        description:
+          type: string
+        totalDays:
+          type: integer
+        trainingFrequency:
+          type: string
+        phases:
+          type: array
+          items:
+            type: string
+        trainingGoals:
+          type: array
+          items:
+            type: string
+        equipmentConstraints:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [ACTIVE, BUILDING, COMPLETED, ERROR]
+        currentDay:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProgramDesignerSession:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, ERROR]
+        conversationHistory:
+          type: array
+          items:
+            type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Workout:
+      type: object
+      properties:
+        workoutId:
+          type: string
+        userId:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        discipline:
+          type: string
+        workoutName:
+          type: string
+        workoutType:
+          type: string
+        duration:
+          type: number
+        location:
+          type: string
+        coachIds:
+          type: array
+          items:
+            type: string
+        coachNames:
+          type: array
+          items:
+            type: string
+        conversationId:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        summary:
+          type: string
+        performanceMetrics:
+          type: object
+          properties:
+            intensity:
+              type: number
+            perceived_exertion:
+              type: number
+            calories_burned:
+              type: number
+        prAchievements:
+          type: array
+          items:
+            type: object
+        crossfitSummary:
+          type: object
+          properties:
+            workout_format:
+              type: string
+            rx_status:
+              type: string
+            total_time:
+              type: string
+            rounds_completed:
+              type: number
+        extractedAt:
+          type: string
+          format: date-time
+
+    Exercise:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+        exerciseName:
+          type: string
+        originalName:
+          type: string
+        discipline:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        coachId:
+          type: string
+        workoutId:
+          type: string
+        sequence:
+          type: integer
+        metrics:
+          type: object
+        metadata:
+          type: object
+          properties:
+            normalizationConfidence:
+              type: number
+            notes:
+              type: string
+
+    Memory:
+      type: object
+      properties:
+        memoryId:
+          type: string
+        userId:
+          type: string
+        coachId:
+          type: string
+        content:
+          type: string
+        memoryType:
+          type: string
+          enum: [preference, goal, constraint, instruction, context]
+        metadata:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+            lastUsed:
+              type: string
+              format: date-time
+            usageCount:
+              type: integer
+            source:
+              type: string
+            importance:
+              type: string
+              enum: [high, medium, low]
+            tags:
+              type: array
+              items:
+                type: string
+
+    UserProfile:
+      type: object
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        nickname:
+          type: string
+        criticalTrainingDirective:
+          type: object
+          properties:
+            directive:
+              type: string
+            rationale:
+              type: string
+        preferences:
+          type: object
+          properties:
+            emailNotifications:
+              type: object
+              properties:
+                coachCheckIns:
+                  type: boolean
+                weeklyReports:
+                  type: boolean
+                monthlyReports:
+                  type: boolean
+                programUpdates:
+                  type: boolean
+                featureAnnouncements:
+                  type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WeeklyReport:
+      type: object
+      properties:
+        weekId:
+          type: string
+        userId:
+          type: string
+        weekStart:
+          type: string
+          format: date-time
+        weekEnd:
+          type: string
+          format: date-time
+        workoutCount:
+          type: integer
+        summary:
+          type: object
+
+    MonthlyReport:
+      type: object
+      properties:
+        monthId:
+          type: string
+        userId:
+          type: string
+        monthStart:
+          type: string
+          format: date-time
+        monthEnd:
+          type: string
+          format: date-time
+        workoutCount:
+          type: integer
+        summary:
+          type: object
+
+    SharedProgram:
+      type: object
+      properties:
+        sharedProgramId:
+          type: string
+        creatorUserId:
+          type: string
+        creatorUsername:
+          type: string
+        programSnapshot:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            totalDays:
+              type: integer
+            trainingFrequency:
+              type: string
+            phases:
+              type: array
+              items:
+                type: string
+            trainingGoals:
+              type: array
+              items:
+                type: string
+            equipmentConstraints:
+              type: array
+              items:
+                type: string
+            coachNames:
+              type: array
+              items:
+                type: string
+        sampleWorkouts:
+          type: array
+          items:
+            type: object
+        createdAt:
+          type: string
+          format: date-time
+        viewCount:
+          type: integer
+        copyCount:
+          type: integer
+
+    SubscriptionStatus:
+      type: object
+      properties:
+        success:
+          type: boolean
+        hasSubscription:
+          type: boolean
+        tier:
+          type: string
+          enum: [free, paid]
+        status:
+          type: string
+          enum: [active, canceled, paused]
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        cancelAtPeriodEnd:
+          type: boolean
+        canceledAt:
+          type: string
+          format: date-time
+
+    WorkoutTemplate:
+      type: object
+      properties:
+        templateId:
+          type: string
+        programId:
+          type: string
+        dayNumber:
+          type: integer
+        workoutName:
+          type: string
+        workoutType:
+          type: string
+        exercises:
+          type: array
+          items:
+            type: object
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Unauthorized - missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden - user does not have access to this resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+security:
+  - CognitoAuth: []
+
+paths:
+  # ===================================================================
+  # PUBLIC ENDPOINTS
+  # ===================================================================
+
+  /contact:
+    post:
+      tags: [Public]
+      summary: Submit contact form
+      description: Submit a contact form message. Saves to DynamoDB and sends SNS notification.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, subject, message, contactType]
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                subject:
+                  type: string
+                message:
+                  type: string
+                contactType:
+                  type: string
+                  description: "Type of contact (e.g., support, partnership)"
+      responses:
+        "200":
+          description: Contact form submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                      timestamp:
+                        type: string
+                        format: date-time
+                      requestId:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          contactType:
+                            type: string
+                          firstName:
+                            type: string
+                          lastName:
+                            type: string
+                          email:
+                            type: string
+                          subject:
+                            type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /unsubscribe:
+    get:
+      tags: [Public]
+      summary: Unsubscribe from email notifications
+      description: |
+        Unsubscribes a user from specific email notification types.
+        Returns an HTML page confirming the unsubscription.
+      security: []
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+          description: The email address to unsubscribe
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [coach-checkins, weekly, monthly, program, features, all]
+          description: The notification type to unsubscribe from
+      responses:
+        "200":
+          description: HTML page confirming unsubscription
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: HTML error page for invalid parameters
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /users/check-availability:
+    get:
+      tags: [Public]
+      summary: Check username or email availability
+      description: Checks if a username or email is available for registration. Checks both Cognito and DynamoDB.
+      security: []
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [username, email]
+          description: Whether to check username or email
+        - name: value
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The username or email to check
+      responses:
+        "200":
+          description: Availability check result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      available:
+                        type: boolean
+                      type:
+                        type: string
+                      value:
+                        type: string
+                      existsInCognito:
+                        type: boolean
+                      existsInDynamoDB:
+                        type: boolean
+                      message:
+                        type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /coach-templates:
+    get:
+      tags: [Public]
+      summary: List all coach templates
+      description: Returns all available coach templates for browsing.
+      security: []
+      responses:
+        "200":
+          description: List of coach templates
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      templates:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/CoachTemplate"
+                      count:
+                        type: integer
+
+  /coach-templates/{templateId}:
+    get:
+      tags: [Public]
+      summary: Get a specific coach template
+      description: Returns details for a single coach template.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/TemplateIdParam"
+      responses:
+        "200":
+          description: Coach template details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      template:
+                        $ref: "#/components/schemas/CoachTemplate"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /shared-programs/{sharedProgramId}:
+    get:
+      tags: [Public, Shared Programs]
+      summary: Get shared program preview
+      description: Returns a public preview of a shared program including sample workouts. Increments view count.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/SharedProgramIdParam"
+      responses:
+        "200":
+          description: Shared program preview
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      sharedProgramId:
+                        type: string
+                      creatorUserId:
+                        type: string
+                      creatorUsername:
+                        type: string
+                      programSnapshot:
+                        type: object
+                      sampleWorkouts:
+                        type: array
+                        items:
+                          type: object
+                      createdAt:
+                        type: string
+                        format: date-time
+                      viewCount:
+                        type: integer
+                      copyCount:
+                        type: integer
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /stripe/webhook:
+    post:
+      tags: [Public]
+      summary: Stripe webhook handler
+      description: |
+        Processes Stripe webhook events. Validates via Stripe signature (not Cognito auth).
+        Handles: checkout.session.completed, customer.subscription.created/updated/deleted,
+        invoice.payment_succeeded/failed.
+      security: []
+      parameters:
+        - name: stripe-signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Stripe webhook signature for verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Stripe event payload
+      responses:
+        "200":
+          description: Webhook received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  # ===================================================================
+  # COACH CREATOR SESSIONS
+  # ===================================================================
+
+  /users/{userId}/coach-creator-sessions:
+    post:
+      tags: [Coach Creator Sessions]
+      summary: Create a coach creator session
+      description: Starts a new AI-guided coach creation session.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      session:
+                        $ref: "#/components/schemas/CoachCreatorSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    get:
+      tags: [Coach Creator Sessions]
+      summary: List coach creator sessions
+      description: Returns all coach creator sessions for the user.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      sessions:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/CoachCreatorSession"
+                      count:
+                        type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/{userId}/coach-creator-sessions/{sessionId}:
+    get:
+      tags: [Coach Creator Sessions]
+      summary: Get a coach creator session
+      description: Returns a specific coach creator session with its conversation history.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      responses:
+        "200":
+          description: Session details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      session:
+                        $ref: "#/components/schemas/CoachCreatorSession"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Coach Creator Sessions]
+      summary: Update a coach creator session
+      description: Updates session data (e.g., conversation messages).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conversationHistory:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                      content:
+                        type: string
+      responses:
+        "200":
+          description: Session updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Coach Creator Sessions]
+      summary: Delete a coach creator session
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      responses:
+        "200":
+          description: Session deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{userId}/coach-creator-sessions/{sessionId}/stream:
+    post:
+      tags: [Coach Creator Sessions]
+      summary: Stream coach creator conversation
+      description: |
+        Streams an AI response for the coach creation conversation using Server-Sent Events (SSE).
+        The response is streamed in real-time as the AI generates it.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  description: The user's message to continue the coach creation conversation
+      responses:
+        "200":
+          description: Server-Sent Events stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE stream with AI response chunks
+
+  /users/{userId}/coach-creator-sessions/{sessionId}/config-status:
+    get:
+      tags: [Coach Creator Sessions]
+      summary: Get coach config build status
+      description: Checks the status of a coach configuration being built from a session.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      responses:
+        "200":
+          description: Config build status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      status:
+                        type: string
+                        enum: [IN_PROGRESS, COMPLETED, ERROR]
+                      coachId:
+                        type: string
+                        description: Available when status is COMPLETED
+
+  # ===================================================================
+  # COACHES (Coach Configs)
+  # ===================================================================
+
+  /users/{userId}/coaches:
+    get:
+      tags: [Coaches]
+      summary: List user's coaches
+      description: Returns all coach configurations for the user.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: List of coaches
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      userId:
+                        type: string
+                      coaches:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/CoachConfig"
+                      count:
+                        type: integer
+
+  /users/{userId}/coaches/{coachId}:
+    get:
+      tags: [Coaches]
+      summary: Get a specific coach
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      responses:
+        "200":
+          description: Coach details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      coach:
+                        $ref: "#/components/schemas/CoachConfig"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Coaches]
+      summary: Update a coach configuration
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                coachName:
+                  type: string
+                personality:
+                  type: object
+                specializations:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Coach updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Coaches]
+      summary: Delete a coach
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      responses:
+        "200":
+          description: Coach deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{userId}/coaches/from-session/{sessionId}:
+    post:
+      tags: [Coaches]
+      summary: Create coach from creator session
+      description: Triggers async build of a coach configuration from a completed creator session.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      responses:
+        "200":
+          description: Coach build triggered
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Coach config build triggered successfully
+                      sessionId:
+                        type: string
+                      userId:
+                        type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /users/{userId}/coaches/from-template/{templateId}:
+    post:
+      tags: [Coaches]
+      summary: Create coach from template
+      description: Creates a coach configuration from a predefined template.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/TemplateIdParam"
+      responses:
+        "200":
+          description: Coach created from template
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      coach:
+                        $ref: "#/components/schemas/CoachConfig"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{userId}/coaches/count:
+    get:
+      tags: [Coaches]
+      summary: Get coach count
+      description: Returns the number of coaches for the user.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: Coach count
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      count:
+                        type: integer
+
+  # ===================================================================
+  # COACH CONVERSATIONS
+  # ===================================================================
+
+  /users/{userId}/coaches/{coachId}/conversations:
+    post:
+      tags: [Coach Conversations]
+      summary: Create a new conversation
+      description: Starts a new conversation with a specific coach.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      responses:
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      conversation:
+                        $ref: "#/components/schemas/CoachConversation"
+    get:
+      tags: [Coach Conversations]
+      summary: List conversations with a coach
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      conversations:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/CoachConversation"
+                      count:
+                        type: integer
+
+  /users/{userId}/coaches/{coachId}/conversations/{conversationId}:
+    get:
+      tags: [Coach Conversations]
+      summary: Get a conversation
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ConversationIdParam"
+      responses:
+        "200":
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      conversation:
+                        $ref: "#/components/schemas/CoachConversation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Coach Conversations]
+      summary: Update a conversation
+      description: Updates conversation metadata (e.g., title).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ConversationIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+      responses:
+        "200":
+          description: Conversation updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      tags: [Coach Conversations]
+      summary: Delete a conversation
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ConversationIdParam"
+      responses:
+        "200":
+          description: Conversation deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{userId}/coaches/{coachId}/conversations/{conversationId}/send-message:
+    post:
+      tags: [Coach Conversations]
+      summary: Send a message in a conversation
+      description: Sends a message to the AI coach and receives a response.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ConversationIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  description: The user's message to the coach
+      responses:
+        "200":
+          description: AI coach response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      response:
+                        type: string
+                        description: The coach's response message
+
+  /users/{userId}/coaches/{coachId}/conversations/count:
+    get:
+      tags: [Coach Conversations]
+      summary: Get conversation count for a coach
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      responses:
+        "200":
+          description: Conversation count
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      count:
+                        type: integer
+
+  # ===================================================================
+  # PROGRAM DESIGNER SESSIONS
+  # ===================================================================
+
+  /users/{userId}/program-designer-sessions:
+    post:
+      tags: [Program Designer Sessions]
+      summary: Create a program designer session
+      description: Starts a new AI-guided program design session.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      session:
+                        $ref: "#/components/schemas/ProgramDesignerSession"
+    get:
+      tags: [Program Designer Sessions]
+      summary: List program designer sessions
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      sessions:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ProgramDesignerSession"
+
+  /users/{userId}/program-designer-sessions/{sessionId}:
+    get:
+      tags: [Program Designer Sessions]
+      summary: Get a program designer session
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      responses:
+        "200":
+          description: Session details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      session:
+                        $ref: "#/components/schemas/ProgramDesignerSession"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Program Designer Sessions]
+      summary: Delete a program designer session
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      responses:
+        "200":
+          description: Session deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{userId}/program-designer-sessions/{sessionId}/stream:
+    post:
+      tags: [Program Designer Sessions]
+      summary: Stream program designer conversation
+      description: Streams an AI response for program design using Server-Sent Events (SSE).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+      responses:
+        "200":
+          description: Server-Sent Events stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  # ===================================================================
+  # TRAINING PROGRAMS
+  # ===================================================================
+
+  /users/{userId}/programs:
+    get:
+      tags: [Programs]
+      summary: List all user programs
+      description: Returns all training programs across all coaches for the user.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: List of programs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      programs:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Program"
+
+  /users/{userId}/coaches/{coachId}/programs:
+    post:
+      tags: [Programs]
+      summary: Create a training program
+      description: Creates a new training program under a specific coach. Triggers async program build.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                programName:
+                  type: string
+                description:
+                  type: string
+                sessionId:
+                  type: string
+                  description: Program designer session ID to build from
+      responses:
+        "201":
+          description: Program creation initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      program:
+                        $ref: "#/components/schemas/Program"
+    get:
+      tags: [Programs]
+      summary: List programs for a coach
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      responses:
+        "200":
+          description: List of programs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      programs:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Program"
+
+  /users/{userId}/coaches/{coachId}/programs/{programId}:
+    get:
+      tags: [Programs]
+      summary: Get a specific program
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+      responses:
+        "200":
+          description: Program details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      program:
+                        $ref: "#/components/schemas/Program"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Programs]
+      summary: Update a program
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                programName:
+                  type: string
+                status:
+                  type: string
+                currentDay:
+                  type: integer
+      responses:
+        "200":
+          description: Program updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      tags: [Programs]
+      summary: Delete a program
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+      responses:
+        "200":
+          description: Program deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ===================================================================
+  # WORKOUT TEMPLATES
+  # ===================================================================
+
+  /users/{userId}/coaches/{coachId}/programs/{programId}/templates:
+    get:
+      tags: [Workout Templates]
+      summary: Get workout templates
+      description: |
+        Returns workout templates for a program. Supports filtering:
+        - `?today=true` - Get today's scheduled workout
+        - `?day=N` - Get workout for a specific day number
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+        - name: today
+          in: query
+          schema:
+            type: boolean
+          description: If true, returns today's scheduled workout
+        - name: day
+          in: query
+          schema:
+            type: integer
+          description: Specific day number to retrieve
+      responses:
+        "200":
+          description: Workout template(s)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      templates:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/WorkoutTemplate"
+
+  /users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}:
+    get:
+      tags: [Workout Templates]
+      summary: Get a specific workout template
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+        - $ref: "#/components/parameters/TemplateIdParam"
+      responses:
+        "200":
+          description: Workout template details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      template:
+                        $ref: "#/components/schemas/WorkoutTemplate"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/log:
+    post:
+      tags: [Workout Templates]
+      summary: Log a workout from template
+      description: Converts a workout template into a logged workout and advances the program.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+        - $ref: "#/components/parameters/TemplateIdParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                modifications:
+                  type: object
+                  description: Optional modifications to the template exercises
+      responses:
+        "200":
+          description: Workout logged
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      workoutId:
+                        type: string
+                      message:
+                        type: string
+
+  /users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/skip:
+    post:
+      tags: [Workout Templates]
+      summary: Skip a workout template
+      description: Marks a workout template as skipped and advances the program.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+        - $ref: "#/components/parameters/TemplateIdParam"
+      responses:
+        "200":
+          description: Workout skipped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{userId}/coaches/{coachId}/programs/{programId}/rest-day/complete:
+    post:
+      tags: [Workout Templates]
+      summary: Complete a rest day
+      description: Marks a rest day as complete and advances the program.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+      responses:
+        "200":
+          description: Rest day completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ===================================================================
+  # SHARED PROGRAMS (Protected)
+  # ===================================================================
+
+  /users/{userId}/programs/{programId}/share:
+    post:
+      tags: [Shared Programs]
+      summary: Share a program
+      description: Creates a shareable link for a training program. Idempotent - returns existing share if one exists.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [coachId]
+              properties:
+                coachId:
+                  type: string
+      responses:
+        "200":
+          description: Program shared
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      sharedProgramId:
+                        type: string
+                      shareUrl:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+                      message:
+                        type: string
+                      existing:
+                        type: boolean
+                        description: True if returning an existing share link
+
+  /users/{userId}/shared-programs:
+    get:
+      tags: [Shared Programs]
+      summary: List user's shared programs
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: List of shared programs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      sharedPrograms:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/SharedProgram"
+
+  /users/{userId}/shared-programs/{sharedProgramId}:
+    delete:
+      tags: [Shared Programs]
+      summary: Unshare a program
+      description: Deactivates a shared program link.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SharedProgramIdParam"
+      responses:
+        "200":
+          description: Shared program deactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{userId}/shared-programs/{sharedProgramId}/copy:
+    post:
+      tags: [Shared Programs]
+      summary: Copy a shared program
+      description: Copies a shared program into the user's account.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SharedProgramIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [coachId]
+              properties:
+                coachId:
+                  type: string
+                  description: Coach to assign the copied program to
+      responses:
+        "200":
+          description: Program copied
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      programId:
+                        type: string
+                      programName:
+                        type: string
+                      coachId:
+                        type: string
+                      coachName:
+                        type: string
+                      message:
+                        type: string
+
+  # ===================================================================
+  # WORKOUTS
+  # ===================================================================
+
+  /users/{userId}/workouts:
+    get:
+      tags: [Workouts]
+      summary: List workouts
+      description: Returns logged workouts with filtering, sorting, and pagination.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter workouts from this date (ISO 8601)
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter workouts up to this date (ISO 8601)
+        - name: discipline
+          in: query
+          schema:
+            type: string
+          description: Filter by discipline
+        - name: workoutType
+          in: query
+          schema:
+            type: string
+          description: Filter by workout type
+        - name: location
+          in: query
+          schema:
+            type: string
+          description: Filter by location
+        - name: coachId
+          in: query
+          schema:
+            type: string
+          description: Filter by coach ID
+        - name: minConfidence
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+          description: Minimum extraction confidence threshold
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [completedAt, confidence, workoutName]
+            default: completedAt
+        - $ref: "#/components/parameters/SortOrderParam"
+      responses:
+        "200":
+          description: List of workouts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      workouts:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Workout"
+                      totalCount:
+                        type: integer
+    post:
+      tags: [Workouts]
+      summary: Log a workout
+      description: |
+        Initiates workout logging from a natural language description.
+        Asynchronously processes the workout using AI extraction.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userMessage, coachId]
+              properties:
+                userMessage:
+                  type: string
+                  description: Natural language workout description
+                coachId:
+                  type: string
+                conversationId:
+                  type: string
+                  default: command-palette
+                isSlashCommand:
+                  type: boolean
+                slashCommand:
+                  type: string
+      responses:
+        "201":
+          description: Workout logging initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                      status:
+                        type: string
+                        example: processing
+                      details:
+                        type: object
+                        properties:
+                          userId:
+                            type: string
+                          workoutContent:
+                            type: string
+                          timestamp:
+                            type: string
+                            format: date-time
+
+  /users/{userId}/workouts/{workoutId}:
+    get:
+      tags: [Workouts]
+      summary: Get a specific workout
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/WorkoutIdParam"
+      responses:
+        "200":
+          description: Workout details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      workout:
+                        $ref: "#/components/schemas/Workout"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Workouts]
+      summary: Update a workout
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/WorkoutIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workoutName:
+                  type: string
+                duration:
+                  type: number
+                summary:
+                  type: string
+      responses:
+        "200":
+          description: Workout updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      tags: [Workouts]
+      summary: Delete a workout
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/WorkoutIdParam"
+      responses:
+        "200":
+          description: Workout deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{userId}/workouts/count:
+    get:
+      tags: [Workouts]
+      summary: Get workout count
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: Workout count
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      count:
+                        type: integer
+
+  # ===================================================================
+  # EXERCISES
+  # ===================================================================
+
+  /users/{userId}/exercises:
+    get:
+      tags: [Exercises]
+      summary: Get exercise history
+      description: Returns exercise performance data filtered by exercise name.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - name: exerciseName
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The exercise name to look up
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date (YYYY-MM-DD)
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date (YYYY-MM-DD)
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SortOrderParam"
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: Pagination cursor from previous response
+      responses:
+        "200":
+          description: Exercise history
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      exerciseName:
+                        type: string
+                      exercises:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Exercise"
+                      aggregations:
+                        type: object
+                      pagination:
+                        type: object
+                        properties:
+                          cursor:
+                            type: string
+                          hasMore:
+                            type: boolean
+
+  /users/{userId}/exercise-names:
+    get:
+      tags: [Exercises]
+      summary: Get exercise name list
+      description: Returns a list of all distinct exercise names the user has logged.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: Exercise names
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      exerciseNames:
+                        type: array
+                        items:
+                          type: string
+
+  /users/{userId}/exercises/count:
+    get:
+      tags: [Exercises]
+      summary: Get exercise count
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: Exercise count
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      count:
+                        type: integer
+
+  # ===================================================================
+  # MEMORIES
+  # ===================================================================
+
+  /users/{userId}/memories:
+    get:
+      tags: [Memories]
+      summary: List user memories
+      description: Returns user memories (preferences, goals, constraints, etc.).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - name: coachId
+          in: query
+          schema:
+            type: string
+          description: Filter by coach ID
+        - name: memoryType
+          in: query
+          schema:
+            type: string
+            enum: [preference, goal, constraint, instruction, context]
+          description: Filter by memory type
+        - name: importance
+          in: query
+          schema:
+            type: string
+            enum: [high, medium, low]
+          description: Filter by importance level
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: List of memories
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      memories:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Memory"
+                      totalCount:
+                        type: integer
+    post:
+      tags: [Memories]
+      summary: Create a memory
+      description: |
+        Creates a new user memory. Uses AI to automatically detect memory type,
+        importance, and scope from the content.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  description: The memory content (free text)
+                coachId:
+                  type: string
+                  description: Optional coach to scope the memory to
+      responses:
+        "201":
+          description: Memory created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                      memory:
+                        $ref: "#/components/schemas/Memory"
+                      memoryId:
+                        type: string
+                      userId:
+                        type: string
+                      pineconeStored:
+                        type: boolean
+                      pineconeRecordId:
+                        type: string
+
+  /users/{userId}/memories/{memoryId}:
+    delete:
+      tags: [Memories]
+      summary: Delete a memory
+      description: Deletes a memory and cleans up its Pinecone vector embedding.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/MemoryIdParam"
+      responses:
+        "200":
+          description: Memory deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                      memoryId:
+                        type: string
+                      userId:
+                        type: string
+                      pineconeCleanup:
+                        type: boolean
+
+  # ===================================================================
+  # REPORTS
+  # ===================================================================
+
+  /users/{userId}/reports/weekly:
+    get:
+      tags: [Reports]
+      summary: List weekly reports
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [weekStart, weekEnd, workoutCount]
+        - $ref: "#/components/parameters/SortOrderParam"
+      responses:
+        "200":
+          description: List of weekly reports
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      reports:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/WeeklyReport"
+                      count:
+                        type: integer
+                      userId:
+                        type: string
+
+  /users/{userId}/reports/weekly/{weekId}:
+    get:
+      tags: [Reports]
+      summary: Get a specific weekly report
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/WeekIdParam"
+      responses:
+        "200":
+          description: Weekly report details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      report:
+                        $ref: "#/components/schemas/WeeklyReport"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{userId}/reports/monthly:
+    get:
+      tags: [Reports]
+      summary: List monthly reports
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+        - $ref: "#/components/parameters/SortOrderParam"
+      responses:
+        "200":
+          description: List of monthly reports
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      reports:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/MonthlyReport"
+                      count:
+                        type: integer
+
+  /users/{userId}/reports/monthly/{monthId}:
+    get:
+      tags: [Reports]
+      summary: Get a specific monthly report
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/MonthIdParam"
+      responses:
+        "200":
+          description: Monthly report details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      report:
+                        $ref: "#/components/schemas/MonthlyReport"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===================================================================
+  # USER PROFILE
+  # ===================================================================
+
+  /users/{userId}/profile:
+    get:
+      tags: [User Profile]
+      summary: Get user profile
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      profile:
+                        $ref: "#/components/schemas/UserProfile"
+    put:
+      tags: [User Profile]
+      summary: Update user profile
+      description: |
+        Updates user profile fields. Immutable fields (email, username, userId)
+        cannot be modified and will return a 400 error if included.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                nickname:
+                  type: string
+                criticalTrainingDirective:
+                  type: object
+                  properties:
+                    directive:
+                      type: string
+                    rationale:
+                      type: string
+                preferences:
+                  type: object
+                  properties:
+                    emailNotifications:
+                      type: object
+                      properties:
+                        coachCheckIns:
+                          type: boolean
+                        weeklyReports:
+                          type: boolean
+                        monthlyReports:
+                          type: boolean
+                        programUpdates:
+                          type: boolean
+                        featureAnnouncements:
+                          type: boolean
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      profile:
+                        $ref: "#/components/schemas/UserProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  # ===================================================================
+  # SUBSCRIPTIONS & BILLING
+  # ===================================================================
+
+  /users/{userId}/subscription:
+    get:
+      tags: [Subscriptions]
+      summary: Get subscription status
+      description: Returns the user's subscription status. No subscription record means free tier.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: Subscription status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionStatus"
+
+  /users/{userId}/stripe/portal-session:
+    post:
+      tags: [Subscriptions]
+      summary: Create Stripe billing portal session
+      description: Creates a Stripe Customer Portal session URL for managing billing. Requires an active subscription.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: Portal session URL
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      url:
+                        type: string
+                        description: Stripe Customer Portal URL
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  # ===================================================================
+  # MEDIA (Upload/Download)
+  # ===================================================================
+
+  /users/{userId}/generate-upload-urls:
+    post:
+      tags: [Media]
+      summary: Generate presigned upload URLs
+      description: Generates presigned S3 URLs for uploading images. URLs expire in 5 minutes.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileCount, fileTypes]
+              properties:
+                fileCount:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Number of upload URLs to generate
+                fileTypes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [jpg, png, webp, gif, heic, heif]
+                  description: File types for each upload
+      responses:
+        "200":
+          description: Presigned upload URLs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      uploadUrls:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            index:
+                              type: integer
+                            s3Key:
+                              type: string
+                            uploadUrl:
+                              type: string
+                              description: Presigned URL (expires in 5 minutes)
+                      expiresIn:
+                        type: integer
+                        example: 300
+
+  /users/{userId}/generate-download-urls:
+    post:
+      tags: [Media]
+      summary: Generate presigned download URLs
+      description: Generates presigned S3 URLs for downloading images.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [s3Keys]
+              properties:
+                s3Keys:
+                  type: array
+                  items:
+                    type: string
+                  description: S3 keys of images to generate download URLs for
+      responses:
+        "200":
+          description: Presigned download URLs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      downloadUrls:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            s3Key:
+                              type: string
+                            downloadUrl:
+                              type: string
+
+  # ===================================================================
+  # AI UTILITIES
+  # ===================================================================
+
+  /explain-term:
+    post:
+      tags: [AI Utilities]
+      summary: Explain a fitness term
+      description: Uses AI to generate a plain-language explanation of a fitness term (equipment, exercise, or focus area).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [term, termType]
+              properties:
+                term:
+                  type: string
+                  description: The fitness term to explain
+                termType:
+                  type: string
+                  enum: [equipment, exercise, focus_area]
+                  description: Category of the term
+      responses:
+        "200":
+          description: Term explanation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      term:
+                        type: string
+                      termType:
+                        type: string
+                      explanation:
+                        type: string
+                      generatedAt:
+                        type: string
+                        format: date-time
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /users/{userId}/coaches/{coachId}/greeting:
+    post:
+      tags: [AI Utilities]
+      summary: Generate a coach greeting
+      description: Generates a personalized dashboard greeting from the coach's perspective.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [timeOfDay, activeProgramCount, todaysWorkoutCount]
+              properties:
+                timeOfDay:
+                  type: string
+                  enum: [morning, afternoon, evening]
+                activeProgramCount:
+                  type: integer
+                  minimum: 0
+                todaysWorkoutCount:
+                  type: integer
+                  minimum: 0
+                lastWorkoutDate:
+                  type: string
+                  format: date-time
+                  description: ISO timestamp of the user's most recent workout
+      responses:
+        "200":
+          description: Generated greeting
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      greeting:
+                        type: string
+                        description: 1-2 sentence personalized greeting
+                      generatedAt:
+                        type: string
+                        format: date-time
+        "400":
+          $ref: "#/components/responses/BadRequest"

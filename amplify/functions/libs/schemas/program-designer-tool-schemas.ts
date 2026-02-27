@@ -74,15 +74,36 @@ export const GENERATE_PHASE_WORKOUTS_SCHEMA = {
     phase: {
       type: "object",
       additionalProperties: false,
+      required: [
+        "phaseId",
+        "name",
+        "startDay",
+        "endDay",
+        "durationDays",
+        "focusAreas",
+      ],
       description: "Single phase definition from phase structure",
       properties: {
-        phaseId: { type: "string" },
-        name: { type: "string" },
-        description: { type: "string" },
-        startDay: { type: "number" },
-        endDay: { type: "number" },
-        durationDays: { type: "number" },
-        focusAreas: { type: "array", items: { type: "string" } },
+        phaseId: { type: "string", description: "Unique phase identifier" },
+        name: { type: "string", description: "Phase name" },
+        description: { type: "string", description: "Phase description" },
+        startDay: {
+          type: "number",
+          description: "First day of the phase (1-based)",
+        },
+        endDay: {
+          type: "number",
+          description: "Last day of the phase (1-based)",
+        },
+        durationDays: {
+          type: "number",
+          description: "Total duration of the phase in days",
+        },
+        focusAreas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Training focus areas for this phase",
+        },
         expectedWorkoutCount: {
           type: "number",
           description:

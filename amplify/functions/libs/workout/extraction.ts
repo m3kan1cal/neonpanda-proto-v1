@@ -9,7 +9,7 @@ import { CoachConfig } from "../coach-creator/types";
 import {
   TimeIndicator,
   UniversalWorkoutSchema,
-  DisciplineClassification,
+  WorkoutCharacteristics,
 } from "./types";
 import {
   storeDebugDataInS3,
@@ -25,6 +25,11 @@ import {
   WORKOUT_COMPLEXITY_SCHEMA,
   WorkoutComplexityResult,
 } from "../schemas/workout-complexity-schema";
+import {
+  WORKOUT_TIME_EXTRACTION_SCHEMA,
+  WorkoutTimeExtractionResult,
+} from "../schemas/workout-time-extraction-schema";
+import { DISCIPLINE_CLASSIFICATION_SCHEMA } from "../schemas/discipline-classification-schema";
 
 /**
  * Prompt for AI-based workout complexity detection
@@ -68,7 +73,7 @@ export const checkWorkoutComplexity = async (
     const result = await callBedrockApi(
       WORKOUT_COMPLEXITY_PROMPT,
       workoutContent,
-      MODEL_IDS.CONTEXTUAL_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {
@@ -1175,6 +1180,27 @@ CONTEXT CLUES:
 - Message typed on: ${messageDay}
 - User's timezone: ${userTimezone}
 
+DURATION vs. CLOCK TIME DISAMBIGUATION:
+Times in workout messages can mean two completely different things:
+
+1. WORKOUT RESULT / DURATION (MM:SS or H:MM:SS format) — NOT a clock time
+   - "23:47", "3:45", "1:02:14" are workout finish times (23 min 47 sec, etc.)
+   - "Fran: 3:45" → duration result (3 min 45 sec), no clock time → omit completedAt
+   - "finished in 23:47" → duration result, no clock time → omit completedAt
+   - "finished Murph in 1:02:14" → duration result → omit completedAt
+   - RULE: When a colon-separated value has no AM/PM, no timezone, and no hour ≥ 24,
+     AND context is a named WOD or timed workout, treat as duration → omit completedAt
+
+2. CLOCK TIME — when the workout was performed on the clock
+   - Explicit AM/PM: "7pm", "11:42 AM Pacific", "6:30am"
+   - 24-hour format with context: "at 23:00 local time", "I went at 20:00"
+   - Relative: "this morning", "last night", "yesterday afternoon"
+   - RULE: Clock times typically use AM/PM or explicit timezone/context words like "at", "around"
+
+KEY DISTINCTION: "finished at 23:47" with timezone context → could be 11:47 PM wall clock
+                 "finished in 23:47" → duration result, omit completedAt
+                 "Chipper: 23:47" → duration result, omit completedAt
+
 CRITICAL REASONING RULES:
 1. Use MESSAGE TYPED AT as your reference point for ALL relative time calculations
 2. When user says "7pm ET" and typed message at 11:30pm ET same day → workout was 7pm TODAY
@@ -1184,63 +1210,48 @@ CRITICAL REASONING RULES:
 6. If workout time seems unrealistic (future time), double-check your date calculation
 
 EXAMPLES:
-- Message typed at 11:30pm local time, user says "did Fran at 7pm" → 7pm local time TODAY (same date)
-- Message typed at 2am local time, user says "worked out this evening" → evening of PREVIOUS day
-- Message typed at 9am local time, user says "this morning at 6am" → 6am local time TODAY
-
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
-RESPONSE SCHEMA:
-{
-  "completedAt": "2025-01-XX[T]XX:XX:XX.XXXZ" or null,
-  "confidence": 0.0-1.0,
-  "reasoning": "Brief explanation including your date/time logic"
-}
-
-Examples:
-- "I just finished at 11:42 AM Pacific" → {"completedAt": "2025-01-14T19:42:00.000Z", "confidence": 0.95, "reasoning": "Explicit time with timezone, converted PST to UTC"}
-- "I worked out this morning" → {"completedAt": "2025-01-14T17:00:00.000Z", "confidence": 0.8, "reasoning": "This morning interpreted as 9 AM local time"}
-- "Did my workout yesterday afternoon" → {"completedAt": "2025-01-13T22:00:00.000Z", "confidence": 0.7, "reasoning": "Yesterday afternoon assumed as 2 PM local time"}
-- "Should I do Fran today?" → {"completedAt": null, "confidence": 0.9, "reasoning": "Future planning question, not completed workout"}
-- "What did I do last week?" → {"completedAt": null, "confidence": 0.9, "reasoning": "Inquiry about past, not logging new workout"}
+- "I just finished at 11:42 AM Pacific" → completedAt: "2025-01-14T19:42:00.000Z", confidence: 0.95
+- "I worked out this morning" → completedAt: "2025-01-14T17:00:00.000Z" (assume 9am local), confidence: 0.8
+- "Did my workout yesterday afternoon" → completedAt: "2025-01-13T22:00:00.000Z" (assume 2pm local), confidence: 0.7
+- "Fran: 3:45 Rx" → omit completedAt (duration result, not clock time), confidence: 0.95
+- "finished Mayhem Chipper in 23:47" → omit completedAt (duration), confidence: 0.95
+- "Should I do Fran today?" → omit completedAt (future plan, not completed), confidence: 0.9
+- "What did I do last week?" → omit completedAt (inquiry, not logging), confidence: 0.9
 `;
 
   try {
-    logger.info("Extracting workout completion time using Nova Micro:", {
+    logger.info("Extracting workout completion time:", {
       userMessage: userMessage.substring(0, 100),
       messageTimestamp: referenceTime,
       currentTime: new Date().toISOString(),
       timeSinceMessage: `${timeSinceMessage}s`,
     });
 
-    const response = (await callBedrockApi(
+    const response = await callBedrockApi(
       timeExtractionPrompt,
       userMessage,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
-        prefillResponse: "{",
-      }, // Force JSON output format
-    )) as string; // No tools used, always returns string
-
-    // Attempt to parse the response as JSON
-    let result;
-    try {
-      result = parseJsonWithFallbacks(response.trim());
-    } catch (parseError) {
-      // If parsing fails, log warning and use message time as fallback
-      logger.warn(
-        "⚠️ Time extraction returned non-JSON response, using message time as fallback:",
-        {
-          responsePreview: response.substring(0, 100),
-          parseError:
-            parseError instanceof Error
-              ? parseError.message
-              : String(parseError),
+        tools: {
+          name: "extract_workout_time",
+          description:
+            "Extract the clock time a workout was completed. Return completedAt only when an explicit clock time is present. Omit completedAt for workout duration/result notation (MM:SS, H:MM:SS) or when no time is given.",
+          inputSchema: WORKOUT_TIME_EXTRACTION_SCHEMA,
         },
+        expectedToolName: "extract_workout_time",
+      },
+    );
+
+    if (!response || typeof response !== "object" || !("input" in response)) {
+      logger.warn(
+        "⚠️ Time extraction returned unexpected response format, using message time as fallback:",
+        { response },
       );
       return messageTimestamp ? new Date(messageTimestamp) : new Date();
     }
+
+    const result = response.input as WorkoutTimeExtractionResult;
 
     logger.info("AI time extraction result:", {
       userMessage: userMessage.substring(0, 100),
@@ -1258,6 +1269,7 @@ Examples:
       const messageTime = new Date(messageTimestamp);
       const timeDiff = extractedTime.getTime() - messageTime.getTime();
       const hoursDiff = timeDiff / (1000 * 60 * 60);
+      const daysDiff = hoursDiff / 24;
 
       // AUTO-CORRECT workouts with future dates (more than 1 hour in the future)
       // We never reject workouts, but we do correct impossible dates
@@ -1273,16 +1285,50 @@ Examples:
           },
         );
 
-        // Use message time as corrected completion time
-        // Workout will still be saved, just with corrected timestamp
         logger.info(
           "✅ Corrected workout time to message timestamp (workout will be saved)",
         );
         return messageTime;
       }
 
+      // AUTO-CORRECT dates that are implausibly far in the past — likely a year
+      // hallucination where the model used the prior year instead of the current one.
+      // Threshold of 180 days preserves legitimate late-logging while catching year errors.
+      if (daysDiff < -180) {
+        const yearCorrected = new Date(extractedTime);
+        yearCorrected.setFullYear(yearCorrected.getFullYear() + 1);
+        const correctedDaysDiff =
+          (yearCorrected.getTime() - messageTime.getTime()) /
+          (1000 * 60 * 60 * 24);
+
+        if (correctedDaysDiff > -30 && correctedDaysDiff <= 1) {
+          // Year +1 produces a reasonable date (within 30 days before message)
+          logger.info(
+            "ℹ️ AUTO-CORRECTING: Year hallucination detected, incrementing year by 1:",
+            {
+              extractedTime: extractedTime.toISOString(),
+              correctedTime: yearCorrected.toISOString(),
+              messageTime: messageTime.toISOString(),
+              daysBeforeMessage: Math.abs(correctedDaysDiff).toFixed(1),
+              originalReasoning: result.reasoning,
+            },
+          );
+          return yearCorrected;
+        }
+
+        // Year correction still doesn't land near the message — fall back to message time
+        logger.info(
+          "ℹ️ AUTO-CORRECTING: Far-past date with no valid year correction, using message time:",
+          {
+            extractedTime: extractedTime.toISOString(),
+            messageTime: messageTime.toISOString(),
+            daysInPast: Math.abs(daysDiff).toFixed(1),
+          },
+        );
+        return messageTime;
+      }
+
       // Allow reasonable past times (workouts logged hours/days after completion)
-      // No upper limit on how far in the past - users often log workouts later
     }
 
     return result.completedAt
@@ -1290,10 +1336,10 @@ Examples:
       : null;
   } catch (error) {
     logger.error(
-      "AI time extraction failed, using current time as default:",
+      "AI time extraction failed, returning null so caller can use context.completedAt:",
       error,
     );
-    return new Date(); // Simple fallback to current time
+    return null;
   }
 };
 
@@ -1369,10 +1415,10 @@ SUMMARY:`;
  * @param workoutData - Optional workout data for additional context
  * @returns Promise<object> - Classification result with multiple attributes
  */
-export const classifyDiscipline = async (
+export const classifyWorkoutCharacteristics = async (
   discipline: string,
   workoutData?: UniversalWorkoutSchema,
-): Promise<DisciplineClassification> => {
+): Promise<WorkoutCharacteristics> => {
   if (!discipline || typeof discipline !== "string") {
     return {
       isQualitative: false,
@@ -1385,7 +1431,7 @@ export const classifyDiscipline = async (
   }
 
   const classificationPrompt = `
-Analyze this workout discipline to provide comprehensive classification information.
+Analyze this workout discipline and classify it across multiple axes.
 
 DISCIPLINE: "${discipline}"
 ${
@@ -1403,26 +1449,15 @@ ${
     : ""
 }
 
-CRITICAL: Return ONLY the JSON object below. DO NOT include any explanatory text, commentary, or additional context before or after the JSON.
-
-{
-  "isQualitative": boolean,
-  "requiresPreciseMetrics": boolean,
-  "environment": "indoor|outdoor|mixed",
-  "primaryFocus": "strength|endurance|power|speed|agility|flexibility|balance|technique|coordination|mixed",
-  "confidence": number,
-  "reasoning": "brief explanation"
-}
-
 CLASSIFICATION CRITERIA:
 
-QUALITATIVE DISCIPLINES (more forgiving of missing precise metrics):
+QUALITATIVE DISCIPLINES (isQualitative: true — more forgiving of missing precise metrics):
 - Focus on time, effort, technique, experience rather than exact numbers
 - Often done in uncontrolled environments (outdoors, open water, trails)
 - Performance may be hard to measure precisely but workout still has value
 - Examples: swimming (especially open water), running (especially trails), cycling, yoga, martial arts, climbing, hiking, dance, pilates
 
-QUANTITATIVE DISCIPLINES (require specific performance metrics):
+QUANTITATIVE DISCIPLINES (isQualitative: false — require specific performance metrics):
 - Focus on precise weights, reps, sets, distances, times
 - Usually done in controlled environments with measurable equipment
 - Performance is typically tracked with specific numbers for progression
@@ -1446,7 +1481,7 @@ EDGE CASES:
 - Consider the workout context if provided
 - Some disciplines can have different focuses depending on the specific workout (running can be endurance OR speed)
 
-Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0.5 for unclear.`;
+Use confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, below 0.5 for unclear.`;
 
   try {
     logger.info("Classifying discipline as qualitative/quantitative:", {
@@ -1454,16 +1489,31 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
       hasWorkoutContext: !!workoutData,
     });
 
-    const response = (await callBedrockApi(
+    const response = await callBedrockApi(
       classificationPrompt,
       discipline,
-      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      MODEL_IDS.UTILITY_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        tools: {
+          name: "classify_workout_characteristics",
+          description:
+            "Classify a workout's characteristics: qualitative vs quantitative, training environment, and primary focus",
+          inputSchema: DISCIPLINE_CLASSIFICATION_SCHEMA,
+        },
+        expectedToolName: "classify_workout_characteristics",
       },
-    )) as string; // No tools used, always returns string
+    );
 
-    // Store prompt and response in S3 for debugging
+    if (!response || typeof response !== "object" || !("input" in response)) {
+      throw new Error(
+        `Unexpected response format from classify_workout_characteristics tool for discipline "${discipline}"`,
+      );
+    }
+
+    const result = response.input as WorkoutCharacteristics;
+
+    // Store prompt and result in S3 for debugging
     try {
       await storeDebugDataInS3(
         classificationPrompt,
@@ -1479,10 +1529,9 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
       );
 
       await storeDebugDataInS3(
-        response,
+        JSON.stringify(result),
         {
           discipline,
-          responseLength: response.length,
           type: "discipline-classification-response",
         },
         "workout-discipline",
@@ -1497,9 +1546,6 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
         s3Error,
       );
     }
-
-    // Use existing response parsing utility
-    const result = parseJsonWithFallbacks(response);
 
     logger.info("AI discipline classification result:", {
       discipline,

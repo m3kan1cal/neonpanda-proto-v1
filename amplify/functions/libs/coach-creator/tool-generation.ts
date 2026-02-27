@@ -491,7 +491,7 @@ Provide validation scores and any issues found using the tool.`;
   const result = (await callBedrockApi(
     prompt,
     "Validate coach configuration quality",
-    MODEL_IDS.EXECUTOR_MODEL_FULL, // Nova 2 Lite for validation
+    MODEL_IDS.UTILITY_MODEL_FULL, // Small 5-field schema, structured scores output consumed programmatically
     {
       temperature: TEMPERATURE_PRESETS.STRUCTURED,
       tools: VALIDATION_RESULT_SCHEMA,

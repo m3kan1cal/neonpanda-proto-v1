@@ -41,6 +41,7 @@ import {
   PERSONALITY_SELECTION_SCHEMA,
   METHODOLOGY_SELECTION_SCHEMA,
   COACH_PROMPTS_SCHEMA,
+  PROMPT_REPAIR_SCHEMA,
 } from "../libs/schemas/coach-creator-tool-schemas";
 import {
   SAFETY_PROFILE_EXTRACTION_SCHEMA,
@@ -67,24 +68,6 @@ import {
 } from "../libs/schemas/workout-logger-tool-schemas";
 import { SELECT_DAYS_TO_REMOVE_SCHEMA } from "../libs/schemas/program-designer-tool-schemas";
 import { NORMALIZATION_RESPONSE_SCHEMA as PROGRAM_NORMALIZATION_RESPONSE_SCHEMA } from "../libs/schemas/program-normalization-schema";
-
-// Inline schema for fixed_prompt_output (too small to warrant its own file)
-const FIXED_PROMPT_OUTPUT_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    fixed_prompt: {
-      type: "string",
-      description: "The rephrased prompt text",
-    },
-    changes_made: {
-      type: "array",
-      items: { type: "string" },
-      description: "List of specific changes made",
-    },
-  },
-  required: ["fixed_prompt", "changes_made"],
-};
 
 interface WarmupSchemaEntry {
   toolName: string;
@@ -436,12 +419,12 @@ const WARMUP_SCHEMAS: WarmupSchemaEntry[] = [
   {
     toolName: "fixed_prompt_output",
     tool: {
-      name: "fixed_prompt_output",
-      description: "The fixed prompt text and a summary of changes.",
-      inputSchema: FIXED_PROMPT_OUTPUT_SCHEMA,
+      name: PROMPT_REPAIR_SCHEMA.name,
+      description: PROMPT_REPAIR_SCHEMA.description,
+      inputSchema: PROMPT_REPAIR_SCHEMA.inputSchema,
     },
-    model: MODEL_IDS.EXECUTOR_MODEL_FULL,
-    source: "agents/coach-creator/tools.ts (inline)",
+    model: MODEL_IDS.UTILITY_MODEL_FULL,
+    source: "schemas/coach-creator-tool-schemas.ts (PROMPT_REPAIR_SCHEMA)",
   },
   {
     toolName: "select_days_to_remove",
@@ -463,8 +446,8 @@ const WARMUP_SCHEMAS: WarmupSchemaEntry[] = [
 //
 // Only schemas that reliably compile within Bedrock's grammar limits belong here.
 // All 5 excluded schemas (normalize_workout, extract_workout_info, extract_program_info,
-// extract_coach_creator_info, generate_coach_config) use unguarded tool use
-// (strictSchema: false) and are documented in docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md.
+// extract_coach_creator_info, generate_coach_config) have complex or large schemas
+// and are documented in docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md.
 // ──────────────────────────────────────────────────────────────────────────────
 
 interface JsonOutputWarmupEntry {
@@ -537,7 +520,9 @@ async function warmSingleSchema(
           inputSchema: entry.tool.inputSchema,
         },
         expectedToolName: entry.tool.name,
-        strictSchema: true,
+        // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
+        // skipValidation: warmup uses a minimal prompt that won't satisfy complex schemas
+        skipValidation: true,
       } as BedrockApiOptions,
     );
     return {

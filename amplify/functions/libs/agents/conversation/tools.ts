@@ -559,6 +559,8 @@ advancement, adherenceRate) and marks the specific workout template as "complete
     });
 
     try {
+      const dayNumber = Number(input.dayNumber);
+
       // Load program from DynamoDB
       const program = await getProgram(
         context.userId,
@@ -593,13 +595,13 @@ advancement, adherenceRate) and marks the specific workout template as "complete
       // Find and update the matching template
       const template = programDetails.workoutTemplates.find(
         (t: any) =>
-          t.templateId === input.templateId && t.dayNumber === input.dayNumber,
+          t.templateId === input.templateId && t.dayNumber === dayNumber,
       );
 
       if (!template) {
         return {
           completed: false,
-          error: `Template ${input.templateId} not found for day ${input.dayNumber}`,
+          error: `Template ${input.templateId} not found for day ${dayNumber}`,
         };
       }
 
@@ -627,7 +629,7 @@ advancement, adherenceRate) and marks the specific workout template as "complete
 
       console.info("✅ Program details saved to S3:", {
         templateId: input.templateId,
-        dayNumber: input.dayNumber,
+        dayNumber,
       });
 
       // Update program stats
@@ -638,14 +640,14 @@ advancement, adherenceRate) and marks the specific workout template as "complete
 
       // Check if all workouts for this day are now complete
       const dayTemplates = programDetails.workoutTemplates.filter(
-        (t: any) => t.dayNumber === input.dayNumber,
+        (t: any) => t.dayNumber === dayNumber,
       );
       const allDayTemplatesComplete = dayTemplates.every(
         (t: any) => t.status === "completed" || t.status === "skipped",
       );
 
       // Advance currentDay if all day templates are complete
-      if (allDayTemplatesComplete && program.currentDay === input.dayNumber) {
+      if (allDayTemplatesComplete && program.currentDay === dayNumber) {
         updates.currentDay = program.currentDay + 1;
         console.info("🎯 All workouts for day complete, advancing:", {
           completedDay: input.dayNumber,

@@ -12,8 +12,7 @@
  * is within Bedrock's grammar compilation limit of 24.
  *
  * If `notes` fields are re-added, the count rises to 44 and grammar compilation
- * will fail -- at that point revert to strictSchema: false and document in
- * docs/strategy/STRUCTURED_OUTPUTS_STRATEGY.md.
+ * will fail — remove `notes` fields or split the schema into two calls.
  *
  * Related files:
  * - amplify/functions/libs/coach-creator/types.ts (TypeScript interfaces)

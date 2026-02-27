@@ -104,7 +104,7 @@ const TiptapEditor = forwardRef(
       },
       onUpdate: ({ editor }) => {
         if (onUpdate) {
-          onUpdate(editor.getHTML(), editor.getText());
+          onUpdate(editor.getHTML(), editor.getText({ blockSeparator: "\n" }));
         }
       },
     });
@@ -156,7 +156,7 @@ const TiptapEditor = forwardRef(
       () => ({
         focus: () => editor?.commands.focus(),
         getHTML: () => editor?.getHTML() || "",
-        getText: () => editor?.getText() || "",
+        getText: () => editor?.getText({ blockSeparator: "\n" }) || "",
         clear: () => editor?.commands.clearContent(),
         editor,
         // Compatibility: setSelectionRange is a no-op for Tiptap
