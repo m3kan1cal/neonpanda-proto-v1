@@ -125,7 +125,7 @@ export const LOG_WORKOUT_SCHEMA = {
           description: "The specific workout template ID",
         },
         dayNumber: {
-          type: "number",
+          type: ["number", "string"],
           description: "The day number in the program",
         },
       },
@@ -149,7 +149,7 @@ export const COMPLETE_PROGRAM_WORKOUT_SCHEMA = {
         "The specific workout template ID to mark as completed (from get_todays_workout result)",
     },
     dayNumber: {
-      type: "number",
+      type: ["number", "string"],
       description:
         "The day number in the program (from context.activeProgram or get_todays_workout)",
     },
