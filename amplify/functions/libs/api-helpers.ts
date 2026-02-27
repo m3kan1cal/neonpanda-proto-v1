@@ -356,14 +356,6 @@ const getMaxTokensForModel = (modelId: string): number => {
 };
 
 /**
- * Check if a model ID is an Amazon Nova model.
- * Nova models support tool calling but not strict tool use schema enforcement.
- */
-export const isNovaModel = (modelId: string): boolean => {
-  return modelId.includes("amazon.nova");
-};
-
-/**
  * Check if a Nova model supports native reasoning via reasoningConfig.
  * Only Nova 2 and Nova Pro support native reasoning; Nova Lite does not.
  */

@@ -486,8 +486,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     // message and is the most reliable source for workout completion time. context.completedAt
     // (from extract_workout_data) can contain model-hallucinated dates, especially wrong years.
     // Always prefer extractedTime when available; fall back to context, then now.
-    const contextIsDateOnly =
-      !!context.completedAt && /^\d{4}-\d{2}-\d{2}$/.test(context.completedAt);
     const completedAt =
       extractedTime ||
       (context.completedAt
@@ -498,7 +496,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       userMessage: userMessage.substring(0, 100),
       userTimezone,
       contextCompletedAt: context.completedAt || null,
-      contextIsDateOnly,
       extractedTime: extractedTime ? extractedTime.toISOString() : null,
       finalCompletedAt: completedAt.toISOString(),
       workoutDate: workoutData.date,
