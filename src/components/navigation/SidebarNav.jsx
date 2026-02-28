@@ -1,5 +1,6 @@
 // SidebarNav.jsx - Desktop Left Sidebar Navigation
-// Persistent vertical navigation for desktop devices (≥ 768px)
+// Floating icon rail (collapsed) with hover-expansion overlay.
+// Pinned mode (expanded) behaves as a traditional sidebar that pushes content.
 
 import React, { useState, useRef } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -43,7 +44,6 @@ const QuickActionsPopover = ({
   getItemColorClasses,
   popoverRefs,
 }) => {
-  // Create a custom boundary function that excludes the chat input area
   const getBoundary = () => {
     const chatInput = document.querySelector("[data-chat-input-container]");
     if (!chatInput) {
@@ -58,15 +58,12 @@ const QuickActionsPopover = ({
         y: 0,
       };
     }
-
     const chatInputRect = chatInput.getBoundingClientRect();
-
-    // Create a virtual boundary that ends where chat input begins
     return {
       top: 0,
       left: 0,
       right: window.innerWidth,
-      bottom: chatInputRect.top - 16, // Stop 16px above chat input
+      bottom: chatInputRect.top - 16,
       width: window.innerWidth,
       height: chatInputRect.top - 16,
       x: 0,
@@ -77,7 +74,7 @@ const QuickActionsPopover = ({
   const { refs, floatingStyles } = useFloating({
     placement: "right-start",
     middleware: [
-      offset(0), // No gap between button and popover
+      offset(0),
       flip({
         fallbackPlacements: ["right-end", "right", "left-start", "left-end"],
         boundary: getBoundary(),
@@ -90,7 +87,6 @@ const QuickActionsPopover = ({
       size({
         boundary: getBoundary(),
         apply({ availableHeight, elements }) {
-          // Apply max height and enable scrolling
           Object.assign(elements.floating.style, {
             maxHeight: `${Math.max(200, availableHeight)}px`,
             overflowY: "auto",
@@ -106,9 +102,8 @@ const QuickActionsPopover = ({
     <Popover>
       {({ open, close }) => {
         const colorClasses = getItemColorClasses("pink", false);
-        const getHoverClasses = () => {
-          return "hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-pink/50";
-        };
+        const getHoverClasses = () =>
+          "hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-pink/50";
 
         return (
           <>
@@ -123,8 +118,7 @@ const QuickActionsPopover = ({
                     ? "border-t-synthwave-neon-pink/50 border-b-synthwave-neon-pink/50 bg-synthwave-bg-primary/20"
                     : getHoverClasses()
                 }
-                focus:outline-none
-                active:outline-none
+                focus:outline-none active:outline-none
               `}
               style={{ WebkitTapHighlightColor: "transparent" }}
               aria-label="Quick actions"
@@ -136,15 +130,21 @@ const QuickActionsPopover = ({
                 isSidebarCollapsed ? "Quick Actions" : undefined
               }
             >
-              {/* Icon */}
+              {/* Icon — pill container in rail mode */}
               <div
                 className={`
-                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
-                flex items-center justify-center
-              `}
+                  relative
+                  ${
+                    isSidebarCollapsed
+                      ? `${navigationPatterns.desktop.navItemIconRail} ${open ? navigationPatterns.desktop.navItemIconRailActivePink : ""}`
+                      : "w-5 h-5 shrink-0 flex items-center justify-center"
+                  }
+                  ${open ? colorClasses.glow : ""}
+                  transition-all duration-200
+                `}
               >
                 <svg
-                  className={isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5"}
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -161,9 +161,9 @@ const QuickActionsPopover = ({
               {/* Label */}
               <span
                 className={`
-                ${navigationPatterns.desktop.navItemLabel}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
-              `}
+                  ${navigationPatterns.desktop.navItemLabel}
+                  ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
+                `}
               >
                 Quick Actions
               </span>
@@ -175,29 +175,25 @@ const QuickActionsPopover = ({
               className="z-[60]"
             >
               <div className={navigationPatterns.utilityFlyout.container}>
-                {/* Header Section */}
                 <div className={navigationPatterns.utilityFlyout.header}>
                   <h3 className={navigationPatterns.utilityFlyout.headerTitle}>
                     Quick Actions
                   </h3>
                 </div>
-
-                {/* Menu Items */}
-                <div
-                  className={navigationPatterns.utilityFlyout.itemsContainer}
-                >
+                <div className={navigationPatterns.utilityFlyout.itemsContainer}>
                   {quickActionItems.map((item) => {
                     const Icon = item.icon;
                     const itemColorClasses = getItemColorClasses(
                       item.color || "pink",
                       false,
                     );
-
                     return (
                       <button
                         key={item.id}
                         ref={
-                          item.popoverType ? popoverRefs.current[item.id] : null
+                          item.popoverType
+                            ? popoverRefs.current[item.id]
+                            : null
                         }
                         onClick={() => {
                           handleItemClick(item);
@@ -209,25 +205,16 @@ const QuickActionsPopover = ({
                           hover:border-synthwave-neon-pink/50
                           hover:bg-synthwave-bg-primary/20
                           focus:ring-2 focus:ring-synthwave-neon-pink/50
-                          focus:outline-none
-                          active:outline-none
-                          w-full
+                          focus:outline-none active:outline-none w-full
                         `}
                         style={{ WebkitTapHighlightColor: "transparent" }}
                       >
-                        {/* Icon */}
                         {Icon && (
-                          <div
-                            className={navigationPatterns.desktop.navItemIcon}
-                          >
+                          <div className={navigationPatterns.desktop.navItemIcon}>
                             <Icon className="w-5 h-5" />
                           </div>
                         )}
-
-                        {/* Label */}
-                        <span
-                          className={navigationPatterns.desktop.navItemLabel}
-                        >
+                        <span className={navigationPatterns.desktop.navItemLabel}>
                           {item.label}
                         </span>
                       </button>
@@ -252,7 +239,6 @@ const UtilityPopover = ({
   getItemRoute,
   getItemColorClasses,
 }) => {
-  // Create a custom boundary function that excludes the chat input area
   const getBoundary = () => {
     const chatInput = document.querySelector("[data-chat-input-container]");
     if (!chatInput) {
@@ -267,15 +253,12 @@ const UtilityPopover = ({
         y: 0,
       };
     }
-
     const chatInputRect = chatInput.getBoundingClientRect();
-
-    // Create a virtual boundary that ends where chat input begins
     return {
       top: 0,
       left: 0,
       right: window.innerWidth,
-      bottom: chatInputRect.top - 16, // Stop 16px above chat input
+      bottom: chatInputRect.top - 16,
       width: window.innerWidth,
       height: chatInputRect.top - 16,
       x: 0,
@@ -286,7 +269,7 @@ const UtilityPopover = ({
   const { refs, floatingStyles } = useFloating({
     placement: "right-start",
     middleware: [
-      offset(0), // No gap between button and popover
+      offset(0),
       flip({
         fallbackPlacements: ["right-end", "right", "left-start", "left-end"],
         boundary: getBoundary(),
@@ -299,7 +282,6 @@ const UtilityPopover = ({
       size({
         boundary: getBoundary(),
         apply({ availableHeight, elements }) {
-          // Apply max height and enable scrolling
           Object.assign(elements.floating.style, {
             maxHeight: `${Math.max(200, availableHeight)}px`,
             overflowY: "auto",
@@ -315,9 +297,8 @@ const UtilityPopover = ({
     <Popover className={navigationPatterns.sectionSpacing.both}>
       {({ open }) => {
         const colorClasses = getItemColorClasses("default", false);
-        const getHoverClasses = () => {
-          return "hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50";
-        };
+        const getHoverClasses = () =>
+          "hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50";
 
         return (
           <>
@@ -340,8 +321,7 @@ const UtilityPopover = ({
                     ? "border-t-synthwave-neon-cyan/50 border-b-synthwave-neon-cyan/50 bg-synthwave-bg-primary/20"
                     : getHoverClasses()
                 }
-                focus:outline-none
-                active:outline-none
+                focus:outline-none active:outline-none
               `}
               style={{ WebkitTapHighlightColor: "transparent" }}
               aria-label="More resources"
@@ -353,15 +333,21 @@ const UtilityPopover = ({
                 isSidebarCollapsed ? "More Resources" : undefined
               }
             >
-              {/* Icon */}
+              {/* Icon — pill container in rail mode */}
               <div
                 className={`
-                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
-                flex items-center justify-center
-              `}
+                  relative
+                  ${
+                    isSidebarCollapsed
+                      ? `${navigationPatterns.desktop.navItemIconRail} ${open ? navigationPatterns.desktop.navItemIconRailActiveCyan : ""}`
+                      : "w-5 h-5 shrink-0 flex items-center justify-center"
+                  }
+                  ${open ? "drop-shadow-[0_0_8px_rgba(0,255,255,0.5)]" : ""}
+                  transition-all duration-200
+                `}
               >
                 <svg
-                  className={isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5"}
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -378,9 +364,9 @@ const UtilityPopover = ({
               {/* Label */}
               <span
                 className={`
-                ${navigationPatterns.desktop.navItemLabel}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
-              `}
+                  ${navigationPatterns.desktop.navItemLabel}
+                  ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
+                `}
               >
                 More Resources
               </span>
@@ -393,26 +379,18 @@ const UtilityPopover = ({
             >
               {({ close }) => (
                 <div className={navigationPatterns.utilityFlyout.container}>
-                  {/* Header Section */}
                   <div className={navigationPatterns.utilityFlyout.header}>
-                    <h3
-                      className={navigationPatterns.utilityFlyout.headerTitle}
-                    >
+                    <h3 className={navigationPatterns.utilityFlyout.headerTitle}>
                       More Resources
                     </h3>
                   </div>
-
-                  {/* Menu Items */}
-                  <div
-                    className={navigationPatterns.utilityFlyout.itemsContainer}
-                  >
+                  <div className={navigationPatterns.utilityFlyout.itemsContainer}>
                     {utilityItems.map((item) => {
                       const Icon = item.icon;
                       const itemColorClasses = getItemColorClasses(
                         item.color || "default",
                         false,
                       );
-
                       return (
                         <button
                           key={item.id}
@@ -429,25 +407,16 @@ const UtilityPopover = ({
                             hover:border-synthwave-neon-cyan/50
                             hover:bg-synthwave-bg-primary/20
                             focus:ring-2 focus:ring-synthwave-neon-cyan/50
-                            focus:outline-none
-                            active:outline-none
-                            w-full
+                            focus:outline-none active:outline-none w-full
                           `}
                           style={{ WebkitTapHighlightColor: "transparent" }}
                         >
-                          {/* Icon */}
                           {Icon && (
-                            <div
-                              className={navigationPatterns.desktop.navItemIcon}
-                            >
+                            <div className={navigationPatterns.desktop.navItemIcon}>
                               <Icon className="w-5 h-5" />
                             </div>
                           )}
-
-                          {/* Label */}
-                          <span
-                            className={navigationPatterns.desktop.navItemLabel}
-                          >
+                          <span className={navigationPatterns.desktop.navItemLabel}>
                             {item.label}
                           </span>
                         </button>
@@ -471,28 +440,44 @@ const SidebarNav = () => {
   const context = useNavigationContext();
   const { isSidebarCollapsed, setIsSidebarCollapsed } = context;
 
-  // Quick Access popover state
   const [activePopover, setActivePopover] = useState(null);
+  // True when the user is hovering over the rail in collapsed mode
+  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
   const popoverRefs = useRef({});
 
-  // Toggle collapse state
+  // effectivelyCollapsed: controls label/section visibility
+  // true  → show icon-only (rail view)
+  // false → show full labels (pinned or hover-expanded)
+  const effectivelyCollapsed = isSidebarCollapsed && !isHoverExpanded;
+
   const toggleCollapse = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+    setIsHoverExpanded(false);
   };
 
-  // Navigate to item or handle onClick
+  const handleMouseEnter = () => {
+    if (isSidebarCollapsed) setIsHoverExpanded(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHoverExpanded(false);
+  };
+
+  // Pick the right container class for current state
+  const getContainerClass = () => {
+    if (!isSidebarCollapsed) return navigationPatterns.desktop.containerPinned;
+    if (isHoverExpanded) return navigationPatterns.desktop.containerRailExpanded;
+    return navigationPatterns.desktop.containerRail;
+  };
+
   const handleItemClick = (item) => {
-    // Handle Quick Access items (open popovers)
     if (item.popoverType) {
       setActivePopover(
         activePopover === item.popoverType ? null : item.popoverType,
       );
       return;
     }
-
-    // Handle Quick Actions items (log workout, start conversation, save memory, create coach, design program)
     if (item.action) {
-      // Map action to command palette commands
       const commandMap = {
         "log-workout": "/log-workout ",
         "start-conversation": "/start-conversation ",
@@ -500,7 +485,6 @@ const SidebarNav = () => {
         "create-coach": "/create-coach",
         "design-program": "/design-program",
       };
-
       if (context.onCommandPaletteToggle && commandMap[item.action]) {
         context.onCommandPaletteToggle(commandMap[item.action]);
       } else {
@@ -510,77 +494,52 @@ const SidebarNav = () => {
       }
       return;
     }
-
-    // Handle onClick function (e.g., Sign Out)
     if (item.onClick) {
       item.onClick(context);
       return;
     }
-
-    // Handle navigation
     const route = getItemRoute(item, context);
-    if (route === "#") return; // Disabled item
+    if (route === "#") return;
     navigate(route);
   };
 
-  // Check if item is active
   const isActive = (item) => {
     const route = getItemRoute(item, context);
     return isRouteActive(route, location.pathname, context.currentSearchParams);
   };
 
-  // Get visible items by section
   const primaryItems =
     navigationItems.primary?.filter((item) => isItemVisible(item, context)) ||
     [];
-
   const contextualItems =
     navigationItems.contextual?.filter((item) =>
       isItemVisible(item, context),
     ) || [];
-
   const quickAccessItems =
     navigationItems.quickAccess?.filter((item) =>
       isItemVisible(item, context),
     ) || [];
-
   const accountItems =
     navigationItems.account?.filter((item) => isItemVisible(item, context)) ||
     [];
-
   const utilityItems =
     navigationItems.utility?.filter((item) => isItemVisible(item, context)) ||
     [];
 
-  // Initialize refs for quick access items with popoverType
-  // This ensures refs exist even though these items are rendered in QuickActionsPopover
   quickAccessItems.forEach((item) => {
     if (item.popoverType && !popoverRefs.current[item.id]) {
       popoverRefs.current[item.id] = React.createRef();
     }
   });
 
-  // Get display name from userProfile or fallback to email
-  const getDisplayName = () => {
-    return (
-      userProfile?.displayName ||
-      user?.attributes?.preferred_username ||
-      user?.attributes?.email ||
-      user?.email ||
-      "User"
-    );
-  };
+  const getDisplayName = () =>
+    userProfile?.displayName ||
+    user?.attributes?.preferred_username ||
+    user?.attributes?.email ||
+    user?.email ||
+    "User";
 
-  // Get username for settings route
-  const getUsername = () => {
-    return (
-      user?.attributes?.preferred_username ||
-      user?.email?.split("@")[0] ||
-      "user"
-    );
-  };
-
-  // Render navigation item
+  // Render a single navigation item
   const renderNavItem = (item) => {
     const badge = getItemBadge(item, context);
     const active = item.popoverType
@@ -593,33 +552,41 @@ const SidebarNav = () => {
     const isDisabled =
       !item.onClick && !item.popoverType && !item.action && route === "#";
 
-    // Create ref for Quick Access items (for popover positioning)
     if (item.popoverType && !popoverRefs.current[item.id]) {
       popoverRefs.current[item.id] = React.createRef();
     }
 
-    // Get color-specific classes for active state (only top/bottom borders)
+    // Active background: pill in rail mode, top/bottom border tint in expanded mode
     const getActiveClasses = () => {
-      if (item.color === "pink") {
+      if (effectivelyCollapsed) return ""; // icon pill handles rail active state
+      if (item.color === "pink")
         return "bg-synthwave-bg-primary/30 border-t-synthwave-neon-pink/30 border-b-synthwave-neon-pink/30";
-      } else if (item.color === "cyan") {
+      if (item.color === "cyan")
         return "bg-synthwave-bg-primary/30 border-t-synthwave-neon-cyan/30 border-b-synthwave-neon-cyan/30";
-      } else if (item.color === "purple") {
+      if (item.color === "purple")
         return "bg-synthwave-bg-primary/30 border-t-synthwave-neon-purple/30 border-b-synthwave-neon-purple/30";
-      }
       return "";
     };
 
-    // Get color-specific hover classes for inactive state (FloatingMenu-inspired)
     const getHoverClasses = () => {
-      if (item.color === "pink") {
+      if (item.color === "pink")
         return "hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-pink/50";
-      } else if (item.color === "cyan") {
+      if (item.color === "cyan")
         return "hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50";
-      } else if (item.color === "purple") {
+      if (item.color === "purple")
         return "hover:border-synthwave-neon-purple/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-purple/50";
-      }
       return "";
+    };
+
+    // Pill fill class for active icon in rail mode
+    const getRailIconPillClass = () => {
+      if (item.color === "pink")
+        return navigationPatterns.desktop.navItemIconRailActivePink;
+      if (item.color === "cyan")
+        return navigationPatterns.desktop.navItemIconRailActiveCyan;
+      if (item.color === "purple")
+        return navigationPatterns.desktop.navItemIconRailActivePurple;
+      return "bg-white/10";
     };
 
     return (
@@ -630,7 +597,7 @@ const SidebarNav = () => {
         disabled={isDisabled}
         className={`
           ${navigationPatterns.desktop.navItem}
-          ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ""}
+          ${effectivelyCollapsed ? navigationPatterns.desktop.navItemCollapsed : ""}
           ${
             isDisabled
               ? "opacity-50 cursor-not-allowed"
@@ -642,46 +609,52 @@ const SidebarNav = () => {
         style={{ WebkitTapHighlightColor: "transparent" }}
         aria-label={ariaLabel}
         aria-current={active ? "page" : undefined}
-        title={isSidebarCollapsed ? item.label : undefined}
-        data-tooltip-id={isSidebarCollapsed ? "sidebar-nav-tooltip" : undefined}
-        data-tooltip-content={isSidebarCollapsed ? item.label : undefined}
+        title={effectivelyCollapsed ? item.label : undefined}
+        data-tooltip-id={
+          effectivelyCollapsed ? "sidebar-nav-tooltip" : undefined
+        }
+        data-tooltip-content={effectivelyCollapsed ? item.label : undefined}
       >
-        {/* Icon */}
+        {/* Icon — pill container in rail mode, plain wrapper in expanded mode */}
         <div
           className={`
-          ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
-          ${active ? colorClasses.glow : ""}
-          ${item.icon.name === "WorkoutIconTiny" || item.icon.name === "NetworkIconTiny" || item.icon.name === "ChatIconSmall" || item.icon.name === "CoachIconSmall" || item.icon.name === "MemoryIconTiny" || item.icon.name === "ProgramIconTiny" || item.icon.name === "MenuIcon" ? "flex items-center justify-center" : ""} // Center icons that need alignment
-        `}
-        >
-          <Icon
-            className={
-              isSidebarCollapsed
-                ? "w-6 h-6" // All icons w-6 h-6 when collapsed
-                : "w-5 h-5"
+            relative
+            ${
+              effectivelyCollapsed
+                ? `${navigationPatterns.desktop.navItemIconRail} ${active ? getRailIconPillClass() : ""}`
+                : "w-5 h-5 shrink-0 flex items-center justify-center"
             }
-          />
+            ${active ? colorClasses.glow : ""}
+            transition-all duration-200
+          `}
+        >
+          <Icon className="w-5 h-5" />
+
+          {/* Badge dot indicator in rail mode */}
+          {badge !== null && badge !== undefined && effectivelyCollapsed && (
+            <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-synthwave-neon-pink shadow-[0_0_5px_rgba(255,0,128,0.7)]" />
+          )}
         </div>
 
         {/* Label */}
         <span
           className={`
-          ${navigationPatterns.desktop.navItemLabel}
-          ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
-        `}
+            ${navigationPatterns.desktop.navItemLabel}
+            ${effectivelyCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
+          `}
         >
           {item.label}
         </span>
 
-        {/* Badge indicator - QuickStats style with Rajdhani font - Only show when expanded */}
-        {badge !== null && badge !== undefined && !isSidebarCollapsed && (
+        {/* Badge count — only in expanded mode */}
+        {badge !== null && badge !== undefined && !effectivelyCollapsed && (
           <div
             className={`
-            ml-auto ${badgePatterns.countBase}
-            ${item.color === "pink" ? badgePatterns.countPink : ""}
-            ${item.color === "cyan" ? badgePatterns.countCyan : ""}
-            ${item.color === "purple" ? badgePatterns.countPurple : ""}
-          `}
+              ml-auto ${badgePatterns.countBase}
+              ${item.color === "pink" ? badgePatterns.countPink : ""}
+              ${item.color === "cyan" ? badgePatterns.countCyan : ""}
+              ${item.color === "purple" ? badgePatterns.countPurple : ""}
+            `}
           >
             {badge}
           </div>
@@ -690,25 +663,20 @@ const SidebarNav = () => {
     );
   };
 
-  // Render navigation section
+  // Render a section of navigation items with optional title
   const renderSection = (items, title, isQuickAccess = false) => {
     if (items.length === 0) return null;
-
     return (
       <div>
-        {/* Add top margin for titled sections in collapsed mode (except Quick Access which has divider) */}
-        {title && isSidebarCollapsed && !isQuickAccess && (
+        {title && effectivelyCollapsed && !isQuickAccess && (
           <div className={navigationPatterns.sectionSpacing.top} />
         )}
-
-        {/* Show divider above Quick Actions - gradient fade effect */}
         {isQuickAccess && (
           <div
             className={`${navigationPatterns.sectionSpacing.bottom} ${navigationPatterns.dividers.gradientCyan}`}
           />
         )}
-
-        {title && !isSidebarCollapsed && (
+        {title && !effectivelyCollapsed && (
           <div className={navigationPatterns.desktop.sectionHeader}>
             <h3 className={navigationPatterns.desktop.sectionTitle}>{title}</h3>
           </div>
@@ -716,8 +684,6 @@ const SidebarNav = () => {
         <div className={navigationPatterns.sectionSpacing.bottom}>
           {items.map((item) => renderNavItem(item))}
         </div>
-
-        {/* Show divider below Quick Actions - gradient fade effect */}
         {isQuickAccess && (
           <div
             className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`}
@@ -729,61 +695,61 @@ const SidebarNav = () => {
 
   return (
     <aside
-      className={`
-        ${navigationPatterns.desktop.container}
-        ${isSidebarCollapsed ? navigationPatterns.desktop.containerCollapsed : navigationPatterns.desktop.containerExpanded}
-      `}
+      className={getContainerClass()}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       role="navigation"
       aria-label="Desktop sidebar navigation"
     >
       <div className={navigationPatterns.desktop.innerContainer}>
-        {/* Collapse/Expand Toggle Button */}
-        <button
-          onClick={toggleCollapse}
-          className={`${navigationPatterns.desktop.collapseButton} pointer-events-auto`}
-          aria-label={
-            isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
-          }
-          title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          style={{ pointerEvents: "auto" }}
-        >
-          <svg
-            className={`
-              ${navigationPatterns.desktop.collapseIcon}
-              ${isSidebarCollapsed ? navigationPatterns.desktop.collapseIconRotated : ""}
-            `}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Pin Button — appears on hover (rail mode) or always when pinned */}
+        {(isHoverExpanded || !isSidebarCollapsed) && (
+          <button
+            onClick={toggleCollapse}
+            className={
+              isSidebarCollapsed
+                ? navigationPatterns.desktop.pinButton
+                : navigationPatterns.desktop.pinButtonPinned
+            }
+            aria-label={
+              isSidebarCollapsed ? "Pin sidebar open" : "Unpin sidebar"
+            }
+            title={isSidebarCollapsed ? "Pin sidebar open" : "Unpin sidebar"}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
+            {/* Pushpin icon — filled when pinned, outline-style when not */}
+            <svg
+              className="w-3.5 h-3.5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isSidebarCollapsed ? (
+                // Unpin outline (click to pin)
+                <path d="M17 4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v1h1v7l-2 2v1h5v5h2v-5h5v-1l-2-2V5h1V4zm-3 8H10V5h4v7z" />
+              ) : (
+                // Pinned fill (click to unpin)
+                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+              )}
+            </svg>
+          </button>
+        )}
 
         {/* Brand/Logo Section */}
         <Link
           to="/"
           className={`
             ${navigationPatterns.desktop.brandSection}
-            ${isSidebarCollapsed ? navigationPatterns.desktop.brandSectionCollapsed : ""}
+            ${effectivelyCollapsed ? navigationPatterns.desktop.brandSectionCollapsed : ""}
             hover:opacity-80 transition-opacity duration-200 cursor-pointer
           `}
           title="Go to NeonPanda home"
         >
-          {isSidebarCollapsed ? (
-            // Collapsed: Show just the panda head
+          {effectivelyCollapsed ? (
             <img
               src="/images/logo-dark-sm-head.webp"
               alt="NeonPanda"
               className={`${navigationPatterns.desktop.brandLogoCollapsed} object-contain`}
             />
           ) : (
-            // Expanded: Show full logo (smaller size)
             <img
               src="/images/logo-dark-sm.webp"
               alt="NeonPanda"
@@ -792,20 +758,18 @@ const SidebarNav = () => {
           )}
         </Link>
 
-        {/* Navigation Section - Scrollable */}
+        {/* Navigation Section — Scrollable */}
         <nav className={navigationPatterns.desktop.navSection}>
-          {/* Coaches and Quick Actions */}
+          {/* Coaches + Quick Actions */}
           <div className={navigationPatterns.sectionSpacing.bottom}>
-            {/* Coaches - Standalone (from primary navigation) */}
             {primaryItems.length > 0 &&
               primaryItems.find((item) => item.id === "coaches") &&
               renderNavItem(primaryItems.find((item) => item.id === "coaches"))}
 
-            {/* Quick Actions - Standalone (directly under Coaches) */}
             {quickAccessItems.length > 0 && (
               <QuickActionsPopover
                 quickActionItems={quickAccessItems}
-                isSidebarCollapsed={isSidebarCollapsed}
+                isSidebarCollapsed={effectivelyCollapsed}
                 context={context}
                 handleItemClick={handleItemClick}
                 getItemColorClasses={getItemColorClasses}
@@ -814,38 +778,33 @@ const SidebarNav = () => {
             )}
           </div>
 
-          {/* Divider before Your Training Section */}
+          {/* Divider before Your Training */}
           {contextualItems.length > 0 && (
             <div
               className={`${navigationPatterns.sectionSpacing.both} ${navigationPatterns.dividers.gradientCyan}`}
             />
           )}
 
-          {/* Your Training Section (includes Training Grounds and all other contextual items) */}
+          {/* Your Training Section */}
           {contextualItems.length > 0 && (
             <>
-              {/* Section header */}
-              {!isSidebarCollapsed && (
+              {!effectivelyCollapsed && (
                 <div className={navigationPatterns.desktop.sectionHeader}>
                   <h3 className={navigationPatterns.desktop.sectionTitle}>
                     Your Training
                   </h3>
                 </div>
               )}
-
-              {/* All Your Training items (including Training Grounds) */}
               <div className={navigationPatterns.sectionSpacing.bottom}>
                 {contextualItems.map((item) => renderNavItem(item))}
               </div>
-
-              {/* Divider after Your Training section */}
               <div
                 className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`}
               />
             </>
           )}
 
-          {/* Account Navigation (Settings, Sign Out) */}
+          {/* Account (Settings, Sign Out) */}
           {accountItems.length > 0 && (
             <div className={navigationPatterns.sectionSpacing.top}>
               {renderSection(accountItems, "Account & Settings")}
@@ -859,11 +818,11 @@ const SidebarNav = () => {
             />
           )}
 
-          {/* Help & Info - Single button that opens popover */}
+          {/* More Resources popover */}
           {utilityItems.length > 0 && (
             <UtilityPopover
               utilityItems={utilityItems}
-              isSidebarCollapsed={isSidebarCollapsed}
+              isSidebarCollapsed={effectivelyCollapsed}
               navigate={navigate}
               context={context}
               getItemRoute={getItemRoute}
@@ -878,7 +837,7 @@ const SidebarNav = () => {
             <button
               className={`
                 ${navigationPatterns.desktop.profileButton}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.profileButtonCollapsed : ""}
+                ${effectivelyCollapsed ? navigationPatterns.desktop.profileButtonCollapsed : ""}
               `}
               onClick={() => {
                 const userId =
@@ -886,28 +845,23 @@ const SidebarNav = () => {
                 navigate(userId ? `/settings?userId=${userId}` : "/settings");
               }}
               aria-label="User settings"
-              title={isSidebarCollapsed ? getDisplayName() : undefined}
+              title={effectivelyCollapsed ? getDisplayName() : undefined}
             >
-              {/* Avatar - using UserAvatar component */}
               <div
-                className={`
-                shrink-0
-                ${isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10"}
-              `}
+                className={`shrink-0 ${effectivelyCollapsed ? "w-8 h-8" : "w-10 h-10"}`}
               >
                 <UserAvatar
                   email={user?.attributes?.email || user?.email}
                   username={getDisplayName()}
-                  size={isSidebarCollapsed ? 32 : 40}
+                  size={effectivelyCollapsed ? 32 : 40}
                 />
               </div>
 
-              {/* User Info */}
               <div
                 className={`
-                ${navigationPatterns.desktop.profileInfo}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.profileInfoCollapsed : ""}
-              `}
+                  ${navigationPatterns.desktop.profileInfo}
+                  ${effectivelyCollapsed ? navigationPatterns.desktop.profileInfoCollapsed : ""}
+                `}
               >
                 <div className={navigationPatterns.desktop.profileName}>
                   {getDisplayName()}
@@ -917,11 +871,10 @@ const SidebarNav = () => {
                 </div>
               </div>
 
-              {/* Chevron */}
               <svg
                 className={`
                   ${navigationPatterns.desktop.profileChevron}
-                  ${isSidebarCollapsed ? navigationPatterns.desktop.profileChevronCollapsed : ""}
+                  ${effectivelyCollapsed ? navigationPatterns.desktop.profileChevronCollapsed : ""}
                 `}
                 fill="none"
                 stroke="currentColor"
@@ -938,6 +891,7 @@ const SidebarNav = () => {
           </div>
         )}
       </div>
+
       <Tooltip
         id="sidebar-nav-tooltip"
         place="right"
