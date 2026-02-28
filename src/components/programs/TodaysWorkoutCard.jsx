@@ -32,9 +32,9 @@ function TodaysWorkoutCard({
           </h3>
         </div>
         <div className="space-y-3">
-          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
         </div>
       </div>
     );
@@ -86,7 +86,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-6 text-center">
+        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -185,7 +185,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-6 text-center">
+        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -294,7 +294,7 @@ function TodaysWorkoutCard({
       </button>
 
       {/* Workout details */}
-      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4 mb-4">
+      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4 mb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-rajdhani font-semibold text-base text-white mb-1">

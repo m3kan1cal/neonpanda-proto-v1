@@ -81,17 +81,17 @@ export default function RecentPRsCard({
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
           <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
-          <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
+          <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 rounded-xl p-3"
+              className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
             >
-              <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2" />
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2" />
-              <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-full" />
+              <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
+              <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />
+              <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-full" />
             </div>
           ))}
         </div>
@@ -133,7 +133,7 @@ export default function RecentPRsCard({
                   `/training-grounds/workouts?workoutId=${pr.workoutId}&userId=${userId}&coachId=${coachId}`,
                 )
               }
-              className="relative bg-synthwave-bg-primary/40 border border-synthwave-neon-cyan/15 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200 hover:bg-synthwave-bg-primary/60 hover:border-synthwave-neon-cyan/30 hover:shadow-lg hover:shadow-synthwave-neon-cyan/5 group"
+              className="relative bg-synthwave-bg-primary/40 border border-synthwave-neon-cyan/15 px-3 py-2 cursor-pointer transition-all duration-200 hover:bg-synthwave-bg-primary/60 hover:border-synthwave-neon-cyan/30 hover:shadow-lg hover:shadow-synthwave-neon-cyan/5 group"
             >
               {isNew && <NewBadge />}
 

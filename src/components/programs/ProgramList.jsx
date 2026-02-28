@@ -109,12 +109,12 @@ function ProgramList({
         {[1, 2].map((i) => (
           <div
             key={i}
-            className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 rounded-lg p-4 flex items-center gap-4"
+            className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 p-4 flex items-center gap-4"
           >
             <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
-              <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
+              <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
             </div>
           </div>
         ))}
@@ -191,7 +191,7 @@ function ProgramList({
             className={
               isActive
                 ? listItemPatterns.rowCyan
-                : `group border-l-2 border-l-synthwave-text-muted/40 bg-gradient-to-r from-synthwave-text-muted/5 to-transparent rounded-lg p-4 cursor-pointer transition-all duration-200 hover:from-synthwave-neon-cyan/10 hover:shadow-md hover:shadow-synthwave-neon-cyan/5`
+                : `group border-l-2 border-l-synthwave-text-muted/40 bg-gradient-to-r from-synthwave-text-muted/5 to-transparent p-4 cursor-pointer transition-all duration-200 hover:from-synthwave-neon-cyan/10 hover:shadow-md hover:shadow-synthwave-neon-cyan/5`
             }
           >
             <div className="flex items-center gap-4">

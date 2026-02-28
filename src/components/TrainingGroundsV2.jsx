@@ -613,10 +613,10 @@ function TrainingGroundsV2() {
           {/* Header skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-2">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
             <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
@@ -624,8 +624,8 @@ function TrainingGroundsV2() {
 
           {/* AI Greeting skeleton */}
           <div className="mb-4 max-w-3xl">
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full mb-2"></div>
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-full mb-2"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-2/3"></div>
           </div>
 
           {/* QuickStats + Pill buttons skeleton */}
@@ -655,23 +655,23 @@ function TrainingGroundsV2() {
           {/* Today's Lineup section skeleton -- matches TodaysWorkoutRow's internal skeleton */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
               <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {[1, 2].map((i) => (
                 <div key={i} className={containerPatterns.neonGlassSkeleton}>
                   <div className={containerPatterns.neonGlassSkeletonInner}>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     <div className="h-[6px] bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
                     <div className="space-y-1.5 pt-1">
                       {[1].map((j) => (
                         <div key={j} className="flex items-center gap-2">
                           <div className="w-5 h-5 min-w-[20px] rounded-md bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
-                          <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                          <div className="h-3 w-8 bg-synthwave-text-muted/20 rounded animate-pulse shrink-0"></div>
+                          <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 animate-pulse"></div>
+                          <div className="h-3 w-8 bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                         </div>
                       ))}
                     </div>
@@ -686,7 +686,7 @@ function TrainingGroundsV2() {
           {/* Your Highlights section skeleton */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
               <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -695,8 +695,8 @@ function TrainingGroundsV2() {
                 {/* Active Programs skeleton - matches ProgramList */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                   </div>
                   <div className="space-y-3">
                     {[1, 2].map((i) => (
@@ -706,8 +706,8 @@ function TrainingGroundsV2() {
                       >
                         <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
-                          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
+                          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                         </div>
                       </div>
                     ))}
@@ -716,37 +716,37 @@ function TrainingGroundsV2() {
                 {/* Reports skeleton - simple 3-line */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
                   </div>
                 </div>
                 {/* Workout History skeleton - simple 3-line */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
                   </div>
                 </div>
                 {/* Conversations skeleton - simple 3-line */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-44"></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
                   </div>
                 </div>
               </div>
@@ -756,7 +756,7 @@ function TrainingGroundsV2() {
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32" />
                   </div>
                   <div className="h-16 bg-synthwave-text-muted/10 rounded-none animate-pulse" />
                 </div>
@@ -764,7 +764,7 @@ function TrainingGroundsV2() {
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[1, 2, 3, 4].map((i) => (
@@ -772,9 +772,9 @@ function TrainingGroundsV2() {
                         key={i}
                         className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
-                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2" />
-                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2" />
-                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-full" />
+                        <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />
+                        <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-full" />
                       </div>
                     ))}
                   </div>
@@ -783,7 +783,7 @@ function TrainingGroundsV2() {
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[1, 2, 3, 4].map((i) => (
@@ -791,9 +791,9 @@ function TrainingGroundsV2() {
                         key={i}
                         className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
-                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2" />
-                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2" />
-                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-full" />
+                        <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />
+                        <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-full" />
                       </div>
                     ))}
                   </div>
@@ -804,8 +804,8 @@ function TrainingGroundsV2() {
 
           {/* Footer skeleton */}
           <div className="flex items-center justify-between pt-4">
-            <div className="h-4 bg-synthwave-text-muted/10 rounded animate-pulse w-48"></div>
-            <div className="h-4 bg-synthwave-text-muted/10 rounded animate-pulse w-20"></div>
+            <div className="h-4 bg-synthwave-text-muted/10 animate-pulse w-48"></div>
+            <div className="h-4 bg-synthwave-text-muted/10 animate-pulse w-20"></div>
           </div>
         </div>
       </div>
@@ -880,9 +880,9 @@ function TrainingGroundsV2() {
       <div className="space-y-2">
         {conversationAgentState.isLoadingRecentItems ? (
           <div className="space-y-3">
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
           </div>
         ) : conversationAgentState.recentConversations.length > 0 ? (
           <>
@@ -992,9 +992,9 @@ function TrainingGroundsV2() {
       <div className="space-y-2">
         {workoutState.isLoadingRecentItems ? (
           <div className="space-y-3">
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
           </div>
         ) : workoutState.error ? (
           <InlineError
@@ -1155,9 +1155,9 @@ function TrainingGroundsV2() {
       <div className="space-y-2">
         {reportsState.isLoadingRecentItems ? (
           <div className="space-y-3">
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
           </div>
         ) : reportsState.error ? (
           <InlineError

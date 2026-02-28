@@ -34,7 +34,7 @@ export default function StreakCard({
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
           <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
-          <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
+          <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32" />
         </div>
         <div className="h-16 bg-synthwave-text-muted/10 rounded-none animate-pulse" />
       </div>

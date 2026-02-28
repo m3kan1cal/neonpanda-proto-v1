@@ -35,7 +35,7 @@ const ImageWithPresignedUrl = ({ s3Key, userId, index }) => {
 
   if (loading) {
     return (
-      <div className="relative rounded-lg border-2 border-synthwave-neon-maroon/80 w-32 h-32 bg-synthwave-bg-primary/50 flex items-center justify-center">
+      <div className="relative border-2 border-synthwave-neon-maroon/80 w-32 h-32 bg-synthwave-bg-primary/50 flex items-center justify-center">
         <div className="w-5 h-5 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -46,11 +46,11 @@ const ImageWithPresignedUrl = ({ s3Key, userId, index }) => {
   }
 
   return (
-    <div className="relative rounded-lg overflow-hidden border-2 border-synthwave-neon-maroon/80 w-32 h-32 bg-synthwave-neon-maroon/50 shadow-neon-maroon">
+    <div className="relative overflow-hidden border-2 border-synthwave-neon-maroon/80 w-32 h-32 bg-synthwave-neon-maroon/50 shadow-neon-maroon">
       <img
         src={imageUrl}
         alt={`Uploaded image ${index + 1}`}
-        className="w-full h-full object-cover rounded-md"
+        className="w-full h-full object-cover"
         onError={() => setError(true)}
       />
     </div>

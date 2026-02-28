@@ -135,7 +135,7 @@ const MessageItem = memo(
       >
         {/* Message Bubble */}
         <div
-          className={`max-w-[95%] md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           <div
             className={getStreamingMessageClasses(
@@ -639,12 +639,12 @@ function CoachCreator() {
             {/* Left: Title + Coach Card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Title skeleton */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
 
@@ -666,16 +666,16 @@ function CoachCreator() {
                     >
                       {/* Message bubble skeleton */}
                       <div
-                        className={`max-w-[95%] md:max-w-[80%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full md:max-w-[80%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         <div
                           className={`px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
                         >
                           <div className="space-y-1">
-                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
-                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
-                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
-                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-3/4"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-3/4"></div>
                           </div>
                         </div>
 
@@ -688,7 +688,7 @@ function CoachCreator() {
                             <div className="shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                           )}
 
-                          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
                           <div className="flex gap-1">
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
@@ -763,7 +763,8 @@ function CoachCreator() {
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-52 sm:pb-60 space-y-4 custom-scrollbar"
+                className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-4 custom-scrollbar"
+                style={{ paddingBottom: "calc(var(--chat-input-height, 160px) + 16px)" }}
               >
                 {agentState.messages
                   .filter((message) => {
