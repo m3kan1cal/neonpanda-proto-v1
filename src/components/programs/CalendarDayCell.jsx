@@ -53,7 +53,7 @@ export default function CalendarDayCell({
 
   // Status-based styling
   const getStatusStyles = () => {
-    const baseStyles = 'relative flex flex-col h-20 rounded-lg transition-all duration-200 overflow-hidden font-rajdhani border border-synthwave-neon-cyan/10';
+    const baseStyles = 'relative flex flex-col h-20 transition-all duration-200 overflow-hidden font-rajdhani border border-synthwave-neon-cyan/10';
 
     switch (status) {
       case 'completed':
@@ -77,7 +77,7 @@ export default function CalendarDayCell({
     >
       {/* Current day ring indicator */}
       {isCurrentDay && (
-        <div className="absolute inset-0 border-2 border-synthwave-neon-cyan rounded-lg animate-pulse pointer-events-none" />
+        <div className="absolute inset-0 border-2 border-synthwave-neon-cyan rounded-none animate-pulse pointer-events-none" />
       )}
 
       {/* Day number header */}

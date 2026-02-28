@@ -127,7 +127,7 @@ function TodaysWorkoutRow({
 
   if (allRestDays) {
     return (
-      <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 text-center max-w-xl mx-auto">
+      <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 p-6 text-center max-w-xl mx-auto">
         <div className="flex justify-center mb-3">
           <div className="text-synthwave-neon-cyan opacity-50">
             <svg
@@ -162,7 +162,7 @@ function TodaysWorkoutRow({
                 key={entry.program.programId}
                 onClick={() => onCompleteRestDay(entry.program)}
                 disabled={isCompletingRestDay}
-                className="px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-lg font-rajdhani text-xs uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan font-rajdhani text-xs uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCompletingRestDay
                   ? "Completing..."

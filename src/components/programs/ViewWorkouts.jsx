@@ -664,7 +664,7 @@ General thoughts: `;
                 <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Program Context Skeleton */}
@@ -706,7 +706,7 @@ General thoughts: `;
 
                 {/* Description Textarea */}
                 <div className="mb-4">
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg px-4 py-4">
+                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4">
                     <div className="space-y-2">
                       <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
                       <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
@@ -758,8 +758,8 @@ General thoughts: `;
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -1071,7 +1071,7 @@ General thoughts: `;
                   {/* Workout Header - Clickable for collapse/expand */}
                   <div
                     className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-                      isCollapsed ? "rounded-2xl" : "rounded-t-2xl"
+                      isCollapsed ? "" : ""
                     }`}
                     onClick={() => toggleCardCollapse(template.templateId)}
                   >

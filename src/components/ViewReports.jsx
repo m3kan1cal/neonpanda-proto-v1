@@ -455,7 +455,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3 animate-fadeIn">
+              <div className="bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
@@ -624,7 +624,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3 animate-fadeIn">
+              <div className="bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
@@ -699,14 +699,14 @@ function ViewReports() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
             ))}
@@ -714,8 +714,8 @@ function ViewReports() {
 
           {/* Tab Switcher skeleton */}
           <div className="flex items-center justify-center gap-2 mb-6 -mt-2">
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </div>
 
           {/* Report cards skeleton */}
@@ -741,7 +741,7 @@ function ViewReports() {
                   </div>
 
                   {/* Summary skeleton */}
-                  <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3">
+                  <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
                     <div className="space-y-2">
                       <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                       <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
@@ -781,7 +781,7 @@ function ViewReports() {
                     </div>
 
                     {/* Summary skeleton */}
-                    <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3">
+                    <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
                       <div className="space-y-2">
                         <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                         <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
@@ -819,7 +819,7 @@ function ViewReports() {
                     </div>
 
                     {/* Summary skeleton */}
-                    <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3">
+                    <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
                       <div className="space-y-2">
                         <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                         <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>

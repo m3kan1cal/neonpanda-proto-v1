@@ -1,7 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Russo+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Russo+One&family=Rajdhani:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap");
 
 /* Import celebration animations */
 @import "./animations/celebrations.css";
+
+/* V2 retro design system tokens, keyframes, and utilities */
+@import "./v2/theme.css";
 
 @import "tailwindcss";
 
@@ -10,7 +14,7 @@
    ===================================================================== */
 @theme {
   /* Synthwave color palette - Backgrounds */
-  --color-synthwave-bg-primary: #0a0a0a;
+  --color-synthwave-bg-primary: #22103e;
   --color-synthwave-bg-secondary: #1a0d2e;
   --color-synthwave-bg-tertiary: #16213e;
   --color-synthwave-bg-purple: #2a1a4a;
@@ -30,19 +34,18 @@
   --color-synthwave-text-muted: #666666;
 
   /* Font families */
-  --font-bangers: "Bangers", sans-serif;
   --font-inter: "Inter", sans-serif;
   --font-rajdhani: "Rajdhani", sans-serif;
   --font-russo: "Russo One", sans-serif;
 
   /* Box shadows */
-  --shadow-neon-pink: 0 0 20px #ff0080, 0 0 40px #ff0080, 0 0 60px #ff0080;
-  --shadow-neon-cyan: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff;
-  --shadow-neon-purple: 0 0 20px #9f00ff, 0 0 40px #9f00ff, 0 0 60px #9f00ff;
+  --shadow-neon-pink: 0 0 10px rgba(255, 0, 128, 0.25);
+  --shadow-neon-cyan: 0 0 10px rgba(0, 255, 255, 0.25);
+  --shadow-neon-purple: 0 0 10px rgba(159, 0, 255, 0.25);
   --shadow-neon-maroon:
     0 0 15px rgba(139, 0, 69, 0.5), 0 0 30px rgba(139, 0, 69, 0.3);
-  --shadow-glow: 0 0 30px rgba(255, 0, 128, 0.3);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 12px rgba(255, 0, 128, 0.15);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
 
   /* Animations */
   --animate-pulse-glow: pulse-glow 2s ease-in-out infinite alternate;

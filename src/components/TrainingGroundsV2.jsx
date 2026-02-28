@@ -619,7 +619,7 @@ function TrainingGroundsV2() {
                 <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* AI Greeting skeleton */}
@@ -702,7 +702,7 @@ function TrainingGroundsV2() {
                     {[1, 2].map((i) => (
                       <div
                         key={i}
-                        className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 rounded-lg p-4 flex items-center gap-4"
+                        className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 p-4 flex items-center gap-4"
                       >
                         <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                         <div className="flex-1 space-y-2">
@@ -758,7 +758,7 @@ function TrainingGroundsV2() {
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
                   </div>
-                  <div className="h-16 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
+                  <div className="h-16 bg-synthwave-text-muted/10 rounded-none animate-pulse" />
                 </div>
                 {/* Recent PRs skeleton - matches RecentPRsCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
@@ -770,7 +770,7 @@ function TrainingGroundsV2() {
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
-                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 rounded-xl p-3"
+                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
                         <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2" />
                         <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2" />
@@ -789,7 +789,7 @@ function TrainingGroundsV2() {
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
-                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 rounded-xl p-3"
+                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
                         <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2" />
                         <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2" />
@@ -1414,7 +1414,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleStartNewConversation}
               disabled={conversationAgentState.isLoadingItem}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-none font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1430,7 +1430,7 @@ function TrainingGroundsV2() {
             </button>
             <button
               onClick={handleLogWorkout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-none font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1450,7 +1450,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleDesignProgram}
               disabled={isCreatingProgram}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-full font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-none font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
