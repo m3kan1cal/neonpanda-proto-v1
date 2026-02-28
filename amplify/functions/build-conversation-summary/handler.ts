@@ -167,7 +167,6 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       {
         tools: [CONVERSATION_SUMMARY_TOOL],
         expectedToolName: "generate_conversation_summary",
-        skipValidation: true, // parseCoachConversationSummary coerces non-array fields downstream
       },
     )) as BedrockToolUseResult; // When using tools, always returns BedrockToolUseResult
     const endTime = Date.now();

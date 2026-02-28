@@ -19,6 +19,40 @@ const ajv = new Ajv({ allErrors: true });
 const schemaCache = new Map<string, ValidateFunction>();
 
 /**
+ * Normalize a tool response before validation by coercing non-array values to
+ * arrays for schema properties declared as type "array". Mutates the response
+ * in place so downstream callers receive well-typed data.
+ *
+ * Models occasionally return a string or null for array fields when they
+ * believe the field has no meaningful content (e.g. returning "" instead of []).
+ * Normalizing here lets validation pass and gives downstream parsing clean arrays.
+ */
+function normalizeArrayFields(
+  response: Record<string, unknown>,
+  schema: Record<string, unknown>,
+): void {
+  const properties = (schema as any).properties as
+    | Record<string, any>
+    | undefined;
+  if (!properties) return;
+
+  for (const [key, propSchema] of Object.entries(properties)) {
+    if (propSchema?.type === "array" && key in response) {
+      const value = response[key];
+      if (!Array.isArray(value)) {
+        if (typeof value === "string" && value.trim().length > 0) {
+          // Single non-empty string — wrap in a one-element array
+          response[key] = [value];
+        } else {
+          // null, undefined, empty string, or other non-array → empty array
+          response[key] = [];
+        }
+      }
+    }
+  }
+}
+
+/**
  * Validate a tool response against its JSON Schema.
  *
  * @param toolName - The name of the tool (used as the cache key)
@@ -31,6 +65,10 @@ export function validateToolResponse(
   response: Record<string, unknown>,
   schema: Record<string, unknown>,
 ): void {
+  // Coerce non-array values to arrays where the schema requires it.
+  // Mutates the response in place so downstream parsing receives well-typed data.
+  normalizeArrayFields(response, schema);
+
   let validate = schemaCache.get(toolName);
 
   if (!validate) {
