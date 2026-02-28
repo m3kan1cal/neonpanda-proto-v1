@@ -340,6 +340,56 @@ export const deepSanitizeNullish = (value: any): any => {
 };
 
 /**
+ * Normalizes a tool response by coercing non-array values to arrays for schema
+ * properties declared as type "array". Mutates the response in place so
+ * downstream callers receive well-typed data.
+ *
+ * Models occasionally return a string or null for array fields when they
+ * believe a field has no meaningful content (e.g. returning "" instead of []).
+ * Normalizing before validation lets AJV pass and gives downstream parsing
+ * clean arrays.
+ *
+ * @param response - The parsed tool input returned by the model (mutated in place)
+ * @param schema - The JSON Schema object the response will be validated against
+ *
+ * @example
+ * ```typescript
+ * const schema = { properties: { tags: { type: "array" } } };
+ * const response = { tags: "urgent" };
+ * normalizeSchemaArrayFields(response, schema);
+ * // response is now: { tags: ["urgent"] }
+ *
+ * const response2 = { tags: null };
+ * normalizeSchemaArrayFields(response2, schema);
+ * // response2 is now: { tags: [] }
+ * ```
+ */
+export const normalizeSchemaArrayFields = (
+  response: Record<string, unknown>,
+  schema: Record<string, unknown>,
+): void => {
+  const properties = (schema as any).properties as
+    | Record<string, any>
+    | undefined;
+  if (!properties) return;
+
+  for (const [key, propSchema] of Object.entries(properties)) {
+    if (propSchema?.type === "array" && key in response) {
+      const value = response[key];
+      if (!Array.isArray(value)) {
+        if (typeof value === "string" && value.trim().length > 0) {
+          // Single non-empty string — wrap in a one-element array
+          response[key] = [value];
+        } else {
+          // null, undefined, empty string, or other non-array → empty array
+          response[key] = [];
+        }
+      }
+    }
+  }
+};
+
+/**
  * Creates a condensed version of a JSON schema for use in AI prompts
  *
  * Removes verbose fields that increase prompt size without adding value:
