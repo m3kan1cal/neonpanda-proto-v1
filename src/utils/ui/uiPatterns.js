@@ -927,7 +927,7 @@ export const navigationPatterns = {
     brandSectionCollapsed: "justify-center px-1 py-2",
     brandLogoCollapsed: "w-8 h-8",
     brandTextCollapsed: "hidden",
-    navItemCollapsed: "justify-center px-2 py-2.5",
+    navItemCollapsed: "justify-center px-2 py-2",
     navItemIconCollapsed: "w-6 h-6",
     navItemLabelCollapsed: "hidden",
     navItemBadgeCollapsed: "absolute -top-1 -right-1",
@@ -936,6 +936,39 @@ export const navigationPatterns = {
     profileInfoCollapsed: "hidden",
     profileChevronCollapsed: "hidden",
     sectionHeaderCollapsed: "hidden",
+
+    // FLOATING RAIL MODE: Narrow pill sidebar that hovers off the left edge
+    // Used when isSidebarCollapsed=true and not hovering
+    containerRail:
+      "hidden md:flex md:flex-col fixed left-2 top-2 bottom-2 w-16 rounded-2xl bg-synthwave-bg-card/90 backdrop-blur-xl border border-synthwave-neon-cyan/20 shadow-[0_0_24px_rgba(0,255,255,0.1),0_4px_20px_rgba(0,0,0,0.35)] z-40 transition-all duration-300 ease-in-out overflow-hidden",
+
+    // RAIL HOVER-EXPANDED MODE: Rail widens on hover — overlays content, no layout shift
+    // Used when isSidebarCollapsed=true and mouse is over the sidebar
+    containerRailExpanded:
+      "hidden md:flex md:flex-col fixed left-2 top-2 bottom-2 w-64 rounded-2xl bg-synthwave-bg-card/95 backdrop-blur-xl border border-synthwave-neon-cyan/35 shadow-[0_0_40px_rgba(0,255,255,0.2),0_4px_24px_rgba(0,0,0,0.5)] z-50 transition-all duration-300 ease-in-out overflow-hidden",
+
+    // PINNED EXPANDED MODE: Traditional full-height sidebar that pushes content
+    // Used when isSidebarCollapsed=false
+    containerPinned:
+      "hidden md:flex md:flex-col fixed left-0 top-0 h-screen w-64 bg-synthwave-bg-card/95 backdrop-blur-xl border-r border-synthwave-neon-cyan/20 shadow-[4px_0_24px_rgba(0,255,255,0.1)] z-40 transition-all duration-300 ease-in-out overflow-hidden",
+
+    // Rail mode icon container — pill-shaped, larger touch target with centered icon
+    navItemIconRail:
+      "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200",
+
+    // Rail mode active icon pill fills — per neon color
+    navItemIconRailActivePink:
+      "bg-synthwave-neon-pink/15 shadow-[0_0_14px_rgba(255,0,128,0.25)]",
+    navItemIconRailActiveCyan:
+      "bg-synthwave-neon-cyan/15 shadow-[0_0_14px_rgba(0,255,255,0.25)]",
+    navItemIconRailActivePurple:
+      "bg-synthwave-neon-purple/15 shadow-[0_0_14px_rgba(139,92,246,0.25)]",
+
+    // Pin button — shown when hovering rail (to pin it open) or when already pinned
+    pinButton:
+      "absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-lg text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 cursor-pointer focus:outline-none z-10",
+    pinButtonPinned:
+      "absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-lg text-synthwave-neon-cyan bg-synthwave-neon-cyan/10 hover:bg-synthwave-neon-cyan/20 transition-all duration-200 cursor-pointer focus:outline-none z-10",
   },
 
   // Quick Actions FAB - Floating Action Button for mobile quick actions
