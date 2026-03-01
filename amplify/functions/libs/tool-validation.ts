@@ -13,6 +13,7 @@
  */
 
 import Ajv, { ValidateFunction } from "ajv";
+import { normalizeSchemaArrayFields } from "./object-utils";
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -31,6 +32,10 @@ export function validateToolResponse(
   response: Record<string, unknown>,
   schema: Record<string, unknown>,
 ): void {
+  // Coerce non-array values to arrays where the schema requires it.
+  // Mutates the response in place so downstream parsing receives well-typed data.
+  normalizeSchemaArrayFields(response, schema);
+
   let validate = schemaCache.get(toolName);
 
   if (!validate) {
