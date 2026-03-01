@@ -98,7 +98,7 @@ function SelectCoachModal({
                 <button
                   key={coach.coach_id}
                   onClick={() => onSelectCoach(coach.coach_id)}
-                  className="w-full p-4 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl
+                  className="w-full p-4 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 
                     hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/50
                     transition-all duration-200 text-left group"
                 >

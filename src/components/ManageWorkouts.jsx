@@ -386,7 +386,7 @@ function ManageWorkouts() {
               e.stopPropagation();
               handleDeleteClick(workout);
             }}
-            className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
+            className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
             title="Delete workout"
           >
             <TrashIcon className="w-4 h-4" />
@@ -587,14 +587,14 @@ function ManageWorkouts() {
                 <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
             ))}

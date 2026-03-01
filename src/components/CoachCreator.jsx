@@ -141,7 +141,7 @@ const MessageItem = memo(
             className={getStreamingMessageClasses(
               message,
               agentState,
-              `px-4 py-3 rounded-2xl shadow-sm ${
+              `px-4 py-3 shadow-sm ${
                 message.type === "user"
                   ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30"
                   : containerPatterns.aiChatBubble
@@ -649,7 +649,7 @@ function CoachCreator() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Main Content Area skeleton */}
@@ -669,7 +669,7 @@ function CoachCreator() {
                         className={`max-w-[95%] md:max-w-[80%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         <div
-                          className={`px-4 py-3 rounded-2xl ${i % 2 === 0 ? "rounded-br-md" : "rounded-bl-md"} bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
+                          className={`px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
                         >
                           <div className="space-y-1">
                             <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>

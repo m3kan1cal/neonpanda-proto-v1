@@ -268,13 +268,13 @@ function ChatInput({
           <div className="flex items-end gap-2 sm:gap-3">
             {/* Text input skeleton — matches TipTap minHeight 60px + rounded-2xl */}
             <div className="flex-1 relative">
-              <div className="w-full h-[80px] bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
+              <div className="w-full h-[80px] bg-synthwave-text-muted/20 animate-pulse"></div>
               {/* Emoji button placeholder (absolute right-3 bottom-3, desktop only) */}
-              <div className="absolute right-3 bottom-3 w-6 h-6 bg-synthwave-text-muted/10 rounded-lg animate-pulse hidden md:block"></div>
+              <div className="absolute right-3 bottom-3 w-6 h-6 bg-synthwave-text-muted/10 rounded-none animate-pulse hidden md:block"></div>
             </div>
 
             {/* Send/Voice button skeleton */}
-            <div className="self-end mb-[6px] w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
+            <div className="self-end mb-[6px] w-12 h-12 bg-synthwave-text-muted/20 animate-pulse"></div>
           </div>
 
           {/* AI disclaimer and keyboard shortcuts skeleton */}
@@ -726,7 +726,7 @@ function ChatInput({
         {/* Error Display */}
         {imageError && (
           <div className="mb-3">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start justify-between">
+            <div className="bg-red-500/10 border border-red-500/30 p-3 flex items-start justify-between">
               <span className="text-sm font-rajdhani text-red-400">
                 {imageError}
               </span>
@@ -800,7 +800,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowQuickActionsPopup(!showQuickActionsPopup)}
-                className={`p-1 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
+                className={`p-1 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
                   showQuickActionsPopup ? "text-blue-400 bg-blue-400/20" : ""
                 }`}
                 data-tooltip-id="quick-actions-tooltip"
@@ -1046,7 +1046,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`absolute right-[8px] bottom-[7px] p-1 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+                className={`absolute right-[8px] bottom-[7px] p-1 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                   showEmojiPicker
                     ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                     : ""
@@ -1221,7 +1221,7 @@ function ChatInput({
 
             {/* Slash Command Tooltip */}
             {showSlashCommandTooltip && enableSlashCommands && (
-              <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
+              <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
                 <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                   Available Slash Commands
                 </div>
@@ -1290,7 +1290,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled={isTyping}
-                className="w-12 h-12 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-2xl shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
+                className="w-12 h-12 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
               >
                 {isTyping ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1307,7 +1307,7 @@ function ChatInput({
                 onTouchStart={handleStartRecording}
                 onTouchEnd={handleStopRecording}
                 disabled={isTyping}
-                className={`w-12 h-12 rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
+                className={`w-12 h-12 transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
                   isRecording
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
@@ -1319,7 +1319,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled
-                className="w-12 h-12 bg-synthwave-bg-primary/30 text-synthwave-text-muted rounded-2xl shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
+                className="w-12 h-12 bg-synthwave-bg-primary/30 text-synthwave-text-muted shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
               >
                 <SendIcon />
               </button>
@@ -1356,7 +1356,7 @@ function ChatInput({
 
           {/* Tips Popover */}
           <div className="absolute bottom-full mb-4 left-1/2 transform -translate-x-1/2 z-50">
-            <div className="bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 flex flex-col w-96 h-[480px]">
+            <div className="bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-xl shadow-synthwave-neon-cyan/20 flex flex-col w-96 h-[480px]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 shrink-0">
                 <h3 className="font-russo font-bold text-white text-sm uppercase">

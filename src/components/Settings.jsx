@@ -586,10 +586,10 @@ function Settings() {
                     <div className="space-y-6 pb-4">
                       <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded animate-pulse mb-4"></div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="h-48 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                        <div className="h-48 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                        <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
+                        <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
                       </div>
-                      <div className="h-12 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                      <div className="h-12 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
                     </div>
                   </div>
                 </div>
@@ -659,10 +659,10 @@ function Settings() {
                   <div className="space-y-6 pb-4">
                     <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded animate-pulse mb-4"></div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="h-48 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                      <div className="h-48 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                      <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
+                      <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
                     </div>
-                    <div className="h-12 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    <div className="h-12 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
                   </div>
                 ) : (
                   <div className="space-y-6 pb-4">
@@ -675,7 +675,7 @@ function Settings() {
                         {/* EarlyPanda Column */}
                         <div className={containerPatterns.mediumGlass}>
                           <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-16 h-16 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center text-synthwave-neon-cyan">
+                            <div className="shrink-0 w-16 h-16 bg-synthwave-neon-cyan/20 flex items-center justify-center text-synthwave-neon-cyan">
                               <ClockIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -728,7 +728,7 @@ function Settings() {
                                     <button
                                       onClick={handleManageSubscription}
                                       disabled={isCreatingPortalSession}
-                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
+                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
                                     >
                                       {isCreatingPortalSession ? (
                                         <>
@@ -767,9 +767,9 @@ function Settings() {
                         </div>
 
                         {/* ElectricPanda Column */}
-                        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-purple/20">
+                        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 p-6 shadow-xl shadow-synthwave-neon-purple/20">
                           <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple rounded-xl flex items-center justify-center text-white">
+                            <div className="shrink-0 w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple flex items-center justify-center text-white">
                               <LightningIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -835,7 +835,7 @@ function Settings() {
                                   <div className="mt-3 pt-1">
                                     {/* Cancellation Warning */}
                                     {subscription?.cancelAtPeriodEnd && (
-                                      <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                      <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30">
                                         <div className="flex items-start gap-2">
                                           <div className="text-yellow-500 mt-0.5 shrink-0">
                                             <InfoIcon />
@@ -866,7 +866,7 @@ function Settings() {
                                     <button
                                       onClick={handleManageSubscription}
                                       disabled={isCreatingPortalSession}
-                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
+                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
                                     >
                                       {isCreatingPortalSession ? (
                                         <>
@@ -1622,7 +1622,7 @@ function Settings() {
                 icon={<DangerIcon />}
                 defaultOpen={false}
               >
-                <div className="space-y-6 border-2 border-red-500/30 rounded-xl p-6 bg-red-500/5">
+                <div className="space-y-6 border-2 border-red-500/30 p-6 bg-red-500/5">
                   <div>
                     <h4 className="font-rajdhani font-bold text-red-400 text-lg mb-2">
                       Delete Account
@@ -1635,7 +1635,7 @@ function Settings() {
                     </p>
                     <button
                       onClick={handleDeleteAccount}
-                      className="bg-red-500 text-white px-6 py-3 rounded-lg font-rajdhani font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
+                      className="bg-red-500 text-white px-6 py-3 font-rajdhani font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
                     >
                       Delete Account
                     </button>

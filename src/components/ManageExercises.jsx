@@ -397,7 +397,7 @@ function ManageExercises() {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="h-10 bg-synthwave-bg-primary/30 rounded-lg mb-2 animate-pulse"
+                      className="h-10 bg-synthwave-bg-primary/30 mb-2 animate-pulse"
                     ></div>
                   ))}
                 </div>
@@ -538,7 +538,7 @@ function ManageExercises() {
                           `/training-grounds/workouts?workoutId=${session.workoutId}&userId=${userId}&coachId=${session.coachId || coachId || "default"}`,
                         )
                       }
-                      className="flex items-center justify-between py-2 px-3 bg-synthwave-bg-primary/30 rounded-lg cursor-pointer hover:bg-synthwave-bg-primary/50 transition-colors duration-200"
+                      className="flex items-center justify-between py-2 px-3 bg-synthwave-bg-primary/30 cursor-pointer hover:bg-synthwave-bg-primary/50 transition-colors duration-200"
                     >
                       <div className="flex items-center gap-2">
                         <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
@@ -632,14 +632,14 @@ function ManageExercises() {
                 <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
             ))}
@@ -648,7 +648,7 @@ function ManageExercises() {
           {/* Search input skeleton */}
           <div className="mb-6">
             <div className="relative max-w-md">
-              <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+              <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
             </div>
           </div>
 
@@ -848,7 +848,7 @@ function ManageExercises() {
                 placeholder="Search exercises..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-10 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="w-full px-4 py-3 pl-10 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 style={{ boxShadow: "none", outline: "none" }}
                 onFocus={(e) => {
                   e.target.style.outline = "none";

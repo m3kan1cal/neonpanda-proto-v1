@@ -91,7 +91,7 @@ function WeeklyReportViewerV2({
       {viewMode === "raw" && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
           <div
-            className={`flex items-start justify-between p-6 cursor-pointer ${collapsedSections.has("raw-json") ? "rounded-2xl" : "rounded-t-2xl"}`}
+            className={`flex items-start justify-between p-6 cursor-pointer ${collapsedSections.has("raw-json") ? "" : ""}`}
             onClick={() => toggleCollapse("raw-json")}
             role="button"
             tabIndex={0}
@@ -126,7 +126,7 @@ function WeeklyReportViewerV2({
           </div>
           {!collapsedSections.has("raw-json") && (
             <div id="raw-json-content" className="px-6 pb-6 space-y-3">
-              <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
+              <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(report, null, 2)}
               </pre>
             </div>
@@ -151,7 +151,7 @@ function WeeklyReportViewerV2({
           {humanSummary && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("coach-analysis") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("coach-analysis") ? "" : ""}`}
                 onClick={() => toggleCollapse("coach-analysis")}
                 role="button"
                 tabIndex={0}
@@ -194,7 +194,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Weekly Analysis
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                       <div className="font-rajdhani leading-relaxed text-synthwave-text-secondary whitespace-pre-wrap text-sm">
                         {humanSummary}
                       </div>
@@ -220,7 +220,7 @@ function WeeklyReportViewerV2({
           {structured.volume_breakdown && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("volume-breakdown") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("volume-breakdown")}
                 role="button"
                 tabIndex={0}
@@ -263,7 +263,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Working Sets Summary
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <ValueDisplay
                           label="Total Tonnage"
@@ -327,7 +327,7 @@ function WeeklyReportViewerV2({
                               (movement, index) => (
                                 <div
                                   key={index}
-                                  className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4"
+                                  className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4"
                                 >
                                   <div className="flex items-center justify-between mb-2">
                                     <h5 className="font-rajdhani font-bold text-synthwave-neon-cyan text-base capitalize">
@@ -370,7 +370,7 @@ function WeeklyReportViewerV2({
           {structured.actionable_insights && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("actionable-insights") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("actionable-insights")}
                 role="button"
                 tabIndex={0}
@@ -415,7 +415,7 @@ function WeeklyReportViewerV2({
                         <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                           Quick Wins
                         </h4>
-                        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                           <ul className="space-y-1">
                             {structured.actionable_insights.quick_wins.map(
                               (win, index) => (
@@ -443,7 +443,7 @@ function WeeklyReportViewerV2({
           {structured.performance_markers && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("performance-markers") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("performance-markers")}
                 role="button"
                 tabIndex={0}
@@ -494,7 +494,7 @@ function WeeklyReportViewerV2({
                             (record, index) => (
                               <div
                                 key={index}
-                                className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4"
+                                className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4"
                               >
                                 <div className="flex items-center justify-between mb-2">
                                   <h5 className="font-rajdhani font-bold text-synthwave-neon-pink text-base capitalize">
@@ -537,7 +537,7 @@ function WeeklyReportViewerV2({
           {structured.coaching_synthesis && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("coaching-synthesis") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("coaching-synthesis")}
                 role="button"
                 tabIndex={0}
@@ -581,7 +581,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         Adherence Analysis
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <div className="col-span-2">
                             <ValueDisplay
@@ -606,7 +606,7 @@ function WeeklyReportViewerV2({
           {/* Analysis Metadata */}
           <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
             <div
-              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("analysis-metadata") ? "rounded-2xl" : "rounded-t-2xl"}`}
+              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
               onClick={() => toggleCollapse("analysis-metadata")}
               role="button"
               tabIndex={0}
@@ -644,7 +644,7 @@ function WeeklyReportViewerV2({
                 id="analysis-metadata-content"
                 className="px-6 pb-6 space-y-3"
               >
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <ValueDisplay label="Week ID" value={weekMeta.week_id} />
                     <ValueDisplay
@@ -673,7 +673,7 @@ function WeeklyReportViewerV2({
           {structured.movement_analysis && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("movement-analysis") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("movement-analysis")}
                 role="button"
                 tabIndex={0}
@@ -717,7 +717,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         Body Part Frequency
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <ValueDisplay
                             label="Arms"
@@ -767,7 +767,7 @@ function WeeklyReportViewerV2({
           {structured.training_intelligence && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("training-intelligence") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("training-intelligence")}
                 role="button"
                 tabIndex={0}
@@ -811,7 +811,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         Workout Pacing
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <ValueDisplay
                             label="Avg Session Duration"
@@ -851,7 +851,7 @@ function WeeklyReportViewerV2({
           {structured.weekly_progression && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("weekly-progression") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("weekly-progression")}
                 role="button"
                 tabIndex={0}
@@ -893,7 +893,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Overall Progression
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <div className="col-span-2">
                           <ValueDisplay
@@ -916,7 +916,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         vs Last Week
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <ValueDisplay
                             label="Volume Change"
@@ -949,7 +949,7 @@ function WeeklyReportViewerV2({
           {structured.fatigue_management && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("fatigue-management") ? "rounded-2xl" : "rounded-t-2xl"}`}
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${collapsedSections.has("") ? "" : ""}`}
                 onClick={() => toggleCollapse("fatigue-management")}
                 role="button"
                 tabIndex={0}
@@ -991,7 +991,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Recovery Metrics
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <ValueDisplay
                           label="Recovery Score"
