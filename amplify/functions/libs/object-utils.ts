@@ -25,9 +25,13 @@ import { logger } from "./logger";
  * // Returns: { a: 1, d: 0, e: false }
  * ```
  */
-export const filterNullish = <T extends Record<string, any>>(obj: T): Partial<T> => {
+export const filterNullish = <T extends Record<string, any>>(
+  obj: T,
+): Partial<T> => {
   return Object.fromEntries(
-    Object.entries(obj).filter(([_, value]) => value !== null && value !== undefined)
+    Object.entries(obj).filter(
+      ([_, value]) => value !== null && value !== undefined,
+    ),
   ) as Partial<T>;
 };
 
@@ -47,9 +51,11 @@ export const filterNullish = <T extends Record<string, any>>(obj: T): Partial<T>
  * // Returns: { a: 1, f: 'hello' }
  * ```
  */
-export const filterFalsy = <T extends Record<string, any>>(obj: T): Partial<T> => {
+export const filterFalsy = <T extends Record<string, any>>(
+  obj: T,
+): Partial<T> => {
   return Object.fromEntries(
-    Object.entries(obj).filter(([_, value]) => Boolean(value))
+    Object.entries(obj).filter(([_, value]) => Boolean(value)),
   ) as Partial<T>;
 };
 
@@ -71,12 +77,10 @@ export const filterFalsy = <T extends Record<string, any>>(obj: T): Partial<T> =
  */
 export const pickDefined = <T extends Record<string, any>, K extends keyof T>(
   obj: T,
-  keys: K[]
+  keys: K[],
 ): Partial<Pick<T, K>> => {
   return filterNullish(
-    Object.fromEntries(
-      keys.map(key => [key, obj[key]])
-    )
+    Object.fromEntries(keys.map((key) => [key, obj[key]])),
   ) as Partial<Pick<T, K>>;
 };
 
@@ -96,11 +100,11 @@ export const pickDefined = <T extends Record<string, any>, K extends keyof T>(
  */
 export const omit = <T extends Record<string, any>, K extends keyof T>(
   obj: T,
-  keys: K[]
+  keys: K[],
 ): Omit<T, K> => {
   const keysToOmit = new Set(keys);
   return Object.fromEntries(
-    Object.entries(obj).filter(([key]) => !keysToOmit.has(key as K))
+    Object.entries(obj).filter(([key]) => !keysToOmit.has(key as K)),
   ) as Omit<T, K>;
 };
 
@@ -198,7 +202,7 @@ export const deepMerge = (target: any, source: any): any => {
  */
 export const isEmpty = (obj: any): boolean => {
   if (obj == null) return true;
-  if (typeof obj !== 'object') return false;
+  if (typeof obj !== "object") return false;
   return Object.keys(obj).length === 0;
 };
 
@@ -309,12 +313,12 @@ export const deepSanitizeNullish = (value: any): any => {
   // Handle arrays - filter out nulls and recursively sanitize elements
   if (Array.isArray(value)) {
     return value
-      .filter(item => item !== null && item !== undefined)
-      .map(item => deepSanitizeNullish(item));
+      .filter((item) => item !== null && item !== undefined)
+      .map((item) => deepSanitizeNullish(item));
   }
 
   // Handle objects - filter out null properties and recursively sanitize
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     const sanitized: Record<string, any> = {};
 
     for (const [key, val] of Object.entries(value)) {
@@ -362,6 +366,12 @@ export const deepSanitizeNullish = (value: any): any => {
  * const response2 = { tags: null };
  * normalizeSchemaArrayFields(response2, schema);
  * // response2 is now: { tags: [] }
+ *
+ * // Also handles nullable array declarations: type: ["array", "null"]
+ * const schema3 = { properties: { injuries: { type: ["array", "null"] } } };
+ * const response3 = { injuries: null };
+ * normalizeSchemaArrayFields(response3, schema3);
+ * // response3 is now: { injuries: [] }
  * ```
  */
 export const normalizeSchemaArrayFields = (
@@ -374,7 +384,11 @@ export const normalizeSchemaArrayFields = (
   if (!properties) return;
 
   for (const [key, propSchema] of Object.entries(properties)) {
-    if (propSchema?.type === "array" && key in response) {
+    const schemaType = propSchema?.type;
+    const isArraySchema =
+      schemaType === "array" ||
+      (Array.isArray(schemaType) && schemaType.includes("array"));
+    if (isArraySchema && key in response) {
       const value = response[key];
       if (!Array.isArray(value)) {
         if (typeof value === "string" && value.trim().length > 0) {
@@ -436,7 +450,7 @@ export const normalizeSchemaArrayFields = (
  */
 export const getCondensedSchema = (schema: any): any => {
   const condense = (obj: any): any => {
-    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj === null || typeof obj !== "object") return obj;
 
     if (Array.isArray(obj)) {
       return obj.map(condense);
@@ -445,13 +459,18 @@ export const getCondensedSchema = (schema: any): any => {
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
       // Skip verbose fields that aren't needed for structural normalization
-      if (key === 'description' || key === 'pattern' || key === 'examples' || key === 'default') {
+      if (
+        key === "description" ||
+        key === "pattern" ||
+        key === "examples" ||
+        key === "default"
+      ) {
         continue;
       }
 
       // Keep only first enum value as example (instead of all possible values)
       // This reduces size while still showing the AI what kind of values are expected
-      if (key === 'enum' && Array.isArray(value) && value.length > 3) {
+      if (key === "enum" && Array.isArray(value) && value.length > 3) {
         result[key] = [value[0], `...${value.length - 1} more`];
         continue;
       }
