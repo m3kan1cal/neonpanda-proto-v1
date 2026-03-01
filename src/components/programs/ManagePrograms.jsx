@@ -840,7 +840,7 @@ function ManagePrograms() {
                   openMenuId === program.programId ? null : program.programId,
                 );
               }}
-              className={`p-2 rounded-lg transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+              className={`p-2 rounded-none transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                 openMenuId === program.programId
                   ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
@@ -855,7 +855,7 @@ function ManagePrograms() {
 
             {/* Dropdown Menu */}
             {openMenuId === program.programId && (
-              <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-lg shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+              <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-none shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1221,7 +1221,7 @@ function ManagePrograms() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Programs grid skeleton */}
@@ -1547,7 +1547,7 @@ function ManagePrograms() {
 
                 {/* Info Badge */}
                 {!isCreatingProgram && (
-                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg px-3 py-1 mb-4">
+                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
                     <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
                       5-10 minute guided conversation
                     </p>
@@ -1821,7 +1821,7 @@ function ManagePrograms() {
 
                       {/* Error message for failed builds */}
                       {isFailed && session.programGeneration?.error && (
-                        <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg p-3 mt-3">
+                        <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 p-3 mt-3">
                           <p className="font-rajdhani text-xs text-synthwave-neon-pink">
                             {session.programGeneration.error}
                           </p>
@@ -1833,7 +1833,7 @@ function ManagePrograms() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1842,7 +1842,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1855,7 +1855,7 @@ function ManagePrograms() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -1881,7 +1881,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useEffect, useImperativeHandle, useRef, forwardRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -37,6 +37,11 @@ const TiptapEditor = forwardRef(
     },
     ref,
   ) => {
+    // Tracks the last content emitted by the editor's own onUpdate so the
+    // sync effect can skip re-setting the editor when the parent simply
+    // bounces that content back as a prop (avoiding the scroll/space bug).
+    const lastUserContent = useRef(null);
+
     const extensions = [
       StarterKit.configure({
         // In plain mode, disable all formatting
@@ -104,7 +109,12 @@ const TiptapEditor = forwardRef(
       },
       onUpdate: ({ editor }) => {
         if (onUpdate) {
-          onUpdate(editor.getHTML(), editor.getText({ blockSeparator: "\n" }));
+          const html = editor.getHTML();
+          const text = editor.getText({ blockSeparator: "\n" });
+          // Record what the editor just emitted so the sync effect can
+          // detect when content is simply bouncing back from the parent.
+          lastUserContent.current = { html, text };
+          onUpdate(html, text);
         }
       },
     });
@@ -119,6 +129,17 @@ const TiptapEditor = forwardRef(
     // Sync content from parent (e.g., quick prompt selection, emoji insertion)
     useEffect(() => {
       if (editor && content !== undefined) {
+        // If the parent is just echoing back what the editor itself emitted
+        // via onUpdate (the common controlled-component pattern), skip the
+        // setContent call entirely. This prevents the editor from scrolling
+        // to the cursor after every keystroke and from swallowing spaces due
+        // to ProseMirror's trailing-whitespace normalisation during HTML
+        // round-trips.
+        const last = lastUserContent.current;
+        if (last && (content === last.html || content === last.text)) {
+          return;
+        }
+
         const currentHTML = editor.getHTML();
         // Only update if content actually changed from outside
         // Avoid resetting during user typing
@@ -127,7 +148,7 @@ const TiptapEditor = forwardRef(
         } else if (
           content !== "" &&
           content !== currentHTML &&
-          content !== editor.getText()
+          content !== editor.getText({ blockSeparator: "\n" })
         ) {
           // Check if content is HTML or plain text
           if (content.startsWith("<")) {

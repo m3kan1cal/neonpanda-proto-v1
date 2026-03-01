@@ -1,0 +1,474 @@
+@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Russo+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap");
+
+/* Import celebration animations */
+@import "./animations/celebrations.css";
+
+/* V2 retro design system tokens, keyframes, and utilities */
+@import "./v2/theme.css";
+
+@import "tailwindcss";
+
+/* =====================================================================
+   Tailwind v4 Theme Configuration (migrated from tailwind.config.js)
+   ===================================================================== */
+@theme {
+  /* Synthwave color palette - Backgrounds */
+  --color-synthwave-bg-primary: #0a0a0a;
+  --color-synthwave-bg-secondary: #1a0d2e;
+  --color-synthwave-bg-tertiary: #16213e;
+  --color-synthwave-bg-purple: #2a1a4a;
+  --color-synthwave-bg-card: #1e1e2e;
+
+  /* Synthwave color palette - Neon colors */
+  --color-synthwave-neon-pink: #ff0080;
+  --color-synthwave-neon-cyan: #00ffff;
+  --color-synthwave-neon-purple: #9f00ff;
+  --color-synthwave-neon-green: #39ff14;
+  --color-synthwave-neon-orange: #ff6b35;
+  --color-synthwave-neon-maroon: #8b0045;
+
+  /* Synthwave color palette - Text colors */
+  --color-synthwave-text-primary: #ffffff;
+  --color-synthwave-text-secondary: #b4b4b4;
+  --color-synthwave-text-muted: #666666;
+
+  /* Font families */
+  --font-bangers: "Bangers", sans-serif;
+  --font-inter: "Inter", sans-serif;
+  --font-rajdhani: "Rajdhani", sans-serif;
+  --font-russo: "Russo One", sans-serif;
+
+  /* Box shadows */
+  --shadow-neon-pink: 0 0 20px #ff0080, 0 0 40px #ff0080, 0 0 60px #ff0080;
+  --shadow-neon-cyan: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff;
+  --shadow-neon-purple: 0 0 20px #9f00ff, 0 0 40px #9f00ff, 0 0 60px #9f00ff;
+  --shadow-neon-maroon:
+    0 0 15px rgba(139, 0, 69, 0.5), 0 0 30px rgba(139, 0, 69, 0.3);
+  --shadow-glow: 0 0 30px rgba(255, 0, 128, 0.3);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  /* Animations */
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite alternate;
+  --animate-glitch: glitch 2s infinite;
+  --animate-scroll-grid: scroll-grid 20s linear infinite;
+}
+
+/* Keyframes for theme animations */
+@keyframes pulse-glow {
+  from {
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.4);
+  }
+  to {
+    box-shadow: 0 0 40px rgba(255, 0, 128, 0.8);
+  }
+}
+
+@keyframes glitch {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+@keyframes scroll-grid {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+/* =====================================================================
+   Custom background image utilities (no @theme namespace for bg-image)
+   ===================================================================== */
+@utility bg-synthwave-gradient {
+  background-image: linear-gradient(
+    135deg,
+    #16213e 0%,
+    #16213e 50%,
+    #16213e 100%
+  );
+}
+
+@utility bg-neon-gradient {
+  background-image: linear-gradient(45deg, #ff0080 0%, #00ffff 100%);
+}
+
+@utility bg-purple-gradient {
+  background-image: linear-gradient(45deg, #9f00ff 0%, #ff0080 100%);
+}
+
+@utility bg-card-gradient {
+  background-image: linear-gradient(145deg, #1e1e2e 0%, #2a2a3e 100%);
+}
+
+@utility bg-grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 0, 128, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 128, 0.1) 1px, transparent 1px);
+}
+
+/* =====================================================================
+   Custom utility classes
+   ===================================================================== */
+@utility text-gradient-neon {
+  background: linear-gradient(45deg, #ff0080 0%, #00ffff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+@utility text-gradient-purple {
+  background: linear-gradient(45deg, #9f00ff 0%, #ff0080 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+@utility grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 0, 128, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 128, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+@utility hide-scrollbar {
+  -webkit-overflow-scrolling: touch;
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Pseudo-element scrollbar styles (can't be @utility) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.synthwave-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.synthwave-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.synthwave-scrollbar::-webkit-scrollbar-thumb {
+  background: #ff007f40;
+  border-radius: 4px;
+}
+
+.synthwave-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ff007f60;
+}
+
+/* Cyan scrollbar for popup containers */
+.synthwave-scrollbar-cyan::-webkit-scrollbar {
+  width: 8px;
+}
+
+.synthwave-scrollbar-cyan::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.synthwave-scrollbar-cyan::-webkit-scrollbar-thumb {
+  background: #00ffff20;
+  border-radius: 4px;
+}
+
+.synthwave-scrollbar-cyan::-webkit-scrollbar-thumb:hover {
+  background: #00ffff40;
+}
+
+/* =====================================================================
+   Tiptap Editor Styles
+   ===================================================================== */
+
+/* Tiptap placeholder styling */
+.tiptap-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #666666;
+  pointer-events: none;
+  height: 0;
+  font-family: "Rajdhani", sans-serif;
+}
+
+/* Tiptap content area reset */
+.tiptap-content {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "Rajdhani", sans-serif;
+}
+
+.tiptap-content p {
+  margin: 0;
+}
+
+.tiptap-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+.tiptap-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+.tiptap-content li {
+  margin: 0;
+}
+
+.tiptap-content:focus {
+  outline: none;
+}
+
+/* Tiptap scrollbar inside editor */
+.tiptap-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tiptap-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-content::-webkit-scrollbar-thumb {
+  background: #00ffff25;
+  border-radius: 3px;
+}
+
+.tiptap-content::-webkit-scrollbar-thumb:hover {
+  background: #00ffff50;
+}
+
+/* =====================================================================
+   Global styles
+   ===================================================================== */
+
+/* Set default page background to synthwave theme */
+html {
+  height: 100%;
+  height: -webkit-fill-available; /* iOS Safari fix */
+  background-color: #16213e !important;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
+body {
+  background-color: #16213e !important;
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  min-height: -webkit-fill-available; /* iOS Safari fix */
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
+/* Control overscroll background without disabling behavior */
+html {
+  background-color: #16213e !important;
+  min-height: 100vh;
+  /* Allow overscroll but ensure background color is applied */
+  background-attachment: fixed;
+}
+
+/* Additional overscroll background control */
+body {
+  background-color: #16213e !important;
+  background-attachment: fixed;
+  /* Allow elastic scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure root container covers full viewport */
+#root {
+  background-color: #16213e !important;
+  min-height: 100vh;
+  min-height: -webkit-fill-available; /* iOS Safari fix */
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* iOS-specific fix for viewport height */
+@supports (-webkit-touch-callout: none) {
+  #root {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Additional fallback for any remaining white space */
+* {
+  box-sizing: border-box;
+}
+
+/* Hide browser's built-in password visibility toggles */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Gradient flow animation for AI-generated content containers */
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ==========================================================================
+   Chat Message Animations
+   ========================================================================== */
+
+/* Message entry animation - subtle slide-up + fade-in */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-in {
+  animation: messageSlideIn 0.25s ease-out;
+}
+
+/* Streaming cursor - blinking bar at end of streaming text */
+@keyframes streamingCursorBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Streaming cursor - targets the last text element inside MarkdownRenderer during AI streaming.
+   Applied to MarkdownRenderer's wrapper div (via className prop) so ::after appears
+   inline with the last line of text rather than on a separate line below the content. */
+.streaming-cursor > p:last-child::after,
+.streaming-cursor > ul:last-child > li:last-child > span:last-child::after,
+.streaming-cursor > ol:last-child > li:last-child::after {
+  content: "\258E";
+  display: inline;
+  color: rgb(0 255 255 / 0.8);
+  animation: streamingCursorBlink 0.8s step-end infinite;
+  margin-left: 1px;
+  font-weight: 300;
+}
+
+/* Typing indicator wave animation - smoother than animate-bounce */
+@keyframes typingWave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.animate-typing-dot {
+  animation: typingWave 1.4s ease-in-out infinite;
+}
+
+/* Contextual update indicator styling */
+@keyframes contextualPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-contextual-pulse {
+  animation: contextualPulse 2s ease-in-out infinite;
+}
+
+/* Custom Amplify Authenticator styles removed - now using custom auth components */
+
+/* Custom Auth Form Autofill Styling - Clean and effective approach */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:autofill {
+  /* Override the background color with a large, inset box-shadow */
+  -webkit-box-shadow: 0 0 0 30px rgb(10 10 10 / 0.2) inset !important;
+  box-shadow: 0 0 0 30px rgb(10 10 10 / 0.2) inset !important;
+
+  /* Enforce text color */
+  -webkit-text-fill-color: rgb(255 255 255 / 1) !important;
+  color: rgb(255 255 255 / 1) !important;
+
+  /* Enforce font family */
+  font-family: "Rajdhani", sans-serif !important;
+
+  /* Enforce other styles to match LoginForm */
+  border-color: rgb(255 0 128 / 0.3) !important;
+  border-width: 2px !important;
+  border-radius: 0.5rem !important;
+  padding: 0.75rem 1rem !important;
+
+  /* Ensure inputs remain clickable after autofill */
+  pointer-events: auto !important;
+  cursor: text !important;
+}
+
+/* Hover state for autofilled inputs */
+input:-webkit-autofill:hover {
+  border-color: rgb(255 0 128 / 0.5) !important;
+}
+
+/* Focus state for autofilled inputs */
+input:-webkit-autofill:focus {
+  border-color: rgb(255 0 128 / 1) !important;
+  outline: none !important;
+}
+
+/* For transitions, set a very long transition duration to prevent background color changes */
+input:-webkit-autofill,
+input:autofill {
+  transition: background-color 5000s ease-in-out 0s !important;
+}

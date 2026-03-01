@@ -527,7 +527,7 @@ function TrainingGrounds() {
                     `/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${coachId}`,
                   );
                 }}
-                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 p-3 cursor-pointer transition-all duration-200"
               >
                 {/* NEW badge for workouts within 24 hours or in the future */}
                 {isNew && <NewBadge />}
@@ -603,7 +603,7 @@ function TrainingGrounds() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
@@ -623,7 +623,7 @@ function TrainingGrounds() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6 h-80"
+                className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 shadow-xl shadow-synthwave-neon-cyan/20 p-6 h-80"
               >
                 <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-4"></div>
                 <div className="space-y-3 mb-6">
@@ -933,7 +933,7 @@ function TrainingGrounds() {
                           onClick={() =>
                             handleViewConversation(conversation.conversationId)
                           }
-                          className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50"
+                          className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 p-3 cursor-pointer transition-all duration-200 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50"
                         >
                           {/* NEW badge for conversations with recent activity */}
                           {isRecent && <NewBadge />}
@@ -1111,7 +1111,7 @@ function TrainingGrounds() {
                             `/training-grounds/reports/weekly?userId=${userId}&weekId=${rep.weekId}&coachId=${coachId}`,
                           )
                         }
-                        className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                        className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 p-3 cursor-pointer transition-all duration-200"
                       >
                         {/* NEW badge for current week reports */}
                         {isNew && <NewBadge />}
@@ -1177,7 +1177,7 @@ function TrainingGrounds() {
                   <Link
                     key={index}
                     to={`/changelog#${generateVersionAnchor(entry.version)}`}
-                    className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200 flex items-center justify-between"
+                    className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 p-3 cursor-pointer transition-all duration-200 flex items-center justify-between"
                   >
                     {/* NEW badge for releases within 3 days */}
                     {isNewRelease && <NewBadge />}

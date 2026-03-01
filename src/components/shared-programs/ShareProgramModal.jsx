@@ -214,7 +214,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
           {/* Error State */}
           {error && !loading && (
             <div className="text-center mb-4">
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+              <div className="bg-red-500/10 border border-red-500/30 p-4 mb-4">
                 <p className="text-red-400 font-rajdhani text-sm">{error}</p>
               </div>
               <button
@@ -237,7 +237,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
                     type="text"
                     value={shareUrl}
                     readOnly
-                    className="flex-1 px-4 py-3 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl text-synthwave-text-primary font-rajdhani cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="flex-1 px-4 py-3 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary font-rajdhani cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                     onClick={(e) => e.target.select()}
                     style={{ boxShadow: "none", outline: "none" }}
                     onFocus={(e) => {
@@ -247,7 +247,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
                   />
                   <button
                     onClick={handleCopyLink}
-                    className="p-2 text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors rounded-lg hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
+                    className="p-2 text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
                     aria-label="Copy link"
                   >
                     {copied ? (

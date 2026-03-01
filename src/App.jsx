@@ -37,6 +37,7 @@ import ProgramDashboard from "./components/programs/ProgramDashboard";
 import Changelog from "./components/Changelog";
 import Settings from "./components/Settings";
 import Theme from "./components/Theme";
+import RetroTemplate from "./components/themes/RetroComponents";
 import BlogIndex from "./components/blog/BlogIndex";
 import BlogPostRouter from "./components/blog/BlogPostRouter";
 import SharedProgramPreview from "./components/shared-programs/SharedProgramPreview";
@@ -81,6 +82,7 @@ function AppContent() {
     "/changelog",
     "/contact",
     "/template/synthwave",
+    "/template/retro",
     "/auth", // Includes all auth child routes (signin, signup, etc.)
     "/welcome", // Post-checkout welcome page
     "/blog", // Blog index and all blog posts
@@ -91,6 +93,9 @@ function AppContent() {
     publicRoutes.some(
       (route) => route !== "/" && location.pathname.startsWith(route),
     );
+
+  // Retro template is full-page with its own nav; show no app/public header
+  const isRetroTemplatePage = location.pathname === "/template/retro";
 
   // Check if we're on a chat page (hide bottom nav and FAB for focused conversation UX)
   const isChatPage =
@@ -149,7 +154,7 @@ function AppContent() {
   return (
     <div className="min-h-screen overflow-x-hidden">
       {/* Conditional Navigation: Public Header vs Full App Navigation */}
-      {isPublicPage ? (
+      {isRetroTemplatePage ? null : isPublicPage ? (
         // Public pages: Simple header only
         <PublicHeader />
       ) : (
@@ -166,11 +171,13 @@ function AppContent() {
       {/* Main Content - conditional margin based on navigation type */}
       <div
         className={`border-none outline-none bg-synthwave-bg-tertiary ${
-          isPublicPage
-            ? "pt-16" // Public pages: just header spacing
-            : isHomePage
-              ? "pt-4 pb-20 md:pb-0" // App home: minimal top, bottom nav spacing
-              : `pt-12 pb-20 md:pb-0 ${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}` // App pages: breadcrumbs + sidebar
+          isRetroTemplatePage
+            ? "pt-0" // Retro template: full viewport, own nav
+            : isPublicPage
+              ? "pt-16" // Public pages: just header spacing
+              : isHomePage
+                ? "pt-4 pb-20 md:pb-0" // App home: minimal top, bottom nav spacing
+                : `pt-12 pb-20 md:pb-0 ${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}` // App pages: breadcrumbs + sidebar
         }`}
       >
         <Routes>
@@ -183,6 +190,7 @@ function AppContent() {
           <Route path="/faqs" element={<FAQs />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/template/synthwave" element={<Theme />} />
+          <Route path="/template/retro" element={<RetroTemplate />} />
           <Route path="/contact" element={<ContactForm />} />
 
           {/* Blog routes */}

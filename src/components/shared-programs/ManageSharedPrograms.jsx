@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import {
@@ -10,6 +10,8 @@ import { AccessDenied, LoadingScreen } from "../shared/AccessDenied";
 import { useToast } from "../../contexts/ToastContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
+import CompactCoachCard from "../shared/CompactCoachCard";
+import CoachAgent from "../../utils/agents/CoachAgent";
 import QuickStats from "../shared/QuickStats";
 import AppFooter from "../shared/AppFooter";
 import {
@@ -107,6 +109,9 @@ function ManageSharedPrograms() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [coachData, setCoachData] = useState(null);
+
+  const coachAgentRef = useRef(null);
 
   // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -133,8 +138,30 @@ function ManageSharedPrograms() {
   useEffect(() => {
     if (userId && isValidUserId) {
       loadSharedPrograms();
+      if (coachId) {
+        loadCoachData();
+      }
     }
-  }, [userId, isValidUserId]);
+  }, [userId, coachId, isValidUserId]);
+
+  const loadCoachData = async () => {
+    try {
+      if (!coachAgentRef.current) {
+        coachAgentRef.current = new CoachAgent();
+      }
+      const data = await coachAgentRef.current.loadCoachDetails(
+        userId,
+        coachId,
+      );
+      setCoachData(data);
+    } catch (err) {
+      logger.error("Failed to load coach data:", err);
+    }
+  };
+
+  const handleCoachCardClick = () => {
+    navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
+  };
 
   // Auto-scroll to top when page loads
   useEffect(() => {
@@ -264,7 +291,7 @@ function ManageSharedPrograms() {
             e.stopPropagation();
             handleDeleteClick(shared);
           }}
-          className="absolute top-4 right-4 p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
+          className="absolute top-4 right-4 p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
           title="Unshare program"
         >
           <TrashIcon />
@@ -330,12 +357,12 @@ function ManageSharedPrograms() {
               type="text"
               value={`${window.location.origin}/shared/programs/${shared.sharedProgramId}`}
               readOnly
-              className="flex-1 px-4 py-3 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl text-synthwave-text-primary font-rajdhani text-sm cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 truncate"
+              className="flex-1 px-4 py-3 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary font-rajdhani text-sm cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 truncate"
               onClick={(e) => e.target.select()}
             />
             <button
               onClick={() => handleCopyLink(shared.sharedProgramId)}
-              className="p-2 text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors rounded-lg hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
+              className="p-2 text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
               aria-label="Copy link"
             >
               {copiedId === shared.sharedProgramId ? (
@@ -403,7 +430,7 @@ function ManageSharedPrograms() {
     if (error) {
       return (
         <div className="text-center py-12">
-          <div className="max-w-md mx-auto p-6 border border-synthwave-neon-pink/30 rounded-lg bg-synthwave-bg-card/30">
+          <div className="max-w-md mx-auto p-6 border border-synthwave-neon-pink/30 bg-synthwave-bg-card/30">
             <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">
               Error Loading Shared Programs
             </p>
@@ -488,14 +515,14 @@ function ManageSharedPrograms() {
           {/* Header skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-80"></div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
             ))}
@@ -518,7 +545,7 @@ function ManageSharedPrograms() {
                     <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                   </div>
-                  <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
+                  <div className="h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse w-full"></div>
                   <div className="flex items-center gap-3 mt-4">
                     <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
                     <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
@@ -542,7 +569,7 @@ function ManageSharedPrograms() {
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                     </div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
+                    <div className="h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse w-full"></div>
                     <div className="flex items-center gap-3 mt-4">
                       <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
                       <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
@@ -564,7 +591,7 @@ function ManageSharedPrograms() {
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                     </div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
+                    <div className="h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse w-full"></div>
                     <div className="flex items-center gap-3 mt-4">
                       <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
                       <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
@@ -627,6 +654,15 @@ function ManageSharedPrograms() {
               >
                 Shared Programs
               </h1>
+
+              {/* Compact Coach Card */}
+              {coachData && (
+                <CompactCoachCard
+                  coachData={coachData}
+                  isOnline={true}
+                  onClick={handleCoachCardClick}
+                />
+              )}
             </div>
 
             {/* Right section: Command Palette Button */}
