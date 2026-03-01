@@ -500,10 +500,6 @@ export const containerPatterns = {
   aiChatBubble:
     "bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-text-primary rounded-md rounded-bl-none shadow-sm shadow-synthwave-neon-cyan/20",
 
-  // AI Program Design Mode Bubble - Purple gradient for program design artifact creation (removed backdrop-blur to prevent scroll artifacts)
-  aiProgramDesignModeBubble:
-    "px-4 py-3 rounded-md rounded-bl-none shadow-sm bg-gradient-to-br from-synthwave-neon-purple/5 to-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-text-primary shadow-synthwave-neon-purple/10",
-
   // Info Card - Static information display without hover effects
   infoCard:
     "rounded-md bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 p-3",
