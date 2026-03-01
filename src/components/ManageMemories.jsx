@@ -479,7 +479,7 @@ function ManageMemories() {
         <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
           <button
             onClick={() => toggleDescriptionCollapse(memory.memoryId)}
-            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
+            className={`${containerPatterns.collapsibleToggle} mb-2`}
           >
             <span>Memory Details</span>
             <svg
@@ -523,7 +523,7 @@ function ManageMemories() {
                 e.stopPropagation();
                 toggleBadgeCollapse(memory.memoryId);
               }}
-              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink text-xs font-rajdhani font-semibold uppercase transition-colors duration-200"
+              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink hover:bg-synthwave-neon-cyan/5 text-xs font-rajdhani font-semibold uppercase transition-all duration-200 px-1 py-0.5"
             >
               {isBadgesCollapsed
                 ? `+${allBadges.length - badgeLimit} more`
@@ -637,10 +637,10 @@ function ManageMemories() {
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left section: Title + Coach Card skeleton */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
 
@@ -653,7 +653,7 @@ function ManageMemories() {
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
-                <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
           </div>
@@ -667,9 +667,9 @@ function ManageMemories() {
                 className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[166px]`}
               >
                 <div className="text-center flex flex-col items-center">
-                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 rounded animate-pulse mb-3"></div>
-                  <div className="h-5 bg-synthwave-neon-pink/20 rounded animate-pulse w-48 mb-2"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
+                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
+                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
                 </div>
               </div>
               {/* Memory Card Skeletons */}
@@ -681,26 +681,26 @@ function ManageMemories() {
                   {/* Header with pink dot */}
                   <div className="flex items-start space-x-3 mb-2">
                     <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                   </div>
 
                   {/* Metadata Row */}
                   <div className="flex flex-wrap gap-4 mb-4">
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
 
                   {/* Collapsible Description Section - Collapsed */}
                   <div className="mb-4">
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                   </div>
 
                   {/* Badge Row */}
                   <div className="flex flex-wrap gap-2">
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                   </div>
                 </div>
               ))}
@@ -714,9 +714,9 @@ function ManageMemories() {
                   className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[166px]`}
                 >
                   <div className="text-center flex flex-col items-center">
-                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 rounded animate-pulse mb-3"></div>
-                    <div className="h-5 bg-synthwave-neon-pink/20 rounded animate-pulse w-48 mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
+                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
+                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
                   </div>
                 </div>
                 {/* Memory Card Skeletons */}
@@ -728,26 +728,26 @@ function ManageMemories() {
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
                       <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
 
                     {/* Metadata Row */}
                     <div className="flex flex-wrap gap-4 mb-4">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
 
                     {/* Collapsible Description Section - Collapsed */}
                     <div className="mb-4">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
 
                     {/* Badge Row */}
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     </div>
                   </div>
                 ))}
@@ -763,26 +763,26 @@ function ManageMemories() {
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
                       <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
 
                     {/* Metadata Row */}
                     <div className="flex flex-wrap gap-4 mb-4">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
 
                     {/* Collapsible Description Section - Collapsed */}
                     <div className="mb-4">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
 
                     {/* Badge Row */}
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     </div>
                   </div>
                 ))}

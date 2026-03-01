@@ -658,10 +658,10 @@ General thoughts: `;
           {/* Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
             <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
@@ -669,11 +669,11 @@ General thoughts: `;
 
           {/* Program Context Skeleton */}
           <div className="mb-8">
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mb-2"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-80 mb-2"></div>
             <div className="flex items-center gap-4 text-sm">
-              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
             </div>
           </div>
 
@@ -686,44 +686,44 @@ General thoughts: `;
                   <div className="flex-1">
                     {/* Name and Badge */}
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                     </div>
                     {/* Metadata Row */}
                     <div className="flex items-center flex-wrap gap-4">
                       <div className="flex items-center gap-1">
-                        <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                        <div className="w-4 h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       </div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
                   </div>
-                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
                 </div>
 
                 {/* Description Textarea */}
                 <div className="mb-4">
                   <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4">
                     <div className="space-y-2">
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/6"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/6"></div>
                     </div>
                   </div>
                   {/* Helper text skeleton */}
-                  <div className="mt-2 h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                  <div className="mt-2 h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
                 </div>
 
                 {/* Coach Notes Skeleton */}
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg px-4 py-4 mb-4">
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24 mb-2"></div>
+                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-4">
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24 mb-2"></div>
                   <div className="space-y-2">
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
                   </div>
                 </div>
 
@@ -731,27 +731,27 @@ General thoughts: `;
                 <div className="space-y-4 mb-4">
                   {/* Equipment Needed */}
                   <div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-2"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-32 mb-2"></div>
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     </div>
                   </div>
                   {/* Prescribed Exercises */}
                   <div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-36 mb-2"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-36 mb-2"></div>
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                     </div>
                   </div>
                   {/* Focus Areas */}
                   <div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24 mb-2"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-24 mb-2"></div>
                     <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     </div>
                   </div>
                 </div>
@@ -1899,9 +1899,9 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
         </button>
         {isLoading ? (
           <div className="space-y-2">
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
           </div>
         ) : (
           <div className={containerPatterns.aiResponseContent}>

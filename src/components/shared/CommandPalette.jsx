@@ -402,7 +402,7 @@ const CommandPalette = ({
 
       {/* Command Palette Container */}
       <div
-        className={`relative mt-20 w-full max-w-2xl mx-4 ${themeClasses.neonBorder} bg-synthwave-bg-card/95 backdrop-blur-md rounded-lg shadow-2xl transform transition-all duration-300 ease-out`}
+        className={`relative mt-20 w-full max-w-2xl mx-4 ${themeClasses.neonBorder} bg-synthwave-bg-card/95 backdrop-blur-md shadow-2xl transform transition-all duration-300 ease-out`}
         style={{
           animation: isOpen
             ? "slideDown 0.3s ease-out"
@@ -539,7 +539,7 @@ const CommandPalette = ({
               </div>
 
               {/* Content Preview */}
-              <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+              <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/20 p-4">
                 <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                   Content
                 </div>

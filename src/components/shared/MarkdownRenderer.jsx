@@ -128,7 +128,7 @@ const MarkdownRendererComponent = ({ content, className = "" }) => {
 
             if (isCodeBlock) {
               return (
-                <pre className="bg-synthwave-dark-purple/30 p-3 rounded-lg my-2 overflow-x-auto">
+                <pre className="bg-synthwave-dark-purple/30 p-3 my-2 overflow-x-auto">
                   <code className="text-synthwave-neon-cyan text-sm">
                     {children}
                   </code>

@@ -363,7 +363,7 @@ function ManageExercises() {
             e.stopPropagation();
             toggleExerciseCollapse(exercise.exerciseName);
           }}
-          className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
+          className={containerPatterns.collapsibleToggle}
         >
           <span>{isCollapsed ? "View Sessions" : "Hide Sessions"}</span>
           <div
@@ -381,19 +381,19 @@ function ManageExercises() {
               <div className="space-y-4">
                 {/* Personal Records skeleton */}
                 <div className={containerPatterns.coachNotesSection}>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-3"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32 mb-3"></div>
                   <div className="flex items-center gap-4 flex-wrap">
                     {[1, 2, 3, 4].map((i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
                       </div>
                     ))}
                   </div>
                 </div>
                 {/* Recent Sessions skeleton */}
                 <div className={containerPatterns.coachNotesSection}>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-3"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32 mb-3"></div>
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
@@ -626,10 +626,10 @@ function ManageExercises() {
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
             <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
@@ -640,7 +640,7 @@ function ManageExercises() {
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
-                <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
           </div>
@@ -663,17 +663,17 @@ function ManageExercises() {
                 >
                   <div className="flex items-start gap-3 mb-2">
                     <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                   </div>
                   <div className="flex flex-wrap gap-4 mb-4">
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28 mb-4"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-4"></div>
                   {/* Badge skeletons */}
                   <div className="flex flex-wrap gap-2 mt-4">
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
                 </div>
               ))}
@@ -688,18 +688,18 @@ function ManageExercises() {
                   >
                     <div className="flex items-start gap-3 mb-2">
                       <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
                     <div className="flex flex-wrap gap-4 mb-4">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28 mb-4"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-4"></div>
                     {/* Badge skeletons */}
                     <div className="flex flex-wrap gap-2 mt-4">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -712,18 +712,18 @@ function ManageExercises() {
                   >
                     <div className="flex items-start gap-3 mb-2">
                       <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
                     <div className="flex flex-wrap gap-4 mb-4">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28 mb-4"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-4"></div>
                     {/* Badge skeletons */}
                     <div className="flex flex-wrap gap-2 mt-4">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
                   </div>
                 ))}
