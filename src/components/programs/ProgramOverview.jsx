@@ -183,7 +183,7 @@ export default function ProgramOverview({
           <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
             Program Intel
           </h4>
-          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               {/* Coach - Full Width */}
               {program.coachNames && program.coachNames.length > 0 && (

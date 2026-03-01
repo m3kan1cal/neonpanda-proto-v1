@@ -279,8 +279,8 @@ function ChatInput({
 
           {/* AI disclaimer and keyboard shortcuts skeleton */}
           <div className="flex items-center justify-between gap-2 mt-3 pr-12 md:pr-[74px]">
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-            <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
+            <div className="hidden md:block h-3 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
           </div>
         </div>
       </div>

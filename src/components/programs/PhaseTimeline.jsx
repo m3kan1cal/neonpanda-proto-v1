@@ -132,7 +132,7 @@ export default function PhaseTimeline({ program }) {
 
         {/* Visual progress bar - wrapper for positioning current day badge */}
         <div className="relative">
-          <div className="relative h-12 bg-synthwave-bg-secondary rounded-lg overflow-hidden flex shadow-lg">
+          <div className="relative h-12 bg-synthwave-bg-secondary overflow-hidden flex shadow-lg">
             {program.phases.map((phase, index) => {
               const width = getPhaseWidth(phase);
               const status = getPhaseStatus(phase);

@@ -558,12 +558,12 @@ function Coaches() {
             {/* Left: Title + Coach Card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Title skeleton */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
 
@@ -577,10 +577,10 @@ function Coaches() {
             <div className={`${containerPatterns.dashedCard} opacity-60`}>
               <div className="text-center h-full flex flex-col justify-between min-h-[350px]">
                 <div className="flex-1 flex flex-col justify-center items-center">
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded animate-pulse mb-4"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-3"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56 mb-4"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                  <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse mb-4"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48 mb-3"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56 mb-4"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                 </div>
               </div>
             </div>
@@ -592,32 +592,32 @@ function Coaches() {
                   {/* Coach name skeleton */}
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                   </div>
 
                   {/* Coach details skeleton */}
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
                   </div>
                 </div>
 
                 {/* Action button skeleton */}
-                <div className="h-10 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="h-10 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
           </div>
@@ -625,9 +625,9 @@ function Coaches() {
           {/* In-Progress Sessions skeleton */}
           <div className="mt-16">
             <div className="text-center mb-12">
-              <div className="h-7 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-xl mx-auto"></div>
+              <div className="h-7 bg-synthwave-text-muted/20 animate-pulse w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-full max-w-xl mx-auto"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -639,21 +639,21 @@ function Coaches() {
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full shrink-0 mt-2"></div>
                     <div className="flex-1">
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
                   </div>
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
                     </div>
                   </div>
                   <div className="pt-4">
-                    <div className="h-4 bg-synthwave-neon-cyan/30 rounded animate-pulse w-36"></div>
+                    <div className="h-4 bg-synthwave-neon-cyan/30 animate-pulse w-36"></div>
                   </div>
                 </div>
               ))}
@@ -663,9 +663,9 @@ function Coaches() {
           {/* Templates section skeleton */}
           <div className="mt-20">
             <div className="text-center mb-12">
-              <div className="h-7 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-xl mx-auto"></div>
+              <div className="h-7 bg-synthwave-text-muted/20 animate-pulse w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-full max-w-xl mx-auto"></div>
             </div>
 
             {/* Template cards skeleton */}
@@ -678,22 +678,22 @@ function Coaches() {
                   <div className="flex-1">
                     <div className="flex items-start space-x-3 mb-3">
                       <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
                     </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4 mb-4"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-full mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4 mb-4"></div>
                     <div className="space-y-2 mb-6">
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                       </div>
                     </div>
                   </div>
-                  <div className="h-10 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-10 bg-synthwave-text-muted/20 animate-pulse"></div>
                 </div>
               ))}
             </div>
@@ -1057,8 +1057,8 @@ function Coaches() {
                         </span>
                       </div>
 
-                      {/* Focus Areas */}
-                      <div className="flex items-start space-x-2 text-synthwave-text-secondary">
+                      {/* Focus Areas - hidden on mobile to reduce card height */}
+                      <div className="hidden md:flex items-start space-x-2 text-synthwave-text-secondary">
                         <div className="mt-0.5">
                           <svg
                             className="w-5 h-5"
@@ -1087,11 +1087,11 @@ function Coaches() {
                         </div>
                       </div>
 
-                      {/* Coaching Style */}
+                      {/* Coaching Style - hidden on mobile to reduce card height */}
                       {agentRef.current?.getMethodologyPreferencesDisplay(
                         coach,
                       ) && (
-                        <div className="flex items-start space-x-2 text-synthwave-text-secondary">
+                        <div className="hidden md:flex items-start space-x-2 text-synthwave-text-secondary">
                           <div className="mt-0.5">
                             <svg
                               className="w-5 h-5"
@@ -1121,8 +1121,8 @@ function Coaches() {
                         </div>
                       )}
 
-                      {/* Conversations Count */}
-                      <div className="flex items-center space-x-2 text-synthwave-text-secondary pt-2 border-t border-synthwave-text-muted/20">
+                      {/* Conversations Count - hidden on mobile */}
+                      <div className="hidden md:flex items-center space-x-2 text-synthwave-text-secondary pt-2 border-t border-synthwave-text-muted/20">
                         <svg
                           className="w-5 h-5"
                           fill="none"
@@ -1142,8 +1142,8 @@ function Coaches() {
                         </span>
                       </div>
 
-                      {/* Created Date */}
-                      <div className="flex items-center space-x-2 text-synthwave-text-muted">
+                      {/* Created Date - hidden on mobile */}
+                      <div className="hidden md:flex items-center space-x-2 text-synthwave-text-muted">
                         <CalendarIcon />
                         <span className="font-rajdhani text-xs">
                           Created{" "}

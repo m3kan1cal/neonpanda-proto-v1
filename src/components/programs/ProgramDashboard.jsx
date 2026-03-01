@@ -505,12 +505,12 @@ function DashboardSkeleton() {
           {/* Left: Title + Coach Card */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
             {/* Title skeleton - compact size */}
-            <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+            <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
 
             {/* Compact coach card skeleton - horizontal pill */}
             <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
               <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
             </div>
           </div>
 
@@ -539,16 +539,16 @@ function DashboardSkeleton() {
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3 flex-1">
                   <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                 </div>
-                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
               <div className="px-6 pb-6 space-y-3">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
                 </div>
               </div>
             </div>
@@ -558,14 +558,14 @@ function DashboardSkeleton() {
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
                 </div>
-                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
               <div className="px-6 pb-6 space-y-4">
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-2/3"></div>
               </div>
             </div>
 
@@ -574,14 +574,14 @@ function DashboardSkeleton() {
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-44"></div>
                 </div>
-                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
               <div className="px-6 pb-6 space-y-3">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
                 </div>
               </div>
             </div>
@@ -594,12 +594,12 @@ function DashboardSkeleton() {
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                 </div>
-                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
               <div className="px-6 pb-6">
-                <div className="h-16 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="h-16 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             </div>
 
@@ -608,13 +608,13 @@ function DashboardSkeleton() {
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
                 </div>
-                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
               <div className="px-6 pb-6 space-y-2">
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
               </div>
             </div>
 
@@ -623,13 +623,13 @@ function DashboardSkeleton() {
               <div className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                 </div>
-                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
               <div className="px-6 pb-6 space-y-2">
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
               </div>
             </div>
           </div>
