@@ -391,12 +391,15 @@ export const normalizeSchemaArrayFields = (
     if (isArraySchema && key in response) {
       const value = response[key];
       if (!Array.isArray(value)) {
-        if (typeof value === "string" && value.trim().length > 0) {
-          // Single non-empty string — wrap in a one-element array
-          response[key] = [value];
-        } else {
-          // null, undefined, empty string, or other non-array → empty array
+        if (value === null || value === undefined || value === "") {
+          // Explicitly empty — coerce to empty array
           response[key] = [];
+        } else if (typeof value === "string" && value.trim().length === 0) {
+          // Whitespace-only string — coerce to empty array
+          response[key] = [];
+        } else {
+          // Any other scalar or object — wrap in a one-element array
+          response[key] = [value];
         }
       }
     }

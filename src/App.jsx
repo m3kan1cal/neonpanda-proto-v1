@@ -62,7 +62,6 @@ function AppContent() {
   const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
   const {
-    isSidebarCollapsed,
     userId,
     coachId,
     isCommandPaletteOpen,
