@@ -58,7 +58,7 @@ export const CircuitTrainingSection = ({
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
         className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-          collapsedSections.has(sectionId) ? "rounded-2xl" : "rounded-t-2xl"
+          collapsedSections.has(sectionId) ? "rounded-md" : "rounded-t-md"
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >
@@ -151,7 +151,7 @@ export const CircuitTrainingSection = ({
                 <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                   Stations
                 </h4>
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                   <div className="space-y-2">
                     {circuitTrainingData.stations.map((station, idx) => (
                       <div key={idx} className="py-2">
@@ -204,7 +204,7 @@ export const CircuitTrainingSection = ({
                   <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Performance
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                     <div className="flex flex-wrap gap-4 text-sm font-rajdhani">
                       {circuitTrainingData.performance_data.total_time && (
                         <span className="text-synthwave-text-secondary">
@@ -245,7 +245,7 @@ export const CircuitTrainingSection = ({
               )}
             </div>
           ) : (
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
               <div className="text-synthwave-text-secondary font-rajdhani text-sm">
                 No Circuit Training data available. Include station details,
                 work/rest times, and exercises when logging.

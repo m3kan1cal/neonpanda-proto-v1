@@ -40,7 +40,7 @@ export default function TopExercisesCard({
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
+              className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
             >
               <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
               <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />
@@ -72,7 +72,7 @@ export default function TopExercisesCard({
         {exercises.slice(0, DISPLAY_LIMIT).map((ex) => (
           <div
             key={ex.exerciseName}
-            className="bg-synthwave-bg-primary/40 border border-synthwave-neon-cyan/15 px-3 py-2 transition-all duration-200 hover:bg-synthwave-bg-primary/60 hover:border-synthwave-neon-cyan/30 hover:shadow-lg hover:shadow-synthwave-neon-cyan/5"
+            className="rounded-md bg-synthwave-bg-primary/40 border border-synthwave-neon-cyan/15 px-3 py-2 transition-all duration-200 hover:bg-synthwave-bg-primary/60 hover:border-synthwave-neon-cyan/30 hover:shadow-lg hover:shadow-synthwave-neon-cyan/5"
           >
             {/* Exercise name -- small muted uppercase section header */}
             <div className="font-rajdhani text-[11px] text-synthwave-text-secondary uppercase font-semibold tracking-wider truncate mb-0.5">

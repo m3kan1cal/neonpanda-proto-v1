@@ -11,7 +11,7 @@ export function NeonBorder({ children, color = "pink", className = "" }) {
 
   return (
     <div
-      className={`border-2 ${borderColor[color]} rounded-lg transition-all duration-300 ${className}`}
+      className={`border-2 ${borderColor[color]} rounded-md transition-all duration-300 ${className}`}
     >
       {children}
     </div>
@@ -32,7 +32,7 @@ export function NeonInput({ placeholder, type = "text", className = "" }) {
       className={`
         bg-synthwave-bg-card border-2 border-synthwave-neon-pink/50
         text-synthwave-text-primary placeholder-synthwave-text-muted
-        px-4 py-3 rounded-lg font-rajdhani
+        px-4 py-3 rounded-md font-rajdhani
         focus:border-synthwave-neon-pink focus:shadow-neon-pink focus:outline-none
         transition-all duration-300
         ${className}

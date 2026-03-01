@@ -195,7 +195,7 @@ function BlogPost({ children }) {
         </div>
         <div className="relative z-10 max-w-4xl mx-auto">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm font-rajdhani mb-6 bg-synthwave-bg-primary/40 backdrop-blur-sm px-4 py-2 rounded-lg border border-synthwave-neon-pink/20 w-fit">
+          <div className="flex items-center gap-2 text-sm font-rajdhani mb-6 bg-synthwave-bg-primary/40 backdrop-blur-sm px-4 py-2 rounded-md border border-synthwave-neon-pink/20 w-fit">
             <Link
               to="/blog"
               className="text-white hover:text-synthwave-neon-cyan transition-colors font-semibold"

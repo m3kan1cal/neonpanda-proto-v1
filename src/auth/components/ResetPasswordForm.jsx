@@ -113,7 +113,7 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
         </div>
 
         {globalError && (
-          <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-lg" />
+          <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md" />
         )}
 
         <AuthInput

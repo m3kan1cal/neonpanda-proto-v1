@@ -56,7 +56,7 @@ export default function PhaseBreakdown({ program }) {
         <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
           Phase Intel
         </h4>
-        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+        <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
           {/* Progress info */}
           <div className="mb-3">
             <div className="font-rajdhani text-sm text-synthwave-text-secondary mb-2">

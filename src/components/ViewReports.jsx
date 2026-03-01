@@ -435,7 +435,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleMonthlySummaryCollapse(report.monthId)}
-              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
             >
               <span>Report Summary</span>
               <svg
@@ -455,7 +455,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
+              <div className="rounded-md bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
@@ -484,7 +484,7 @@ function ViewReports() {
             {dataCompleteness}% complete
           </span>
           {workoutCount >= 4 && (
-            <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-rajdhani font-medium">
+            <span className="bg-green-500/20 text-green-400 px-2 py-1 text-xs font-rajdhani font-medium">
               ✓ Qualified
             </span>
           )}
@@ -604,7 +604,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleWeeklySummaryCollapse(report.weekId)}
-              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded"
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
             >
               <span>Report Summary</span>
               <svg
@@ -624,7 +624,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
+              <div className="rounded-md bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
@@ -692,21 +692,21 @@ function ViewReports() {
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
@@ -714,8 +714,8 @@ function ViewReports() {
 
           {/* Tab Switcher skeleton */}
           <div className="flex items-center justify-center gap-2 mb-6 -mt-2">
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </div>
 
           {/* Report cards skeleton */}

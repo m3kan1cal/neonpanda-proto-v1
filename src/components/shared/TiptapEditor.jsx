@@ -204,7 +204,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 editor.chain().focus().toggleBold().run();
               }}
-              className={`cursor-pointer px-2.5 py-1 rounded text-sm font-bold font-rajdhani transition-colors ${
+              className={`cursor-pointer px-2.5 py-1 rounded-md text-sm font-bold font-rajdhani transition-colors ${
                 editor.isActive("bold")
                   ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
@@ -219,7 +219,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 editor.chain().focus().toggleItalic().run();
               }}
-              className={`cursor-pointer px-2.5 py-1 rounded text-sm italic font-rajdhani transition-colors ${
+              className={`cursor-pointer px-2.5 py-1 rounded-md text-sm italic font-rajdhani transition-colors ${
                 editor.isActive("italic")
                   ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
@@ -234,7 +234,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 editor.chain().focus().toggleStrike().run();
               }}
-              className={`cursor-pointer px-2.5 py-1 rounded text-sm line-through font-rajdhani transition-colors ${
+              className={`cursor-pointer px-2.5 py-1 rounded-md text-sm line-through font-rajdhani transition-colors ${
                 editor.isActive("strike")
                   ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
@@ -254,7 +254,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 editor.chain().focus().toggleBulletList().run();
               }}
-              className={`cursor-pointer p-1 rounded transition-colors ${
+              className={`cursor-pointer p-1 rounded-md transition-colors ${
                 editor.isActive("bulletList")
                   ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
@@ -302,7 +302,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 editor.chain().focus().toggleOrderedList().run();
               }}
-              className={`cursor-pointer p-1 rounded transition-colors ${
+              className={`cursor-pointer p-1 rounded-md transition-colors ${
                 editor.isActive("orderedList")
                   ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"

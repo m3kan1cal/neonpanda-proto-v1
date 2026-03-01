@@ -87,7 +87,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         </div>
 
         {/* ElectricPanda upgrade option */}
-        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-4 md:p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-4 md:mb-6">
+        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-md p-4 md:p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-4 md:mb-6">
           <div className="mb-2 md:mb-3">
             <p className="font-rajdhani text-synthwave-text-secondary text-xs md:text-sm mb-2 md:mb-4">
               Upgrade to{" "}

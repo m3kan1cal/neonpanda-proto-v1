@@ -67,6 +67,7 @@ import CoachAgent from "../utils/agents/CoachAgent";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
 import { OnboardingPrompt, UpgradePrompt } from "./subscription";
+import CoachDetailsModal from "./coaches/CoachDetailsModal";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 
 // Vesper coach data - static coach for coach creator
@@ -170,6 +171,9 @@ function Coaches() {
   // Actions menu state
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingCoachId, setEditingCoachId] = useState(null);
+
+  // Coach details modal state
+  const [coachDetailsId, setCoachDetailsId] = useState(null);
 
   // Onboarding modal state
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -561,7 +565,7 @@ function Coaches() {
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
@@ -915,7 +919,7 @@ function Coaches() {
                               : coach.coach_id,
                           );
                         }}
-                        className={`p-2 rounded-none transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
+                        className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
                           openMenuId === coach.coach_id
                             ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                             : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
@@ -930,7 +934,32 @@ function Coaches() {
 
                       {/* Dropdown Menu */}
                       {openMenuId === coach.coach_id && (
-                        <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-none shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+                        <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCoachDetailsId(coach.coach_id);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 cursor-pointer"
+                          >
+                            <svg
+                              className="w-4 h-4 shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <span className="font-rajdhani font-medium text-sm">
+                              Coach Details
+                            </span>
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1707,6 +1736,17 @@ function Coaches() {
           </div>
         </div>
       )}
+
+      {/* Coach Details Modal */}
+      <CoachDetailsModal
+        isOpen={coachDetailsId !== null}
+        onClose={() => setCoachDetailsId(null)}
+        coach={
+          agentState.coaches.find((c) => c.coach_id === coachDetailsId) ?? null
+        }
+        userId={userId}
+        agentRef={agentRef}
+      />
 
       {/* Tooltips */}
       <Tooltip

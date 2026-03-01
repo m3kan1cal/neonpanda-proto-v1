@@ -563,9 +563,9 @@ function Settings() {
         >
           {/* Header Skeleton */}
           <div className="mb-12 text-center">
-            <div className="h-12 w-80 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-4"></div>
-            <div className="h-4 w-[32rem] bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-2"></div>
-            <div className="h-4 w-[28rem] bg-synthwave-text-muted/10 rounded animate-pulse mx-auto"></div>
+            <div className="h-12 w-80 bg-synthwave-text-muted/10 rounded-md animate-pulse mx-auto mb-4"></div>
+            <div className="h-4 w-[32rem] bg-synthwave-text-muted/10 rounded-md animate-pulse mx-auto mb-2"></div>
+            <div className="h-4 w-[28rem] bg-synthwave-text-muted/10 rounded-md animate-pulse mx-auto"></div>
           </div>
 
           {/* Main Content Skeleton */}
@@ -578,13 +578,13 @@ function Settings() {
                 <div className={containerPatterns.collapsibleSection}>
                   <div className={containerPatterns.collapsibleHeader}>
                     <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
-                      <div className="h-4 w-48 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                      <div className="h-4 w-48 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
                     </div>
                   </div>
                   <div className={containerPatterns.collapsibleContent}>
                     <div className="space-y-6 pb-4">
-                      <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded animate-pulse mb-4"></div>
+                      <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded-md animate-pulse mb-4"></div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
                         <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
@@ -599,10 +599,10 @@ function Settings() {
                   <div key={i} className={containerPatterns.collapsibleSection}>
                     <div className={containerPatterns.collapsibleHeader}>
                       <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
-                        <div className="h-4 w-32 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                        <div className="h-4 w-32 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
                       </div>
-                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
                     </div>
                   </div>
                 ))}
@@ -657,7 +657,7 @@ function Settings() {
                 {isLoadingSubscription ? (
                   // Loading skeleton
                   <div className="space-y-6 pb-4">
-                    <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded animate-pulse mb-4"></div>
+                    <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded-md animate-pulse mb-4"></div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
                       <div className="h-48 bg-synthwave-text-muted/10 rounded-none animate-pulse"></div>
@@ -767,9 +767,9 @@ function Settings() {
                         </div>
 
                         {/* ElectricPanda Column */}
-                        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 p-6 shadow-xl shadow-synthwave-neon-purple/20">
+                        <div className="rounded-md bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 p-6 shadow-xl shadow-synthwave-neon-purple/20">
                           <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple flex items-center justify-center text-white">
+                            <div className="shrink-0 w-16 h-16 rounded-md bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple flex items-center justify-center text-white">
                               <LightningIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1532,8 +1532,11 @@ function Settings() {
                       content={directiveData.content}
                       onUpdate={(html, text) => {
                         // Enforce maxLength of 500 characters
-                        const truncated = text.length > 500 ? text.slice(0, 500) : text;
-                        handleDirectiveChange({ target: { name: "content", value: truncated } });
+                        const truncated =
+                          text.length > 500 ? text.slice(0, 500) : text;
+                        handleDirectiveChange({
+                          target: { name: "content", value: truncated },
+                        });
                       }}
                       disabled={isSavingDirective}
                       mode="plain"

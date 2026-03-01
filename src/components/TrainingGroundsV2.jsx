@@ -614,12 +614,12 @@ function TrainingGroundsV2() {
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-2">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* AI Greeting skeleton */}
@@ -646,7 +646,7 @@ function TrainingGroundsV2() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-full animate-pulse"
+                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-md animate-pulse"
                 ></div>
               ))}
             </div>
@@ -676,7 +676,7 @@ function TrainingGroundsV2() {
                       ))}
                     </div>
                     <div className="flex-1 min-h-[4px]"></div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-[10px] animate-pulse w-full"></div>
+                    <div className="h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse w-full"></div>
                   </div>
                 </div>
               ))}
@@ -702,7 +702,7 @@ function TrainingGroundsV2() {
                     {[1, 2].map((i) => (
                       <div
                         key={i}
-                        className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 p-4 flex items-center gap-4"
+                        className="rounded-md border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 p-4 flex items-center gap-4"
                       >
                         <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                         <div className="flex-1 space-y-2">
@@ -758,7 +758,7 @@ function TrainingGroundsV2() {
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
                     <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32" />
                   </div>
-                  <div className="h-16 bg-synthwave-text-muted/10 rounded-none animate-pulse" />
+                  <div className="h-16 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
                 </div>
                 {/* Recent PRs skeleton - matches RecentPRsCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
@@ -770,7 +770,7 @@ function TrainingGroundsV2() {
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
-                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
+                        className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
                         <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />
@@ -789,7 +789,7 @@ function TrainingGroundsV2() {
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
-                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
+                        className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
                         <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />
@@ -1414,7 +1414,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleStartNewConversation}
               disabled={conversationAgentState.isLoadingItem}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-none font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-md font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1430,7 +1430,7 @@ function TrainingGroundsV2() {
             </button>
             <button
               onClick={handleLogWorkout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-none font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-md font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1450,7 +1450,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleDesignProgram}
               disabled={isCreatingProgram}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-none font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-md font-rajdhani text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"

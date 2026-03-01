@@ -17,7 +17,6 @@ import {
   CollaborateIconTiny,
   SignOutIconTiny,
   WaitlistIconTiny,
-  CoachIconSmall,
   ProgramIconTiny,
   WeightPlateIconTiny,
   BlogIconTiny,
@@ -208,15 +207,6 @@ export const navigationItems = {
       requiresCoach: true, // Requires coach context
       color: "pink",
       action: "design-program", // Special flag for command palette action
-    },
-    {
-      id: "quick-access-coach",
-      label: "View Coach Details",
-      icon: CoachIconSmall,
-      requiresAuth: true,
-      requiresCoach: true,
-      color: "pink",
-      popoverType: "coach", // Opens coach details popover
     },
   ],
 

@@ -1229,7 +1229,7 @@ function ChatInput({
                   {availableSlashCommands.map((cmd, index) => (
                     <div
                       key={index}
-                      className={`flex items-start space-x-3 py-1 px-2 rounded cursor-pointer transition-colors duration-200 border ${
+                      className={`flex items-start space-x-3 py-1 px-2 rounded-md cursor-pointer transition-colors duration-200 border ${
                         index === selectedCommandIndex
                           ? "bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20"
                           : "hover:bg-synthwave-bg-primary/30 border-transparent"

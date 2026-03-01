@@ -37,7 +37,7 @@ export default function ProgramOverview({
       active: {
         text: "Active",
         className:
-          "bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-rajdhani uppercase border border-green-500/40",
+          "bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-rajdhani uppercase border border-green-500/40",
       },
       paused: {
         text: "Paused",
@@ -183,7 +183,7 @@ export default function ProgramOverview({
           <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
             Program Intel
           </h4>
-          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+          <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               {/* Coach - Full Width */}
               {program.coachNames && program.coachNames.length > 0 && (

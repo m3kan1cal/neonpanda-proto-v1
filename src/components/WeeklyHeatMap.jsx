@@ -108,7 +108,7 @@ const HeatMapLegend = () => {
       </span>
       {legendItems.map((item, index) => (
         <div key={index} className="flex items-center gap-1">
-          <div className={`w-3 h-3 rounded border ${item.color}`}></div>
+          <div className={`w-3 h-3 rounded-md border ${item.color}`}></div>
           <span className="text-synthwave-text-secondary font-rajdhani text-xs">
             {item.label} {item.range}
           </span>

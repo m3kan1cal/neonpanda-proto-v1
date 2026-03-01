@@ -199,7 +199,7 @@ function BlogPost5Orchestration() {
             execute mid-stream, and the agent weaves tool results back into the
             response seamlessly—all while maintaining your coach's personality.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Streaming conversation with autonomous tool use
             </div>
@@ -463,10 +463,10 @@ function BlogPost5Orchestration() {
             Streaming Conversation Architecture
           </h3>
 
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-6">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-6">
             <div className="flex flex-col items-center space-y-4">
               {/* Entry */}
-              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                   User Message + Context
                 </span>
@@ -482,7 +482,7 @@ function BlogPost5Orchestration() {
               </div>
 
               {/* Context Assembly */}
-              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
                   Context Assembly (Parallel Burst)
                 </span>
@@ -500,7 +500,7 @@ function BlogPost5Orchestration() {
 
               {/* Conversation Agent with Tools */}
               <div className="w-full max-w-lg">
-                <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-lg px-6 py-3 text-center mb-3">
+                <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center mb-3">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
                     Conversation Agent (Streaming)
                   </span>
@@ -509,7 +509,7 @@ function BlogPost5Orchestration() {
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg p-2 text-center">
+                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-md p-2 text-center">
                     <span className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
                       Text Stream
                     </span>
@@ -517,7 +517,7 @@ function BlogPost5Orchestration() {
                       Token by token
                     </p>
                   </div>
-                  <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-lg p-2 text-center">
+                  <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-md p-2 text-center">
                     <span className="font-rajdhani text-synthwave-neon-cyan text-xs font-semibold">
                       Tool Calls
                     </span>
@@ -525,7 +525,7 @@ function BlogPost5Orchestration() {
                       Mid-stream
                     </p>
                   </div>
-                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg p-2 text-center">
+                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md p-2 text-center">
                     <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
                       Tool Results
                     </span>
@@ -543,7 +543,7 @@ function BlogPost5Orchestration() {
               </div>
 
               {/* Output */}
-              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                   Real-Time Streamed Response
                 </span>
@@ -630,13 +630,13 @@ function BlogPost5Orchestration() {
               <p className="text-synthwave-text-muted text-sm font-rajdhani mb-3">
                 A simple question that triggers intelligent data retrieval.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-cyan font-semibold shrink-0">
                     Tool 1:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
                       get_todays_workout
                     </code>{" "}
                     → Fetches today's program workout with exercises, sets,
@@ -648,7 +648,7 @@ function BlogPost5Orchestration() {
                     Tool 2:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md">
                       retrieve_memories
                     </code>{" "}
                     → Checks for relevant constraints (that shoulder thing,
@@ -678,13 +678,13 @@ function BlogPost5Orchestration() {
                 Logging, program tracking, history analysis, and celebration in
                 one exchange.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-pink font-semibold shrink-0">
                     Tool 1:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md">
                       log_workout
                     </code>{" "}
                     → Fires async pipeline: extraction, normalization, DynamoDB
@@ -696,7 +696,7 @@ function BlogPost5Orchestration() {
                     Tool 2:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
                       complete_program_workout
                     </code>{" "}
                     → Marks day complete, advances program, updates adherence
@@ -707,7 +707,7 @@ function BlogPost5Orchestration() {
                     Tool 3:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md">
                       query_exercise_history
                     </code>{" "}
                     → Retrieves squat history to confirm the PR and show trend
@@ -736,13 +736,13 @@ function BlogPost5Orchestration() {
                 A coaching question that requires data analysis and methodology
                 knowledge.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-cyan font-semibold shrink-0">
                     Tool 1:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
                       get_recent_workouts
                     </code>{" "}
                     → Pulls last 10 sessions to assess training volume and
@@ -754,7 +754,7 @@ function BlogPost5Orchestration() {
                     Tool 2:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md">
                       query_programs
                     </code>{" "}
                     → Checks current program phase to see if a deload is already
@@ -766,7 +766,7 @@ function BlogPost5Orchestration() {
                     Tool 3:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md">
                       search_methodology
                     </code>{" "}
                     → Retrieves deload protocols for your training methodology
@@ -777,7 +777,7 @@ function BlogPost5Orchestration() {
                     Tool 4:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
                       save_memory
                     </code>{" "}
                     → Saves "feeling beat up" as a fatigue signal for future
@@ -807,13 +807,13 @@ function BlogPost5Orchestration() {
               <p className="text-synthwave-text-muted text-sm font-rajdhani mb-3">
                 Self-awareness query that requires exercise analytics.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-cyan font-semibold shrink-0">
                     Tool 1:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
                       list_exercise_names
                     </code>{" "}
                     → Returns every exercise with occurrence counts and
@@ -825,7 +825,7 @@ function BlogPost5Orchestration() {
                     Tool 2:
                   </span>
                   <span className="text-synthwave-text-secondary">
-                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded">
+                    <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md">
                       search_knowledge_base
                     </code>{" "}
                     → Semantic search for posterior chain work to find related
@@ -865,7 +865,7 @@ function BlogPost5Orchestration() {
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.cyan}>Post 1</span>
               <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
                 Router Pattern
@@ -875,7 +875,7 @@ function BlogPost5Orchestration() {
                 message flows through the router first.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.pink}>Post 2</span>
               <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
                 Assembler Pattern
@@ -885,7 +885,7 @@ function BlogPost5Orchestration() {
                 personalities.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.purple}>Post 3</span>
               <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
                 Tool-Use Pattern
@@ -895,7 +895,7 @@ function BlogPost5Orchestration() {
                 Conversation Agent takes this to the extreme with 11 tools.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.cyan}>Post 3</span>
               <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
                 Evaluator-Optimizer
@@ -905,7 +905,7 @@ function BlogPost5Orchestration() {
                 flow control for data extraction.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.pink}>Post 4</span>
               <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
                 Orchestrator Pattern
@@ -915,7 +915,7 @@ function BlogPost5Orchestration() {
                 design.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.purple}>Post 4</span>
               <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
                 Parallel Pattern
@@ -946,7 +946,7 @@ function BlogPost5Orchestration() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className={containerPatterns.mediumGlassPurple}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-white rounded-lg p-2">
+              <div className="bg-white rounded-md p-2">
                 <img
                   src="/images/icons/Claude_AI_logo.svg"
                   alt="Claude"
@@ -975,7 +975,7 @@ function BlogPost5Orchestration() {
 
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-white rounded-lg p-2">
+              <div className="bg-white rounded-md p-2">
                 <img
                   src="/images/icons/Claude_AI_logo.svg"
                   alt="Claude Haiku"
@@ -1031,7 +1031,7 @@ function BlogPost5Orchestration() {
 
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-synthwave-neon-cyan/20 rounded-lg p-2">
+              <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
                 <span className="font-russo text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
@@ -1045,11 +1045,11 @@ function BlogPost5Orchestration() {
             </p>
             <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
               Powers the semantic search behind{" "}
-              <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded text-xs">
+              <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 search_knowledge_base
               </code>{" "}
               and{" "}
-              <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded text-xs">
+              <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 search_methodology
               </code>
               . Finds relevant context by meaning, not keywords.
@@ -1067,7 +1067,7 @@ function BlogPost5Orchestration() {
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Intelligent Model Selection
           </h3>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Handler selects model based on conversation complexity
             </div>
@@ -1109,7 +1109,7 @@ function BlogPost5Orchestration() {
           </h3>
           <div className="space-y-4">
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-md bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
                   1
                 </span>
@@ -1126,7 +1126,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-cyan/20 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-md bg-synthwave-neon-cyan/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-cyan">
                   2
                 </span>
@@ -1138,7 +1138,7 @@ function BlogPost5Orchestration() {
                 <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                   Coaching advice is grounded in validated methodology knowledge
                   via{" "}
-                  <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded">
+                  <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
                     search_methodology
                   </code>
                   —not hallucinated fitness advice. The agent draws from
@@ -1147,7 +1147,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-purple/20 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-md bg-synthwave-neon-purple/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-purple">
                   3
                 </span>
@@ -1158,7 +1158,7 @@ function BlogPost5Orchestration() {
                 </h4>
                 <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                   Every tool validates its inputs before executing. The{" "}
-                  <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded">
+                  <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md">
                     log_workout
                   </code>{" "}
                   tool runs through normalization and validation before
@@ -1167,7 +1167,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-md bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
                 <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
                   4
                 </span>
@@ -1204,15 +1204,15 @@ function BlogPost5Orchestration() {
         <p className={`${typographyPatterns.description} mb-6`}>
           The Conversation Agent's most human quality? Memory. Powered by Nvidia
           NV-Embed-V2 embeddings and Pinecone vector search, three of its tools—
-          <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded">
+          <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
             search_knowledge_base
           </code>
           ,{" "}
-          <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded">
+          <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md">
             retrieve_memories
           </code>
           , and{" "}
-          <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded">
+          <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md">
             save_memory
           </code>
           —form a persistent memory loop. The agent both reads and writes
@@ -1254,7 +1254,7 @@ function BlogPost5Orchestration() {
             an old one? The agent retrieves it. Over time, the memory builds a
             rich profile that makes every conversation smarter.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // The memory loop in action
             </div>
@@ -1335,7 +1335,7 @@ function BlogPost5Orchestration() {
             </div>
             <p className="text-synthwave-text-secondary font-rajdhani text-sm">
               Powers the{" "}
-              <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded text-xs">
+              <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 log_workout
               </code>{" "}
               tool. When the Conversation Agent detects a workout log, the
@@ -1362,11 +1362,11 @@ function BlogPost5Orchestration() {
             </div>
             <p className="text-synthwave-text-secondary font-rajdhani text-sm">
               Creates the programs that{" "}
-              <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded text-xs">
+              <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 get_todays_workout
               </code>{" "}
               and{" "}
-              <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded text-xs">
+              <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 complete_program_workout
               </code>{" "}
               interact with. Program design happens async; the Conversation
@@ -1544,7 +1544,7 @@ function BlogPost5Orchestration() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link
                 to="/blog/the-foundation"
-                className="group flex items-center gap-3 p-3 rounded-lg hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
                   <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
@@ -1557,7 +1557,7 @@ function BlogPost5Orchestration() {
               </Link>
               <Link
                 to="/blog/your-coach-your-way"
-                className="group flex items-center gap-3 p-3 rounded-lg hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
                   <span className="font-inter font-bold text-sm text-synthwave-neon-cyan">
@@ -1570,7 +1570,7 @@ function BlogPost5Orchestration() {
               </Link>
               <Link
                 to="/blog/every-rep-counts"
-                className="group flex items-center gap-3 p-3 rounded-lg hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-purple/20 flex items-center justify-center">
                   <span className="font-inter font-bold text-sm text-synthwave-neon-purple">
@@ -1583,7 +1583,7 @@ function BlogPost5Orchestration() {
               </Link>
               <Link
                 to="/blog/training-programs-that-think"
-                className="group flex items-center gap-3 p-3 rounded-lg hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
                   <span className="font-inter font-bold text-sm text-synthwave-neon-pink">

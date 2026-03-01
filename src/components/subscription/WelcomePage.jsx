@@ -166,7 +166,7 @@ function WelcomePage() {
                 </div>
 
                 {/* Benefits list */}
-                <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-6 text-left">
+                <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-md p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-6 text-left">
                   <h3 className="font-rajdhani text-sm text-synthwave-text-primary uppercase font-semibold mb-3">
                     Your Benefits
                   </h3>

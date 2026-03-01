@@ -57,7 +57,7 @@ function TodaysWorkoutRow({
                 ))}
               </div>
               <div className="flex-1 min-h-[4px]"></div>
-              <div className="h-12 bg-synthwave-text-muted/20 rounded-[10px] animate-pulse w-full"></div>
+              <div className="h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse w-full"></div>
             </div>
           </div>
         ))}
@@ -242,7 +242,7 @@ function TodaysWorkoutRow({
                       onCompleteRestDay(program);
                     }}
                     disabled={isCompletingRestDay}
-                    className="w-full py-3.5 border border-synthwave-neon-cyan/30 rounded-[10px] bg-transparent text-synthwave-neon-cyan font-rajdhani font-bold text-sm tracking-[1.5px] uppercase cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3.5 border border-synthwave-neon-cyan/30 rounded-md bg-transparent text-synthwave-neon-cyan font-rajdhani font-bold text-sm tracking-[1.5px] uppercase cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCompletingRestDay
                       ? "Completing..."

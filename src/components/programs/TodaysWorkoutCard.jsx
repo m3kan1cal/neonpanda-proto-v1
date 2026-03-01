@@ -86,7 +86,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
+        <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -185,7 +185,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
+        <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -266,7 +266,7 @@ function TodaysWorkoutCard({
           Today's Workout
         </h3>
         <div
-          className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+          className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
           data-tooltip-id="beta-badge-todays-workout"
           data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
         >
@@ -294,7 +294,7 @@ function TodaysWorkoutCard({
       </button>
 
       {/* Workout details */}
-      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4 mb-4">
+      <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4 mb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-rajdhani font-semibold text-base text-white mb-1">
@@ -318,7 +318,7 @@ function TodaysWorkoutCard({
       {/* Multiple workouts indicator */}
       {templates.length > 1 && (
         <div className="flex items-center justify-center mb-4">
-          <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani">
+          <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-rajdhani">
             +{templates.length - 1} more workout
             {templates.length > 2 ? "s" : ""} scheduled today
           </div>

@@ -17,7 +17,7 @@ export const PowerliftingSection = ({
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
         className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-          collapsedSections.has(sectionId) ? "rounded-2xl" : "rounded-t-2xl"
+          collapsedSections.has(sectionId) ? "rounded-md" : "rounded-t-md"
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >
@@ -91,7 +91,7 @@ export const PowerliftingSection = ({
                   </svg>
                 </button>
                 {!collapsedSubsections.has(`exercise-${exerciseIndex}`) && (
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4 animate-fadeIn">
+                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4 animate-fadeIn">
                     <div className="space-y-2">
                       {exercise.sets?.map((set, setIndex) => (
                         <div key={setIndex} className="py-2">
@@ -199,7 +199,7 @@ export const PowerliftingSection = ({
               </div>
             ))
           ) : (
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
               <div className="text-synthwave-text-secondary font-rajdhani text-sm">
                 No powerlifting exercises data available for this workout.
               </div>

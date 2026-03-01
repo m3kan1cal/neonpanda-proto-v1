@@ -374,7 +374,7 @@ export const RunningSection = ({
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-              collapsedSections.has(detailsId) ? "rounded-2xl" : "rounded-t-2xl"
+              collapsedSections.has(detailsId) ? "rounded-md" : "rounded-t-md"
             }`}
             onClick={() => toggleCollapse(detailsId)}
           >
@@ -406,7 +406,7 @@ export const RunningSection = ({
                   containerPatterns={containerPatterns}
                 />
               ) : (
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                   <div className="text-synthwave-text-secondary font-rajdhani text-sm">
                     No running details data available for this workout.
                   </div>
@@ -423,8 +423,8 @@ export const RunningSection = ({
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
               collapsedSections.has(segmentsId)
-                ? "rounded-2xl"
-                : "rounded-t-2xl"
+                ? "rounded-md"
+                : "rounded-t-md"
             }`}
             onClick={() => toggleCollapse(segmentsId)}
           >
@@ -461,7 +461,7 @@ export const RunningSection = ({
                   ))}
                 </div>
               ) : (
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                   <div className="text-synthwave-text-secondary font-rajdhani text-sm">
                     No running segments data available for this workout.
                   </div>

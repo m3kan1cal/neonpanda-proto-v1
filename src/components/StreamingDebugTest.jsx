@@ -154,7 +154,7 @@ export default function StreamingDebugTest() {
               mode="plain"
               minHeight="60px"
               maxHeight="150px"
-              className="mt-1 p-2 border border-gray-300 rounded"
+              className="mt-1 p-2 border border-gray-300 rounded-md"
             />
           </label>
         </div>

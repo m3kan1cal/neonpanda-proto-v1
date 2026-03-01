@@ -143,7 +143,7 @@ export default function PhaseTimeline({ program }) {
                 <div
                   key={phase.phaseId || index}
                   className={`
-                    relative border-r border-synthwave-bg-primary/50 last:border-r-0 first:rounded-l-lg last:rounded-r-lg
+                    relative border-r border-synthwave-bg-primary/50 last:border-r-0 first:rounded-l-md last:rounded-r-md
                     ${colors.bg}
                   `}
                   style={{ width: `${width}%` }}
