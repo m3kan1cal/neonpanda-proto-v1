@@ -4,7 +4,6 @@ import {
   getRouteDisplayName,
   buildRouteWithParams,
 } from "../../utils/routeUtils";
-import { useNavigationContext } from "../../contexts/NavigationContext";
 import { Tooltip } from "react-tooltip";
 import { tooltipPatterns } from "../../utils/ui/uiPatterns";
 
@@ -44,8 +43,6 @@ function Breadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
   const searchParams = new URLSearchParams(location.search);
-  const { isSidebarCollapsed } = useNavigationContext();
-
   // Route mappings now handled by shared utility
 
   // Don't show breadcrumbs on the home page
@@ -59,9 +56,7 @@ function Breadcrumbs() {
   };
 
   return (
-    <nav
-      className={`fixed top-0 right-0 z-30 pointer-events-none pt-[env(safe-area-inset-top)] ${isSidebarCollapsed ? "left-0 md:left-16" : "left-0 md:left-64"}`}
-    >
+    <nav className="fixed top-0 right-0 left-0 md:left-20 z-30 pointer-events-none pt-[env(safe-area-inset-top)]">
       <div className="px-4 pt-2 pb-2 bg-synthwave-gradient border-b border-synthwave-neon-cyan/10">
         <div className="flex items-center space-x-2 text-sm font-rajdhani overflow-x-auto scrollbar-hide pointer-events-auto">
           {/* Logo - Mobile only */}

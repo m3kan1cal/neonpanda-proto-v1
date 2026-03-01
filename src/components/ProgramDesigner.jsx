@@ -31,6 +31,7 @@ import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
+import CopyButton from "./shared/CopyButton";
 import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 // No imports needed - session ID comes from URL
 import ProgramDesignerAgent from "../utils/agents/ProgramDesignerAgent";
@@ -120,13 +121,6 @@ const MessageItem = memo(
     renderMessageContent,
     conversationMode,
   }) => {
-    const [copied, setCopied] = useState(false);
-    const handleCopy = () => {
-      navigator.clipboard.writeText(message.content || "");
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    };
-
     return (
       <div
         className={`flex flex-col mb-1 group animate-message-in ${
@@ -222,44 +216,7 @@ const MessageItem = memo(
             )}
             {message.type === "ai" &&
               !isMessageStreaming(message, agentState) && (
-                <button
-                  onClick={handleCopy}
-                  className="self-start flex items-center gap-1 ml-1 text-synthwave-text-secondary/40 hover:text-synthwave-neon-cyan transition-colors duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  title={copied ? "Copied!" : "Copy to clipboard"}
-                >
-                  {copied ? (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
-                  )}
-                  {copied && (
-                    <span className="text-xs font-rajdhani">Copied!</span>
-                  )}
-                </button>
+                <CopyButton text={message.content} />
               )}
 
             {/* Avatar for user messages (right side) */}
