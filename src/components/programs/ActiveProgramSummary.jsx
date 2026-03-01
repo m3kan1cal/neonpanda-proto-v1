@@ -25,9 +25,9 @@ function ActiveProgramSummary({
           </h3>
         </div>
         <div className="space-y-3">
-          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
         </div>
       </div>
     );
@@ -103,7 +103,7 @@ function ActiveProgramSummary({
 
       {/* Current phase */}
       {phaseName && (
-        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-3 mb-4">
+        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-3 mb-4">
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-1">
             Current Phase
           </div>

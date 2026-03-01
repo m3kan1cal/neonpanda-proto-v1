@@ -43,16 +43,16 @@ function TodaysWorkoutRow({
         {[1, 2].map((i) => (
           <div key={i} className={containerPatterns.neonGlassSkeleton}>
             <div className={containerPatterns.neonGlassSkeletonInner}>
-              <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-              <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+              <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
+              <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+              <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
               <div className="h-[6px] bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
               <div className="space-y-1.5 pt-1">
                 {[1].map((j) => (
                   <div key={j} className="flex items-center gap-2">
                     <div className="w-5 h-5 min-w-[20px] rounded-md bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
-                    <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-3 w-8 bg-synthwave-text-muted/20 rounded animate-pulse shrink-0"></div>
+                    <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-3 w-8 bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                   </div>
                 ))}
               </div>

@@ -250,9 +250,10 @@ export const inputPatterns = {
   standard:
     "w-full px-4 py-3 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-synthwave-neon-pink/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-pink focus:bg-synthwave-bg-primary/50 focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[48px] [-webkit-appearance:none] [appearance:none] [&:-webkit-autofill]:!px-4 [&:-webkit-autofill]:!py-3 [&:-webkit-autofill]:!min-h-[48px] [&:-webkit-autofill]:!border-[1px] [&:-webkit-autofill]:!border-solid [&:-webkit-autofill]:!bg-synthwave-bg-primary/30 [&:-webkit-autofill]:!border-synthwave-neon-pink/20 [&:-webkit-autofill]:![&:-webkit-autofill]:!shadow-none [&:-webkit-autofill]:!outline-none [&:-webkit-autofill]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.47)_inset] [&:-webkit-autofill:hover]:!px-4 [&:-webkit-autofill:hover]:!py-3 [&:-webkit-autofill:hover]:!min-h-[48px] [&:-webkit-autofill:hover]:!border-[1px] [&:-webkit-autofill:hover]:!border-solid [&:-webkit-autofill:hover]:!bg-synthwave-bg-primary/30 [&:-webkit-autofill:hover]:!border-synthwave-neon-pink/20 [&:-webkit-autofill:hover]:![&:-webkit-autofill:hover]:!shadow-none [&:-webkit-autofill:hover]:!outline-none [&:-webkit-autofill:hover]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.47)_inset] [&:-webkit-autofill:focus]:!px-4 [&:-webkit-autofill:focus]:!py-3 [&:-webkit-autofill:focus]:!min-h-[48px] [&:-webkit-autofill:focus]:!border-[1px] [&:-webkit-autofill:focus]:!border-solid [&:-webkit-autofill:focus]:!bg-synthwave-bg-primary/50 [&:-webkit-autofill:focus]:!border-synthwave-neon-pink [&:-webkit-autofill:focus]:![&:-webkit-autofill:focus]:!shadow-none [&:-webkit-autofill:focus]:!outline-none [&:-webkit-autofill:focus]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.5)_inset]",
 
-  // Chat input field - Tiptap editor wrapper styling (with right padding for emoji button, left padding for actions button)
+  // Chat input field - Tiptap editor wrapper styling (right padding for emoji button, bottom padding for action buttons)
+  // pl-4 is standard left padding - text flows freely above the bottom action button
   chatInput:
-    "w-full px-4 py-3 pr-12 pl-10 bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30 text-synthwave-text-primary font-rajdhani outline-none ring-0 focus-within:outline-none focus-within:ring-0 focus-within:border-synthwave-neon-pink hover:border-synthwave-neon-pink/50 transition-colors placeholder-synthwave-text-muted synthwave-scrollbar box-border",
+    "w-full px-4 py-3 pr-12 pb-10 bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30 text-synthwave-text-primary font-rajdhani outline-none ring-0 focus-within:outline-none focus-within:ring-0 focus-within:border-synthwave-neon-pink hover:border-synthwave-neon-pink/50 transition-colors placeholder-synthwave-text-muted synthwave-scrollbar box-border",
 
   // Command palette input field - same styling but without right padding
   commandInput:
@@ -516,6 +517,11 @@ export const containerPatterns = {
   // Collapsible section content
   collapsibleContent: "px-6 py-4 bg-synthwave-bg-card/10",
 
+  // Collapsible/Expandable inline toggle - for entity card section toggles on manage pages
+  // Consistent sharp-cornered hover style with subtle cyan background
+  collapsibleToggle:
+    "w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2",
+
   // Info card cyan variant - for AI summaries and content sections (matches exercise container styling)
   infoCardCyan:
     "bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/20 p-3",
@@ -558,10 +564,10 @@ export const containerPatterns = {
   // AI Explanation Popup - Gradient border wrapper (outer shell)
   // Note: also apply inline style: backgroundSize "200% 200%", animation "slideDown 0.3s ease-out forwards, gradient-flow 3s ease infinite"
   explanationPopupWrapper:
-    "mt-3 relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-sm",
+    "mt-3 relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px]",
 
   // AI Explanation Popup - Inner card (always paired with explanationPopupWrapper)
-  explanationPopupInner: "bg-synthwave-bg-card rounded-sm p-4 h-full",
+  explanationPopupInner: "bg-synthwave-bg-card p-4 h-full",
 
   // AI Explanation Popup - Close button (top-right corner overlay)
   explanationPopupCloseButton:

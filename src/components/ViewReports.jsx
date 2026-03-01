@@ -689,12 +689,12 @@ function ViewReports() {
             {/* Left: Title + Coach Card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
               {/* Title skeleton - compact size */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
 
@@ -707,7 +707,7 @@ function ViewReports() {
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
-                <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
           </div>
@@ -730,30 +730,30 @@ function ViewReports() {
                   {/* Header with dot skeleton */}
                   <div className="flex items-start gap-3 mb-2">
                     <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                   </div>
 
                   {/* Metadata row skeleton */}
                   <div className="flex flex-wrap gap-4 mb-3">
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                   </div>
 
                   {/* Summary skeleton */}
                   <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
                     <div className="space-y-2">
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
                     </div>
                   </div>
 
                   {/* Badge row skeleton */}
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                   </div>
                 </div>
               ))}
@@ -770,30 +770,30 @@ function ViewReports() {
                     {/* Header with dot skeleton */}
                     <div className="flex items-start gap-3 mb-2">
                       <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
 
                     {/* Metadata row skeleton */}
                     <div className="flex flex-wrap gap-4 mb-3">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
 
                     {/* Summary skeleton */}
                     <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
                       <div className="space-y-2">
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
                       </div>
                     </div>
 
                     {/* Badge row skeleton */}
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     </div>
                   </div>
                 ))}
@@ -808,30 +808,30 @@ function ViewReports() {
                     {/* Header with dot skeleton */}
                     <div className="flex items-start gap-3 mb-2">
                       <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
 
                     {/* Metadata row skeleton */}
                     <div className="flex flex-wrap gap-4 mb-3">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
 
                     {/* Summary skeleton */}
                     <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
                       <div className="space-y-2">
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
                       </div>
                     </div>
 
                     {/* Badge row skeleton */}
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     </div>
                   </div>
                 ))}
