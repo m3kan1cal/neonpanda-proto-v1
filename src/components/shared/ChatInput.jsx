@@ -1290,7 +1290,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled={isTyping}
-                className="w-12 h-12 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
+                className="w-12 h-12 rounded-md bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
               >
                 {isTyping ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1307,7 +1307,7 @@ function ChatInput({
                 onTouchStart={handleStartRecording}
                 onTouchEnd={handleStopRecording}
                 disabled={isTyping}
-                className={`w-12 h-12 transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
+                className={`w-12 h-12 rounded-md transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
                   isRecording
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
@@ -1319,7 +1319,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled
-                className="w-12 h-12 bg-synthwave-bg-primary/30 text-synthwave-text-muted shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
+                className="w-12 h-12 rounded-md bg-synthwave-bg-primary/30 text-synthwave-text-muted shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
               >
                 <SendIcon />
               </button>

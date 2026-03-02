@@ -130,13 +130,13 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex flex-col mb-1 group animate-message-in ${
+        className={`flex flex-col mb-8 group animate-message-in ${
           message.type === "user" ? "items-end" : "items-start"
         }`}
       >
         {/* Message Content */}
         <div
-          className={`w-full md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {message.type === "user" ? (
             <div
@@ -676,7 +676,7 @@ function CoachCreator() {
                       className={`flex flex-col mb-1 ${i % 2 === 0 ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`w-full md:max-w-[80%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full md:max-w-[85%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         {i % 2 === 0 ? (
                           /* User message: keep bubble container */
@@ -781,7 +781,7 @@ function CoachCreator() {
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-4 custom-scrollbar"
+                className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-8 custom-scrollbar"
                 style={{
                   paddingBottom: "calc(var(--chat-input-height, 160px) + 16px)",
                 }}

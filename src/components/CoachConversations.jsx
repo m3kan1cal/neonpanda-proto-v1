@@ -136,13 +136,13 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex flex-col mb-4 md:mb-1 group animate-message-in ${
+        className={`flex flex-col mb-8 group animate-message-in ${
           message.type === "user" ? "items-end" : "items-start"
         }`}
       >
         {/* Message Content */}
         <div
-          className={`w-full md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
           {message.type === "ai" &&
@@ -1075,7 +1075,7 @@ function CoachConversations() {
                       className={`flex flex-col mb-1 ${i % 2 === 1 ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`w-full md:max-w-[80%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full md:max-w-[85%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         {i % 2 === 1 ? (
                           /* User message: keep bubble container */
@@ -1227,299 +1227,290 @@ function CoachConversations() {
               {/* Messages Area - with bottom padding for floating input */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-6 py-3 sm:py-6 synthwave-scrollbar-cyan"
+                className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-6 py-3 sm:py-6 space-y-8 synthwave-scrollbar-cyan"
                 style={{
                   paddingBottom: "calc(var(--chat-input-height, 160px) + 16px)",
                 }}
               >
-                <div className="space-y-4">
-                  {/* Empty State - Show tips when no messages */}
-                  {coachConversationAgentState.messages.length === 0 &&
-                    !coachConversationAgentState.isTyping &&
-                    !coachConversationAgentState.isStreaming && (
-                      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
-                        {/* Welcome Header */}
-                        <div className="text-center space-y-2">
-                          <h2 className={typographyPatterns.emptyStateHeader}>
-                            Ready to Train?
-                          </h2>
-                          <p
-                            className={typographyPatterns.emptyStateDescription}
+                {/* Empty State - Show tips when no messages */}
+                {coachConversationAgentState.messages.length === 0 &&
+                  !coachConversationAgentState.isTyping &&
+                  !coachConversationAgentState.isStreaming && (
+                    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
+                      {/* Welcome Header */}
+                      <div className="text-center space-y-2">
+                        <h2 className={typographyPatterns.emptyStateHeader}>
+                          Ready to Train?
+                        </h2>
+                        <p className={typographyPatterns.emptyStateDescription}>
+                          Let's get after it! Chat with me about anything
+                          fitness, or use these quick commands to dive right in.
+                        </p>
+                      </div>
+
+                      {/* Command Tips Grid */}
+                      <div className="flex flex-col gap-6 w-full max-w-2xl">
+                        {/* Slash Commands */}
+                        <div>
+                          <h4
+                            className={
+                              typographyPatterns.emptyStateSectionHeader
+                            }
                           >
-                            Let's get after it! Chat with me about anything
-                            fitness, or use these quick commands to dive right
-                            in.
-                          </p>
-                        </div>
-
-                        {/* Command Tips Grid */}
-                        <div className="flex flex-col gap-6 w-full max-w-2xl">
-                          {/* Slash Commands */}
-                          <div>
-                            <h4
-                              className={
-                                typographyPatterns.emptyStateSectionHeader
-                              }
+                            Use Slash Commands
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Log Workout Command */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
                             >
-                              Use Slash Commands
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Log Workout Command */}
-                              <div
-                                className={containerPatterns.emptyStateTipCard}
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
                               >
-                                <h3
-                                  className={
-                                    typographyPatterns.emptyStateCardTitle
-                                  }
-                                >
-                                  Log Your Wins
-                                </h3>
-                                <p
-                                  className={
-                                    typographyPatterns.emptyStateCardTextWithMargin
-                                  }
-                                >
-                                  Drop your workout results so I can celebrate
-                                  with you and track your gains
-                                </p>
-                                <code className={typographyPatterns.inlineCode}>
-                                  /log-workout Fran 8:57
-                                </code>
-                              </div>
-
-                              {/* Save Memory Command */}
-                              <div
-                                className={containerPatterns.emptyStateTipCard}
+                                Log Your Wins
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardTextWithMargin
+                                }
                               >
-                                <h3
-                                  className={
-                                    typographyPatterns.emptyStateCardTitle
-                                  }
-                                >
-                                  Store What Matters
-                                </h3>
-                                <p
-                                  className={
-                                    typographyPatterns.emptyStateCardTextWithMargin
-                                  }
-                                >
-                                  Save notes about what works for you—I'll
-                                  remember so you don't have to
-                                </p>
-                                <code className={typographyPatterns.inlineCode}>
-                                  /save-memory prefer morning workouts
-                                </code>
-                              </div>
+                                Drop your workout results so I can celebrate
+                                with you and track your gains
+                              </p>
+                              <code className={typographyPatterns.inlineCode}>
+                                /log-workout Fran 8:57
+                              </code>
                             </div>
-                          </div>
 
-                          {/* Chat & Build Features */}
-                          <div>
-                            <h4
-                              className={
-                                typographyPatterns.emptyStateSectionHeader
-                              }
+                            {/* Save Memory Command */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
                             >
-                              Chat & Build
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Ask Anything */}
-                              <div
-                                className={containerPatterns.emptyStateTipCard}
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
                               >
-                                <h3
-                                  className={
-                                    typographyPatterns.emptyStateCardTitle
-                                  }
-                                >
-                                  Ask Me Anything
-                                </h3>
-                                <p
-                                  className={
-                                    typographyPatterns.emptyStateCardText
-                                  }
-                                >
-                                  Need form checks, programming help, guidance,
-                                  answers, or a pep talk? I'm here for all of it
-                                </p>
-                              </div>
-
-                              {/* Natural Language Workouts */}
-                              <div
-                                className={containerPatterns.emptyStateTipCard}
+                                Store What Matters
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardTextWithMargin
+                                }
                               >
-                                <h3
-                                  className={
-                                    typographyPatterns.emptyStateCardTitle
-                                  }
-                                >
-                                  Just Talk to Me
-                                </h3>
-                                <p
-                                  className={
-                                    typographyPatterns.emptyStateCardText
-                                  }
-                                >
-                                  Log your session naturally or tell me what you
-                                  want—I'll build the perfect workout for you
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Media & Quick Actions */}
-                          <div>
-                            <h4
-                              className={
-                                typographyPatterns.emptyStateSectionHeader
-                              }
-                            >
-                              Media & Quick Actions
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Attach Photos */}
-                              <div
-                                className={containerPatterns.emptyStateTipCard}
-                              >
-                                <h3
-                                  className={
-                                    typographyPatterns.emptyStateCardTitle
-                                  }
-                                >
-                                  Show Me Your Work
-                                </h3>
-                                <p
-                                  className={
-                                    typographyPatterns.emptyStateCardText
-                                  }
-                                >
-                                  Hit the{" "}
-                                  <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1">
-                                    <CameraIcon />
-                                  </span>{" "}
-                                  to share form videos, progress pics, or that
-                                  whiteboard you just conquered
-                                </p>
-                              </div>
-
-                              {/* Quick Prompts */}
-                              <div
-                                className={containerPatterns.emptyStateTipCard}
-                              >
-                                <h3
-                                  className={
-                                    typographyPatterns.emptyStateCardTitle
-                                  }
-                                >
-                                  One-Tap Favorites
-                                </h3>
-                                <p
-                                  className={
-                                    typographyPatterns.emptyStateCardText
-                                  }
-                                >
-                                  Check out Quick Prompts for instant check-ins,
-                                  workout requests, and other handy shortcuts
-                                </p>
-                              </div>
+                                Save notes about what works for you—I'll
+                                remember so you don't have to
+                              </p>
+                              <code className={typographyPatterns.inlineCode}>
+                                /save-memory prefer morning workouts
+                              </code>
                             </div>
                           </div>
                         </div>
 
-                        {/* Pro Tip */}
-                        <div className="text-center">
-                          <p className={typographyPatterns.emptyStateProTip}>
-                            Pro tip: Hit{" "}
-                            <span className="text-synthwave-neon-cyan font-mono">
-                              /
-                            </span>{" "}
-                            anytime to see what I can do
-                          </p>
+                        {/* Chat & Build Features */}
+                        <div>
+                          <h4
+                            className={
+                              typographyPatterns.emptyStateSectionHeader
+                            }
+                          >
+                            Chat & Build
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Ask Anything */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Ask Me Anything
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Need form checks, programming help, guidance,
+                                answers, or a pep talk? I'm here for all of it
+                              </p>
+                            </div>
+
+                            {/* Natural Language Workouts */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Just Talk to Me
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Log your session naturally or tell me what you
+                                want—I'll build the perfect workout for you
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Media & Quick Actions */}
+                        <div>
+                          <h4
+                            className={
+                              typographyPatterns.emptyStateSectionHeader
+                            }
+                          >
+                            Media & Quick Actions
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Attach Photos */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Show Me Your Work
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Hit the{" "}
+                                <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1">
+                                  <CameraIcon />
+                                </span>{" "}
+                                to share form videos, progress pics, or that
+                                whiteboard you just conquered
+                              </p>
+                            </div>
+
+                            {/* Quick Prompts */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                One-Tap Favorites
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Check out Quick Prompts for instant check-ins,
+                                workout requests, and other handy shortcuts
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    )}
 
-                  {coachConversationAgentState.messages
-                    .sort(
-                      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
-                    ) // Ensure chronological order
-                    .filter((message) => {
-                      // Filter out empty streaming placeholder messages
-                      const streaming = isMessageStreaming(
-                        message,
-                        coachConversationAgentState,
-                      );
-                      const hasContent =
-                        message.content && message.content.trim().length > 0;
-                      const hasStreamingContent =
-                        coachConversationAgentState.streamingMessage &&
-                        coachConversationAgentState.streamingMessage.trim()
-                          .length > 0;
-
-                      // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
-                      return hasContent || (streaming && hasStreamingContent);
-                    })
-                    .map((message, index) => (
-                      <React.Fragment key={message.id}>
-                        <MessageItem
-                          message={message}
-                          agentState={coachConversationAgentState}
-                          coachName={coachConversationAgentState.coach?.name}
-                          userEmail={userEmail}
-                          userDisplayName={userDisplayName}
-                          getUserInitial={getUserInitial}
-                          formatTime={formatTime}
-                          renderMessageContent={renderMessageContent}
-                          conversationMode={conversationMode}
-                        />
-                      </React.Fragment>
-                    ))}
-
-                  {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
-                  {coachConversationAgentState.contextualUpdate && (
-                    <ContextualUpdateIndicator
-                      content={
-                        coachConversationAgentState.contextualUpdate.content
-                      }
-                      avatarLabel={
-                        coachConversationAgentState.coach?.name?.charAt(0) ||
-                        "C"
-                      }
-                    />
+                      {/* Pro Tip */}
+                      <div className="text-center">
+                        <p className={typographyPatterns.emptyStateProTip}>
+                          Pro tip: Hit{" "}
+                          <span className="text-synthwave-neon-cyan font-mono">
+                            /
+                          </span>{" "}
+                          anytime to see what I can do
+                        </p>
+                      </div>
+                    </div>
                   )}
 
-                  {/* Typing Indicator - Show only when typing but not actively streaming content */}
-                  {typingState.showTypingIndicator &&
-                    !coachConversationAgentState.contextualUpdate && (
-                      <div className="flex flex-col items-start mb-1 animate-message-in">
-                        <div
-                          className={`${containerPatterns.aiChatBubble} px-4 py-3`}
-                        >
-                          <div className="flex space-x-1.5">
-                            <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"></div>
-                            <div
-                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
-                              style={{ animationDelay: "0.2s" }}
-                            ></div>
-                            <div
-                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
-                              style={{ animationDelay: "0.4s" }}
-                            ></div>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2 px-2 mt-2">
-                          <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
-                            {coachConversationAgentState.coach?.name?.charAt(
-                              0,
-                            ) || "C"}
-                          </div>
+                {coachConversationAgentState.messages
+                  .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
+                  .filter((message) => {
+                    // Filter out empty streaming placeholder messages
+                    const streaming = isMessageStreaming(
+                      message,
+                      coachConversationAgentState,
+                    );
+                    const hasContent =
+                      message.content && message.content.trim().length > 0;
+                    const hasStreamingContent =
+                      coachConversationAgentState.streamingMessage &&
+                      coachConversationAgentState.streamingMessage.trim()
+                        .length > 0;
+
+                    // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
+                    return hasContent || (streaming && hasStreamingContent);
+                  })
+                  .map((message, index) => (
+                    <React.Fragment key={message.id}>
+                      <MessageItem
+                        message={message}
+                        agentState={coachConversationAgentState}
+                        coachName={coachConversationAgentState.coach?.name}
+                        userEmail={userEmail}
+                        userDisplayName={userDisplayName}
+                        getUserInitial={getUserInitial}
+                        formatTime={formatTime}
+                        renderMessageContent={renderMessageContent}
+                        conversationMode={conversationMode}
+                      />
+                    </React.Fragment>
+                  ))}
+
+                {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
+                {coachConversationAgentState.contextualUpdate && (
+                  <ContextualUpdateIndicator
+                    content={
+                      coachConversationAgentState.contextualUpdate.content
+                    }
+                    avatarLabel={
+                      coachConversationAgentState.coach?.name?.charAt(0) || "C"
+                    }
+                  />
+                )}
+
+                {/* Typing Indicator - Show only when typing but not actively streaming content */}
+                {typingState.showTypingIndicator &&
+                  !coachConversationAgentState.contextualUpdate && (
+                    <div className="flex flex-col items-start mb-1 animate-message-in">
+                      <div
+                        className={`${containerPatterns.aiChatBubble} px-4 py-3`}
+                      >
+                        <div className="flex space-x-1.5">
+                          <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"></div>
+                          <div
+                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+                            style={{ animationDelay: "0.4s" }}
+                          ></div>
                         </div>
                       </div>
-                    )}
-                  {/* Scroll anchor - always at the bottom */}
-                  <div ref={messagesEndRef} />
-                </div>
+                      <div className="flex items-start gap-2 px-2 mt-2">
+                        <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
+                          {coachConversationAgentState.coach?.name?.charAt(0) ||
+                            "C"}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                {/* Scroll anchor - always at the bottom */}
+                <div ref={messagesEndRef} />
               </div>
             </div>
           </div>

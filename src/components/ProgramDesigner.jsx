@@ -123,13 +123,13 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex flex-col mb-1 group animate-message-in ${
+        className={`flex flex-col mb-8 group animate-message-in ${
           message.type === "user" ? "items-end" : "items-start"
         }`}
       >
         {/* Message Content */}
         <div
-          className={`w-full md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
           {message.type === "ai" &&
@@ -882,7 +882,7 @@ function ProgramDesigner() {
                       className={`flex flex-col mb-1 ${i % 2 === 1 ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`w-full md:max-w-[80%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full md:max-w-[85%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         {i % 2 === 1 ? (
                           /* User message: keep bubble container */
@@ -1034,7 +1034,7 @@ function ProgramDesigner() {
               {/* Messages Area - with bottom padding for floating input */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-4"
+                className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-8"
                 style={{
                   paddingBottom: "calc(var(--chat-input-height, 160px) + 16px)",
                 }}
