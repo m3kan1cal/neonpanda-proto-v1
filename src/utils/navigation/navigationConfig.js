@@ -147,8 +147,10 @@ export const navigationItems = {
       id: "shared-programs",
       label: "Shared Programs",
       icon: ShareIconTiny,
-      getRoute: (ctx) =>
-        `/training-grounds/programs/shared?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+      getRoute: (ctx) => {
+        const base = `/training-grounds/programs/shared?userId=${ctx.userId}`;
+        return ctx.coachId ? `${base}&coachId=${ctx.coachId}` : base;
+      },
       requiresAuth: true,
       requiresCoach: false, // User-level data, but preserves coach context for navigation
       badge: (ctx) => ctx.sharedProgramsCount || 0,

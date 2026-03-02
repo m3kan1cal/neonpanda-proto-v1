@@ -19,25 +19,30 @@ This document defines the comprehensive UI/UX strategy for NeonPanda's synthwave
 ## AI Fitness Platform Color Hierarchy Framework
 
 ### Core Philosophy
+
 Colors communicate the **user's relationship to the action** - whether they're actively creating, engaging with content, or receiving system intelligence. This creates an intuitive mental model that users can learn and rely on throughout their fitness journey.
 
 ### 🩷 NEON PINK - User-Driven Creation
-*"I'm actively building my fitness journey and changing the system"*
 
-**Mental Model:** *"These actions create something new in my fitness journey"*
+_"I'm actively building my fitness journey and changing the system"_
+
+**Mental Model:** _"These actions create something new in my fitness journey"_
 
 #### Core Actions (Always Neon Pink):
+
 - **Conversations** - The absolute center of your platform - coach/user relationship
 - **Workout Logging** - Users describing completed workouts in natural language
 - **Memory Creation** - Capturing important moments, insights, milestones
 - **Coach Creation** - Using the Coach Creator to build personalized AI coaches
 
 #### Future Neon Pink Actions:
+
 - **Training Program Creation** - When users can design custom programs
 - **Goal Setting/Updates** - Defining and modifying fitness objectives
 - **Personal Data Input** - Adding metrics, preferences, injuries, etc.
 
 **Examples:**
+
 ```
 • Start New Conversation
 • Log Workout
@@ -49,11 +54,13 @@ Colors communicate the **user's relationship to the action** - whether they're a
 ```
 
 ### 🔵 CYAN - Engagement & Discovery
-*"I'm actively exploring and managing my fitness experience"*
 
-**Mental Model:** *"These are important things I choose to engage with"*
+_"I'm actively exploring and managing my fitness experience"_
+
+**Mental Model:** _"These are important things I choose to engage with"_
 
 #### Discovery Actions:
+
 - **Browse Workouts** - Exploring suggested/template workouts
 - **Methodology Learning** - Reading about CrossFit principles, techniques
 - **Coach Customization** - Tweaking existing coach settings/personality
@@ -61,12 +68,14 @@ Colors communicate the **user's relationship to the action** - whether they're a
 - **Community Features** - Connecting with other users (future)
 
 #### Management Actions:
+
 - **Settings/Preferences** - Platform customization
 - **Data Export** - Requesting personal data
 - **Subscription Management** - Billing, plan changes
 - **Coach Switching** - Changing primary coach
 
 **Examples:**
+
 ```
 • Browse Workouts
 • Review Progress
@@ -78,23 +87,27 @@ Colors communicate the **user's relationship to the action** - whether they're a
 ```
 
 ### 🟣 PURPLE - System Intelligence & Events
-*"The platform is working for me automatically"*
 
-**Mental Model:** *"The platform is intelligently responding to my actions"*
+_"The platform is working for me automatically"_
+
+**Mental Model:** _"The platform is intelligently responding to my actions"_
 
 #### System-Generated Content:
+
 - **Analytics/Reports** - Weekly progress reports, workout analysis
 - **Recommendations** - AI suggesting workouts, program adjustments
 - **Insights** - "You've improved your squat by 15% this month"
 - **Safety Validations** - System checking workout appropriateness
 
 #### Special Events:
+
 - **Achievements/Milestones** - "First 300lb squat!" celebrations
 - **Notifications** - Workout reminders, coach messages
 - **Seasonal Content** - Challenges, competitions, special programs
 - **System Maintenance** - Updates, new features announcements
 
 **Examples:**
+
 ```
 • Weekly Progress Reports
 • AI Workout Recommendations
@@ -106,6 +119,7 @@ Colors communicate the **user's relationship to the action** - whether they're a
 ```
 
 ### Supporting Colors
+
 - **Red:** Destructive actions (delete, remove, error states)
 - **Green:** Success states, confirmations, positive feedback
 - **Yellow/Orange:** Warnings, cautions, pending states
@@ -124,6 +138,7 @@ For any new feature, ask:
 ## Visual Hierarchy Benefits
 
 This creates an intuitive **attention hierarchy**:
+
 - **Neon Pink draws the eye first** → Most important user actions
 - **Cyan provides structure** → Navigation and exploration
 - **Purple adds context** → System intelligence and events
@@ -131,16 +146,19 @@ This creates an intuitive **attention hierarchy**:
 ## Practical Applications
 
 ### Navigation Bars:
+
 - **Neon Pink**: "New Chat", "Log Workout", "Create Memory"
 - **Cyan**: "Browse", "My Progress", "Settings"
 - **Purple**: "Reports", "Achievements", [notification badges]
 
 ### Dashboard Cards:
+
 - **Neon Pink**: Active conversation thread, Quick workout entry
 - **Cyan**: "Explore Workouts", "Review Progress", "Manage Coaches"
 - **Purple**: "This Week's Insights", Achievement notifications
 
 ### Button Hierarchies:
+
 - **Primary (Neon Pink)**: Main CTAs for creation actions
 - **Secondary (Cyan)**: Navigation and management actions
 - **Tertiary (Purple)**: System-generated content links
@@ -148,6 +166,7 @@ This creates an intuitive **attention hierarchy**:
 ## Visual Appeal of Neon Pink
 
 Neon pink is brilliant for this because:
+
 - **Highly Distinctive** - Stands out more than green in typical UI contexts
 - **Creative Energy** - Pink suggests creativity, personalization, self-expression
 - **Fitness Industry Friendly** - Lots of fitness brands use vibrant pinks successfully
@@ -161,6 +180,7 @@ The **Pink → Cyan → Purple** progression creates a really nice visual flow f
 ## Button Design Standards
 
 ### Modern 2025 Principles
+
 - **Touch-first design:** Minimum 44px touch targets
 - **Subtle animations:** Hover translations (-translate-y-0.5 to -translate-y-1)
 - **Glassmorphism effects:** Backdrop blur for floating elements
@@ -168,6 +188,7 @@ The **Pink → Cyan → Purple** progression creates a really nice visual flow f
 - **Accessibility focus:** Proper focus rings and contrast ratios
 
 ### Primary Buttons (Neon Pink)
+
 ```css
 /* Solid Fill - High Impact */
 bg-synthwave-neon-pink text-synthwave-bg-primary
@@ -179,6 +200,7 @@ transition-all duration-300
 ```
 
 ### Secondary Buttons (Neon Cyan)
+
 ```css
 /* Outlined - Clean Modern */
 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan
@@ -190,6 +212,7 @@ transition-all duration-300
 ```
 
 ### Link Buttons (Modern Approach)
+
 ```css
 /* Enhanced Link Style */
 bg-transparent border-none text-synthwave-neon-cyan
@@ -201,6 +224,7 @@ transition-all duration-200
 ```
 
 ### Icon Buttons
+
 - **Minimal:** Subtle hover backgrounds, no borders
 - **Soft Background:** Light color backgrounds with hover intensification
 - **Bordered:** Subtle borders that strengthen on hover
@@ -209,12 +233,14 @@ transition-all duration-200
 - **Glow Effect:** Animated glow for special states
 
 ### Size Variants
+
 - **Small (32px):** Compact interfaces, secondary actions
 - **Medium (40px):** Standard size for most interfaces
 - **Large (48px):** Primary actions, mobile-optimized
 - **Extra Large (56px):** Hero CTAs, landing pages
 
 ### Interactive States
+
 - **Loading:** Spinner or bouncing dots with disabled styling
 - **Success:** Green background with checkmark icon
 - **Warning:** Yellow background with warning icon
@@ -226,10 +252,13 @@ transition-all duration-200
 ## Container Design Standards
 
 ### Modern Container Philosophy
+
 Move away from heavy neon borders toward subtle glassmorphism and modern depth techniques that enhance rather than compete with content.
 
 ### Main Content Container (Recommended)
+
 **Subtle Glassmorphism Approach:**
+
 ```css
 bg-synthwave-bg-card/30 backdrop-blur-xl
 border border-synthwave-neon-cyan/10
@@ -239,6 +268,7 @@ hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15
 ```
 
 **Benefits:**
+
 - Modern 2025 aesthetic
 - Better content focus
 - Accessibility friendly
@@ -249,16 +279,19 @@ hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15
 ### Container Variants
 
 #### Glassmorphism Levels
+
 1. **Light Glass:** `bg-white/5 backdrop-blur-md border border-white/10`
 2. **Medium Glass:** `bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20`
 3. **Heavy Glass:** `bg-synthwave-bg-card/50 backdrop-blur-xl border border-synthwave-neon-purple/30`
 
 #### Modern Card Layouts
+
 1. **Minimal Card:** Borderless with subtle hover effects
 2. **Outlined Card:** Prominent borders with transparent backgrounds
 3. **Elevated Card:** Strong shadows with enhanced hover states
 
 #### Interactive Container States
+
 - **Loading State:** Animated gradient overlays with skeleton content
 - **Error State:** Red color coding with appropriate iconography
 - **Success State:** Green accents with confirmation messaging
@@ -266,6 +299,7 @@ hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15
 ### Chat Interface Containers
 
 #### Enhanced User Bubble
+
 ```css
 bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60
 text-white border-0 rounded-2xl rounded-br-md
@@ -273,6 +307,7 @@ shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm
 ```
 
 #### Enhanced AI Bubble
+
 ```css
 bg-synthwave-bg-card/60 backdrop-blur-md
 border border-synthwave-neon-cyan/20 text-synthwave-text-primary
@@ -280,6 +315,7 @@ rounded-2xl rounded-bl-md shadow-lg shadow-synthwave-neon-cyan/20
 ```
 
 #### Advanced Floating Input
+
 ```css
 bg-gradient-to-r from-synthwave-bg-card/90 via-synthwave-bg-card/95 to-synthwave-bg-card/90
 backdrop-blur-xl border border-synthwave-neon-purple/20
@@ -291,6 +327,7 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 ## Typography & Spacing
 
 ### Font Hierarchy
+
 - **Primary Font:** Russo One (headings, titles)
 - **Secondary Font:** Rajdhani (body text, buttons, UI elements)
 - **Font Weights:**
@@ -301,12 +338,14 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
   - Black (900) for hero titles
 
 ### Text Styling Standards
+
 - **Buttons:** `font-rajdhani font-semibold uppercase tracking-wide`
-- **Headings:** `font-russo uppercase`
+- **Headings:** `font-barlow uppercase`
 - **Body Text:** `font-rajdhani`
 - **Captions:** `font-rajdhani text-sm`
 
 ### Spacing System
+
 - **Micro (4px):** `space-x-1, gap-1`
 - **Small (8px):** `space-x-2, gap-2`
 - **Medium (16px):** `space-x-4, gap-4, p-4`
@@ -314,6 +353,7 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 - **XL (32px):** `space-x-8, gap-8, p-8`
 
 ### Border Radius Standards
+
 - **Small elements:** `rounded-lg` (8px)
 - **Buttons:** `rounded-lg` (8px) to `rounded-xl` (12px)
 - **Cards:** `rounded-xl` (12px) to `rounded-2xl` (16px)
@@ -324,6 +364,7 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 ## Modern UI/UX Principles
 
 ### 2025 Design Standards
+
 1. **Glassmorphism over Heavy Borders:** Subtle depth through transparency and blur
 2. **Touch-First Design:** Minimum 44px touch targets for mobile accessibility
 3. **Micro-Interactions:** Subtle hover animations and state changes
@@ -333,6 +374,7 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 7. **Mobile-First Approach:** Responsive design that works on all screen sizes
 
 ### Animation Guidelines
+
 - **Hover Translations:** `-translate-y-0.5` for subtle lift, `-translate-y-1` for stronger emphasis
 - **Scale Effects:** `hover:scale-105 active:scale-95` for interactive feedback
 - **Transition Duration:** `duration-200` for quick interactions, `duration-300` for standard animations
@@ -340,6 +382,7 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 - **Color Transitions:** Smooth color changes for state feedback
 
 ### Accessibility Standards
+
 - **Focus Rings:** `focus:ring-2 focus:ring-{color}/50 focus:ring-offset-2`
 - **Color Contrast:** Minimum 4.5:1 ratio for normal text, 3:1 for large text
 - **Touch Targets:** Minimum 44px for mobile, adequate spacing between interactive elements
@@ -351,6 +394,7 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 ## Implementation Guidelines
 
 ### Color Usage Priority
+
 1. **One Primary Action per Screen:** Use pink sparingly for maximum impact
 2. **Multiple Secondary Actions:** Cyan can be used more liberally
 3. **Special Features:** Purple for unique or premium functionality
@@ -359,16 +403,19 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 ### Context-Specific Rules
 
 #### Authentication Pages
+
 - **Sign In/Register:** Pink (creates session/account)
 - **Forgot Password:** Cyan (navigation to recovery)
 - **Cancel/Go Back:** Cyan (navigation)
 
 #### Workout Management
+
 - **Create Workout:** Pink (creates new data)
 - **Manage Workouts:** Cyan (browse/organize)
 - **AI Generate Workout:** Purple (AI feature)
 
 #### Coach Conversations
+
 - **Send Message:** Pink (creates new message)
 - **View Conversations:** Cyan (browse existing)
 - **AI Coach Features:** Purple (AI-powered)
@@ -376,22 +423,28 @@ shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl
 ### Flexible Color Application
 
 #### When to Use Strict Semantic Colors
+
 Use semantic colors when containers serve **different functional purposes**:
+
 - **Coaches.jsx**: Coach cards (cyan - manage) vs Template cards (pink - create)
 - **Different action types**: Create vs Manage vs View vs Delete
 
 #### When to Use Consistent Container Colors
+
 Use consistent colors when containers serve the **same functional purpose**:
+
 - **TrainingGrounds.jsx**: All containers are data management sections
 - **Dashboard layouts**: Multiple similar content areas
 - **List views**: Similar item types with different content
 
 #### Decision Framework
+
 1. **Are the containers functionally different?** → Use semantic colors
 2. **Are the containers functionally similar?** → Use consistent colors + semantic clickable items
 3. **What creates less cognitive load for users?** → Choose that approach
 
 #### Examples
+
 - **TrainingGrounds.jsx**: All cyan containers + pink clickable items (consistent grouping)
 - **Coaches.jsx**: Cyan manage cards + pink create cards (semantic meaning)
 - **Settings pages**: All cyan containers (consistent management interface)
@@ -399,6 +452,7 @@ Use consistent colors when containers serve the **same functional purpose**:
 ### User Workflow Hierarchy
 
 #### Color Priority Based on User Relationship to Action
+
 1. **Pink**: User-Driven Creation - "I'm building my fitness journey"
    - Coach Conversations (core relationship)
    - Workout Logging (creating workout data)
@@ -418,17 +472,20 @@ Use consistent colors when containers serve the **same functional purpose**:
    - Notifications & Alerts (system communications)
 
 #### Decision Logic
+
 - **Does this create something new?** → Pink (User-Driven Creation)
 - **Is this something I choose to engage with?** → Cyan (Engagement & Discovery)
 - **Is this something the system generates?** → Purple (System Intelligence)
 
 ### Form Design Patterns
+
 - **Primary Submit:** Pink button, right-aligned
 - **Cancel/Back:** Cyan link or outlined button, left-aligned
 - **Destructive Actions:** Red with confirmation modal
 - **Save Draft:** Cyan secondary button
 
 ### Card Action Patterns
+
 - **Create New:** Pink FAB or prominent button
 - **View/Edit:** Cyan text or icon buttons
 - **Delete:** Red icon button with confirmation
@@ -439,29 +496,35 @@ Use consistent colors when containers serve the **same functional purpose**:
 ## Component Reference
 
 ### AuthButton Component
+
 Located: `src/auth/components/AuthButton.jsx`
 
 **Variants:**
+
 - `primary`: Pink solid fill for main actions
 - `secondary`: Cyan outlined for secondary actions
 - `link`: Enhanced link styling for navigation
 
 **Props:**
+
 - `variant`: Button style variant
 - `loading`: Shows loading state with spinner
 - `disabled`: Disabled state with reduced opacity
 - `type`: HTML button type (button, submit, reset)
 
 ### IconButton Component
+
 Located: `src/components/shared/IconButton.jsx`
 
 **Variants:**
+
 - `default`: Standard icon button
 - `cyan`: Cyan themed icon button
 - `active`: Active state styling
 - `small`: Compact size variant
 
 ### NeonBorder Component
+
 Located: `src/components/themes/SynthwaveComponents.jsx`
 
 **Usage:** Legacy component - migrate to glassmorphism containers
@@ -469,9 +532,11 @@ Located: `src/components/themes/SynthwaveComponents.jsx`
 **Recommendation:** Use for special accent containers only
 
 ### Theme Classes
+
 Located: `src/utils/synthwaveThemeClasses.js`
 
 **Key Classes:**
+
 - `neonButton`: Pink themed button
 - `cyanButton`: Cyan themed button
 - `glowCard`: Card with glow effects
@@ -482,21 +547,25 @@ Located: `src/utils/synthwaveThemeClasses.js`
 ## Migration Strategy
 
 ### Phase 1: Authentication Pages ✅
+
 - Updated `AuthButton.jsx` with modern link variant
 - Applied glassmorphism to `AuthLayout.jsx`
 - Enhanced `AuthInput.jsx` with modern styling
 
 ### Phase 2: Main Content Containers (Recommended Next)
+
 - Replace `NeonBorder` with subtle glassmorphism
 - Update `Workouts.jsx`, `WeeklyReports.jsx`, `CoachConversations.jsx`
 - Implement new container standards
 
 ### Phase 3: Button Consistency
+
 - Audit all button usage across components
 - Apply semantic color system consistently
 - Update hover states and animations
 
 ### Phase 4: Mobile Optimization
+
 - Ensure all touch targets meet 44px minimum
 - Test responsive behavior across devices
 - Optimize animations for mobile performance
@@ -506,6 +575,7 @@ Located: `src/utils/synthwaveThemeClasses.js`
 ## Testing & Validation
 
 ### Visual Consistency Checklist
+
 - [ ] All buttons use semantic color system
 - [ ] Touch targets meet accessibility standards
 - [ ] Hover states provide clear feedback
@@ -514,6 +584,7 @@ Located: `src/utils/synthwaveThemeClasses.js`
 - [ ] Spacing uses consistent scale
 
 ### User Experience Validation
+
 - [ ] Color meanings are intuitive to users
 - [ ] Primary actions are clearly distinguished
 - [ ] Navigation flows feel natural
@@ -522,6 +593,7 @@ Located: `src/utils/synthwaveThemeClasses.js`
 - [ ] Error handling is user-friendly
 
 ### Performance Considerations
+
 - [ ] Animations are smooth on all devices
 - [ ] Glassmorphism effects don't impact performance
 - [ ] Images and assets are optimized
@@ -533,6 +605,7 @@ Located: `src/utils/synthwaveThemeClasses.js`
 ## Future Considerations
 
 ### Emerging Trends
+
 - **Advanced Glassmorphism:** More sophisticated blur and transparency effects
 - **Micro-Animations:** Subtle motion design for enhanced UX
 - **Dark Mode Variants:** Alternative color schemes for different preferences
@@ -540,6 +613,7 @@ Located: `src/utils/synthwaveThemeClasses.js`
 - **Voice Interface Integration:** UI patterns for voice-controlled interactions
 
 ### Scalability Planning
+
 - **Component Library:** Systematic organization of reusable components
 - **Design Tokens:** Centralized management of colors, spacing, and typography
 - **Automated Testing:** Visual regression testing for design consistency
@@ -558,6 +632,6 @@ Regular review and updates of this strategy will ensure NeonPanda remains at the
 
 ---
 
-*Last Updated: January 2025*
-*Version: 1.0*
-*Next Review: March 2025*
+_Last Updated: January 2025_
+_Version: 1.0_
+_Next Review: March 2025_

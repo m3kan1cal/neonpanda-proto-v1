@@ -19,7 +19,7 @@ function AppFooter() {
         <span className="font-rajdhani text-sm text-synthwave-text-muted">
           Powered by
         </span>
-        <span className="font-russo text-sm text-synthwave-neon-cyan uppercase tracking-wider">
+        <span className="font-barlow text-sm text-synthwave-neon-cyan uppercase tracking-wider">
           NeonPanda
         </span>
         <span className="text-synthwave-text-muted/30 mx-1">/</span>

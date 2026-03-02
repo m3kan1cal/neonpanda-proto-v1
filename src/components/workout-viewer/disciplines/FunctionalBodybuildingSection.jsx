@@ -23,7 +23,7 @@ export const FunctionalBodybuildingSection = ({
       >
         <div className="flex items-start space-x-3">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             Functional Bodybuilding (
             {functionalBodybuildingData?.exercises?.length || 0})
           </h3>

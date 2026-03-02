@@ -828,7 +828,7 @@ function BlogPost3WorkoutLogger() {
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
-                <span className="font-russo text-synthwave-neon-cyan text-lg">
+                <span className="font-barlow text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
               </div>
@@ -1399,7 +1399,7 @@ function BlogPost3WorkoutLogger() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 ~2s
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1407,7 +1407,7 @@ function BlogPost3WorkoutLogger() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
                 9
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1415,7 +1415,7 @@ function BlogPost3WorkoutLogger() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
                 100+
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1423,7 +1423,7 @@ function BlogPost3WorkoutLogger() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 ∞
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1488,7 +1488,7 @@ function BlogPost3WorkoutLogger() {
               className="group flex items-center justify-between"
             >
               <div>
-                <h3 className="font-russo text-xl text-synthwave-neon-pink group-hover:text-synthwave-neon-cyan transition-colors">
+                <h3 className="font-barlow text-xl text-synthwave-neon-pink group-hover:text-synthwave-neon-cyan transition-colors">
                   Training Programs That Think
                 </h3>
                 <p className="font-rajdhani text-synthwave-text-secondary">

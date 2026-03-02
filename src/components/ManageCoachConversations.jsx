@@ -483,7 +483,7 @@ function ManageCoachConversations() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             {headerText}
           </h3>
         </div>
@@ -492,9 +492,12 @@ function ManageCoachConversations() {
         <div className="flex items-center flex-wrap gap-4 mb-4">
           {/* Started Date */}
           {conversation.metadata?.startedAt && (
-            <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
+            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
               <ClockIconSmall />
-              <span>{formatDate(conversation.metadata.startedAt)}</span>
+              <span className="text-synthwave-text-muted">Started:</span>
+              <span className="text-synthwave-neon-cyan font-medium">
+                {formatDate(conversation.metadata.startedAt)}
+              </span>
             </div>
           )}
           {/* Last Activity */}
@@ -611,7 +614,7 @@ function ManageCoachConversations() {
             : "cursor-pointer"
         }`}
       >
-        <div className="text-center flex flex-col justify-center items-center h-full min-h-[188px]">
+        <div className="text-center flex flex-col justify-center items-center h-full min-h-[230px]">
           {/* Plus Icon or Spinner */}
           <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
             {isCreatingConversation ? (
@@ -634,7 +637,7 @@ function ManageCoachConversations() {
           </div>
 
           {/* Title */}
-          <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
+          <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
             {isCreatingConversation ? "Creating..." : "Start New Conversation"}
           </h3>
 
@@ -668,7 +671,7 @@ function ManageCoachConversations() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h5 className="font-russo text-lg text-red-400 uppercase">
+              <h5 className="font-barlow text-lg text-red-400 uppercase">
                 Error Loading Conversations
               </h5>
             </div>
@@ -794,8 +797,7 @@ function ManageCoachConversations() {
             <div className="lg:hidden">
               {/* Create Card Skeleton */}
               <div
-                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center`}
-                style={{ minHeight: "188px" }}
+                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[220px]`}
               >
                 <div className="text-center flex flex-col items-center">
                   <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
@@ -807,8 +809,7 @@ function ManageCoachConversations() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-6 mb-6`}
-                  style={{ minHeight: "188px" }}
+                  className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start space-x-3 mb-2">
@@ -843,8 +844,7 @@ function ManageCoachConversations() {
               <div>
                 {/* Create Card Skeleton (first item, left column) */}
                 <div
-                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center`}
-                  style={{ minHeight: "188px" }}
+                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[220px]`}
                 >
                   <div className="text-center flex flex-col items-center">
                     <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
@@ -856,8 +856,7 @@ function ManageCoachConversations() {
                 {[2, 4].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
-                    style={{ minHeight: "188px" }}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
@@ -892,8 +891,7 @@ function ManageCoachConversations() {
                 {[1, 3, 5].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
-                    style={{ minHeight: "188px" }}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
@@ -933,7 +931,7 @@ function ManageCoachConversations() {
     return (
       <div className="min-h-screen bg-synthwave-bg-tertiary">
         <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-          <h1 className="font-russo font-black text-3xl text-white mb-6 uppercase">
+          <h1 className="font-barlow font-black text-3xl text-white mb-6 uppercase">
             Invalid Access
           </h1>
           <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-8">
@@ -972,7 +970,7 @@ function ManageCoachConversations() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="conversations-info"
                 data-tooltip-content="Review, organize, and manage all your conversations with your coach. Access detailed conversation history and track your coaching progress."
               >

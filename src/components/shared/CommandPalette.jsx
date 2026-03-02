@@ -415,7 +415,7 @@ const CommandPalette = ({
             <div className="w-6 h-6 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
               <span className="text-synthwave-neon-pink text-sm">⚡</span>
             </div>
-            <h2 className="font-russo text-lg text-white uppercase">
+            <h2 className="font-barlow text-lg text-white uppercase">
               Command Palette
             </h2>
           </div>

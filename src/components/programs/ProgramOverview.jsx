@@ -165,7 +165,7 @@ export default function ProgramOverview({
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Program Overview
         </h3>
       </div>
@@ -187,8 +187,10 @@ export default function ProgramOverview({
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               {/* Coach - Full Width */}
               {program.coachNames && program.coachNames.length > 0 && (
-                <div className="col-span-2 flex items-center gap-1.5 font-rajdhani text-sm">
-                  <span className="text-synthwave-text-secondary">Coach:</span>
+                <div className="col-span-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary shrink-0">
+                    Coach:
+                  </span>
                   <span className="text-synthwave-neon-cyan font-medium">
                     {program.coachNames
                       .map((name) => name.replace(/_/g, " "))
@@ -199,9 +201,9 @@ export default function ProgramOverview({
 
               {/* Duration */}
               {program.totalDays && (
-                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
                   <span className="text-synthwave-text-secondary">
-                    Duration:
+                    Duration
                   </span>
                   <span className="text-synthwave-neon-cyan font-medium">
                     {program.totalDays} days ({Math.ceil(program.totalDays / 7)}{" "}
@@ -212,9 +214,9 @@ export default function ProgramOverview({
 
               {/* Frequency */}
               {program.trainingFrequency && (
-                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
                   <span className="text-synthwave-text-secondary">
-                    Frequency:
+                    Frequency
                   </span>
                   <span className="text-synthwave-neon-cyan font-medium">
                     {program.trainingFrequency}x per week
@@ -224,20 +226,20 @@ export default function ProgramOverview({
 
               {/* Total Workouts */}
               {program.totalWorkouts && (
-                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
                   <span className="text-synthwave-text-secondary">
-                    Total Workouts:
+                    Workouts
                   </span>
                   <span className="text-synthwave-neon-cyan font-medium">
-                    {program.totalWorkouts}
+                    {program.totalWorkouts} total
                   </span>
                 </div>
               )}
 
               {/* Phases */}
               {program.phases && program.phases.length > 0 && (
-                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                  <span className="text-synthwave-text-secondary">Phases:</span>
+                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary">Phases</span>
                   <span className="text-synthwave-neon-cyan font-medium">
                     {program.phases.length}
                   </span>
@@ -298,7 +300,7 @@ export default function ProgramOverview({
                 onClick={() =>
                   setIsTrainingFocusExpanded(!isTrainingFocusExpanded)
                 }
-                className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                className={`${containerPatterns.collapsibleToggle} mb-2`}
               >
                 <span>Training Focus</span>
                 <svg
@@ -344,7 +346,7 @@ export default function ProgramOverview({
         <div className="mb-4">
           <button
             onClick={() => setIsTimelineExpanded(!isTimelineExpanded)}
-            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+            className={`${containerPatterns.collapsibleToggle} mb-2`}
           >
             <span>Timeline</span>
             <svg
@@ -438,7 +440,7 @@ export default function ProgramOverview({
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                 />
               </svg>
-              <span>Share This Program</span>
+              <span>share program</span>
             </button>
           )}
 

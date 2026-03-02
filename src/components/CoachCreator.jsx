@@ -154,7 +154,7 @@ const MessageItem = memo(
             <div
               className={getStreamingMessageClasses(message, agentState, "")}
             >
-              <div className="font-rajdhani text-base leading-relaxed text-synthwave-text-primary">
+              <div className="font-fira-code text-base leading-relaxed text-synthwave-text-primary">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -675,20 +675,27 @@ function CoachCreator() {
                       key={i}
                       className={`flex flex-col mb-1 ${i % 2 === 0 ? "items-end" : "items-start"}`}
                     >
-                      {/* Message bubble skeleton */}
                       <div
                         className={`w-full md:max-w-[80%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
                       >
-                        <div
-                          className={`rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
-                        >
-                          <div className="space-y-1">
+                        {i % 2 === 0 ? (
+                          /* User message: keep bubble container */
+                          <div className="rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[100px]">
+                            <div className="space-y-1">
+                              <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
+                              <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
+                              <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-3/4"></div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* AI message: no bubble, text lines printed directly */
+                          <div className="space-y-2 py-1 min-w-[min(65vw,600px)] min-h-[130px]">
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-3/4"></div>
                           </div>
-                        </div>
+                        )}
 
                         {/* Avatar, timestamp, and status skeleton - all on same line below message */}
                         <div
@@ -742,7 +749,7 @@ function CoachCreator() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="coach-creator-info"
               data-tooltip-content="Create your personalized AI coach through an interactive conversation. Vesper will guide you through the process."
             >
@@ -871,7 +878,7 @@ function CoachCreator() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-russo text-base text-white uppercase tracking-wider">
+                  <h3 className="font-barlow text-base text-white uppercase tracking-wider">
                     Session Complete
                   </h3>
                   <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-0.5">

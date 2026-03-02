@@ -291,7 +291,7 @@ function ManageSharedPrograms() {
             e.stopPropagation();
             handleDeleteClick(shared);
           }}
-          className="absolute top-4 right-4 p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
           title="Unshare program"
         >
           <TrashIcon />
@@ -300,7 +300,7 @@ function ManageSharedPrograms() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             {headerText}
           </h3>
         </div>
@@ -308,9 +308,10 @@ function ManageSharedPrograms() {
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-4 mb-4 pr-16">
           {/* Created Date */}
-          <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
             <ClockIconSmall />
-            <span>
+            <span className="text-synthwave-text-muted">Created:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
               {new Date(shared.createdAt).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
@@ -619,7 +620,7 @@ function ManageSharedPrograms() {
     return (
       <div className="min-h-screen bg-synthwave-bg-tertiary">
         <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-          <h1 className="font-russo font-black text-3xl text-white mb-6 uppercase">
+          <h1 className="font-barlow font-black text-3xl text-white mb-6 uppercase">
             Invalid Access
           </h1>
           <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-8">
@@ -648,7 +649,7 @@ function ManageSharedPrograms() {
             {/* Left section: Title */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="shared-programs-info"
                 data-tooltip-content="Manage programs you've shared with others. Copy links, view previews, or unshare programs."
               >

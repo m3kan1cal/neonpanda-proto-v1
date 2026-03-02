@@ -8,7 +8,6 @@ import {
   queryWorkoutSummaries,
 } from "../../../dynamodb/operations";
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
-import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import {
   shouldNormalizeAnalytics,
@@ -677,8 +676,6 @@ This directive takes precedence over all other instructions except safety constr
 
   return `${directiveSection}You are an elite strength and conditioning analyst examining training data from workout and conversation summaries.
 
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
 ATHLETE CONTEXT:
 ${athleteProfile}
 
@@ -850,16 +847,14 @@ export const generateAnalytics = async (
       `📝 Analytics prompt built: ${analyticsPrompt.length} characters`,
     );
 
-    // Call Claude with thinking enabled
     const analyticsResponse = (await callBedrockApi(
       analyticsPrompt,
       "analytics_generation",
-      MODEL_IDS.PLANNER_MODEL_FULL, // Use default model (Sonnet 4)
+      MODEL_IDS.PLANNER_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
-        enableThinking: true,
-      }, // Enable thinking
-    )) as string; // No tools used, always returns string
+      },
+    )) as string;
 
     logger.info(
       `🔍 Raw analytics response received: ${analyticsResponse.length} characters`,

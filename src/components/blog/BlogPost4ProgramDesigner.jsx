@@ -1138,7 +1138,7 @@ function BlogPost4ProgramDesigner() {
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
-                <span className="font-russo text-synthwave-neon-cyan text-lg">
+                <span className="font-barlow text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
               </div>
@@ -1548,7 +1548,7 @@ function BlogPost4ProgramDesigner() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 36+
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1556,7 +1556,7 @@ function BlogPost4ProgramDesigner() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
                 60+
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1564,7 +1564,7 @@ function BlogPost4ProgramDesigner() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
                 10
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1572,7 +1572,7 @@ function BlogPost4ProgramDesigner() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 4
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1641,7 +1641,7 @@ function BlogPost4ProgramDesigner() {
               className="group flex items-center justify-between"
             >
               <div>
-                <h3 className="font-russo text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
+                <h3 className="font-barlow text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
                   When All Agents Converge
                 </h3>
                 <p className="font-rajdhani text-synthwave-text-secondary">

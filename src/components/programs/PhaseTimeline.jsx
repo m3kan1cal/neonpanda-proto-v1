@@ -5,6 +5,13 @@ import {
   messagePatterns,
 } from "../../utils/ui/uiPatterns";
 
+// Map phase color index to calendar-style count badge color variant
+const PHASE_COUNT_BADGE_COLORS = [
+  badgePatterns.countPink,
+  badgePatterns.countCyan,
+  badgePatterns.countPurple,
+];
+
 export default function PhaseTimeline({ program }) {
   const [expandedPhases, setExpandedPhases] = useState({});
   const totalDays = program.totalDays || program.duration || 1;
@@ -76,20 +83,16 @@ export default function PhaseTimeline({ program }) {
     }
   };
 
-  // Format phase name for timeline display (show "Phase X" or first 10 chars)
+  // Format phase name for timeline display — always use compact "P1", "P2" form
   const getTimelinePhaseName = (phaseName, index) => {
-    if (!phaseName) {
-      return `Phase ${index + 1}`;
-    }
+    if (!phaseName) return `P${index + 1}`;
 
-    // Check if name matches "Phase X" pattern (case-insensitive)
+    // Extract the number from "Phase X" pattern
     const phaseMatch = phaseName.match(/^phase\s+(\d+)/i);
-    if (phaseMatch) {
-      return `Phase ${phaseMatch[1]}`;
-    }
+    if (phaseMatch) return `P${phaseMatch[1]}`;
 
-    // Otherwise, truncate to first 10 characters
-    return phaseName.length > 10 ? phaseName.substring(0, 10) : phaseName;
+    // Fallback: use positional index
+    return `P${index + 1}`;
   };
 
   return (
@@ -99,40 +102,16 @@ export default function PhaseTimeline({ program }) {
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Phase Timeline
         </h3>
       </div>
 
       {/* Phase Timeline */}
       <div className="mb-4">
-        {/* Phase names as headers above timeline */}
-        <div className="flex mb-3">
-          {program.phases.map((phase, index) => {
-            const width = getPhaseWidth(phase);
-            const status = getPhaseStatus(phase);
-            const colors = getPhaseColor(index);
-
-            return (
-              <div
-                key={`header-${phase.phaseId || index}`}
-                style={{ width: `${width}%` }}
-                className="px-2"
-              >
-                <div className="font-rajdhani font-bold text-sm uppercase tracking-wide text-synthwave-text-secondary">
-                  {getTimelinePhaseName(phase.name, index)}
-                </div>
-                <div className="text-xs text-synthwave-text-muted font-rajdhani mt-0.5">
-                  Days {phase.startDay}-{phase.endDay}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
         {/* Visual progress bar - wrapper for positioning current day badge */}
         <div className="relative">
-          <div className="relative h-12 bg-synthwave-bg-secondary overflow-hidden flex shadow-lg">
+          <div className="relative h-14 bg-synthwave-bg-secondary overflow-hidden flex shadow-lg">
             {program.phases.map((phase, index) => {
               const width = getPhaseWidth(phase);
               const status = getPhaseStatus(phase);
@@ -142,10 +121,7 @@ export default function PhaseTimeline({ program }) {
               return (
                 <div
                   key={phase.phaseId || index}
-                  className={`
-                    relative border-r border-synthwave-bg-primary/50 last:border-r-0 first:rounded-l-md last:rounded-r-md
-                    ${colors.bg}
-                  `}
+                  className={`relative overflow-hidden border-r border-synthwave-bg-primary/50 last:border-r-0 first:rounded-l-md last:rounded-r-md ${colors.bg}`}
                   style={{ width: `${width}%` }}
                 >
                   {/* Progress fill for current phase */}
@@ -163,10 +139,19 @@ export default function PhaseTimeline({ program }) {
                     />
                   )}
 
+                  {/* Phase label centered inside segment - styled like calendar workout count badges */}
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <div
+                      className={`${badgePatterns.countBase} rounded-md ${PHASE_COUNT_BADGE_COLORS[index % PHASE_COUNT_BADGE_COLORS.length]}`}
+                    >
+                      {getTimelinePhaseName(phase.name, index)}
+                    </div>
+                  </div>
+
                   {/* Current day indicator */}
                   {status === "current" && (
                     <div
-                      className="absolute top-0 bottom-0 w-0.5 bg-synthwave-neon-pink"
+                      className="absolute top-0 bottom-0 w-0.5 bg-synthwave-neon-pink z-20"
                       style={{ left: `${progress}%` }}
                     >
                       <div className="absolute -top-1 -left-1 w-3 h-3 bg-synthwave-neon-pink rounded-full animate-pulse" />

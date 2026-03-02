@@ -406,7 +406,7 @@ function BlogPost5Orchestration() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 3
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -414,7 +414,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
                 3
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -422,7 +422,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
                 2
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -430,7 +430,7 @@ function BlogPost5Orchestration() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 3
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1032,7 +1032,7 @@ function BlogPost5Orchestration() {
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
-                <span className="font-russo text-synthwave-neon-cyan text-lg">
+                <span className="font-barlow text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
               </div>
@@ -1104,7 +1104,7 @@ function BlogPost5Orchestration() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-russo text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-barlow text-lg text-synthwave-neon-pink mb-4">
             The Safety Stack
           </h3>
           <div className="space-y-4">
@@ -1243,7 +1243,7 @@ function BlogPost5Orchestration() {
         </div>
 
         <div className={`${containerPatterns.mediumGlassPurple} mb-8`}>
-          <h3 className="font-russo text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-barlow text-lg text-synthwave-neon-purple mb-4">
             The Memory Loop
           </h3>
           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
@@ -1302,7 +1302,7 @@ function BlogPost5Orchestration() {
                 </span>
               </div>
               <div>
-                <h3 className="font-russo text-lg text-synthwave-neon-cyan">
+                <h3 className="font-barlow text-lg text-synthwave-neon-cyan">
                   Coach Creator Agent
                 </h3>
                 <p className="text-synthwave-text-muted text-sm font-rajdhani">
@@ -1325,7 +1325,7 @@ function BlogPost5Orchestration() {
                 </span>
               </div>
               <div>
-                <h3 className="font-russo text-lg text-synthwave-neon-purple">
+                <h3 className="font-barlow text-lg text-synthwave-neon-purple">
                   Workout Logger Agent
                 </h3>
                 <p className="text-synthwave-text-muted text-sm font-rajdhani">
@@ -1352,7 +1352,7 @@ function BlogPost5Orchestration() {
                 </span>
               </div>
               <div>
-                <h3 className="font-russo text-lg text-synthwave-neon-pink">
+                <h3 className="font-barlow text-lg text-synthwave-neon-pink">
                   Program Designer Agent
                 </h3>
                 <p className="text-synthwave-text-muted text-sm font-rajdhani">
@@ -1384,7 +1384,7 @@ function BlogPost5Orchestration() {
                 </span>
               </div>
               <div>
-                <h3 className="font-russo text-lg text-synthwave-neon-cyan">
+                <h3 className="font-barlow text-lg text-synthwave-neon-cyan">
                   Conversation Agent
                 </h3>
                 <p className="text-synthwave-text-muted text-sm font-rajdhani">
@@ -1417,7 +1417,7 @@ function BlogPost5Orchestration() {
         </p>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <h3 className="font-russo text-xl text-white mb-4">What's Coming</h3>
+          <h3 className="font-barlow text-xl text-white mb-4">What's Coming</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">

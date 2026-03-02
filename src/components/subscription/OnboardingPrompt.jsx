@@ -154,7 +154,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         {/* Divider - styled like Coaches page, hidden on mobile */}
         <div className="hidden md:flex items-center justify-center mb-6">
           <div className="flex-1 h-px bg-gradient-to-r from-transparent to-synthwave-neon-cyan/30"></div>
-          <span className="font-russo text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
+          <span className="font-barlow text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
             OR
           </span>
           <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>

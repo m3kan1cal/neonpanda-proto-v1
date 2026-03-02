@@ -735,7 +735,7 @@ function Coaches() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="coaches-info"
               data-tooltip-content="Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective over time."
             >
@@ -808,7 +808,7 @@ function Coaches() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
+                <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
                   {isCreatingCustomCoach
                     ? "Creating Coach..."
                     : "Create Custom Coach"}
@@ -1034,7 +1034,7 @@ function Coaches() {
                           placeholder="Coach name..."
                           maxLength={50}
                           size="large"
-                          displayClassName="font-russo font-bold text-white text-xl uppercase"
+                          displayClassName="font-barlow font-bold text-white text-xl uppercase"
                           tooltipPrefix={`coach-${coach.coach_id}`}
                           onError={(error) => {
                             setEditingCoachId(null);
@@ -1045,7 +1045,7 @@ function Coaches() {
                           startInEditMode={true}
                         />
                       ) : (
-                        <h3 className="font-russo font-bold text-white text-xl uppercase">
+                        <h3 className="font-barlow font-bold text-white text-xl uppercase">
                           {agentRef.current?.formatCoachName(coach.coach_name)}
                         </h3>
                       )}
@@ -1198,7 +1198,7 @@ function Coaches() {
                       className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
                     >
                       <HomeIcon />
-                      <span>Enter Training Grounds</span>
+                      <span>Start Training</span>
                     </button>
                   </div>
                 </div>
@@ -1210,7 +1210,7 @@ function Coaches() {
         {inProgressSessions && inProgressSessions.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Your In-Progress Coaches
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1271,7 +1271,7 @@ function Coaches() {
                         className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
                       ></div>
                       <div className="flex-1">
-                        <h3 className="font-russo font-bold text-white text-lg uppercase">
+                        <h3 className="font-barlow font-bold text-white text-lg uppercase">
                           Coach Creator Session
                         </h3>
                       </div>
@@ -1475,13 +1475,13 @@ function Coaches() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent to-synthwave-neon-cyan/30"></div>
-              <span className="font-russo text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
+              <span className="font-barlow text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
                 OR
               </span>
               <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>
             </div>
 
-            <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
+            <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
               Start Fast with Templates
             </h2>
             <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1543,7 +1543,7 @@ function Coaches() {
                       {/* Template Name */}
                       <div className="flex items-start space-x-3 mb-3">
                         <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                        <h3 className="font-russo font-bold text-white text-lg uppercase">
+                        <h3 className="font-barlow font-bold text-white text-lg uppercase">
                           {template.template_name}
                         </h3>
                       </div>

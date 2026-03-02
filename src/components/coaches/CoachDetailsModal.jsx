@@ -156,7 +156,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
           {/* Sticky header */}
           <div className="flex items-start justify-between px-7 py-5 border-b border-synthwave-neon-cyan/10 shrink-0">
             <div className="min-w-0 pr-4">
-              <h3 className="font-russo font-bold text-lg text-white uppercase truncate">
+              <h3 className="font-barlow font-bold text-lg text-white uppercase truncate">
                 {displayName}
               </h3>
               <p className="font-rajdhani text-xs text-synthwave-text-secondary mt-0.5">

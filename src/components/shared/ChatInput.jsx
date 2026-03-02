@@ -800,7 +800,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowQuickActionsPopup(!showQuickActionsPopup)}
-                className={`p-1 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
+                className={`p-1 rounded-md text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
                   showQuickActionsPopup ? "text-blue-400 bg-blue-400/20" : ""
                 }`}
                 data-tooltip-id="quick-actions-tooltip"
@@ -1046,7 +1046,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`absolute right-[8px] bottom-[7px] p-1 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+                className={`absolute right-[8px] bottom-[7px] p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                   showEmojiPicker
                     ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                     : ""
@@ -1359,7 +1359,7 @@ function ChatInput({
             <div className="bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-xl shadow-synthwave-neon-cyan/20 flex flex-col w-96 h-[480px]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 shrink-0">
-                <h3 className="font-russo font-bold text-white text-sm uppercase">
+                <h3 className="font-barlow font-bold text-white text-sm uppercase">
                   {tipsTitle}
                 </h3>
                 <button

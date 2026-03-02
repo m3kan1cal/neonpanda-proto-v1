@@ -380,7 +380,7 @@ export const RunningSection = ({
           >
             <div className="flex items-start space-x-3">
               <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
+              <h3 className="font-barlow font-bold text-white text-lg uppercase">
                 Running Details
               </h3>
             </div>
@@ -422,15 +422,13 @@ export const RunningSection = ({
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-              collapsedSections.has(segmentsId)
-                ? "rounded-md"
-                : "rounded-t-md"
+              collapsedSections.has(segmentsId) ? "rounded-md" : "rounded-t-md"
             }`}
             onClick={() => toggleCollapse(segmentsId)}
           >
             <div className="flex items-start space-x-3">
               <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
+              <h3 className="font-barlow font-bold text-white text-lg uppercase">
                 Run Segments ({runningData?.segments?.length || 0})
               </h3>
             </div>

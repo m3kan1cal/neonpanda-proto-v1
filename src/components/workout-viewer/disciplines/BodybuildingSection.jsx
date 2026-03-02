@@ -23,7 +23,7 @@ export const BodybuildingSection = ({
       >
         <div className="flex items-start space-x-3">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             Bodybuilding Exercises ({bodybuildingData?.exercises?.length || 0})
           </h3>
         </div>

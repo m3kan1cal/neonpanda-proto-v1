@@ -1,12 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   containerPatterns,
   buttonPatterns,
-  messagePatterns
-} from '../../utils/ui/uiPatterns';
-import CalendarDayCell from './CalendarDayCell';
+  messagePatterns,
+} from "../../utils/ui/uiPatterns";
+import CalendarDayCell from "./CalendarDayCell";
 
-export default function ProgramCalendar({ program, programDetails, userId, coachId, programId }) {
+export default function ProgramCalendar({
+  program,
+  programDetails,
+  userId,
+  coachId,
+  programId,
+}) {
   const [showAllWeeks, setShowAllWeeks] = useState(false);
 
   // Build calendar days from program details
@@ -20,10 +26,11 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
 
     // Group workouts by day if programDetails available
     // Try both workoutTemplates and templates properties
-    const templates = programDetails?.workoutTemplates || programDetails?.templates || [];
+    const templates =
+      programDetails?.workoutTemplates || programDetails?.templates || [];
 
     if (templates.length > 0) {
-      templates.forEach(template => {
+      templates.forEach((template) => {
         if (!workoutsByDay[template.dayNumber]) {
           workoutsByDay[template.dayNumber] = [];
         }
@@ -67,7 +74,7 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
 
     return weeks.slice(startIndex, endIndex).map((week, idx) => ({
       week,
-      weekIndex: startIndex + idx
+      weekIndex: startIndex + idx,
     }));
   }, [weeks, currentWeekIndex, showAllWeeks]);
 
@@ -77,8 +84,8 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
       return null;
     }
 
-    return program.phases.find(phase =>
-      dayNumber >= phase.startDay && dayNumber <= phase.endDay
+    return program.phases.find(
+      (phase) => dayNumber >= phase.startDay && dayNumber <= phase.endDay,
     );
   };
 
@@ -87,9 +94,14 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
     setShowAllWeeks(false);
     // Scroll current week into view
     setTimeout(() => {
-      const currentWeekElement = document.getElementById(`week-${currentWeekIndex}`);
+      const currentWeekElement = document.getElementById(
+        `week-${currentWeekIndex}`,
+      );
       if (currentWeekElement) {
-        currentWeekElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        currentWeekElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
       }
     }, 100);
   };
@@ -98,8 +110,10 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}></div>
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <div
+            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
+          ></div>
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             Training Calendar
           </h3>
         </div>
@@ -114,8 +128,10 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
       <div className="flex items-start space-x-3 mb-4">
-        <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}></div>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <div
+          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
+        ></div>
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Training Calendar
         </h3>
       </div>
@@ -159,13 +175,21 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
 
           <button
             onClick={() => setShowAllWeeks(false)}
-            className={!showAllWeeks ? buttonPatterns.tabToggleActive : buttonPatterns.tabToggleInactive}
+            className={
+              !showAllWeeks
+                ? buttonPatterns.tabToggleActive
+                : buttonPatterns.tabToggleInactive
+            }
           >
             Current
           </button>
           <button
             onClick={() => setShowAllWeeks(true)}
-            className={showAllWeeks ? buttonPatterns.tabToggleActive : buttonPatterns.tabToggleInactive}
+            className={
+              showAllWeeks
+                ? buttonPatterns.tabToggleActive
+                : buttonPatterns.tabToggleInactive
+            }
           >
             All Weeks
           </button>
@@ -178,13 +202,12 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
           const isCurrentWeek = weekIndex === currentWeekIndex;
 
           return (
-            <div
-              key={weekIndex}
-              id={`week-${weekIndex}`}
-            >
+            <div key={weekIndex} id={`week-${weekIndex}`}>
               {/* Week header */}
               <div className="flex items-center justify-between mb-2">
-                <h4 className={`font-rajdhani text-sm font-semibold uppercase tracking-wide ${isCurrentWeek ? 'text-synthwave-neon-pink' : 'text-synthwave-text-secondary'}`}>
+                <h4
+                  className={`font-rajdhani text-sm font-semibold uppercase tracking-wide ${isCurrentWeek ? "text-synthwave-neon-pink" : "text-synthwave-text-secondary"}`}
+                >
                   Week {weekIndex + 1}
                   {isCurrentWeek && (
                     <span className="ml-2 text-xs lowercase text-synthwave-neon-pink/70">
@@ -193,13 +216,14 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
                   )}
                 </h4>
                 <span className="text-xs text-synthwave-text-muted font-rajdhani">
-                  Days {week[0]?.dayNumber || 1} - {week[week.length - 1]?.dayNumber || 7}
+                  Days {week[0]?.dayNumber || 1} -{" "}
+                  {week[week.length - 1]?.dayNumber || 7}
                 </span>
               </div>
 
               {/* Days grid - tighter spacing, taller cells */}
               <div className="grid grid-cols-7 gap-1.5">
-                {week.map(day => (
+                {week.map((day) => (
                   <CalendarDayCell
                     key={day.dayNumber}
                     day={day}
@@ -225,4 +249,3 @@ export default function ProgramCalendar({ program, programDetails, userId, coach
     </div>
   );
 }
-

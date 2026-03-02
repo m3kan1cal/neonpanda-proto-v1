@@ -873,7 +873,7 @@ function TrainingGroundsV2() {
           <polygon points="9 9 9 11 8 11 8 12 6 12 6 11 5 11 5 9 6 9 6 8 8 8 8 9 9 9" />
           <path d="m22,2v-1H2v1h-1v16h1v1h6v4h1v-1h1v-1h1v-1h2v-1h9v-1h1V2h-1Zm-1,15H3V3h18v14Z" />
         </svg>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Recent Conversations
         </h3>
       </div>
@@ -985,7 +985,7 @@ function TrainingGroundsV2() {
           <path d="M19.5041 6.50098H17.5036V9.50166H19.5041V6.50098Z" />
           <path d="M17.5036 1.5V6.50114H14.5029V4.50068H12.5025V13.5027H10.502V4.50068H8.50158V6.50114H5.5009V1.5H17.5036Z" />
         </svg>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Workout History
         </h3>
       </div>
@@ -1148,7 +1148,7 @@ function TrainingGroundsV2() {
           <rect x="6" y="6" width="1" height="1" />
           <polygon points="8 4 7 4 7 2 8 2 8 1 10 1 10 2 11 2 11 4 10 4 10 5 8 5 8 4" />
         </svg>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Reports & Insights
         </h3>
       </div>
@@ -1275,7 +1275,7 @@ function TrainingGroundsV2() {
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="training-grounds-info"
               data-tooltip-content="Your central hub to track progress, access resources, chat with your coach, and manage your complete fitness journey."
             >
@@ -1513,7 +1513,7 @@ function TrainingGroundsV2() {
                 >
                   <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
                 </svg>
-                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                <h3 className="font-barlow font-bold text-white text-lg uppercase">
                   Active Programs
                 </h3>
               </div>
@@ -1562,7 +1562,7 @@ function TrainingGroundsV2() {
                   >
                     <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
                   </svg>
-                  <h3 className="font-russo font-bold text-white text-lg uppercase">
+                  <h3 className="font-barlow font-bold text-white text-lg uppercase">
                     Active Programs
                   </h3>
                 </div>

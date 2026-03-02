@@ -844,7 +844,7 @@ General thoughts: `;
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             <div className="flex items-center gap-3">
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="workouts-info"
                 data-tooltip-content={tooltipContent}
               >
@@ -964,7 +964,7 @@ General thoughts: `;
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-russo text-white text-xl font-bold uppercase">
+                    <h3 className="font-barlow text-white text-xl font-bold uppercase">
                       Rest & Recovery Day
                     </h3>
                     <span className={`${badgePatterns.cyan} uppercase`}>
@@ -1078,7 +1078,7 @@ General thoughts: `;
                     <div className="flex-1">
                       <div className="flex items-start gap-3 mb-2">
                         <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-                        <h3 className="font-russo text-lg font-bold uppercase text-white">
+                        <h3 className="font-barlow text-lg font-bold uppercase text-white">
                           {template.name}
                         </h3>
                         {/* Difficulty Badge - always show if available */}

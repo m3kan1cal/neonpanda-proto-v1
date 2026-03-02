@@ -20,7 +20,7 @@ function ActiveProgramSummary({
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
           <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2 animate-pulse"></div>
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             Training Programs
           </h3>
         </div>
@@ -59,7 +59,7 @@ function ActiveProgramSummary({
       {/* Header */}
       <div className="flex items-start space-x-3 mb-4">
         <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Training Programs
         </h3>
         <div

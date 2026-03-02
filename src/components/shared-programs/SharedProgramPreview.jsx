@@ -631,7 +631,7 @@ function SharedProgramPreview() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan" />
-                            <h3 className="font-russo text-lg font-bold uppercase text-white">
+                            <h3 className="font-barlow text-lg font-bold uppercase text-white">
                               {workout.name}
                             </h3>
                             {workout.metadata?.difficulty && (
