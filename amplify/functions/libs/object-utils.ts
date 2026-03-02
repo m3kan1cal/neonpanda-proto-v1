@@ -383,24 +383,41 @@ export const normalizeSchemaArrayFields = (
     | undefined;
   if (!properties) return;
 
+  const requiredFields: string[] = Array.isArray((schema as any).required)
+    ? (schema as any).required
+    : [];
+
   for (const [key, propSchema] of Object.entries(properties)) {
     const schemaType = propSchema?.type;
     const isArraySchema =
       schemaType === "array" ||
       (Array.isArray(schemaType) && schemaType.includes("array"));
-    if (isArraySchema && key in response) {
-      const value = response[key];
-      if (!Array.isArray(value)) {
-        if (value === null || value === undefined || value === "") {
-          // Explicitly empty — coerce to empty array
-          response[key] = [];
-        } else if (typeof value === "string" && value.trim().length === 0) {
-          // Whitespace-only string — coerce to empty array
-          response[key] = [];
-        } else {
-          // Any other scalar or object — wrap in a one-element array
-          response[key] = [value];
-        }
+
+    if (!isArraySchema) continue;
+
+    if (!(key in response)) {
+      // Field is completely absent. If it's required, backfill with [] so
+      // validation passes rather than throwing and killing the Lambda.
+      if (requiredFields.includes(key)) {
+        response[key] = [];
+        logger.warn(
+          `⚠️ normalizeSchemaArrayFields: required array field "${key}" was missing from model response — backfilled with []`,
+        );
+      }
+      continue;
+    }
+
+    const value = response[key];
+    if (!Array.isArray(value)) {
+      if (value === null || value === undefined || value === "") {
+        // Explicitly empty — coerce to empty array
+        response[key] = [];
+      } else if (typeof value === "string" && value.trim().length === 0) {
+        // Whitespace-only string — coerce to empty array
+        response[key] = [];
+      } else {
+        // Any other scalar or object — wrap in a one-element array
+        response[key] = [value];
       }
     }
   }
