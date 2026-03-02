@@ -8,7 +8,7 @@ import {
   queryWorkoutSummaries,
 } from "../../../dynamodb/operations";
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
-import { parseJsonWithFallbacks } from "../response-utils";
+import type { BedrockToolUseResult } from "../api-helpers";
 import {
   shouldNormalizeAnalytics,
   normalizeAnalytics,
@@ -40,7 +40,10 @@ import {
   UserMonthlyData,
   WorkoutSummary,
 } from "./types";
-import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-schema";
+import {
+  getAnalyticsSchemaWithContext,
+  ANALYTICS_GENERATION_TOOL,
+} from "../schemas/universal-analytics-schema";
 import { logger } from "../logger";
 
 /**
@@ -644,6 +647,7 @@ This directive takes precedence over all other instructions except safety constr
 
   // Determine period type for labels
   const isPeriodWeekly = "weekRange" in weeklyData;
+  const period = isPeriodWeekly ? "weekly" : ("monthly" as const);
   const periodLabel = isPeriodWeekly ? "THIS WEEK'S" : "THIS MONTH'S";
   const historicalLabel = isPeriodWeekly ? "PREVIOUS WEEKS" : "PREVIOUS MONTHS";
 
@@ -687,42 +691,6 @@ ${currentPeriodWorkouts}
 
 ${historicalLabel} WORKOUT SUMMARIES (for trending):
 ${historicalSummaries || "No historical data available."}
-
-DUAL OUTPUT REQUIREMENTS:
-Your response must include TWO components:
-
-1. STRUCTURED ANALYTICS: Complete JSON analysis following the detailed schema
-2. HUMAN SUMMARY: A conversational, coach-friendly summary formatted like this example:
-
-"Weekly Training Summary
-
-6 out of 6 planned sessions completed with high data quality
-18,750 lbs total tonnage across 456 reps and 67 working sets
-Average session duration: 61 minutes with excellent density score (7.8/10)
-
-Key Highlights
-Performance Records Set:
-• Front Squat PR: 215lbs x 3 (up from previous 205lbs x 3)
-• Deadlift Progress: 275lbs x 3 - on track toward 315lb goal (87% there)
-
-Volume Leaders:
-• Deadlift: 4,950 lbs (strongest focus)
-• Back Squat: 4,125 lbs
-• Front Squat: 2,790 lbs
-
-Training Intelligence Insights:
-• Progressive overload score: 8.5/10 (excellent)
-• Volume increased 12% from previous week
-• Optimal exercise ordering maintained
-
-Areas for Improvement:
-• Pull volume slightly low vs push - needs more horizontal pulling
-• T2B technique needs consistent skill work
-
-Key Actionable Insights:
-• Priority: Continue deadlift progression toward 315lb goal (achievable in 4-6 weeks)
-• Quick wins: Add more pulling volume, integrate T2B skill work
-• No red flags - training is progressing optimally"
 
 ANALYZE BASED ON AVAILABLE UWS FIELDS:
 
@@ -778,9 +746,7 @@ Identify training phase from patterns:
 - Deload (>40% volume reduction)
 - Testing week (1RM attempts, benchmark WODs)
 
-CRITICAL: Return ONLY valid JSON in the exact format below. No markdown, no explanations, just the JSON object:
-
-${getAnalyticsSchemaWithContext("generation")}
+${getAnalyticsSchemaWithContext("generation", period)}
 
 CRITICAL ANALYSIS RULES:
 1. ALWAYS compare to previous weeks - never analyze in isolation
@@ -847,23 +813,22 @@ export const generateAnalytics = async (
       `📝 Analytics prompt built: ${analyticsPrompt.length} characters`,
     );
 
-    const analyticsResponse = (await callBedrockApi(
+    const analyticsResult = (await callBedrockApi(
       analyticsPrompt,
       "analytics_generation",
       MODEL_IDS.PLANNER_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         enableThinking: true,
+        tools: ANALYTICS_GENERATION_TOOL,
+        expectedToolName: "generate_analytics",
+        skipValidation: true, // AJV throws before normalization can run; normalizeAnalytics is the intended enforcement layer
       },
-    )) as string;
+    )) as BedrockToolUseResult;
 
-    logger.info(
-      `🔍 Raw analytics response received: ${analyticsResponse.length} characters`,
-    );
+    logger.info(`✅ Analytics tool result received for user ${userId}`);
 
-    // Parse JSON response with cleaning and fixing (handles markdown-wrapped JSON and common issues)
-    const analyticsData = parseJsonWithFallbacks(analyticsResponse);
-    logger.info(`✅ Analytics JSON parsed successfully for user ${userId}`);
+    const analyticsData = analyticsResult.input;
 
     // NORMALIZATION STEP - Normalize analytics data for schema compliance
     let finalAnalyticsData = analyticsData;
