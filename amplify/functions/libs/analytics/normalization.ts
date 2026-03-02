@@ -56,29 +56,6 @@ ${periodType.toUpperCase()} BOUNDARY ENFORCEMENT:
 - Remove or fix any dates outside this boundary
 - Ensure metadata.date_range matches the ${periodType.toLowerCase()} boundary exactly
 
-RESPONSE REQUIREMENTS:
-Return a JSON object with this exact structure:
-
-{
-  "isValid": boolean,
-  "normalizedData": {
-    "structured_analytics": { ... complete normalized analytics ... },
-    "human_summary": "string"
-  },
-  "issues": [
-    {
-      "type": "structural|data_consistency|quality_threshold|cross_validation",
-      "severity": "error|warning",
-      "section": "string",
-      "field": "string",
-      "description": "string",
-      "corrected": boolean
-    }
-  ],
-  "confidence": number,
-  "summary": "string"
-}
-
 ANALYTICS DATA TO NORMALIZE:
 ${JSON.stringify(analyticsData, null, 2)}
 
@@ -88,9 +65,7 @@ WEEKLY DATA CONTEXT:
 - Workouts Count: ${weeklyData.workouts.count}
 - Conversations Count: ${weeklyData.coaching.count}
 
-${getAnalyticsSchemaWithContext("normalization", period)}
-
-CRITICAL: Return ONLY valid JSON in the exact format above. No markdown, no explanations, no text outside the JSON object. Start with { and end with }.`;
+${getAnalyticsSchemaWithContext("normalization", period)}`;
 };
 
 /**
