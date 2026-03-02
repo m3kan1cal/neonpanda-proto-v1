@@ -161,7 +161,7 @@ function BlogPost2CoachCreator() {
               Coach configurations, active sessions, user preferences. This is
               the hot data—accessed on literally every request.
             </p>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
               <span className="text-synthwave-neon-cyan">~5ms</span>
               <span className="text-synthwave-text-muted"> read latency</span>
             </div>
@@ -186,7 +186,7 @@ function BlogPost2CoachCreator() {
               Full conversation transcripts, detailed program specs, workout
               analysis reports. Rich context retrieved when needed.
             </p>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
               <span className="text-synthwave-neon-pink">90%</span>
               <span className="text-synthwave-text-muted"> cost reduction</span>
             </div>
@@ -195,7 +195,7 @@ function BlogPost2CoachCreator() {
           {/* Pinecone */}
           <div className={containerPatterns.mediumGlassPurple}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-white rounded-lg p-1.5">
+              <div className="bg-white rounded-md p-1.5">
                 <img
                   src="/images/icons/pinecone-logo.svg"
                   alt="Pinecone"
@@ -213,7 +213,7 @@ function BlogPost2CoachCreator() {
               Vector embeddings of workouts, memories, methodology knowledge.
               Find context by meaning, not just keywords.
             </p>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
               <span className="text-synthwave-neon-purple">meaning-based</span>
               <span className="text-synthwave-text-muted"> retrieval</span>
             </div>
@@ -225,7 +225,7 @@ function BlogPost2CoachCreator() {
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
             How Data Flows Through the System
           </h3>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-3">
               // Every coach interaction
             </div>
@@ -325,7 +325,7 @@ function BlogPost2CoachCreator() {
             ].map((discipline, idx) => (
               <div
                 key={idx}
-                className="bg-synthwave-bg-primary/40 rounded-lg p-3 text-center border border-synthwave-neon-cyan/20"
+                className="bg-synthwave-bg-primary/40 rounded-md p-3 text-center border border-synthwave-neon-cyan/20"
               >
                 <span className="font-rajdhani font-semibold text-synthwave-text-primary text-sm block">
                   {discipline.name}
@@ -349,7 +349,7 @@ function BlogPost2CoachCreator() {
             Personality Templates: More Than Communication Style
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 The Drill Sergeant
               </h4>
@@ -359,7 +359,7 @@ function BlogPost2CoachCreator() {
                 volume."
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 The Sports Scientist
               </h4>
@@ -369,7 +369,7 @@ function BlogPost2CoachCreator() {
                 pattern."
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
                 The Hype Coach
               </h4>
@@ -378,7 +378,7 @@ function BlogPost2CoachCreator() {
                 could see it in your training logs. You're built different."
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 The Mentor
               </h4>
@@ -439,7 +439,7 @@ function BlogPost2CoachCreator() {
             the Assembler synthesizes—taking inputs from different places and
             merging them into something greater than the sum of its parts.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Coach Creator assembles from multiple sources
             </div>
@@ -481,10 +481,10 @@ function BlogPost2CoachCreator() {
           </p>
 
           {/* Visual Flow */}
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-6">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-6">
             <div className="flex flex-col items-center space-y-4">
               {/* Step 1 */}
-              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                   1. Discovery Conversation
                 </span>
@@ -500,7 +500,7 @@ function BlogPost2CoachCreator() {
               </div>
 
               {/* Step 2 */}
-              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
                   2. Pattern Recognition
                 </span>
@@ -516,7 +516,7 @@ function BlogPost2CoachCreator() {
               </div>
 
               {/* Step 3 */}
-              <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
                   3. Template Selection + Customization
                 </span>
@@ -532,7 +532,7 @@ function BlogPost2CoachCreator() {
               </div>
 
               {/* Step 4 */}
-              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                   4. Personality Prompt Generation
                 </span>
@@ -637,7 +637,7 @@ function BlogPost2CoachCreator() {
             and how to adapt based on your responses—all in service of the
             singular goal of building a coach that genuinely fits you.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Agent receives goal + tools, makes autonomous decisions
             </div>
@@ -672,7 +672,7 @@ function BlogPost2CoachCreator() {
             optimize for both quality and cost.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
                 Claude Sonnet 4.6
               </h4>
@@ -681,7 +681,7 @@ function BlogPost2CoachCreator() {
                 generation. When nuance matters, Sonnet delivers.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 Claude Haiku 4.5
               </h4>
@@ -690,7 +690,7 @@ function BlogPost2CoachCreator() {
                 recognition and adaptive questioning at low latency.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 Nvidia Nemotron / Amazon Nova 2 Lite
               </h4>
@@ -833,7 +833,7 @@ function BlogPost2CoachCreator() {
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Dynamic Prompt Assembly
           </h3>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Every message triggers intelligent context assembly
             </div>
@@ -894,7 +894,7 @@ function BlogPost2CoachCreator() {
               "Remember that thing I mentioned about my knee" actually works.
               Pinecone finds relevant memories by meaning, not keyword matching.
             </p>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
               <div className="text-synthwave-text-muted">
                 {`"that knee thing" → finds`}
               </div>
@@ -913,7 +913,7 @@ function BlogPost2CoachCreator() {
               Coach configuration loads in under 5ms from DynamoDB. No
               "loading..." states when starting a conversation.
             </p>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
               <div className="text-synthwave-text-muted">
                 {`DynamoDB single-table design`}
               </div>
@@ -932,7 +932,7 @@ function BlogPost2CoachCreator() {
               Full conversation transcripts in S3 mean the coach can reference
               discussions from months ago—retrieved on demand when relevant.
             </p>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
               <div className="text-synthwave-text-muted">
                 {`S3 transcript retrieval`}
               </div>
@@ -951,7 +951,7 @@ function BlogPost2CoachCreator() {
               Tiered storage means we can offer unlimited conversation history
               without passing massive storage bills to users.
             </p>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
               <div className="text-synthwave-text-muted">
                 {`S3 storage cost`}
               </div>

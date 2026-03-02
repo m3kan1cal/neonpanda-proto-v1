@@ -16,7 +16,10 @@ import {
 import { Pinecone } from "@pinecone-database/pinecone";
 import { getEnhancedMethodologyContext } from "./pinecone-utils";
 import { putObject } from "./s3-utils";
-import { deepSanitizeNullish } from "./object-utils";
+import {
+  deepSanitizeNullish,
+  normalizeSchemaArrayFields,
+} from "./object-utils";
 import { parseJsonWithFallbacks } from "./response-utils";
 import { logger } from "./logger";
 import { validateToolResponse } from "./tool-validation";
@@ -807,6 +810,9 @@ export function extractToolUseResult(
     const matchingTool = toolsArray.find((t) => t.name === result.toolName);
     if (matchingTool?.inputSchema) {
       try {
+        // Coerce non-array values to arrays before validation so AJV sees
+        // well-typed data and downstream callers receive clean arrays.
+        normalizeSchemaArrayFields(result.input, matchingTool.inputSchema);
         validateToolResponse(
           result.toolName,
           result.input,

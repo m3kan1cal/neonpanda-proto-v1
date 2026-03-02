@@ -426,6 +426,15 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   animation: contextualPulse 2s ease-in-out infinite;
 }
 
+/* Sidebar nav label fade-in when sidebar expands */
+@keyframes navLabelFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.nav-label-reveal {
+  animation: navLabelFadeIn 0.18s ease-out forwards;
+}
+
 /* Custom Amplify Authenticator styles removed - now using custom auth components */
 
 /* Custom Auth Form Autofill Styling - Clean and effective approach */

@@ -14,7 +14,7 @@ export const HyroxSection = ({
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
         className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-          collapsedSections.has(sectionId) ? "rounded-2xl" : "rounded-t-2xl"
+          collapsedSections.has(sectionId) ? "rounded-md" : "rounded-t-md"
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >
@@ -49,7 +49,7 @@ export const HyroxSection = ({
                   <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Stations
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                     <div className="space-y-2">
                       {hyroxData.stations.map((station, idx) => (
                         <div key={idx} className="py-2">
@@ -98,7 +98,7 @@ export const HyroxSection = ({
                   <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Runs
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                     <div className="space-y-2">
                       {hyroxData.runs.map((run, idx) => (
                         <div key={idx} className="py-2">
@@ -134,7 +134,7 @@ export const HyroxSection = ({
               )}
             </div>
           ) : (
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
               <div className="text-synthwave-text-secondary font-rajdhani text-sm">
                 No Hyrox data available. Include station details, times,
                 weights, and run splits when logging.

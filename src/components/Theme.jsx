@@ -148,7 +148,7 @@ function Theme() {
 
         {/* Category Navigation */}
         <div className="flex justify-center mb-6">
-          <div className="flex bg-synthwave-bg-card/50 rounded-lg p-1 border border-synthwave-neon-purple/30">
+          <div className="flex bg-synthwave-bg-card/50 rounded-md p-1 border border-synthwave-neon-purple/30">
             <button
               onClick={() => setActiveCategory("buttons")}
               className={`px-6 py-3 rounded-md font-rajdhani font-semibold transition-all duration-300 ${
@@ -185,7 +185,7 @@ function Theme() {
         {/* Sub-Navigation Tabs */}
         {activeCategory === "buttons" && (
           <div className="flex justify-center mb-8">
-            <div className="flex bg-synthwave-bg-card/50 rounded-lg p-1 border border-synthwave-neon-pink/30">
+            <div className="flex bg-synthwave-bg-card/50 rounded-md p-1 border border-synthwave-neon-pink/30">
               <button
                 onClick={() => setActiveSection("existing")}
                 className={`px-6 py-3 rounded-md font-rajdhani font-semibold transition-all duration-300 ${
@@ -212,7 +212,7 @@ function Theme() {
 
         {activeCategory === "containers" && (
           <div className="flex justify-center mb-8">
-            <div className="flex bg-synthwave-bg-card/50 rounded-lg p-1 border border-synthwave-neon-cyan/30">
+            <div className="flex bg-synthwave-bg-card/50 rounded-md p-1 border border-synthwave-neon-cyan/30">
               <button
                 onClick={() => setActiveSection("existing")}
                 className={`px-6 py-3 rounded-md font-rajdhani font-semibold transition-all duration-300 ${
@@ -347,7 +347,7 @@ function Theme() {
                         </IconButton>
                       </div>
                     </div>
-                    <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-pink/20 rounded-lg p-4 mt-6">
+                    <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-pink/20 rounded-md p-4 mt-6">
                       <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                         <strong className="text-synthwave-neon-pink">
                           Updated IconButton.jsx:
@@ -462,12 +462,12 @@ function Theme() {
                       Card Action Buttons (Various Components)
                     </h3>
                     <div className="space-y-4">
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-md p-3 cursor-pointer transition-all duration-200">
                         <p className="text-synthwave-text-primary font-rajdhani">
                           Card with hover effect
                         </p>
                       </div>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-md p-3">
                         <p className="text-synthwave-text-primary font-rajdhani">
                           Static card (no hover)
                         </p>
@@ -480,7 +480,7 @@ function Theme() {
                     <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Collapsible Section Buttons (WorkoutViewer.jsx, etc.)
                     </h3>
-                    <button className="w-full px-4 py-3 bg-synthwave-bg-primary/30 hover:bg-synthwave-bg-primary/50 transition-colors duration-200 flex items-center justify-between text-left rounded-lg border border-synthwave-neon-pink/30">
+                    <button className="w-full px-4 py-3 bg-synthwave-bg-primary/30 hover:bg-synthwave-bg-primary/50 transition-colors duration-200 flex items-center justify-between text-left rounded-md border border-synthwave-neon-pink/30">
                       <span className="text-synthwave-text-primary font-rajdhani">
                         Expandable Section Header
                       </span>
@@ -507,10 +507,10 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                           Solid Fill (High Impact)
                         </h4>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Create New
                         </button>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Save Changes
                         </button>
                       </div>
@@ -520,10 +520,10 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-purple">
                           Gradient Fill (Premium)
                         </h4>
-                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Premium Action
                         </button>
-                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-cyan to-synthwave-neon-blue text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-cyan to-synthwave-neon-blue text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Cool Action
                         </button>
                       </div>
@@ -533,10 +533,10 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-text-primary">
                           Outlined (Clean)
                         </h4>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Secondary
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Alternative
                         </button>
                       </div>
@@ -746,13 +746,13 @@ function Theme() {
                       </div>
                     </div>
 
-                    <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                    <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-cyan/20 rounded-md p-4">
                       <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                         <strong className="text-synthwave-neon-cyan">
                           Small Action Buttons:
                         </strong>{" "}
                         Designed for chat interfaces and toolbars. Smaller than
-                        regular icon buttons (40px vs 48px), use rounded-lg
+                        regular icon buttons (40px vs 48px), use rounded-md
                         instead of rounded-full for modern consistency, and
                         maintain color-coded functionality (blue=actions,
                         green=photos, purple=files, pink=destructive,
@@ -777,7 +777,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-sm text-synthwave-neon-pink">
                           Pink
                         </h4>
-                        <span className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani font-medium inline-block">
+                        <span className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded-md text-xs font-rajdhani font-medium inline-block">
                           High Priority
                         </span>
                       </div>
@@ -787,7 +787,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-sm text-synthwave-neon-pink">
                           Pink Border
                         </h4>
-                        <span className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani font-medium border border-synthwave-neon-pink/40 inline-block">
+                        <span className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded-md text-xs font-rajdhani font-medium border border-synthwave-neon-pink/40 inline-block">
                           Strength
                         </span>
                       </div>
@@ -797,7 +797,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-sm text-synthwave-neon-cyan">
                           Cyan
                         </h4>
-                        <span className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani font-medium inline-block">
+                        <span className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-rajdhani font-medium inline-block">
                           Info Tag
                         </span>
                       </div>
@@ -807,7 +807,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-sm text-synthwave-neon-cyan">
                           Cyan Border
                         </h4>
-                        <span className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani font-medium border border-synthwave-neon-cyan/40 inline-block">
+                        <span className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-rajdhani font-medium border border-synthwave-neon-cyan/40 inline-block">
                           Conditioning
                         </span>
                       </div>
@@ -817,7 +817,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-sm text-synthwave-neon-purple">
                           Purple
                         </h4>
-                        <span className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani font-medium inline-block">
+                        <span className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded-md text-xs font-rajdhani font-medium inline-block">
                           Special
                         </span>
                       </div>
@@ -827,7 +827,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-sm text-synthwave-neon-purple">
                           Purple Border
                         </h4>
-                        <span className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani font-medium border border-synthwave-neon-purple/40 inline-block">
+                        <span className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded-md text-xs font-rajdhani font-medium border border-synthwave-neon-purple/40 inline-block">
                           Accessory
                         </span>
                       </div>
@@ -837,13 +837,13 @@ function Theme() {
                         <h4 className="font-rajdhani text-sm text-synthwave-neon-cyan">
                           Workout Detail
                         </h4>
-                        <span className="px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded text-sm font-rajdhani text-synthwave-text-secondary inline-block">
+                        <span className="px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-md text-sm font-rajdhani text-synthwave-text-secondary inline-block">
                           Barbell
                         </span>
                       </div>
                     </div>
 
-                    <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                    <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-pink/20 rounded-md p-4">
                       <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                         <strong className="text-synthwave-neon-pink">
                           Badge Patterns:
@@ -903,10 +903,10 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                           Medium (40px)
                         </h4>
-                        <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary font-rajdhani font-semibold text-base uppercase tracking-wide rounded-lg transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
+                        <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary font-rajdhani font-semibold text-base uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
                           Medium
                         </button>
-                        <button className="p-2.5 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-lg transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
+                        <button className="p-2.5 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-md transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -928,10 +928,10 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-purple">
                           Large (48px)
                         </h4>
-                        <button className="px-6 py-3 bg-synthwave-neon-purple text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
+                        <button className="px-6 py-3 bg-synthwave-neon-purple text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
                           Large
                         </button>
-                        <button className="p-3 bg-synthwave-neon-purple text-white rounded-lg transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
+                        <button className="p-3 bg-synthwave-neon-purple text-white rounded-md transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
                           <svg
                             className="w-6 h-6"
                             fill="none"
@@ -953,10 +953,10 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                           XL (56px)
                         </h4>
-                        <button className="px-8 py-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-rajdhani font-bold text-xl uppercase tracking-wide rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
+                        <button className="px-8 py-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-rajdhani font-bold text-xl uppercase tracking-wide rounded-md transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
                           Hero CTA
                         </button>
-                        <button className="p-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
+                        <button className="p-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-md transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
                           <svg
                             className="w-7 h-7"
                             fill="none"
@@ -986,11 +986,11 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                           Loading States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
                           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                           <span>Loading...</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-cyan text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-cyan text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
                           <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
                             <div
@@ -1011,7 +1011,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-green-400">
                           Success States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-green-500 text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-green-500 text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1027,7 +1027,7 @@ function Theme() {
                           </svg>
                           <span>Saved!</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-green-500 text-green-500 font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-green-500 text-green-500 font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1050,7 +1050,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-yellow-400">
                           Warning States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-yellow-500 text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-yellow-500 text-synthwave-bg-primary font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1066,7 +1066,7 @@ function Theme() {
                           </svg>
                           <span>Caution</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-yellow-500 text-yellow-500 font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-yellow-500 text-yellow-500 font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1089,7 +1089,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-red-400">
                           Danger States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-red-500 text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-600">
+                        <button className="w-full px-6 py-3 bg-red-500 text-white font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-600">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1105,7 +1105,7 @@ function Theme() {
                           </svg>
                           <span>Delete</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-red-500 text-red-500 font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-500/10">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-red-500 text-red-500 font-rajdhani font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-500/10">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1215,7 +1215,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-purple">
                           Minimal Clean
                         </h4>
-                        <button className="bg-transparent border-none text-synthwave-neon-purple px-2 py-1 hover:text-white hover:bg-synthwave-neon-purple/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide">
+                        <button className="bg-transparent border-none text-synthwave-neon-purple px-2 py-1 hover:text-white hover:bg-synthwave-neon-purple/10 rounded-md transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide">
                           Cancel
                         </button>
                         <p className="text-synthwave-text-secondary font-rajdhani text-xs">
@@ -1226,7 +1226,7 @@ function Theme() {
                     </div>
 
                     {/* Link Button Guidelines */}
-                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-lg p-6 mt-6">
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6 mt-6">
                       <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold mb-4">
                         Link Button Best Practices:
                       </h4>
@@ -1273,11 +1273,11 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                           Tab Switcher (ViewReports.jsx)
                         </h4>
-                        <div className="flex items-center justify-center gap-2 p-4 bg-synthwave-bg-card/30 rounded-lg">
-                          <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
+                        <div className="flex items-center justify-center gap-2 p-4 bg-synthwave-bg-card/30 rounded-md">
+                          <button className="px-4 py-2 rounded-md font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
                             Active Tab
                           </button>
-                          <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10">
+                          <button className="px-4 py-2 rounded-md font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10">
                             Inactive Tab
                           </button>
                         </div>
@@ -1298,7 +1298,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-rajdhani text-xs w-16">
                               Active:
                             </span>
-                            <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
+                            <button className="px-4 py-2 rounded-md font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
                               Tab
                             </button>
                           </div>
@@ -1306,7 +1306,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-rajdhani text-xs w-16">
                               Inactive:
                             </span>
-                            <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent">
+                            <button className="px-4 py-2 rounded-md font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent">
                               Tab
                             </button>
                           </div>
@@ -1314,7 +1314,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-rajdhani text-xs w-16">
                               Hover:
                             </span>
-                            <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/20">
+                            <button className="px-4 py-2 rounded-md font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/20">
                               Tab
                             </button>
                           </div>
@@ -1323,7 +1323,7 @@ function Theme() {
                     </div>
 
                     {/* Tab Button Guidelines */}
-                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-lg p-6 mt-6">
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6 mt-6">
                       <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold mb-4">
                         Tab Button Guidelines:
                       </h4>
@@ -1354,7 +1354,7 @@ function Theme() {
                               • Hover: subtle cyan background
                               (bg-synthwave-neon-cyan/10)
                             </li>
-                            <li>• Border: 2px with rounded-lg corners</li>
+                            <li>• Border: 2px with rounded-md corners</li>
                           </ul>
                         </div>
                       </div>
@@ -1366,7 +1366,7 @@ function Theme() {
                     <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       UI/UX Recommendations
                     </h3>
-                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-lg p-6">
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6">
                       <div className="space-y-4">
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                           Modern Best Practices:
@@ -1478,12 +1478,12 @@ function Theme() {
                               effects.
                             </p>
                             <div className="space-y-2">
-                              <div className="bg-synthwave-bg-primary/30 p-3 rounded-lg">
+                              <div className="bg-synthwave-bg-primary/30 p-3 rounded-md">
                                 <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                   Sample content area
                                 </p>
                               </div>
-                              <div className="bg-synthwave-bg-primary/30 p-3 rounded-lg">
+                              <div className="bg-synthwave-bg-primary/30 p-3 rounded-md">
                                 <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                   More sample content
                                 </p>
@@ -1491,7 +1491,7 @@ function Theme() {
                             </div>
                           </div>
                         </NeonBorder>
-                        <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                        <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-cyan/20 rounded-md p-4">
                           <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                             <strong className="text-synthwave-neon-cyan">
                               Current Issues:
@@ -1558,7 +1558,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Container Class
                           </h4>
-                          <div className="bg-synthwave-gradient p-6 rounded-lg border border-synthwave-neon-cyan/30">
+                          <div className="bg-synthwave-gradient p-6 rounded-md border border-synthwave-neon-cyan/30">
                             <h5 className="font-russo text-xl text-white mb-4 uppercase">
                               Container
                             </h5>
@@ -1583,7 +1583,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                             Interactive Card
                           </h4>
-                          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-4 cursor-pointer transition-all duration-200">
+                          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-md p-4 cursor-pointer transition-all duration-200">
                             <h5 className="font-rajdhani text-lg text-synthwave-text-primary mb-2">
                               Workout Card
                             </h5>
@@ -1599,7 +1599,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Static Card
                           </h4>
-                          <div className="bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/30 rounded-lg p-4">
+                          <div className="bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/30 rounded-md p-4">
                             <h5 className="font-rajdhani text-lg text-synthwave-text-primary mb-2">
                               Info Card
                             </h5>
@@ -1615,7 +1615,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-purple">
                             Floating Card
                           </h4>
-                          <div className="bg-synthwave-bg-card/80 backdrop-blur-sm border border-synthwave-neon-purple/30 rounded-xl p-4 shadow-lg shadow-synthwave-neon-purple/20">
+                          <div className="bg-synthwave-bg-card/80 backdrop-blur-sm border border-synthwave-neon-purple/30 rounded-md p-4 shadow-lg shadow-synthwave-neon-purple/20">
                             <h5 className="font-rajdhani text-lg text-synthwave-text-primary mb-2">
                               Floating Menu
                             </h5>
@@ -1680,7 +1680,7 @@ function Theme() {
                         Fixed Floating Input (CoachConversations.jsx)
                       </h3>
                       <div className="relative">
-                        <div className="bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 rounded-lg p-6">
+                        <div className="bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 rounded-md p-6">
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink mb-4">
                             Chat Input Container
                           </h4>
@@ -1690,7 +1690,7 @@ function Theme() {
                             visible during scroll with glassmorphism styling.
                           </p>
                           <div className="flex items-center space-x-4">
-                            <div className="flex-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30 rounded-lg p-3">
+                            <div className="flex-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30 rounded-md p-3">
                               <span className="text-synthwave-text-muted font-rajdhani">
                                 Type your message...
                               </span>
@@ -1709,7 +1709,7 @@ function Theme() {
                         Collapsible Sections (WorkoutViewer.jsx, etc.)
                       </h3>
                       <div className="space-y-4">
-                        <div className="border border-synthwave-neon-pink/30 rounded-lg overflow-hidden">
+                        <div className="border border-synthwave-neon-pink/30 rounded-md overflow-hidden">
                           <button className="w-full px-4 py-3 bg-synthwave-bg-primary/30 hover:bg-synthwave-bg-primary/50 transition-colors duration-200 flex items-center justify-between text-left">
                             <div className="flex items-center space-x-3">
                               <div className="text-synthwave-neon-pink">
@@ -1864,7 +1864,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink font-semibold">
                             Option 1: Subtle Glassmorphism (Recommended)
                           </h4>
-                          <div className="bg-synthwave-bg-card/30 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/5 h-64 overflow-hidden transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15">
+                          <div className="bg-synthwave-bg-card/30 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-md shadow-xl shadow-synthwave-neon-cyan/5 h-64 overflow-hidden transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15">
                             <div className="p-6 h-full overflow-y-auto custom-scrollbar">
                               <h5 className="font-russo text-lg text-white mb-4 uppercase">
                                 Modern Glassmorphism
@@ -1876,12 +1876,12 @@ function Theme() {
                                 functionality.
                               </p>
                               <div className="space-y-2">
-                                <div className="bg-synthwave-bg-primary/20 p-3 rounded-xl">
+                                <div className="bg-synthwave-bg-primary/20 p-3 rounded-md">
                                   <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                     Sample content area
                                   </p>
                                 </div>
-                                <div className="bg-synthwave-bg-primary/20 p-3 rounded-xl">
+                                <div className="bg-synthwave-bg-primary/20 p-3 rounded-md">
                                   <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                     More sample content
                                   </p>
@@ -1889,7 +1889,7 @@ function Theme() {
                               </div>
                             </div>
                           </div>
-                          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                          <div className="bg-green-500/10 border border-green-500/30 rounded-md p-4">
                             <p className="text-green-400 font-rajdhani text-sm">
                               <strong>Benefits:</strong> Modern 2025 aesthetic,
                               better content focus, accessibility friendly,
@@ -1904,7 +1904,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-purple font-semibold">
                             Option 2: Enhanced Glassmorphism
                           </h4>
-                          <div className="bg-gradient-to-br from-synthwave-bg-card/40 to-synthwave-bg-card/20 backdrop-blur-2xl border border-synthwave-neon-cyan/15 rounded-2xl shadow-2xl shadow-synthwave-neon-cyan/10 h-64 overflow-hidden">
+                          <div className="bg-gradient-to-br from-synthwave-bg-card/40 to-synthwave-bg-card/20 backdrop-blur-2xl border border-synthwave-neon-cyan/15 rounded-md shadow-2xl shadow-synthwave-neon-cyan/10 h-64 overflow-hidden">
                             <div className="p-6 h-full overflow-y-auto custom-scrollbar">
                               <h5 className="font-russo text-lg text-white mb-4 uppercase">
                                 Enhanced Glass
@@ -1915,12 +1915,12 @@ function Theme() {
                                 staying modern.
                               </p>
                               <div className="space-y-2">
-                                <div className="bg-synthwave-bg-primary/25 backdrop-blur-sm p-3 rounded-xl">
+                                <div className="bg-synthwave-bg-primary/25 backdrop-blur-sm p-3 rounded-md">
                                   <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                     Sample content area
                                   </p>
                                 </div>
-                                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg px-4 py-4">
+                                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md px-4 py-4">
                                   <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                     Workout subcontainer (used in
                                     TodaysWorkoutCard phase display, workout
@@ -1930,7 +1930,7 @@ function Theme() {
                               </div>
                             </div>
                           </div>
-                          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                          <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-4">
                             <p className="text-blue-400 font-rajdhani text-sm">
                               <strong>Benefits:</strong> More visual impact than
                               Option 1, gradient depth, stronger shadows for
@@ -1945,7 +1945,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-text-primary font-semibold">
                           Option 3: Minimal Modern (Clean)
                         </h4>
-                        <div className="bg-synthwave-bg-card/25 rounded-3xl shadow-xl h-64 overflow-hidden border-0">
+                        <div className="bg-synthwave-bg-card/25 rounded-md shadow-xl h-64 overflow-hidden border-0">
                           <div className="p-6 h-full overflow-y-auto custom-scrollbar">
                             <h5 className="font-russo text-lg text-white mb-4 uppercase">
                               Minimal Clean
@@ -1956,12 +1956,12 @@ function Theme() {
                               focus with clean, modern aesthetics.
                             </p>
                             <div className="space-y-2">
-                              <div className="bg-synthwave-bg-primary/20 p-3 rounded-2xl">
+                              <div className="bg-synthwave-bg-primary/20 p-3 rounded-md">
                                 <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                   Sample content area
                                 </p>
                               </div>
-                              <div className="bg-synthwave-bg-primary/20 p-3 rounded-2xl">
+                              <div className="bg-synthwave-bg-primary/20 p-3 rounded-md">
                                 <p className="text-synthwave-text-secondary text-sm font-rajdhani">
                                   More sample content
                                 </p>
@@ -1969,7 +1969,7 @@ function Theme() {
                             </div>
                           </div>
                         </div>
-                        <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                        <div className="bg-purple-500/10 border border-purple-500/30 rounded-md p-4">
                           <p className="text-purple-400 font-rajdhani text-sm">
                             <strong>Benefits:</strong> Maximum content focus,
                             ultra-clean aesthetic, excellent performance, works
@@ -1979,7 +1979,7 @@ function Theme() {
                       </div>
 
                       {/* Recommendation */}
-                      <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-xl p-6 mt-8">
+                      <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-md p-6 mt-8">
                         <h4 className="font-russo text-lg text-synthwave-neon-pink mb-4 uppercase">
                           My Recommendation
                         </h4>
@@ -2029,7 +2029,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                             Light Glass
                           </h4>
-                          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl">
+                          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-md p-6 shadow-xl">
                             <h5 className="font-russo text-lg text-white mb-3 uppercase">
                               Light Glass
                             </h5>
@@ -2046,7 +2046,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Medium Glass
                           </h4>
-                          <div className="bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/10">
+                          <div className="bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20 rounded-md p-6 shadow-xl shadow-synthwave-neon-cyan/10">
                             <h5 className="font-russo text-lg text-white mb-3 uppercase">
                               Medium Glass
                             </h5>
@@ -2063,7 +2063,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-purple">
                             Heavy Glass
                           </h4>
-                          <div className="bg-synthwave-bg-card/50 backdrop-blur-xl border border-synthwave-neon-purple/30 rounded-2xl p-6 shadow-2xl shadow-synthwave-neon-purple/20">
+                          <div className="bg-synthwave-bg-card/50 backdrop-blur-xl border border-synthwave-neon-purple/30 rounded-md p-6 shadow-2xl shadow-synthwave-neon-purple/20">
                             <h5 className="font-russo text-lg text-white mb-3 uppercase">
                               Heavy Glass
                             </h5>
@@ -2088,7 +2088,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                             Subtle Gradient
                           </h4>
-                          <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-primary/80 border border-synthwave-neon-pink/20 rounded-xl p-6">
+                          <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-primary/80 border border-synthwave-neon-pink/20 rounded-md p-6">
                             <h5 className="font-russo text-lg text-white mb-3 uppercase">
                               Subtle Background
                             </h5>
@@ -2105,7 +2105,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Bold Gradient
                           </h4>
-                          <div className="bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-cyan/30 rounded-xl p-6">
+                          <div className="bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-cyan/30 rounded-md p-6">
                             <h5 className="font-russo text-lg text-white mb-3 uppercase">
                               Neon Gradient
                             </h5>
@@ -2123,7 +2123,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-pink font-semibold mb-4">
                           CTA Container (Bold Gradient + Elevated Card)
                         </h4>
-                        <div className="bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-pink/30 rounded-xl p-6 shadow-xl shadow-synthwave-neon-pink/20 hover:shadow-2xl hover:shadow-synthwave-neon-pink/30 transition-all duration-300 hover:-translate-y-2">
+                        <div className="bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-pink/30 rounded-md p-6 shadow-xl shadow-synthwave-neon-pink/20 hover:shadow-2xl hover:shadow-synthwave-neon-pink/30 transition-all duration-300 hover:-translate-y-2">
                           <h5 className="font-russo text-lg text-white mb-3 uppercase">
                             Premium CTA
                           </h5>
@@ -2170,7 +2170,7 @@ function Theme() {
                             </li>
                           </ul>
                         </div>
-                        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mt-4">
+                        <div className="bg-green-500/10 border border-green-500/30 rounded-md p-4 mt-4">
                           <p className="text-green-400 font-rajdhani text-sm">
                             <strong>Best Use Cases:</strong> Premium
                             subscription tiers, upgrade CTAs, founding member
@@ -2193,7 +2193,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                             Minimal Card
                           </h4>
-                          <div className="bg-synthwave-bg-card/20 hover:bg-synthwave-bg-card/40 border-0 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-synthwave-neon-pink/10">
+                          <div className="bg-synthwave-bg-card/20 hover:bg-synthwave-bg-card/40 border-0 rounded-md p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-synthwave-neon-pink/10">
                             <div className="flex items-start space-x-3 mb-4">
                               <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                               <h5 className="font-russo text-lg text-white uppercase">
@@ -2213,7 +2213,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Outlined Card
                           </h4>
-                          <div className="bg-transparent hover:bg-synthwave-neon-cyan/5 border-2 border-synthwave-neon-cyan/30 hover:border-synthwave-neon-cyan/60 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1">
+                          <div className="bg-transparent hover:bg-synthwave-neon-cyan/5 border-2 border-synthwave-neon-cyan/30 hover:border-synthwave-neon-cyan/60 rounded-md p-6 transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-start space-x-3 mb-4">
                               <div className="w-3 h-3 border-2 border-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
                               <h5 className="font-russo text-lg text-white uppercase">
@@ -2232,7 +2232,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-purple">
                             Elevated Card
                           </h4>
-                          <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-purple/20 hover:shadow-2xl hover:shadow-synthwave-neon-purple/30 transition-all duration-300 hover:-translate-y-2">
+                          <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-md p-6 shadow-xl shadow-synthwave-neon-purple/20 hover:shadow-2xl hover:shadow-synthwave-neon-purple/30 transition-all duration-300 hover:-translate-y-2">
                             <div className="flex items-start space-x-3 mb-4">
                               <div className="w-3 h-3 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                               <h5 className="font-russo text-lg text-white uppercase">
@@ -2252,7 +2252,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Content Card
                           </h4>
-                          <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 transition-all duration-300 hover:-translate-y-1">
+                          <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-md p-6 shadow-xl shadow-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 transition-all duration-300 hover:-translate-y-1">
                             <p className="text-synthwave-text-primary font-rajdhani text-base mb-3 leading-relaxed">
                               This is a content-focused card without headers.
                               Perfect for displaying user-generated content like
@@ -2260,10 +2260,10 @@ function Theme() {
                               itself is the primary focus.
                             </p>
                             <div className="flex flex-wrap items-center gap-4 font-rajdhani text-synthwave-text-primary text-sm">
-                              <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani">
+                              <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-rajdhani">
                                 Personal
                               </div>
-                              <div className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani">
+                              <div className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded-md text-xs font-rajdhani">
                                 High Priority
                               </div>
                               <div className="text-synthwave-text-secondary">
@@ -2327,7 +2327,7 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-pink mb-4">
                           Dashed Card (Create/Add Actions)
                         </h4>
-                        <div className="bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/30 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/50 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1 p-6">
+                        <div className="bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/30 rounded-md shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/50 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1 p-6">
                           <div className="flex items-start space-x-3 mb-4">
                             <div className="w-3 h-3 border-2 border-dashed border-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
                             <h5 className="font-russo text-lg text-white uppercase">
@@ -2355,7 +2355,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                             Loading State
                           </h4>
-                          <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-xl p-6 relative overflow-hidden">
+                          <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-6 relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-synthwave-neon-pink/10 to-transparent animate-pulse"></div>
                             <div className="relative">
                               <div className="flex items-center space-x-3 mb-4">
@@ -2365,8 +2365,8 @@ function Theme() {
                                 </h5>
                               </div>
                               <div className="space-y-2">
-                                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                                <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                                <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-3/4"></div>
                               </div>
                             </div>
                           </div>
@@ -2418,7 +2418,7 @@ function Theme() {
                             Enhanced User Bubble
                           </h4>
                           <div className="flex justify-end">
-                            <div className="bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-2xl rounded-br-md p-4 max-w-xs shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm">
+                            <div className="bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-md rounded-br-md p-4 max-w-xs shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm">
                               <p className="font-rajdhani">
                                 Modern gradient bubble with enhanced shadows and
                                 borderless design for cleaner aesthetics.
@@ -2459,18 +2459,18 @@ function Theme() {
                           Advanced Floating Input
                         </h4>
                         <div className="relative">
-                          <div className="bg-gradient-to-r from-synthwave-bg-card/90 via-synthwave-bg-card/95 to-synthwave-bg-card/90 backdrop-blur-xl border border-synthwave-neon-purple/20 shadow-2xl shadow-synthwave-neon-purple/20 rounded-2xl p-6">
+                          <div className="bg-gradient-to-r from-synthwave-bg-card/90 via-synthwave-bg-card/95 to-synthwave-bg-card/90 backdrop-blur-xl border border-synthwave-neon-purple/20 shadow-2xl shadow-synthwave-neon-purple/20 rounded-md p-6">
                             <p className="text-synthwave-text-secondary font-rajdhani mb-4 text-sm">
                               Next-gen floating input with gradient backgrounds,
                               enhanced blur effects, and seamless integration.
                             </p>
                             <div className="flex items-center space-x-4">
-                              <div className="flex-1 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-synthwave-neon-purple/20 rounded-2xl p-4 focus-within:border-synthwave-neon-purple/50 transition-all duration-300">
+                              <div className="flex-1 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-synthwave-neon-purple/20 rounded-md p-4 focus-within:border-synthwave-neon-purple/50 transition-all duration-300">
                                 <span className="text-synthwave-text-muted font-rajdhani">
                                   Enhanced message input...
                                 </span>
                               </div>
-                              <button className="p-4 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-2xl shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300">
+                              <button className="p-4 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-md shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300">
                                 <SendIcon />
                               </button>
                             </div>
@@ -2488,11 +2488,11 @@ function Theme() {
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                           Training Grounds Quick Stats Bar
                         </h4>
-                        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-4">
+                        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-md shadow-xl shadow-synthwave-neon-cyan/20 p-4">
                           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
                             {/* Stat 1 - Pink */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
+                              <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
                                 <ConversationIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2507,7 +2507,7 @@ function Theme() {
 
                             {/* Stat 2 - Cyan */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
+                              <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
                                 <ConversationIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2522,7 +2522,7 @@ function Theme() {
 
                             {/* Stat 3 - Purple */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
+                              <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
                                 <WorkoutIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2537,7 +2537,7 @@ function Theme() {
 
                             {/* Stat 4 - Pink */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
+                              <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
                                 <WorkoutIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2552,7 +2552,7 @@ function Theme() {
 
                             {/* Stat 5 - Cyan */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
+                              <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
                                 <WorkoutIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2567,7 +2567,7 @@ function Theme() {
 
                             {/* Stat 6 - Purple */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
+                              <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
                                 <ProgramIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2582,7 +2582,7 @@ function Theme() {
 
                             {/* Stat 7 - Pink */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
+                              <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
                                 <LightningIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2597,7 +2597,7 @@ function Theme() {
 
                             {/* Stat 8 - Cyan */}
                             <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                              <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
+                              <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
                                 <ReportIcon />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -2611,7 +2611,7 @@ function Theme() {
                             </div>
                           </div>
                         </div>
-                        <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                        <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-cyan/20 rounded-md p-4">
                           <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                             <strong className="text-synthwave-neon-cyan">
                               Quick Stats Bar Features:
@@ -2638,7 +2638,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Mobile Optimized
                           </h4>
-                          <div className="bg-synthwave-bg-card/40 border border-synthwave-neon-cyan/30 rounded-2xl p-4 md:p-6">
+                          <div className="bg-synthwave-bg-card/40 border border-synthwave-neon-cyan/30 rounded-md p-4 md:p-6">
                             <h5 className="font-russo text-base md:text-lg text-white mb-3 uppercase">
                               Responsive
                             </h5>
@@ -2648,10 +2648,10 @@ function Theme() {
                               readability on all devices.
                             </p>
                             <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                              <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-lg text-sm font-rajdhani font-semibold">
+                              <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-md text-sm font-rajdhani font-semibold">
                                 Mobile Action
                               </button>
-                              <button className="px-4 py-2 border border-synthwave-neon-cyan text-synthwave-neon-cyan rounded-lg text-sm font-rajdhani font-semibold">
+                              <button className="px-4 py-2 border border-synthwave-neon-cyan text-synthwave-neon-cyan rounded-md text-sm font-rajdhani font-semibold">
                                 Secondary
                               </button>
                             </div>
@@ -2663,7 +2663,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-pink">
                             Touch-Friendly
                           </h4>
-                          <div className="bg-synthwave-bg-card/40 border border-synthwave-neon-pink/30 rounded-2xl p-6">
+                          <div className="bg-synthwave-bg-card/40 border border-synthwave-neon-pink/30 rounded-md p-6">
                             <h5 className="font-russo text-lg text-white mb-3 uppercase">
                               Touch UI
                             </h5>
@@ -2673,10 +2673,10 @@ function Theme() {
                               with adequate spacing.
                             </p>
                             <div className="grid grid-cols-2 gap-3">
-                              <button className="h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-lg font-rajdhani font-semibold text-sm">
+                              <button className="h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-md font-rajdhani font-semibold text-sm">
                                 Touch Me
                               </button>
-                              <button className="h-12 border-2 border-synthwave-neon-pink text-synthwave-neon-pink rounded-lg font-rajdhani font-semibold text-sm">
+                              <button className="h-12 border-2 border-synthwave-neon-pink text-synthwave-neon-pink rounded-md font-rajdhani font-semibold text-sm">
                                 Or Me
                               </button>
                             </div>
@@ -2703,7 +2703,7 @@ function Theme() {
                               placeholder="Enter text..."
                               readOnly
                             />
-                            <button className="p-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                            <button className="p-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                               <svg
                                 className="w-4 h-4"
                                 fill="none"
@@ -2718,7 +2718,7 @@ function Theme() {
                                 />
                               </svg>
                             </button>
-                            <button className="p-1.5 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
+                            <button className="p-1.5 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
                               <svg
                                 className="w-4 h-4"
                                 fill="none"
@@ -2737,7 +2737,7 @@ function Theme() {
                         </div>
 
                         {/* Guidelines */}
-                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-xl p-6 mt-6">
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6 mt-6">
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold mb-4">
                             Inline Edit Features:
                           </h4>
@@ -2773,7 +2773,7 @@ function Theme() {
                               </ul>
                             </div>
                           </div>
-                          <div className="mt-4 p-3 bg-synthwave-neon-pink/10 rounded-lg border border-synthwave-neon-pink/20">
+                          <div className="mt-4 p-3 bg-synthwave-neon-pink/10 rounded-md border border-synthwave-neon-pink/20">
                             <p className="text-synthwave-neon-pink font-rajdhani text-sm">
                               <strong>Usage:</strong> Import inputPatterns from
                               uiPatterns.js and use className=
@@ -2796,7 +2796,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-green-400">
                             Success Toast
                           </h4>
-                          <div className="bg-gradient-to-br from-green-500/20 via-synthwave-neon-cyan/10 to-green-400/20 border border-green-500/40 rounded-xl px-4 py-3 backdrop-blur-sm shadow-lg shadow-green-500/20 text-green-400">
+                          <div className="bg-gradient-to-br from-green-500/20 via-synthwave-neon-cyan/10 to-green-400/20 border border-green-500/40 rounded-md px-4 py-3 backdrop-blur-sm shadow-lg shadow-green-500/20 text-green-400">
                             <div className="flex items-center space-x-2">
                               <svg
                                 className="w-5 h-5"
@@ -2823,7 +2823,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-red-400">
                             Error Toast
                           </h4>
-                          <div className="bg-gradient-to-br from-red-500/20 via-synthwave-neon-pink/10 to-red-400/20 border border-red-500/40 rounded-xl px-4 py-3 backdrop-blur-sm shadow-lg shadow-red-500/20 text-red-400">
+                          <div className="bg-gradient-to-br from-red-500/20 via-synthwave-neon-pink/10 to-red-400/20 border border-red-500/40 rounded-md px-4 py-3 backdrop-blur-sm shadow-lg shadow-red-500/20 text-red-400">
                             <div className="flex items-center space-x-2">
                               <svg
                                 className="w-5 h-5"
@@ -2850,7 +2850,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-yellow-400">
                             Warning Toast
                           </h4>
-                          <div className="bg-gradient-to-br from-yellow-500/20 via-synthwave-neon-purple/10 to-yellow-400/20 border border-yellow-500/40 rounded-xl px-4 py-3 backdrop-blur-sm shadow-lg shadow-yellow-500/20 text-yellow-400">
+                          <div className="bg-gradient-to-br from-yellow-500/20 via-synthwave-neon-purple/10 to-yellow-400/20 border border-yellow-500/40 rounded-md px-4 py-3 backdrop-blur-sm shadow-lg shadow-yellow-500/20 text-yellow-400">
                             <div className="flex items-center space-x-2">
                               <svg
                                 className="w-5 h-5"
@@ -2877,7 +2877,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">
                             Info Toast
                           </h4>
-                          <div className="bg-gradient-to-br from-synthwave-neon-cyan/20 via-synthwave-neon-purple/10 to-synthwave-neon-pink/20 border border-synthwave-neon-cyan/40 rounded-xl px-4 py-3 backdrop-blur-sm shadow-lg shadow-synthwave-neon-cyan/20 text-synthwave-neon-cyan">
+                          <div className="bg-gradient-to-br from-synthwave-neon-cyan/20 via-synthwave-neon-purple/10 to-synthwave-neon-pink/20 border border-synthwave-neon-cyan/40 rounded-md px-4 py-3 backdrop-blur-sm shadow-lg shadow-synthwave-neon-cyan/20 text-synthwave-neon-cyan">
                             <div className="flex items-center space-x-2">
                               <svg
                                 className="w-5 h-5"
@@ -2901,7 +2901,7 @@ function Theme() {
                       </div>
 
                       {/* Toast Guidelines */}
-                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/30 rounded-xl p-6 mt-6">
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/30 rounded-md p-6 mt-6">
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-pink font-semibold mb-4">
                           Modern 2025 Toast Features:
                         </h4>
@@ -2934,7 +2934,7 @@ function Theme() {
                             </ul>
                           </div>
                         </div>
-                        <div className="mt-4 p-3 bg-synthwave-neon-cyan/10 rounded-lg border border-synthwave-neon-cyan/20">
+                        <div className="mt-4 p-3 bg-synthwave-neon-cyan/10 rounded-md border border-synthwave-neon-cyan/20">
                           <p className="text-synthwave-neon-cyan font-rajdhani text-sm">
                             <strong>Usage:</strong> Import toastPatterns from
                             uiPatterns.js and use className=
@@ -3021,7 +3021,7 @@ function Theme() {
                       </div>
 
                       {/* Input Guidelines */}
-                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/30 rounded-xl p-6 mt-8">
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/30 rounded-md p-6 mt-8">
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-pink font-semibold mb-4">
                           Modern Input Features:
                         </h4>
@@ -3051,7 +3051,7 @@ function Theme() {
                             </ul>
                           </div>
                         </div>
-                        <div className="mt-4 p-3 bg-synthwave-neon-cyan/10 rounded-lg border border-synthwave-neon-cyan/20">
+                        <div className="mt-4 p-3 bg-synthwave-neon-cyan/10 rounded-md border border-synthwave-neon-cyan/20">
                           <p className="text-synthwave-neon-cyan font-rajdhani text-sm">
                             <strong>Usage:</strong> Import inputPatterns from
                             uiPatterns.js and use className=
@@ -3096,7 +3096,7 @@ function Theme() {
                                 </span>
                               </div>
                             </div>
-                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-md p-4">
                               <p className="text-red-400 font-rajdhani text-sm">
                                 <strong>Issues:</strong> Heavy border, harsh
                                 colors, sharp edges, poor mobile experience,
@@ -3110,9 +3110,9 @@ function Theme() {
                             <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                               Proposed Modern (Recommended)
                             </h4>
-                            <div className="bg-synthwave-bg-card/20 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-2xl shadow-lg shadow-synthwave-neon-cyan/5 p-4 hover:bg-synthwave-bg-card/30 hover:border-synthwave-neon-cyan/15 transition-all duration-300">
+                            <div className="bg-synthwave-bg-card/20 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-md shadow-lg shadow-synthwave-neon-cyan/5 p-4 hover:bg-synthwave-bg-card/30 hover:border-synthwave-neon-cyan/15 transition-all duration-300">
                               <div className="flex items-center space-x-3 text-sm font-rajdhani">
-                                <div className="p-1.5 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan rounded-lg hover:bg-synthwave-neon-cyan/20 transition-all duration-200">
+                                <div className="p-1.5 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan rounded-md hover:bg-synthwave-neon-cyan/20 transition-all duration-200">
                                   <HomeIcon />
                                 </div>
                                 <span className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer">
@@ -3131,15 +3131,15 @@ function Theme() {
                                   <ChevronRightIcon />
                                 </div>
 
-                                <span className="text-synthwave-neon-pink font-medium bg-synthwave-neon-pink/10 px-2 py-1 rounded-lg">
+                                <span className="text-synthwave-neon-pink font-medium bg-synthwave-neon-pink/10 px-2 py-1 rounded-md">
                                   Workouts
                                 </span>
                               </div>
                             </div>
-                            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                            <div className="bg-green-500/10 border border-green-500/30 rounded-md p-4">
                               <p className="text-green-400 font-rajdhani text-sm">
                                 <strong>Benefits:</strong> Glassmorphism, subtle
-                                shadows, rounded corners, hover effects,
+                                shadows, rounded-md corners, hover effects,
                                 mobile-friendly, modern aesthetics.
                               </p>
                             </div>
@@ -3158,7 +3158,7 @@ function Theme() {
                               <h5 className="font-rajdhani text-base text-synthwave-text-primary">
                                 Minimal Clean
                               </h5>
-                              <div className="bg-synthwave-bg-card/10 rounded-xl p-4 border-0">
+                              <div className="bg-synthwave-bg-card/10 rounded-md p-4 border-0">
                                 <div className="flex items-center space-x-2 text-sm font-rajdhani">
                                   <span className="text-synthwave-neon-cyan hover:text-white transition-colors duration-200 cursor-pointer">
                                     Home
@@ -3247,10 +3247,10 @@ function Theme() {
                               <h5 className="font-rajdhani text-base text-synthwave-text-primary">
                                 Compact Mobile
                               </h5>
-                              <div className="bg-synthwave-bg-card/30 rounded-xl p-3 border border-synthwave-neon-pink/20">
+                              <div className="bg-synthwave-bg-card/30 rounded-md p-3 border border-synthwave-neon-pink/20">
                                 <div className="flex items-center justify-between text-sm font-rajdhani">
                                   <div className="flex items-center space-x-2">
-                                    <button className="p-1 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded transition-colors duration-200">
+                                    <button className="p-1 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-md transition-colors duration-200">
                                       <svg
                                         className="w-4 h-4"
                                         fill="none"
@@ -3287,7 +3287,7 @@ function Theme() {
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                             Modern Interactive Features
                           </h4>
-                          <div className="bg-synthwave-bg-card/20 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-2xl p-6">
+                          <div className="bg-synthwave-bg-card/20 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-md p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-rajdhani">
                               <div>
                                 <h5 className="text-synthwave-neon-pink font-semibold mb-3">
@@ -3418,7 +3418,7 @@ function Theme() {
                             </div>
                           </div>
                         </div>
-                        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                        <div className="bg-green-500/10 border border-green-500/30 rounded-md p-4">
                           <p className="text-green-400 font-rajdhani text-sm">
                             <strong>Modern Features:</strong> Diagonal red
                             gradient background, glassmorphism with backdrop
@@ -3428,7 +3428,7 @@ function Theme() {
                             and destructive actions.
                           </p>
                         </div>
-                        <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 rounded-lg p-4">
+                        <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 rounded-md p-4">
                           <p className="text-synthwave-neon-cyan font-rajdhani text-sm">
                             <strong>Usage:</strong> Import containerPatterns
                             from uiPatterns.js and use className=
@@ -3445,7 +3445,7 @@ function Theme() {
                       <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Container Design Recommendations
                       </h3>
-                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-xl p-6">
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6">
                         <div className="space-y-4">
                           <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                             Modern Best Practices:
@@ -3534,7 +3534,7 @@ function Theme() {
                       Inline Edit Pattern (InlineEditField.jsx)
                     </h3>
 
-                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/20 rounded-xl p-6 space-y-4">
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/20 rounded-md p-6 space-y-4">
                       <p className="text-synthwave-text-primary font-rajdhani">
                         <strong className="text-synthwave-neon-cyan">
                           Overview:
@@ -3561,7 +3561,7 @@ function Theme() {
                       <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                         Small Size
                       </h4>
-                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-xl p-6">
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-6">
                         <div className="space-y-4">
                           <div className="flex items-center space-x-2">
                             <span className="text-synthwave-text-secondary font-rajdhani text-sm">
@@ -3590,7 +3590,7 @@ function Theme() {
                       <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                         Medium Size (Default)
                       </h4>
-                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-xl p-6">
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-6">
                         <div className="space-y-4">
                           <div className="flex items-center space-x-2">
                             <span className="text-synthwave-text-secondary font-rajdhani">
@@ -3620,7 +3620,7 @@ function Theme() {
                       <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                         Large Size
                       </h4>
-                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-xl p-6">
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-6">
                         <div className="space-y-4">
                           <div className="flex items-center space-x-2">
                             <span className="text-synthwave-text-secondary font-rajdhani text-lg">
@@ -3650,7 +3650,7 @@ function Theme() {
                         States & Behavior
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-4">
                           <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">
                             Display Mode
                           </h5>
@@ -3663,7 +3663,7 @@ function Theme() {
                             <li>• Click to enter edit mode</li>
                           </ul>
                         </div>
-                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-4">
                           <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">
                             Edit Mode
                           </h5>
@@ -3674,7 +3674,7 @@ function Theme() {
                             <li>• Tooltips bottom, offset 8px</li>
                           </ul>
                         </div>
-                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-4">
                           <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">
                             Loading State
                           </h5>
@@ -3685,7 +3685,7 @@ function Theme() {
                             <li>• Prevents interaction</li>
                           </ul>
                         </div>
-                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-md p-4">
                           <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">
                             Validation
                           </h5>
@@ -3704,7 +3704,7 @@ function Theme() {
                       <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                         Usage Example
                       </h4>
-                      <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4">
+                      <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-md p-4">
                         <pre className="text-synthwave-text-primary font-mono text-xs overflow-x-auto">
                           {`// Import the component
 import InlineEditField from './common/InlineEditField';
@@ -3738,7 +3738,7 @@ const handleSaveCoachName = coachAgent.createCoachNameHandler(
                     </div>
 
                     {/* Pattern Details */}
-                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/20 rounded-xl p-6 space-y-4">
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/20 rounded-md p-6 space-y-4">
                       <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                         Pattern Configuration
                       </h4>
@@ -3826,18 +3826,18 @@ const handleSaveCoachName = coachAgent.createCoachNameHandler(
                     </div>
 
                     {/* Implementation Notes */}
-                    <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                    <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/20 rounded-md p-4">
                       <p className="text-synthwave-neon-pink font-rajdhani text-sm">
                         <strong>Implementation:</strong> This pattern
                         consolidates 3 different inline edit implementations
                         (coach name, conversation title, workout title) into a
                         single reusable component, eliminating ~190 lines of
                         duplicate code. All patterns are defined in{" "}
-                        <code className="bg-synthwave-bg-primary px-1 rounded">
+                        <code className="bg-synthwave-bg-primary px-1 rounded-md">
                           inlineEditPatterns
                         </code>{" "}
                         from{" "}
-                        <code className="bg-synthwave-bg-primary px-1 rounded">
+                        <code className="bg-synthwave-bg-primary px-1 rounded-md">
                           uiPatterns.js
                         </code>
                         .
@@ -3845,7 +3845,7 @@ const handleSaveCoachName = coachAgent.createCoachNameHandler(
                     </div>
 
                     {/* Best Practices */}
-                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-xl p-6">
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6">
                       <div className="space-y-4">
                         <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">
                           Best Practices:

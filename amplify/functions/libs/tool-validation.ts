@@ -19,7 +19,9 @@ const ajv = new Ajv({ allErrors: true });
 const schemaCache = new Map<string, ValidateFunction>();
 
 /**
- * Validate a tool response against its JSON Schema.
+ * Validate a tool response against its JSON Schema. Pure — throws on failure,
+ * does not mutate the response. Callers are responsible for any normalization
+ * (e.g. `normalizeSchemaArrayFields`) before calling this function.
  *
  * @param toolName - The name of the tool (used as the cache key)
  * @param response - The parsed tool input returned by the model

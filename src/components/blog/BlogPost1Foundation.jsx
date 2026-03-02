@@ -481,7 +481,7 @@ function BlogPost1Foundation() {
             and route to the optimal processing path. It's AI deciding how to
             use AI.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Simplified routing logic
             </div>
@@ -531,10 +531,10 @@ function BlogPost1Foundation() {
           </h3>
 
           {/* Visual Flow Diagram */}
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-6 mb-6">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-6 mb-6">
             <div className="flex flex-col items-center space-y-4">
               {/* Entry Point */}
-              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center">
+              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                   User Message Received
                 </span>
@@ -547,7 +547,7 @@ function BlogPost1Foundation() {
               </div>
 
               {/* Parallel Burst */}
-              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
                   🚀 Parallel Burst
                 </span>
@@ -564,7 +564,7 @@ function BlogPost1Foundation() {
 
               {/* Analysis Outputs */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
-                <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30 rounded-lg p-3 text-center">
+                <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30 rounded-md p-3 text-center">
                   <span className="font-rajdhani text-sm text-synthwave-neon-pink">
                     Intent Classification
                   </span>
@@ -572,7 +572,7 @@ function BlogPost1Foundation() {
                     workout_logging | question | memory_request | general
                   </p>
                 </div>
-                <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-3 text-center">
+                <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-md p-3 text-center">
                   <span className="font-rajdhani text-sm text-synthwave-neon-cyan">
                     Complexity Analysis
                   </span>
@@ -580,7 +580,7 @@ function BlogPost1Foundation() {
                     requiresDeepReasoning: true/false
                   </p>
                 </div>
-                <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-purple/30 rounded-lg p-3 text-center">
+                <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-purple/30 rounded-md p-3 text-center">
                   <span className="font-rajdhani text-sm text-synthwave-neon-purple">
                     Context Needs
                   </span>
@@ -598,7 +598,7 @@ function BlogPost1Foundation() {
 
               {/* Conditional Processing */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg p-4">
+                <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md p-4">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-purple text-sm">
                     If Workout Detected
                   </span>
@@ -606,7 +606,7 @@ function BlogPost1Foundation() {
                     → Workout Logger Agent (multi-turn extraction)
                   </p>
                 </div>
-                <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-lg p-4">
+                <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-md p-4">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-cyan text-sm">
                     If Memory Needed
                   </span>
@@ -623,7 +623,7 @@ function BlogPost1Foundation() {
               </div>
 
               {/* Model Selection */}
-              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                   Model Selection
                 </span>
@@ -645,7 +645,7 @@ function BlogPost1Foundation() {
           </div>
 
           {/* Implementation Details */}
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Actual implementation from detection.ts
             </div>
@@ -766,7 +766,7 @@ function BlogPost1Foundation() {
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Key Structure
           </h3>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm mb-4">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm mb-4">
             <div className="text-synthwave-neon-pink">pk: user#userId</div>
             <div className="text-synthwave-neon-cyan">
               sk: entity_type#entityId
@@ -786,7 +786,7 @@ function BlogPost1Foundation() {
           </h3>
           <p className="text-synthwave-text-secondary font-rajdhani">
             Every DynamoDB operation is wrapped in our{" "}
-            <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded">
+            <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md">
               withThroughputScaling()
             </code>{" "}
             utility, ensuring graceful handling of capacity limits with

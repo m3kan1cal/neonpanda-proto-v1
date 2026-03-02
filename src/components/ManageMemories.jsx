@@ -427,7 +427,7 @@ function ManageMemories() {
             e.stopPropagation();
             handleDeleteClick(memory);
           }}
-          className="absolute top-4 right-4 p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
           title="Delete memory"
         >
           <TrashIcon />
@@ -638,7 +638,7 @@ function ManageMemories() {
             {/* Left section: Title + Coach Card skeleton */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>

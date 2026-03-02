@@ -247,7 +247,7 @@ function BlogPost4ProgramDesigner() {
             ].map((discipline, idx) => (
               <div
                 key={idx}
-                className="bg-synthwave-bg-primary/30 rounded-lg p-4"
+                className="bg-synthwave-bg-primary/30 rounded-md p-4"
               >
                 <h4
                   className={`font-rajdhani font-semibold ${
@@ -297,7 +297,7 @@ function BlogPost4ProgramDesigner() {
             (Retrieval-Augmented Generation) approach from Posts 2 and 3, but
             applied to programming methodology.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Methodology retrieval for program design
             </div>
@@ -454,7 +454,7 @@ function BlogPost4ProgramDesigner() {
             everything in one message. Others need guided questions. The agent
             adapts.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Program Designer agent configuration
             </div>
@@ -517,7 +517,7 @@ function BlogPost4ProgramDesigner() {
             What It Creates
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 Multi-Phase Structure
               </h4>
@@ -528,7 +528,7 @@ function BlogPost4ProgramDesigner() {
                 purposeful blocks.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 Complete Daily Workouts
               </h4>
@@ -538,7 +538,7 @@ function BlogPost4ProgramDesigner() {
                 just "do 5x5 squats"—actual coaching-quality sessions.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
                 Intelligent Progression
               </h4>
@@ -549,7 +549,7 @@ function BlogPost4ProgramDesigner() {
                 were convenient for the AI.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 Phase Management
               </h4>
@@ -586,10 +586,10 @@ function BlogPost4ProgramDesigner() {
           </p>
 
           {/* Visual Flow Diagram */}
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-6 mb-4">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-6 mb-4">
             <div className="flex flex-col items-center space-y-4">
               {/* Step 1 */}
-              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                   1. Analyze Goals + Constraints
                 </span>
@@ -606,7 +606,7 @@ function BlogPost4ProgramDesigner() {
               </div>
 
               {/* Step 2 */}
-              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
                   2. Retrieve Methodology from Pinecone
                 </span>
@@ -623,7 +623,7 @@ function BlogPost4ProgramDesigner() {
 
               {/* Step 3 - Design Phase Structure - PARALLEL */}
               <div className="w-full max-w-lg">
-                <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-lg px-6 py-3 text-center mb-3">
+                <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center mb-3">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
                     3. Design Phase Structure (Claude Sonnet)
                   </span>
@@ -633,7 +633,7 @@ function BlogPost4ProgramDesigner() {
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-lg p-2 text-center">
+                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-md p-2 text-center">
                     <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
                       Phase 1
                     </span>
@@ -641,7 +641,7 @@ function BlogPost4ProgramDesigner() {
                       Accumulation
                     </p>
                   </div>
-                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-lg p-2 text-center">
+                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-md p-2 text-center">
                     <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
                       Phase 2
                     </span>
@@ -649,7 +649,7 @@ function BlogPost4ProgramDesigner() {
                       Intensification
                     </p>
                   </div>
-                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-lg p-2 text-center">
+                  <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-md p-2 text-center">
                     <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
                       Phase 3
                     </span>
@@ -666,7 +666,7 @@ function BlogPost4ProgramDesigner() {
 
               {/* Step 4 - Parallel Weekly Templates */}
               <div className="w-full max-w-lg">
-                <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg px-6 py-3 text-center mb-3">
+                <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center mb-3">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
                     4. Generate Weekly Templates (Parallel)
                   </span>
@@ -684,7 +684,7 @@ function BlogPost4ProgramDesigner() {
                           : week <= 8
                             ? "bg-synthwave-neon-cyan/10 border-synthwave-neon-cyan/30"
                             : "bg-synthwave-neon-purple/10 border-synthwave-neon-purple/30"
-                      } border rounded p-1.5 text-center`}
+                      } border rounded-md p-1.5 text-center`}
                     >
                       <span
                         className={`font-rajdhani text-xs font-semibold ${
@@ -709,7 +709,7 @@ function BlogPost4ProgramDesigner() {
               </div>
 
               {/* Step 5 - Parallel Daily Workouts */}
-              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
                   5. Create Daily Workouts (Parallel)
                 </span>
@@ -725,7 +725,7 @@ function BlogPost4ProgramDesigner() {
               </div>
 
               {/* Step 6 */}
-              <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-lg px-6 py-3 text-center w-full max-w-md">
+              <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center w-full max-w-md">
                 <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
                   6. Validate + Assemble Final Program
                 </span>
@@ -742,7 +742,7 @@ function BlogPost4ProgramDesigner() {
 
               {/* Storage */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-md">
-                <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-lg p-3 text-center">
+                <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md p-3 text-center">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-pink text-sm">
                     DynamoDB
                   </span>
@@ -750,7 +750,7 @@ function BlogPost4ProgramDesigner() {
                     Metadata + tracking
                   </p>
                 </div>
-                <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-lg p-3 text-center">
+                <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md p-3 text-center">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-cyan text-sm">
                     S3
                   </span>
@@ -758,7 +758,7 @@ function BlogPost4ProgramDesigner() {
                     Full program JSON
                   </p>
                 </div>
-                <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-lg p-3 text-center">
+                <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md p-3 text-center">
                   <span className="font-rajdhani font-semibold text-synthwave-neon-purple text-sm">
                     Pinecone
                   </span>
@@ -794,7 +794,7 @@ function BlogPost4ProgramDesigner() {
             this can reduce generation time from minutes to seconds.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 Weekly Template Generation
               </h4>
@@ -804,7 +804,7 @@ function BlogPost4ProgramDesigner() {
                 same phase context but producing unique weekly programming.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 Daily Workout Creation
               </h4>
@@ -815,7 +815,7 @@ function BlogPost4ProgramDesigner() {
                 selection.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
                 Validation Passes
               </h4>
@@ -825,7 +825,7 @@ function BlogPost4ProgramDesigner() {
                 weekly volume totals while another verifies exercise variety.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 Summary Generation
               </h4>
@@ -843,7 +843,7 @@ function BlogPost4ProgramDesigner() {
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Orchestrator + Parallel in Code
           </h3>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Simplified program generation flow
             </div>
@@ -947,7 +947,7 @@ function BlogPost4ProgramDesigner() {
             pattern from Post 1. The user's conversation continues uninterrupted
             while the heavy lifting happens in the background.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-neon-cyan">
               {`User: "Build me a 12-week program for the throwdown"`}
             </div>
@@ -990,7 +990,7 @@ function BlogPost4ProgramDesigner() {
             communication style:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 The Drill Sergeant
               </h4>
@@ -998,7 +998,7 @@ function BlogPost4ProgramDesigner() {
                 "Laying out your strength phase. This is where it gets real."
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 The Sports Scientist
               </h4>
@@ -1007,7 +1007,7 @@ function BlogPost4ProgramDesigner() {
                 blocks..."
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
                 The Hype Coach
               </h4>
@@ -1015,7 +1015,7 @@ function BlogPost4ProgramDesigner() {
                 "Building Week 8—this is where PRs are going to happen."
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 The Mentor
               </h4>
@@ -1051,7 +1051,7 @@ function BlogPost4ProgramDesigner() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className={containerPatterns.mediumGlassPurple}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-white rounded-lg p-2">
+              <div className="bg-white rounded-md p-2">
                 <img
                   src="/images/icons/Claude_AI_logo.svg"
                   alt="Claude"
@@ -1081,7 +1081,7 @@ function BlogPost4ProgramDesigner() {
 
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-white rounded-lg p-2">
+              <div className="bg-white rounded-md p-2">
                 <img
                   src="/images/icons/Claude_AI_logo.svg"
                   alt="Claude Haiku"
@@ -1137,7 +1137,7 @@ function BlogPost4ProgramDesigner() {
 
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-synthwave-neon-cyan/20 rounded-lg p-2">
+              <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
                 <span className="font-russo text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
@@ -1175,7 +1175,7 @@ function BlogPost4ProgramDesigner() {
             Sonnet—at a fraction of the cost and latency. The key insight:
             Sonnet designs the strategy, Haiku executes the tactics.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Model selection in program generation
             </div>
@@ -1245,7 +1245,7 @@ function BlogPost4ProgramDesigner() {
                 Today's workout quick-access
               </li>
             </ul>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs mt-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs mt-4">
               <span className="text-synthwave-neon-pink">~5ms</span>
               <span className="text-synthwave-text-muted">
                 {" "}
@@ -1286,7 +1286,7 @@ function BlogPost4ProgramDesigner() {
                 Design rationale and methodology notes
               </li>
             </ul>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs mt-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs mt-4">
               <span className="text-synthwave-neon-cyan">~100ms</span>
               <span className="text-synthwave-text-muted">
                 {" "}
@@ -1297,7 +1297,7 @@ function BlogPost4ProgramDesigner() {
 
           <div className={containerPatterns.mediumGlassPurple}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-white rounded-lg p-1.5">
+              <div className="bg-white rounded-md p-1.5">
                 <img
                   src="/images/icons/pinecone-logo.svg"
                   alt="Pinecone"
@@ -1329,7 +1329,7 @@ function BlogPost4ProgramDesigner() {
                 Cross-program pattern matching
               </li>
             </ul>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 font-mono text-xs mt-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs mt-4">
               <span className="text-synthwave-neon-purple">meaning-based</span>
               <span className="text-synthwave-text-muted"> retrieval</span>
             </div>
@@ -1347,7 +1347,7 @@ function BlogPost4ProgramDesigner() {
             state instantly. S3 only gets involved when someone browses the full
             program or when the coach needs to reason about upcoming phases.
           </p>
-          <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
+          <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
               // Access pattern optimization
             </div>
@@ -1470,7 +1470,7 @@ function BlogPost4ProgramDesigner() {
             How Sharing Works
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 One-Click Sharing
               </h4>
@@ -1480,7 +1480,7 @@ function BlogPost4ProgramDesigner() {
                 layouts, workout previews—without needing an account.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 Adopt & Personalize
               </h4>
@@ -1490,7 +1490,7 @@ function BlogPost4ProgramDesigner() {
                 own training context. Same structure, personalized execution.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
                 Train Together
               </h4>
@@ -1500,7 +1500,7 @@ function BlogPost4ProgramDesigner() {
                 progress while working through the same structured approach.
               </p>
             </div>
-            <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
+            <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 Community Building
               </h4>

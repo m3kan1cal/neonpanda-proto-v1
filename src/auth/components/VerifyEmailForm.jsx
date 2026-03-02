@@ -123,11 +123,11 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
         </div>
 
         {globalError && (
-          <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-lg" />
+          <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md" />
         )}
 
         {successMessage && (
-          <div className="text-center p-3 bg-synthwave-neon-pink/10 rounded-lg">
+          <div className="text-center p-3 bg-synthwave-neon-pink/10 rounded-md">
             <p className="font-rajdhani text-synthwave-neon-pink text-sm">
               {successMessage}
             </p>
