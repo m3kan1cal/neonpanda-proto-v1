@@ -853,6 +853,7 @@ export const generateAnalytics = async (
       MODEL_IDS.PLANNER_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        enableThinking: true,
       },
     )) as string;
 
