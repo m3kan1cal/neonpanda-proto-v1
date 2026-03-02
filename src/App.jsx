@@ -62,7 +62,6 @@ function AppContent() {
   const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
   const {
-    isSidebarCollapsed,
     userId,
     coachId,
     isCommandPaletteOpen,
@@ -152,7 +151,7 @@ function AppContent() {
   }, [setIsCommandPaletteOpen, setCommandPaletteCommand]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden flex flex-col">
       {/* Conditional Navigation: Public Header vs Full App Navigation */}
       {isRetroTemplatePage ? null : isPublicPage ? (
         // Public pages: Simple header only
@@ -170,14 +169,14 @@ function AppContent() {
 
       {/* Main Content - conditional margin based on navigation type */}
       <div
-        className={`border-none outline-none bg-synthwave-bg-tertiary ${
+        className={`flex-1 flex flex-col border-none outline-none bg-synthwave-bg-tertiary ${
           isRetroTemplatePage
             ? "pt-0" // Retro template: full viewport, own nav
             : isPublicPage
               ? "pt-16" // Public pages: just header spacing
               : isHomePage
                 ? "pt-4 pb-20 md:pb-0" // App home: minimal top, bottom nav spacing
-                : `pt-12 pb-20 md:pb-0 ${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}` // App pages: breadcrumbs + sidebar
+                : "pt-12 pb-20 md:pb-0 md:ml-20" // App pages: breadcrumbs + sidebar (always floating overlay)
         }`}
       >
         <Routes>

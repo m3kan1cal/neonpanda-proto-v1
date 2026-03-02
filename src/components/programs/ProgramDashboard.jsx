@@ -266,7 +266,7 @@ export default function ProgramDashboard() {
                 Program Dashboard
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -508,14 +508,14 @@ function DashboardSkeleton() {
             <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
 
             {/* Compact coach card skeleton - horizontal pill */}
-            <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+            <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
               <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
               <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
             </div>
           </div>
 
           {/* Right: Command button skeleton */}
-          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
         </header>
 
         {/* Quick Stats skeleton */}

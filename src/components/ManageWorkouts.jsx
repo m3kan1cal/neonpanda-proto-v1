@@ -386,7 +386,7 @@ function ManageWorkouts() {
               e.stopPropagation();
               handleDeleteClick(workout);
             }}
-            className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
+            className="p-2 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
             title="Delete workout"
           >
             <TrashIcon className="w-4 h-4" />
@@ -582,7 +582,7 @@ function ManageWorkouts() {
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>

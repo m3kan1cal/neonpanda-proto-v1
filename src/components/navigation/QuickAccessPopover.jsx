@@ -290,14 +290,14 @@ export const QuickAccessPopover = ({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3"
+              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-md p-3"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4 mb-2"></div>
-                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-3/4 mb-2"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-1/2"></div>
                 </div>
-                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse ml-2"></div>
+                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse ml-2"></div>
               </div>
             </div>
           ))}
@@ -324,7 +324,7 @@ export const QuickAccessPopover = ({
                   );
                   onClose();
                 }}
-                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-md p-3 cursor-pointer transition-all duration-200"
               >
                 {isNew && <NewBadge />}
                 <div className="flex items-center justify-between">
@@ -381,14 +381,14 @@ export const QuickAccessPopover = ({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3"
+              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-md p-3"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/3 mb-2"></div>
-                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-1/3 mb-2"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-2/3"></div>
                 </div>
-                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse ml-2"></div>
+                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse ml-2"></div>
               </div>
             </div>
           ))}
@@ -415,7 +415,7 @@ export const QuickAccessPopover = ({
                   );
                   onClose();
                 }}
-                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-md p-3 cursor-pointer transition-all duration-200"
               >
                 {isNew && <NewBadge />}
 
@@ -453,14 +453,14 @@ export const QuickAccessPopover = ({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3"
+              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-md p-3"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2"></div>
-                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-2/3 mb-2"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-1/2"></div>
                 </div>
-                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse ml-2"></div>
+                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse ml-2"></div>
               </div>
             </div>
           ))}
@@ -485,7 +485,7 @@ export const QuickAccessPopover = ({
               <div
                 key={conv.conversationId}
                 onClick={() => handleConversationClick(conv.conversationId)}
-                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-md p-3 cursor-pointer transition-all duration-200"
               >
                 {isRecent && <NewBadge />}
                 <div className="flex items-center justify-between">

@@ -128,7 +128,7 @@ const PublicHeader = () => {
               {/* Avatar Skeleton */}
               <div className="w-9 h-9 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
               {/* Username Skeleton (hidden on mobile) */}
-              <div className="hidden sm:block h-4 w-24 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+              <div className="hidden sm:block h-4 w-24 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
             </div>
           )}
 

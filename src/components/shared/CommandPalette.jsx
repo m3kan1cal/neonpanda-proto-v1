@@ -402,7 +402,7 @@ const CommandPalette = ({
 
       {/* Command Palette Container */}
       <div
-        className={`relative mt-20 w-full max-w-2xl mx-4 ${themeClasses.neonBorder} bg-synthwave-bg-card/95 backdrop-blur-md shadow-2xl transform transition-all duration-300 ease-out`}
+        className={`relative mt-20 w-full max-w-2xl mx-4 rounded-md ${themeClasses.neonBorder} bg-synthwave-bg-card/95 backdrop-blur-md shadow-2xl transform transition-all duration-300 ease-out`}
         style={{
           animation: isOpen
             ? "slideDown 0.3s ease-out"
@@ -527,7 +527,7 @@ const CommandPalette = ({
             </div>
             <div className="space-y-3">
               {/* Command Info */}
-              <div className="flex items-start space-x-3 py-2 px-3 rounded bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
+              <div className="flex items-start space-x-3 py-2 px-3 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
                 <div className="font-rajdhani text-base text-synthwave-neon-pink">
                   {displayState.command.trigger}
                 </div>
@@ -565,7 +565,7 @@ const CommandPalette = ({
               Ready to Start
             </div>
             <div className="space-y-3">
-              <div className="flex items-start space-x-3 py-2 px-3 rounded bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
+              <div className="flex items-start space-x-3 py-2 px-3 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
                 <div className="font-rajdhani text-base text-synthwave-neon-pink">
                   {displayState.command.trigger}
                 </div>
@@ -589,7 +589,7 @@ const CommandPalette = ({
         {(agentState.isExecuting || agentState.executionResult) && (
           <div className="px-6 pb-6">
             {agentState.isExecuting && (
-              <div className="flex items-center space-x-3 py-3 px-3 rounded bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/30">
+              <div className="flex items-center space-x-3 py-3 px-3 rounded-md bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/30">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-synthwave-neon-cyan"></div>
                 <span className="text-synthwave-text-secondary font-rajdhani text-sm">
                   Executing command...
@@ -599,7 +599,7 @@ const CommandPalette = ({
 
             {agentState.executionResult && (
               <div
-                className={`py-3 px-3 rounded border ${
+                className={`py-3 px-3 rounded-md border ${
                   agentState.executionResult.success
                     ? "bg-synthwave-neon-cyan/10 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan"
                     : "bg-red-900/20 border-red-500/30 text-red-400"

@@ -375,7 +375,7 @@ function Technology() {
 
                 {/* Industry Patterns Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div className="bg-synthwave-bg-secondary/30 rounded-lg p-4 border border-synthwave-neon-cyan/20">
+                  <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
                     <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
                       Orchestrator Pattern
                     </h5>
@@ -384,7 +384,7 @@ function Technology() {
                       delegating to specialized agents based on task complexity
                     </p>
                   </div>
-                  <div className="bg-synthwave-bg-secondary/30 rounded-lg p-4 border border-synthwave-neon-cyan/20">
+                  <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
                     <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
                       Parallel Pattern
                     </h5>
@@ -394,7 +394,7 @@ function Technology() {
                       simultaneously
                     </p>
                   </div>
-                  <div className="bg-synthwave-bg-secondary/30 rounded-lg p-4 border border-synthwave-neon-cyan/20">
+                  <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
                     <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
                       Assembler Pattern
                     </h5>
@@ -404,7 +404,7 @@ function Technology() {
                       preferences
                     </p>
                   </div>
-                  <div className="bg-synthwave-bg-secondary/30 rounded-lg p-4 border border-synthwave-neon-cyan/20">
+                  <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
                     <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
                       Router Pattern
                     </h5>
@@ -413,7 +413,7 @@ function Technology() {
                       selects optimal models and processing paths dynamically
                     </p>
                   </div>
-                  <div className="bg-synthwave-bg-secondary/30 rounded-lg p-4 border border-synthwave-neon-cyan/20">
+                  <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
                     <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
                       Tool-Use Pattern
                     </h5>
@@ -423,7 +423,7 @@ function Technology() {
                       enforcement
                     </p>
                   </div>
-                  <div className="bg-synthwave-bg-secondary/30 rounded-lg p-4 border border-synthwave-neon-cyan/20">
+                  <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
                     <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
                       Evaluator-Optimizer Pattern
                     </h5>
@@ -597,7 +597,7 @@ function Technology() {
               <img
                 src="/images/diagrams/architecture-v1.png"
                 alt="NeonPanda AWS Architecture Overview - Multi-agent AI system built on serverless infrastructure"
-                className="mx-auto rounded-xl shadow-lg cursor-zoom-in hover:shadow-xl transition-shadow duration-300 max-w-2xl"
+                className="mx-auto rounded-md shadow-lg cursor-zoom-in hover:shadow-xl transition-shadow duration-300 max-w-2xl"
                 onClick={() =>
                   openModal(
                     "/images/diagrams/architecture-v1.png",
@@ -761,7 +761,7 @@ function Technology() {
                     </div>
                   </div>
                   <div className="md:col-span-1">
-                    <div className="bg-white rounded-lg p-4 mx-auto w-fit drop-shadow-lg">
+                    <div className="bg-white rounded-md p-4 mx-auto w-fit drop-shadow-lg">
                       <img
                         src="/images/icons/pinecone-logo.svg"
                         alt="Pinecone - Vector database for AI applications"
@@ -986,7 +986,7 @@ function Technology() {
                     alt="Amazon Nova - Advanced AI model for specialized tasks"
                     className="w-32 h-32 mx-auto drop-shadow-lg"
                   />
-                  <div className="bg-white rounded-lg p-4 mx-auto w-fit drop-shadow-lg">
+                  <div className="bg-white rounded-md p-4 mx-auto w-fit drop-shadow-lg">
                     <img
                       src="/images/icons/Claude_AI_logo.svg"
                       alt="Claude AI - Advanced conversational AI models"
@@ -1486,7 +1486,7 @@ function Technology() {
             <img
               src={modalImage.src}
               alt={modalImage.alt}
-              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+              className="max-w-full max-h-full object-contain rounded-md shadow-2xl"
             />
             {/* Close button */}
             <button

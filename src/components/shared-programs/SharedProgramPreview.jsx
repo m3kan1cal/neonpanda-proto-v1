@@ -205,29 +205,29 @@ function SharedProgramPreview() {
           <div className="relative z-10 max-w-5xl mx-auto">
             {/* Duration badge skeleton */}
             <div className="flex justify-center mb-4">
-              <div className="h-6 w-32 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              <div className="h-6 w-32 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
             </div>
 
             {/* Program name skeleton */}
             <div className="flex justify-center mb-6">
-              <div className="h-12 w-96 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              <div className="h-12 w-96 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
             </div>
 
             {/* Attribution skeleton */}
             <div className="flex justify-center mb-4">
-              <div className="h-6 w-64 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              <div className="h-6 w-64 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
             </div>
 
             {/* Quick stats skeleton */}
             <div className="flex flex-wrap justify-center gap-8 mb-8">
-              <div className="h-5 w-24 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-              <div className="h-5 w-28 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-              <div className="h-5 w-32 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              <div className="h-5 w-24 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+              <div className="h-5 w-28 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+              <div className="h-5 w-32 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
             </div>
 
             {/* Button skeleton */}
             <div className="flex justify-center">
-              <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
             </div>
           </div>
         </section>
@@ -237,32 +237,32 @@ function SharedProgramPreview() {
           <div className="max-w-4xl mx-auto space-y-12">
             {/* The Game Plan skeleton */}
             <div className={containerPatterns.boldGradient}>
-              <div className="h-8 w-48 bg-synthwave-text-muted/20 rounded animate-pulse mb-4"></div>
+              <div className="h-8 w-48 bg-synthwave-text-muted/20 rounded-md animate-pulse mb-4"></div>
               <div className="space-y-2">
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-5/6"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-4/5"></div>
               </div>
             </div>
 
             {/* Program Intel skeleton */}
             <div className={containerPatterns.mediumGlass}>
-              <div className="h-8 w-48 bg-synthwave-text-muted/20 rounded animate-pulse mb-6"></div>
+              <div className="h-8 w-48 bg-synthwave-text-muted/20 rounded-md animate-pulse mb-6"></div>
               <div className="space-y-6">
                 <div>
-                  <div className="h-6 w-40 bg-synthwave-text-muted/20 rounded animate-pulse mb-3"></div>
+                  <div className="h-6 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse mb-3"></div>
                   <div className="space-y-2">
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-3/4"></div>
                   </div>
                 </div>
                 <div>
-                  <div className="h-6 w-40 bg-synthwave-text-muted/20 rounded animate-pulse mb-3"></div>
+                  <div className="h-6 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse mb-3"></div>
                   <div className="flex flex-wrap gap-2">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <div
                         key={i}
-                        className="h-6 w-20 bg-synthwave-text-muted/20 rounded animate-pulse"
+                        className="h-6 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"
                       ></div>
                     ))}
                   </div>
@@ -272,7 +272,7 @@ function SharedProgramPreview() {
 
             {/* Training Phases skeleton */}
             <div>
-              <div className="h-8 w-56 bg-synthwave-text-muted/20 rounded animate-pulse mb-8 mx-auto"></div>
+              <div className="h-8 w-56 bg-synthwave-text-muted/20 rounded-md animate-pulse mb-8 mx-auto"></div>
               <div className="space-y-6">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className={containerPatterns.mediumGlass}>
@@ -280,13 +280,13 @@ function SharedProgramPreview() {
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                         <div className="flex-1 space-y-2">
-                          <div className="h-6 w-64 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                          <div className="h-4 w-32 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                          <div className="h-6 w-64 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                          <div className="h-4 w-32 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                         </div>
                       </div>
                       <div className="space-y-2 mb-4">
-                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-5/6"></div>
                       </div>
                     </div>
                   </div>
@@ -296,13 +296,13 @@ function SharedProgramPreview() {
 
             {/* CTA Section skeleton */}
             <div className={`${containerPatterns.boldGradient} text-center`}>
-              <div className="h-8 w-96 bg-synthwave-text-muted/20 rounded animate-pulse mb-6 mx-auto"></div>
+              <div className="h-8 w-96 bg-synthwave-text-muted/20 rounded-md animate-pulse mb-6 mx-auto"></div>
               <div className="space-y-2 mb-8 max-w-2xl mx-auto">
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4 mx-auto"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-3/4 mx-auto"></div>
               </div>
               <div className="flex justify-center">
-                <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
               </div>
             </div>
           </div>

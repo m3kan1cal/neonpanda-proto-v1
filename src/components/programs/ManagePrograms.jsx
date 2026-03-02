@@ -840,7 +840,7 @@ function ManagePrograms() {
                   openMenuId === program.programId ? null : program.programId,
                 );
               }}
-              className={`p-2 rounded-none transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+              className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                 openMenuId === program.programId
                   ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
@@ -855,7 +855,7 @@ function ManagePrograms() {
 
             {/* Dropdown Menu */}
             {openMenuId === program.programId && (
-              <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-none shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+              <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1214,14 +1214,14 @@ function ManagePrograms() {
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Programs grid skeleton */}
@@ -1293,8 +1293,8 @@ function ManagePrograms() {
 
                 {/* Action buttons skeleton - multiple buttons */}
                 <div className="mt-6 space-y-2">
-                  <div className="h-10 bg-synthwave-text-muted/20 animate-pulse"></div>
-                  <div className="h-10 bg-synthwave-text-muted/20 animate-pulse"></div>
+                  <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
+                  <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -1454,7 +1454,7 @@ function ManagePrograms() {
                 Your Training Programs
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -1821,7 +1821,7 @@ function ManagePrograms() {
 
                       {/* Error message for failed builds */}
                       {isFailed && session.programGeneration?.error && (
-                        <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 p-3 mt-3">
+                        <div className="rounded-md bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 p-3 mt-3">
                           <p className="font-rajdhani text-xs text-synthwave-neon-pink">
                             {session.programGeneration.error}
                           </p>

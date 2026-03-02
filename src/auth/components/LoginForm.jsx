@@ -176,7 +176,7 @@ const LoginForm = ({
     <AuthLayout>
       <form onSubmit={handleSubmit} className="space-y-6">
         {showVerificationSuccess && (
-          <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-lg">
+          <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
             <p className="font-rajdhani text-synthwave-neon-cyan text-sm">
               Email verified! Your account has been successfully confirmed. You can now sign in with your credentials.
             </p>
@@ -184,7 +184,7 @@ const LoginForm = ({
         )}
 
         {showPasswordResetSuccess && (
-          <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-lg">
+          <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
             <p className="font-rajdhani text-synthwave-neon-cyan text-sm">
               Password reset successful! Your password has been updated. You can now sign in with your new password.
             </p>
@@ -194,12 +194,12 @@ const LoginForm = ({
         {globalError && (
           <AuthErrorMessage
             error={globalError}
-            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-lg"
+            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md"
           />
         )}
 
         {showVerificationOption && (
-          <div className="text-center p-4 bg-synthwave-neon-pink/10 rounded-lg border border-synthwave-neon-pink/30">
+          <div className="text-center p-4 bg-synthwave-neon-pink/10 rounded-md border border-synthwave-neon-pink/30">
             <p className="font-rajdhani text-synthwave-text-secondary mb-3">
               Need to verify your email address?
             </p>
