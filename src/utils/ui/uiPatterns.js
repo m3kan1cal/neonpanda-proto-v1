@@ -130,7 +130,7 @@ export const badgePatterns = {
 
   // Count badges - For numerical indicators (sidebar, calendar, etc.) - matches SidebarNav styling
   countBase:
-    "min-w-[24px] h-[24px] px-1 flex items-center justify-center font-rajdhani font-bold text-sm transition-all duration-150",
+    "min-w-[24px] h-[24px] px-1 rounded-md flex items-center justify-center font-rajdhani font-bold text-sm transition-all duration-150",
   countPink:
     "bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20",
   countCyan:
@@ -142,7 +142,7 @@ export const badgePatterns = {
 
   // Small count badges - For inline numbered indicators (workout template rows, etc.)
   countSmall:
-    "min-w-[20px] h-[20px] px-0.5 flex items-center justify-center font-rajdhani font-bold text-xs transition-all duration-150",
+    "min-w-[20px] h-[20px] px-0.5 rounded-md flex items-center justify-center font-rajdhani font-bold text-xs transition-all duration-150",
 
   // Workout badge patterns - For workout viewer and discipline components
   // Base pattern with proper vertical centering (inline-flex items-center with asymmetric padding)
@@ -631,7 +631,7 @@ const baseTooltipStyle = {
   color: "#ffffff",
   borderRadius: "8px",
   fontSize: "14px",
-  fontFamily: "Rajdhani, sans-serif",
+  fontFamily: "var(--font-rajdhani)",
   padding: "8px 12px",
   zIndex: 99999,
 };
@@ -707,24 +707,24 @@ export const messagePatterns = {
 
 export const avatarPatterns = {
   // Small avatars (text-sm) - for navigation and chat bubbles
-  small: "font-russo font-bold text-sm",
+  small: "font-barlow font-bold text-sm",
 
   // Large avatars (text-lg) - for coach headers and prominent displays
-  large: "font-russo font-bold text-lg",
+  large: "font-barlow font-bold text-lg",
 
   // Complete avatar containers with styling
   userSmall:
-    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-pink via-synthwave-neon-purple to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-sm shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30",
+    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-pink via-synthwave-neon-purple to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-barlow font-bold text-sm shadow-sm shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30",
 
   aiSmall:
-    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-sm shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
+    "w-8 h-8 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-barlow font-bold text-sm shadow-sm shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
 
   coachLarge:
-    "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg shadow-sm shadow-synthwave-neon-cyan/30 ring-2 ring-synthwave-neon-cyan/30",
+    "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-barlow font-bold text-lg shadow-sm shadow-synthwave-neon-cyan/30 ring-2 ring-synthwave-neon-cyan/30",
 
   // Compact avatar (24px) - for compact header displays
   coachCompact:
-    "w-6 h-6 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-xs shadow-sm shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
+    "w-6 h-6 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-barlow font-bold text-xs shadow-sm shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
 
   // Skeleton loading states for avatars
   skeletonSmall:
@@ -859,7 +859,7 @@ export const navigationPatterns = {
 
     // Menu header
     header: "px-6 py-4 border-b border-synthwave-neon-cyan/10",
-    headerTitle: "font-russo font-bold text-2xl text-white uppercase",
+    headerTitle: "font-barlow font-bold text-2xl text-white uppercase",
     headerCloseButton:
       "p-2 rounded-md text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
 
@@ -897,7 +897,7 @@ export const navigationPatterns = {
     brandLogo: "w-10 h-10 shrink-0",
     brandText: "flex flex-col",
     brandTitle:
-      "font-russo font-bold text-xl text-white uppercase leading-tight",
+      "font-barlow font-bold text-xl text-white uppercase leading-tight",
     brandSubtitle:
       "font-rajdhani text-xs text-synthwave-text-muted uppercase tracking-wider",
 
@@ -928,7 +928,7 @@ export const navigationPatterns = {
     profileButton:
       "w-full flex items-center gap-3 px-3 py-2 transition-colors duration-150 hover:bg-synthwave-bg-card/60 focus:outline-none",
     profileAvatar:
-      "w-10 h-10 rounded-full bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink flex items-center justify-center text-white font-russo font-bold text-sm shadow-sm ring-2 ring-synthwave-neon-cyan/30",
+      "w-10 h-10 rounded-full bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink flex items-center justify-center text-white font-barlow font-bold text-sm shadow-sm ring-2 ring-synthwave-neon-cyan/30",
     profileInfo: "flex-1 min-w-0",
     profileName: "font-rajdhani font-semibold text-base text-white truncate",
     profileEmail: "font-rajdhani text-xs text-synthwave-text-muted truncate",
@@ -1035,7 +1035,7 @@ export const navigationPatterns = {
     // Flyout header section
     header: "px-4 py-3 border-b border-synthwave-neon-cyan/10",
     headerTitle:
-      "font-russo font-bold text-sm text-synthwave-text-secondary uppercase tracking-wider",
+      "font-barlow font-bold text-sm text-synthwave-text-secondary uppercase tracking-wider",
 
     // Menu items container
     itemsContainer: "py-2",
@@ -1102,12 +1102,12 @@ export const quickStatsPatterns = {
 export const typographyPatterns = {
   // Headings (Russo font - original patterns)
   heroTitle:
-    "font-russo font-black text-5xl md:text-6xl lg:text-7xl text-white mb-8 drop-shadow-sm uppercase",
+    "font-barlow font-black text-5xl md:text-6xl lg:text-7xl text-white mb-8 drop-shadow-sm uppercase",
   pageTitle:
-    "font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase",
+    "font-barlow font-black text-4xl md:text-5xl text-white mb-6 uppercase",
   sectionTitle:
-    "font-russo font-bold text-2xl md:text-3xl text-white mb-4 uppercase",
-  cardTitle: "font-russo font-bold text-xl text-white uppercase",
+    "font-barlow font-bold text-2xl md:text-3xl text-white mb-4 uppercase",
+  cardTitle: "font-barlow font-bold text-xl text-white uppercase",
 
   // Inter font headings (for About and content-heavy pages)
   pageTitleInter: "font-inter font-black text-4xl md:text-5xl text-white mb-6",
@@ -1125,7 +1125,7 @@ export const typographyPatterns = {
 
   // Empty state and tip card typography
   emptyStateHeader:
-    "font-russo text-2xl md:text-3xl text-white uppercase tracking-wider",
+    "font-barlow text-2xl md:text-3xl text-white uppercase tracking-wider",
   emptyStateDescription:
     "font-rajdhani text-base text-synthwave-text-secondary max-w-md",
   emptyStateSectionHeader:
@@ -1141,7 +1141,7 @@ export const typographyPatterns = {
 
   // Section divider -- used in Training Grounds tier headers
   sectionDivider:
-    "font-russo font-bold text-white text-lg uppercase tracking-wider",
+    "font-barlow font-bold text-white text-lg uppercase tracking-wider",
 
   // Program label -- small uppercase identifier used in workout/program cards
   programLabel:

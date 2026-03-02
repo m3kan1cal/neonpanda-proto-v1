@@ -399,7 +399,7 @@ function ViewReports() {
         {/* Header with purple dot */}
         <div className="flex items-start gap-3 mb-2">
           <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             {formattedMonth}
           </h3>
         </div>
@@ -568,7 +568,7 @@ function ViewReports() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2">
           <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             Weekly Report: Week {report.weekId}
           </h3>
         </div>
@@ -865,7 +865,7 @@ function ViewReports() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="reports-info"
                 data-tooltip-content="Comprehensive weekly analytics and insights from your training journey. Review performance trends and coaching analysis."
               >

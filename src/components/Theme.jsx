@@ -137,7 +137,7 @@ function Theme() {
       <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
+          <h1 className="font-barlow font-black text-4xl md:text-5xl text-white mb-6 uppercase">
             Synthwave Design System Showcase
           </h1>
           <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
@@ -247,13 +247,13 @@ function Theme() {
               {/* BUTTONS SECTION */}
               {activeCategory === "buttons" && activeSection === "existing" && (
                 <div className="space-y-12">
-                  <h2 className="font-russo text-3xl text-synthwave-neon-pink mb-8 text-center uppercase">
+                  <h2 className="font-barlow text-3xl text-synthwave-neon-pink mb-8 text-center uppercase">
                     Existing Button Inventory
                   </h2>
 
                   {/* Auth Buttons Section */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Auth Buttons (AuthButton.jsx)
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -298,7 +298,7 @@ function Theme() {
 
                   {/* Icon Buttons Section */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Icon Buttons (IconButton.jsx) - Standardized Variants
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -362,7 +362,7 @@ function Theme() {
 
                   {/* Theme Class Buttons Section */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Theme Class Buttons (synthwaveThemeClasses.js)
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -399,7 +399,7 @@ function Theme() {
 
                   {/* Chat Interface Buttons Section */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Chat Interface Buttons (CoachConversations.jsx)
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -440,7 +440,7 @@ function Theme() {
 
                   {/* Slash Command Buttons Section */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Slash Command Buttons (CoachConversations.jsx)
                     </h3>
                     <div className="flex flex-wrap gap-4">
@@ -458,7 +458,7 @@ function Theme() {
 
                   {/* Card Action Buttons Section */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Card Action Buttons (Various Components)
                     </h3>
                     <div className="space-y-4">
@@ -477,7 +477,7 @@ function Theme() {
 
                   {/* Collapsible Section Buttons */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Collapsible Section Buttons (WorkoutViewer.jsx, etc.)
                     </h3>
                     <button className="w-full px-4 py-3 bg-synthwave-bg-primary/30 hover:bg-synthwave-bg-primary/50 transition-colors duration-200 flex items-center justify-between text-left rounded-md border border-synthwave-neon-pink/30">
@@ -492,13 +492,13 @@ function Theme() {
 
               {activeCategory === "buttons" && activeSection === "proposed" && (
                 <div className="space-y-12">
-                  <h2 className="font-russo text-3xl text-synthwave-neon-cyan mb-8 text-center uppercase">
+                  <h2 className="font-barlow text-3xl text-synthwave-neon-cyan mb-8 text-center uppercase">
                     Modern UI/UX Button Proposals
                   </h2>
 
                   {/* Primary Action Buttons */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Primary Action Buttons - Modern Approach
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -545,7 +545,7 @@ function Theme() {
 
                   {/* Icon Buttons - Modern Variants */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Icon Buttons - Modern Variants
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
@@ -623,7 +623,7 @@ function Theme() {
 
                   {/* Small Action Buttons */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Small Action Buttons - Chat Interface
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
@@ -768,7 +768,7 @@ function Theme() {
 
                   {/* Badge Patterns - Tag-like Button Components */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Badge Patterns - Tag/Label Components
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -869,7 +869,7 @@ function Theme() {
 
                   {/* Size Variants */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Size Variants - Touch Optimized
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -977,7 +977,7 @@ function Theme() {
 
                   {/* State Variations */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Interactive States - Modern Feedback
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1127,7 +1127,7 @@ function Theme() {
 
                   {/* Floating Action Buttons */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Floating Action Buttons - Modern Mobile UX
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1180,7 +1180,7 @@ function Theme() {
 
                   {/* Modern Link Buttons */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Modern Link Buttons - Refined Secondary Actions
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1264,7 +1264,7 @@ function Theme() {
 
                   {/* Tab Buttons */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       Tab Buttons - Content Switching
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1363,7 +1363,7 @@ function Theme() {
 
                   {/* Recommendations */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                       UI/UX Recommendations
                     </h3>
                     <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6">
@@ -1446,13 +1446,13 @@ function Theme() {
               {activeCategory === "containers" &&
                 activeSection === "existing" && (
                   <div className="space-y-12">
-                    <h2 className="font-russo text-3xl text-synthwave-neon-cyan mb-8 text-center uppercase">
+                    <h2 className="font-barlow text-3xl text-synthwave-neon-cyan mb-8 text-center uppercase">
                       Existing Container Inventory
                     </h2>
 
                     {/* NeonBorder Component */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Main Content Container - Current NeonBorder
                       </h3>
 
@@ -1467,7 +1467,7 @@ function Theme() {
                           className="bg-synthwave-bg-card/50 h-64 overflow-hidden"
                         >
                           <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                            <h5 className="font-russo text-lg text-white mb-4 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-4 uppercase">
                               Current Main Container
                             </h5>
                             <p className="text-synthwave-text-primary font-rajdhani mb-4">
@@ -1506,7 +1506,7 @@ function Theme() {
 
                     {/* Other NeonBorder Variants */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Other NeonBorder Variants (SynthwaveComponents.jsx)
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1535,7 +1535,7 @@ function Theme() {
 
                     {/* Theme Class Cards */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Theme Class Cards (synthwaveThemeClasses.js)
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1559,7 +1559,7 @@ function Theme() {
                             Container Class
                           </h4>
                           <div className="bg-synthwave-gradient p-6 rounded-md border border-synthwave-neon-cyan/30">
-                            <h5 className="font-russo text-xl text-white mb-4 uppercase">
+                            <h5 className="font-barlow text-xl text-white mb-4 uppercase">
                               Container
                             </h5>
                             <p className="font-rajdhani text-synthwave-text-secondary">
@@ -1574,7 +1574,7 @@ function Theme() {
 
                     {/* Card Variations */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Card Variations (Various Components)
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1630,7 +1630,7 @@ function Theme() {
 
                     {/* Chat Interface Containers */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Chat Interface Containers (CoachConversations.jsx)
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1676,7 +1676,7 @@ function Theme() {
 
                     {/* Fixed Floating Input */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Fixed Floating Input (CoachConversations.jsx)
                       </h3>
                       <div className="relative">
@@ -1705,7 +1705,7 @@ function Theme() {
 
                     {/* Collapsible Sections */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Collapsible Sections (WorkoutViewer.jsx, etc.)
                       </h3>
                       <div className="space-y-4">
@@ -1715,7 +1715,7 @@ function Theme() {
                               <div className="text-synthwave-neon-pink">
                                 <WorkoutIcon />
                               </div>
-                              <h4 className="font-russo font-bold text-white text-sm uppercase">
+                              <h4 className="font-barlow font-bold text-white text-sm uppercase">
                                 Workout Metadata
                               </h4>
                             </div>
@@ -1748,7 +1748,7 @@ function Theme() {
 
                     {/* Toast Notifications */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
                         Toast Notifications (Toast.jsx)
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1847,13 +1847,13 @@ function Theme() {
               {activeCategory === "containers" &&
                 activeSection === "proposed" && (
                   <div className="space-y-12">
-                    <h2 className="font-russo text-3xl text-synthwave-neon-pink mb-8 text-center uppercase">
+                    <h2 className="font-barlow text-3xl text-synthwave-neon-pink mb-8 text-center uppercase">
                       Modern UI/UX Container Proposals
                     </h2>
 
                     {/* Modern Main Content Container Alternatives */}
                     <section className="space-y-8">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Main Content Container - Modern Alternatives
                       </h3>
 
@@ -1866,7 +1866,7 @@ function Theme() {
                           </h4>
                           <div className="bg-synthwave-bg-card/30 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-md shadow-xl shadow-synthwave-neon-cyan/5 h-64 overflow-hidden transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15">
                             <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                              <h5 className="font-russo text-lg text-white mb-4 uppercase">
+                              <h5 className="font-barlow text-lg text-white mb-4 uppercase">
                                 Modern Glassmorphism
                               </h5>
                               <p className="text-synthwave-text-primary font-rajdhani mb-4">
@@ -1906,7 +1906,7 @@ function Theme() {
                           </h4>
                           <div className="bg-gradient-to-br from-synthwave-bg-card/40 to-synthwave-bg-card/20 backdrop-blur-2xl border border-synthwave-neon-cyan/15 rounded-md shadow-2xl shadow-synthwave-neon-cyan/10 h-64 overflow-hidden">
                             <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                              <h5 className="font-russo text-lg text-white mb-4 uppercase">
+                              <h5 className="font-barlow text-lg text-white mb-4 uppercase">
                                 Enhanced Glass
                               </h5>
                               <p className="text-synthwave-text-primary font-rajdhani mb-4">
@@ -1947,7 +1947,7 @@ function Theme() {
                         </h4>
                         <div className="bg-synthwave-bg-card/25 rounded-md shadow-xl h-64 overflow-hidden border-0">
                           <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                            <h5 className="font-russo text-lg text-white mb-4 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-4 uppercase">
                               Minimal Clean
                             </h5>
                             <p className="text-synthwave-text-primary font-rajdhani mb-4">
@@ -1980,7 +1980,7 @@ function Theme() {
 
                       {/* Recommendation */}
                       <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-md p-6 mt-8">
-                        <h4 className="font-russo text-lg text-synthwave-neon-pink mb-4 uppercase">
+                        <h4 className="font-barlow text-lg text-synthwave-neon-pink mb-4 uppercase">
                           My Recommendation
                         </h4>
                         <p className="text-synthwave-text-primary font-rajdhani mb-4">
@@ -2020,7 +2020,7 @@ function Theme() {
 
                     {/* Glassmorphism Containers */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         General Glassmorphism Containers - Modern Trend
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2030,7 +2030,7 @@ function Theme() {
                             Light Glass
                           </h4>
                           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-md p-6 shadow-xl">
-                            <h5 className="font-russo text-lg text-white mb-3 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-3 uppercase">
                               Light Glass
                             </h5>
                             <p className="text-synthwave-text-secondary font-rajdhani text-sm">
@@ -2047,7 +2047,7 @@ function Theme() {
                             Medium Glass
                           </h4>
                           <div className="bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20 rounded-md p-6 shadow-xl shadow-synthwave-neon-cyan/10">
-                            <h5 className="font-russo text-lg text-white mb-3 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-3 uppercase">
                               Medium Glass
                             </h5>
                             <p className="text-synthwave-text-secondary font-rajdhani text-sm">
@@ -2064,7 +2064,7 @@ function Theme() {
                             Heavy Glass
                           </h4>
                           <div className="bg-synthwave-bg-card/50 backdrop-blur-xl border border-synthwave-neon-purple/30 rounded-md p-6 shadow-2xl shadow-synthwave-neon-purple/20">
-                            <h5 className="font-russo text-lg text-white mb-3 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-3 uppercase">
                               Heavy Glass
                             </h5>
                             <p className="text-synthwave-text-secondary font-rajdhani text-sm">
@@ -2079,7 +2079,7 @@ function Theme() {
 
                     {/* Gradient Containers */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Gradient Containers - Visual Impact
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2089,7 +2089,7 @@ function Theme() {
                             Subtle Gradient
                           </h4>
                           <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-primary/80 border border-synthwave-neon-pink/20 rounded-md p-6">
-                            <h5 className="font-russo text-lg text-white mb-3 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-3 uppercase">
                               Subtle Background
                             </h5>
                             <p className="text-synthwave-text-secondary font-rajdhani">
@@ -2106,7 +2106,7 @@ function Theme() {
                             Bold Gradient
                           </h4>
                           <div className="bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-cyan/30 rounded-md p-6">
-                            <h5 className="font-russo text-lg text-white mb-3 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-3 uppercase">
                               Neon Gradient
                             </h5>
                             <p className="text-synthwave-text-secondary font-rajdhani">
@@ -2124,7 +2124,7 @@ function Theme() {
                           CTA Container (Bold Gradient + Elevated Card)
                         </h4>
                         <div className="bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-pink/30 rounded-md p-6 shadow-xl shadow-synthwave-neon-pink/20 hover:shadow-2xl hover:shadow-synthwave-neon-pink/30 transition-all duration-300 hover:-translate-y-2">
-                          <h5 className="font-russo text-lg text-white mb-3 uppercase">
+                          <h5 className="font-barlow text-lg text-white mb-3 uppercase">
                             Premium CTA
                           </h5>
                           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
@@ -2184,7 +2184,7 @@ function Theme() {
 
                     {/* Modern Card Layouts */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Modern Card Layouts - 2025 Standards
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2196,7 +2196,7 @@ function Theme() {
                           <div className="bg-synthwave-bg-card/20 hover:bg-synthwave-bg-card/40 border-0 rounded-md p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-synthwave-neon-pink/10">
                             <div className="flex items-start space-x-3 mb-4">
                               <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                              <h5 className="font-russo text-lg text-white uppercase">
+                              <h5 className="font-barlow text-lg text-white uppercase">
                                 Minimal
                               </h5>
                             </div>
@@ -2216,7 +2216,7 @@ function Theme() {
                           <div className="bg-transparent hover:bg-synthwave-neon-cyan/5 border-2 border-synthwave-neon-cyan/30 hover:border-synthwave-neon-cyan/60 rounded-md p-6 transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-start space-x-3 mb-4">
                               <div className="w-3 h-3 border-2 border-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-                              <h5 className="font-russo text-lg text-white uppercase">
+                              <h5 className="font-barlow text-lg text-white uppercase">
                                 Outlined
                               </h5>
                             </div>
@@ -2235,7 +2235,7 @@ function Theme() {
                           <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-md p-6 shadow-xl shadow-synthwave-neon-purple/20 hover:shadow-2xl hover:shadow-synthwave-neon-purple/30 transition-all duration-300 hover:-translate-y-2">
                             <div className="flex items-start space-x-3 mb-4">
                               <div className="w-3 h-3 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                              <h5 className="font-russo text-lg text-white uppercase">
+                              <h5 className="font-barlow text-lg text-white uppercase">
                                 Elevated
                               </h5>
                             </div>
@@ -2330,7 +2330,7 @@ function Theme() {
                         <div className="bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/30 rounded-md shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/50 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1 p-6">
                           <div className="flex items-start space-x-3 mb-4">
                             <div className="w-3 h-3 border-2 border-dashed border-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                            <h5 className="font-russo text-lg text-white uppercase">
+                            <h5 className="font-barlow text-lg text-white uppercase">
                               Create New
                             </h5>
                           </div>
@@ -2346,7 +2346,7 @@ function Theme() {
 
                     {/* Interactive States */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Interactive Container States
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2360,7 +2360,7 @@ function Theme() {
                             <div className="relative">
                               <div className="flex items-center space-x-3 mb-4">
                                 <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-                                <h5 className="font-russo text-lg text-white uppercase">
+                                <h5 className="font-barlow text-lg text-white uppercase">
                                   Loading
                                 </h5>
                               </div>
@@ -2392,7 +2392,7 @@ function Theme() {
                                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                               </svg>
-                              <h5 className="font-russo text-lg text-red-400 uppercase">
+                              <h5 className="font-barlow text-lg text-red-400 uppercase">
                                 Error
                               </h5>
                             </div>
@@ -2408,7 +2408,7 @@ function Theme() {
 
                     {/* Modern Chat Interface Containers */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Modern Chat Interface Containers - 2025 Standards
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2481,7 +2481,7 @@ function Theme() {
 
                     {/* Quick Stats Bar Container */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Quick Stats Bar Container - Modern Dashboard Pattern
                       </h3>
                       <div className="space-y-4">
@@ -2496,7 +2496,7 @@ function Theme() {
                                 <ConversationIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   12
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2511,7 +2511,7 @@ function Theme() {
                                 <ConversationIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   48
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2526,7 +2526,7 @@ function Theme() {
                                 <WorkoutIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   24
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2541,7 +2541,7 @@ function Theme() {
                                 <WorkoutIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   3
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2556,7 +2556,7 @@ function Theme() {
                                 <WorkoutIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   2
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2571,7 +2571,7 @@ function Theme() {
                                 <ProgramIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   1
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2586,7 +2586,7 @@ function Theme() {
                                 <LightningIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   15
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2601,7 +2601,7 @@ function Theme() {
                                 <ReportIcon />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                                <div className="text-lg font-barlow font-bold text-white group-hover:scale-105 transition-transform duration-300">
                                   7
                                 </div>
                                 <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
@@ -2629,7 +2629,7 @@ function Theme() {
 
                     {/* Mobile-First Containers */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Mobile-First Container Design
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2639,7 +2639,7 @@ function Theme() {
                             Mobile Optimized
                           </h4>
                           <div className="bg-synthwave-bg-card/40 border border-synthwave-neon-cyan/30 rounded-md p-4 md:p-6">
-                            <h5 className="font-russo text-base md:text-lg text-white mb-3 uppercase">
+                            <h5 className="font-barlow text-base md:text-lg text-white mb-3 uppercase">
                               Responsive
                             </h5>
                             <p className="text-synthwave-text-secondary font-rajdhani text-sm md:text-base">
@@ -2664,7 +2664,7 @@ function Theme() {
                             Touch-Friendly
                           </h4>
                           <div className="bg-synthwave-bg-card/40 border border-synthwave-neon-pink/30 rounded-md p-6">
-                            <h5 className="font-russo text-lg text-white mb-3 uppercase">
+                            <h5 className="font-barlow text-lg text-white mb-3 uppercase">
                               Touch UI
                             </h5>
                             <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-4">
@@ -2687,7 +2687,7 @@ function Theme() {
 
                     {/* Inline Edit Input */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Inline Edit Input - Modern Text Editing
                       </h3>
                       <div className="space-y-4">
@@ -2787,7 +2787,7 @@ function Theme() {
 
                     {/* Modern Toast Notifications */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Modern Toast Notifications - 2025 Gradient Style
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2947,7 +2947,7 @@ function Theme() {
 
                     {/* Modern Input Fields */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Modern Input Fields - 2025 Standards
                       </h3>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -3064,7 +3064,7 @@ function Theme() {
 
                     {/* Modern Breadcrumb Navigation */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Modern Breadcrumb Navigation - 2025 Standards
                       </h3>
 
@@ -3384,7 +3384,7 @@ function Theme() {
 
                     {/* Modern Delete Modal */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Modern Delete Modal - Destructive Action Container
                       </h3>
                       <div className="space-y-4">
@@ -3442,7 +3442,7 @@ function Theme() {
 
                     {/* Recommendations */}
                     <section className="space-y-6">
-                      <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                         Container Design Recommendations
                       </h3>
                       <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-md p-6">
@@ -3524,13 +3524,13 @@ function Theme() {
               {/* PATTERNS SECTION */}
               {activeCategory === "patterns" && (
                 <div className="space-y-12">
-                  <h2 className="font-russo text-3xl text-synthwave-neon-pink mb-8 text-center uppercase">
+                  <h2 className="font-barlow text-3xl text-synthwave-neon-pink mb-8 text-center uppercase">
                     Interactive Patterns
                   </h2>
 
                   {/* Inline Edit Pattern */}
                   <section className="space-y-6">
-                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                    <h3 className="font-barlow text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
                       Inline Edit Pattern (InlineEditField.jsx)
                     </h3>
 

@@ -67,7 +67,7 @@ const CollapsibleSection = ({
       >
         <div className="flex items-center space-x-3">
           <div className="text-synthwave-neon-pink">{icon}</div>
-          <h3 className="font-russo font-bold text-white text-base uppercase">
+          <h3 className="font-barlow font-bold text-white text-base uppercase">
             {title}
           </h3>
         </div>

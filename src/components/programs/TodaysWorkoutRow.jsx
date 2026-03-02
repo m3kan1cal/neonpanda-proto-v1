@@ -219,7 +219,7 @@ function TodaysWorkoutRow({
                 </div>
 
                 {/* Rest day message */}
-                <div className="font-russo font-bold text-white text-xl leading-tight uppercase">
+                <div className="font-barlow font-bold text-white text-xl leading-tight uppercase">
                   Rest Day
                 </div>
 
@@ -299,7 +299,7 @@ function TodaysWorkoutRow({
               </div>
 
               {/* Hero workout name */}
-              <div className="font-russo font-bold text-white text-lg leading-tight uppercase">
+              <div className="font-barlow font-bold text-white text-lg leading-tight uppercase">
                 {templates[0].name}
               </div>
 

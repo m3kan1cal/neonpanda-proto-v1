@@ -948,7 +948,7 @@ function ManagePrograms() {
                 placeholder="Program name..."
                 maxLength={100}
                 size="large"
-                displayClassName="font-russo font-bold text-white text-xl uppercase"
+                displayClassName="font-barlow font-bold text-white text-xl uppercase"
                 tooltipPrefix={`program-${program.programId}`}
                 onError={(error) => {
                   setEditingProgramId(null);
@@ -957,7 +957,7 @@ function ManagePrograms() {
                 startInEditMode={true}
               />
             ) : (
-              <h3 className="font-russo font-bold text-white text-xl uppercase">
+              <h3 className="font-barlow font-bold text-white text-xl uppercase">
                 {program.name}
               </h3>
             )}
@@ -1145,7 +1145,7 @@ function ManagePrograms() {
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                 />
               </svg>
-              <span>Share This Program</span>
+              <span>share program</span>
             </button>
           )}
 
@@ -1447,7 +1447,7 @@ function ManagePrograms() {
             {/* Page Title with Hover Tooltip */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="programs-info"
                 data-tooltip-content="Manage all your training programs. View progress, pause, resume, or complete programs across all your coaches."
               >
@@ -1530,7 +1530,7 @@ function ManagePrograms() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
+                <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
                   {isCreatingProgram
                     ? "Creating Session..."
                     : "Design New Program"}
@@ -1629,7 +1629,7 @@ function ManagePrograms() {
         {inProgressSessions && inProgressSessions.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Your In-Progress Program Designs
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1678,7 +1678,7 @@ function ManagePrograms() {
                         className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
                       ></div>
                       <div className="flex-1">
-                        <h3 className="font-russo font-bold text-white text-lg uppercase">
+                        <h3 className="font-barlow font-bold text-white text-lg uppercase">
                           Program Design Session
                         </h3>
                       </div>
@@ -1905,7 +1905,7 @@ function ManagePrograms() {
         {programState.pausedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Paused Training Programs
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1927,7 +1927,7 @@ function ManagePrograms() {
         {programState.completedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Completed Programs
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">

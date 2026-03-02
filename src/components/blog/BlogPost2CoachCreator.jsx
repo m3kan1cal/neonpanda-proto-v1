@@ -262,7 +262,7 @@ function BlogPost2CoachCreator() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 DynamoDB
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -270,7 +270,7 @@ function BlogPost2CoachCreator() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
                 S3
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -278,7 +278,7 @@ function BlogPost2CoachCreator() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
                 Pinecone
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -975,7 +975,7 @@ function BlogPost2CoachCreator() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
                 ~5ms
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -983,7 +983,7 @@ function BlogPost2CoachCreator() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
                 ~50ms
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -991,7 +991,7 @@ function BlogPost2CoachCreator() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-russo text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
                 Infinite
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -1034,7 +1034,7 @@ function BlogPost2CoachCreator() {
               className="group flex items-center justify-between"
             >
               <div>
-                <h3 className="font-russo text-xl text-synthwave-neon-purple group-hover:text-synthwave-neon-pink transition-colors">
+                <h3 className="font-barlow text-xl text-synthwave-neon-purple group-hover:text-synthwave-neon-pink transition-colors">
                   Every Rep Counts, Every Time
                 </h3>
                 <p className="font-rajdhani text-synthwave-text-secondary">

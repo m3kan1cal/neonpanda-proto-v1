@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Russo+One&family=Rajdhani:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Russo+One&family=Rajdhani:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@700;800;900&family=Barlow+Semi+Condensed:wght@700;800;900&family=Fira+Code:wght@400&family=Plus+Jakarta+Sans:wght@400&family=Space+Mono:ital,wght@0,400;1,400&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap");
 
 /* Import celebration animations */
@@ -35,8 +36,16 @@
 
   /* Font families */
   --font-inter: "Inter", sans-serif;
-  --font-rajdhani: "Rajdhani", sans-serif;
+  --font-rajdhani: "Inter", sans-serif; /* "Rajdhani", sans-serif; */
   --font-russo: "Russo One", sans-serif;
+
+  /* New fonts */
+  --font-barlow-semi: "Barlow Semi Condensed", sans-serif;
+  --font-barlow: "Barlow", sans-serif;
+  --font-jakarta: "Plus Jakarta Sans", sans-serif;
+  --font-space-mono: "Space Mono", monospace;
+  --font-fira-code: "Fira Code", monospace;
+  --font-courier-prime: "Courier Prime", monospace;
 
   /* Box shadows */
   --shadow-neon-pink: 0 0 10px rgba(255, 0, 128, 0.25);
@@ -211,7 +220,8 @@
   color: #666666;
   pointer-events: none;
   height: 0;
-  font-family: "Rajdhani", sans-serif;
+  font-family: var(--font-rajdhani);
+  /* font-family: "Rajdhani", sans-serif; */
 }
 
 /* Tiptap content area reset */
@@ -219,7 +229,8 @@
   word-wrap: break-word;
   white-space: pre-wrap;
   word-break: break-word;
-  font-family: "Rajdhani", sans-serif;
+  font-family: var(--font-rajdhani);
+  /* font-family: "Rajdhani", sans-serif; */
 }
 
 .tiptap-content p {

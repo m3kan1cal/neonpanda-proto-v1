@@ -28,7 +28,11 @@ export const NavigationProvider = ({ children }) => {
   // This prevents API calls with literal "null" string when userId is missing
   const rawUserId = searchParams.get("userId");
   const userId = isValidUserId(rawUserId) ? rawUserId : null;
-  const coachId = searchParams.get("coachId");
+  const rawCoachId = searchParams.get("coachId");
+  const coachId =
+    rawCoachId && rawCoachId !== "null" && rawCoachId !== "undefined"
+      ? rawCoachId
+      : null;
 
   // Local state
   const [currentCoachName, setCurrentCoachName] = useState("");
@@ -102,10 +106,7 @@ export const NavigationProvider = ({ children }) => {
         const data = await getCoachesCount(userId);
         setCoachesCount(data.totalCount || 0);
       } catch (error) {
-        logger.warn(
-          "NavigationContext: Failed to fetch coaches count:",
-          error,
-        );
+        logger.warn("NavigationContext: Failed to fetch coaches count:", error);
         setCoachesCount(0);
       }
     };

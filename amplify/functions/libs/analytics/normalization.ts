@@ -12,8 +12,11 @@ import {
   NormalizationIssue,
 } from "./types";
 import { callBedrockApi, TEMPERATURE_PRESETS } from "../api-helpers";
-import { parseJsonWithFallbacks } from "../response-utils";
-import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-schema";
+import type { BedrockToolUseResult } from "../api-helpers";
+import {
+  getAnalyticsSchemaWithContext,
+  ANALYTICS_NORMALIZATION_TOOL,
+} from "../schemas/universal-analytics-schema";
 import { logger } from "../logger";
 
 /**
@@ -34,6 +37,7 @@ export const buildNormalizationPrompt = (
       ? weeklyData.weekRange.weekEnd
       : weeklyData.monthRange.monthEnd;
   const periodType = "weekRange" in weeklyData ? "Week" : "Month";
+  const period = "weekRange" in weeklyData ? "weekly" : ("monthly" as const);
 
   const rangeStartStr = rangeStart.toISOString().split("T")[0];
   const rangeEndStr = rangeEnd.toISOString().split("T")[0];
@@ -52,29 +56,6 @@ ${periodType.toUpperCase()} BOUNDARY ENFORCEMENT:
 - Remove or fix any dates outside this boundary
 - Ensure metadata.date_range matches the ${periodType.toLowerCase()} boundary exactly
 
-RESPONSE REQUIREMENTS:
-Return a JSON object with this exact structure:
-
-{
-  "isValid": boolean,
-  "normalizedData": {
-    "structured_analytics": { ... complete normalized analytics ... },
-    "human_summary": "string"
-  },
-  "issues": [
-    {
-      "type": "structural|data_consistency|quality_threshold|cross_validation",
-      "severity": "error|warning",
-      "section": "string",
-      "field": "string",
-      "description": "string",
-      "corrected": boolean
-    }
-  ],
-  "confidence": number,
-  "summary": "string"
-}
-
 ANALYTICS DATA TO NORMALIZE:
 ${JSON.stringify(analyticsData, null, 2)}
 
@@ -84,9 +65,7 @@ WEEKLY DATA CONTEXT:
 - Workouts Count: ${weeklyData.workouts.count}
 - Conversations Count: ${weeklyData.coaching.count}
 
-${getAnalyticsSchemaWithContext("normalization")}
-
-CRITICAL: Return ONLY valid JSON in the exact format above. No markdown, no explanations, no text outside the JSON object. Start with { and end with }.`;
+${getAnalyticsSchemaWithContext("normalization", period)}`;
 };
 
 /**
@@ -121,32 +100,20 @@ export const normalizeAnalytics = async (
       range: `${rangeStart.toISOString().split("T")[0]} to ${rangeEnd.toISOString().split("T")[0]}`,
     });
 
-    const normalizationResponse = (await callBedrockApi(
+    const normalizationToolResult = (await callBedrockApi(
       normalizationPrompt,
       "analytics_normalization",
       undefined, // Use default model
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         enableThinking,
+        tools: ANALYTICS_NORMALIZATION_TOOL,
+        expectedToolName: "normalize_analytics",
+        skipValidation: true, // normalization response is consumed directly; AJV failure here would abort correction of an already-generated analytics object
       },
-    )) as string; // No tools used, always returns string
+    )) as BedrockToolUseResult;
 
-    // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
-    const normalizationResult = parseJsonWithFallbacks(normalizationResponse);
-
-    // Validate the response structure
-    if (!normalizationResult || typeof normalizationResult !== "object") {
-      throw new Error("Response is not a valid object");
-    }
-
-    if (
-      !normalizationResult.hasOwnProperty("isValid") ||
-      !normalizationResult.hasOwnProperty("normalizedData")
-    ) {
-      throw new Error(
-        "Response missing required fields (isValid, normalizedData)",
-      );
-    }
+    const normalizationResult = normalizationToolResult.input;
 
     // Add normalized flag to metadata if it exists
     if (normalizationResult.normalizedData?.structured_analytics?.metadata) {
@@ -479,16 +446,14 @@ export const shouldNormalizeAnalytics = (
         description: "human_summary appears too short (< 100 characters)",
         corrected: false,
       });
-    } else if (
-      !analyticsData.human_summary.includes("Weekly Training Summary")
-    ) {
+    } else if (!analyticsData.human_summary.includes("Training Summary")) {
       issues.push({
         type: "quality_threshold",
         severity: "warning",
         section: "root",
         field: "human_summary",
         description:
-          "human_summary should start with 'Weekly Training Summary'",
+          "human_summary should start with 'Weekly Training Summary' or 'Monthly Training Summary'",
         corrected: false,
       });
     }

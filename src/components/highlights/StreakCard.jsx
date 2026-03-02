@@ -54,7 +54,7 @@ export default function StreakCard({
         <span className="shrink-0 mt-1.5 text-synthwave-neon-pink">
           <FireIconSmall />
         </span>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Streak
         </h3>
       </div>
@@ -63,7 +63,7 @@ export default function StreakCard({
       <div className="flex items-baseline gap-6 mb-4">
         <div className="flex items-baseline gap-2">
           <span
-            className={`font-russo text-4xl leading-none ${streakActive ? "text-synthwave-neon-pink" : "text-synthwave-text-muted"}`}
+            className={`font-barlow text-4xl leading-none ${streakActive ? "text-synthwave-neon-pink" : "text-synthwave-text-muted"}`}
           >
             {currentStreak}
           </span>
@@ -76,7 +76,7 @@ export default function StreakCard({
             <span className="font-rajdhani text-xs text-synthwave-text-muted uppercase tracking-wider">
               Best:
             </span>
-            <span className="font-russo text-4xl text-synthwave-neon-cyan leading-none">
+            <span className="font-barlow text-4xl text-synthwave-neon-cyan leading-none">
               {bestStreak}
             </span>
             <span className="font-rajdhani text-sm text-synthwave-text-secondary font-medium">

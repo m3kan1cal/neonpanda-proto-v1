@@ -3,7 +3,7 @@
 // No pin mode — sidebar is always hover-to-expand only.
 // Quick Actions and More Resources use hover-triggered floating flyouts.
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   useFloating,
@@ -94,6 +94,33 @@ const SidebarNav = () => {
   // effectivelyCollapsed uses isContentExpanded so internal layout only switches
   // after the container has had time to grow, preventing icon/label jitter
   const effectivelyCollapsed = !isContentExpanded;
+
+  useEffect(() => {
+    // Collapse immediately when the pointer exits the browser viewport.
+    // mouseleave on document.documentElement fires only on viewport exit (no bubbling),
+    // so this catches the case where the mouse left the sidebar to the main content
+    // area and the pending collapse timer hasn't fired yet before the user switches apps.
+    const handleViewportMouseLeave = () => {
+      clearTimeout(expandTimer.current);
+      clearTimeout(collapseTimer.current);
+      setIsContentExpanded(false);
+      setIsHoverExpanded(false);
+    };
+
+    document.documentElement.addEventListener(
+      "mouseleave",
+      handleViewportMouseLeave,
+    );
+
+    return () => {
+      document.documentElement.removeEventListener(
+        "mouseleave",
+        handleViewportMouseLeave,
+      );
+      clearTimeout(expandTimer.current);
+      clearTimeout(collapseTimer.current);
+    };
+  }, []);
 
   const handleMouseEnter = () => {
     // Cancel any pending collapse — mouse returned before the sidebar closed

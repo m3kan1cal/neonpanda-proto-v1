@@ -72,7 +72,7 @@ export const ModernPopover = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 shrink-0">
-          <h3 className="font-russo font-bold text-white text-sm uppercase">
+          <h3 className="font-barlow font-bold text-white text-sm uppercase">
             {title}
           </h3>
           <button

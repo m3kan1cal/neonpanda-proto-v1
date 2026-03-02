@@ -1053,9 +1053,8 @@ export const callBedrockApi = async (
     let response;
 
     try {
-      logger.info("Starting Bedrock API call with 60s timeout..");
+      logger.info("Starting Bedrock API call..");
 
-      // Simple approach: just make the API call and let AWS SDK handle timeouts
       response = await bedrockClient.send(command);
 
       clearInterval(heartbeatInterval);

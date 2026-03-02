@@ -681,7 +681,7 @@ function TrainingGrounds() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="training-grounds-info"
               data-tooltip-content="Your central hub to track progress, access resources, chat with your coach, and manage your complete fitness journey."
             >
@@ -841,7 +841,7 @@ function TrainingGrounds() {
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
                 <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                <h3 className="font-barlow font-bold text-white text-lg uppercase">
                   Training Programs
                 </h3>
               </div>
@@ -899,7 +899,7 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
+              <h3 className="font-barlow font-bold text-white text-lg uppercase">
                 Conversations
               </h3>
             </div>
@@ -1015,7 +1015,7 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
+              <h3 className="font-barlow font-bold text-white text-lg uppercase">
                 Workout History
               </h3>
             </div>
@@ -1032,7 +1032,7 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
+              <h3 className="font-barlow font-bold text-white text-lg uppercase">
                 Reports & Insights
               </h3>
             </div>
@@ -1149,7 +1149,7 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
+              <h3 className="font-barlow font-bold text-white text-lg uppercase">
                 Messages & Notifications
               </h3>
             </div>

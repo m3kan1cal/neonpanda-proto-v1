@@ -1,15 +1,21 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   containerPatterns,
   buttonPatterns,
   badgePatterns,
   typographyPatterns,
-  messagePatterns
-} from '../../utils/ui/uiPatterns';
-import { ClockIcon } from '../themes/SynthwaveComponents';
+  messagePatterns,
+} from "../../utils/ui/uiPatterns";
+import { ClockIcon } from "../themes/SynthwaveComponents";
 
-export default function TodaysWorkoutSummary({ workout, program, userId, coachId, programId }) {
+export default function TodaysWorkoutSummary({
+  workout,
+  program,
+  userId,
+  coachId,
+  programId,
+}) {
   const navigate = useNavigate();
 
   // Extract templates from workout data (handles both array and object with templates property)
@@ -24,33 +30,25 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
   } else if (workout.templates && Array.isArray(workout.templates)) {
     // Object with templates property (like from loadWorkoutTemplates)
     workoutTemplates = workout.templates;
-  } else if (typeof workout === 'object') {
+  } else if (typeof workout === "object") {
     // Single workout object
     workoutTemplates = [workout];
   }
 
   // Get status badge
   const getStatusBadge = (template) => {
-    if (template.status === 'completed') {
-      return (
-        <span className={badgePatterns.logged}>
-          ✓ Logged
-        </span>
-      );
+    if (template.status === "completed") {
+      return <span className={badgePatterns.logged}>✓ Logged</span>;
     }
-    if (template.status === 'skipped') {
-      return (
-        <span className={badgePatterns.skipped}>
-          ✕ Skipped
-        </span>
-      );
+    if (template.status === "skipped") {
+      return <span className={badgePatterns.skipped}>✕ Skipped</span>;
     }
     return null;
   };
 
   // Check if entire day is complete
   const isDayComplete = workoutTemplates.every(
-    t => t.status === 'completed' || t.status === 'skipped'
+    (t) => t.status === "completed" || t.status === "skipped",
   );
 
   // Rest day or no workout scheduled
@@ -58,13 +56,16 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}></div>
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <div
+            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
+          ></div>
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
         </div>
         <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-          Your scheduled workout for today. Log your performance to track progress.
+          Your scheduled workout for today. Log your performance to track
+          progress.
         </p>
 
         <div className="text-center py-8">
@@ -83,20 +84,21 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start space-x-3">
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}></div>
+          <div
+            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
+          ></div>
           <div>
-            <h3 className="font-russo font-bold text-white text-lg uppercase">
+            <h3 className="font-barlow font-bold text-white text-lg uppercase">
               Today's Workout
             </h3>
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mt-1">
-              Your scheduled workout for today. Log your performance to track progress.
+              Your scheduled workout for today. Log your performance to track
+              progress.
             </p>
           </div>
         </div>
         {isDayComplete && (
-          <span className={badgePatterns.dayComplete}>
-            🎉 Day Complete
-          </span>
+          <span className={badgePatterns.dayComplete}>🎉 Day Complete</span>
         )}
       </div>
 
@@ -106,7 +108,7 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
           <div
             key={template.templateId || index}
             className={`
-              ${index > 0 ? 'mt-4 pt-4 border-t border-synthwave-neon-cyan/20' : ''}
+              ${index > 0 ? "mt-4 pt-4 border-t border-synthwave-neon-cyan/20" : ""}
             `}
           >
             <div className="flex items-start justify-between mb-3">
@@ -137,7 +139,7 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
 
               {template.workoutType && (
                 <span className="capitalize">
-                  {template.workoutType.replace(/_/g, ' ')}
+                  {template.workoutType.replace(/_/g, " ")}
                 </span>
               )}
 
@@ -168,21 +170,30 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
 
         {/* Action buttons */}
         <div className="flex flex-wrap gap-3 pt-4 border-t border-synthwave-neon-cyan/20">
-      <button
-        onClick={() => navigate(`/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}`)}
-        className={buttonPatterns.primary}
-      >
-        View Full Workout{workoutTemplates.length > 1 ? 's' : ''}
-      </button>
+          <button
+            onClick={() =>
+              navigate(
+                `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+              )
+            }
+            className={buttonPatterns.primary}
+          >
+            View Full Workout{workoutTemplates.length > 1 ? "s" : ""}
+          </button>
 
-          {!isDayComplete && workoutTemplates.some(t => t.status === 'pending') && (
-            <button
-              onClick={() => navigate(`/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}`)}
-              className={buttonPatterns.secondary}
-            >
-              Log Workout
-            </button>
-          )}
+          {!isDayComplete &&
+            workoutTemplates.some((t) => t.status === "pending") && (
+              <button
+                onClick={() =>
+                  navigate(
+                    `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+                  )
+                }
+                className={buttonPatterns.secondary}
+              >
+                Log Workout
+              </button>
+            )}
 
           {workoutTemplates.length > 1 && (
             <p className="text-sm text-synthwave-text-muted flex items-center">
@@ -194,4 +205,3 @@ export default function TodaysWorkoutSummary({ workout, program, userId, coachId
     </div>
   );
 }
-

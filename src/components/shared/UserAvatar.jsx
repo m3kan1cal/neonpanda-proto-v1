@@ -305,7 +305,7 @@ function UserAvatar({ email, username, size = 40, className = "" }) {
   // Fallback to gradient initial avatar
   return (
     <div
-      className={`bg-gradient-to-br from-synthwave-neon-pink via-synthwave-neon-purple to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30 ${className}`}
+      className={`bg-gradient-to-br from-synthwave-neon-pink via-synthwave-neon-purple to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-barlow font-bold shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30 ${className}`}
       style={{
         width: `${size}px`,
         height: `${size}px`,

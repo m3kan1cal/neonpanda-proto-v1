@@ -75,7 +75,7 @@ export default function ProgressOverview({ program }) {
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Progress Overview
         </h3>
       </div>
@@ -102,9 +102,9 @@ export default function ProgressOverview({ program }) {
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             {/* Current Phase - Full Width */}
             {currentPhase && (
-              <div className="col-span-2 flex items-center gap-1.5 font-rajdhani text-sm">
+              <div className="col-span-2 flex flex-col gap-0.5 font-rajdhani text-sm">
                 <span className="text-synthwave-text-secondary">
-                  Current Phase:
+                  Current Phase
                 </span>
                 <span className="text-synthwave-neon-cyan font-medium">
                   {currentPhase.name || "Phase 1"}
@@ -113,40 +113,32 @@ export default function ProgressOverview({ program }) {
             )}
 
             {/* Completed Workouts */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-secondary">
-                Completed Workouts:
-              </span>
+            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+              <span className="text-synthwave-text-secondary">Completed</span>
               <span className="text-synthwave-neon-cyan font-medium">
                 {program.completedWorkouts || 0} / {program.totalWorkouts || 0}
               </span>
             </div>
 
             {/* Workouts Remaining */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-secondary">
-                Workouts Remaining:
-              </span>
+            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+              <span className="text-synthwave-text-secondary">Remaining</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {workoutsRemaining}
+                {workoutsRemaining} workouts
               </span>
             </div>
 
             {/* Skipped Workouts */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-secondary">
-                Skipped Workouts:
-              </span>
+            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+              <span className="text-synthwave-text-secondary">Skipped</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {program.skippedWorkouts || 0}
+                {program.skippedWorkouts || 0} workouts
               </span>
             </div>
 
             {/* Days Remaining */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-secondary">
-                Days Remaining:
-              </span>
+            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+              <span className="text-synthwave-text-secondary">Days Left</span>
               <span className="text-synthwave-neon-cyan font-medium">
                 {daysRemaining} day{daysRemaining !== 1 ? "s" : ""}
               </span>
@@ -154,10 +146,8 @@ export default function ProgressOverview({ program }) {
 
             {/* Adherence Rate */}
             {adherenceRate > 0 && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                <span className="text-synthwave-text-secondary">
-                  Adherence Rate:
-                </span>
+              <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+                <span className="text-synthwave-text-secondary">Adherence</span>
                 <span className="text-synthwave-neon-cyan font-medium">
                   {adherenceRate}%
                 </span>
@@ -165,9 +155,9 @@ export default function ProgressOverview({ program }) {
             )}
 
             {/* Last Activity */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
               <span className="text-synthwave-text-secondary">
-                Last Activity:
+                Last Activity
               </span>
               <span className="text-synthwave-neon-cyan font-medium">
                 {formatLastActivity()}
@@ -176,10 +166,8 @@ export default function ProgressOverview({ program }) {
 
             {/* Current Streak */}
             {currentStreak > 0 && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                <span className="text-synthwave-text-secondary">
-                  Current Streak:
-                </span>
+              <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+                <span className="text-synthwave-text-secondary">Streak</span>
                 <span className="text-synthwave-neon-cyan font-medium">
                   {currentStreak} day{currentStreak !== 1 ? "s" : ""}
                 </span>

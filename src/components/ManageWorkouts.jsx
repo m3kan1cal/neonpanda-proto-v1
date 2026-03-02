@@ -301,7 +301,7 @@ function ManageWorkouts() {
         onClick={handleLogNewWorkout}
         className={`${containerPatterns.dashedCard} mb-6 group cursor-pointer`}
       >
-        <div className="text-center flex flex-col justify-center items-center h-full min-h-[188px]">
+        <div className="text-center flex flex-col justify-center items-center h-full min-h-[220px]">
           {/* Plus Icon */}
           <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
             <svg
@@ -320,7 +320,7 @@ function ManageWorkouts() {
           </div>
 
           {/* Title */}
-          <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
+          <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
             Log New Workout
           </h3>
 
@@ -396,52 +396,59 @@ function ManageWorkouts() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase">
             {workoutName}
           </h3>
         </div>
 
-        {/* Metadata Row - styled like ViewWorkouts.jsx */}
-        <div className="flex items-center flex-wrap gap-4 mb-4">
-          {/* Completed Date */}
-          <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
-            <ClockIconSmall />
-            <span>
-              {dateInfo.date} at {dateInfo.time}
-            </span>
-          </div>
-          {/* Duration */}
-          {duration && (
+        {/* Metadata Rows - 3 items per line */}
+        <div className="space-y-2 mb-4">
+          {/* Row 1: Completed at, Duration, AI Score */}
+          <div className="flex items-center flex-wrap gap-4">
+            {/* Completed at */}
             <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-muted">Duration:</span>
+              <ClockIconSmall />
+              <span className="text-synthwave-text-muted">Completed:</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {duration}m
+                {dateInfo.date} at {dateInfo.time}
               </span>
             </div>
-          )}
-          {/* AI Score */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-            <span className="text-synthwave-text-muted">AI Score:</span>
-            <span className="text-synthwave-neon-cyan font-medium">
-              {Math.round(confidence * 100)}%
-            </span>
-          </div>
-          {/* Intensity */}
-          {intensity > 0 && (
+            {/* Duration */}
+            {duration && (
+              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                <span className="text-synthwave-text-muted">Duration:</span>
+                <span className="text-synthwave-neon-cyan font-medium">
+                  {duration}m
+                </span>
+              </div>
+            )}
+            {/* AI Score */}
             <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-muted">Intensity:</span>
+              <span className="text-synthwave-text-muted">AI Score:</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {intensity}/10
+                {Math.round(confidence * 100)}%
               </span>
             </div>
-          )}
-          {/* RPE */}
-          {rpe > 0 && (
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-muted">RPE:</span>
-              <span className="text-synthwave-neon-cyan font-medium">
-                {rpe}/10
-              </span>
+          </div>
+          {/* Row 2: Intensity, RPE (only if present) */}
+          {(intensity > 0 || rpe > 0) && (
+            <div className="flex items-center gap-4">
+              {intensity > 0 && (
+                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-muted">Intensity:</span>
+                  <span className="text-synthwave-neon-cyan font-medium">
+                    {intensity}/10
+                  </span>
+                </div>
+              )}
+              {rpe > 0 && (
+                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-muted">RPE:</span>
+                  <span className="text-synthwave-neon-cyan font-medium">
+                    {rpe}/10
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -606,7 +613,7 @@ function ManageWorkouts() {
             <div className="lg:hidden">
               {/* Create Card Skeleton */}
               <div
-                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[166px]`}
+                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[220px]`}
               >
                 <div className="text-center flex flex-col items-center">
                   <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
@@ -618,7 +625,7 @@ function ManageWorkouts() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[166px]`}
+                  className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start space-x-3 mb-2">
@@ -654,7 +661,7 @@ function ManageWorkouts() {
               <div>
                 {/* Create Card Skeleton (first item, left column) */}
                 <div
-                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[166px]`}
+                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[220px]`}
                 >
                   <div className="text-center flex flex-col items-center">
                     <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
@@ -666,7 +673,7 @@ function ManageWorkouts() {
                 {[1, 3].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[166px]`}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
@@ -702,7 +709,7 @@ function ManageWorkouts() {
                 {[2, 4].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[166px]`}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start space-x-3 mb-2">
@@ -761,7 +768,7 @@ function ManageWorkouts() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="workouts-info"
                 data-tooltip-content="Review, organize, and analyze your complete workout history. Track your fitness journey and monitor your progress over time."
               >
