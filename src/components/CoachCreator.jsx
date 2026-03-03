@@ -643,7 +643,7 @@ function CoachCreator() {
     return (
       <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
         <div
-          className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}
+          className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6 min-h-[calc(100vh-5rem)] flex flex-col`}
         >
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
@@ -738,7 +738,7 @@ function CoachCreator() {
   return (
     <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
       <div
-        className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}
+        className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6 min-h-[calc(100vh-5rem)] flex flex-col`}
       >
         {/* Compact Horizontal Header */}
         <header

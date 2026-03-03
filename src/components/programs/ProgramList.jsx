@@ -1,7 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { badgePatterns, listItemPatterns } from "../../utils/ui/uiPatterns";
+import { listItemPatterns } from "../../utils/ui/uiPatterns";
 import { ChevronRightIcon } from "../themes/SynthwaveComponents";
+import { SectionEmptyState } from "../shared/ErrorStates";
 
 /**
  * ProgressRing - Small SVG donut ring showing completion percentage
@@ -99,6 +100,7 @@ function ProgramList({
   maxItems,
   showAll,
   onToggleShowAll,
+  onDesignProgram,
 }) {
   const navigate = useNavigate();
 
@@ -125,41 +127,11 @@ function ProgramList({
   // Empty state
   if (!programs || programs.length === 0) {
     return (
-      <div className="text-center pb-2">
-        <div className="max-w-xs mx-auto">
-          <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
-            No active programs yet. Design a structured training program with
-            your coach to start building toward your goals.
-          </p>
-          <div className="space-y-2 text-left">
-            <div className="flex items-start gap-2">
-              <span className={badgePatterns.numberedCircle}>
-                <span className={badgePatterns.numberedCircleText}>1</span>
-              </span>
-              <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                Click "Design Program" above or use ⌘+K → /design-program
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className={badgePatterns.numberedCircle}>
-                <span className={badgePatterns.numberedCircleText}>2</span>
-              </span>
-              <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                Answer a few questions and your coach will build a custom
-                program
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className={badgePatterns.numberedCircle}>
-                <span className={badgePatterns.numberedCircleText}>3</span>
-              </span>
-              <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                Active programs and today's workouts will appear here
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SectionEmptyState
+        message="No active programs yet."
+        actionLabel="Design one"
+        onAction={onDesignProgram}
+      />
     );
   }
 

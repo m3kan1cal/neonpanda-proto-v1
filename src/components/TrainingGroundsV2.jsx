@@ -7,7 +7,6 @@ import { useToast } from "../contexts/ToastContext";
 import {
   containerPatterns,
   layoutPatterns,
-  badgePatterns,
   tooltipPatterns,
   typographyPatterns,
   listItemPatterns,
@@ -37,6 +36,7 @@ import {
   FullPageLoader,
   CenteredErrorState,
   InlineError,
+  SectionEmptyState,
 } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
@@ -943,24 +943,11 @@ function TrainingGroundsV2() {
             )}
           </>
         ) : (
-          <div className="text-center pb-2">
-            <div className="max-w-xs mx-auto">
-              <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
-                No conversations yet. Chat with your coach to set goals, log
-                workouts, or design programs.
-              </p>
-              <div className="space-y-2 text-left">
-                <div className="flex items-start gap-2">
-                  <span className={badgePatterns.numberedCircle}>
-                    <span className={badgePatterns.numberedCircleText}>1</span>
-                  </span>
-                  <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                    Click "Chat" above or use ⌘+K
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SectionEmptyState
+            message="No conversations yet."
+            actionLabel="Start one"
+            onAction={handleStartNewConversation}
+          />
         )}
       </div>
     </div>
@@ -1004,23 +991,11 @@ function TrainingGroundsV2() {
             size="medium"
           />
         ) : workoutState.recentWorkouts.length === 0 ? (
-          <div className="text-center pb-2">
-            <div className="max-w-xs mx-auto">
-              <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
-                No workouts logged yet. Start tracking to monitor progress.
-              </p>
-              <div className="space-y-2 text-left">
-                <div className="flex items-start gap-2">
-                  <span className={badgePatterns.numberedCircle}>
-                    <span className={badgePatterns.numberedCircleText}>1</span>
-                  </span>
-                  <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                    Click "Log Workout" above or use ⌘+K
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SectionEmptyState
+            message="No workouts logged yet."
+            actionLabel="Log one"
+            onAction={handleLogWorkout}
+          />
         ) : (
           <>
             {workoutState.recentWorkouts
@@ -1167,40 +1142,7 @@ function TrainingGroundsV2() {
             size="medium"
           />
         ) : reportsState.recentReports.length === 0 ? (
-          <div className="pb-4">
-            <div>
-              <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4">
-                You don't have any reports yet. Reports automatically generate
-                weekly to track your progress and provide insights.
-              </p>
-              <div className="space-y-2 text-left">
-                <div className="flex items-start gap-2">
-                  <span className={badgePatterns.numberedCircle}>
-                    <span className={badgePatterns.numberedCircleText}>1</span>
-                  </span>
-                  <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                    Log workouts throughout the week
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className={badgePatterns.numberedCircle}>
-                    <span className={badgePatterns.numberedCircleText}>2</span>
-                  </span>
-                  <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                    Reports automatically generate each Sunday
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className={badgePatterns.numberedCircle}>
-                    <span className={badgePatterns.numberedCircleText}>3</span>
-                  </span>
-                  <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                    View reports in "Reports" or here on your dashboard
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SectionEmptyState message="Reports generate weekly after you log workouts." />
         ) : (
           <>
             {reportsState.recentReports
@@ -1473,7 +1415,7 @@ function TrainingGroundsV2() {
             <div className={typographyPatterns.sectionDivider}>
               Today's Lineup
             </div>
-            <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
+            <div className={typographyPatterns.sectionDividerLine}></div>
           </div>
 
           <TodaysWorkoutRow
@@ -1484,6 +1426,7 @@ function TrainingGroundsV2() {
             coachId={coachId}
             onCompleteRestDay={handleCompleteRestDay}
             isCompletingRestDay={isCompletingRestDay}
+            onDesignProgram={handleDesignProgram}
           />
         </div>
 
@@ -1496,11 +1439,11 @@ function TrainingGroundsV2() {
             <div className={typographyPatterns.sectionDivider}>
               Your Highlights
             </div>
-            <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
+            <div className={typographyPatterns.sectionDividerLine}></div>
           </div>
 
           {/* Mobile: Single column */}
-          <div className="md:hidden space-y-6">
+          <div className="md:hidden space-y-6 animate-fade-in-up">
             {/* Active Programs */}
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
@@ -1525,6 +1468,7 @@ function TrainingGroundsV2() {
                 maxItems={PAGINATION_LIMIT}
                 showAll={showAllPrograms}
                 onToggleShowAll={() => setShowAllPrograms((prev) => !prev)}
+                onDesignProgram={handleDesignProgram}
               />
             </div>
 
@@ -1550,7 +1494,10 @@ function TrainingGroundsV2() {
           {/* Desktop: Two columns with alternating distribution (masonry) */}
           <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:items-start">
             {/* Left Column -- Programs + Reports + Recent Conversations */}
-            <div className="space-y-6">
+            <div
+              className="space-y-6 animate-fade-in-up"
+              style={{ animationDelay: "0ms" }}
+            >
               <div className={`${containerPatterns.cardMedium} p-6`}>
                 <div className="flex items-start space-x-3 mb-4">
                   <svg
@@ -1574,6 +1521,7 @@ function TrainingGroundsV2() {
                   maxItems={PAGINATION_LIMIT}
                   showAll={showAllPrograms}
                   onToggleShowAll={() => setShowAllPrograms((prev) => !prev)}
+                  onDesignProgram={handleDesignProgram}
                 />
               </div>
 
@@ -1583,7 +1531,10 @@ function TrainingGroundsV2() {
             </div>
 
             {/* Right Column -- Streak + Recent PRs + Top Exercises */}
-            <div className="space-y-6">
+            <div
+              className="space-y-6 animate-fade-in-up"
+              style={{ animationDelay: "80ms" }}
+            >
               {renderStreakCard()}
               {renderRecentPRsCard()}
               {renderTopExercisesCard()}
