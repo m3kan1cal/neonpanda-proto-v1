@@ -192,15 +192,15 @@ export const InlineError = ({
  * @param {string} message - Short descriptive text (e.g. "No programs yet.")
  * @param {string} [actionLabel] - Label for the inline action link (e.g. "Design one")
  * @param {Function} [onAction] - Callback invoked when the action link is clicked
- * @param {string} [className] - Additional classes applied to the wrapper
+ * @param {string} [className] - Classes applied to the wrapper (replaces default py-3 when provided)
  */
 export const SectionEmptyState = ({
   message,
   actionLabel,
   onAction,
-  className = "",
+  className,
 }) => (
-  <div className={`py-3 ${className}`}>
+  <div className={className || "py-3"}>
     <p className="font-rajdhani text-sm text-synthwave-text-muted">
       {message}
       {actionLabel && onAction && (
