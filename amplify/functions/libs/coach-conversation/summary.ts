@@ -8,6 +8,29 @@ import { parseJsonWithFallbacks } from "../response-utils";
 import { logger } from "../logger";
 
 /**
+ * Parses conversation tags from model output, handling the case where Claude
+ * returns XML-formatted content (e.g. "<item>tag-one</item>\n<item>tag-two</item>")
+ * as a single array element instead of clean individual strings.
+ */
+function parseConversationTags(raw: unknown[]): string[] {
+  const tags: string[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== "string") continue;
+    if (entry.includes("<item>")) {
+      const matches = entry.match(/<item>(.*?)<\/item>/g) ?? [];
+      for (const match of matches) {
+        const tag = match.replace(/<\/?item>/g, "").trim();
+        if (tag) tags.push(tag);
+      }
+    } else {
+      const tag = entry.trim();
+      if (tag) tags.push(tag);
+    }
+  }
+  return tags;
+}
+
+/**
  * Build the prompt for coach conversation summarization
  */
 export function buildCoachConversationSummaryPrompt(
@@ -89,7 +112,7 @@ Merge all of these into a single comprehensive list:
 - Programming principles they referenced or responded positively to
 
 ### CONVERSATION TAGS
-Generate 2-5 descriptive tags:
+Generate 2-5 descriptive tags as a plain JSON array of strings — do NOT use XML <item> tags or any other markup:
 - **Format**: Lowercase with hyphens (e.g., "strength-training", "weekly-wods", "crossfit")
 - **Content**: Main topics, methodologies, or themes discussed
 - **Examples**: "strength-training", "cardio", "nutrition", "motivation", "injury-recovery", "crossfit", "powerlifting", "bodybuilding", "goal-setting", "progress-review", "technique-focus", "equipment-questions", "scheduling"
@@ -261,7 +284,7 @@ function migrateLegacyStructuredData(data: any): any {
       ? data.important_context
       : [],
     conversation_tags: Array.isArray(data.conversation_tags)
-      ? data.conversation_tags
+      ? parseConversationTags(data.conversation_tags)
       : [],
   };
 }

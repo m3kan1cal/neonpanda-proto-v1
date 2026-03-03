@@ -75,7 +75,7 @@ export const CONVERSATION_SUMMARY_SCHEMA = {
       type: "array",
       items: { type: "string" },
       description:
-        "2-5 descriptive tags (lowercase with hyphens) categorizing the conversation topics (e.g., 'strength-training', 'goal-setting', 'crossfit')",
+        "2-5 descriptive tags (lowercase with hyphens) categorizing the conversation topics (e.g., 'strength-training', 'goal-setting', 'crossfit'). Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
     },
   },
 };
