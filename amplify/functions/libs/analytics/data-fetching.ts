@@ -823,6 +823,7 @@ export const generateAnalytics = async (
         tools: ANALYTICS_GENERATION_TOOL,
         expectedToolName: "generate_analytics",
         skipValidation: true, // AJV throws before normalization can run; normalizeAnalytics is the intended enforcement layer
+        skipToolEnforcement: true, // schema exceeds Bedrock's ~24 optional-parameter grammar limit; unguarded mode avoids compilation errors
       },
     )) as BedrockToolUseResult;
 
