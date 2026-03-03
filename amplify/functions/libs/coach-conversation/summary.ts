@@ -176,6 +176,11 @@ export function parseCoachConversationSummary(
       narrative = parsedData.narrative || "";
       structuredData = { ...parsedData };
       if (structuredData.narrative) delete structuredData.narrative;
+      if (Array.isArray(structuredData.conversation_tags)) {
+        structuredData.conversation_tags = parseConversationTags(
+          structuredData.conversation_tags,
+        );
+      }
     }
 
     logger.info("Parsed conversation data:", {

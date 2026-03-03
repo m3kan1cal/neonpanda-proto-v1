@@ -110,6 +110,7 @@ export const normalizeAnalytics = async (
         tools: ANALYTICS_NORMALIZATION_TOOL,
         expectedToolName: "normalize_analytics",
         skipValidation: true, // normalization response is consumed directly; AJV failure here would abort correction of an already-generated analytics object
+        skipToolEnforcement: true, // schema exceeds Bedrock's ~24 optional-parameter grammar limit; unguarded mode avoids compilation errors
       },
     )) as BedrockToolUseResult;
 
