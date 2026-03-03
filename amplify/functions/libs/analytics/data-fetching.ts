@@ -785,7 +785,7 @@ DAILY RPE/INTENSITY CALCULATION REQUIREMENTS:
 - Handle multiple workouts per day by averaging RPE/intensity values
 - Days with no workouts should still appear with workout_count: 0 and null values for averages
 
-CRITICAL: Return ONLY valid JSON in the exact format above. No markdown, no explanations, no text outside the JSON object. Start with { and end with }.`;
+`;
 };
 
 /**

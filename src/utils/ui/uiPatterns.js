@@ -498,7 +498,7 @@ export const containerPatterns = {
 
   // AI Chat Bubble - Modern glassmorphism with cyan background tint (default Chat mode) (removed backdrop-blur to prevent scroll artifacts)
   aiChatBubble:
-    "bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-text-primary rounded-md rounded-bl-none shadow-sm shadow-synthwave-neon-cyan/20",
+    "bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-text-secondary rounded-md rounded-bl-none shadow-sm shadow-synthwave-neon-cyan/20",
 
   // Info Card - Static information display without hover effects
   infoCard:

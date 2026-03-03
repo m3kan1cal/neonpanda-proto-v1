@@ -395,13 +395,18 @@ function ManageCoachConversations() {
     if (!dateString) return "Unknown";
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString(undefined, {
-        year: "numeric",
+      const isCurrentYear = date.getFullYear() === new Date().getFullYear();
+      const datePart = date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+        ...(!isCurrentYear && { year: "numeric" }),
       });
+      const timePart = date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+      return `${datePart} · ${timePart}`;
     } catch (error) {
       return "Unknown";
     }

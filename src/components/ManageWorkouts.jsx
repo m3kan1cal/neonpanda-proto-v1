@@ -252,18 +252,18 @@ function ManageWorkouts() {
   // Format date for display
   const formatWorkoutDate = (dateString) => {
     const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString("en-US", {
-        month: "2-digit",
-        day: "2-digit",
-        year: "numeric",
-      }),
-      time: date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }),
-    };
+    const isCurrentYear = date.getFullYear() === new Date().getFullYear();
+    const datePart = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      ...(!isCurrentYear && { year: "numeric" }),
+    });
+    const timePart = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return { date: datePart, time: timePart };
   };
 
   // Collapsed workout summary sections - initialize with all workout IDs (collapsed by default)
@@ -410,7 +410,7 @@ function ManageWorkouts() {
               <ClockIconSmall />
               <span className="text-synthwave-text-muted">Completed:</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {dateInfo.date} at {dateInfo.time}
+                {dateInfo.date} · {dateInfo.time}
               </span>
             </div>
             {/* Duration */}

@@ -154,7 +154,7 @@ const MessageItem = memo(
             <div
               className={getStreamingMessageClasses(message, agentState, "")}
             >
-              <div className="font-fira-code text-base leading-relaxed text-synthwave-text-primary/80">
+              <div className="font-fira-code text-base leading-relaxed text-synthwave-text-secondary">
                 {renderMessageContent(message)}
               </div>
             </div>
