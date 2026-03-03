@@ -62,7 +62,7 @@ export default function TopExercisesCard({
         <span className="text-synthwave-neon-cyan shrink-0 mt-1.5">
           <WeightPlateIconTiny className="w-5 h-5" />
         </span>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Top Exercises
         </h3>
       </div>
@@ -81,7 +81,7 @@ export default function TopExercisesCard({
 
             {/* Count hero number with label */}
             <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="font-russo text-2xl text-white leading-none">
+              <span className="font-barlow text-2xl text-white leading-none">
                 {ex.count}
               </span>
               <span className="font-rajdhani text-sm text-synthwave-text-muted font-medium">

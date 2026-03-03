@@ -42,7 +42,7 @@ export const HybridSection = ({
         >
           <div className="flex items-start space-x-3">
             <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-            <h3 className="font-russo font-bold text-white text-lg uppercase">
+            <h3 className="font-barlow font-bold text-white text-lg uppercase">
               Hybrid Workout (0)
             </h3>
           </div>
@@ -219,7 +219,7 @@ export const HybridSection = ({
               className="w-full flex items-center justify-between p-4 bg-synthwave-bg-primary/40 hover:bg-synthwave-bg-primary/60 transition-colors duration-200 cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <span className="font-russo font-bold text-white text-sm uppercase">
+                <span className="font-barlow font-bold text-white text-sm uppercase">
                   {phaseName} ({phase.exercises?.length || 0})
                 </span>
                 {phase.phase_type && (
@@ -299,7 +299,7 @@ export const HybridSection = ({
         <div className="flex items-start space-x-3">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
           <div className="flex flex-col">
-            <h3 className="font-russo font-bold text-white text-lg uppercase">
+            <h3 className="font-barlow font-bold text-white text-lg uppercase">
               Hybrid Workout ({totalExerciseCount})
             </h3>
             {/* Show workout style or primary focus if available */}

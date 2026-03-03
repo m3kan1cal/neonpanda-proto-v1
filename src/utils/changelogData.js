@@ -11,6 +11,33 @@ import { logger } from "./logger";
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260301-beta",
+    date: "2026-03-01",
+    changes: {
+      added: [
+        "Shared CopyButton component (src/components/shared/CopyButton.jsx) for copy-to-clipboard on AI messages, replacing duplicated logic in CoachConversations, CoachCreator, and ProgramDesigner",
+        "v2 theme scaffolding for future retro work (RetroComponents, theme utilities)",
+      ],
+      changed: [
+        "Desktop sidebar redesigned as floating icon rail with hover expansion; main content margin and breadcrumbs aligned to md:ml-20 / md:left-20 for consistent layout",
+        "Breadcrumbs no longer depend on isSidebarCollapsed; fixed left offset matches content margin",
+        "Chat UI polish: sharp corners, mobile chat bubbles, input layout consistency; AI message bubbles simplified (removed distinct program-design bubble styling from message container)",
+        "Chat input left-side action buttons consolidated into a single in-textarea menu",
+        "Tool response validation: normalizeSchemaArrayFields moved to object-utils and invoked explicitly in api-helpers before validateToolResponse; validateToolResponse is now a pure validator and no longer mutates its input",
+      ],
+      fixed: [
+        "Content margin and breadcrumbs misalignment on desktop (breadcrumbs used md:left-64 while content used md:ml-20); both now use 80px (md:left-20 / md:ml-20)",
+        "Unused isSidebarCollapsed destructured from useNavigationContext in App.jsx and Breadcrumbs.jsx removed after margin hardcoding",
+        'normalizeSchemaArrayFields now treats JSON Schema type: ["array", "null"] as array fields so nullable array declarations (e.g. injuries, equipment_used, training_partners) are normalized correctly',
+        "Non-string scalars (numbers, booleans, objects) in array-typed tool response fields no longer silently converted to []; they are now wrapped in a one-element array to avoid data loss",
+        "TiptapEditor scroll-to-bottom and space-swallowing on keypress in chat input",
+        "Client-side AJV validation skipped for conversation summary tool to avoid schema mismatches on summary payloads",
+        "Skip/log error on last workout of a training program",
+        "Removed dead aiProgramDesignModeBubble pattern from uiPatterns.js (no remaining consumers after AI message rendering refactor)",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260221-beta",
     date: "2026-02-21",
     changes: {

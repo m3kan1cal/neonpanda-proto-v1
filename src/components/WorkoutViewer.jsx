@@ -1255,7 +1255,7 @@ const WorkoutViewer = ({
                   onSave={onSaveWorkoutTitle}
                   placeholder="Enter workout name..."
                   size="large"
-                  displayClassName="font-russo font-bold text-white text-lg uppercase"
+                  displayClassName="font-barlow font-bold text-white text-lg uppercase"
                   containerClassName="flex items-center gap-2 group"
                   buttonClassName="px-2 py-0 text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 rounded-md focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
                 />
@@ -1976,7 +1976,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start gap-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                <h3 className="font-barlow font-bold text-white text-lg uppercase">
                   Subjective Feedback
                 </h3>
               </div>
@@ -2298,7 +2298,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start gap-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                <h3 className="font-barlow font-bold text-white text-lg uppercase">
                   Personal Insights
                 </h3>
               </div>
@@ -2496,7 +2496,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start gap-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                <h3 className="font-barlow font-bold text-white text-lg uppercase">
                   PR Achievements
                   {workoutData.pr_achievements &&
                     workoutData.pr_achievements.length > 0 &&
@@ -2645,7 +2645,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start space-x-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                <h3 className="font-barlow font-bold text-white text-lg uppercase">
                   Coach Notes
                 </h3>
               </div>
@@ -2881,7 +2881,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start space-x-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                <h3 className="font-barlow font-bold text-white text-lg uppercase">
                   Extraction Notes
                 </h3>
               </div>
@@ -3191,7 +3191,7 @@ const WorkoutViewer = ({
           >
             <div className="flex items-start space-x-3">
               <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
+              <h3 className="font-barlow font-bold text-white text-lg uppercase">
                 Raw Workout Data
               </h3>
             </div>

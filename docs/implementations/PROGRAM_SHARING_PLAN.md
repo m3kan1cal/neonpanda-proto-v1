@@ -93,7 +93,7 @@ Friend shares their success... [loop continues]
 **User Journey:**
 
 ```
-1. User clicks "Share This Program"
+1. User clicks "share program"
 2. Modal appears: "Generate shareable link"
 3. Link generated instantly
 4. User can:
@@ -105,7 +105,7 @@ Friend shares their success... [loop continues]
 
 **UI Copy (Brand Voice):**
 
-- Button: "Share This Program"
+- Button: "share program"
 - Modal title: "Share Your Success"
 - Success message: "Link copied! Time to inspire some athletes. 💪"
 - Social share pre-fill: "Just crushed this program on @NeonPanda - [result]. Check it out: [link]"
@@ -1722,7 +1722,7 @@ function SharedProgramPreview() {
           <div className="flex items-start gap-3 mb-4">
             <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full mt-2 animate-pulse" />
             <div>
-              <h1 className="font-russo text-3xl md:text-4xl text-white uppercase tracking-wider">
+              <h1 className="font-barlow text-3xl md:text-4xl text-white uppercase tracking-wider">
                 {program.programSnapshot.name}
               </h1>
               {/* Attribution */}
@@ -1760,7 +1760,7 @@ function SharedProgramPreview() {
           {/* Training Goals */}
           {program.programSnapshot.trainingGoals?.length > 0 && (
             <div className="mb-8">
-              <h3 className="font-russo text-lg text-white uppercase tracking-wide mb-3">
+              <h3 className="font-barlow text-lg text-white uppercase tracking-wide mb-3">
                 Training Goals
               </h3>
               <ul className="space-y-2">
@@ -1798,7 +1798,7 @@ function SharedProgramPreview() {
 
         {/* Phase Breakdown */}
         <div className={`${containerPatterns.cardMedium} p-6 mb-6`}>
-          <h2 className="font-russo text-xl text-white uppercase tracking-wide mb-4">
+          <h2 className="font-barlow text-xl text-white uppercase tracking-wide mb-4">
             Program Structure
           </h2>
           <div className="space-y-4">
@@ -1807,7 +1807,7 @@ function SharedProgramPreview() {
                 key={phase.phaseId || index}
                 className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/10 rounded-lg p-4"
               >
-                <h3 className="font-russo text-synthwave-neon-cyan uppercase tracking-wide text-sm mb-1">
+                <h3 className="font-barlow text-synthwave-neon-cyan uppercase tracking-wide text-sm mb-1">
                   Phase {index + 1}: {phase.name}
                 </h3>
                 <div className="text-synthwave-text-muted font-rajdhani text-sm mb-2">
@@ -2214,7 +2214,7 @@ function ProgramAdaptationChat({
       <div className="flex items-center gap-3">
         <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-pulse" />
         <div>
-          <h2 className="font-russo text-lg text-white">
+          <h2 className="font-barlow text-lg text-white">
             {mode === "adaptation-new-copy"
               ? "Adapt This Program"
               : "Customize with Coach"}
@@ -2805,7 +2805,7 @@ export const SHARED_PROGRAM_EVENTS = {
 
 /**
  * Track when user initiates sharing a program
- * Trigger: User clicks "Share This Program" button
+ * Trigger: User clicks "share program" button
  */
 export function trackShareInitiated(userId, programId) {
   console.info("📊 Analytics: share_program_initiated", { userId, programId });
@@ -3313,7 +3313,7 @@ Add share button to each active or completed program card:
       onClick={() => handleShareProgram(program)}
       className={buttonPatterns.secondary}
     >
-      Share This Program
+      share program
     </button>
   );
 }
@@ -3327,7 +3327,7 @@ Add share button to each active or completed program card:
 
 **Share Button States:**
 
-- Default: "Share This Program"
+- Default: "share program"
 - Generating: "Creating link..."
 - Success: "Link copied! Time to inspire some athletes."
 
@@ -3823,7 +3823,7 @@ These features are explicitly **out of scope** for initial launch but could be a
 **Existing Files Modified ✅:**
 
 - `src/App.jsx` - Added routes `/shared/programs/:sharedProgramId` (public) and `/training-grounds/programs/shared` (protected) + CommandPalette navigation handler ✅
-- `src/components/programs/ProgramOverview.jsx` - Added "Share This Program" button ✅
+- `src/components/programs/ProgramOverview.jsx` - Added "share program" button ✅
 - `src/components/themes/SynthwaveComponents.jsx` - Added `ShareIconTiny` icon component ✅
 - `src/utils/navigation/navigationConfig.js` - Added "Shared Programs" to contextual navigation (user-level, pink color, with badge count) ✅
 - `src/components/shared/CommandPalette.jsx` - Added `/shared-programs` command definition ✅

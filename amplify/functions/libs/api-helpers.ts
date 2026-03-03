@@ -609,6 +609,18 @@ export interface BedrockApiOptions {
    * Default: false (validation is on by default)
    */
   skipValidation?: boolean;
+
+  /**
+   * Disable toolChoice enforcement for this call, sending the tool in unguarded mode.
+   *
+   * Use for schemas with many optional parameters (>24) or large nested structures that
+   * risk exceeding Bedrock's grammar compilation limits. The schema is still sent to the
+   * model as structural guidance — output quality remains high without grammar enforcement.
+   * Malformed output should be handled downstream (e.g. by a normalization pass).
+   *
+   * Default: false (toolChoice enforcement is on for single-tool calls)
+   */
+  skipToolEnforcement?: boolean;
 }
 
 /**
@@ -1024,7 +1036,10 @@ export const callBedrockApi = async (
       messages: messages,
       ...(systemParams.length > 0 && { system: systemParams }), // Only include if not empty
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
+        toolConfig: buildToolConfig(
+          options.tools,
+          !options.skipToolEnforcement,
+        ),
       }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
@@ -1053,9 +1068,8 @@ export const callBedrockApi = async (
     let response;
 
     try {
-      logger.info("Starting Bedrock API call with 60s timeout..");
+      logger.info("Starting Bedrock API call..");
 
-      // Simple approach: just make the API call and let AWS SDK handle timeouts
       response = await bedrockClient.send(command);
 
       clearInterval(heartbeatInterval);
@@ -1298,7 +1312,10 @@ export const callBedrockApiStream = async (
       ],
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
+        toolConfig: buildToolConfig(
+          options.tools,
+          !options.skipToolEnforcement,
+        ),
       }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
@@ -1423,7 +1440,10 @@ export const callBedrockApiMultimodal = async (
       messages: messages,
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
+        toolConfig: buildToolConfig(
+          options.tools,
+          !options.skipToolEnforcement,
+        ),
       }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
@@ -2246,7 +2266,10 @@ export const callBedrockApiMultimodalStream = async (
       messages: messages,
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
+        toolConfig: buildToolConfig(
+          options.tools,
+          !options.skipToolEnforcement,
+        ),
       }), // strict mode removed — schema enforced via additionalProperties, required, and enum constraints
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),

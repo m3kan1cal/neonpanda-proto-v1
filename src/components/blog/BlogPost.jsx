@@ -315,7 +315,7 @@ function BlogPost({ children }) {
                     Previous
                   </span>
                 </div>
-                <h3 className="font-russo text-lg text-white group-hover:text-synthwave-neon-cyan transition-colors">
+                <h3 className="font-barlow text-lg text-white group-hover:text-synthwave-neon-cyan transition-colors">
                   {prevPost.title}
                 </h3>
                 <p className="font-rajdhani text-sm text-synthwave-text-secondary">
@@ -350,7 +350,7 @@ function BlogPost({ children }) {
                     />
                   </svg>
                 </div>
-                <h3 className="font-russo text-lg text-white group-hover:text-synthwave-neon-pink transition-colors">
+                <h3 className="font-barlow text-lg text-white group-hover:text-synthwave-neon-pink transition-colors">
                   {nextPost.title}
                 </h3>
                 <p className="font-rajdhani text-sm text-synthwave-text-secondary">

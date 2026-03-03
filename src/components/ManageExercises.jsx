@@ -334,7 +334,7 @@ function ManageExercises() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-russo font-bold text-white text-lg uppercase flex-1">
+          <h3 className="font-barlow font-bold text-white text-lg uppercase flex-1">
             {exercise.displayName || exercise.exerciseName}
           </h3>
         </div>
@@ -342,10 +342,11 @@ function ManageExercises() {
         {/* Metadata Row - consolidated on one line */}
         <div className="flex items-center flex-wrap gap-4 mb-4">
           {/* Last Performed */}
-          <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
             <ClockIconSmall />
-            <span>
-              Last Performed: {formatRelativeTime(exercise.lastPerformed)}
+            <span className="text-synthwave-text-muted">Completed:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {formatRelativeTime(exercise.lastPerformed)}
             </span>
           </div>
           {/* Session Count */}
@@ -757,7 +758,7 @@ function ManageExercises() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="exercises-info"
                 data-tooltip-content="Browse your exercise history and track your personal records. See progression over time for each movement."
               >
@@ -848,7 +849,7 @@ function ManageExercises() {
                 placeholder="Search exercises..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-10 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="w-full px-4 py-3 pl-10 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 style={{ boxShadow: "none", outline: "none" }}
                 onFocus={(e) => {
                   e.target.style.outline = "none";

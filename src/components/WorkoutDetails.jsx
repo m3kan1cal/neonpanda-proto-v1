@@ -408,7 +408,7 @@ function WorkoutDetails() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title */}
             <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="workout-details-info"
               data-tooltip-content="View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics."
             >

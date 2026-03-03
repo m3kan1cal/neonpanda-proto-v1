@@ -39,7 +39,7 @@ export default function PhaseBreakdown({ program }) {
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Current Phase
         </h3>
       </div>
@@ -75,9 +75,9 @@ export default function PhaseBreakdown({ program }) {
 
           {/* Phase Stats */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {/* Days Remaining */}
-            <div className="col-span-2 flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-secondary">
+            {/* Days Remaining - full width */}
+            <div className="col-span-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-rajdhani text-sm">
+              <span className="text-synthwave-text-secondary shrink-0">
                 Days Remaining:
               </span>
               <span className="text-synthwave-neon-cyan font-medium">
@@ -87,18 +87,18 @@ export default function PhaseBreakdown({ program }) {
             </div>
 
             {/* Start Day */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-secondary">Start Day:</span>
+            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+              <span className="text-synthwave-text-secondary">Starts</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {currentPhase.startDay}
+                Day {currentPhase.startDay}
               </span>
             </div>
 
             {/* End Day */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-              <span className="text-synthwave-text-secondary">End Day:</span>
+            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+              <span className="text-synthwave-text-secondary">Ends</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {currentPhase.endDay}
+                Day {currentPhase.endDay}
               </span>
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function PhaseBreakdown({ program }) {
         <div className="mb-4">
           <button
             onClick={() => setIsPhaseStrategyExpanded(!isPhaseStrategyExpanded)}
-            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+            className={`${containerPatterns.collapsibleToggle} mb-2`}
           >
             <span>Phase Strategy</span>
             <svg
@@ -146,7 +146,7 @@ export default function PhaseBreakdown({ program }) {
         <div className="mb-4">
           <button
             onClick={() => setIsPhaseFocusExpanded(!isPhaseFocusExpanded)}
-            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+            className={`${containerPatterns.collapsibleToggle} mb-2`}
           >
             <span>Phase Focus</span>
             <svg

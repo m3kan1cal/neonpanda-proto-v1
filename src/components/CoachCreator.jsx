@@ -130,13 +130,13 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex flex-col mb-1 group animate-message-in ${
+        className={`flex flex-col mb-8 group animate-message-in ${
           message.type === "user" ? "items-end" : "items-start"
         }`}
       >
         {/* Message Content */}
         <div
-          className={`w-full md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {message.type === "user" ? (
             <div
@@ -154,7 +154,7 @@ const MessageItem = memo(
             <div
               className={getStreamingMessageClasses(message, agentState, "")}
             >
-              <div className="font-rajdhani text-base leading-relaxed text-synthwave-text-primary">
+              <div className="font-fira-code text-base leading-relaxed text-synthwave-text-secondary">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -675,20 +675,27 @@ function CoachCreator() {
                       key={i}
                       className={`flex flex-col mb-1 ${i % 2 === 0 ? "items-end" : "items-start"}`}
                     >
-                      {/* Message bubble skeleton */}
                       <div
-                        className={`w-full md:max-w-[80%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full md:max-w-[85%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
                       >
-                        <div
-                          className={`rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
-                        >
-                          <div className="space-y-1">
+                        {i % 2 === 0 ? (
+                          /* User message: keep bubble container */
+                          <div className="rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[100px]">
+                            <div className="space-y-1">
+                              <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
+                              <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
+                              <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-3/4"></div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* AI message: no bubble, text lines printed directly */
+                          <div className="space-y-2 py-1 min-w-[min(65vw,600px)] min-h-[130px]">
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-3/4"></div>
                           </div>
-                        </div>
+                        )}
 
                         {/* Avatar, timestamp, and status skeleton - all on same line below message */}
                         <div
@@ -742,7 +749,7 @@ function CoachCreator() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="coach-creator-info"
               data-tooltip-content="Create your personalized AI coach through an interactive conversation. Vesper will guide you through the process."
             >
@@ -774,7 +781,7 @@ function CoachCreator() {
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-4 custom-scrollbar"
+                className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-8 custom-scrollbar"
                 style={{
                   paddingBottom: "calc(var(--chat-input-height, 160px) + 16px)",
                 }}
@@ -871,7 +878,7 @@ function CoachCreator() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-russo text-base text-white uppercase tracking-wider">
+                  <h3 className="font-barlow text-base text-white uppercase tracking-wider">
                     Session Complete
                   </h3>
                   <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-0.5">

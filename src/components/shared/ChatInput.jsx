@@ -800,7 +800,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowQuickActionsPopup(!showQuickActionsPopup)}
-                className={`p-1 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
+                className={`p-1 rounded-md text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
                   showQuickActionsPopup ? "text-blue-400 bg-blue-400/20" : ""
                 }`}
                 data-tooltip-id="quick-actions-tooltip"
@@ -1046,7 +1046,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`absolute right-[8px] bottom-[7px] p-1 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+                className={`absolute right-[8px] bottom-[7px] p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                   showEmojiPicker
                     ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                     : ""
@@ -1290,7 +1290,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled={isTyping}
-                className="w-12 h-12 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
+                className="w-12 h-12 rounded-md bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
               >
                 {isTyping ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1307,7 +1307,7 @@ function ChatInput({
                 onTouchStart={handleStartRecording}
                 onTouchEnd={handleStopRecording}
                 disabled={isTyping}
-                className={`w-12 h-12 transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
+                className={`w-12 h-12 rounded-md transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
                   isRecording
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
@@ -1319,7 +1319,7 @@ function ChatInput({
               <button
                 type="submit"
                 disabled
-                className="w-12 h-12 bg-synthwave-bg-primary/30 text-synthwave-text-muted shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
+                className="w-12 h-12 rounded-md bg-synthwave-bg-primary/30 text-synthwave-text-muted shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
               >
                 <SendIcon />
               </button>
@@ -1359,7 +1359,7 @@ function ChatInput({
             <div className="bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-xl shadow-synthwave-neon-cyan/20 flex flex-col w-96 h-[480px]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 shrink-0">
-                <h3 className="font-russo font-bold text-white text-sm uppercase">
+                <h3 className="font-barlow font-bold text-white text-sm uppercase">
                   {tipsTitle}
                 </h3>
                 <button

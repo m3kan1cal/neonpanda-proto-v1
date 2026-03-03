@@ -8,6 +8,40 @@ import { parseJsonWithFallbacks } from "../response-utils";
 import { logger } from "../logger";
 
 /**
+ * Sanitizes a string array from model output, handling the case where Claude
+ * returns XML-formatted content (e.g. "<item>foo</item>\n<item>bar</item>")
+ * as a single array element instead of clean individual strings. Applies to
+ * all structured data array fields — not just conversation_tags.
+ */
+function parseXmlWrappedArray(raw: unknown[]): string[] {
+  const items: string[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== "string") continue;
+    if (entry.includes("<item>")) {
+      const matches = entry.match(/<item>(.*?)<\/item>/gs) ?? [];
+      for (const match of matches) {
+        const item = match.replace(/<\/?item>/g, "").trim();
+        if (item) items.push(item);
+      }
+    } else {
+      const item = entry.trim();
+      if (item) items.push(item);
+    }
+  }
+  return items;
+}
+
+const SUMMARY_ARRAY_FIELDS = [
+  "current_goals",
+  "recent_progress",
+  "training_preferences",
+  "schedule_constraints",
+  "key_insights",
+  "important_context",
+  "conversation_tags",
+] as const;
+
+/**
  * Build the prompt for coach conversation summarization
  */
 export function buildCoachConversationSummaryPrompt(
@@ -89,7 +123,7 @@ Merge all of these into a single comprehensive list:
 - Programming principles they referenced or responded positively to
 
 ### CONVERSATION TAGS
-Generate 2-5 descriptive tags:
+Generate 2-5 descriptive tags as a plain JSON array of strings — do NOT use XML <item> tags or any other markup:
 - **Format**: Lowercase with hyphens (e.g., "strength-training", "weekly-wods", "crossfit")
 - **Content**: Main topics, methodologies, or themes discussed
 - **Examples**: "strength-training", "cardio", "nutrition", "motivation", "injury-recovery", "crossfit", "powerlifting", "bodybuilding", "goal-setting", "progress-review", "technique-focus", "equipment-questions", "scheduling"
@@ -153,6 +187,11 @@ export function parseCoachConversationSummary(
       narrative = parsedData.narrative || "";
       structuredData = { ...parsedData };
       if (structuredData.narrative) delete structuredData.narrative;
+      for (const field of SUMMARY_ARRAY_FIELDS) {
+        if (Array.isArray(structuredData[field])) {
+          structuredData[field] = parseXmlWrappedArray(structuredData[field]);
+        }
+      }
     }
 
     logger.info("Parsed conversation data:", {
@@ -248,21 +287,27 @@ function migrateLegacyStructuredData(data: any): any {
   ].filter((v, i, arr) => v && arr.indexOf(v) === i); // deduplicate
 
   return {
-    current_goals: Array.isArray(data.current_goals) ? data.current_goals : [],
-    recent_progress: Array.isArray(data.recent_progress)
-      ? data.recent_progress
-      : [],
-    training_preferences: trainingPreferences,
-    schedule_constraints: Array.isArray(preferences.schedule_constraints)
-      ? preferences.schedule_constraints
-      : [],
-    key_insights: Array.isArray(data.key_insights) ? data.key_insights : [],
-    important_context: Array.isArray(data.important_context)
-      ? data.important_context
-      : [],
-    conversation_tags: Array.isArray(data.conversation_tags)
-      ? data.conversation_tags
-      : [],
+    current_goals: parseXmlWrappedArray(
+      Array.isArray(data.current_goals) ? data.current_goals : [],
+    ),
+    recent_progress: parseXmlWrappedArray(
+      Array.isArray(data.recent_progress) ? data.recent_progress : [],
+    ),
+    training_preferences: parseXmlWrappedArray(trainingPreferences),
+    schedule_constraints: parseXmlWrappedArray(
+      Array.isArray(preferences.schedule_constraints)
+        ? preferences.schedule_constraints
+        : [],
+    ),
+    key_insights: parseXmlWrappedArray(
+      Array.isArray(data.key_insights) ? data.key_insights : [],
+    ),
+    important_context: parseXmlWrappedArray(
+      Array.isArray(data.important_context) ? data.important_context : [],
+    ),
+    conversation_tags: parseXmlWrappedArray(
+      Array.isArray(data.conversation_tags) ? data.conversation_tags : [],
+    ),
   };
 }
 

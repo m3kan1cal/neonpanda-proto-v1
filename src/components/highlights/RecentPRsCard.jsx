@@ -113,7 +113,7 @@ export default function RecentPRsCard({
         <span className="text-synthwave-neon-pink shrink-0 mt-1.5">
           <TrophySolidIcon />
         </span>
-        <h3 className="font-russo font-bold text-white text-lg uppercase">
+        <h3 className="font-barlow font-bold text-white text-lg uppercase">
           Recent PRs
         </h3>
       </div>
@@ -144,7 +144,7 @@ export default function RecentPRsCard({
 
               {/* Hero number with unit */}
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="font-russo text-2xl text-white leading-none">
+                <span className="font-barlow text-2xl text-white leading-none">
                   {pr.newBest}
                 </span>
                 {unit && (

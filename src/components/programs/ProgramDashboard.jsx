@@ -259,7 +259,7 @@ export default function ProgramDashboard() {
             {/* Page Title */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="program-dashboard-info"
                 data-tooltip-content={`${program.name} - Day ${program.currentDay} of ${program.totalDays || program.duration}`}
               >
