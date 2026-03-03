@@ -1,29 +1,28 @@
 #!/usr/bin/env node
 
 /**
- * Audit XML Tags in Coach Conversation Records
+ * Audit XML Tags in DynamoDB Records
  *
- * Scans DynamoDB for coachConversation and conversationSummary records that contain
- * XML <item> markup (e.g. "<item>tag-one</item>") embedded in string fields. This
- * happens when Claude ignores the plain-array instruction for conversation_tags and
- * returns XML-wrapped strings instead of clean individual strings.
+ * Scans DynamoDB for records that contain any XML markup embedded in string
+ * fields (e.g. "<item>tag-one</item>", "<li>value</li>", "<bullet>...").
+ * By default scans all entity types; use --entity-types to restrict.
  *
- * Checked fields:
- *   - conversationSummary: attributes.structuredData.conversation_tags
- *   - coachConversation:   attributes.metadata.tags
- *   - Any other string array field found to contain <item> patterns (deep scan)
+ * This pattern occurs when an LLM ignores a plain-array instruction and returns
+ * XML-wrapped strings instead of clean individual strings. Detection covers any
+ * tag name, not just <item>, since models may use <li>, <bullet>, <point>, etc.
  *
  * Usage:
  *   node scripts/audit-xml-tags.js <userId> --table=<tableName>
  *   node scripts/audit-xml-tags.js --all-users --table=<tableName>
- *   node scripts/audit-xml-tags.js 63gocaz-j-AYRsb0094ik --table=NeonPanda-ProtoApi-AllItems-V2
+ *   node scripts/audit-xml-tags.js --all-users --entity-types=conversationSummary,coachConversation
  *
  * Options:
- *   --table=NAME      DynamoDB table name (required, or set DYNAMODB_TABLE_NAME env var)
- *   --region=REGION   AWS region (default: us-west-2)
- *   --all-users       Scan the entire table instead of a single user (slow for large tables)
- *   --verbose         Show the full offending field values
- *   --json            Output findings as JSON to stdout
+ *   --table=NAME              DynamoDB table name (required, or set DYNAMODB_TABLE_NAME env var)
+ *   --region=REGION           AWS region (default: us-west-2)
+ *   --all-users               Scan the entire table instead of a single user
+ *   --entity-types=T1,T2,...  Restrict audit to these entity types (default: all)
+ *   --verbose                 Show the full offending field values
+ *   --json                    Output findings as JSON to stdout
  */
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -34,11 +33,14 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 
 const DEFAULT_REGION = "us-west-2";
-const TARGET_ENTITY_TYPES = new Set([
-  "coachConversation",
-  "conversationSummary",
-]);
-const XML_ITEM_PATTERN = /<item>/;
+
+// Matches any XML opening tag, e.g. <item>, <li>, <bullet>, <point>, <entry>
+// Intentionally broad — covers any tag name an LLM might substitute for plain strings.
+const XML_TAG_PATTERN = /<[a-zA-Z][a-zA-Z0-9_-]*[\s>]/;
+
+// Tag names that are intentional placeholder values in the application, not LLM contamination.
+// e.g. programDesignerSession.todoList fields use "<UNKNOWN>" when a value hasn't been captured.
+const KNOWN_SAFE_TAG_NAMES = new Set(["UNKNOWN"]);
 
 // ---------------------------------------------------------------------------
 // Arg parsing
@@ -49,27 +51,29 @@ function parseArgs() {
 
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     console.info(`
-Audit XML Tags in Coach Conversation Records
+Audit XML Tags in DynamoDB Records
 
 Usage:
   node scripts/audit-xml-tags.js <userId> [options]
   node scripts/audit-xml-tags.js --all-users [options]
 
 Arguments:
-  userId          A single user ID to audit (required unless --all-users is set)
+  userId                    A single user ID to audit (required unless --all-users is set)
 
 Options:
-  --table=NAME    DynamoDB table name (required, or set DYNAMODB_TABLE_NAME env var)
-  --region=REGION AWS region (default: ${DEFAULT_REGION})
-  --all-users     Scan the entire table (may be slow for large tables)
-  --verbose       Print the full offending field value for each finding
-  --json          Output findings as JSON instead of human-readable text
-  --help, -h      Show this help message
+  --table=NAME              DynamoDB table name (required, or set DYNAMODB_TABLE_NAME env var)
+  --region=REGION           AWS region (default: ${DEFAULT_REGION})
+  --all-users               Scan the entire table (may be slow for large tables)
+  --entity-types=T1,T2,...  Comma-separated list of entity types to audit (default: all)
+  --verbose                 Print the full offending field value for each finding
+  --json                    Output findings as JSON instead of human-readable text
+  --help, -h                Show this help message
 
 Examples:
-  node scripts/audit-xml-tags.js 63gocaz-j-AYRsb0094ik --table=NeonPanda-ProtoApi-AllItems-V2
-  node scripts/audit-xml-tags.js --all-users --table=NeonPanda-ProtoApi-AllItems-V2 --verbose
-  node scripts/audit-xml-tags.js --all-users --table=NeonPanda-ProtoApi-AllItems-V2 --json
+  node scripts/audit-xml-tags.js 63gocaz-j-AYRsb0094ik
+  node scripts/audit-xml-tags.js --all-users --verbose
+  node scripts/audit-xml-tags.js --all-users --entity-types=conversationSummary,coachConversation
+  node scripts/audit-xml-tags.js --all-users --json > audit-results.json
     `);
     process.exit(0);
   }
@@ -79,6 +83,7 @@ Examples:
     tableName: process.env.DYNAMODB_TABLE_NAME || null,
     region: DEFAULT_REGION,
     allUsers: false,
+    entityTypes: null, // null = all entity types
     verbose: false,
     json: false,
   };
@@ -90,6 +95,13 @@ Examples:
       options.region = arg.split("=")[1];
     } else if (arg === "--all-users") {
       options.allUsers = true;
+    } else if (arg.startsWith("--entity-types=")) {
+      options.entityTypes = new Set(
+        arg
+          .split("=")[1]
+          .split(",")
+          .map((t) => t.trim()),
+      );
     } else if (arg === "--verbose") {
       options.verbose = true;
     } else if (arg === "--json") {
@@ -111,37 +123,33 @@ function getDynamoDBClient(region) {
 }
 
 /**
- * Query all coachConversation + conversationSummary records for a single user.
+ * Query all records for a single user (all entity types).
  */
-async function queryUserConversationRecords(docClient, tableName, userId) {
+async function queryUserRecords(docClient, tableName, userId) {
   const items = [];
-  const skPrefixes = ["coachConversation#", "conversation#"];
+  let lastEvaluatedKey = undefined;
 
-  for (const prefix of skPrefixes) {
-    let lastEvaluatedKey = undefined;
-    do {
-      const command = new QueryCommand({
-        TableName: tableName,
-        KeyConditionExpression: "pk = :pk AND begins_with(sk, :skPrefix)",
-        ExpressionAttributeValues: {
-          ":pk": `user#${userId}`,
-          ":skPrefix": prefix,
-        },
-        ExclusiveStartKey: lastEvaluatedKey,
-      });
-      const result = await docClient.send(command);
-      items.push(...(result.Items || []));
-      lastEvaluatedKey = result.LastEvaluatedKey;
-    } while (lastEvaluatedKey);
-  }
+  do {
+    const command = new QueryCommand({
+      TableName: tableName,
+      KeyConditionExpression: "pk = :pk",
+      ExpressionAttributeValues: {
+        ":pk": `user#${userId}`,
+      },
+      ExclusiveStartKey: lastEvaluatedKey,
+    });
+    const result = await docClient.send(command);
+    items.push(...(result.Items || []));
+    lastEvaluatedKey = result.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
 
   return items;
 }
 
 /**
- * Scan the entire table and return only coachConversation + conversationSummary items.
+ * Full table scan — returns all items regardless of entity type.
  */
-async function scanAllConversationRecords(docClient, tableName) {
+async function scanAllRecords(docClient, tableName) {
   const items = [];
   let lastEvaluatedKey = undefined;
   let scanned = 0;
@@ -151,11 +159,6 @@ async function scanAllConversationRecords(docClient, tableName) {
   do {
     const command = new ScanCommand({
       TableName: tableName,
-      FilterExpression: "entityType = :et1 OR entityType = :et2",
-      ExpressionAttributeValues: {
-        ":et1": "coachConversation",
-        ":et2": "conversationSummary",
-      },
       ExclusiveStartKey: lastEvaluatedKey,
     });
 
@@ -166,9 +169,7 @@ async function scanAllConversationRecords(docClient, tableName) {
     process.stderr.write(".");
   } while (lastEvaluatedKey);
 
-  process.stderr.write(
-    `\nScanned ${scanned} total items, found ${items.length} conversation records\n\n`,
-  );
+  process.stderr.write(`\nScanned ${scanned} total items\n\n`);
 
   return items;
 }
@@ -178,15 +179,24 @@ async function scanAllConversationRecords(docClient, tableName) {
 // ---------------------------------------------------------------------------
 
 /**
+ * Extract all unique XML tag names found in a string.
+ * e.g. "\n<item>foo</item>\n<item>bar</item>" → ["item"]
+ */
+function extractXmlTagNames(str) {
+  const matches = str.match(/<([a-zA-Z][a-zA-Z0-9_-]*)/g) ?? [];
+  return [...new Set(matches.map((m) => m.slice(1)))];
+}
+
+/**
  * Recursively walk an object/array and collect every string value that contains
- * an <item> tag. Returns an array of { path, value } findings.
+ * any XML tag. Returns an array of { path, value, tagNames } findings.
  */
 function findXmlTagsInValue(value, path = "") {
   const findings = [];
 
   if (typeof value === "string") {
-    if (XML_ITEM_PATTERN.test(value)) {
-      findings.push({ path, value });
+    if (XML_TAG_PATTERN.test(value)) {
+      findings.push({ path, value, tagNames: extractXmlTagNames(value) });
     }
   } else if (Array.isArray(value)) {
     value.forEach((element, index) => {
@@ -206,11 +216,10 @@ function findXmlTagsInValue(value, path = "") {
 /**
  * Inspect a single DynamoDB item and return a finding object if XML tags are present.
  */
-function inspectItem(item) {
+function inspectItem(item, entityTypeFilter) {
   const entityType = item.entityType || "unknown";
 
-  // Only audit targeted entity types
-  if (!TARGET_ENTITY_TYPES.has(entityType)) {
+  if (entityTypeFilter && !entityTypeFilter.has(entityType)) {
     return null;
   }
 
@@ -218,11 +227,18 @@ function inspectItem(item) {
   const sk = item.sk || "";
   const attributes = item.attributes || {};
 
-  const xmlFindings = findXmlTagsInValue(attributes, "attributes");
+  const rawFindings = findXmlTagsInValue(attributes, "attributes");
+
+  // Drop findings whose tag names are all known-safe placeholders (e.g. <UNKNOWN>)
+  const xmlFindings = rawFindings.filter((f) =>
+    f.tagNames.some((tag) => !KNOWN_SAFE_TAG_NAMES.has(tag)),
+  );
 
   if (xmlFindings.length === 0) {
     return null;
   }
+
+  const allTagNames = [...new Set(xmlFindings.flatMap((f) => f.tagNames))];
 
   return {
     userId,
@@ -230,8 +246,10 @@ function inspectItem(item) {
     sk,
     entityType,
     findingsCount: xmlFindings.length,
-    fields: xmlFindings.map(({ path, value }) => ({
+    tagNamesFound: allTagNames,
+    fields: xmlFindings.map(({ path, value, tagNames }) => ({
       path,
+      tagNames,
       preview: value.length > 120 ? value.substring(0, 120) + "..." : value,
       fullValue: value,
     })),
@@ -247,30 +265,40 @@ function printFinding(finding, verbose) {
   console.info(`  User:  ${finding.userId}`);
   console.info(`  SK:    ${finding.sk}`);
   console.info(`  Issues found: ${finding.findingsCount}`);
+  console.info(`  Tag names:    ${finding.tagNamesFound.join(", ")}`);
 
-  finding.fields.forEach(({ path, preview, fullValue }) => {
-    console.info(`\n    Field: ${path}`);
+  finding.fields.forEach(({ path, tagNames, preview, fullValue }) => {
+    console.info(`\n    Field:    ${path}`);
+    console.info(`    Tags:     <${tagNames.join(">, <")}>`);
     const display = verbose ? fullValue : preview;
-    console.info(`    Value: ${display}`);
+    console.info(`    Value:    ${display}`);
   });
 }
 
-function printReport(findings, options) {
+function printReport(findings, options, entityTypeCounts) {
   const totalRecordsAudited = options._totalAudited || 0;
+  const totalRecordsScanned = options._totalScanned || 0;
 
   if (options.json) {
     console.info(
       JSON.stringify(
         {
+          totalRecordsScanned,
           totalRecordsAudited,
           totalAffectedRecords: findings.length,
+          entityTypeBreakdown: entityTypeCounts,
           findings: findings.map((f) => ({
             userId: f.userId,
             pk: f.pk,
             sk: f.sk,
             entityType: f.entityType,
             findingsCount: f.findingsCount,
-            fields: f.fields.map(({ path, preview }) => ({ path, preview })),
+            tagNamesFound: f.tagNamesFound,
+            fields: f.fields.map(({ path, tagNames, preview }) => ({
+              path,
+              tagNames,
+              preview,
+            })),
           })),
         },
         null,
@@ -284,24 +312,60 @@ function printReport(findings, options) {
   console.info("  XML TAG AUDIT RESULTS");
   console.info("========================================\n");
 
+  console.info(`Records scanned:        ${totalRecordsScanned}`);
   console.info(`Records audited:        ${totalRecordsAudited}`);
   console.info(`Records with XML tags:  ${findings.length}`);
+
+  // Always show entity type breakdown so we know what was covered
+  if (Object.keys(entityTypeCounts).length > 0) {
+    console.info("\nEntity types audited:");
+    const sorted = Object.entries(entityTypeCounts).sort(
+      ([, a], [, b]) => b - a,
+    );
+    for (const [type, count] of sorted) {
+      const affectedCount = findings.filter(
+        (f) => f.entityType === type,
+      ).length;
+      const marker =
+        affectedCount > 0 ? ` ⚠️  (${affectedCount} affected)` : " ✅";
+      console.info(`  ${type}: ${count} record(s)${marker}`);
+    }
+  }
 
   if (findings.length === 0) {
     console.info("\n✅ No XML-tagged fields found. All records are clean.\n");
     return;
   }
 
-  // Group by entityType for summary
-  const byType = findings.reduce((acc, f) => {
-    acc[f.entityType] = (acc[f.entityType] || 0) + 1;
-    return acc;
-  }, {});
+  // Show which XML tag names were found across all records
+  const tagFrequency = findings
+    .flatMap((f) => f.tagNamesFound)
+    .reduce((acc, tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {});
 
-  console.info("\nBreakdown by entity type:");
-  for (const [type, count] of Object.entries(byType)) {
-    console.info(`  ${type}: ${count} record(s)`);
-  }
+  console.info("\nXML tag names found:");
+  Object.entries(tagFrequency)
+    .sort(([, a], [, b]) => b - a)
+    .forEach(([tag, count]) => {
+      console.info(`  <${tag}>: ${count} record(s)`);
+    });
+
+  // Show which fields are most commonly affected
+  const fieldFrequency = findings
+    .flatMap((f) => f.fields.map(({ path }) => path))
+    .reduce((acc, path) => {
+      acc[path] = (acc[path] || 0) + 1;
+      return acc;
+    }, {});
+
+  console.info("\nMost affected fields:");
+  Object.entries(fieldFrequency)
+    .sort(([, a], [, b]) => b - a)
+    .forEach(([path, count]) => {
+      console.info(`  ${path}: ${count} occurrence(s)`);
+    });
 
   console.info("\n----------------------------------------");
   console.info("  AFFECTED RECORDS");
@@ -313,26 +377,9 @@ function printReport(findings, options) {
   console.info("  NEXT STEPS");
   console.info("========================================\n");
 
-  console.info("The fix has already been deployed to new records via the");
+  console.info("Re-run with --verbose to see the full field values.");
   console.info(
-    "parseConversationTags() call now wired into the v2 parse path.",
-  );
-  console.info("");
-  console.info(
-    "For the affected records above, the structuredData.conversation_tags",
-  );
-  console.info("field needs to be re-parsed and re-saved. Options:");
-  console.info(
-    "  1. Re-run the build-conversation-summary Lambda for each conversation",
-  );
-  console.info("     to regenerate the summary with clean tags.");
-  console.info(
-    "  2. Write a targeted repair script that reads each affected record,",
-  );
-  console.info("     strips the <item> markup inline, and writes it back.");
-  console.info("");
-  console.info(
-    "Re-run with --verbose to see the full field values for each record.\n",
+    "Re-run with --json to get machine-readable output for further analysis.\n",
   );
 }
 
@@ -345,9 +392,7 @@ async function main() {
 
   if (!options.userId && !options.allUsers) {
     console.error("❌ Error: provide a userId or --all-users");
-    console.error(
-      "   Usage: node scripts/audit-xml-tags.js <userId> --table=<tableName>",
-    );
+    console.error("   Usage: node scripts/audit-xml-tags.js <userId>");
     process.exit(1);
   }
 
@@ -361,16 +406,19 @@ async function main() {
 
   if (!options.json) {
     console.info("\n========================================");
-    console.info("  XML TAG AUDIT — COACH CONVERSATIONS");
+    console.info("  XML TAG AUDIT");
     console.info("========================================\n");
 
     console.info("Configuration:");
-    console.info(`  Table:   ${options.tableName}`);
-    console.info(`  Region:  ${options.region}`);
+    console.info(`  Table:         ${options.tableName}`);
+    console.info(`  Region:        ${options.region}`);
     console.info(
-      `  Scope:   ${options.allUsers ? "all users (full table scan)" : `user ${options.userId}`}`,
+      `  Scope:         ${options.allUsers ? "all users (full table scan)" : `user ${options.userId}`}`,
     );
-    console.info(`  Verbose: ${options.verbose}`);
+    console.info(
+      `  Entity types:  ${options.entityTypes ? [...options.entityTypes].join(", ") : "all"}`,
+    );
+    console.info(`  Verbose:       ${options.verbose}`);
     console.info("");
   }
 
@@ -378,35 +426,48 @@ async function main() {
 
   let items;
   if (options.allUsers) {
-    items = await scanAllConversationRecords(docClient, options.tableName);
+    items = await scanAllRecords(docClient, options.tableName);
   } else {
     if (!options.json) {
-      console.info(`Querying records for user: ${options.userId}...`);
+      console.info(`Querying all records for user: ${options.userId}...`);
     }
-    items = await queryUserConversationRecords(
+    items = await queryUserRecords(
       docClient,
       options.tableName,
       options.userId,
     );
     if (!options.json) {
-      console.info(`Found ${items.length} conversation records\n`);
+      console.info(`Found ${items.length} records\n`);
     }
   }
 
-  // Filter to targeted entity types and inspect each
-  const targeted = items.filter((item) =>
-    TARGET_ENTITY_TYPES.has(item.entityType),
-  );
+  options._totalScanned = items.length;
+
+  // Count records per entity type (before filtering) for the breakdown
+  const entityTypeCounts = items.reduce((acc, item) => {
+    const et = item.entityType || "unknown";
+    if (!options.entityTypes || options.entityTypes.has(et)) {
+      acc[et] = (acc[et] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  // Apply entity type filter if specified
+  const targeted = options.entityTypes
+    ? items.filter((item) =>
+        options.entityTypes.has(item.entityType || "unknown"),
+      )
+    : items;
+
+  options._totalAudited = targeted.length;
 
   const findings = targeted.reduce((acc, item) => {
-    const finding = inspectItem(item);
+    const finding = inspectItem(item, options.entityTypes);
     if (finding) acc.push(finding);
     return acc;
   }, []);
 
-  options._totalAudited = targeted.length;
-
-  printReport(findings, options);
+  printReport(findings, options, entityTypeCounts);
 }
 
 main().catch((error) => {

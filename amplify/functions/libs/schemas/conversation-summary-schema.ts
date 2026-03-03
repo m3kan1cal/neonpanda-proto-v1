@@ -40,36 +40,38 @@ export const CONVERSATION_SUMMARY_SCHEMA = {
     current_goals: {
       type: "array",
       items: { type: "string" },
-      description: "Specific, actionable goals the user is working towards",
+      description:
+        "Specific, actionable goals the user is working towards. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
     },
     recent_progress: {
       type: "array",
       items: { type: "string" },
-      description: "Recent progress updates, achievements, and milestones",
+      description:
+        "Recent progress updates, achievements, and milestones. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
     },
     training_preferences: {
       type: "array",
       items: { type: "string" },
       description:
-        "Training preferences, methodology names, preferred approaches, and programming principles. Merge training style preferences (e.g., 'prefers compound movements'), methodology names (e.g., 'uses 5/3/1 programming'), and approach preferences (e.g., 'responds well to linear progression') into this single list for comprehensive semantic searchability",
+        "Training preferences, methodology names, preferred approaches, and programming principles. Merge training style preferences (e.g., 'prefers compound movements'), methodology names (e.g., 'uses 5/3/1 programming'), and approach preferences (e.g., 'responds well to linear progression') into this single list for comprehensive semantic searchability. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
     },
     schedule_constraints: {
       type: "array",
       items: { type: "string" },
       description:
-        "Schedule limitations, time constraints, and availability patterns",
+        "Schedule limitations, time constraints, and availability patterns. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
     },
     key_insights: {
       type: "array",
       items: { type: "string" },
       description:
-        "Important insights about the user's training, mindset, or behavior patterns",
+        "Important insights about the user's training, mindset, or behavior patterns. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
     },
     important_context: {
       type: "array",
       items: { type: "string" },
       description:
-        "Critical context items (personal circumstances, injuries, equipment, life events)",
+        "Critical context items (personal circumstances, injuries, equipment, life events). Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
     },
     conversation_tags: {
       type: "array",
@@ -95,4 +97,4 @@ export const CONVERSATION_SUMMARY_TOOL: BedrockToolConfig = {
  * Schema version information
  */
 export const SCHEMA_VERSION = "2.0";
-export const SCHEMA_LAST_UPDATED = "2026-02-11";
+export const SCHEMA_LAST_UPDATED = "2026-03-03";
