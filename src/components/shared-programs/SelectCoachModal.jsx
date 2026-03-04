@@ -74,7 +74,7 @@ function SelectCoachModal({
             <h3 className={`${typographyPatterns.cardTitle} mb-2`}>
               Select a Coach
             </h3>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm">
+            <p className="font-body text-synthwave-text-secondary text-sm">
               Choose which coach should manage "{programName}". Your coach will
               adapt the program to your fitness level, personalize the workouts,
               and guide you through each session.
@@ -85,7 +85,7 @@ function SelectCoachModal({
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-8">
               <div className="w-12 h-12 border-4 border-synthwave-neon-cyan/20 border-t-synthwave-neon-cyan rounded-full animate-spin mb-4"></div>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Copying program...
               </p>
             </div>
@@ -110,11 +110,11 @@ function SelectCoachModal({
 
                     {/* Coach Info - font styles match CoachHeader.jsx */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-rajdhani font-semibold text-white text-lg truncate group-hover:text-synthwave-neon-cyan transition-colors">
+                      <h4 className="font-body font-semibold text-white text-lg truncate group-hover:text-synthwave-neon-cyan transition-colors">
                         {coach.coach_name || "Unnamed Coach"}
                       </h4>
                       {coach.coach_description && (
-                        <p className="text-sm text-synthwave-text-secondary font-rajdhani truncate">
+                        <p className="text-sm text-synthwave-text-secondary font-body truncate">
                           {coach.coach_description}
                         </p>
                       )}

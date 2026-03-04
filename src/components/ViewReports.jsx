@@ -399,20 +399,20 @@ function ViewReports() {
         {/* Header with purple dot */}
         <div className="flex items-start gap-3 mb-2">
           <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             {formattedMonth}
           </h3>
         </div>
 
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-3 mb-3">
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Period:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               Monthly Report
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Confidence:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
@@ -422,7 +422,7 @@ function ViewReports() {
                   : "Low"}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Generated:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {createdAt}
@@ -435,7 +435,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleMonthlySummaryCollapse(report.monthId)}
-              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
+              className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
             >
               <span>Report Summary</span>
               <svg
@@ -458,7 +458,7 @@ function ViewReports() {
               <div className="rounded-md bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
-                  className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
+                  className="font-body text-synthwave-text-secondary text-sm leading-relaxed"
                 />
               </div>
             )}
@@ -484,7 +484,7 @@ function ViewReports() {
             {dataCompleteness}% complete
           </span>
           {workoutCount >= 4 && (
-            <span className="bg-green-500/20 text-green-400 px-2 py-1 text-xs font-rajdhani font-medium">
+            <span className="bg-green-500/20 text-green-400 px-2 py-1 text-xs font-body font-medium">
               ✓ Qualified
             </span>
           )}
@@ -568,20 +568,20 @@ function ViewReports() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2">
           <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Weekly Report: Week {report.weekId}
           </h3>
         </div>
 
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-3 mb-3">
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Period:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {weekStart} - {weekEnd}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Confidence:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
@@ -591,7 +591,7 @@ function ViewReports() {
                   : "Low"}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Generated:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {createdAt}
@@ -604,7 +604,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleWeeklySummaryCollapse(report.weekId)}
-              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
+              className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
             >
               <span>Report Summary</span>
               <svg
@@ -627,7 +627,7 @@ function ViewReports() {
               <div className="rounded-md bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
-                  className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed"
+                  className="font-body text-synthwave-text-secondary text-sm leading-relaxed"
                 />
               </div>
             )}
@@ -865,7 +865,7 @@ function ViewReports() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="reports-info"
                 data-tooltip-content="Comprehensive weekly analytics and insights from your training journey. Review performance trends and coaching analysis."
               >
@@ -1100,10 +1100,10 @@ function ViewReports() {
             activeTab === "weekly" &&
             reportAgentState.allReports.length === 0 && (
               <div className="text-center py-12">
-                <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+                <div className="font-body text-synthwave-neon-cyan text-base">
                   No Weekly Reports Found
                 </div>
-                <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+                <div className="font-body text-synthwave-text-muted text-sm mt-2">
                   Weekly reports are generated automatically when you complete
                   2+ workouts in a week.
                 </div>
@@ -1117,10 +1117,10 @@ function ViewReports() {
             activeTab === "monthly" &&
             reportAgentState.allMonthlyReports.length === 0 && (
               <div className="text-center py-12">
-                <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+                <div className="font-body text-synthwave-neon-cyan text-base">
                   No Monthly Reports Found
                 </div>
-                <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+                <div className="font-body text-synthwave-text-muted text-sm mt-2">
                   Monthly reports are generated automatically when you complete
                   4+ workouts in a month.
                 </div>

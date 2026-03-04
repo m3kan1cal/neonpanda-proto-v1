@@ -844,14 +844,14 @@ General thoughts: `;
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             <div className="flex items-center gap-3">
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="workouts-info"
                 data-tooltip-content={tooltipContent}
               >
                 {pageTitle}
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -890,7 +890,7 @@ General thoughts: `;
                   `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
                 )
               }
-              className="font-rajdhani text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer"
+              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer"
               data-tooltip-id="program-name-link"
               data-tooltip-content="View training program"
             >
@@ -923,7 +923,7 @@ General thoughts: `;
               )}
           </div>
           <div className="flex items-center gap-4 text-sm pb-1">
-            <div className="font-rajdhani text-synthwave-text-secondary">
+            <div className="font-body text-synthwave-text-secondary">
               {phaseNumber ? (
                 <>
                   <span className="text-synthwave-text-muted">
@@ -938,17 +938,17 @@ General thoughts: `;
                 </>
               )}
             </div>
-            <div className="font-rajdhani text-synthwave-text-muted">
+            <div className="font-body text-synthwave-text-muted">
               Day {workoutDayNumber} of {program.totalDays}
             </div>
             {!isRestDay && (
-              <span className="font-rajdhani text-synthwave-neon-cyan">
+              <span className="font-body text-synthwave-neon-cyan">
                 {templates.length} Workout{templates.length > 1 ? "s" : ""}{" "}
                 Scheduled
               </span>
             )}
             {isRestDay && (
-              <div className="font-rajdhani text-synthwave-neon-cyan">
+              <div className="font-body text-synthwave-neon-cyan">
                 Rest Day
               </div>
             )}
@@ -964,7 +964,7 @@ General thoughts: `;
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-barlow text-white text-xl font-bold uppercase">
+                    <h3 className="font-header text-white text-xl font-bold uppercase">
                       Rest & Recovery Day
                     </h3>
                     <span className={`${badgePatterns.cyan} uppercase`}>
@@ -972,7 +972,7 @@ General thoughts: `;
                     </span>
                   </div>
                   <div className="flex items-center flex-wrap gap-4">
-                    <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                    <div className="flex items-center gap-1.5 font-body text-sm">
                       <span className="text-synthwave-text-muted">Type:</span>
                       <span className="text-synthwave-neon-cyan font-medium capitalize">
                         Recovery
@@ -1001,7 +1001,7 @@ General thoughts: `;
               <div
                 className={`${containerPatterns.workoutDescriptionEditable} text-sm mb-4`}
               >
-                <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                <p className="font-body text-sm text-synthwave-text-secondary">
                   No workouts scheduled for{" "}
                   {isViewingToday ? "today" : `day ${dayParam}`}. Take this time
                   to focus on recovery, mobility work, light stretching, or
@@ -1012,10 +1012,10 @@ General thoughts: `;
 
               {/* Coach Notes - Enhanced Glassmorphism */}
               <div className={`${containerPatterns.coachNotesSection} mb-4`}>
-                <div className="font-rajdhani text-sm text-synthwave-neon-cyan uppercase font-semibold mb-2">
+                <div className="font-body text-sm text-synthwave-neon-cyan uppercase font-semibold mb-2">
                   Recovery Tips
                 </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                <div className="font-body text-sm text-synthwave-text-secondary">
                   Consider foam rolling, stretching, a light walk, or yoga. Stay
                   hydrated and get quality sleep. Listen to your body and enjoy
                   the recovery!
@@ -1078,7 +1078,7 @@ General thoughts: `;
                     <div className="flex-1">
                       <div className="flex items-start gap-3 mb-2">
                         <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-                        <h3 className="font-barlow text-lg font-bold uppercase text-white">
+                        <h3 className="font-header text-lg font-bold uppercase text-white">
                           {template.name}
                         </h3>
                         {/* Difficulty Badge - always show if available */}
@@ -1111,7 +1111,7 @@ General thoughts: `;
 
                       <div className="flex items-center flex-wrap gap-4">
                         {template.estimatedDuration && (
-                          <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                          <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
                             <svg
                               className="w-4 h-4 shrink-0"
                               fill="none"
@@ -1129,7 +1129,7 @@ General thoughts: `;
                           </div>
                         )}
                         {(template.timeCap || true) && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-muted">
                               Time Cap:
                             </span>
@@ -1143,7 +1143,7 @@ General thoughts: `;
                         {(template.restAfter ||
                           template.restAfter === 0 ||
                           true) && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-muted">
                               Rest After:
                             </span>
@@ -1155,7 +1155,7 @@ General thoughts: `;
                           </div>
                         )}
                         {template.type && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-muted">
                               Type:
                             </span>
@@ -1165,7 +1165,7 @@ General thoughts: `;
                           </div>
                         )}
                         {template.scoringType && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-muted">
                               Scoring:
                             </span>
@@ -1202,7 +1202,7 @@ General thoughts: `;
                       {/* Prescribed Workout - Read-only */}
                       {template.description && (
                         <div className="mb-4">
-                          <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                             Prescribed Workout
                           </h4>
                           <div
@@ -1219,7 +1219,7 @@ General thoughts: `;
                           id={`workout-form-${template.templateId}`}
                           className="mb-4 animate-slideDown"
                         >
-                          <h4 className="font-rajdhani text-sm text-synthwave-neon-pink uppercase font-semibold mb-2">
+                          <h4 className="font-body text-sm text-synthwave-neon-pink uppercase font-semibold mb-2">
                             What You Did
                           </h4>
                           <TiptapEditor
@@ -1326,11 +1326,11 @@ General thoughts: `;
                       {/* Coach Notes */}
                       {template.notes && (
                         <div className="mb-4">
-                          <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                             Coach Notes
                           </h4>
                           <div className={containerPatterns.coachNotesSection}>
-                            <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                            <div className="font-body text-sm text-synthwave-text-secondary">
                               {template.notes}
                             </div>
                           </div>
@@ -1342,7 +1342,7 @@ General thoughts: `;
                         {template.equipment &&
                           template.equipment.length > 0 && (
                             <div>
-                              <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                                 Equipment Needed
                               </div>
                               <div className="flex flex-wrap gap-2">
@@ -1388,7 +1388,7 @@ General thoughts: `;
                         {template.prescribedExercises &&
                           template.prescribedExercises.length > 0 && (
                             <div>
-                              <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                                 Prescribed Exercises
                               </div>
                               <div className="flex flex-wrap gap-2">
@@ -1437,7 +1437,7 @@ General thoughts: `;
                         {template.metadata?.focusAreas &&
                           template.metadata.focusAreas.length > 0 && (
                             <div>
-                              <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                                 Focus Areas
                               </div>
                               <div className="flex flex-wrap gap-2">

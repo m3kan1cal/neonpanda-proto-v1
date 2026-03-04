@@ -58,7 +58,7 @@ export default function CalendarDayCell({
   // Status-based styling
   const getStatusStyles = () => {
     const baseStyles =
-      "relative flex flex-col h-20 rounded-md transition-all duration-200 overflow-hidden font-rajdhani border border-synthwave-neon-cyan/10";
+      "relative flex flex-col h-20 rounded-md transition-all duration-200 overflow-hidden font-body border border-synthwave-neon-cyan/10";
 
     switch (status) {
       case "completed":

@@ -213,7 +213,7 @@ function LandingPage() {
         <div className="relative z-10 max-w-7xl mx-auto w-full">
           <div className="w-full">
             {/* Main Headline */}
-            <h1 className="font-inter font-bold text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white mb-8 drop-shadow-lg leading-tight text-left">
+            <h1 className="font-body font-bold text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white mb-8 drop-shadow-lg leading-tight text-left">
               Your fitness coach,{" "}
               <span className="text-synthwave-neon-pink">electrified</span>
             </h1>
@@ -249,11 +249,11 @@ function LandingPage() {
       >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
+            <h2 className="font-body font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
               Your reality vs. Your{" "}
               <span className="text-synthwave-neon-pink">AI Coach</span>
             </h2>
-            <p className="font-rajdhani text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
+            <p className="font-body text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
               See how the NeonPanda platform transforms everyday fitness
               frustrations into seamless coaching experiences
             </p>
@@ -279,22 +279,22 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-cyan text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your Reality
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         The Expensive Coach Dilemma
                       </h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
-                    <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed mb-2">
+                    <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "$150/session with my trainer who cancels last minute,
                       doesn't remember I can't do overhead movements due to my
                       shoulder injury, and gives me the same cookie-cutter
                       program as everyone else..."
                     </p>
-                    <p className="text-synthwave-neon-cyan/80 text-sm font-rajdhani">
+                    <p className="text-synthwave-neon-cyan/80 text-sm font-body">
                       — Equinox member, New York
                     </p>
                   </div>
@@ -321,15 +321,15 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-pink text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your AI Coach
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         24/7 Personalized Coaching
                       </h3>
                     </div>
                   </div>
-                  <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
+                  <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
                     Your AI coach remembers every detail about your fitness
                     goals, injury history, and training preferences. Never
                     cancels, always available for workout questions, form
@@ -337,7 +337,7 @@ function LandingPage() {
                     personal training.
                   </p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -351,7 +351,7 @@ function LandingPage() {
                       </svg>
                       Personalized workout programming & periodization
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -365,7 +365,7 @@ function LandingPage() {
                       </svg>
                       24/7 availability for form checks & training questions
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -403,22 +403,22 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-cyan text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your Reality
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Workout Logging Hell
                       </h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
-                    <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed mb-2">
+                    <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "Spent 15 minutes trying to log a simple CrossFit WOD...
                       endless dropdowns, can't find 'Fran', have to manually
                       enter every movement. The logging took longer than the
                       actual workout!"
                     </p>
-                    <p className="text-synthwave-neon-cyan/80 text-sm font-rajdhani">
+                    <p className="text-synthwave-neon-cyan/80 text-sm font-body">
                       — CrossFit athlete, Austin
                     </p>
                   </div>
@@ -445,22 +445,22 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-pink text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your AI Coach
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Natural Language Logging
                       </h3>
                     </div>
                   </div>
-                  <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
+                  <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
                     Log workouts by just telling your coach what you did—your
                     way. No forms, no dropdowns, no searching for exercises.
                     Whether it's "Did Fran in 8:45" or "Hit 315x5 on squats,
                     felt solid"—your coach understands and tracks everything.
                   </p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -474,7 +474,7 @@ function LandingPage() {
                       </svg>
                       Automatic workout analysis & progress tracking
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -488,7 +488,7 @@ function LandingPage() {
                       </svg>
                       Works for CrossFit WODs, strength training, cardio, & more
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -532,22 +532,22 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-cyan text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your Reality
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Data Scattered Everywhere
                       </h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
-                    <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed mb-2">
+                    <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "My workouts are in one app, nutrition notes in another,
                       progress pics scattered across my photo roll, and coach
                       conversations buried in email threads. I can't see the
                       full picture of my fitness journey..."
                     </p>
-                    <p className="text-synthwave-neon-cyan/80 text-sm font-rajdhani">
+                    <p className="text-synthwave-neon-cyan/80 text-sm font-body">
                       — Powerlifter, Denver
                     </p>
                   </div>
@@ -574,15 +574,15 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-pink text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your AI Coach
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Your Training Grounds Hub
                       </h3>
                     </div>
                   </div>
-                  <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
+                  <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
                     Your complete fitness dashboard. Workout history, training
                     analytics, performance trends, coach conversations, and
                     progress reports—all organized in one place. See your
@@ -590,7 +590,7 @@ function LandingPage() {
                     latest achievements.
                   </p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -604,7 +604,7 @@ function LandingPage() {
                       </svg>
                       Complete workout history & performance analytics
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -618,7 +618,7 @@ function LandingPage() {
                       </svg>
                       Weekly & monthly training insights reports
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -656,23 +656,23 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-cyan text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your Reality
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         One-Size-Fits-Nobody
                       </h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
-                    <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed mb-2">
+                    <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "Whether I'm learning basic movements or training for
                       competitions, this app gives me the same generic workouts
                       as everyone else. I need programming that meets me where I
                       am—beginner fundamentals or competition prep—not
                       one-size-fits-nobody routines..."
                     </p>
-                    <p className="text-synthwave-neon-cyan/80 text-sm font-rajdhani">
+                    <p className="text-synthwave-neon-cyan/80 text-sm font-body">
                       — HYROX competitor, Seattle
                     </p>
                   </div>
@@ -693,15 +693,15 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-pink text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your AI Coach
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Purpose-Built for Your Sport
                       </h3>
                     </div>
                   </div>
-                  <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
+                  <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
                     Create AI coaches built specifically for CrossFit,
                     powerlifting, HYROX, running, or general fitness. Whether
                     you're learning fundamental movements or preparing for
@@ -709,7 +709,7 @@ function LandingPage() {
                     current level and goals.
                   </p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -723,7 +723,7 @@ function LandingPage() {
                       </svg>
                       Programming for beginners to elite-level athletes
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -737,7 +737,7 @@ function LandingPage() {
                       </svg>
                       Sport-specific methodology & periodization
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -781,16 +781,16 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-cyan text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your Reality
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Cookie-Cutter Programming Chaos
                       </h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
-                    <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed mb-2">
+                    <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "My app gives me the same mass-market workouts as
                       thousands of other people. Heavy squats Monday, more
                       squats Tuesday, then suddenly cardio for a week. There's
@@ -798,7 +798,7 @@ function LandingPage() {
                       chaos that doesn't account for MY goals or MY
                       equipment..."
                     </p>
-                    <p className="text-synthwave-neon-cyan/80 text-sm font-rajdhani">
+                    <p className="text-synthwave-neon-cyan/80 text-sm font-body">
                       — Fitness app subscriber, Los Angeles
                     </p>
                   </div>
@@ -825,15 +825,15 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-pink text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your AI Coach
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Intelligent Programming That Makes Sense
                       </h3>
                     </div>
                   </div>
-                  <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
+                  <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
                     Get intelligent workout programming designed around your
                     specific fitness goals, available equipment, training
                     schedule, and current abilities. Every session builds
@@ -841,7 +841,7 @@ function LandingPage() {
                     peaking for competitions.
                   </p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -855,7 +855,7 @@ function LandingPage() {
                       </svg>
                       Structured periodization with progressive overload
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -869,7 +869,7 @@ function LandingPage() {
                       </svg>
                       Adapts to your equipment, schedule, & recovery needs
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -913,22 +913,22 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-cyan text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your Reality
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Programs That Never Evolve
                       </h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
-                    <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed mb-2">
+                    <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "I've been crushing these weights for months but my
                       program never adjusts. I'm hitting PRs left and right, but
                       still getting beginner programming. Meanwhile, when I'm
                       struggling, it never scales back..."
                     </p>
-                    <p className="text-synthwave-neon-cyan/80 text-sm font-rajdhani">
+                    <p className="text-synthwave-neon-cyan/80 text-sm font-body">
                       — Bodybuilder, Miami
                     </p>
                   </div>
@@ -955,15 +955,15 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-pink text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your AI Coach
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Smart Progress Tracking & Adaptation
                       </h3>
                     </div>
                   </div>
-                  <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
+                  <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
                     Your coach analyzes every workout, tracks your performance
                     trends, and adapts your training automatically. Hitting
                     strength milestones? Your programming progresses. Showing
@@ -971,7 +971,7 @@ function LandingPage() {
                     coaching that evolves with your fitness journey.
                   </p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -985,7 +985,7 @@ function LandingPage() {
                       </svg>
                       Tracks performance trends & strength progressions
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -999,7 +999,7 @@ function LandingPage() {
                       </svg>
                       Adjusts training based on recovery & fatigue signals
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -1037,22 +1037,22 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-cyan text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your Reality
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         Limited to One Training Style
                       </h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
-                    <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed mb-2">
+                    <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "My fitness app only works for bodybuilding splits. I want
                       to train for a HYROX race, improve my Olympic lifts, and
                       work on powerlifting too, but I'd need three different
                       apps with three different subscriptions..."
                     </p>
-                    <p className="text-synthwave-neon-cyan/80 text-sm font-rajdhani">
+                    <p className="text-synthwave-neon-cyan/80 text-sm font-body">
                       — Multi-discipline athlete, Chicago
                     </p>
                   </div>
@@ -1079,15 +1079,15 @@ function LandingPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">
+                      <p className="text-synthwave-neon-pink text-sm font-body font-semibold uppercase tracking-wider mb-1">
                         Your AI Coach
                       </p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">
+                      <h3 className="text-white text-xl font-body font-bold mb-3">
                         10 Disciplines. One Platform.
                       </h3>
                     </div>
                   </div>
-                  <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
+                  <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
                     Train across 10 supported disciplines with one platform and
                     one coach—CrossFit, Powerlifting, Olympic Weightlifting,
                     Bodybuilding, Running, HYROX, Calisthenics, Functional
@@ -1096,7 +1096,7 @@ function LandingPage() {
                     disciplines as your goals evolve.
                   </p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -1110,7 +1110,7 @@ function LandingPage() {
                       </svg>
                       Purpose-built programming for each discipline
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -1124,7 +1124,7 @@ function LandingPage() {
                       </svg>
                       Switch disciplines or create multiple coaches
                     </li>
-                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
+                    <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -1145,7 +1145,7 @@ function LandingPage() {
           </div>
 
           <div className="text-center mt-16">
-            <p className="font-rajdhani text-2xl text-white/90 italic mb-8">
+            <p className="font-body text-2xl text-white/90 italic mb-8">
               Ready to transform your fitness frustrations into seamless
               coaching?
             </p>
@@ -1168,12 +1168,12 @@ function LandingPage() {
 
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-32">
-            <h2 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
+            <h2 className="font-body font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
               Real{" "}
               <span className="text-synthwave-neon-pink">fitness coaching</span>{" "}
               that drives real results
             </h2>
-            <p className="font-rajdhani text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
+            <p className="font-body text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
               We're not just building AI coaches – we're creating relationships
               that transform lives, one workout and one conversation at a time.
             </p>
@@ -1201,7 +1201,7 @@ function LandingPage() {
                 {/* Content */}
                 <div className="flex-1">
                   <h3
-                    className={`font-inter font-bold text-3xl md:text-4xl lg:text-5xl mb-4 ${colors.text}`}
+                    className={`font-body font-bold text-3xl md:text-4xl lg:text-5xl mb-4 ${colors.text}`}
                   >
                     {feature.heading}
                   </h3>
@@ -1252,10 +1252,10 @@ function LandingPage() {
 
         <div className="max-w-5xl mx-auto relative z-10">
           <div className="text-center mb-16">
-            <h2 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
+            <h2 className="font-body font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
               Your coaching journey
             </h2>
-            <p className="font-rajdhani text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
+            <p className="font-body text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
               From your first conversation to a coach that truly knows you
             </p>
           </div>
@@ -1315,7 +1315,7 @@ function LandingPage() {
                   }`}
                 >
                   <span
-                    className={`font-inter font-bold text-sm uppercase tracking-wider ${
+                    className={`font-body font-bold text-sm uppercase tracking-wider ${
                       item.color === "pink"
                         ? "text-synthwave-neon-pink"
                         : "text-synthwave-neon-cyan"
@@ -1327,7 +1327,7 @@ function LandingPage() {
 
                 {/* Step Title */}
                 <h3
-                  className={`font-inter font-bold text-xl md:text-2xl mb-3 ${
+                  className={`font-body font-bold text-xl md:text-2xl mb-3 ${
                     item.color === "pink"
                       ? "text-synthwave-neon-pink"
                       : "text-synthwave-neon-cyan"
@@ -1355,7 +1355,7 @@ function LandingPage() {
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/20 via-black/10 to-transparent pointer-events-none"></div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-8">
+          <h2 className="font-body font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-8">
             Ready to train{" "}
             <span className="text-synthwave-neon-pink">electric</span>?
           </h2>
@@ -1378,7 +1378,7 @@ function LandingPage() {
           </div>
 
           {/* Launch Info */}
-          <div className="flex flex-col sm:flex-row gap-8 justify-center items-center text-sm font-rajdhani text-synthwave-text-secondary mt-8">
+          <div className="flex flex-col sm:flex-row gap-8 justify-center items-center text-sm font-body text-synthwave-text-secondary mt-8">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full animate-pulse"></div>
               <span>Public Launch: Q2 2026</span>

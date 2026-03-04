@@ -735,7 +735,7 @@ function Coaches() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="coaches-info"
               data-tooltip-content="Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective over time."
             >
@@ -762,7 +762,7 @@ function Coaches() {
         {/* Error State */}
         {agentState.error && (
           <div className="text-center text-synthwave-neon-pink mb-8">
-            <p className="font-rajdhani text-lg">{agentState.error}</p>
+            <p className="font-body text-lg">{agentState.error}</p>
             <button
               onClick={handleRefresh}
               className={`${buttonPatterns.primarySmall} mt-4`}
@@ -808,14 +808,14 @@ function Coaches() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
+                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
                   {isCreatingCustomCoach
                     ? "Creating Coach..."
                     : "Create Custom Coach"}
                 </h3>
 
                 {/* Description */}
-                <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
+                <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
                   {isCreatingCustomCoach
                     ? "Setting up your personalized coach"
                     : "Design your perfect coach through our guided process"}
@@ -824,7 +824,7 @@ function Coaches() {
                 {/* Time Estimate */}
                 {!isCreatingCustomCoach && (
                   <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
-                    <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
+                    <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
                       Takes 25-30 minutes
                     </p>
                   </div>
@@ -849,7 +849,7 @@ function Coaches() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span className="font-rajdhani text-sm">
+                      <span className="font-body text-sm">
                         Methodology Intelligence
                       </span>
                     </div>
@@ -867,7 +867,7 @@ function Coaches() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span className="font-rajdhani text-sm">
+                      <span className="font-body text-sm">
                         Predictive Intelligence
                       </span>
                     </div>
@@ -885,7 +885,7 @@ function Coaches() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span className="font-rajdhani text-sm">
+                      <span className="font-body text-sm">
                         Movement & Mental Coaching
                       </span>
                     </div>
@@ -956,7 +956,7 @@ function Coaches() {
                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                            <span className="font-rajdhani font-medium text-sm">
+                            <span className="font-body font-medium text-sm">
                               Coach Details
                             </span>
                           </button>
@@ -969,7 +969,7 @@ function Coaches() {
                             className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
                           >
                             <EditIcon />
-                            <span className="font-rajdhani font-medium text-sm">
+                            <span className="font-body font-medium text-sm">
                               Rename Coach
                             </span>
                           </button>
@@ -984,7 +984,7 @@ function Coaches() {
                             <div className="w-4 h-4 flex items-center justify-center">
                               <TrashIcon />
                             </div>
-                            <span className="font-rajdhani font-medium text-sm">
+                            <span className="font-body font-medium text-sm">
                               Delete Coach
                             </span>
                           </button>
@@ -1034,7 +1034,7 @@ function Coaches() {
                           placeholder="Coach name..."
                           maxLength={50}
                           size="large"
-                          displayClassName="font-barlow font-bold text-white text-xl uppercase"
+                          displayClassName="font-header font-bold text-white text-xl uppercase"
                           tooltipPrefix={`coach-${coach.coach_id}`}
                           onError={(error) => {
                             setEditingCoachId(null);
@@ -1045,7 +1045,7 @@ function Coaches() {
                           startInEditMode={true}
                         />
                       ) : (
-                        <h3 className="font-barlow font-bold text-white text-xl uppercase">
+                        <h3 className="font-header font-bold text-white text-xl uppercase">
                           {agentRef.current?.formatCoachName(coach.coach_name)}
                         </h3>
                       )}
@@ -1054,7 +1054,7 @@ function Coaches() {
                     {/* Coach Description - Tagline */}
                     {agentRef.current?.getCoachDescription(coach) && (
                       <div className="ml-6 mb-4">
-                        <p className="font-rajdhani text-synthwave-neon-cyan text-sm italic">
+                        <p className="font-body text-synthwave-neon-cyan text-sm italic">
                           {agentRef.current?.getCoachDescription(coach)}
                         </p>
                       </div>
@@ -1065,7 +1065,7 @@ function Coaches() {
                       {/* Experience Level & Training Frequency */}
                       <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                         <TargetIcon />
-                        <span className="font-rajdhani text-sm">
+                        <span className="font-body text-sm">
                           {formatDisplayText(
                             agentRef.current?.getExperienceLevelDisplay(
                               coach.technical_config?.experience_level,
@@ -1104,10 +1104,10 @@ function Coaches() {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <p className="font-rajdhani text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
+                          <p className="font-body text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
                             Focus Areas
                           </p>
-                          <p className="font-rajdhani text-sm leading-relaxed">
+                          <p className="font-body text-sm leading-relaxed">
                             {agentRef.current?.getMethodologyFocusDisplay(
                               coach,
                               6,
@@ -1137,10 +1137,10 @@ function Coaches() {
                             </svg>
                           </div>
                           <div className="flex-1">
-                            <p className="font-rajdhani text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
+                            <p className="font-body text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
                               Coaching Style
                             </p>
-                            <p className="font-rajdhani text-sm leading-relaxed">
+                            <p className="font-body text-sm leading-relaxed">
                               {agentRef.current?.getMethodologyPreferencesDisplay(
                                 coach,
                                 8,
@@ -1165,7 +1165,7 @@ function Coaches() {
                             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                           />
                         </svg>
-                        <span className="font-rajdhani text-sm">
+                        <span className="font-body text-sm">
                           {coach.metadata?.total_conversations || 0}{" "}
                           conversations
                         </span>
@@ -1174,7 +1174,7 @@ function Coaches() {
                       {/* Created Date - hidden on mobile */}
                       <div className="hidden md:flex items-center space-x-2 text-synthwave-text-muted">
                         <CalendarIcon />
-                        <span className="font-rajdhani text-xs">
+                        <span className="font-body text-xs">
                           Created{" "}
                           {agentRef.current?.formatDate(
                             coach.metadata?.created_date,
@@ -1210,10 +1210,10 @@ function Coaches() {
         {inProgressSessions && inProgressSessions.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Your In-Progress Coaches
               </h2>
-              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
+              <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
                 Great progress! You're building something amazing and personal.
                 Pick up where you left off and bring your perfect coach to life.
               </p>
@@ -1271,7 +1271,7 @@ function Coaches() {
                         className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
                       ></div>
                       <div className="flex-1">
-                        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                        <h3 className="font-header font-bold text-white text-lg uppercase">
                           Coach Creator Session
                         </h3>
                       </div>
@@ -1326,7 +1326,7 @@ function Coaches() {
                             />
                           </svg>
                         )}
-                        <span className="font-rajdhani text-sm font-medium">
+                        <span className="font-body text-sm font-medium">
                           {isFailed
                             ? "Build Failed"
                             : isBuilding
@@ -1341,7 +1341,7 @@ function Coaches() {
 
                       <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                         <CalendarIcon />
-                        <span className="font-rajdhani text-sm">
+                        <span className="font-body text-sm">
                           Started{" "}
                           {agentRef.current?.formatDate(session.startedAt)}
                         </span>
@@ -1361,7 +1361,7 @@ function Coaches() {
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span className="font-rajdhani text-sm">
+                        <span className="font-body text-sm">
                           Last activity{" "}
                           {agentRef.current?.formatDate(session.lastActivity)}
                         </span>
@@ -1382,7 +1382,7 @@ function Coaches() {
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="font-rajdhani text-sm font-medium">
+                          <span className="font-body text-sm font-medium">
                             {session.questionsCompleted} questions answered
                           </span>
                         </div>
@@ -1391,7 +1391,7 @@ function Coaches() {
                       {/* Show error message for failed builds */}
                       {isFailed && session.configGeneration?.error && (
                         <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 p-3 mt-3">
-                          <p className="font-rajdhani text-xs text-synthwave-neon-pink">
+                          <p className="font-body text-xs text-synthwave-neon-pink">
                             {session.configGeneration.error}
                           </p>
                         </div>
@@ -1402,7 +1402,7 @@ function Coaches() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1411,7 +1411,7 @@ function Coaches() {
                               e.stopPropagation(); // Prevent card click
                               handleDeleteClick(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1424,7 +1424,7 @@ function Coaches() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -1450,14 +1450,14 @@ function Coaches() {
                               e.stopPropagation(); // Prevent card click
                               handleDeleteClick(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
                         </div>
                       ) : (
                         <div className="text-center">
-                          <p className="font-rajdhani text-xs text-synthwave-text-muted">
+                          <p className="font-body text-xs text-synthwave-text-muted">
                             Coach configuration is being generated...
                           </p>
                         </div>
@@ -1475,16 +1475,16 @@ function Coaches() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent to-synthwave-neon-cyan/30"></div>
-              <span className="font-barlow text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
+              <span className="font-header text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
                 OR
               </span>
               <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>
             </div>
 
-            <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
+            <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
               Start Fast with Templates
             </h2>
-            <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
+            <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
               Need to get going quickly? Choose from pre-configured coaches
               designed for specific goals and experience levels. You can always
               customize them later.
@@ -1494,7 +1494,7 @@ function Coaches() {
           {/* Templates Loading State */}
           {agentState.templatesLoading && (
             <div className="text-center">
-              <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
+              <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-body">
                 <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
                 <span>Loading templates...</span>
               </div>
@@ -1504,7 +1504,7 @@ function Coaches() {
           {/* Templates Error State */}
           {agentState.templatesError && !agentState.templatesLoading && (
             <div className="text-center text-synthwave-neon-pink mb-8">
-              <p className="font-rajdhani text-lg">
+              <p className="font-body text-lg">
                 {agentState.templatesError}
               </p>
             </div>
@@ -1543,13 +1543,13 @@ function Coaches() {
                       {/* Template Name */}
                       <div className="flex items-start space-x-3 mb-3">
                         <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                        <h3 className="font-header font-bold text-white text-lg uppercase">
                           {template.template_name}
                         </h3>
                       </div>
 
                       {/* Template Description */}
-                      <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-4 leading-relaxed">
+                      <p className="font-body text-synthwave-text-secondary text-sm mb-4 leading-relaxed">
                         {template.description}
                       </p>
 
@@ -1558,7 +1558,7 @@ function Coaches() {
                         {/* Target Audience */}
                         <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                           <TargetIcon />
-                          <span className="font-rajdhani text-xs">
+                          <span className="font-body text-xs">
                             {agentRef.current?.getTemplateAudienceDisplay(
                               template.target_audience,
                             )}
@@ -1568,7 +1568,7 @@ function Coaches() {
                         {/* Popularity */}
                         <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                           <SparkleIcon />
-                          <span className="font-rajdhani text-xs">
+                          <span className="font-body text-xs">
                             {template.metadata.popularity_score || 0} users
                           </span>
                         </div>
@@ -1617,7 +1617,7 @@ function Coaches() {
             agentState.templates.length === 0 &&
             !agentState.templatesError && (
               <div className="text-center text-synthwave-text-secondary">
-                <p className="font-rajdhani text-lg">
+                <p className="font-body text-lg">
                   No templates available at this time.
                 </p>
               </div>
@@ -1641,10 +1641,10 @@ function Coaches() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Coach Creator Session
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete this coach creator session? This
                 action cannot be undone.
               </p>
@@ -1695,10 +1695,10 @@ function Coaches() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Coach
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete "
                 <strong className="text-white">
                   {agentRef.current?.formatCoachName(coachToDelete.coach_name)}

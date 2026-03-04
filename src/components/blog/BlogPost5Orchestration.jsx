@@ -13,7 +13,7 @@ function BlogPost5Orchestration() {
       {/* Opening Hook */}
       <section className="mb-16">
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <p className="font-rajdhani text-xl text-white leading-relaxed italic">
+          <p className="font-body text-xl text-white leading-relaxed italic">
             "Just got back from the gym—hit 275 for a clean double on squat,
             then ran through the MetCon in 11:40. Legs are fried but I feel
             great. Oh, and my knee was bugging me on the box jumps again. Can
@@ -72,13 +72,13 @@ function BlogPost5Orchestration() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-pink mb-4">
             What's Missing from "AI Coaching"
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   No action behind the words:
                 </strong>{" "}
@@ -92,7 +92,7 @@ function BlogPost5Orchestration() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   No memory across sessions:
                 </strong>{" "}
@@ -106,7 +106,7 @@ function BlogPost5Orchestration() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   No data access:
                 </strong>{" "}
@@ -120,7 +120,7 @@ function BlogPost5Orchestration() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   No program awareness:
                 </strong>{" "}
@@ -147,7 +147,7 @@ function BlogPost5Orchestration() {
       <section className="mb-16">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan">
-            <span className="font-inter font-bold text-xl text-synthwave-neon-cyan">
+            <span className="font-body font-bold text-xl text-synthwave-neon-cyan">
               5
             </span>
           </div>
@@ -157,7 +157,7 @@ function BlogPost5Orchestration() {
             >
               Agent Spotlight: The Conversation Agent
             </h2>
-            <p className="font-rajdhani text-synthwave-text-muted italic">
+            <p className="font-body text-synthwave-text-muted italic">
               "The Orchestration Layer"
             </p>
           </div>
@@ -189,10 +189,10 @@ function BlogPost5Orchestration() {
             <span className={badgePatterns.cyan}>Tool-Use Pattern</span>
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             The Streaming Tool-Use Pattern
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Conversation Agent extends the Tool-Use Pattern (Post 3) with
             real-time streaming. Instead of waiting for the entire response to
             generate, tokens stream to the user as they're produced. Tool calls
@@ -251,30 +251,30 @@ function BlogPost5Orchestration() {
             </div>
             <div className="space-y-4">
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-purple mb-1">
                   search_knowledge_base
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Semantic search across workouts, conversations, programs, and
                   memories. "How did my squats feel last month?" finds the
                   answer by meaning, not keywords.
                 </p>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-purple mb-1">
                   search_methodology
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Queries the methodology knowledge base for training
                   philosophy, programming principles, and exercise technique.
                   Your coach's advice is grounded in real expertise.
                 </p>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-purple mb-1">
                   retrieve_memories
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Pulls stored preferences, goals, constraints, and
                   instructions. That shoulder injury you mentioned weeks ago?
                   Instantly recalled.
@@ -290,30 +290,30 @@ function BlogPost5Orchestration() {
             </div>
             <div className="space-y-4">
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-pink mb-1">
                   log_workout
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Triggers the full async workout creation pipeline—extraction,
                   normalization, validation, DynamoDB persistence, and Pinecone
                   indexing. One tool call, entire pipeline.
                 </p>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-pink mb-1">
                   save_memory
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Persists user preferences, goals, constraints, or instructions
                   for future reference. Memories survive across conversations
                   and inform every future interaction.
                 </p>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-pink mb-1">
                   complete_program_workout
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Marks a program-prescribed workout as done. Updates completion
                   stats, advances the current day, and recalculates adherence
                   rate. Your program stays in sync automatically.
@@ -329,20 +329,20 @@ function BlogPost5Orchestration() {
             </div>
             <div className="space-y-4">
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-1">
                   get_todays_workout
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Fetches today's prescribed workout from your active training
                   program. Knows about rest days, current phase, and exercise
                   details. Your coach always knows what's on the menu.
                 </p>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-1">
                   query_programs
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Queries your training program history—active, completed, or
                   archived. Returns metadata, adherence rates, completion stats,
                   and phase structure.
@@ -360,30 +360,30 @@ function BlogPost5Orchestration() {
             </div>
             <div className="space-y-4">
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-1">
                   get_recent_workouts
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Pulls your recent workout history with completion dates,
                   disciplines, and names. Perfect for "What did I do this week?"
                   or trend analysis.
                 </p>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-1">
                   query_exercise_history
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Deep dive into a specific exercise—sets, reps, weights, PRs,
                   and aggregated statistics. Automatically normalizes exercise
                   names so "bench" and "bench press" return the same data.
                 </p>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-1">
+                <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-1">
                   list_exercise_names
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Lists every distinct exercise in your history with occurrence
                   counts and disciplines. Your coach knows your entire movement
                   vocabulary.
@@ -395,10 +395,10 @@ function BlogPost5Orchestration() {
 
         {/* Why 11 Tools Matter */}
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             Why 11 Tools Changes Everything
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-6">
+          <p className="text-synthwave-text-secondary font-body mb-6">
             Each tool is a capability. Combined, they transform the Conversation
             Agent from a text generator into a full-stack coaching system that
             can read, write, search, and act across the entire platform—all
@@ -406,34 +406,34 @@ function BlogPost5Orchestration() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 3
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Search Tools
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-cyan mb-1">
                 3
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Write Tools
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-purple mb-1">
                 2
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Program Tools
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 3
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 History Tools
               </div>
             </div>
@@ -459,7 +459,7 @@ function BlogPost5Orchestration() {
 
         {/* Streaming Flow Diagram */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-6">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-6">
             Streaming Conversation Architecture
           </h3>
 
@@ -467,10 +467,10 @@ function BlogPost5Orchestration() {
             <div className="flex flex-col items-center space-y-4">
               {/* Entry */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   User Message + Context
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Message, coach personality, conversation history, images
                 </p>
               </div>
@@ -483,10 +483,10 @@ function BlogPost5Orchestration() {
 
               {/* Context Assembly */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <span className="font-body font-semibold text-synthwave-neon-cyan">
                   Context Assembly (Parallel Burst)
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   DynamoDB reads + Pinecone search + coach personality
                   (simultaneous)
                 </p>
@@ -501,16 +501,16 @@ function BlogPost5Orchestration() {
               {/* Conversation Agent with Tools */}
               <div className="w-full max-w-lg">
                 <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center mb-3">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
+                  <span className="font-body font-semibold text-synthwave-neon-purple">
                     Conversation Agent (Streaming)
                   </span>
-                  <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                  <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                     Claude Sonnet/Haiku with 11 tools + coach personality
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-md p-2 text-center">
-                    <span className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
+                    <span className="font-body text-synthwave-neon-pink text-xs font-semibold">
                       Text Stream
                     </span>
                     <p className="text-synthwave-text-muted text-xs">
@@ -518,7 +518,7 @@ function BlogPost5Orchestration() {
                     </p>
                   </div>
                   <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-md p-2 text-center">
-                    <span className="font-rajdhani text-synthwave-neon-cyan text-xs font-semibold">
+                    <span className="font-body text-synthwave-neon-cyan text-xs font-semibold">
                       Tool Calls
                     </span>
                     <p className="text-synthwave-text-muted text-xs">
@@ -526,7 +526,7 @@ function BlogPost5Orchestration() {
                     </p>
                   </div>
                   <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md p-2 text-center">
-                    <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
+                    <span className="font-body text-synthwave-neon-purple text-xs font-semibold">
                       Tool Results
                     </span>
                     <p className="text-synthwave-text-muted text-xs">
@@ -544,10 +544,10 @@ function BlogPost5Orchestration() {
 
               {/* Output */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   Real-Time Streamed Response
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Personalized coaching + data actions + contextual insights
                 </p>
               </div>
@@ -557,13 +557,13 @@ function BlogPost5Orchestration() {
 
         {/* What Streaming Enables */}
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             What Streaming-First Enables
           </h3>
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Perceived zero latency:
                 </strong>{" "}
@@ -577,7 +577,7 @@ function BlogPost5Orchestration() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Transparent tool execution:
                 </strong>{" "}
@@ -591,7 +591,7 @@ function BlogPost5Orchestration() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Multi-turn tool chains:
                 </strong>{" "}
@@ -624,13 +624,13 @@ function BlogPost5Orchestration() {
           <div className="space-y-8">
             {/* Scenario 1: Morning Check-in */}
             <div className="border-l-2 border-synthwave-neon-pink pl-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Scenario: "What's on the menu today, coach?"
               </h4>
-              <p className="text-synthwave-text-muted text-sm font-rajdhani mb-3">
+              <p className="text-synthwave-text-muted text-sm font-body mb-3">
                 A simple question that triggers intelligent data retrieval.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-body space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-cyan font-semibold shrink-0">
                     Tool 1:
@@ -670,15 +670,15 @@ function BlogPost5Orchestration() {
 
             {/* Scenario 2: Post-Workout Log with Program */}
             <div className="border-l-2 border-synthwave-neon-cyan pl-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Scenario: "Done! Hit 315x5 on squat, PR. Program workout
                 complete."
               </h4>
-              <p className="text-synthwave-text-muted text-sm font-rajdhani mb-3">
+              <p className="text-synthwave-text-muted text-sm font-body mb-3">
                 Logging, program tracking, history analysis, and celebration in
                 one exchange.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-body space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-pink font-semibold shrink-0">
                     Tool 1:
@@ -728,15 +728,15 @@ function BlogPost5Orchestration() {
 
             {/* Scenario 3: Complex Knowledge Query */}
             <div className="border-l-2 border-synthwave-neon-purple pl-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Scenario: "Should I deload next week? I've been feeling beat up
                 lately."
               </h4>
-              <p className="text-synthwave-text-muted text-sm font-rajdhani mb-3">
+              <p className="text-synthwave-text-muted text-sm font-body mb-3">
                 A coaching question that requires data analysis and methodology
                 knowledge.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-body space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-cyan font-semibold shrink-0">
                     Tool 1:
@@ -800,14 +800,14 @@ function BlogPost5Orchestration() {
 
             {/* Scenario 4: Broad Exploration */}
             <div className="border-l-2 border-synthwave-neon-pink pl-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Scenario: "Which exercises have I been doing most? I feel like
                 I'm neglecting my posterior chain."
               </h4>
-              <p className="text-synthwave-text-muted text-sm font-rajdhani mb-3">
+              <p className="text-synthwave-text-muted text-sm font-body mb-3">
                 Self-awareness query that requires exercise analytics.
               </p>
-              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-rajdhani space-y-2">
+              <div className="bg-synthwave-bg-primary/30 rounded-md p-3 text-sm font-body space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-synthwave-neon-cyan font-semibold shrink-0">
                     Tool 1:
@@ -867,60 +867,60 @@ function BlogPost5Orchestration() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.cyan}>Post 1</span>
-              <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
+              <h4 className="font-body font-semibold text-white mt-2 mb-1">
                 Router Pattern
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-xs">
+              <p className="text-synthwave-text-secondary font-body text-xs">
                 Intelligent request routing based on intent analysis. Every
                 message flows through the router first.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.pink}>Post 2</span>
-              <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
+              <h4 className="font-body font-semibold text-white mt-2 mb-1">
                 Assembler Pattern
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-xs">
+              <p className="text-synthwave-text-secondary font-body text-xs">
                 Combining outputs from multiple sources into cohesive coach
                 personalities.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.purple}>Post 3</span>
-              <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
+              <h4 className="font-body font-semibold text-white mt-2 mb-1">
                 Tool-Use Pattern
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-xs">
+              <p className="text-synthwave-text-secondary font-body text-xs">
                 AI deciding when and how to use specialized tools. The
                 Conversation Agent takes this to the extreme with 11 tools.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.cyan}>Post 3</span>
-              <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
+              <h4 className="font-body font-semibold text-white mt-2 mb-1">
                 Evaluator-Optimizer
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-xs">
+              <p className="text-synthwave-text-secondary font-body text-xs">
                 Quality assessment with iterative refinement. Confidence-based
                 flow control for data extraction.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.pink}>Post 4</span>
-              <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
+              <h4 className="font-body font-semibold text-white mt-2 mb-1">
                 Orchestrator Pattern
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-xs">
+              <p className="text-synthwave-text-secondary font-body text-xs">
                 Central coordinator managing multi-step workflows for program
                 design.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
               <span className={badgePatterns.purple}>Post 4</span>
-              <h4 className="font-rajdhani font-semibold text-white mt-2 mb-1">
+              <h4 className="font-body font-semibold text-white mt-2 mb-1">
                 Parallel Pattern
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-xs">
+              <p className="text-synthwave-text-secondary font-body text-xs">
                 Concurrent execution of independent tasks. 12 weeks generated
                 simultaneously.
               </p>
@@ -953,19 +953,19 @@ function BlogPost5Orchestration() {
                   className="w-8 h-8"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Claude Sonnet 4.6
               </h3>
             </div>
-            <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-purple font-body font-semibold mb-2">
               The Deep Thinker
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Handles complex coaching conversations, multi-tool orchestration,
               nuanced advice, and situations requiring deep reasoning about
               training context and methodology.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Complex multi-tool conversations</li>
               <li>• Program-aware coaching advice</li>
               <li>• Injury and recovery reasoning</li>
@@ -982,19 +982,19 @@ function BlogPost5Orchestration() {
                   className="w-8 h-8"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Claude Haiku 4.5
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               The Quick Responder
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Handles straightforward questions, quick check-ins, motivational
               responses, and simple tool calls. Sub-second first-token latency
               for a natural conversational flow.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Morning check-ins and quick queries</li>
               <li>• Single-tool responses</li>
               <li>• Motivational and celebratory messages</li>
@@ -1009,19 +1009,19 @@ function BlogPost5Orchestration() {
                 alt="Nemotron / Nova"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 Nvidia Nemotron / Amazon Nova 2 Lite
               </h3>
             </div>
-            <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-pink font-body font-semibold mb-2">
               The Contextual Narrators
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Generate real-time contextual updates during tool execution.
               Coach-personality-aware ephemeral messages that keep the
               conversation feeling alive during processing.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• "Pulling up your squat history..." messages</li>
               <li>• Coach-personality-aware updates</li>
               <li>• Ultra-low latency (~100ms)</li>
@@ -1032,18 +1032,18 @@ function BlogPost5Orchestration() {
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
-                <span className="font-barlow text-synthwave-neon-cyan text-lg">
+                <span className="font-header text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Nvidia NV-Embed-V2
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               The Semantic Bridge
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Powers the semantic search behind{" "}
               <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 search_knowledge_base
@@ -1054,7 +1054,7 @@ function BlogPost5Orchestration() {
               </code>
               . Finds relevant context by meaning, not keywords.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Workout history similarity search</li>
               <li>• Memory retrieval by meaning</li>
               <li>• Methodology knowledge matching</li>
@@ -1064,7 +1064,7 @@ function BlogPost5Orchestration() {
         </div>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Intelligent Model Selection
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
@@ -1104,21 +1104,21 @@ function BlogPost5Orchestration() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-barlow text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-header text-lg text-synthwave-neon-pink mb-4">
             The Safety Stack
           </h3>
           <div className="space-y-4">
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-md bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
+                <span className="font-body font-bold text-sm text-synthwave-neon-pink">
                   1
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <h4 className="font-body font-semibold text-synthwave-neon-pink">
                   Memory-Aware Coaching
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   The agent retrieves injury memories and constraints before
                   giving advice. That shoulder injury from three weeks ago
                   automatically informs today's recommendations.
@@ -1127,15 +1127,15 @@ function BlogPost5Orchestration() {
             </div>
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-md bg-synthwave-neon-cyan/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-cyan">
+                <span className="font-body font-bold text-sm text-synthwave-neon-cyan">
                   2
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <h4 className="font-body font-semibold text-synthwave-neon-cyan">
                   Methodology Grounding
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Coaching advice is grounded in validated methodology knowledge
                   via{" "}
                   <code className="text-synthwave-neon-cyan bg-synthwave-bg-primary/50 px-1 rounded-md">
@@ -1148,15 +1148,15 @@ function BlogPost5Orchestration() {
             </div>
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-md bg-synthwave-neon-purple/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-purple">
+                <span className="font-body font-bold text-sm text-synthwave-neon-purple">
                   3
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple">
+                <h4 className="font-body font-semibold text-synthwave-neon-purple">
                   Tool-Level Validation
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Every tool validates its inputs before executing. The{" "}
                   <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md">
                     log_workout
@@ -1168,15 +1168,15 @@ function BlogPost5Orchestration() {
             </div>
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-md bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
+                <span className="font-body font-bold text-sm text-synthwave-neon-pink">
                   4
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <h4 className="font-body font-semibold text-synthwave-neon-pink">
                   Behavioral Guardrails
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   The agent's system prompt includes medical disclaimer
                   requirements, injury-aware coaching constraints, and response
                   consistency rules. It knows when to coach and when to refer to
@@ -1232,10 +1232,10 @@ function BlogPost5Orchestration() {
               key={idx}
               className={`${containerPatterns.cardLight} p-4 text-center`}
             >
-              <span className="font-rajdhani font-semibold text-synthwave-text-primary text-sm block mb-1">
+              <span className="font-body font-semibold text-synthwave-text-primary text-sm block mb-1">
                 {item.name}
               </span>
-              <span className="font-rajdhani text-synthwave-text-muted text-xs">
+              <span className="font-body text-synthwave-text-muted text-xs">
                 via {item.tool}
               </span>
             </div>
@@ -1243,10 +1243,10 @@ function BlogPost5Orchestration() {
         </div>
 
         <div className={`${containerPatterns.mediumGlassPurple} mb-8`}>
-          <h3 className="font-barlow text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-header text-lg text-synthwave-neon-purple mb-4">
             The Memory Loop
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Most AI conversations are one-directional—you provide context, the
             AI responds. The Conversation Agent closes the loop: it reads
             memories to inform responses, and writes new memories during
@@ -1297,20 +1297,20 @@ function BlogPost5Orchestration() {
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/30 flex items-center justify-center">
-                <span className="font-inter font-bold text-synthwave-neon-cyan">
+                <span className="font-body font-bold text-synthwave-neon-cyan">
                   1
                 </span>
               </div>
               <div>
-                <h3 className="font-barlow text-lg text-synthwave-neon-cyan">
+                <h3 className="font-header text-lg text-synthwave-neon-cyan">
                   Coach Creator Agent
                 </h3>
-                <p className="text-synthwave-text-muted text-sm font-rajdhani">
+                <p className="text-synthwave-text-muted text-sm font-body">
                   The Personality Architect
                 </p>
               </div>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+            <p className="text-synthwave-text-secondary font-body text-sm">
               Builds the coach personality that the Conversation Agent embodies
               in every response. Your coach's voice, style, and methodology
               expertise all originate here.
@@ -1320,20 +1320,20 @@ function BlogPost5Orchestration() {
           <div className={containerPatterns.mediumGlassPurple}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-synthwave-neon-purple/30 flex items-center justify-center">
-                <span className="font-inter font-bold text-synthwave-neon-purple">
+                <span className="font-body font-bold text-synthwave-neon-purple">
                   2
                 </span>
               </div>
               <div>
-                <h3 className="font-barlow text-lg text-synthwave-neon-purple">
+                <h3 className="font-header text-lg text-synthwave-neon-purple">
                   Workout Logger Agent
                 </h3>
-                <p className="text-synthwave-text-muted text-sm font-rajdhani">
+                <p className="text-synthwave-text-muted text-sm font-body">
                   The Training Historian
                 </p>
               </div>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+            <p className="text-synthwave-text-secondary font-body text-sm">
               Powers the{" "}
               <code className="text-synthwave-neon-purple bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 log_workout
@@ -1347,20 +1347,20 @@ function BlogPost5Orchestration() {
           <div className={containerPatterns.mediumGlassPink}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-synthwave-neon-pink/30 flex items-center justify-center">
-                <span className="font-inter font-bold text-synthwave-neon-pink">
+                <span className="font-body font-bold text-synthwave-neon-pink">
                   3
                 </span>
               </div>
               <div>
-                <h3 className="font-barlow text-lg text-synthwave-neon-pink">
+                <h3 className="font-header text-lg text-synthwave-neon-pink">
                   Program Designer Agent
                 </h3>
-                <p className="text-synthwave-text-muted text-sm font-rajdhani">
+                <p className="text-synthwave-text-muted text-sm font-body">
                   The Programming Mastermind
                 </p>
               </div>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+            <p className="text-synthwave-text-secondary font-body text-sm">
               Creates the programs that{" "}
               <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md text-xs">
                 get_todays_workout
@@ -1379,20 +1379,20 @@ function BlogPost5Orchestration() {
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/30 flex items-center justify-center">
-                <span className="font-inter font-bold text-synthwave-neon-cyan">
+                <span className="font-body font-bold text-synthwave-neon-cyan">
                   4
                 </span>
               </div>
               <div>
-                <h3 className="font-barlow text-lg text-synthwave-neon-cyan">
+                <h3 className="font-header text-lg text-synthwave-neon-cyan">
                   Conversation Agent
                 </h3>
-                <p className="text-synthwave-text-muted text-sm font-rajdhani">
+                <p className="text-synthwave-text-muted text-sm font-body">
                   The Orchestration Layer — 11 Tools, Streaming, Real-Time
                 </p>
               </div>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+            <p className="text-synthwave-text-secondary font-body text-sm">
               The agent users talk to every day. It orchestrates across the
               entire platform—pulling from programs, logging workouts, searching
               memories, querying history, saving context—all streamed in your
@@ -1417,43 +1417,43 @@ function BlogPost5Orchestration() {
         </p>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <h3 className="font-barlow text-xl text-white mb-4">What's Coming</h3>
+          <h3 className="font-header text-xl text-white mb-4">What's Coming</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 More Tools, More Capabilities
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Nutrition tracking, recovery management, competition prep tools.
                 Each new tool is a new capability the Conversation Agent can
                 autonomously leverage.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Wearable Integration
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 HRV, sleep, and recovery data from wearables feeding directly
                 into the Conversation Agent's context. "Should I train hard
                 today?" answered with real physiological data.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Proactive Coaching
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 The agent reaches out to you—not just responds. "Hey, you
                 haven't trained in 3 days and your program has a heavy squat day
                 waiting. Want to talk about it?"
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Community Features
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Shared challenges, training partner matching, and
                 community-driven coach templates. Your Conversation Agent as the
                 bridge between solo training and community.
@@ -1471,7 +1471,7 @@ function BlogPost5Orchestration() {
           The NeonPanda Philosophy
         </h2>
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <p className="text-xl text-synthwave-text-primary font-rajdhani leading-relaxed mb-4">
+          <p className="text-xl text-synthwave-text-primary font-body leading-relaxed mb-4">
             "At NeonPanda, we believe the best technology disappears into the
             background, leaving you free to focus on what matters most:{" "}
             <strong className="text-synthwave-neon-pink">
@@ -1480,14 +1480,14 @@ function BlogPost5Orchestration() {
             </strong>
             "
           </p>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Conversation Agent embodies this philosophy completely. Users
             don't think about 11 tools, 4 AI models, or 5 coordinating agents.
             They think about their coach—the one who remembers their shoulder
             injury, celebrates their PRs, knows what workout is on deck today,
             and always has time for a conversation.
           </p>
-          <p className="text-synthwave-text-secondary font-rajdhani">
+          <p className="text-synthwave-text-secondary font-body">
             The tech is sophisticated, but the experience is simply... coaching.
           </p>
         </div>
@@ -1517,7 +1517,7 @@ function BlogPost5Orchestration() {
           </div>
 
           {/* Launch Info */}
-          <div className="flex flex-wrap gap-6 justify-center items-center text-sm font-rajdhani text-synthwave-text-secondary mt-8">
+          <div className="flex flex-wrap gap-6 justify-center items-center text-sm font-body text-synthwave-text-secondary mt-8">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full animate-pulse"></div>
               <span>Public Launch: Q2 2026</span>
@@ -1538,7 +1538,7 @@ function BlogPost5Orchestration() {
       <section className="mb-8">
         <div className={containerPatterns.cardLight}>
           <div className="p-6">
-            <p className="font-rajdhani text-synthwave-text-muted text-sm uppercase tracking-wide mb-4">
+            <p className="font-body text-synthwave-text-muted text-sm uppercase tracking-wide mb-4">
               Explore the Full Series
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1547,11 +1547,11 @@ function BlogPost5Orchestration() {
                 className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
-                  <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-pink">
                     1
                   </span>
                 </div>
-                <span className="font-rajdhani text-synthwave-text-primary group-hover:text-synthwave-neon-pink transition-colors">
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-pink transition-colors">
                   The Foundation of Everything
                 </span>
               </Link>
@@ -1560,11 +1560,11 @@ function BlogPost5Orchestration() {
                 className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
-                  <span className="font-inter font-bold text-sm text-synthwave-neon-cyan">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-cyan">
                     2
                   </span>
                 </div>
-                <span className="font-rajdhani text-synthwave-text-primary group-hover:text-synthwave-neon-cyan transition-colors">
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-cyan transition-colors">
                   Your Coach, Built Your Way
                 </span>
               </Link>
@@ -1573,11 +1573,11 @@ function BlogPost5Orchestration() {
                 className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-purple/20 flex items-center justify-center">
-                  <span className="font-inter font-bold text-sm text-synthwave-neon-purple">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-purple">
                     3
                   </span>
                 </div>
-                <span className="font-rajdhani text-synthwave-text-primary group-hover:text-synthwave-neon-purple transition-colors">
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-purple transition-colors">
                   Every Rep Counts, Every Time
                 </span>
               </Link>
@@ -1586,11 +1586,11 @@ function BlogPost5Orchestration() {
                 className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
-                  <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-pink">
                     4
                   </span>
                 </div>
-                <span className="font-rajdhani text-synthwave-text-primary group-hover:text-synthwave-neon-pink transition-colors">
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-pink transition-colors">
                   Training Programs That Think
                 </span>
               </Link>

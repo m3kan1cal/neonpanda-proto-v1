@@ -24,20 +24,20 @@ const CloseIcon = () => (
 
 // Thin separator + uppercase section label
 const SectionHeader = ({ title }) => (
-  <div className="font-rajdhani text-xs text-synthwave-neon-cyan/70 uppercase tracking-widest pt-5 pb-1 first:pt-0 border-t border-synthwave-neon-cyan/10 first:border-t-0">
+  <div className="font-body text-xs text-synthwave-neon-cyan/70 uppercase tracking-widest pt-5 pb-1 first:pt-0 border-t border-synthwave-neon-cyan/10 first:border-t-0">
     {title}
   </div>
 );
 
 // Small muted label above a content block (no border, no box)
 const FieldLabel = ({ children }) => (
-  <div className="font-rajdhani text-xs text-synthwave-text-muted uppercase tracking-wider mb-0.5 mt-3 first:mt-0">
+  <div className="font-body text-xs text-synthwave-text-muted uppercase tracking-wider mb-0.5 mt-3 first:mt-0">
     {children}
   </div>
 );
 
 const Tag = ({ children }) => (
-  <span className="font-rajdhani text-xs px-2 py-0.5 rounded-md bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan">
+  <span className="font-body text-xs px-2 py-0.5 rounded-md bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan">
     {children}
   </span>
 );
@@ -156,10 +156,10 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
           {/* Sticky header */}
           <div className="flex items-start justify-between px-7 py-5 border-b border-synthwave-neon-cyan/10 shrink-0">
             <div className="min-w-0 pr-4">
-              <h3 className="font-barlow font-bold text-lg text-white uppercase truncate">
+              <h3 className="font-header font-bold text-lg text-white uppercase truncate">
                 {displayName}
               </h3>
-              <p className="font-rajdhani text-xs text-synthwave-text-secondary mt-0.5">
+              <p className="font-body text-xs text-synthwave-text-secondary mt-0.5">
                 Coach Configuration
               </p>
             </div>
@@ -178,7 +178,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
 
             {error && (
               <div className="text-center py-8">
-                <p className="font-rajdhani text-synthwave-neon-pink text-sm">
+                <p className="font-body text-synthwave-neon-pink text-sm">
                   {error}
                 </p>
               </div>
@@ -189,7 +189,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                 {/* ── Identity ── */}
                 <SectionHeader title="Identity" />
 
-                <p className="font-rajdhani text-xs text-synthwave-text-secondary leading-relaxed">
+                <p className="font-body text-xs text-synthwave-text-secondary leading-relaxed">
                   {createdDate && <>Created {createdDate} &nbsp;·&nbsp; </>}
                   <Highlight>
                     {totalConversations} conversation
@@ -200,7 +200,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                 {identity?.coach_description && (
                   <>
                     <FieldLabel>Description</FieldLabel>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                    <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
                       {identity.coach_description}
                     </p>
                   </>
@@ -213,11 +213,11 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
 
                     {personality?.primary_template && (
                       <>
-                        <p className="font-rajdhani text-sm text-white font-medium">
+                        <p className="font-body text-sm text-white font-medium">
                           {tidyLabel(personality.primary_template)}
                         </p>
                         {personality.secondary_influences?.length > 0 && (
-                          <p className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                          <p className="font-body text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
                             Influenced by{" "}
                             <Highlight>
                               {personality.secondary_influences
@@ -251,7 +251,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                     {personality?.selection_reasoning && (
                       <>
                         <FieldLabel>Why this personality</FieldLabel>
-                        <p className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                        <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
                           {personality.selection_reasoning}
                         </p>
                       </>
@@ -260,7 +260,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                     {prompts?.communication_style && (
                       <>
                         <FieldLabel>Communication style</FieldLabel>
-                        <p className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                        <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
                           {prompts.communication_style.slice(0, 300)}
                           {prompts.communication_style.length > 300 ? "…" : ""}
                         </p>
@@ -270,7 +270,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                     {prompts?.motivation_prompt && (
                       <>
                         <FieldLabel>Motivational approach</FieldLabel>
-                        <p className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                        <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
                           {prompts.motivation_prompt.slice(0, 300)}
                           {prompts.motivation_prompt.length > 300 ? "…" : ""}
                         </p>
@@ -286,10 +286,10 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
 
                     {methodology?.primary_methodology && (
                       <>
-                        <p className="font-rajdhani text-sm text-white font-medium">
+                        <p className="font-body text-sm text-white font-medium">
                           {tidyLabel(methodology.primary_methodology)}
                         </p>
-                        <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                        <div className="font-body text-xs text-synthwave-text-secondary mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
                           {methodology.programming_emphasis && (
                             <Highlight>
                               {tidyLabel(methodology.programming_emphasis)}
@@ -313,7 +313,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                     {methodology?.methodology_reasoning && (
                       <>
                         <FieldLabel>Approach rationale</FieldLabel>
-                        <p className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                        <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
                           {methodology.methodology_reasoning}
                         </p>
                       </>
@@ -322,7 +322,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                     {techConfig && (
                       <>
                         <FieldLabel>Training profile</FieldLabel>
-                        <div className="font-rajdhani text-sm text-synthwave-text-secondary space-y-0.5">
+                        <div className="font-body text-sm text-synthwave-text-secondary space-y-0.5">
                           {techConfig.experience_level && (
                             <p>
                               Experience:{" "}
@@ -388,7 +388,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                           {safetyProfile.contraindications.map((item, i) => (
                             <li
                               key={i}
-                              className="font-rajdhani text-sm text-synthwave-text-secondary flex items-start gap-1.5"
+                              className="font-body text-sm text-synthwave-text-secondary flex items-start gap-1.5"
                             >
                               <span className="text-synthwave-neon-pink mt-0.5 shrink-0">
                                 •
@@ -407,7 +407,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
                           {safetyProfile.modifications.map((item, i) => (
                             <li
                               key={i}
-                              className="font-rajdhani text-sm text-synthwave-text-secondary flex items-start gap-1.5"
+                              className="font-body text-sm text-synthwave-text-secondary flex items-start gap-1.5"
                             >
                               <span className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                                 •
@@ -423,7 +423,7 @@ const CoachDetailsModal = ({ isOpen, onClose, coach, userId, agentRef }) => {
 
                 {!fullConfig && !isLoading && !error && (
                   <div className="text-center py-8">
-                    <p className="font-rajdhani text-synthwave-text-muted text-sm">
+                    <p className="font-body text-synthwave-text-muted text-sm">
                       No configuration details available.
                     </p>
                   </div>

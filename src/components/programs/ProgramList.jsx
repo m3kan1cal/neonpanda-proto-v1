@@ -67,7 +67,7 @@ function ProgressRing({ percentage = 0, size = 40, strokeWidth = 3.5 }) {
         y={size / 2}
         textAnchor="middle"
         dominantBaseline="central"
-        className="fill-white font-rajdhani text-[9px] font-bold rotate-90"
+        className="fill-white font-body text-[9px] font-bold rotate-90"
         style={{ transformOrigin: "center" }}
       >
         {percentage}%
@@ -173,16 +173,16 @@ function ProgramList({
               {/* Program details */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <div className="font-rajdhani text-sm text-white font-semibold truncate">
+                  <div className="font-body text-sm text-white font-semibold truncate">
                     {program.name}
                   </div>
                   {isPaused && (
-                    <span className="px-1.5 py-0.5 bg-synthwave-text-muted/20 text-synthwave-text-muted rounded-md text-[10px] font-rajdhani uppercase tracking-wider">
+                    <span className="px-1.5 py-0.5 bg-synthwave-text-muted/20 text-synthwave-text-muted rounded-md text-[10px] font-body uppercase tracking-wider">
                       Paused
                     </span>
                   )}
                 </div>
-                <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-0.5">
+                <div className="font-body text-xs text-synthwave-text-secondary mt-0.5">
                   Day {currentDay} of {program.totalDays} &middot;{" "}
                   <span className="text-synthwave-neon-cyan">
                     {completedWorkouts}/{totalWorkouts} workouts

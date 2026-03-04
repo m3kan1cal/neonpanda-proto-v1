@@ -12,7 +12,7 @@ function BlogPost2CoachCreator() {
       {/* Opening Hook */}
       <section className="mb-16">
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <p className="font-rajdhani text-xl text-white leading-relaxed italic">
+          <p className="font-body text-xl text-white leading-relaxed italic">
             "Meet Alex—they want a coach who speaks in metrics and periodization
             blocks. Sarah prefers encouragement and celebration of small wins.
             Marcus needs someone who understands competition prep. Three users,
@@ -65,13 +65,13 @@ function BlogPost2CoachCreator() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-pink mb-4">
             What Generic Coaching Looks Like
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Same voice for everyone:
                 </strong>{" "}
@@ -84,7 +84,7 @@ function BlogPost2CoachCreator() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   No memory of what matters:
                 </strong>{" "}
@@ -97,7 +97,7 @@ function BlogPost2CoachCreator() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Wrong methodology for your goals:
                 </strong>{" "}
@@ -150,14 +150,14 @@ function BlogPost2CoachCreator() {
                 alt="DynamoDB"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 DynamoDB
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               Real-Time State
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-4">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-4">
               Coach configurations, active sessions, user preferences. This is
               the hot data—accessed on literally every request.
             </p>
@@ -175,14 +175,14 @@ function BlogPost2CoachCreator() {
                 alt="S3"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 Amazon S3
               </h3>
             </div>
-            <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-pink font-body font-semibold mb-2">
               Archival Storage
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-4">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-4">
               Full conversation transcripts, detailed program specs, workout
               analysis reports. Rich context retrieved when needed.
             </p>
@@ -202,14 +202,14 @@ function BlogPost2CoachCreator() {
                   className="w-9 h-9"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Pinecone
               </h3>
             </div>
-            <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-purple font-body font-semibold mb-2">
               Semantic Search
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-4">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-4">
               Vector embeddings of workouts, memories, methodology knowledge.
               Find context by meaning, not just keywords.
             </p>
@@ -222,7 +222,7 @@ function BlogPost2CoachCreator() {
 
         {/* Data Flow Diagram */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             How Data Flows Through the System
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
@@ -242,7 +242,7 @@ function BlogPost2CoachCreator() {
               {`4. Assemble context → send to Claude → stream response`}
             </div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             The magic is in step 2—Pinecone finds relevant context even when
             users don't use the exact right words. "That shoulder thing"
             retrieves the memory about rotator cuff tendinitis because the
@@ -251,10 +251,10 @@ function BlogPost2CoachCreator() {
         </div>
 
         <div className={containerPatterns.boldGradient}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             The Cost Efficiency Win
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             By moving rarely-accessed data to S3 (conversation archives, old
             workout details), we achieved a 90% reduction in storage costs
             compared to keeping everything in DynamoDB. That's savings we pass
@@ -262,26 +262,26 @@ function BlogPost2CoachCreator() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 DynamoDB
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Hot data only (~10KB/user)
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-cyan mb-1">
                 S3
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Archives (~5MB/user/month)
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-purple mb-1">
                 Pinecone
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Semantic index (~500 vectors/user)
               </div>
             </div>
@@ -304,7 +304,7 @@ function BlogPost2CoachCreator() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
             10 Disciplines, Countless Coaching Styles
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -327,16 +327,16 @@ function BlogPost2CoachCreator() {
                 key={idx}
                 className="bg-synthwave-bg-primary/40 rounded-md p-3 text-center border border-synthwave-neon-cyan/20"
               >
-                <span className="font-rajdhani font-semibold text-synthwave-text-primary text-sm block">
+                <span className="font-body font-semibold text-synthwave-text-primary text-sm block">
                   {discipline.name}
                 </span>
-                <span className="font-rajdhani text-synthwave-text-muted text-xs">
+                <span className="font-body text-synthwave-text-muted text-xs">
                   {discipline.detail}
                 </span>
               </div>
             ))}
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani">
+          <p className="text-synthwave-text-secondary font-body">
             Each template includes discipline-specific terminology,
             periodization knowledge, and appropriate communication styles. A
             CrossFit coach knows what "Fran" means. A powerlifting coach
@@ -345,44 +345,44 @@ function BlogPost2CoachCreator() {
         </div>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             Personality Templates: More Than Communication Style
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 The Drill Sergeant
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Direct, no-nonsense, accountability-focused. "Did you do your
                 accessory work? Good. If not, that's the priority before we add
                 volume."
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 The Sports Scientist
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Data-driven, analytical, explains the "why." "Your volume is
                 trending up 12% while intensity holds—classic accumulation
                 pattern."
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 The Hype Coach
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Energetic, celebratory, motivational. "That PR was coming—I
                 could see it in your training logs. You're built different."
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 The Mentor
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Patient, educational, growth-focused. "Let's talk about why that
                 lift didn't feel right and what we can adjust for next time."
               </p>
@@ -401,7 +401,7 @@ function BlogPost2CoachCreator() {
       <section className="mb-16">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan">
-            <span className="font-inter font-bold text-xl text-synthwave-neon-cyan">
+            <span className="font-body font-bold text-xl text-synthwave-neon-cyan">
               2
             </span>
           </div>
@@ -411,7 +411,7 @@ function BlogPost2CoachCreator() {
             >
               Agent Spotlight: The Coach Creator Agent
             </h2>
-            <p className="font-rajdhani text-synthwave-text-muted italic">
+            <p className="font-body text-synthwave-text-muted italic">
               "The Personality Architect"
             </p>
           </div>
@@ -430,10 +430,10 @@ function BlogPost2CoachCreator() {
             <span className={badgePatterns.cyan}>Assembler Pattern</span>
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             The Assembler Pattern in Action
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Assembler Pattern combines outputs from multiple sources into
             cohesive results. Unlike the Router Pattern (which directs traffic),
             the Assembler synthesizes—taking inputs from different places and
@@ -468,10 +468,10 @@ function BlogPost2CoachCreator() {
             <span className={badgePatterns.pink}>Discovery Flow</span>
             <span className={badgePatterns.muted}>Multi-Step Process</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             The Discovery Workflow
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-6">
+          <p className="text-synthwave-text-secondary font-body mb-6">
             The Coach Creator doesn't just ask questions—it conducts an adaptive
             interview where each response shapes the next question. The
             conversation feels natural, like chatting with a perceptive friend
@@ -485,10 +485,10 @@ function BlogPost2CoachCreator() {
             <div className="flex flex-col items-center space-y-4">
               {/* Step 1 */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   1. Discovery Conversation
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Adaptive questions about goals, style, and motivation
                 </p>
               </div>
@@ -501,10 +501,10 @@ function BlogPost2CoachCreator() {
 
               {/* Step 2 */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <span className="font-body font-semibold text-synthwave-neon-cyan">
                   2. Pattern Recognition
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   AI analyzes responses to identify coaching preferences
                 </p>
               </div>
@@ -517,10 +517,10 @@ function BlogPost2CoachCreator() {
 
               {/* Step 3 */}
               <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
+                <span className="font-body font-semibold text-synthwave-neon-purple">
                   3. Template Selection + Customization
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Match to optimal base template, apply personalization
                 </p>
               </div>
@@ -533,10 +533,10 @@ function BlogPost2CoachCreator() {
 
               {/* Step 4 */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   4. Personality Prompt Generation
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Sonnet 4.6 synthesizes a unique coaching personality
                 </p>
               </div>
@@ -546,13 +546,13 @@ function BlogPost2CoachCreator() {
 
         {/* What Makes It Special */}
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             What Makes the Coach Creator Actually Smart
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Adaptive questioning:
                 </strong>{" "}
@@ -566,7 +566,7 @@ function BlogPost2CoachCreator() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Implicit preference detection:
                 </strong>{" "}
@@ -580,7 +580,7 @@ function BlogPost2CoachCreator() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Cross-discipline awareness:
                 </strong>{" "}
@@ -593,7 +593,7 @@ function BlogPost2CoachCreator() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Tool-use for precision:
                 </strong>{" "}
@@ -613,10 +613,10 @@ function BlogPost2CoachCreator() {
             <span className={badgePatterns.purple}>AI Philosophy</span>
             <span className={badgePatterns.muted}>True Autonomy</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-4">
             Our Philosophy: Tools + Instructions, Not Scripts
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Here's what sets the Coach Creator apart from typical AI
             implementations: we don't script every possible conversation path.
             Instead, we provide the LLM with{" "}
@@ -626,7 +626,7 @@ function BlogPost2CoachCreator() {
             , then trust it to make intelligent decisions to achieve its
             goal—creating a truly personal coach for you.
           </p>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             This is what we mean by{" "}
             <span className="text-synthwave-neon-cyan font-semibold">
               true AI agents with LLM autonomy
@@ -662,10 +662,10 @@ function BlogPost2CoachCreator() {
             <span className={badgePatterns.cyan}>Multi-Model</span>
             <span className={badgePatterns.muted}>Intelligent Routing</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Multi-LLM Orchestration in the Coach Creator
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Coach Creator doesn't rely on a single model—it orchestrates
             multiple LLMs, each chosen for their strengths. Different tasks
             require different capabilities, and we route intelligently to
@@ -673,28 +673,28 @@ function BlogPost2CoachCreator() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Claude Sonnet 4.6
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Complex reasoning, personality synthesis, and final coach prompt
                 generation. When nuance matters, Sonnet delivers.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Claude Haiku 4.5
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Fast conversational responses during discovery. Quick pattern
                 recognition and adaptive questioning at low latency.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Nvidia Nemotron / Amazon Nova 2 Lite
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Template matching, preference classification, and real-time
                 contextual updates. Efficient analysis of user responses and
                 ultra-low latency for ephemeral UI messages during coach
@@ -702,7 +702,7 @@ function BlogPost2CoachCreator() {
               </p>
             </div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             This multi-model approach means you get Sonnet-quality personality
             synthesis without paying Sonnet prices for every conversational
             turn. The Coach Creator is smart about being smart.
@@ -726,14 +726,14 @@ function BlogPost2CoachCreator() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Core Identity */}
           <div className={containerPatterns.mediumGlassPink}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-3">
               Core Identity
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               The fundamental personality traits that define how the coach
               communicates:
             </p>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-sm text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-pink">→</span>
                 <span>
@@ -757,13 +757,13 @@ function BlogPost2CoachCreator() {
 
           {/* Methodology Knowledge */}
           <div className={containerPatterns.mediumGlass}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
               Methodology Knowledge
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Discipline-specific expertise that shapes advice and programming:
             </p>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-sm text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 <span>Training terminology and concepts</span>
@@ -781,13 +781,13 @@ function BlogPost2CoachCreator() {
 
           {/* User Context */}
           <div className={containerPatterns.mediumGlassPurple}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-3">
               User Context
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Dynamic information that personalizes every interaction:
             </p>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-sm text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-purple">→</span>
                 <span>Training history and recent workouts</span>
@@ -805,13 +805,13 @@ function BlogPost2CoachCreator() {
 
           {/* Behavioral Guardrails */}
           <div className={containerPatterns.mediumGlass}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
               Behavioral Guardrails
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Safety and consistency rules that prevent coaching mistakes:
             </p>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-sm text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 <span>Medical disclaimer requirements</span>
@@ -830,7 +830,7 @@ function BlogPost2CoachCreator() {
 
         {/* Prompt Assembly Code */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Dynamic Prompt Assembly
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
@@ -863,7 +863,7 @@ function BlogPost2CoachCreator() {
             </div>
             <div className="text-synthwave-neon-cyan">{`});`}</div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             Notice how context is loaded conditionally—we don't waste tokens
             fetching workout history for a simple "good morning" message. The
             Smart Request Router (from the last post) tells us exactly what
@@ -887,10 +887,10 @@ function BlogPost2CoachCreator() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Semantic Memory */}
           <div className={containerPatterns.mediumGlassPurple}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-3">
               Semantic Memory Search
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               "Remember that thing I mentioned about my knee" actually works.
               Pinecone finds relevant memories by meaning, not keyword matching.
             </p>
@@ -906,10 +906,10 @@ function BlogPost2CoachCreator() {
 
           {/* Instant Recall */}
           <div className={containerPatterns.mediumGlassPink}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-3">
               Instant Coach Recall
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Coach configuration loads in under 5ms from DynamoDB. No
               "loading..." states when starting a conversation.
             </p>
@@ -925,10 +925,10 @@ function BlogPost2CoachCreator() {
 
           {/* Rich Context */}
           <div className={containerPatterns.mediumGlass}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
               Rich Historical Context
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Full conversation transcripts in S3 mean the coach can reference
               discussions from months ago—retrieved on demand when relevant.
             </p>
@@ -944,10 +944,10 @@ function BlogPost2CoachCreator() {
 
           {/* Affordable at Scale */}
           <div className={containerPatterns.mediumGlassPink}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-3">
               Affordable at Scale
             </h3>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Tiered storage means we can offer unlimited conversation history
               without passing massive storage bills to users.
             </p>
@@ -963,10 +963,10 @@ function BlogPost2CoachCreator() {
         </div>
 
         <div className={containerPatterns.boldGradient}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             The Result: Coaches That Actually Feel Personal
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             When someone messages their coach, they're not talking to "the
             NeonPanda AI." They're talking to the specific coaching personality
             they created (or chose), enriched with their complete training
@@ -975,26 +975,26 @@ function BlogPost2CoachCreator() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 ~5ms
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Coach Config Load
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-cyan mb-1">
                 ~50ms
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Semantic Context Fetch
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-purple mb-1">
                 Infinite
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Personality Combinations
               </div>
             </div>
@@ -1026,7 +1026,7 @@ function BlogPost2CoachCreator() {
 
         <div className={containerPatterns.cardLight}>
           <div className="p-6">
-            <p className="font-rajdhani text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
+            <p className="font-body text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
               Next in the Series
             </p>
             <Link
@@ -1034,10 +1034,10 @@ function BlogPost2CoachCreator() {
               className="group flex items-center justify-between"
             >
               <div>
-                <h3 className="font-barlow text-xl text-synthwave-neon-purple group-hover:text-synthwave-neon-pink transition-colors">
+                <h3 className="font-header text-xl text-synthwave-neon-purple group-hover:text-synthwave-neon-pink transition-colors">
                   Every Rep Counts, Every Time
                 </h3>
-                <p className="font-rajdhani text-synthwave-text-secondary">
+                <p className="font-body text-synthwave-text-secondary">
                   The Workout Logger Agent & Multi-Model Orchestration
                 </p>
               </div>

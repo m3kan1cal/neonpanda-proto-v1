@@ -54,7 +54,7 @@ export default function StreakCard({
         <span className="shrink-0 mt-1.5 text-synthwave-neon-pink">
           <FireIconSmall />
         </span>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Streak
         </h3>
       </div>
@@ -63,23 +63,23 @@ export default function StreakCard({
       <div className="flex items-baseline gap-6 mb-4">
         <div className="flex items-baseline gap-2">
           <span
-            className={`font-barlow text-4xl leading-none ${streakActive ? "text-synthwave-neon-pink" : "text-synthwave-text-muted"}`}
+            className={`font-header text-4xl leading-none ${streakActive ? "text-synthwave-neon-pink" : "text-synthwave-text-muted"}`}
           >
             {currentStreak}
           </span>
-          <span className="font-rajdhani text-sm text-synthwave-text-secondary font-medium">
+          <span className="font-body text-sm text-synthwave-text-secondary font-medium">
             {currentStreak === 1 ? "day" : "days"}
           </span>
         </div>
         {bestStreak > 0 && (
           <div className="flex items-baseline gap-2">
-            <span className="font-rajdhani text-xs text-synthwave-text-muted uppercase tracking-wider">
+            <span className="font-body text-xs text-synthwave-text-muted uppercase tracking-wider">
               Best:
             </span>
-            <span className="font-barlow text-4xl text-synthwave-neon-cyan leading-none">
+            <span className="font-header text-4xl text-synthwave-neon-cyan leading-none">
               {bestStreak}
             </span>
-            <span className="font-rajdhani text-sm text-synthwave-text-secondary font-medium">
+            <span className="font-body text-sm text-synthwave-text-secondary font-medium">
               {bestStreak === 1 ? "day" : "days"}
             </span>
           </div>
@@ -89,10 +89,10 @@ export default function StreakCard({
       {/* Weekly progress bar */}
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider">
+          <span className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider">
             This Week
           </span>
-          <span className="font-rajdhani text-xs text-synthwave-text-muted">
+          <span className="font-body text-xs text-synthwave-text-muted">
             {thisWeekWorkoutCount}/{WEEKLY_TARGET}
           </span>
         </div>
@@ -105,7 +105,7 @@ export default function StreakCard({
       </div>
 
       {/* Nudge / motivation line */}
-      <p className="font-rajdhani text-xs text-synthwave-text-muted">
+      <p className="font-body text-xs text-synthwave-text-muted">
         {streakActive && lastWorkoutDaysAgo === 0
           ? "You trained today. Keep it going."
           : streakActive && lastWorkoutDaysAgo === 1

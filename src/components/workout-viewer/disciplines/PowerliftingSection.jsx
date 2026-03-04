@@ -23,7 +23,7 @@ export const PowerliftingSection = ({
       >
         <div className="flex items-start space-x-3">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Powerlifting Exercises ({powerliftingData?.exercises?.length || 0})
           </h3>
         </div>
@@ -48,7 +48,7 @@ export const PowerliftingSection = ({
               <div key={exerciseIndex}>
                 <button
                   onClick={() => toggleSubsection(`exercise-${exerciseIndex}`)}
-                  className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                  className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <span className="uppercase">
@@ -95,7 +95,7 @@ export const PowerliftingSection = ({
                     <div className="space-y-2">
                       {exercise.sets?.map((set, setIndex) => (
                         <div key={setIndex} className="py-2">
-                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-rajdhani">
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
                             <span className="font-bold text-synthwave-neon-cyan text-sm">
                               Set {setIndex + 1}
                             </span>
@@ -150,7 +150,7 @@ export const PowerliftingSection = ({
                       ))}
                       {exercise.attempts && (
                         <div className="mt-3">
-                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-rajdhani">
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
                             <span className="font-semibold text-synthwave-neon-cyan text-sm">
                               Attempts:
                             </span>
@@ -173,7 +173,7 @@ export const PowerliftingSection = ({
                           {exercise.attempts.successful_attempts &&
                             exercise.attempts.successful_attempts.length >
                               0 && (
-                              <div className="mt-1 text-sm font-rajdhani text-synthwave-text-secondary">
+                              <div className="mt-1 text-sm font-body text-synthwave-text-secondary">
                                 ✓ Successful:{" "}
                                 {exercise.attempts.successful_attempts.join(
                                   "lbs, ",
@@ -183,7 +183,7 @@ export const PowerliftingSection = ({
                             )}
                           {exercise.attempts.missed_attempts &&
                             exercise.attempts.missed_attempts.length > 0 && (
-                              <div className="mt-1 text-sm font-rajdhani text-synthwave-text-secondary">
+                              <div className="mt-1 text-sm font-body text-synthwave-text-secondary">
                                 ✗ Missed:{" "}
                                 {exercise.attempts.missed_attempts.join(
                                   "lbs, ",
@@ -200,7 +200,7 @@ export const PowerliftingSection = ({
             ))
           ) : (
             <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-              <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <div className="text-synthwave-text-secondary font-body text-sm">
                 No powerlifting exercises data available for this workout.
               </div>
             </div>

@@ -134,7 +134,7 @@ function Technology() {
                 <div className="flex items-center gap-4 mb-6">
                   {/* Agent Number Circle */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink">
-                    <span className="font-inter font-bold text-xl text-synthwave-neon-pink">
+                    <span className="font-body font-bold text-xl text-synthwave-neon-pink">
                       1
                     </span>
                   </div>
@@ -190,7 +190,7 @@ function Technology() {
                 <div className="flex items-center gap-4 mb-6">
                   {/* Agent Number Circle */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan">
-                    <span className="font-inter font-bold text-xl text-synthwave-neon-cyan">
+                    <span className="font-body font-bold text-xl text-synthwave-neon-cyan">
                       2
                     </span>
                   </div>
@@ -245,7 +245,7 @@ function Technology() {
                 <div className="flex items-center gap-4 mb-6">
                   {/* Agent Number Circle */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple">
-                    <span className="font-inter font-bold text-xl text-synthwave-neon-purple">
+                    <span className="font-body font-bold text-xl text-synthwave-neon-purple">
                       3
                     </span>
                   </div>
@@ -299,7 +299,7 @@ function Technology() {
                 <div className="flex items-center gap-4 mb-6">
                   {/* Agent Number Circle */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink">
-                    <span className="font-inter font-bold text-xl text-synthwave-neon-pink">
+                    <span className="font-body font-bold text-xl text-synthwave-neon-pink">
                       4
                     </span>
                   </div>
@@ -376,65 +376,65 @@ function Technology() {
                 {/* Industry Patterns Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                   <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
-                    <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+                    <h5 className="text-synthwave-neon-cyan font-body font-semibold mb-2">
                       Orchestrator Pattern
                     </h5>
-                    <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <p className="text-synthwave-text-secondary font-body text-sm">
                       Central coordinator that manages multi-step workflows,
                       delegating to specialized agents based on task complexity
                     </p>
                   </div>
                   <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
-                    <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+                    <h5 className="text-synthwave-neon-cyan font-body font-semibold mb-2">
                       Parallel Pattern
                     </h5>
-                    <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <p className="text-synthwave-text-secondary font-body text-sm">
                       Concurrent execution of independent tasks for faster
                       processing—analytics, summaries, and validations running
                       simultaneously
                     </p>
                   </div>
                   <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
-                    <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+                    <h5 className="text-synthwave-neon-cyan font-body font-semibold mb-2">
                       Assembler Pattern
                     </h5>
-                    <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <p className="text-synthwave-text-secondary font-body text-sm">
                       Combines outputs from multiple agents into cohesive
                       responses—merging workout data, coach context, and user
                       preferences
                     </p>
                   </div>
                   <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
-                    <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+                    <h5 className="text-synthwave-neon-cyan font-body font-semibold mb-2">
                       Router Pattern
                     </h5>
-                    <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <p className="text-synthwave-text-secondary font-body text-sm">
                       Intelligent request routing that analyzes intent and
                       selects optimal models and processing paths dynamically
                     </p>
                   </div>
                   <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
-                    <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+                    <h5 className="text-synthwave-neon-cyan font-body font-semibold mb-2">
                       Tool-Use Pattern
                     </h5>
-                    <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <p className="text-synthwave-text-secondary font-body text-sm">
                       Agents equipped with specialized tools for validation,
                       data extraction, and external integrations with blocking
                       enforcement
                     </p>
                   </div>
                   <div className="bg-synthwave-bg-secondary/30 rounded-md p-4 border border-synthwave-neon-cyan/20">
-                    <h5 className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+                    <h5 className="text-synthwave-neon-cyan font-body font-semibold mb-2">
                       Evaluator-Optimizer Pattern
                     </h5>
-                    <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <p className="text-synthwave-text-secondary font-body text-sm">
                       Continuous quality assessment of agent outputs with
                       iterative refinement for accuracy and safety
                     </p>
                   </div>
                 </div>
 
-                <ul className="space-y-3 text-synthwave-text-secondary font-rajdhani text-lg ml-6">
+                <ul className="space-y-3 text-synthwave-text-secondary font-body text-lg ml-6">
                   <li className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
@@ -801,7 +801,7 @@ function Technology() {
                     sophisticated, you need infrastructure that scales
                     beautifully:
                   </p>
-                  <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                  <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                     <li className="flex items-start space-x-3">
                       <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                         •
@@ -880,7 +880,7 @@ function Technology() {
                       Amazon Bedrock Runtime APIs:
                     </strong>
                   </p>
-                  <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                  <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                     <li className="flex items-start space-x-3">
                       <span className="text-synthwave-neon-pink mt-1 shrink-0">
                         •
@@ -1006,7 +1006,7 @@ function Technology() {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                 <div className="md:col-span-2">
-                  <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                  <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                     <li className="flex items-start space-x-3">
                       <span className="text-synthwave-neon-purple mt-1 shrink-0">
                         •
@@ -1088,7 +1088,7 @@ function Technology() {
                   Every piece of coaching advice goes through sophisticated
                   checks before reaching you:
                 </p>
-                <ol className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                <ol className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                   <li className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       1.
@@ -1176,7 +1176,7 @@ function Technology() {
                   blend cutting-edge AI with time-tested wisdom from established
                   programming methodologies.
                 </p>
-                <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                   <li className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
@@ -1231,7 +1231,7 @@ function Technology() {
                   building trust in the system. No black boxes—just intelligent
                   coaching you can understand.
                 </p>
-                <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                   <li className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-purple mt-1 shrink-0">
                       •
@@ -1321,7 +1321,7 @@ function Technology() {
                 Our Technical Philosophy
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4 font-rajdhani">
+                <div className="space-y-4 font-body">
                   <div className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •
@@ -1368,7 +1368,7 @@ function Technology() {
                     </div>
                   </div>
                 </div>
-                <div className="space-y-4 font-rajdhani">
+                <div className="space-y-4 font-body">
                   <div className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •

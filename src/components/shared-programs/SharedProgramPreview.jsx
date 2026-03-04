@@ -326,7 +326,7 @@ function SharedProgramPreview() {
             >
               Program Not Found
             </h2>
-            <p className="font-rajdhani text-synthwave-text-secondary mb-6">
+            <p className="font-body text-synthwave-text-secondary mb-6">
               {error}
             </p>
             <Link to="/" className={buttonPatterns.secondary}>
@@ -442,7 +442,7 @@ function SharedProgramPreview() {
           </p>
 
           {/* Quick stats */}
-          <div className="flex flex-wrap justify-center gap-8 text-sm font-rajdhani mb-8">
+          <div className="flex flex-wrap justify-center gap-8 text-sm font-body mb-8">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full"></div>
               <span className="text-synthwave-text-secondary">
@@ -496,10 +496,10 @@ function SharedProgramPreview() {
             <div className="space-y-6">
               {/* Training Goals */}
               <div>
-                <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
+                <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
                   Training Goals
                 </h3>
-                <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
+                <p className="font-body text-synthwave-text-secondary leading-relaxed">
                   {Array.isArray(programSnapshot.trainingGoals)
                     ? programSnapshot.trainingGoals.join(" ")
                     : programSnapshot.trainingGoals}
@@ -508,7 +508,7 @@ function SharedProgramPreview() {
 
               {/* Equipment */}
               <div>
-                <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
+                <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
                   Equipment Needed
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -567,7 +567,7 @@ function SharedProgramPreview() {
                           className={`w-10 h-10 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center shrink-0`}
                         >
                           <span
-                            className={`font-inter font-bold ${colors.text}`}
+                            className={`font-body font-bold ${colors.text}`}
                           >
                             {index + 1}
                           </span>
@@ -578,7 +578,7 @@ function SharedProgramPreview() {
                           >
                             {phase.name}
                           </h3>
-                          <p className="font-rajdhani text-synthwave-text-muted text-sm">
+                          <p className="font-body text-synthwave-text-muted text-sm">
                             Days {phase.startDay} - {phase.endDay} (
                             {phase.durationDays} days)
                           </p>
@@ -631,7 +631,7 @@ function SharedProgramPreview() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan" />
-                            <h3 className="font-barlow text-lg font-bold uppercase text-white">
+                            <h3 className="font-header text-lg font-bold uppercase text-white">
                               {workout.name}
                             </h3>
                             {workout.metadata?.difficulty && (
@@ -653,7 +653,7 @@ function SharedProgramPreview() {
                           {/* Metadata Row */}
                           <div className="flex items-center flex-wrap gap-4">
                             {workout.estimatedDuration && (
-                              <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                              <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
                                 <svg
                                   className="w-4 h-4"
                                   fill="none"
@@ -671,7 +671,7 @@ function SharedProgramPreview() {
                               </div>
                             )}
                             {workout.type && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-muted">
                                   Type:
                                 </span>
@@ -681,7 +681,7 @@ function SharedProgramPreview() {
                               </div>
                             )}
                             {workout.scoringType && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-muted">
                                   Scoring:
                                 </span>
@@ -716,7 +716,7 @@ function SharedProgramPreview() {
                       <div className="space-y-4">
                         {workout.equipment && workout.equipment.length > 0 && (
                           <div>
-                            <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                            <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                               Equipment Needed
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -735,7 +735,7 @@ function SharedProgramPreview() {
                         {workout.prescribedExercises &&
                           workout.prescribedExercises.length > 0 && (
                             <div>
-                              <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                                 Prescribed Exercises
                               </div>
                               <div className="flex flex-wrap gap-2">
@@ -756,7 +756,7 @@ function SharedProgramPreview() {
                         {workout.metadata?.focusAreas &&
                           workout.metadata.focusAreas.length > 0 && (
                             <div>
-                              <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                                 Focus Areas
                               </div>
                               <div className="flex flex-wrap gap-2">

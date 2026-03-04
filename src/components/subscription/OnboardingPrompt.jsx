@@ -72,11 +72,11 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
           <h1 className={`${typographyPatterns.cardTitle} mb-2`}>
             Ready to start your journey?
           </h1>
-          <p className="hidden md:block font-rajdhani text-synthwave-text-secondary text-base mb-4">
+          <p className="hidden md:block font-body text-synthwave-text-secondary text-base mb-4">
             You've unlocked the next frontier in fitness – where AI becomes your
             trusted training partner, evolving and learning with every workout.
           </p>
-          <p className="font-rajdhani text-synthwave-text-secondary text-sm md:text-base">
+          <p className="font-body text-synthwave-text-secondary text-sm md:text-base">
             You're starting as an{" "}
             <span className="text-synthwave-neon-cyan font-semibold">
               {freeInfo.displayName}
@@ -89,7 +89,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         {/* ElectricPanda upgrade option */}
         <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-md p-4 md:p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-4 md:mb-6">
           <div className="mb-2 md:mb-3">
-            <p className="font-rajdhani text-synthwave-text-secondary text-xs md:text-sm mb-2 md:mb-4">
+            <p className="font-body text-synthwave-text-secondary text-xs md:text-sm mb-2 md:mb-4">
               Upgrade to{" "}
               <span className="text-synthwave-neon-pink font-semibold">
                 {electricInfo.displayName}
@@ -112,7 +112,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
             {electricInfo.features.map((feature, index) => (
               <li
                 key={index}
-                className="flex items-center gap-2 font-rajdhani text-synthwave-text-secondary text-sm"
+                className="flex items-center gap-2 font-body text-synthwave-text-secondary text-sm"
               >
                 <div className="text-synthwave-neon-pink shrink-0">
                   <CheckIcon />
@@ -154,7 +154,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         {/* Divider - styled like Coaches page, hidden on mobile */}
         <div className="hidden md:flex items-center justify-center mb-6">
           <div className="flex-1 h-px bg-gradient-to-r from-transparent to-synthwave-neon-cyan/30"></div>
-          <span className="font-barlow text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
+          <span className="font-header text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
             OR
           </span>
           <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>
@@ -162,7 +162,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
 
         {/* Getting started guidance - hidden on mobile */}
         <div className="hidden md:block mb-4">
-          <p className="font-rajdhani text-synthwave-text-secondary text-sm">
+          <p className="font-body text-synthwave-text-secondary text-sm">
             Want to get started? Create your first coach, start conversations,
             log workouts, and explore your Training Grounds to unlock the full
             power of AI coaching.
@@ -181,7 +181,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         </button>
 
         {/* Fine print */}
-        <p className="font-rajdhani text-xs text-synthwave-text-muted text-center mt-6">
+        <p className="font-body text-xs text-synthwave-text-muted text-center mt-6">
           You can upgrade anytime from Settings. No pressure, no deadlines.
         </p>
       </div>

@@ -98,7 +98,7 @@ function WelcomePage() {
             </div>
 
             {/* Tagline */}
-            <p className="font-rajdhani text-synthwave-text-secondary">
+            <p className="font-body text-synthwave-text-secondary">
               Where intelligent coaching meets grit, sweat, dreams, and science
             </p>
           </div>
@@ -114,10 +114,10 @@ function WelcomePage() {
                     <div className="absolute inset-0 rounded-full border-4 border-t-synthwave-neon-purple animate-spin"></div>
                   </div>
 
-                  <h1 className="font-rajdhani font-bold text-2xl text-white mb-2 uppercase">
+                  <h1 className="font-body font-bold text-2xl text-white mb-2 uppercase">
                     Processing Your Upgrade
                   </h1>
-                  <p className="font-rajdhani text-synthwave-text-secondary mb-4">
+                  <p className="font-body text-synthwave-text-secondary mb-4">
                     Confirming your {electricInfo.displayName} subscription...
                   </p>
 
@@ -150,10 +150,10 @@ function WelcomePage() {
                     </div>
                   </div>
 
-                  <h1 className="font-rajdhani font-bold text-2xl text-white mb-2 uppercase">
+                  <h1 className="font-body font-bold text-2xl text-white mb-2 uppercase">
                     Thank you! You're All Set
                   </h1>
-                  <p className="font-rajdhani text-synthwave-text-secondary mb-6">
+                  <p className="font-body text-synthwave-text-secondary mb-6">
                     You're now an{" "}
                     <span className="text-synthwave-neon-pink font-semibold">
                       {electricInfo.displayName}
@@ -167,14 +167,14 @@ function WelcomePage() {
 
                 {/* Benefits list */}
                 <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-md p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-6 text-left">
-                  <h3 className="font-rajdhani text-sm text-synthwave-text-primary uppercase font-semibold mb-3">
+                  <h3 className="font-body text-sm text-synthwave-text-primary uppercase font-semibold mb-3">
                     Your Benefits
                   </h3>
                   <ul className="space-y-2">
                     {electricInfo.features.map((feature, index) => (
                       <li
                         key={index}
-                        className="flex items-center gap-2 font-rajdhani text-synthwave-text-secondary text-sm"
+                        className="flex items-center gap-2 font-body text-synthwave-text-secondary text-sm"
                       >
                         <div className="text-synthwave-neon-pink shrink-0">
                           <CheckIcon />
@@ -206,14 +206,14 @@ function WelcomePage() {
                     <div className="absolute inset-0 rounded-full border-4 border-t-synthwave-neon-purple animate-spin"></div>
                   </div>
 
-                  <h1 className="font-rajdhani font-bold text-2xl text-white mb-2 uppercase">
+                  <h1 className="font-body font-bold text-2xl text-white mb-2 uppercase">
                     Almost There
                   </h1>
-                  <p className="font-rajdhani text-synthwave-text-secondary mb-2">
+                  <p className="font-body text-synthwave-text-secondary mb-2">
                     Your payment was received. We're still processing your
                     upgrade.
                   </p>
-                  <p className="font-rajdhani text-synthwave-text-muted text-sm mb-6">
+                  <p className="font-body text-synthwave-text-muted text-sm mb-6">
                     This usually takes just a moment. You can continue to the
                     app and check your subscription in Settings.
                   </p>
@@ -240,7 +240,7 @@ function WelcomePage() {
                   </button>
                 </div>
 
-                <p className="font-rajdhani text-xs text-synthwave-text-muted text-center mt-6">
+                <p className="font-body text-xs text-synthwave-text-muted text-center mt-6">
                   Having trouble?{" "}
                   <a
                     href="mailto:support@neonpanda.ai"

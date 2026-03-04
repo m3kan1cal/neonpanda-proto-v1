@@ -29,11 +29,11 @@ const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
       className={`flex justify-between items-center py-1 ${className}`}
       data-json-path={dataPath}
     >
-      <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+      <span className="text-synthwave-neon-pink font-body text-base font-medium">
         {label}:
       </span>
       <span
-        className="text-synthwave-text-primary font-rajdhani text-base"
+        className="text-synthwave-text-primary font-body text-base"
         data-json-value={JSON.stringify(value)}
       >
         {typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}
@@ -51,11 +51,11 @@ const ExerciseDisplay = ({ exercise, roundNumber, exerciseIndex }) => {
       className={`${containerPatterns.workoutDescriptionEditable} space-y-2`}
     >
       <div className="flex items-center justify-between">
-        <h4 className="font-rajdhani font-bold text-synthwave-neon-cyan text-lg capitalize">
+        <h4 className="font-body font-bold text-synthwave-neon-cyan text-lg capitalize">
           {exercise.exercise_name}
           {exercise.variation && ` (${exercise.variation})`}
         </h4>
-        <span className="text-synthwave-text-secondary text-sm font-rajdhani uppercase">
+        <span className="text-synthwave-text-secondary text-sm font-body uppercase">
           {exercise.movement_type}
         </span>
       </div>
@@ -108,11 +108,11 @@ const ExerciseDisplay = ({ exercise, roundNumber, exerciseIndex }) => {
 
       {exercise.form_notes && (
         <div className={`mt-2 p-2 ${containerPatterns.coachNotesSection}`}>
-          <span className="text-synthwave-neon-pink font-rajdhani text-sm font-medium">
+          <span className="text-synthwave-neon-pink font-body text-sm font-medium">
             Notes:{" "}
           </span>
           <span
-            className="text-synthwave-text-secondary font-rajdhani text-sm"
+            className="text-synthwave-text-secondary font-body text-sm"
             data-json-path={`${dataPath}.form_notes`}
             data-json-value={JSON.stringify(exercise.form_notes)}
           >
@@ -130,11 +130,11 @@ const RoundDisplay = ({ round, roundIndex }) => {
     <div className="space-y-3">
       <div className="flex items-center space-x-2">
         <div className="w-8 h-8 bg-synthwave-neon-pink/20 border border-synthwave-neon-pink rounded-full flex items-center justify-center">
-          <span className="text-synthwave-neon-pink font-rajdhani font-bold text-sm">
+          <span className="text-synthwave-neon-pink font-body font-bold text-sm">
             {round.round_number}
           </span>
         </div>
-        <h3 className="font-rajdhani font-bold text-white text-lg">
+        <h3 className="font-body font-bold text-white text-lg">
           Round {round.round_number}
         </h3>
       </div>
@@ -210,11 +210,11 @@ const PowerliftingSetDisplay = ({ set, setIndex, dataPath }) => {
     <div className="space-y-2">
       <div className="flex items-center space-x-2">
         <div className="w-8 h-8 bg-synthwave-neon-cyan/20 border border-synthwave-neon-cyan rounded-full flex items-center justify-center">
-          <span className="text-synthwave-neon-cyan font-rajdhani font-bold text-sm">
+          <span className="text-synthwave-neon-cyan font-body font-bold text-sm">
             {setIndex + 1}
           </span>
         </div>
-        <h3 className="font-rajdhani font-bold text-white text-lg">
+        <h3 className="font-body font-bold text-white text-lg">
           Set {setIndex + 1}
         </h3>
         <span
@@ -286,7 +286,7 @@ const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-rajdhani font-bold text-synthwave-neon-cyan text-xl capitalize">
+          <h3 className="font-body font-bold text-synthwave-neon-cyan text-xl capitalize">
             {exercise.exercise_name?.replace(/_/g, " ")}
           </h3>
           <div className="flex items-center gap-2 mt-1">
@@ -302,7 +302,7 @@ const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
               {exercise.movement_category?.replace(/_/g, " ") || "main lift"}
             </span>
             {exercise.equipment && exercise.equipment.length > 0 && (
-              <span className="text-synthwave-text-muted font-rajdhani text-sm">
+              <span className="text-synthwave-text-muted font-body text-sm">
                 {exercise.equipment.join(", ")}
               </span>
             )}
@@ -325,7 +325,7 @@ const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
 
       {exercise.attempts && (
         <div className={containerPatterns.workoutDescriptionEditable}>
-          <h5 className="font-rajdhani font-bold text-synthwave-neon-cyan text-base uppercase mb-2">
+          <h5 className="font-body font-bold text-synthwave-neon-cyan text-base uppercase mb-2">
             Attempts
           </h5>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -354,10 +354,10 @@ const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
           {exercise.attempts.successful_attempts &&
             exercise.attempts.successful_attempts.length > 0 && (
               <div className="mt-2">
-                <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">
+                <span className="text-synthwave-neon-cyan font-body text-sm font-medium">
                   Successful:{" "}
                 </span>
-                <span className="text-synthwave-text-primary font-rajdhani text-sm">
+                <span className="text-synthwave-text-primary font-body text-sm">
                   {exercise.attempts.successful_attempts.join("lbs, ")}lbs
                 </span>
               </div>
@@ -365,10 +365,10 @@ const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
           {exercise.attempts.missed_attempts &&
             exercise.attempts.missed_attempts.length > 0 && (
               <div className="mt-1">
-                <span className="text-synthwave-neon-pink font-rajdhani text-sm font-medium">
+                <span className="text-synthwave-neon-pink font-body text-sm font-medium">
                   Missed:{" "}
                 </span>
-                <span className="text-synthwave-text-primary font-rajdhani text-sm">
+                <span className="text-synthwave-text-primary font-body text-sm">
                   {exercise.attempts.missed_attempts.join("lbs, ")}lbs
                 </span>
               </div>
@@ -614,11 +614,11 @@ const SubjectiveFeedback = ({ feedback }) => {
 
       {feedback.notes && (
         <div className={containerPatterns.coachNotesSection}>
-          <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+          <span className="text-synthwave-neon-pink font-body text-base font-medium">
             Notes:{" "}
           </span>
           <span
-            className="text-synthwave-text-secondary font-rajdhani text-base"
+            className="text-synthwave-text-secondary font-body text-base"
             data-json-path="workoutData.subjective_feedback.notes"
             data-json-value={JSON.stringify(feedback.notes)}
           >
@@ -631,7 +631,7 @@ const SubjectiveFeedback = ({ feedback }) => {
         <div className="grid grid-cols-2 gap-4">
           {feedback.soreness_pre && (
             <div>
-              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+              <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
                 Pre-Workout Soreness
               </h4>
               <div className="space-y-1">
@@ -677,7 +677,7 @@ const SubjectiveFeedback = ({ feedback }) => {
 
           {feedback.soreness_post && (
             <div>
-              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+              <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
                 Post-Workout Soreness
               </h4>
               <div className="space-y-1">
@@ -734,11 +734,11 @@ const CoachNotes = ({ notes }) => {
     <div className="space-y-4">
       {notes.programming_intent && (
         <div className={containerPatterns.workoutDescriptionEditable}>
-          <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
+          <span className="text-synthwave-neon-cyan font-body text-base font-medium">
             Programming Intent:{" "}
           </span>
           <span
-            className="text-synthwave-text-secondary font-rajdhani text-base"
+            className="text-synthwave-text-secondary font-body text-base"
             data-json-path="workoutData.coach_notes.programming_intent"
             data-json-value={JSON.stringify(notes.programming_intent)}
           >
@@ -750,14 +750,14 @@ const CoachNotes = ({ notes }) => {
       {notes.positive_observations &&
         notes.positive_observations.length > 0 && (
           <div>
-            <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+            <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
               Positive Observations
             </h4>
             <ul className="space-y-1">
               {notes.positive_observations.map((observation, index) => (
                 <li
                   key={index}
-                  className="text-synthwave-text-secondary font-rajdhani text-base flex items-start space-x-2"
+                  className="text-synthwave-text-secondary font-body text-base flex items-start space-x-2"
                   data-json-path={`workoutData.coach_notes.positive_observations[${index}]`}
                   data-json-value={JSON.stringify(observation)}
                 >
@@ -772,14 +772,14 @@ const CoachNotes = ({ notes }) => {
       {notes.areas_for_improvement &&
         notes.areas_for_improvement.length > 0 && (
           <div>
-            <h4 className="text-synthwave-neon-pink font-rajdhani font-bold text-base mb-2">
+            <h4 className="text-synthwave-neon-pink font-body font-bold text-base mb-2">
               Areas for Improvement
             </h4>
             <ul className="space-y-1">
               {notes.areas_for_improvement.map((area, index) => (
                 <li
                   key={index}
-                  className="text-synthwave-text-secondary font-rajdhani text-base flex items-start space-x-2"
+                  className="text-synthwave-text-secondary font-body text-base flex items-start space-x-2"
                   data-json-path={`workoutData.coach_notes.areas_for_improvement[${index}]`}
                   data-json-value={JSON.stringify(area)}
                 >
@@ -793,11 +793,11 @@ const CoachNotes = ({ notes }) => {
 
       {notes.next_session_focus && (
         <div className={containerPatterns.coachNotesSection}>
-          <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+          <span className="text-synthwave-neon-pink font-body text-base font-medium">
             Next Session Focus:{" "}
           </span>
           <span
-            className="text-synthwave-text-secondary font-rajdhani text-base"
+            className="text-synthwave-text-secondary font-body text-base"
             data-json-path="workoutData.coach_notes.next_session_focus"
             data-json-value={JSON.stringify(notes.next_session_focus)}
           >
@@ -814,7 +814,7 @@ const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
   return (
     <div className="py-2">
       {/* Segment Name and All Details on One Line */}
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs font-rajdhani">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs font-body">
         <span className="font-bold text-synthwave-neon-cyan text-sm capitalize">
           Segment {segment.segment_number}: {segment.segment_type}
         </span>
@@ -886,7 +886,7 @@ const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
 
       {/* Notes on Second Line if Present */}
       {segment.notes && (
-        <div className="mt-1 text-xs font-rajdhani text-synthwave-text-secondary italic">
+        <div className="mt-1 text-xs font-body text-synthwave-text-secondary italic">
           {segment.notes}
         </div>
       )}
@@ -902,7 +902,7 @@ const RunningDetails = ({ runningData }) => {
     <div className="space-y-4">
       {runningData.weather && (
         <div>
-          <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+          <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
             Weather Conditions
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -940,7 +940,7 @@ const RunningDetails = ({ runningData }) => {
 
       {runningData.equipment && (
         <div>
-          <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+          <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
             Equipment
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -961,10 +961,10 @@ const RunningDetails = ({ runningData }) => {
             {runningData.equipment.other_gear &&
               runningData.equipment.other_gear.length > 0 && (
                 <div className="col-span-2">
-                  <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+                  <span className="text-synthwave-neon-pink font-body text-base font-medium">
                     Other Gear:{" "}
                   </span>
-                  <span className="text-synthwave-text-primary font-rajdhani text-base">
+                  <span className="text-synthwave-text-primary font-body text-base">
                     {runningData.equipment.other_gear.join(", ")}
                   </span>
                 </div>
@@ -978,18 +978,18 @@ const RunningDetails = ({ runningData }) => {
           <div className={containerPatterns.workoutDescriptionEditable}>
             {runningData.route.name && (
               <>
-                <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
+                <span className="text-synthwave-neon-cyan font-body text-base font-medium">
                   Route:{" "}
                 </span>
                 <span
-                  className="text-synthwave-text-primary font-rajdhani text-base"
+                  className="text-synthwave-text-primary font-body text-base"
                   data-json-path="workoutData.discipline_specific.running.route.name"
                   data-json-value={JSON.stringify(runningData.route.name)}
                 >
                   {runningData.route.name}
                 </span>
                 {runningData.route.type && (
-                  <span className="text-synthwave-text-secondary font-rajdhani text-sm ml-2">
+                  <span className="text-synthwave-text-secondary font-body text-sm ml-2">
                     ({runningData.route.type.replace(/_/g, " ")})
                   </span>
                 )}
@@ -998,7 +998,7 @@ const RunningDetails = ({ runningData }) => {
             {runningData.route.description && (
               <div className="mt-1">
                 <span
-                  className="text-synthwave-text-secondary font-rajdhani text-base"
+                  className="text-synthwave-text-secondary font-body text-base"
                   data-json-path="workoutData.discipline_specific.running.route.description"
                   data-json-value={JSON.stringify(
                     runningData.route.description,
@@ -1015,7 +1015,7 @@ const RunningDetails = ({ runningData }) => {
         <div className="grid grid-cols-2 gap-4">
           {runningData.warmup && (
             <div>
-              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+              <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
                 Warmup
               </h4>
               <div className="space-y-1">
@@ -1035,7 +1035,7 @@ const RunningDetails = ({ runningData }) => {
                 )}
                 {runningData.warmup.description && (
                   <div
-                    className="text-synthwave-text-secondary font-rajdhani text-sm"
+                    className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.running.warmup.description"
                     data-json-value={JSON.stringify(
                       runningData.warmup.description,
@@ -1050,7 +1050,7 @@ const RunningDetails = ({ runningData }) => {
 
           {runningData.cooldown && (
             <div>
-              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+              <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
                 Cooldown
               </h4>
               <div className="space-y-1">
@@ -1070,7 +1070,7 @@ const RunningDetails = ({ runningData }) => {
                 )}
                 {runningData.cooldown.description && (
                   <div
-                    className="text-synthwave-text-secondary font-rajdhani text-sm"
+                    className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.running.cooldown.description"
                     data-json-value={JSON.stringify(
                       runningData.cooldown.description,
@@ -1090,7 +1090,7 @@ const RunningDetails = ({ runningData }) => {
           runningData.fueling.during_run ||
           runningData.fueling.hydration_oz) && (
           <div>
-            <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+            <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
               Nutrition & Hydration
             </h4>
             <div className="space-y-2">
@@ -1098,11 +1098,11 @@ const RunningDetails = ({ runningData }) => {
                 <div
                   className={`p-2 ${containerPatterns.workoutDescriptionEditable}`}
                 >
-                  <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">
+                  <span className="text-synthwave-neon-cyan font-body text-sm font-medium">
                     Pre-Run:{" "}
                   </span>
                   <span
-                    className="text-synthwave-text-secondary font-rajdhani text-sm"
+                    className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.running.fueling.pre_run"
                     data-json-value={JSON.stringify(
                       runningData.fueling.pre_run,
@@ -1117,10 +1117,10 @@ const RunningDetails = ({ runningData }) => {
                   <div
                     className={`p-2 ${containerPatterns.workoutDescriptionEditable}`}
                   >
-                    <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">
+                    <span className="text-synthwave-neon-cyan font-body text-sm font-medium">
                       During Run:{" "}
                     </span>
-                    <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <span className="text-synthwave-text-secondary font-body text-sm">
                       {runningData.fueling.during_run.join(", ")}
                     </span>
                   </div>
@@ -1187,7 +1187,7 @@ const WorkoutViewer = ({
   if (!workout || !workout.workoutData) {
     return (
       <div className="text-center py-8">
-        <div className="text-synthwave-text-secondary font-rajdhani text-lg">
+        <div className="text-synthwave-text-secondary font-body text-lg">
           No workout data available
         </div>
       </div>
@@ -1255,7 +1255,7 @@ const WorkoutViewer = ({
                   onSave={onSaveWorkoutTitle}
                   placeholder="Enter workout name..."
                   size="large"
-                  displayClassName="font-barlow font-bold text-white text-lg uppercase"
+                  displayClassName="font-header font-bold text-white text-lg uppercase"
                   containerClassName="flex items-center gap-2 group"
                   buttonClassName="px-2 py-0 text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 rounded-md focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
                 />
@@ -1280,13 +1280,13 @@ const WorkoutViewer = ({
               <div id="session-stats-content" className="px-6 pb-6 space-y-3">
                 {/* Subsection 1: Session Details */}
                 <div>
-                  <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                  <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Session Details
                   </h4>
                   <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       {/* Completed Date - Full Width */}
-                      <div className="col-span-2 flex items-center gap-1.5 font-rajdhani text-sm">
+                      <div className="col-span-2 flex items-center gap-1.5 font-body text-sm">
                         <span className="text-synthwave-text-secondary">
                           Completed:
                         </span>
@@ -1313,7 +1313,7 @@ const WorkoutViewer = ({
 
                       {/* Discipline */}
                       {workoutData.discipline && (
-                        <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                        <div className="flex items-center gap-1.5 font-body text-sm">
                           <span className="text-synthwave-text-secondary">
                             Discipline:
                           </span>
@@ -1325,7 +1325,7 @@ const WorkoutViewer = ({
 
                       {/* Type */}
                       {workoutData.workout_type && (
-                        <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                        <div className="flex items-center gap-1.5 font-body text-sm">
                           <span className="text-synthwave-text-secondary">
                             Type:
                           </span>
@@ -1337,7 +1337,7 @@ const WorkoutViewer = ({
 
                       {/* Location */}
                       {workoutData.location && (
-                        <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                        <div className="flex items-center gap-1.5 font-body text-sm">
                           <span className="text-synthwave-text-secondary">
                             Location:
                           </span>
@@ -1349,7 +1349,7 @@ const WorkoutViewer = ({
 
                       {/* Methodology */}
                       {workoutData.methodology && (
-                        <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                        <div className="flex items-center gap-1.5 font-body text-sm">
                           <span className="text-synthwave-text-secondary">
                             Methodology:
                           </span>
@@ -1366,7 +1366,7 @@ const WorkoutViewer = ({
                 <div>
                   <button
                     onClick={() => toggleSubsection("workout-metrics")}
-                    className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                    className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                   >
                     <span>Workout Metrics</span>
                     <svg
@@ -1392,7 +1392,7 @@ const WorkoutViewer = ({
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         {/* Duration */}
                         {workoutData.duration && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Duration:
                             </span>
@@ -1404,7 +1404,7 @@ const WorkoutViewer = ({
 
                         {/* Session Duration */}
                         {workoutData.session_duration && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Session Duration:
                             </span>
@@ -1417,7 +1417,7 @@ const WorkoutViewer = ({
 
                         {/* Calories */}
                         {workoutData.performance_metrics?.calories_burned && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Calories:
                             </span>
@@ -1431,7 +1431,7 @@ const WorkoutViewer = ({
                         {crossfitData && (
                           <>
                             {crossfitData.workout_format && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Format:
                                 </span>
@@ -1441,7 +1441,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {crossfitData.rx_status && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   RX Status:
                                 </span>
@@ -1452,7 +1452,7 @@ const WorkoutViewer = ({
                             )}
                             {crossfitData.performance_data
                               ?.rounds_completed && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Rounds:
                                 </span>
@@ -1465,7 +1465,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {crossfitData.performance_data?.total_reps && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Total Reps:
                                 </span>
@@ -1475,7 +1475,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {crossfitData.performance_data?.total_time && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Total Time:
                                 </span>
@@ -1493,7 +1493,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {crossfitData.time_cap && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Time Cap:
                                 </span>
@@ -1507,7 +1507,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {crossfitData.performance_data?.score && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Score:
                                 </span>
@@ -1535,7 +1535,7 @@ const WorkoutViewer = ({
                         {runningData && (
                           <>
                             {runningData.run_type && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Run Type:
                                 </span>
@@ -1545,7 +1545,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {runningData.total_distance && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Distance:
                                 </span>
@@ -1556,7 +1556,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {runningData.total_time && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Total Time:
                                 </span>
@@ -1570,7 +1570,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {runningData.average_pace && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Avg Pace:
                                 </span>
@@ -1580,7 +1580,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {runningData.surface && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Surface:
                                 </span>
@@ -1590,7 +1590,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {runningData.elevation_gain && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Elevation Gain:
                                 </span>
@@ -1600,7 +1600,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {runningData.elevation_loss && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Elevation Loss:
                                 </span>
@@ -1610,7 +1610,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {runningData.route?.name && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Route:
                                 </span>
@@ -1626,7 +1626,7 @@ const WorkoutViewer = ({
                         {powerliftingData && (
                           <>
                             {powerliftingData.session_type && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Session Type:
                                 </span>
@@ -1636,7 +1636,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {powerliftingData.exercises?.length && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Exercises:
                                 </span>
@@ -1647,7 +1647,7 @@ const WorkoutViewer = ({
                             )}
                             {powerliftingData.competition_prep !==
                               undefined && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Competition Prep:
                                 </span>
@@ -1660,7 +1660,7 @@ const WorkoutViewer = ({
                             )}
                             {powerliftingData.exercises &&
                               powerliftingData.exercises.length > 0 && (
-                                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <div className="flex items-center gap-1.5 font-body text-sm">
                                   <span className="text-synthwave-text-secondary">
                                     Total Sets:
                                   </span>
@@ -1679,7 +1679,7 @@ const WorkoutViewer = ({
                         {bodybuildingData && (
                           <>
                             {bodybuildingData.split_type && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Split Type:
                                 </span>
@@ -1694,7 +1694,7 @@ const WorkoutViewer = ({
                             {bodybuildingData.target_muscle_groups &&
                               bodybuildingData.target_muscle_groups.length >
                                 0 && (
-                                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <div className="flex items-center gap-1.5 font-body text-sm">
                                   <span className="text-synthwave-text-secondary">
                                     Target Muscles:
                                   </span>
@@ -1706,7 +1706,7 @@ const WorkoutViewer = ({
                                 </div>
                               )}
                             {bodybuildingData.exercises?.length && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Exercises:
                                 </span>
@@ -1717,7 +1717,7 @@ const WorkoutViewer = ({
                             )}
                             {bodybuildingData.exercises &&
                               bodybuildingData.exercises.length > 0 && (
-                                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <div className="flex items-center gap-1.5 font-body text-sm">
                                   <span className="text-synthwave-text-secondary">
                                     Total Sets:
                                   </span>
@@ -1736,7 +1736,7 @@ const WorkoutViewer = ({
                         {hyroxData && (
                           <>
                             {hyroxData.race_or_training && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Type:
                                 </span>
@@ -1746,7 +1746,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {hyroxData.division && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Division:
                                 </span>
@@ -1756,7 +1756,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {hyroxData.total_time && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Total Time:
                                 </span>
@@ -1770,7 +1770,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {hyroxData.stations?.length && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Stations:
                                 </span>
@@ -1780,7 +1780,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {hyroxData.runs?.length && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Runs:
                                 </span>
@@ -1796,7 +1796,7 @@ const WorkoutViewer = ({
                         {olympicWeightliftingData && (
                           <>
                             {olympicWeightliftingData.session_type && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Session Type:
                                 </span>
@@ -1810,7 +1810,7 @@ const WorkoutViewer = ({
                             )}
                             {olympicWeightliftingData.competition_prep !==
                               undefined && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Competition Prep:
                                 </span>
@@ -1822,7 +1822,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {olympicWeightliftingData.lifts?.length && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Lifts:
                                 </span>
@@ -1833,7 +1833,7 @@ const WorkoutViewer = ({
                             )}
                             {olympicWeightliftingData.lifts &&
                               olympicWeightliftingData.lifts.length > 0 && (
-                                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <div className="flex items-center gap-1.5 font-body text-sm">
                                   <span className="text-synthwave-text-secondary">
                                     Total Sets:
                                   </span>
@@ -1853,7 +1853,7 @@ const WorkoutViewer = ({
                         {functionalBodybuildingData && (
                           <>
                             {functionalBodybuildingData.session_focus && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Session Focus:
                                 </span>
@@ -1866,7 +1866,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {functionalBodybuildingData.methodology && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Methodology:
                                 </span>
@@ -1879,7 +1879,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {functionalBodybuildingData.exercises?.length && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Exercises:
                                 </span>
@@ -1891,7 +1891,7 @@ const WorkoutViewer = ({
                             {functionalBodybuildingData.exercises &&
                               functionalBodybuildingData.exercises.length >
                                 0 && (
-                                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <div className="flex items-center gap-1.5 font-body text-sm">
                                   <span className="text-synthwave-text-secondary">
                                     Total Sets:
                                   </span>
@@ -1910,7 +1910,7 @@ const WorkoutViewer = ({
                         {calisthenicsData && (
                           <>
                             {calisthenicsData.session_focus && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Session Focus:
                                 </span>
@@ -1920,7 +1920,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {calisthenicsData.exercises?.length && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Exercises:
                                 </span>
@@ -1931,7 +1931,7 @@ const WorkoutViewer = ({
                             )}
                             {calisthenicsData.exercises &&
                               calisthenicsData.exercises.length > 0 && (
-                                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <div className="flex items-center gap-1.5 font-body text-sm">
                                   <span className="text-synthwave-text-secondary">
                                     Total Sets:
                                   </span>
@@ -1976,7 +1976,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start gap-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                <h3 className="font-header font-bold text-white text-lg uppercase">
                   Subjective Feedback
                 </h3>
               </div>
@@ -2011,13 +2011,13 @@ const WorkoutViewer = ({
                       workoutData.subjective_feedback.confidence ||
                       workoutData.subjective_feedback.mental_state) && (
                       <div>
-                        <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                        <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                           Feedback Scores
                         </h4>
                         <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
                             {workoutData.subjective_feedback.enjoyment && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Enjoyment:
                                 </span>
@@ -2027,7 +2027,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {workoutData.subjective_feedback.difficulty && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Difficulty:
                                 </span>
@@ -2038,7 +2038,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {workoutData.subjective_feedback.form_quality && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Form Quality:
                                 </span>
@@ -2049,7 +2049,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {workoutData.subjective_feedback.motivation && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Motivation:
                                 </span>
@@ -2060,7 +2060,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {workoutData.subjective_feedback.confidence && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Confidence:
                                 </span>
@@ -2071,7 +2071,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {workoutData.subjective_feedback.mental_state && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Mental State:
                                 </span>
@@ -2092,7 +2092,7 @@ const WorkoutViewer = ({
                       <div>
                         <button
                           onClick={() => toggleSubsection("physical-notes")}
-                          className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                          className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                         >
                           <span>Physical Notes</span>
                           <svg
@@ -2116,7 +2116,7 @@ const WorkoutViewer = ({
                         {!collapsedSubsections.has("physical-notes") && (
                           <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4 space-y-3 animate-fadeIn">
                             {workoutData.subjective_feedback.notes && (
-                              <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+                              <div className="text-synthwave-text-secondary font-body text-sm">
                                 {workoutData.subjective_feedback.notes}
                               </div>
                             )}
@@ -2128,13 +2128,13 @@ const WorkoutViewer = ({
                                 {workoutData.subjective_feedback
                                   .soreness_pre && (
                                   <div>
-                                    <div className="text-synthwave-neon-cyan font-rajdhani text-xs uppercase font-semibold mb-1">
+                                    <div className="text-synthwave-neon-cyan font-body text-xs uppercase font-semibold mb-1">
                                       Pre-Workout Soreness
                                     </div>
                                     <div className="space-y-1">
                                       {workoutData.subjective_feedback
                                         .soreness_pre.overall && (
-                                        <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                        <div className="flex items-center gap-1.5 font-body text-sm">
                                           <span className="text-synthwave-text-secondary">
                                             Overall:
                                           </span>
@@ -2153,13 +2153,13 @@ const WorkoutViewer = ({
                                 {workoutData.subjective_feedback
                                   .soreness_post && (
                                   <div>
-                                    <div className="text-synthwave-neon-cyan font-rajdhani text-xs uppercase font-semibold mb-1">
+                                    <div className="text-synthwave-neon-cyan font-body text-xs uppercase font-semibold mb-1">
                                       Post-Workout Soreness
                                     </div>
                                     <div className="space-y-1">
                                       {workoutData.subjective_feedback
                                         .soreness_post.overall && (
-                                        <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                        <div className="flex items-center gap-1.5 font-body text-sm">
                                           <span className="text-synthwave-text-secondary">
                                             Overall:
                                           </span>
@@ -2184,7 +2184,7 @@ const WorkoutViewer = ({
                   </>
                 ) : (
                   <div className={containerPatterns.coachNotesSection}>
-                    <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <div className="font-body text-sm text-synthwave-text-secondary">
                       No subjective feedback recorded for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
                         When logging workouts, mention how you felt
@@ -2298,7 +2298,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start gap-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                <h3 className="font-header font-bold text-white text-lg uppercase">
                   Personal Insights
                 </h3>
               </div>
@@ -2331,14 +2331,14 @@ const WorkoutViewer = ({
                   workoutData.performance_metrics?.energy_level_pre ||
                   workoutData.performance_metrics?.energy_level_post) && (
                   <div>
-                    <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                    <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Personal Feedback
                     </h4>
                     <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         {/* Intensity */}
                         {workoutData.performance_metrics?.intensity && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Intensity:
                             </span>
@@ -2351,7 +2351,7 @@ const WorkoutViewer = ({
                         {/* RPE */}
                         {workoutData.performance_metrics
                           ?.perceived_exertion && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               RPE:
                             </span>
@@ -2367,7 +2367,7 @@ const WorkoutViewer = ({
 
                         {/* Pre-Mood */}
                         {workoutData.performance_metrics?.mood_pre && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Pre-Mood:
                             </span>
@@ -2379,7 +2379,7 @@ const WorkoutViewer = ({
 
                         {/* Post-Mood */}
                         {workoutData.performance_metrics?.mood_post && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Post-Mood:
                             </span>
@@ -2391,7 +2391,7 @@ const WorkoutViewer = ({
 
                         {/* Pre-Energy */}
                         {workoutData.performance_metrics?.energy_level_pre && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Pre-Energy:
                             </span>
@@ -2404,7 +2404,7 @@ const WorkoutViewer = ({
 
                         {/* Post-Energy */}
                         {workoutData.performance_metrics?.energy_level_post && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Post-Energy:
                             </span>
@@ -2427,7 +2427,7 @@ const WorkoutViewer = ({
                   <div>
                     <button
                       onClick={() => toggleSubsection("the-breakdown")}
-                      className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                      className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                     >
                       <span>The Breakdown</span>
                       <svg
@@ -2452,14 +2452,14 @@ const WorkoutViewer = ({
                       <div
                         className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
                       >
-                        <div className="text-synthwave-text-secondary font-rajdhani text-sm leading-relaxed">
+                        <div className="text-synthwave-text-secondary font-body text-sm leading-relaxed">
                           {workout.summary}
                         </div>
                         <div className="mt-3 p-3 bg-synthwave-bg-primary/30 rounded-md border border-synthwave-neon-cyan/20">
-                          <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">
+                          <span className="text-synthwave-neon-cyan font-body text-sm font-medium">
                             Generated by AI
                           </span>
-                          <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                          <span className="text-synthwave-text-secondary font-body text-sm">
                             {" "}
                             • Provides contextual overview of workout
                             performance and key highlights
@@ -2496,7 +2496,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start gap-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                <h3 className="font-header font-bold text-white text-lg uppercase">
                   PR Achievements
                   {workoutData.pr_achievements &&
                     workoutData.pr_achievements.length > 0 &&
@@ -2532,7 +2532,7 @@ const WorkoutViewer = ({
                           className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4"
                         >
                           <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-rajdhani font-bold text-synthwave-neon-pink text-base capitalize">
+                            <h4 className="font-body font-bold text-synthwave-neon-pink text-base capitalize">
                               {pr.exercise}{" "}
                               {pr.pr_type && `(${getPrTypeLabel(pr.pr_type)})`}
                             </h4>
@@ -2551,7 +2551,7 @@ const WorkoutViewer = ({
 
                           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                             {pr.previous_best && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Previous:
                                 </span>
@@ -2566,7 +2566,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {pr.new_best && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   New:
                                 </span>
@@ -2581,7 +2581,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {pr.improvement && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Improvement:
                                 </span>
@@ -2596,7 +2596,7 @@ const WorkoutViewer = ({
                               </div>
                             )}
                             {pr.improvement_percentage && (
-                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                              <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   %:
                                 </span>
@@ -2608,7 +2608,7 @@ const WorkoutViewer = ({
                           </div>
 
                           {pr.context && (
-                            <div className="mt-2 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <div className="mt-2 text-synthwave-text-secondary font-body text-sm">
                               {pr.context}
                             </div>
                           )}
@@ -2618,7 +2618,7 @@ const WorkoutViewer = ({
                   </div>
                 ) : (
                   <div className={containerPatterns.coachNotesSection}>
-                    <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <div className="font-body text-sm text-synthwave-text-secondary">
                       No PR achievements recorded for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
                         When you log workouts and mention hitting new personal
@@ -2645,7 +2645,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start space-x-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                <h3 className="font-header font-bold text-white text-lg uppercase">
                   Coach Notes
                 </h3>
               </div>
@@ -2672,7 +2672,7 @@ const WorkoutViewer = ({
                       <div>
                         <button
                           onClick={() => toggleSubsection("programming-intent")}
-                          className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                          className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                         >
                           <span>Programming Intent</span>
                           <svg
@@ -2695,7 +2695,7 @@ const WorkoutViewer = ({
                         </button>
                         {!collapsedSubsections.has("programming-intent") && (
                           <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4 animate-fadeIn">
-                            <div className="text-synthwave-text-secondary font-rajdhani text-sm leading-relaxed">
+                            <div className="text-synthwave-text-secondary font-body text-sm leading-relaxed">
                               {workoutData.coach_notes.programming_intent}
                             </div>
                           </div>
@@ -2712,7 +2712,7 @@ const WorkoutViewer = ({
                             onClick={() =>
                               toggleSubsection("positive-observations")
                             }
-                            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                            className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                           >
                             <span>Positive Observations</span>
                             <svg
@@ -2744,7 +2744,7 @@ const WorkoutViewer = ({
                                   (observation, index) => (
                                     <li
                                       key={index}
-                                      className="text-synthwave-text-secondary font-rajdhani text-sm flex items-start gap-2"
+                                      className="text-synthwave-text-secondary font-body text-sm flex items-start gap-2"
                                     >
                                       <span className="text-synthwave-neon-cyan mt-0.5">
                                         •
@@ -2770,7 +2770,7 @@ const WorkoutViewer = ({
                             onClick={() =>
                               toggleSubsection("areas-for-improvement")
                             }
-                            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                            className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                           >
                             <span>Areas for Improvement</span>
                             <svg
@@ -2802,7 +2802,7 @@ const WorkoutViewer = ({
                                   (area, index) => (
                                     <li
                                       key={index}
-                                      className="text-synthwave-text-secondary font-rajdhani text-sm flex items-start gap-2"
+                                      className="text-synthwave-text-secondary font-body text-sm flex items-start gap-2"
                                     >
                                       <span className="text-synthwave-neon-cyan mt-0.5">
                                         •
@@ -2822,7 +2822,7 @@ const WorkoutViewer = ({
                       <div>
                         <button
                           onClick={() => toggleSubsection("next-session-focus")}
-                          className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                          className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                         >
                           <span>Next Session Focus</span>
                           <svg
@@ -2845,7 +2845,7 @@ const WorkoutViewer = ({
                         </button>
                         {!collapsedSubsections.has("next-session-focus") && (
                           <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4 animate-fadeIn">
-                            <div className="text-synthwave-text-secondary font-rajdhani text-sm leading-relaxed">
+                            <div className="text-synthwave-text-secondary font-body text-sm leading-relaxed">
                               {workoutData.coach_notes.next_session_focus}
                             </div>
                           </div>
@@ -2855,7 +2855,7 @@ const WorkoutViewer = ({
                   </>
                 ) : (
                   <div className={containerPatterns.coachNotesSection}>
-                    <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <div className="font-body text-sm text-synthwave-text-secondary">
                       No coach notes available for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
                         Coach notes are typically added to workout templates
@@ -2881,7 +2881,7 @@ const WorkoutViewer = ({
             >
               <div className="flex items-start space-x-3">
                 <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                <h3 className="font-header font-bold text-white text-lg uppercase">
                   Extraction Notes
                 </h3>
               </div>
@@ -2903,11 +2903,11 @@ const WorkoutViewer = ({
               <div className="px-6 pb-6 space-y-4">
                 {/* Subsection 1: Extraction Summary */}
                 <div>
-                  <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                  <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Extraction Summary
                   </h4>
                   <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-                    <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <div className="text-synthwave-text-secondary font-body text-sm">
                       {workoutData.metadata?.extraction_notes || (
                         <>
                           No extraction notes available.{" "}
@@ -2927,7 +2927,7 @@ const WorkoutViewer = ({
                 <div>
                   <button
                     onClick={() => toggleSubsection("quality-metrics")}
-                    className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                    className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                   >
                     <span>Quality Metrics</span>
                     <svg
@@ -2954,7 +2954,7 @@ const WorkoutViewer = ({
                         {/* Confidence */}
                         {workoutData.metadata?.data_confidence !==
                           undefined && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Confidence:
                             </span>
@@ -2970,7 +2970,7 @@ const WorkoutViewer = ({
                         {/* Completeness */}
                         {workoutData.metadata?.data_completeness !==
                           undefined && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Completeness:
                             </span>
@@ -2985,7 +2985,7 @@ const WorkoutViewer = ({
 
                         {/* Schema Version */}
                         {workoutData.metadata?.schema_version && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Schema:
                             </span>
@@ -2997,7 +2997,7 @@ const WorkoutViewer = ({
 
                         {/* AI Extracted */}
                         {workoutData.metadata?.ai_extracted !== undefined && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               AI Extracted:
                             </span>
@@ -3009,7 +3009,7 @@ const WorkoutViewer = ({
 
                         {/* User Verified */}
                         {workoutData.metadata?.user_verified !== undefined && (
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Verified:
                             </span>
@@ -3025,7 +3025,7 @@ const WorkoutViewer = ({
                       {/* Extraction Method - On its own line */}
                       {workoutData.metadata?.extraction_method && (
                         <div className="mt-3">
-                          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                          <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-secondary">
                               Method:
                             </span>
@@ -3040,7 +3040,7 @@ const WorkoutViewer = ({
                       {workoutData.metadata?.validation_flags &&
                         workoutData.metadata.validation_flags.length > 0 && (
                           <div className="mt-3">
-                            <div className="text-synthwave-neon-cyan font-rajdhani font-semibold text-xs uppercase mb-2">
+                            <div className="text-synthwave-neon-cyan font-body font-semibold text-xs uppercase mb-2">
                               Validation Flags
                             </div>
                             <ul className="space-y-1">
@@ -3048,7 +3048,7 @@ const WorkoutViewer = ({
                                 (flag, index) => (
                                   <li
                                     key={index}
-                                    className="text-synthwave-text-muted font-rajdhani text-sm flex items-start space-x-2"
+                                    className="text-synthwave-text-muted font-body text-sm flex items-start space-x-2"
                                   >
                                     <span className="text-synthwave-neon-cyan">
                                       •
@@ -3070,7 +3070,7 @@ const WorkoutViewer = ({
                     <div>
                       <button
                         onClick={() => toggleSubsection("extraction-tips")}
-                        className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                        className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                       >
                         <span>Extraction Tips</span>
                         <svg
@@ -3095,19 +3095,19 @@ const WorkoutViewer = ({
                         <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4 animate-fadeIn">
                           <div className="flex items-start space-x-2">
                             <div className="flex-1">
-                              <h5 className="text-synthwave-neon-cyan font-rajdhani font-bold text-sm mb-2">
+                              <h5 className="text-synthwave-neon-cyan font-body font-bold text-sm mb-2">
                                 Improve Your Data Completeness (Currently{" "}
                                 {Math.round(
                                   workoutData.metadata.data_completeness * 100,
                                 )}
                                 %)
                               </h5>
-                              <p className="text-synthwave-text-secondary font-rajdhani text-xs mb-2">
+                              <p className="text-synthwave-text-secondary font-body text-xs mb-2">
                                 To get a more complete workout record, try
                                 including these details in your next workout
                                 log:
                               </p>
-                              <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-xs">
+                              <ul className="space-y-1 text-synthwave-text-secondary font-body text-xs">
                                 {!workoutData.subjective_feedback
                                   ?.enjoyment && (
                                   <li className="flex items-start space-x-2">
@@ -3163,7 +3163,7 @@ const WorkoutViewer = ({
                                   </li>
                                 )}
                               </ul>
-                              <p className="text-synthwave-neon-cyan font-rajdhani text-xs mt-2 italic">
+                              <p className="text-synthwave-neon-cyan font-body text-xs mt-2 italic">
                                 Just tell your coach naturally - e.g., "I
                                 enjoyed it 8/10, felt challenging at 7/10, and I
                                 got about 7 hours of sleep last night"
@@ -3191,7 +3191,7 @@ const WorkoutViewer = ({
           >
             <div className="flex items-start space-x-3">
               <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-              <h3 className="font-barlow font-bold text-white text-lg uppercase">
+              <h3 className="font-header font-bold text-white text-lg uppercase">
                 Raw Workout Data
               </h3>
             </div>

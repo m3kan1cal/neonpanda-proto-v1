@@ -113,11 +113,11 @@ export default function ProgramCalendar({
           <div
             className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
           ></div>
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Training Calendar
           </h3>
         </div>
-        <p className="text-center text-synthwave-text-muted py-8 font-rajdhani">
+        <p className="text-center text-synthwave-text-muted py-8 font-body">
           Loading calendar...
         </p>
       </div>
@@ -131,7 +131,7 @@ export default function ProgramCalendar({
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Training Calendar
         </h3>
       </div>
@@ -139,7 +139,7 @@ export default function ProgramCalendar({
       {/* Controls */}
       <div className="flex items-center justify-between mb-4">
         {/* Legend */}
-        <div className="flex flex-wrap gap-3 text-xs font-rajdhani">
+        <div className="flex flex-wrap gap-3 text-xs font-body">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-synthwave-neon-pink"></div>
             <span className="text-synthwave-text-secondary">Done</span>
@@ -206,7 +206,7 @@ export default function ProgramCalendar({
               {/* Week header */}
               <div className="flex items-center justify-between mb-2">
                 <h4
-                  className={`font-rajdhani text-sm font-semibold uppercase tracking-wide ${isCurrentWeek ? "text-synthwave-neon-pink" : "text-synthwave-text-secondary"}`}
+                  className={`font-body text-sm font-semibold uppercase tracking-wide ${isCurrentWeek ? "text-synthwave-neon-pink" : "text-synthwave-text-secondary"}`}
                 >
                   Week {weekIndex + 1}
                   {isCurrentWeek && (
@@ -215,7 +215,7 @@ export default function ProgramCalendar({
                     </span>
                   )}
                 </h4>
-                <span className="text-xs text-synthwave-text-muted font-rajdhani">
+                <span className="text-xs text-synthwave-text-muted font-body">
                   Days {week[0]?.dayNumber || 1} -{" "}
                   {week[week.length - 1]?.dayNumber || 7}
                 </span>
@@ -242,7 +242,7 @@ export default function ProgramCalendar({
 
       {/* Show count if not showing all */}
       {!showAllWeeks && weeks.length > visibleWeeks.length && (
-        <div className="text-center mt-6 font-rajdhani text-xs text-synthwave-text-muted">
+        <div className="text-center mt-6 font-body text-xs text-synthwave-text-muted">
           Viewing {visibleWeeks.length} of {weeks.length} weeks
         </div>
       )}

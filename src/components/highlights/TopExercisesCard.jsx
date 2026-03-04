@@ -62,7 +62,7 @@ export default function TopExercisesCard({
         <span className="text-synthwave-neon-cyan shrink-0 mt-1.5">
           <WeightPlateIconTiny className="w-5 h-5" />
         </span>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Top Exercises
         </h3>
       </div>
@@ -75,16 +75,16 @@ export default function TopExercisesCard({
             className="rounded-md bg-synthwave-bg-primary/40 border border-synthwave-neon-cyan/15 px-3 py-2 transition-all duration-200 hover:bg-synthwave-bg-primary/60 hover:border-synthwave-neon-cyan/30 hover:shadow-lg hover:shadow-synthwave-neon-cyan/5"
           >
             {/* Exercise name -- small muted uppercase section header */}
-            <div className="font-rajdhani text-[11px] text-synthwave-text-secondary uppercase font-semibold tracking-wider truncate mb-0.5">
+            <div className="font-body text-[11px] text-synthwave-text-secondary uppercase font-semibold tracking-wider truncate mb-0.5">
               {ex.displayName}
             </div>
 
             {/* Count hero number with label */}
             <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="font-barlow text-2xl text-white leading-none">
+              <span className="font-header text-2xl text-white leading-none">
                 {ex.count}
               </span>
-              <span className="font-rajdhani text-sm text-synthwave-text-muted font-medium">
+              <span className="font-body text-sm text-synthwave-text-muted font-medium">
                 workouts
               </span>
             </div>

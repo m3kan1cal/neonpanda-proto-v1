@@ -102,7 +102,7 @@ export default function PhaseTimeline({ program }) {
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Phase Timeline
         </h3>
       </div>
@@ -196,7 +196,7 @@ export default function PhaseTimeline({ program }) {
         </div>
 
         {/* Day markers */}
-        <div className="flex justify-between mt-2 px-1 font-rajdhani">
+        <div className="flex justify-between mt-2 px-1 font-body">
           <span className="text-xs text-synthwave-text-muted">Day 1</span>
           <span className="text-xs text-synthwave-text-muted">
             Day {totalDays}
@@ -216,7 +216,7 @@ export default function PhaseTimeline({ program }) {
           return (
             <div
               key={phaseKey}
-              className={`${containerPatterns.coachNotesSection} font-rajdhani`}
+              className={`${containerPatterns.coachNotesSection} font-body`}
             >
               <button
                 onClick={() => togglePhase(phaseKey)}

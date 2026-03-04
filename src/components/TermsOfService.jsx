@@ -72,7 +72,7 @@ function TermsOfService() {
               <p className={typographyPatterns.description}>
                 NeonPanda provides AI-powered fitness coaching services, including:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Personalized AI fitness coaches with customizable personalities and expertise</span>
@@ -107,7 +107,7 @@ function TermsOfService() {
               <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-cyan text-xl mb-3`}>
                 Account Creation
               </h3>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>You must be at least 13 years old to create an account</span>
@@ -145,7 +145,7 @@ function TermsOfService() {
               <p className={typographyPatterns.description}>
                 You agree to use NeonPanda only for lawful purposes and in accordance with these Terms. You agree NOT to:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Use the service for any illegal or unauthorized purpose</span>
@@ -185,7 +185,7 @@ function TermsOfService() {
                 <p className={`${typographyPatterns.description} text-synthwave-neon-pink font-semibold mb-4`}>
                   IMPORTANT: NeonPanda is not a medical service and does not provide medical advice.
                 </p>
-                <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                   <li className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                     <span>Our AI coaches provide fitness guidance, not medical advice</span>
@@ -217,7 +217,7 @@ function TermsOfService() {
               <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-cyan text-xl mb-3`}>
                 Subscription Plans
               </h3>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Subscription fees are charged in advance on a recurring basis</span>
@@ -259,7 +259,7 @@ function TermsOfService() {
               <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-pink text-xl mb-3`}>
                 Your AI Rights
               </h3>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Right to Explanation:</strong> Understand why any AI recommendation was made for your specific situation</span>
@@ -281,7 +281,7 @@ function TermsOfService() {
               <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-cyan text-xl mb-3 mt-8`}>
                 Our AI Commitments
               </h3>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>All AI decisions include clear, understandable explanations</span>
@@ -351,7 +351,7 @@ function TermsOfService() {
               <p className={typographyPatterns.description}>
                 We strive to provide reliable service, but we cannot guarantee uninterrupted availability. We may:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Modify, suspend, or discontinue any part of our service at any time</span>
@@ -399,7 +399,7 @@ function TermsOfService() {
               <p className={typographyPatterns.description}>
                 Either party may terminate these Terms at any time. We may terminate or suspend your account immediately if you violate these Terms. Upon termination:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span>Your access to NeonPanda will be immediately revoked</span>
