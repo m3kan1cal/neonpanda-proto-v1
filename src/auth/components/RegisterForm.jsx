@@ -221,7 +221,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="font-rajdhani font-bold text-2xl text-white mb-4 uppercase">
+          <h1 className="font-body font-bold text-2xl text-white mb-4 uppercase">
             Create Account
           </h1>
         </div>
@@ -369,7 +369,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
         />
 
         {/* Password Requirements */}
-        <div className="text-sm font-rajdhani text-synthwave-neon-cyan space-y-1">
+        <div className="text-sm font-body text-synthwave-neon-cyan space-y-1">
           <p className="font-medium text-synthwave-neon-cyan">Password must contain:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>At least 8 characters</li>
@@ -398,7 +398,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
         </div>
 
         <div className="text-center pt-4 border-t border-synthwave-neon-pink/20">
-          <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+          <p className="font-body text-synthwave-text-secondary mb-3">
             Already have an account?
           </p>
           <AuthButton

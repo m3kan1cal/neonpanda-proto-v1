@@ -16,7 +16,7 @@ const Toast = ({ toast, onRemove }) => {
   };
 
     const getToastStyles = (type) => {
-    const baseStyles = "relative overflow-hidden font-rajdhani";
+    const baseStyles = "relative overflow-hidden font-body";
 
     switch (type) {
       case 'success':

@@ -56,7 +56,7 @@ function PrivacyPolicy() {
               <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-pink text-xl mb-3`}>
                 Information You Provide
               </h3>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Account Information:</strong> Name, email address, password, and profile details</span>
@@ -80,7 +80,7 @@ function PrivacyPolicy() {
               <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-cyan text-xl mb-3`}>
                 Information We Collect Automatically
               </h3>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-cyan">Usage Data:</strong> How you interact with our platform, features used, and session duration</span>
@@ -107,7 +107,7 @@ function PrivacyPolicy() {
               <p className={typographyPatterns.description}>
                 We use your information to provide and improve our AI coaching services:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span>Personalize your AI coach's behavior and recommendations</span>
@@ -146,7 +146,7 @@ function PrivacyPolicy() {
               <p className={typographyPatterns.description}>
                 <strong className="text-synthwave-neon-purple">We do not sell your personal information.</strong> We may share your information only in the following circumstances:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Service Providers:</strong> Trusted third parties who help us operate our platform (cloud hosting, analytics, customer support)</span>
@@ -177,7 +177,7 @@ function PrivacyPolicy() {
               <p className={typographyPatterns.description}>
                 We implement industry-standard security measures to protect your personal information:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-cyan mt-1 shrink-0">•</span>
                   <span>Encryption in transit and at rest using AES-256 standards</span>
@@ -208,7 +208,7 @@ function PrivacyPolicy() {
               <p className={typographyPatterns.description}>
                 <strong className="text-synthwave-neon-purple">We believe you should understand how AI affects your coaching experience.</strong> Here's how we ensure transparency:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Decision Explanations:</strong> Every AI recommendation comes with clear reasoning you can understand</span>
@@ -243,7 +243,7 @@ function PrivacyPolicy() {
               <p className={typographyPatterns.description}>
                 You have the following rights regarding your personal information:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-pink mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-pink">Access:</strong> Request a copy of the personal information we hold about you</span>
@@ -289,7 +289,7 @@ function PrivacyPolicy() {
               <p className={typographyPatterns.description}>
                 We use cookies and similar technologies to enhance your experience and analyze platform usage. You can control cookie preferences through your browser settings.
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-purple mt-1 shrink-0">•</span>
                   <span><strong className="text-synthwave-neon-purple">Essential Cookies:</strong> Required for platform functionality and security</span>

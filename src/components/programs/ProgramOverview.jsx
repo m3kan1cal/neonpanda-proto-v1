@@ -37,7 +37,7 @@ export default function ProgramOverview({
       active: {
         text: "Active",
         className:
-          "bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-rajdhani uppercase border border-green-500/40",
+          "bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-body uppercase border border-green-500/40",
       },
       paused: {
         text: "Paused",
@@ -165,14 +165,14 @@ export default function ProgramOverview({
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Program Overview
         </h3>
       </div>
 
       {/* Program Name with Status Badge */}
       <div className="mb-4 flex items-start gap-3">
-        <div className="font-rajdhani text-lg text-white">{program.name}</div>
+        <div className="font-body text-lg text-white">{program.name}</div>
         {getStatusBadge()}
       </div>
 
@@ -180,14 +180,14 @@ export default function ProgramOverview({
       <div className="space-y-4">
         {/* Program Intel */}
         <div className="mb-4">
-          <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
             Program Intel
           </h4>
           <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               {/* Coach - Full Width */}
               {program.coachNames && program.coachNames.length > 0 && (
-                <div className="col-span-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-rajdhani text-sm">
+                <div className="col-span-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-body text-sm">
                   <span className="text-synthwave-text-secondary shrink-0">
                     Coach:
                   </span>
@@ -201,7 +201,7 @@ export default function ProgramOverview({
 
               {/* Duration */}
               {program.totalDays && (
-                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+                <div className="flex flex-col gap-0.5 font-body text-sm">
                   <span className="text-synthwave-text-secondary">
                     Duration
                   </span>
@@ -214,7 +214,7 @@ export default function ProgramOverview({
 
               {/* Frequency */}
               {program.trainingFrequency && (
-                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+                <div className="flex flex-col gap-0.5 font-body text-sm">
                   <span className="text-synthwave-text-secondary">
                     Frequency
                   </span>
@@ -226,7 +226,7 @@ export default function ProgramOverview({
 
               {/* Total Workouts */}
               {program.totalWorkouts && (
-                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+                <div className="flex flex-col gap-0.5 font-body text-sm">
                   <span className="text-synthwave-text-secondary">
                     Workouts
                   </span>
@@ -238,7 +238,7 @@ export default function ProgramOverview({
 
               {/* Phases */}
               {program.phases && program.phases.length > 0 && (
-                <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+                <div className="flex flex-col gap-0.5 font-body text-sm">
                   <span className="text-synthwave-text-secondary">Phases</span>
                   <span className="text-synthwave-neon-cyan font-medium">
                     {program.phases.length}
@@ -252,11 +252,11 @@ export default function ProgramOverview({
         {/* Program Description */}
         {program.description && (
           <div className="mb-4">
-            <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
               The Game Plan
             </h4>
             <div className={containerPatterns.coachNotesSection}>
-              <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+              <div className="font-body text-sm text-synthwave-text-secondary">
                 {program.description}
               </div>
             </div>
@@ -266,11 +266,11 @@ export default function ProgramOverview({
         {/* Program Goals */}
         {program.goals && (
           <div className="mb-4">
-            <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
               Your Targets
             </h4>
             <div className={containerPatterns.coachNotesSection}>
-              <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+              <div className="font-body text-sm text-synthwave-text-secondary">
                 {program.goals}
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function ProgramOverview({
                     {allFocusAreas.map((area, i) => (
                       <li
                         key={i}
-                        className="flex items-start gap-2 font-rajdhani text-sm text-synthwave-text-secondary"
+                        className="flex items-start gap-2 font-body text-sm text-synthwave-text-secondary"
                       >
                         <span className="text-synthwave-neon-cyan mt-0.5">
                           •
@@ -372,7 +372,7 @@ export default function ProgramOverview({
               <div className="space-y-1">
                 {/* First row: Created and Started */}
                 <div className="flex gap-x-4">
-                  <div className="w-1/2 font-rajdhani text-sm text-synthwave-text-secondary">
+                  <div className="w-1/2 font-body text-sm text-synthwave-text-secondary">
                     Created:{" "}
                     {program.createdAt ? (
                       <span className="text-synthwave-neon-cyan">
@@ -382,7 +382,7 @@ export default function ProgramOverview({
                       <span className="text-synthwave-text-muted">Unknown</span>
                     )}
                   </div>
-                  <div className="w-1/2 font-rajdhani text-sm text-synthwave-text-secondary">
+                  <div className="w-1/2 font-body text-sm text-synthwave-text-secondary">
                     Started:{" "}
                     {program.startedAt ? (
                       <span className="text-synthwave-neon-cyan">
@@ -396,7 +396,7 @@ export default function ProgramOverview({
                   </div>
                 </div>
                 {/* Second row: Completed */}
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                <div className="font-body text-sm text-synthwave-text-secondary">
                   Completed:{" "}
                   {program.completedAt ? (
                     <span className="text-synthwave-neon-cyan">

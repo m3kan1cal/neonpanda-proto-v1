@@ -11,11 +11,11 @@ const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
       className={`flex justify-between items-center py-1 ${className}`}
       data-json-path={dataPath}
     >
-      <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+      <span className="text-synthwave-neon-pink font-body text-base font-medium">
         {label}:
       </span>
       <span
-        className="text-synthwave-text-primary font-rajdhani text-base"
+        className="text-synthwave-text-primary font-body text-base"
         data-json-value={JSON.stringify(value)}
       >
         {typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}
@@ -29,7 +29,7 @@ const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
   return (
     <div className="py-2">
       {/* Segment Name and All Details on One Line */}
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-rajdhani">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
         <span className="font-bold text-synthwave-neon-cyan text-sm capitalize">
           Segment {segment.segment_number}: {segment.segment_type}
         </span>
@@ -103,7 +103,7 @@ const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
 
       {/* Notes on Second Line if Present */}
       {segment.notes && (
-        <div className="mt-1 text-sm font-rajdhani text-synthwave-text-secondary italic">
+        <div className="mt-1 text-sm font-body text-synthwave-text-secondary italic">
           {segment.notes}
         </div>
       )}
@@ -119,7 +119,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
     <div className="space-y-3">
       {runningData.weather && (
         <div>
-          <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+          <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
             Weather Conditions
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -157,7 +157,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
 
       {runningData.equipment && (
         <div>
-          <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+          <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
             Equipment
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -178,10 +178,10 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
             {runningData.equipment.other_gear &&
               runningData.equipment.other_gear.length > 0 && (
                 <div className="col-span-2">
-                  <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+                  <span className="text-synthwave-neon-pink font-body text-base font-medium">
                     Other Gear:{" "}
                   </span>
-                  <span className="text-synthwave-text-primary font-rajdhani text-base">
+                  <span className="text-synthwave-text-primary font-body text-base">
                     {runningData.equipment.other_gear.join(", ")}
                   </span>
                 </div>
@@ -195,18 +195,18 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
           <div className={containerPatterns.workoutDescriptionEditable}>
             {runningData.route.name && (
               <>
-                <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
+                <span className="text-synthwave-neon-cyan font-body text-base font-medium">
                   Route:{" "}
                 </span>
                 <span
-                  className="text-synthwave-text-primary font-rajdhani text-base"
+                  className="text-synthwave-text-primary font-body text-base"
                   data-json-path="workoutData.discipline_specific.running.route.name"
                   data-json-value={JSON.stringify(runningData.route.name)}
                 >
                   {runningData.route.name}
                 </span>
                 {runningData.route.type && (
-                  <span className="text-synthwave-text-secondary font-rajdhani text-sm ml-2">
+                  <span className="text-synthwave-text-secondary font-body text-sm ml-2">
                     ({runningData.route.type.replace(/_/g, " ")})
                   </span>
                 )}
@@ -215,7 +215,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
             {runningData.route.description && (
               <div className="mt-1">
                 <span
-                  className="text-synthwave-text-secondary font-rajdhani text-base"
+                  className="text-synthwave-text-secondary font-body text-base"
                   data-json-path="workoutData.discipline_specific.running.route.description"
                   data-json-value={JSON.stringify(
                     runningData.route.description,
@@ -232,7 +232,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
         <div className="grid grid-cols-2 gap-4">
           {runningData.warmup && (
             <div>
-              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+              <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
                 Warmup
               </h4>
               <div className="space-y-1">
@@ -252,7 +252,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
                 )}
                 {runningData.warmup.description && (
                   <div
-                    className="text-synthwave-text-secondary font-rajdhani text-sm"
+                    className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.running.warmup.description"
                     data-json-value={JSON.stringify(
                       runningData.warmup.description,
@@ -267,7 +267,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
 
           {runningData.cooldown && (
             <div>
-              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+              <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
                 Cooldown
               </h4>
               <div className="space-y-1">
@@ -287,7 +287,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
                 )}
                 {runningData.cooldown.description && (
                   <div
-                    className="text-synthwave-text-secondary font-rajdhani text-sm"
+                    className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.running.cooldown.description"
                     data-json-value={JSON.stringify(
                       runningData.cooldown.description,
@@ -307,7 +307,7 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
           runningData.fueling.during_run ||
           runningData.fueling.hydration_oz) && (
           <div>
-            <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">
+            <h4 className="text-synthwave-neon-cyan font-body font-bold text-base mb-2">
               Nutrition & Hydration
             </h4>
             <div className="space-y-2">
@@ -315,11 +315,11 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
                 <div
                   className={`p-2 ${containerPatterns.workoutDescriptionEditable}`}
                 >
-                  <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">
+                  <span className="text-synthwave-neon-cyan font-body text-sm font-medium">
                     Pre-Run:{" "}
                   </span>
                   <span
-                    className="text-synthwave-text-secondary font-rajdhani text-sm"
+                    className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.running.fueling.pre_run"
                     data-json-value={JSON.stringify(
                       runningData.fueling.pre_run,
@@ -334,10 +334,10 @@ const RunningDetails = ({ runningData, containerPatterns }) => {
                   <div
                     className={`p-2 ${containerPatterns.workoutDescriptionEditable}`}
                   >
-                    <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">
+                    <span className="text-synthwave-neon-cyan font-body text-sm font-medium">
                       During Run:{" "}
                     </span>
-                    <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    <span className="text-synthwave-text-secondary font-body text-sm">
                       {runningData.fueling.during_run.join(", ")}
                     </span>
                   </div>
@@ -380,7 +380,7 @@ export const RunningSection = ({
           >
             <div className="flex items-start space-x-3">
               <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-barlow font-bold text-white text-lg uppercase">
+              <h3 className="font-header font-bold text-white text-lg uppercase">
                 Running Details
               </h3>
             </div>
@@ -407,7 +407,7 @@ export const RunningSection = ({
                 />
               ) : (
                 <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-                  <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+                  <div className="text-synthwave-text-secondary font-body text-sm">
                     No running details data available for this workout.
                   </div>
                 </div>
@@ -428,7 +428,7 @@ export const RunningSection = ({
           >
             <div className="flex items-start space-x-3">
               <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-barlow font-bold text-white text-lg uppercase">
+              <h3 className="font-header font-bold text-white text-lg uppercase">
                 Run Segments ({runningData?.segments?.length || 0})
               </h3>
             </div>
@@ -460,7 +460,7 @@ export const RunningSection = ({
                 </div>
               ) : (
                 <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-                  <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+                  <div className="text-synthwave-text-secondary font-body text-sm">
                     No running segments data available for this workout.
                   </div>
                 </div>

@@ -727,7 +727,7 @@ function ChatInput({
         {imageError && (
           <div className="mb-3">
             <div className="bg-red-500/10 border border-red-500/30 p-3 flex items-start justify-between">
-              <span className="text-sm font-rajdhani text-red-400">
+              <span className="text-sm font-body text-red-400">
                 {imageError}
               </span>
               <button
@@ -745,7 +745,7 @@ function ChatInput({
           <div className="mb-3 flex items-center justify-center">
             <div className="bg-red-500 text-white px-4 py-2 rounded-full flex items-center gap-2 animate-pulse">
               <div className="w-3 h-3 bg-white rounded-full"></div>
-              <span className="text-sm font-medium font-rajdhani">
+              <span className="text-sm font-medium font-body">
                 Recording {formatRecordingTime(recordingTime)}
               </span>
               <button
@@ -831,7 +831,7 @@ function ChatInput({
                           window.innerWidth >= 768 &&
                           setShowQuickPromptsSubmenu(false)
                         }
-                        className="flex items-center justify-between space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                        className="flex items-center justify-between space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
                       >
                         <div className="flex items-center space-x-3">
                           <svg
@@ -937,7 +937,7 @@ function ChatInput({
                             photoInputRef.current?.click();
                           }
                         }}
-                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
                       >
                         <CameraIcon />
                         <span>Attach Photos</span>
@@ -953,7 +953,7 @@ function ChatInput({
                             onFileAttachment();
                           }
                         }}
-                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-purple-400 hover:bg-purple-400/10 transition-all duration-300 w-full text-left"
+                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-purple-400 hover:bg-purple-400/10 transition-all duration-300 w-full text-left"
                       >
                         <PaperclipIcon />
                         <span>Attach Files</span>
@@ -972,7 +972,7 @@ function ChatInput({
                           setShowQuickActionsPopup(false);
                           setShowTipsModal(true);
                         }}
-                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
                       >
                         <QuestionIcon />
                         <span>Tips & Help</span>
@@ -986,7 +986,7 @@ function ChatInput({
                           setShowQuickActionsPopup(false);
                           onDeleteClick && onDeleteClick();
                         }}
-                        className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
                       >
                         <TrashIcon />
                         <span>
@@ -1222,7 +1222,7 @@ function ChatInput({
             {/* Slash Command Tooltip */}
             {showSlashCommandTooltip && enableSlashCommands && (
               <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
-                <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+                <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                   Available Slash Commands
                 </div>
                 <div className="space-y-2">
@@ -1246,7 +1246,7 @@ function ChatInput({
                       }}
                     >
                       <div
-                        className={`font-rajdhani text-sm ${
+                        className={`font-body text-sm ${
                           index === selectedCommandIndex
                             ? "text-synthwave-neon-pink"
                             : "text-synthwave-neon-pink"
@@ -1256,7 +1256,7 @@ function ChatInput({
                       </div>
                       <div className="flex-1">
                         <div
-                          className={`font-rajdhani text-sm ${
+                          className={`font-body text-sm ${
                             index === selectedCommandIndex
                               ? "text-white"
                               : "text-white"
@@ -1265,7 +1265,7 @@ function ChatInput({
                           {cmd.description}
                         </div>
                         <div
-                          className={`font-rajdhani text-xs mt-1 ${
+                          className={`font-body text-xs mt-1 ${
                             index === selectedCommandIndex
                               ? "text-synthwave-text-secondary"
                               : "text-synthwave-text-muted"
@@ -1277,7 +1277,7 @@ function ChatInput({
                     </div>
                   ))}
                 </div>
-                <div className="font-rajdhani text-xs text-synthwave-text-muted mt-3 pt-2 border-t border-synthwave-neon-pink/20">
+                <div className="font-body text-xs text-synthwave-text-muted mt-3 pt-2 border-t border-synthwave-neon-pink/20">
                   Use ↑↓ to navigate, Enter to select, Esc to close
                 </div>
               </div>
@@ -1328,7 +1328,7 @@ function ChatInput({
         </form>
 
         {/* AI disclaimer and keyboard shortcuts */}
-        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-synthwave-text-muted font-rajdhani pr-12 md:pr-[74px]">
+        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-synthwave-text-muted font-body pr-12 md:pr-[74px]">
           {/* Left: AI disclaimer - aligned with text input left edge */}
           <div className="flex items-center">
             <span className="text-synthwave-text-muted/80">
@@ -1359,7 +1359,7 @@ function ChatInput({
             <div className="bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-xl shadow-synthwave-neon-cyan/20 flex flex-col w-96 h-[480px]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 shrink-0">
-                <h3 className="font-barlow font-bold text-white text-sm uppercase">
+                <h3 className="font-header font-bold text-white text-sm uppercase">
                   {tipsTitle}
                 </h3>
                 <button
@@ -1392,11 +1392,11 @@ function ChatInput({
                         className={`${containerPatterns.minimalCardStatic} px-3 py-1`}
                       >
                         <div className="mb-2">
-                          <h5 className="font-rajdhani text-base text-white font-medium">
+                          <h5 className="font-body text-base text-white font-medium">
                             {tip.title}
                           </h5>
                         </div>
-                        <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                        <p className="text-synthwave-text-secondary font-body text-sm">
                           {tip.description}
                         </p>
                       </div>

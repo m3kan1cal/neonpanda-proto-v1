@@ -100,7 +100,7 @@ function ProgressIndicator({
   return (
     <div className={`${sizes.container} ${className}`}>
       <div className={`flex items-center justify-between ${sizes.spacing}`}>
-        <span className={`font-rajdhani ${sizes.text} text-synthwave-text-secondary`}>
+        <span className={`font-body ${sizes.text} text-synthwave-text-secondary`}>
           {label}: {current} {currentLabel}
           {subtitle && (
             <span className="ml-2 text-xs text-synthwave-text-muted">
@@ -109,7 +109,7 @@ function ProgressIndicator({
           )}
         </span>
         {showPercentage && (
-          <span className={`font-rajdhani ${sizes.percentage} ${colors.text} font-semibold`}>
+          <span className={`font-body ${sizes.percentage} ${colors.text} font-semibold`}>
             {calculatedPercentage}%
           </span>
         )}
@@ -123,7 +123,7 @@ function ProgressIndicator({
       </div>
 
       {showRemaining && remainingLabel && remaining > 0 && (
-        <p className={`font-rajdhani text-xs text-synthwave-text-muted mt-2 text-center`}>
+        <p className={`font-body text-xs text-synthwave-text-muted mt-2 text-center`}>
           {remaining} {remainingLabel}
         </p>
       )}

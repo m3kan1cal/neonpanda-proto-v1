@@ -250,7 +250,7 @@ const SidebarNav = () => {
         disabled={isDisabled}
         className={`
           ${navigationPatterns.desktop.navItem}
-          ${effectivelyCollapsed ? navigationPatterns.desktop.navItemCollapsed : "py-1"}
+          ${effectivelyCollapsed ? navigationPatterns.desktop.navItemCollapsed : "py-0.5"}
           ${
             isDisabled
               ? "opacity-50 cursor-not-allowed"
@@ -333,7 +333,7 @@ const SidebarNav = () => {
       <button
         className={`
           ${navigationPatterns.desktop.navItem}
-          ${effectivelyCollapsed ? navigationPatterns.desktop.navItemCollapsed : "py-1"}
+          ${effectivelyCollapsed ? navigationPatterns.desktop.navItemCollapsed : "py-0.5"}
           ${isOpen ? accentOpen : `${colorClasses.inactive} ${accentHover}`}
           focus:outline-none active:outline-none
         `}

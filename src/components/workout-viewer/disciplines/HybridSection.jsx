@@ -42,14 +42,14 @@ export const HybridSection = ({
         >
           <div className="flex items-start space-x-3">
             <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-            <h3 className="font-barlow font-bold text-white text-lg uppercase">
+            <h3 className="font-header font-bold text-white text-lg uppercase">
               Hybrid Workout (0)
             </h3>
           </div>
         </div>
         <div className="px-6 pb-6">
           <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-            <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+            <div className="text-synthwave-text-secondary font-body text-sm">
               No hybrid workout data available. This discipline is for
               mixed-modality workouts that don't fit a single training style.
             </div>
@@ -110,7 +110,7 @@ export const HybridSection = ({
       <div key={exerciseIndex}>
         <button
           onClick={() => toggleSubsection(subKey)}
-          className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+          className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
         >
           <div className="flex items-center gap-2">
             <span className="uppercase">{exercise.exercise_name}</span>
@@ -149,7 +149,7 @@ export const HybridSection = ({
               {exercise.sets?.length > 0 ? (
                 exercise.sets.map((set, setIndex) => (
                   <div key={setIndex} className="py-2">
-                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-rajdhani">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
                       {set.set_number && (
                         <span className="font-bold text-synthwave-neon-cyan text-sm">
                           Set {set.set_number}
@@ -183,14 +183,14 @@ export const HybridSection = ({
                       )}
                     </div>
                     {set.notes && (
-                      <div className="mt-1 text-sm font-rajdhani text-synthwave-text-secondary italic">
+                      <div className="mt-1 text-sm font-body text-synthwave-text-secondary italic">
                         {set.notes}
                       </div>
                     )}
                   </div>
                 ))
               ) : (
-                <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <div className="text-synthwave-text-secondary font-body text-sm">
                   No set data recorded
                 </div>
               )}
@@ -219,7 +219,7 @@ export const HybridSection = ({
               className="w-full flex items-center justify-between p-4 bg-synthwave-bg-primary/40 hover:bg-synthwave-bg-primary/60 transition-colors duration-200 cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <span className="font-barlow font-bold text-white text-sm uppercase">
+                <span className="font-header font-bold text-white text-sm uppercase">
                   {phaseName} ({phase.exercises?.length || 0})
                 </span>
                 {phase.phase_type && (
@@ -258,7 +258,7 @@ export const HybridSection = ({
             {!collapsedSubsections.has(phaseKey) && (
               <div className="p-4 space-y-2 animate-fadeIn">
                 {phase.notes && (
-                  <div className="text-sm font-rajdhani text-synthwave-text-secondary italic mb-3">
+                  <div className="text-sm font-body text-synthwave-text-secondary italic mb-3">
                     {phase.notes}
                   </div>
                 )}
@@ -267,7 +267,7 @@ export const HybridSection = ({
                     renderExercise(exercise, exerciseIndex, phaseKey),
                   )
                 ) : (
-                  <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+                  <div className="text-synthwave-text-secondary font-body text-sm">
                     No exercises recorded for this phase
                   </div>
                 )}
@@ -299,12 +299,12 @@ export const HybridSection = ({
         <div className="flex items-start space-x-3">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
           <div className="flex flex-col">
-            <h3 className="font-barlow font-bold text-white text-lg uppercase">
+            <h3 className="font-header font-bold text-white text-lg uppercase">
               Hybrid Workout ({totalExerciseCount})
             </h3>
             {/* Show workout style or primary focus if available */}
             {(hybridData?.workout_style || hybridData?.primary_focus) && (
-              <span className="text-xs text-synthwave-text-secondary font-rajdhani mt-1">
+              <span className="text-xs text-synthwave-text-secondary font-body mt-1">
                 {hybridData.workout_style || hybridData.primary_focus}
               </span>
             )}

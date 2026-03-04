@@ -32,7 +32,7 @@ export function NeonInput({ placeholder, type = "text", className = "" }) {
       className={`
         bg-synthwave-bg-card border-2 border-synthwave-neon-pink/50
         text-synthwave-text-primary placeholder-synthwave-text-muted
-        px-4 py-3 rounded-md font-rajdhani
+        px-4 py-3 rounded-md font-body
         focus:border-synthwave-neon-pink focus:shadow-neon-pink focus:outline-none
         transition-all duration-300
         ${className}
@@ -1429,7 +1429,7 @@ export const NewBadge = () => (
       {/* Pulsing glow effect */}
       <div className="absolute inset-0 bg-synthwave-neon-pink rounded-full animate-pulse opacity-75 blur-sm scale-110"></div>
       {/* Main badge */}
-      <div className="relative bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-black font-barlow font-black text-xs px-2 py-1 rounded-full uppercase tracking-wider shadow-lg shadow-synthwave-neon-pink/50 animate-pulse">
+      <div className="relative bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-black font-header font-black text-xs px-2 py-1 rounded-full uppercase tracking-wider shadow-lg shadow-synthwave-neon-pink/50 animate-pulse">
         NEW
       </div>
     </div>

@@ -342,14 +342,14 @@ function WeeklyReports() {
             {/* Page Title with Beta Badge */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="weekly-report-info"
                 data-tooltip-content="Comprehensive analysis of your weekly training performance including volume, progression, and insights."
               >
                 Weekly Report
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Weekly reports v2 are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -391,7 +391,7 @@ function WeeklyReports() {
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <div className="text-synthwave-text-secondary font-rajdhani text-lg">
+              <div className="text-synthwave-text-secondary font-body text-lg">
                 No report data available
               </div>
             </div>

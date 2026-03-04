@@ -12,7 +12,7 @@ function BlogPost3WorkoutLogger() {
       {/* Opening Hook */}
       <section className="mb-16">
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <p className="font-rajdhani text-xl text-white leading-relaxed italic">
+          <p className="font-body text-xl text-white leading-relaxed italic">
             "Did Fran in 8:45. Had to break up the thrusters 12-9 on the round
             of 21 but pull-ups were unbroken. Felt like death but somehow still
             standing. Pretty sure I saw my ancestors waving at me around rep
@@ -65,13 +65,13 @@ function BlogPost3WorkoutLogger() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-pink mb-4">
             The Old Way (Painful)
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Search, scroll, select:
                 </strong>{" "}
@@ -85,7 +85,7 @@ function BlogPost3WorkoutLogger() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Schema mismatch:
                 </strong>{" "}
@@ -98,7 +98,7 @@ function BlogPost3WorkoutLogger() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Lost context:
                 </strong>{" "}
@@ -112,7 +112,7 @@ function BlogPost3WorkoutLogger() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Benchmark blindness:
                 </strong>{" "}
@@ -139,7 +139,7 @@ function BlogPost3WorkoutLogger() {
       <section className="mb-16">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple">
-            <span className="font-inter font-bold text-xl text-synthwave-neon-purple">
+            <span className="font-body font-bold text-xl text-synthwave-neon-purple">
               3
             </span>
           </div>
@@ -149,7 +149,7 @@ function BlogPost3WorkoutLogger() {
             >
               Agent Spotlight: The Workout Logger Agent
             </h2>
-            <p className="font-rajdhani text-synthwave-text-muted italic">
+            <p className="font-body text-synthwave-text-muted italic">
               "The Multilingual Training Historian"
             </p>
           </div>
@@ -169,10 +169,10 @@ function BlogPost3WorkoutLogger() {
             <span className={badgePatterns.purple}>Tool-Use Pattern</span>
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-4">
             The Tool-Use Pattern: AI with Capabilities
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Workout Logger Agent isn't a single prompt—it's an AI equipped
             with specialized tools that it decides when and how to use. Like
             giving a craftsman access to a workshop full of precision
@@ -259,11 +259,11 @@ function BlogPost3WorkoutLogger() {
                   />
                 </svg>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 CrossFit
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               "Did Fran in 8:45, broke up thrusters 12-9 on the 21s"
             </p>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
@@ -297,11 +297,11 @@ function BlogPost3WorkoutLogger() {
                   <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
                 </svg>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Powerlifting
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               "Worked up to 405x1 on deadlift, RPE 9.5, hitched a bit"
             </p>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
@@ -338,11 +338,11 @@ function BlogPost3WorkoutLogger() {
                   />
                 </svg>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Olympic Weightlifting
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               "Snatches felt heavy, missed 90kg twice, made it on third"
             </p>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
@@ -379,11 +379,11 @@ function BlogPost3WorkoutLogger() {
                   />
                 </svg>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 Running
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               "Easy 10k this morning, about 52 mins, felt smooth"
             </p>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
@@ -429,11 +429,11 @@ function BlogPost3WorkoutLogger() {
                   />
                 </svg>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 HYROX
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               "HYROX sim, 1:28:45, sled push destroyed me"
             </p>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
@@ -470,11 +470,11 @@ function BlogPost3WorkoutLogger() {
                   />
                 </svg>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Circuit Training
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               "F45 Hollywood class, 45 mins, tons of lunges today"
             </p>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3 font-mono text-xs">
@@ -496,10 +496,10 @@ function BlogPost3WorkoutLogger() {
 
         {/* Full Discipline Support */}
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
             10 Disciplines, One Agent
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Workout Logger Agent automatically detects and applies the
             appropriate extraction schema for each discipline:
           </p>
@@ -521,7 +521,7 @@ function BlogPost3WorkoutLogger() {
               </span>
             ))}
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             Each discipline has its own extraction schema, terminology mapping,
             and benchmark database. A "PR" means something different in
             powerlifting vs running vs CrossFit—and the agent knows the
@@ -545,7 +545,7 @@ function BlogPost3WorkoutLogger() {
 
         {/* Visual Flow Diagram */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-6">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-6">
             Extraction Flow Architecture
           </h3>
 
@@ -553,10 +553,10 @@ function BlogPost3WorkoutLogger() {
             <div className="flex flex-col items-center space-y-4">
               {/* Step 1: Message Received */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   1. Message Received
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   "Did Fran in 8:45, broke up thrusters last round"
                 </p>
               </div>
@@ -569,10 +569,10 @@ function BlogPost3WorkoutLogger() {
 
               {/* Step 2: Router Detection */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <span className="font-body font-semibold text-synthwave-neon-cyan">
                   2. Smart Router Detection
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Intent: workout_logging | Dispatch: WorkoutLoggerAgent
                 </p>
               </div>
@@ -585,10 +585,10 @@ function BlogPost3WorkoutLogger() {
 
               {/* Step 3: Discipline Classification */}
               <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
+                <span className="font-body font-semibold text-synthwave-neon-purple">
                   3. Discipline Classification
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   "Fran" → CrossFit benchmark | Load CrossFit schema
                 </p>
               </div>
@@ -601,10 +601,10 @@ function BlogPost3WorkoutLogger() {
 
               {/* Step 4: Structured Extraction */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   4. Structured Extraction (Claude Sonnet)
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Tool use: extract_workout_data with CrossFit schema
                 </p>
               </div>
@@ -617,10 +617,10 @@ function BlogPost3WorkoutLogger() {
 
               {/* Step 5: Normalization & Validation */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <span className="font-body font-semibold text-synthwave-neon-cyan">
                   5. Normalization & Validation
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Data cleanup | Completeness check | Benchmark expansion
                 </p>
               </div>
@@ -634,7 +634,7 @@ function BlogPost3WorkoutLogger() {
               {/* Step 6: Persistence */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-md">
                 <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md p-3 text-center">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-purple text-sm">
+                  <span className="font-body font-semibold text-synthwave-neon-purple text-sm">
                     6a. DynamoDB
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -642,7 +642,7 @@ function BlogPost3WorkoutLogger() {
                   </p>
                 </div>
                 <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md p-3 text-center">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-pink text-sm">
+                  <span className="font-body font-semibold text-synthwave-neon-pink text-sm">
                     6b. Pinecone
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -656,7 +656,7 @@ function BlogPost3WorkoutLogger() {
 
         {/* Code Example */}
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             The Extraction in Code
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
@@ -747,19 +747,19 @@ function BlogPost3WorkoutLogger() {
                   className="w-8 h-8"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Claude Sonnet 4.6
               </h3>
             </div>
-            <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-purple font-body font-semibold mb-2">
               Complex Extraction Engine
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               The heavy lifter. Handles nuanced workout extraction,
               multi-exercise sessions, ambiguous descriptions, and complex
               periodization analysis.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Structured data extraction via tool use</li>
               <li>• Benchmark recognition and expansion</li>
               <li>• Context-aware interpretation</li>
@@ -777,19 +777,19 @@ function BlogPost3WorkoutLogger() {
                   className="w-8 h-8"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Claude Haiku 4.5
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               Fast Response Engine
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               The speedster. Handles quick confirmations, simple clarification
               questions, and validation checks where speed matters more than
               deep reasoning.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• "Got it, logging that now" responses</li>
               <li>• Simple yes/no clarifications</li>
               <li>• Quick validation feedback</li>
@@ -805,18 +805,18 @@ function BlogPost3WorkoutLogger() {
                 alt="Nemotron / Nova"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 Nvidia Nemotron / Amazon Nova 2 Lite
               </h3>
             </div>
-            <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-pink font-body font-semibold mb-2">
               Contextual Updates
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               The hype machine. Generates real-time contextual updates that keep
               users engaged during longer extraction processes.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• "Crunching those numbers..." messages</li>
               <li>• Progress feedback during extraction</li>
               <li>• Coach-personality-aware updates</li>
@@ -828,22 +828,22 @@ function BlogPost3WorkoutLogger() {
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
-                <span className="font-barlow text-synthwave-neon-cyan text-lg">
+                <span className="font-header text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Nvidia NV-Embed-V2
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               Semantic Embeddings
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               The memory keeper. Generates vector embeddings that enable
               semantic search across your entire workout history.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• State-of-the-art embedding quality</li>
               <li>• Workout similarity search</li>
               <li>• Cross-discipline pattern matching</li>
@@ -854,7 +854,7 @@ function BlogPost3WorkoutLogger() {
 
         {/* Model Selection Logic */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Intelligent Model Selection
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
@@ -878,7 +878,7 @@ function BlogPost3WorkoutLogger() {
             </div>
             <div className="text-synthwave-neon-cyan">{`};`}</div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             This multi-model approach means you get Sonnet-quality extraction
             without paying Sonnet prices for every message. The result: better
             quality AND lower costs.
@@ -911,10 +911,10 @@ function BlogPost3WorkoutLogger() {
             <span className={badgePatterns.purple}>Evaluator-Optimizer</span>
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-4">
             Confidence-Based Flow Control
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Every extraction includes a confidence score. If confidence drops
             below threshold, the agent asks targeted questions. If confidence is
             high, it proceeds immediately—no unnecessary friction.
@@ -967,10 +967,10 @@ function BlogPost3WorkoutLogger() {
 
         {/* Normalization */}
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             The Normalizer: Fixing What's Broken
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             When confidence dips below threshold, we don't just ask questions—we
             also run the extraction through our normalization pipeline. The
             normalizer fixes common issues automatically before the data ever
@@ -1000,7 +1000,7 @@ function BlogPost3WorkoutLogger() {
             </div>
             <div className="text-synthwave-neon-cyan">{`});`}</div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+          <p className="text-synthwave-text-secondary font-body text-sm">
             This means even messy input—abbreviations, inconsistent formatting,
             mixed units—gets cleaned up before storage. Your data stays
             consistent even when your post-workout brain isn't.
@@ -1009,13 +1009,13 @@ function BlogPost3WorkoutLogger() {
 
         {/* Confidence Factors */}
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             What Affects Confidence?
           </h3>
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Benchmark recognition:
                 </strong>{" "}
@@ -1027,7 +1027,7 @@ function BlogPost3WorkoutLogger() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Unit ambiguity:
                 </strong>{" "}
@@ -1039,7 +1039,7 @@ function BlogPost3WorkoutLogger() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Completeness:
                 </strong>{" "}
@@ -1051,7 +1051,7 @@ function BlogPost3WorkoutLogger() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Historical context:
                 </strong>{" "}
@@ -1085,17 +1085,17 @@ function BlogPost3WorkoutLogger() {
             <span className={badgePatterns.purple}>Fan Favorite</span>
             <span className={badgePatterns.muted}>Zero Typing Required</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-purple mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-purple mb-4">
             Snap the Whiteboard, Skip the Typing
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Walk into your gym, see the workout on the whiteboard, snap a photo,
             and attach it to your message. That's it. The Workout Logger Agent
             reads the coach's handwriting, extracts the workout structure,
             identifies the format (AMRAP, For Time, EMOM, etc.), and creates a
             complete workout record.
           </p>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             After you finish, just tell your coach your results:{" "}
             <span className="text-synthwave-neon-purple italic">
               "Finished in 12:34, scaled the muscle-ups to pull-ups"
@@ -1126,45 +1126,45 @@ function BlogPost3WorkoutLogger() {
         </div>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             Image Understanding Capabilities
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Whiteboard Workouts
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 Snap a photo of your box's WOD board. The AI reads the workout,
                 understands the format, and structures it automatically. Walk
                 in, snap, train, done.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Programming Screenshots
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 Found a workout on social media? Screenshot it, send it to your
                 coach. The agent extracts the workout and asks for your results
                 when you're done.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Handwritten Notes
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 That workout you scribbled in your notebook? Photograph it.
                 Claude's vision capabilities handle handwriting surprisingly
                 well.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 App Screenshots
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 Switching from another app? Screenshot your old workout logs and
                 we'll import the data. Migration doesn't have to be painful.
               </p>
@@ -1173,10 +1173,10 @@ function BlogPost3WorkoutLogger() {
         </div>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Vision + Text = Complete Picture
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The real power comes from combining image understanding with
             conversational context. Send a whiteboard photo with "Did this
             today, took me 12:34" and the agent combines visual extraction with
@@ -1229,10 +1229,10 @@ function BlogPost3WorkoutLogger() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Weekly Reports */}
           <div className={containerPatterns.mediumGlass}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
               Weekly Reports (Automated)
             </h3>
-            <ul className="space-y-2 text-synthwave-text-secondary font-rajdhani">
+            <ul className="space-y-2 text-synthwave-text-secondary font-body">
               <li className="flex items-center gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 Training volume and intensity trends
@@ -1258,10 +1258,10 @@ function BlogPost3WorkoutLogger() {
 
           {/* Monthly Reports */}
           <div className={containerPatterns.mediumGlassPink}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
               Monthly Reports (Automated)
             </h3>
-            <ul className="space-y-2 text-synthwave-text-secondary font-rajdhani">
+            <ul className="space-y-2 text-synthwave-text-secondary font-body">
               <li className="flex items-center gap-2">
                 <span className="text-synthwave-neon-pink">→</span>
                 Strength progression analysis
@@ -1288,43 +1288,43 @@ function BlogPost3WorkoutLogger() {
 
         {/* Semantic Search */}
         <div className={`${containerPatterns.mediumGlassPurple} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-4">
             Semantic Workout Search
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Because workouts are indexed in Pinecone as semantic embeddings,
             your coach can query your history in natural language:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3">
-              <p className="text-synthwave-neon-purple font-rajdhani text-sm font-semibold mb-1">
+              <p className="text-synthwave-neon-purple font-body text-sm font-semibold mb-1">
                 "When did I last do Fran?"
               </p>
-              <p className="text-synthwave-text-muted font-rajdhani text-xs">
+              <p className="text-synthwave-text-muted font-body text-xs">
                 → Finds your most recent Fran attempt with time and context
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3">
-              <p className="text-synthwave-neon-purple font-rajdhani text-sm font-semibold mb-1">
+              <p className="text-synthwave-neon-purple font-body text-sm font-semibold mb-1">
                 "Show me heavy squat sessions"
               </p>
-              <p className="text-synthwave-text-muted font-rajdhani text-xs">
+              <p className="text-synthwave-text-muted font-body text-xs">
                 → Retrieves high-intensity squat workouts by semantic similarity
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3">
-              <p className="text-synthwave-neon-purple font-rajdhani text-sm font-semibold mb-1">
+              <p className="text-synthwave-neon-purple font-body text-sm font-semibold mb-1">
                 "Workouts where I felt great"
               </p>
-              <p className="text-synthwave-text-muted font-rajdhani text-xs">
+              <p className="text-synthwave-text-muted font-body text-xs">
                 → Finds sessions with positive sentiment in notes
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-3">
-              <p className="text-synthwave-neon-purple font-rajdhani text-sm font-semibold mb-1">
+              <p className="text-synthwave-neon-purple font-body text-sm font-semibold mb-1">
                 "Compare my Cindy to last month"
               </p>
-              <p className="text-synthwave-text-muted font-rajdhani text-xs">
+              <p className="text-synthwave-text-muted font-body text-xs">
                 → Retrieves and compares benchmark attempts over time
               </p>
             </div>
@@ -1333,10 +1333,10 @@ function BlogPost3WorkoutLogger() {
 
         {/* Fire and Forget */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Fire-and-Forget Analytics Processing
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Report generation happens asynchronously via Lambda invocations.
             When you complete a workout, we fire off analytics processing
             without blocking your conversation. You chat with your coach while
@@ -1386,10 +1386,10 @@ function BlogPost3WorkoutLogger() {
         </p>
 
         <div className={containerPatterns.boldGradient}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             The Compound Effect of Good Data
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-6">
+          <p className="text-synthwave-text-secondary font-body mb-6">
             Every workout you log makes your coach smarter. Over time, the
             system learns your patterns, recognizes your strengths and
             weaknesses, and provides increasingly personalized guidance. Month
@@ -1399,34 +1399,34 @@ function BlogPost3WorkoutLogger() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 ~2s
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Average Log Time
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-cyan mb-1">
                 9
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Disciplines Supported
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-purple mb-1">
                 100+
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Benchmark Workouts
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 ∞
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Semantic Queries
               </div>
             </div>
@@ -1437,16 +1437,16 @@ function BlogPost3WorkoutLogger() {
       {/* Try It */}
       <section className="mb-16">
         <div className={`${containerPatterns.mediumGlassCyan}`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
             Ready to Stop Fighting Your Fitness App?
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             If you've ever abandoned a workout log because the app made you
             click through 47 screens, NeonPanda was built for you. Log workouts
             the way you actually think about them—in plain English, with photos,
             however makes sense in the moment.
           </p>
-          <p className="text-synthwave-text-secondary font-rajdhani">
+          <p className="text-synthwave-text-secondary font-body">
             <span className="text-synthwave-neon-cyan font-semibold">
               Your first coach is free.
             </span>{" "}
@@ -1480,7 +1480,7 @@ function BlogPost3WorkoutLogger() {
 
         <div className={containerPatterns.cardLight}>
           <div className="p-6">
-            <p className="font-rajdhani text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
+            <p className="font-body text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
               Next in the Series
             </p>
             <Link
@@ -1488,10 +1488,10 @@ function BlogPost3WorkoutLogger() {
               className="group flex items-center justify-between"
             >
               <div>
-                <h3 className="font-barlow text-xl text-synthwave-neon-pink group-hover:text-synthwave-neon-cyan transition-colors">
+                <h3 className="font-header text-xl text-synthwave-neon-pink group-hover:text-synthwave-neon-cyan transition-colors">
                   Training Programs That Think
                 </h3>
-                <p className="font-rajdhani text-synthwave-text-secondary">
+                <p className="font-body text-synthwave-text-secondary">
                   The Program Designer Agent & Orchestrator Pattern
                 </p>
               </div>

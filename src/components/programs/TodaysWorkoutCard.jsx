@@ -27,7 +27,7 @@ function TodaysWorkoutCard({
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
           <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2 animate-pulse"></div>
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
         </div>
@@ -45,7 +45,7 @@ function TodaysWorkoutCard({
       <div className={`${containerPatterns.cardMedium} p-6`}>
         <div className="flex items-start space-x-3 mb-4">
           <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
         </div>
@@ -71,7 +71,7 @@ function TodaysWorkoutCard({
         {/* Header */}
         <div className="flex items-start space-x-3 mb-4">
           <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
         </div>
@@ -79,7 +79,7 @@ function TodaysWorkoutCard({
         {/* Program name */}
         {program && (
           <>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
               {program.name}
             </div>
           </>
@@ -104,10 +104,10 @@ function TodaysWorkoutCard({
               </svg>
             </div>
           </div>
-          <div className="font-rajdhani text-white text-lg uppercase mb-2">
+          <div className="font-body text-white text-lg uppercase mb-2">
             Rest Day
           </div>
-          <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+          <div className="font-body text-sm text-synthwave-text-secondary">
             No workout scheduled for today. Enjoy your recovery!
           </div>
         </div>
@@ -162,24 +162,24 @@ function TodaysWorkoutCard({
         {/* Header */}
         <div className="flex items-start space-x-3 mb-4">
           <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
         </div>
 
         {/* Day info */}
-        <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+        <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
           Day {dayNumber} of {program.totalDays}
         </div>
 
         {/* Program name */}
-        <div className="font-rajdhani text-sm text-synthwave-neon-cyan mb-1">
+        <div className="font-body text-sm text-synthwave-neon-cyan mb-1">
           {program.name}
         </div>
 
         {/* Phase name */}
         {phaseName && (
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary mb-4">
+          <div className="font-body text-xs text-synthwave-text-secondary mb-4">
             {phaseName}
           </div>
         )}
@@ -203,10 +203,10 @@ function TodaysWorkoutCard({
               </svg>
             </div>
           </div>
-          <div className="font-rajdhani text-white text-lg uppercase mb-2">
+          <div className="font-body text-white text-lg uppercase mb-2">
             Rest Day
           </div>
-          <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+          <div className="font-body text-sm text-synthwave-text-secondary">
             No workout scheduled for today. Enjoy your recovery!
           </div>
         </div>
@@ -262,11 +262,11 @@ function TodaysWorkoutCard({
       {/* Header */}
       <div className="flex items-start space-x-3 mb-4">
         <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Today's Workout
         </h3>
         <div
-          className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+          className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
           data-tooltip-id="beta-badge-todays-workout"
           data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
         >
@@ -279,11 +279,11 @@ function TodaysWorkoutCard({
         onClick={handleViewWorkout}
         className="text-left mb-4 block w-full"
       >
-        <div className="font-rajdhani text-lg text-white hover:text-synthwave-neon-cyan transition-colors mb-2 font-semibold">
+        <div className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors mb-2 font-semibold">
           {program.name}
         </div>
         {phaseName && (
-          <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+          <div className="font-body text-sm text-synthwave-text-secondary">
             {phaseName}{" "}
             <span className="text-synthwave-text-muted">
               (Day {dayNumber || program.currentDay || 1} of {program.totalDays}
@@ -297,11 +297,11 @@ function TodaysWorkoutCard({
       <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4 mb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="font-rajdhani font-semibold text-base text-white mb-1">
+            <h3 className="font-body font-semibold text-base text-white mb-1">
               {primaryTemplate.name}
             </h3>
             {primaryTemplate.estimatedDuration && (
-              <div className="font-rajdhani text-xs text-synthwave-text-secondary">
+              <div className="font-body text-xs text-synthwave-text-secondary">
                 Estimated Duration:{" "}
                 <span className="text-synthwave-neon-cyan">
                   {primaryTemplate.estimatedDuration} minutes
@@ -318,7 +318,7 @@ function TodaysWorkoutCard({
       {/* Multiple workouts indicator */}
       {templates.length > 1 && (
         <div className="flex items-center justify-center mb-4">
-          <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-rajdhani">
+          <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-body">
             +{templates.length - 1} more workout
             {templates.length > 2 ? "s" : ""} scheduled today
           </div>

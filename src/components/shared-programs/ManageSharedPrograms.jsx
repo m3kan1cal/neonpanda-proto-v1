@@ -300,7 +300,7 @@ function ManageSharedPrograms() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             {headerText}
           </h3>
         </div>
@@ -308,7 +308,7 @@ function ManageSharedPrograms() {
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-4 mb-4 pr-16">
           {/* Created Date */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <ClockIconSmall />
             <span className="text-synthwave-text-muted">Created:</span>
             <span className="text-synthwave-neon-cyan font-medium">
@@ -320,7 +320,7 @@ function ManageSharedPrograms() {
             </span>
           </div>
           {/* Duration */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Duration:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {totalDays} days
@@ -328,7 +328,7 @@ function ManageSharedPrograms() {
           </div>
           {/* Frequency */}
           {frequency > 0 && (
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <div className="flex items-center gap-1.5 font-body text-sm">
               <span className="text-synthwave-text-muted">Frequency:</span>
               <span className="text-synthwave-neon-cyan font-medium">
                 {frequency}x/week
@@ -336,14 +336,14 @@ function ManageSharedPrograms() {
             </div>
           )}
           {/* Views */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <EyeIconTiny className="w-3.5 h-3.5 text-synthwave-text-muted" />
             <span className="text-synthwave-neon-cyan font-medium">
               {shared.viewCount || 0}
             </span>
           </div>
           {/* Copies */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <UsersIconTiny className="w-3.5 h-3.5 text-synthwave-text-muted" />
             <span className="text-synthwave-neon-cyan font-medium">
               {shared.copyCount || 0}
@@ -358,7 +358,7 @@ function ManageSharedPrograms() {
               type="text"
               value={`${window.location.origin}/shared/programs/${shared.sharedProgramId}`}
               readOnly
-              className="flex-1 px-4 py-3 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary font-rajdhani text-sm cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 truncate"
+              className="flex-1 px-4 py-3 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary font-body text-sm cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 truncate"
               onClick={(e) => e.target.select()}
             />
             <button
@@ -432,10 +432,10 @@ function ManageSharedPrograms() {
       return (
         <div className="text-center py-12">
           <div className="max-w-md mx-auto p-6 border border-synthwave-neon-pink/30 bg-synthwave-bg-card/30">
-            <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">
+            <p className="font-body text-synthwave-neon-pink text-xl font-bold mb-2">
               Error Loading Shared Programs
             </p>
-            <p className="font-rajdhani text-synthwave-text-secondary text-lg mb-6">
+            <p className="font-body text-synthwave-text-secondary text-lg mb-6">
               {error}
             </p>
             <button
@@ -460,10 +460,10 @@ function ManageSharedPrograms() {
     if (sortedPrograms.length === 0) {
       return (
         <div className="text-center py-12">
-          <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+          <div className="font-body text-synthwave-neon-cyan text-base">
             No Shared Programs Yet
           </div>
-          <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+          <div className="font-body text-synthwave-text-muted text-sm mt-2">
             Share a program from your Programs page to generate a link others
             can view and copy.
           </div>
@@ -620,10 +620,10 @@ function ManageSharedPrograms() {
     return (
       <div className="min-h-screen bg-synthwave-bg-tertiary">
         <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-          <h1 className="font-barlow font-black text-3xl text-white mb-6 uppercase">
+          <h1 className="font-header font-black text-3xl text-white mb-6 uppercase">
             Invalid Access
           </h1>
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-8">
+          <p className="font-body text-lg text-synthwave-text-secondary mb-8">
             User ID is required to access shared programs.
           </p>
           <button
@@ -649,7 +649,7 @@ function ManageSharedPrograms() {
             {/* Left section: Title */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="shared-programs-info"
                 data-tooltip-content="Manage programs you've shared with others. Copy links, view previews, or unshare programs."
               >
@@ -739,17 +739,17 @@ function ManageSharedPrograms() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Unshare Program
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-2">
+              <p className="font-body text-base text-synthwave-text-secondary mb-2">
                 Are you sure you want to unshare{" "}
                 <span className="text-white font-semibold">
                   "{programToDelete?.programSnapshot?.name}"
                 </span>
                 ?
               </p>
-              <p className="font-rajdhani text-sm text-synthwave-text-muted mb-6">
+              <p className="font-body text-sm text-synthwave-text-muted mb-6">
                 Anyone with the link will no longer be able to access it.
               </p>
 

@@ -12,7 +12,7 @@ function BlogPost4ProgramDesigner() {
       {/* Opening Hook */}
       <section className="mb-16">
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <p className="font-rajdhani text-xl text-white leading-relaxed italic">
+          <p className="font-body text-xl text-white leading-relaxed italic">
             "I want to lose some body fat and build muscle at the same time.
             I've been doing CrossFit three days a week for about a year but I
             want more structure. I've got a home gym with a barbell and
@@ -69,13 +69,13 @@ function BlogPost4ProgramDesigner() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-pink mb-4">
             Why Program Design Is the Boss Fight
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Temporal coherence:
                 </strong>{" "}
@@ -89,7 +89,7 @@ function BlogPost4ProgramDesigner() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Discipline-specific methodology:
                 </strong>{" "}
@@ -104,7 +104,7 @@ function BlogPost4ProgramDesigner() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Constraint satisfaction:
                 </strong>{" "}
@@ -119,7 +119,7 @@ function BlogPost4ProgramDesigner() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Computational scale:
                 </strong>{" "}
@@ -134,7 +134,7 @@ function BlogPost4ProgramDesigner() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Living context:
                 </strong>{" "}
@@ -179,7 +179,7 @@ function BlogPost4ProgramDesigner() {
         </p>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             10 Disciplines, 10 Programming Philosophies
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -250,7 +250,7 @@ function BlogPost4ProgramDesigner() {
                 className="bg-synthwave-bg-primary/30 rounded-md p-4"
               >
                 <h4
-                  className={`font-rajdhani font-semibold ${
+                  className={`font-body font-semibold ${
                     discipline.color === "pink"
                       ? "text-synthwave-neon-pink"
                       : discipline.color === "cyan"
@@ -260,10 +260,10 @@ function BlogPost4ProgramDesigner() {
                 >
                   {discipline.name}
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-xs mb-1">
+                <p className="text-synthwave-text-secondary font-body text-xs mb-1">
                   {discipline.focus}
                 </p>
-                <p className="text-synthwave-text-muted font-rajdhani text-xs italic">
+                <p className="text-synthwave-text-muted font-body text-xs italic">
                   {discipline.example}
                 </p>
               </div>
@@ -272,10 +272,10 @@ function BlogPost4ProgramDesigner() {
         </div>
 
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             The Hybrid Discipline: For the Methodology-Agnostic Athlete
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Not everyone identifies with a single training methodology. You
             might love Olympic lifting on Mondays, do a MetCon on Wednesdays,
             and hit a bodybuilding session on Fridays. The Hybrid discipline was
@@ -286,10 +286,10 @@ function BlogPost4ProgramDesigner() {
         </div>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Methodology Alignment via Pinecone
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Each discipline has its own methodology library stored as semantic
             embeddings in Pinecone. When the Program Designer builds a
             powerlifting program, it retrieves powerlifting-specific
@@ -321,7 +321,7 @@ function BlogPost4ProgramDesigner() {
               // progression protocols, exercise selection principles
             </div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             This means the AI isn't guessing about how to structure your
             program—it's grounding its decisions in established coaching
             methodology. The methodology library includes proven periodization
@@ -357,21 +357,21 @@ function BlogPost4ProgramDesigner() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPurple} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-4">
             What The Agent Discovers
           </h3>
           <div className="space-y-4">
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
+                <span className="font-body font-bold text-sm text-synthwave-neon-pink">
                   1
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <h4 className="font-body font-semibold text-synthwave-neon-pink">
                   Goals & Timeline
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Body recomp? PR chasing? Competition prep? General fitness?
                   When do you need to peak—or is this ongoing? The answer
                   fundamentally changes the program structure. A 12-week comp
@@ -381,15 +381,15 @@ function BlogPost4ProgramDesigner() {
             </div>
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-cyan">
+                <span className="font-body font-bold text-sm text-synthwave-neon-cyan">
                   2
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <h4 className="font-body font-semibold text-synthwave-neon-cyan">
                   Constraints & Equipment
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Training days per week, session length limits, available
                   equipment, injury history. These constraints interact—3 days
                   in a home gym with 60-minute sessions requires fundamentally
@@ -399,15 +399,15 @@ function BlogPost4ProgramDesigner() {
             </div>
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-full bg-synthwave-neon-purple/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-purple">
+                <span className="font-body font-bold text-sm text-synthwave-neon-purple">
                   3
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple">
+                <h4 className="font-body font-semibold text-synthwave-neon-purple">
                   Current Fitness & History
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Current fitness level, recent training volume, benchmark
                   times, years of experience. The agent also pulls from your
                   logged workout history and saved memories (via Pinecone) to
@@ -419,15 +419,15 @@ function BlogPost4ProgramDesigner() {
             </div>
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-bold text-sm text-synthwave-neon-pink">
+                <span className="font-body font-bold text-sm text-synthwave-neon-pink">
                   4
                 </span>
               </div>
               <div>
-                <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <h4 className="font-body font-semibold text-synthwave-neon-pink">
                   Preferences & Style
                 </h4>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <p className="text-synthwave-text-secondary font-body text-sm">
                   Favorite movements, exercises you hate (we all have them),
                   training style preferences. "I'd rather die than do Bulgarian
                   split squats" is valid feedback that shapes the program.
@@ -442,10 +442,10 @@ function BlogPost4ProgramDesigner() {
             <span className={badgePatterns.cyan}>AI Philosophy</span>
             <span className={badgePatterns.muted}>True Autonomy</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Tools + Instructions, Not Scripts
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Like our other agents (Posts 2 and 3), the Program Designer doesn't
             follow a rigid conversation script. It has a goal (gather enough
             context to design an excellent program), tools (save discoveries,
@@ -484,7 +484,7 @@ function BlogPost4ProgramDesigner() {
       <section className="mb-16">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink">
-            <span className="font-inter font-bold text-xl text-synthwave-neon-pink">
+            <span className="font-body font-bold text-xl text-synthwave-neon-pink">
               4
             </span>
           </div>
@@ -494,7 +494,7 @@ function BlogPost4ProgramDesigner() {
             >
               Agent Spotlight: The Program Designer Agent
             </h2>
-            <p className="font-rajdhani text-synthwave-text-muted italic">
+            <p className="font-body text-synthwave-text-muted italic">
               "The Programming Mastermind"
             </p>
           </div>
@@ -513,15 +513,15 @@ function BlogPost4ProgramDesigner() {
 
         {/* What It Creates */}
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             What It Creates
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Multi-Phase Structure
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 4-16 week programs with logical phase progression—hypertrophy,
                 strength, peaking, deload—each with specific goals and
                 appropriate transitions. Not arbitrary week chunks, but
@@ -529,20 +529,20 @@ function BlogPost4ProgramDesigner() {
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Complete Daily Workouts
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Every training day gets a full workout prescription: warm-ups,
                 main work, accessory movements, conditioning, and cooldowns. Not
                 just "do 5x5 squats"—actual coaching-quality sessions.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Intelligent Progression
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Volume and intensity progress logically across weeks based on
                 your starting point, your goals, and established methodology.
                 Deload weeks are placed where they should be, not where they
@@ -550,10 +550,10 @@ function BlogPost4ProgramDesigner() {
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Phase Management
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Week-by-week tracking of which phase you're in, what the focus
                 is, and when transitions happen. Your coach knows exactly where
                 you are in the program at all times.
@@ -568,10 +568,10 @@ function BlogPost4ProgramDesigner() {
             <span className={badgePatterns.cyan}>Orchestrator Pattern</span>
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             The Orchestrator Pattern: Conducting the Symphony
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             You can't build a multi-week program in a single LLM call. The
             context window would overflow, the quality would degrade, and the
             temporal coherence would fall apart. Instead, we use the
@@ -579,7 +579,7 @@ function BlogPost4ProgramDesigner() {
             task into manageable sub-tasks, delegates to specialized processing
             steps, and assembles the results into a coherent whole.
           </p>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-6">
+          <p className="text-synthwave-text-secondary font-body mb-6">
             Think of it like a head coach who designs the season plan, then
             delegates position-specific training to assistant coaches, then
             reviews everything to make sure it fits together.
@@ -590,10 +590,10 @@ function BlogPost4ProgramDesigner() {
             <div className="flex flex-col items-center space-y-4">
               {/* Step 1 */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   1. Analyze Goals + Constraints
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Parse user requirements, memories, and history into design
                   parameters
                 </p>
@@ -607,10 +607,10 @@ function BlogPost4ProgramDesigner() {
 
               {/* Step 2 */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <span className="font-body font-semibold text-synthwave-neon-cyan">
                   2. Retrieve Methodology from Pinecone
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Discipline-specific periodization models and guidelines
                 </p>
               </div>
@@ -624,17 +624,17 @@ function BlogPost4ProgramDesigner() {
               {/* Step 3 - Design Phase Structure - PARALLEL */}
               <div className="w-full max-w-lg">
                 <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center mb-3">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
+                  <span className="font-body font-semibold text-synthwave-neon-purple">
                     3. Design Phase Structure (Claude Sonnet)
                   </span>
-                  <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                  <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                     Macro-level periodization → then generate each phase in
                     parallel
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-md p-2 text-center">
-                    <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
+                    <span className="font-body text-synthwave-neon-purple text-xs font-semibold">
                       Phase 1
                     </span>
                     <p className="text-synthwave-text-muted text-xs">
@@ -642,7 +642,7 @@ function BlogPost4ProgramDesigner() {
                     </p>
                   </div>
                   <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-md p-2 text-center">
-                    <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
+                    <span className="font-body text-synthwave-neon-purple text-xs font-semibold">
                       Phase 2
                     </span>
                     <p className="text-synthwave-text-muted text-xs">
@@ -650,7 +650,7 @@ function BlogPost4ProgramDesigner() {
                     </p>
                   </div>
                   <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/40 rounded-md p-2 text-center">
-                    <span className="font-rajdhani text-synthwave-neon-purple text-xs font-semibold">
+                    <span className="font-body text-synthwave-neon-purple text-xs font-semibold">
                       Phase 3
                     </span>
                     <p className="text-synthwave-text-muted text-xs">Peaking</p>
@@ -667,10 +667,10 @@ function BlogPost4ProgramDesigner() {
               {/* Step 4 - Parallel Weekly Templates */}
               <div className="w-full max-w-lg">
                 <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center mb-3">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                  <span className="font-body font-semibold text-synthwave-neon-pink">
                     4. Generate Weekly Templates (Parallel)
                   </span>
-                  <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                  <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                     All weeks generated concurrently within phase constraints
                   </p>
                 </div>
@@ -687,7 +687,7 @@ function BlogPost4ProgramDesigner() {
                       } border rounded-md p-1.5 text-center`}
                     >
                       <span
-                        className={`font-rajdhani text-xs font-semibold ${
+                        className={`font-body text-xs font-semibold ${
                           week <= 4
                             ? "text-synthwave-neon-pink"
                             : week <= 8
@@ -710,10 +710,10 @@ function BlogPost4ProgramDesigner() {
 
               {/* Step 5 - Parallel Daily Workouts */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <span className="font-body font-semibold text-synthwave-neon-cyan">
                   5. Create Daily Workouts (Parallel)
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   36+ individual workouts generated with full prescriptions
                 </p>
               </div>
@@ -726,10 +726,10 @@ function BlogPost4ProgramDesigner() {
 
               {/* Step 6 */}
               <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-purple">
+                <span className="font-body font-semibold text-synthwave-neon-purple">
                   6. Validate + Assemble Final Program
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Safety checks, volume validation, coherence review
                 </p>
               </div>
@@ -743,7 +743,7 @@ function BlogPost4ProgramDesigner() {
               {/* Storage */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-md">
                 <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md p-3 text-center">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-pink text-sm">
+                  <span className="font-body font-semibold text-synthwave-neon-pink text-sm">
                     DynamoDB
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -751,7 +751,7 @@ function BlogPost4ProgramDesigner() {
                   </p>
                 </div>
                 <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md p-3 text-center">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-cyan text-sm">
+                  <span className="font-body font-semibold text-synthwave-neon-cyan text-sm">
                     S3
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -759,7 +759,7 @@ function BlogPost4ProgramDesigner() {
                   </p>
                 </div>
                 <div className="bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple rounded-md p-3 text-center">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-purple text-sm">
+                  <span className="font-body font-semibold text-synthwave-neon-purple text-sm">
                     Pinecone
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -777,10 +777,10 @@ function BlogPost4ProgramDesigner() {
             <span className={badgePatterns.purple}>Parallel Pattern</span>
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-4">
             The Parallel Pattern: Speed Through Independence
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Here's a key insight: once the phase structure is defined,
             individual weeks within a phase are largely independent. Week 3 of a
             hypertrophy block doesn't need to wait for Week 2 to finish
@@ -788,27 +788,27 @@ function BlogPost4ProgramDesigner() {
             intensity ranges, exercise pools—so they can be generated
             simultaneously.
           </p>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-6">
+          <p className="text-synthwave-text-secondary font-body mb-6">
             This is the Parallel Pattern: identify independent sub-tasks, run
             them concurrently, and merge the results. For a 12-week program,
             this can reduce generation time from minutes to seconds.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Weekly Template Generation
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 All weeks within a phase generated concurrently. A 4-week
                 hypertrophy block spawns 4 parallel AI calls, each receiving the
                 same phase context but producing unique weekly programming.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Daily Workout Creation
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Within each week, individual training days can also be generated
                 in parallel. Monday's squat session and Wednesday's MetCon share
                 weekly volume targets but are independent in their exercise
@@ -816,20 +816,20 @@ function BlogPost4ProgramDesigner() {
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Validation Passes
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Safety checks, volume calculations, and methodology alignment
                 run simultaneously across all workouts. One validator checks
                 weekly volume totals while another verifies exercise variety.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Summary Generation
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 AI-generated program summary, phase descriptions, and Pinecone
                 embeddings all happen concurrently after the program is
                 assembled. Persistence doesn't block the user.
@@ -840,7 +840,7 @@ function BlogPost4ProgramDesigner() {
 
         {/* Code Example */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Orchestrator + Parallel in Code
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm">
@@ -914,7 +914,7 @@ function BlogPost4ProgramDesigner() {
             <div className="text-synthwave-text-secondary pl-4">{`]);`}</div>
             <div className="text-synthwave-neon-pink">{`};`}</div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             Notice the pattern: sequential steps where order matters
             (methodology → phases → validation), parallel execution where tasks
             are independent (week generation, persistence). This is the
@@ -939,10 +939,10 @@ function BlogPost4ProgramDesigner() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             The Async Build Flow
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             Program generation happens via async Lambda invocation—the same
             pattern from Post 1. The user's conversation continues uninterrupted
             while the heavy lifting happens in the background.
@@ -979,10 +979,10 @@ function BlogPost4ProgramDesigner() {
         </div>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Contextual Updates: Your Coach Narrates the Build
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             While your program builds in the background, you receive
             AI-generated contextual updates—brief, coach-like progress messages
             powered by Nvidia Nemotron. These aren't generic "Loading..."
@@ -991,41 +991,41 @@ function BlogPost4ProgramDesigner() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 The Drill Sergeant
               </h4>
-              <p className="text-synthwave-text-muted font-rajdhani text-sm italic">
+              <p className="text-synthwave-text-muted font-body text-sm italic">
                 "Laying out your strength phase. This is where it gets real."
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 The Sports Scientist
               </h4>
-              <p className="text-synthwave-text-muted font-rajdhani text-sm italic">
+              <p className="text-synthwave-text-muted font-body text-sm italic">
                 "Calibrating volume progression across your accumulation
                 blocks..."
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 The Hype Coach
               </h4>
-              <p className="text-synthwave-text-muted font-rajdhani text-sm italic">
+              <p className="text-synthwave-text-muted font-body text-sm italic">
                 "Building Week 8—this is where PRs are going to happen."
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 The Mentor
               </h4>
-              <p className="text-synthwave-text-muted font-rajdhani text-sm italic">
+              <p className="text-synthwave-text-muted font-body text-sm italic">
                 "Designing your deload week. Recovery is where adaptation
                 happens."
               </p>
             </div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani mt-4 text-sm">
+          <p className="text-synthwave-text-secondary font-body mt-4 text-sm">
             These updates are generated at ultra-low latency (~100ms) by Nova 2
             Lite, making the build process feel interactive rather than like
             waiting for a download. Your coach is working and keeping you in the
@@ -1058,20 +1058,20 @@ function BlogPost4ProgramDesigner() {
                   className="w-8 h-8"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Claude Sonnet 4.6
               </h3>
             </div>
-            <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-purple font-body font-semibold mb-2">
               The Architect
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Handles the high-stakes decisions: phase structure design,
               periodization logic, exercise prescription, and the design
               conversation itself. When the quality of reasoning directly
               impacts program quality, Sonnet does the thinking.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Phase structure and periodization design</li>
               <li>• Complex constraint satisfaction</li>
               <li>• Exercise selection and progression logic</li>
@@ -1088,19 +1088,19 @@ function BlogPost4ProgramDesigner() {
                   className="w-8 h-8"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Claude Haiku 4.5
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               The Speed Worker
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Handles the volume work: individual workout generation within
               established phase parameters, validation checks, and quick
               conversational responses during the design process.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Individual workout generation</li>
               <li>• Warm-up and cooldown prescriptions</li>
               <li>• Quick validation passes</li>
@@ -1115,19 +1115,19 @@ function BlogPost4ProgramDesigner() {
                 alt="Nova"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 Nvidia Nemotron / Amazon Nova 2 Lite
               </h3>
             </div>
-            <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-pink font-body font-semibold mb-2">
               The Narrators
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Generates those real-time contextual updates during the build
               process. Ultra-fast, personality-aware progress messages that keep
               users engaged.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Build progress updates (~100ms)</li>
               <li>• Coach-personality-aware messaging</li>
               <li>• Ephemeral UX feedback</li>
@@ -1138,23 +1138,23 @@ function BlogPost4ProgramDesigner() {
           <div className={containerPatterns.mediumGlass}>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-synthwave-neon-cyan/20 rounded-md p-2">
-                <span className="font-barlow text-synthwave-neon-cyan text-lg">
+                <span className="font-header text-synthwave-neon-cyan text-lg">
                   NV
                 </span>
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Nvidia NV-Embed-V2
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               The Indexer
             </p>
-            <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+            <p className="text-synthwave-text-secondary font-body text-sm mb-3">
               Generates semantic embeddings for the completed program, enabling
               your coach to reference your program in future conversations via
               natural language queries.
             </p>
-            <ul className="space-y-1 text-synthwave-text-muted font-rajdhani text-xs">
+            <ul className="space-y-1 text-synthwave-text-muted font-body text-xs">
               <li>• Program summary embeddings</li>
               <li>• Methodology retrieval vectors</li>
               <li>• Cross-program similarity search</li>
@@ -1164,10 +1164,10 @@ function BlogPost4ProgramDesigner() {
         </div>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Why Not Use Sonnet for Everything?
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             We could. The quality would be marginally better in some areas. But
             using Sonnet for every individual workout generation in a 36-workout
             program would be slow and expensive. Haiku handles workout
@@ -1220,14 +1220,14 @@ function BlogPost4ProgramDesigner() {
                 alt="DynamoDB"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 DynamoDB
               </h3>
             </div>
-            <p className="text-synthwave-neon-pink font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-pink font-body font-semibold mb-2">
               Hot State & Tracking
             </p>
-            <ul className="space-y-2 text-synthwave-text-secondary font-rajdhani text-sm">
+            <ul className="space-y-2 text-synthwave-text-secondary font-body text-sm">
               <li className="flex items-center gap-2">
                 <span className="text-synthwave-neon-pink">→</span>
                 Program metadata (name, dates, status)
@@ -1261,14 +1261,14 @@ function BlogPost4ProgramDesigner() {
                 alt="S3"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Amazon S3
               </h3>
             </div>
-            <p className="text-synthwave-neon-cyan font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-cyan font-body font-semibold mb-2">
               Full Program Specification
             </p>
-            <ul className="space-y-2 text-synthwave-text-secondary font-rajdhani text-sm">
+            <ul className="space-y-2 text-synthwave-text-secondary font-body text-sm">
               <li className="flex items-center gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 Complete program JSON (all weeks/workouts)
@@ -1304,14 +1304,14 @@ function BlogPost4ProgramDesigner() {
                   className="w-9 h-9"
                 />
               </div>
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Pinecone
               </h3>
             </div>
-            <p className="text-synthwave-neon-purple font-rajdhani font-semibold mb-2">
+            <p className="text-synthwave-neon-purple font-body font-semibold mb-2">
               Semantic Intelligence
             </p>
-            <ul className="space-y-2 text-synthwave-text-secondary font-rajdhani text-sm">
+            <ul className="space-y-2 text-synthwave-text-secondary font-body text-sm">
               <li className="flex items-center gap-2">
                 <span className="text-synthwave-neon-purple">→</span>
                 Program summary embeddings
@@ -1337,10 +1337,10 @@ function BlogPost4ProgramDesigner() {
         </div>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Smart Data Access Patterns
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The key optimization: most program interactions only need today's
             workout. We don't fetch a 36-workout program from S3 every time
             someone asks "What should I do today?" DynamoDB serves the current
@@ -1383,13 +1383,13 @@ function BlogPost4ProgramDesigner() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-pink mb-4">
             How Programs Guide Your Entire Experience
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Contextual coaching:
                 </strong>{" "}
@@ -1404,7 +1404,7 @@ function BlogPost4ProgramDesigner() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Adaptive insights:
                 </strong>{" "}
@@ -1419,7 +1419,7 @@ function BlogPost4ProgramDesigner() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Memory integration:
                 </strong>{" "}
@@ -1434,7 +1434,7 @@ function BlogPost4ProgramDesigner() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Completion tracking:
                 </strong>{" "}
@@ -1466,45 +1466,45 @@ function BlogPost4ProgramDesigner() {
         </p>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             How Sharing Works
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 One-Click Sharing
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Generate a shareable link from any active or completed program.
                 Recipients see the full program structure—phases, weekly
                 layouts, workout previews—without needing an account.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Adopt & Personalize
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 When someone adopts a shared program, it becomes theirs—tracked
                 independently, integrated with their coach, enriched with their
                 own training context. Same structure, personalized execution.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Train Together
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Share a program with your training partner or gym crew so
                 everyone follows the same plan. Each person tracks their own
                 progress while working through the same structured approach.
               </p>
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-md p-4">
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Community Building
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Coaches and experienced athletes can share their programs with
                 their communities. Built a solid beginner program? Share it with
                 the newcomers at your box.
@@ -1539,43 +1539,43 @@ function BlogPost4ProgramDesigner() {
         </p>
 
         <div className={containerPatterns.boldGradient}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             The Numbers Behind the Magic
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-6">
+          <p className="text-synthwave-text-secondary font-body mb-6">
             When someone asks for a 12-week, 3-day program, here's what the
             Program Designer Agent actually produces:
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 36+
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Individual Workouts
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-cyan mb-1">
                 60+
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 AI Calls Orchestrated
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-purple mb-1">
                 10
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Disciplines Supported
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 4
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 AI Models Orchestrated
               </div>
             </div>
@@ -1586,7 +1586,7 @@ function BlogPost4ProgramDesigner() {
       {/* Try It CTA */}
       <section className="mb-16">
         <div className={`${containerPatterns.mediumGlassCyan}`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
             Ready to Stop Googling "12-Week Program"?
           </h3>
           <p className={`${typographyPatterns.description} mb-4`}>
@@ -1633,7 +1633,7 @@ function BlogPost4ProgramDesigner() {
 
         <div className={containerPatterns.cardLight}>
           <div className="p-6">
-            <p className="font-rajdhani text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
+            <p className="font-body text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
               Final Post in the Series
             </p>
             <Link
@@ -1641,10 +1641,10 @@ function BlogPost4ProgramDesigner() {
               className="group flex items-center justify-between"
             >
               <div>
-                <h3 className="font-barlow text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
+                <h3 className="font-header text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
                   When All Agents Converge
                 </h3>
-                <p className="font-rajdhani text-synthwave-text-secondary">
+                <p className="font-body text-synthwave-text-secondary">
                   The Conversation Agent & Streaming Orchestration
                 </p>
               </div>

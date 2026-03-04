@@ -8,7 +8,7 @@ function CoachCreatorHeader({ isOnline = true }) {
     <div className="flex items-center justify-center gap-3 mb-4">
       {/* Coach Avatar with Online Status */}
       <div className="relative">
-        <div className="w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-barlow font-bold text-lg">
+        <div className="w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-header font-bold text-lg">
           V
         </div>
         {isOnline && (
@@ -21,14 +21,14 @@ function CoachCreatorHeader({ isOnline = true }) {
       {/* Coach Info */}
       <div className="text-left">
         <div className="flex items-center gap-2">
-          <h3 className="font-rajdhani font-semibold text-white text-lg">
+          <h3 className="font-body font-semibold text-white text-lg">
             {coachName}
           </h3>
-          <span className="px-2 py-0.5 bg-green-400/20 text-green-300 rounded-full text-xs font-medium font-rajdhani">
+          <span className="px-2 py-0.5 bg-green-400/20 text-green-300 rounded-full text-xs font-medium font-body">
             Online
           </span>
         </div>
-        <p className="text-sm text-synthwave-text-secondary font-rajdhani">
+        <p className="text-sm text-synthwave-text-secondary font-body">
           {coachTitle}
         </p>
       </div>

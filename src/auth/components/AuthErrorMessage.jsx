@@ -4,7 +4,7 @@ const AuthErrorMessage = ({ error, className = '' }) => {
   if (!error) return null;
 
   return (
-    <div className={`mt-2 text-synthwave-neon-cyan font-rajdhani text-sm ${className}`}>
+    <div className={`mt-2 text-synthwave-neon-cyan font-body text-sm ${className}`}>
       {error}
     </div>
   );

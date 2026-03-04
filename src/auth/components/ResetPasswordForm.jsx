@@ -101,13 +101,13 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header moved into form */}
         <div className="text-center mb-6">
-          <h1 className="font-rajdhani font-bold text-2xl text-white mb-4 uppercase">
+          <h1 className="font-body font-bold text-2xl text-white mb-4 uppercase">
             Reset Password
           </h1>
-          <p className="font-rajdhani text-synthwave-text-secondary">
+          <p className="font-body text-synthwave-text-secondary">
             Enter the confirmation code sent to:
           </p>
-          <p className="font-rajdhani font-semibold text-synthwave-neon-cyan mt-1">
+          <p className="font-body font-semibold text-synthwave-neon-cyan mt-1">
             {email}
           </p>
         </div>
@@ -154,7 +154,7 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
         />
 
         {/* Password Requirements */}
-        <div className="text-xs font-rajdhani text-synthwave-neon-cyan space-y-1">
+        <div className="text-xs font-body text-synthwave-neon-cyan space-y-1">
           <p className="font-medium text-synthwave-neon-cyan">Password must contain:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>At least 8 characters</li>
@@ -177,7 +177,7 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
         </div>
 
         <div className="text-center pt-4 border-t border-synthwave-neon-pink/20">
-          <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+          <p className="font-body text-synthwave-text-secondary mb-3">
             Remember your password?
           </p>
           <AuthButton

@@ -282,7 +282,7 @@ export function InlineEditField({
       </div>
 
       {/* Character count and error messages */}
-      <div className="flex items-center justify-between text-xs font-rajdhani">
+      <div className="flex items-center justify-between text-xs font-body">
         {showCharacterCount && maxLength && (
           <span
             className={`${characterCount > maxLength * 0.9 ? "text-synthwave-neon-pink" : "text-synthwave-text-secondary"}`}

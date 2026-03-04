@@ -15,7 +15,7 @@ function Footer() {
                 className="h-8 w-auto mr-3"
               />
             </div>
-            <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed mb-6">
+            <p className="font-body text-synthwave-text-secondary leading-relaxed mb-6">
               Building the future of personalized AI fitness coaching. Create
               your perfect coach, tailored to your unique journey.
             </p>
@@ -109,10 +109,10 @@ function Footer() {
 
           {/* Navigation Links */}
           <div className="lg:col-span-1">
-            <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-cyan mb-6 font-semibold">
+            <h3 className="font-body text-xl md:text-2xl text-synthwave-neon-cyan mb-6 font-semibold">
               Platform
             </h3>
-            <ul className="space-y-4 font-rajdhani">
+            <ul className="space-y-4 font-body">
               <li>
                 <Link
                   to="/"
@@ -158,10 +158,10 @@ function Footer() {
 
           {/* Resources */}
           <div className="lg:col-span-1">
-            <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-pink mb-6 font-semibold">
+            <h3 className="font-body text-xl md:text-2xl text-synthwave-neon-pink mb-6 font-semibold">
               Resources
             </h3>
-            <ul className="space-y-4 font-rajdhani">
+            <ul className="space-y-4 font-body">
               <li>
                 <Link
                   to="/about"
@@ -207,10 +207,10 @@ function Footer() {
 
           {/* Contact Info */}
           <div className="lg:col-span-1">
-            <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-cyan mb-6 font-semibold">
+            <h3 className="font-body text-xl md:text-2xl text-synthwave-neon-cyan mb-6 font-semibold">
               Contact
             </h3>
-            <div className="space-y-4 font-rajdhani text-synthwave-text-secondary">
+            <div className="space-y-4 font-body text-synthwave-text-secondary">
               <div>
                 <p className="font-semibold text-white mb-1">Developers</p>
                 <a
@@ -247,7 +247,7 @@ function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-synthwave-neon-cyan/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6 font-rajdhani text-synthwave-text-secondary">
+            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6 font-body text-synthwave-text-secondary">
               <p>
                 &copy; {new Date().getFullYear()} NeonPanda, LLC. All rights
                 reserved.
@@ -273,7 +273,7 @@ function Footer() {
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-2 font-rajdhani text-synthwave-text-secondary">
+            <div className="flex items-center space-x-2 font-body text-synthwave-text-secondary">
               <div className="w-2 h-2 bg-synthwave-neon-green rounded-full animate-pulse"></div>
               <span className="text-sm">Status: Building the Future</span>
             </div>

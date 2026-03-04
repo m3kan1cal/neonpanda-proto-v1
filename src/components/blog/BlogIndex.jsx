@@ -149,7 +149,7 @@ function BlogIndex() {
           <div className="absolute inset-0 bg-gradient-to-b from-synthwave-bg-primary/70 via-synthwave-bg-primary/65 to-synthwave-bg-primary/80"></div>
         </div>
         <div className="relative z-10 max-w-5xl mx-auto">
-          <p className="font-rajdhani text-synthwave-neon-cyan uppercase tracking-widest text-sm mb-4">
+          <p className="font-body text-synthwave-neon-cyan uppercase tracking-widest text-sm mb-4">
             Technical Deep Dive Series
           </p>
           <h1 className={typographyPatterns.heroTitle}>
@@ -165,7 +165,7 @@ function BlogIndex() {
           </p>
 
           {/* Series Stats */}
-          <div className="flex flex-wrap justify-center gap-8 text-sm font-rajdhani">
+          <div className="flex flex-wrap justify-center gap-8 text-sm font-body">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full"></div>
               <span className="text-synthwave-text-secondary">
@@ -226,7 +226,7 @@ function BlogIndex() {
                                 : "bg-synthwave-neon-purple"
                           }`}
                         >
-                          <span className="font-inter font-bold text-lg text-black">
+                          <span className="font-body font-bold text-lg text-black">
                             {post.id}
                           </span>
                         </div>
@@ -252,11 +252,11 @@ function BlogIndex() {
                                       : "bg-synthwave-neon-purple"
                                 }`}
                               >
-                                <span className="font-inter font-bold text-sm text-black">
+                                <span className="font-body font-bold text-sm text-black">
                                   {post.id}
                                 </span>
                               </div>
-                              <span className="font-rajdhani text-synthwave-text-muted text-sm">
+                              <span className="font-body text-synthwave-text-muted text-sm">
                                 Part {post.id} of 5
                               </span>
                             </div>
@@ -269,11 +269,11 @@ function BlogIndex() {
                                 >
                                   {post.title}
                                 </h3>
-                                <p className="font-rajdhani text-lg text-white mt-1">
+                                <p className="font-body text-lg text-white mt-1">
                                   {post.subtitle}
                                 </p>
                               </div>
-                              <span className="font-rajdhani text-sm text-synthwave-text-muted whitespace-nowrap">
+                              <span className="font-body text-sm text-synthwave-text-muted whitespace-nowrap">
                                 {post.readTime}
                               </span>
                             </div>
@@ -298,7 +298,7 @@ function BlogIndex() {
                               {post.topics.map((topic, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-xs font-rajdhani text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-md"
+                                  className="text-xs font-body text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-md"
                                 >
                                   {topic}
                                 </span>
@@ -307,7 +307,7 @@ function BlogIndex() {
 
                             {/* Read More Arrow */}
                             <div
-                              className={`mt-4 flex items-center gap-2 ${colors.text} font-rajdhani font-semibold text-sm uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                              className={`mt-4 flex items-center gap-2 ${colors.text} font-body font-semibold text-sm uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
                             >
                               <span>Read Article</span>
                               <svg
@@ -331,7 +331,7 @@ function BlogIndex() {
                           >
                             {/* Coming Soon Badge */}
                             <div className="absolute top-4 right-4 bg-synthwave-bg-primary border border-synthwave-neon-cyan/50 px-3 py-1 rounded-full">
-                              <span className="text-xs font-rajdhani font-semibold text-synthwave-neon-cyan uppercase tracking-wider">
+                              <span className="text-xs font-body font-semibold text-synthwave-neon-cyan uppercase tracking-wider">
                                 Coming Soon
                               </span>
                             </div>
@@ -347,11 +347,11 @@ function BlogIndex() {
                                       : "bg-synthwave-neon-purple/50"
                                 }`}
                               >
-                                <span className="font-inter font-bold text-sm text-black/70">
+                                <span className="font-body font-bold text-sm text-black/70">
                                   {post.id}
                                 </span>
                               </div>
-                              <span className="font-rajdhani text-synthwave-text-muted text-sm">
+                              <span className="font-body text-synthwave-text-muted text-sm">
                                 Part {post.id} of 5
                               </span>
                             </div>
@@ -364,11 +364,11 @@ function BlogIndex() {
                                 >
                                   {post.title}
                                 </h3>
-                                <p className="font-rajdhani text-lg text-white mt-1">
+                                <p className="font-body text-lg text-white mt-1">
                                   {post.subtitle}
                                 </p>
                               </div>
-                              <span className="font-rajdhani text-sm text-synthwave-text-muted whitespace-nowrap">
+                              <span className="font-body text-sm text-synthwave-text-muted whitespace-nowrap">
                                 {post.readTime}
                               </span>
                             </div>
@@ -393,7 +393,7 @@ function BlogIndex() {
                               {post.topics.map((topic, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-xs font-rajdhani text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-md"
+                                  className="text-xs font-body text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-md"
                                 >
                                   {topic}
                                 </span>

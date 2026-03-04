@@ -156,7 +156,7 @@ const MessageItem = memo(
                 containerPatterns.userMessageBubble,
               )}
             >
-              <div className="font-rajdhani text-base leading-relaxed">
+              <div className="font-body text-base leading-relaxed">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -164,7 +164,7 @@ const MessageItem = memo(
             <div
               className={getStreamingMessageClasses(message, agentState, "")}
             >
-              <div className="font-fira-code text-base leading-relaxed text-synthwave-text-secondary">
+              <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -183,7 +183,7 @@ const MessageItem = memo(
               </div>
             )}
 
-            <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+            <span className="text-xs text-synthwave-text-secondary font-body">
               {formatTime(message.timestamp)}
             </span>
             {message.type === "user" && (
@@ -993,14 +993,14 @@ function ProgramDesigner() {
             {/* Page Title with Hover Tooltip */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="program-designer-info"
                 data-tooltip-content="Design a structured training program with your AI coach through guided conversation"
               >
                 Program Designer
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -1046,7 +1046,7 @@ function ProgramDesigner() {
                     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
                       {/* Welcome Header */}
                       <div className="text-center space-y-2">
-                        <h3 className="font-barlow text-xl md:text-2xl text-white uppercase tracking-wider">
+                        <h3 className="font-header text-xl md:text-2xl text-white uppercase tracking-wider">
                           Let's Build Your Program
                         </h3>
                         <p className={typographyPatterns.emptyStateDescription}>
@@ -1360,10 +1360,10 @@ function ProgramDesigner() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-barlow text-base text-white uppercase tracking-wider">
+                  <h3 className="font-header text-base text-white uppercase tracking-wider">
                     Training Program Design Complete
                   </h3>
-                  <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-0.5">
+                  <p className="font-body text-sm text-synthwave-text-secondary mt-0.5">
                     Your program is being built (2-3 minutes). You can close
                     this page or navigate to your programs.
                   </p>
@@ -1437,10 +1437,10 @@ function ProgramDesigner() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Program Design Session
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete this program design session?
                 This action cannot be undone.
               </p>
@@ -1500,12 +1500,12 @@ function ProgramDesigner() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-synthwave-neon-cyan font-rajdhani text-xl font-bold">
+                <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold">
                   Training Program Design Complete!
                 </h3>
               </div>
 
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Great work! We're now crafting a personalized training program
                 tailored specifically to your goals.
               </p>
@@ -1529,7 +1529,7 @@ function ProgramDesigner() {
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       We're now building your custom training program
                     </p>
                   </div>
@@ -1547,7 +1547,7 @@ function ProgramDesigner() {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       This usually takes 2-3 minutes to complete
                     </p>
                   </div>
@@ -1565,7 +1565,7 @@ function ProgramDesigner() {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       You can monitor the build progress on your Programs page
                     </p>
                   </div>

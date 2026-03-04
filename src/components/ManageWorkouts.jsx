@@ -320,12 +320,12 @@ function ManageWorkouts() {
           </div>
 
           {/* Title */}
-          <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
+          <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
             Log New Workout
           </h3>
 
           {/* Description */}
-          <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
+          <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
             Record your training session and track your progress
           </p>
         </div>
@@ -396,7 +396,7 @@ function ManageWorkouts() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             {workoutName}
           </h3>
         </div>
@@ -406,7 +406,7 @@ function ManageWorkouts() {
           {/* Row 1: Completed at, Duration, AI Score */}
           <div className="flex items-center flex-wrap gap-4">
             {/* Completed at */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <div className="flex items-center gap-1.5 font-body text-sm">
               <ClockIconSmall />
               <span className="text-synthwave-text-muted">Completed:</span>
               <span className="text-synthwave-neon-cyan font-medium">
@@ -415,7 +415,7 @@ function ManageWorkouts() {
             </div>
             {/* Duration */}
             {duration && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+              <div className="flex items-center gap-1.5 font-body text-sm">
                 <span className="text-synthwave-text-muted">Duration:</span>
                 <span className="text-synthwave-neon-cyan font-medium">
                   {duration}m
@@ -423,7 +423,7 @@ function ManageWorkouts() {
               </div>
             )}
             {/* AI Score */}
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <div className="flex items-center gap-1.5 font-body text-sm">
               <span className="text-synthwave-text-muted">AI Score:</span>
               <span className="text-synthwave-neon-cyan font-medium">
                 {Math.round(confidence * 100)}%
@@ -434,7 +434,7 @@ function ManageWorkouts() {
           {(intensity > 0 || rpe > 0) && (
             <div className="flex items-center gap-4">
               {intensity > 0 && (
-                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                <div className="flex items-center gap-1.5 font-body text-sm">
                   <span className="text-synthwave-text-muted">Intensity:</span>
                   <span className="text-synthwave-neon-cyan font-medium">
                     {intensity}/10
@@ -442,7 +442,7 @@ function ManageWorkouts() {
                 </div>
               )}
               {rpe > 0 && (
-                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                <div className="flex items-center gap-1.5 font-body text-sm">
                   <span className="text-synthwave-text-muted">RPE:</span>
                   <span className="text-synthwave-neon-cyan font-medium">
                     {rpe}/10
@@ -481,7 +481,7 @@ function ManageWorkouts() {
               <div
                 className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
               >
-                <p className="font-rajdhani text-sm text-synthwave-text-secondary mb-4">
+                <p className="font-body text-sm text-synthwave-text-secondary mb-4">
                   {workout.summary}
                 </p>
 
@@ -491,10 +491,10 @@ function ManageWorkouts() {
                   {rpe > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold">
+                        <span className="font-body text-xs text-synthwave-text-muted uppercase font-semibold">
                           RPE (Perceived Exertion)
                         </span>
-                        <span className="font-rajdhani text-xs text-synthwave-text-muted font-bold">
+                        <span className="font-body text-xs text-synthwave-text-muted font-bold">
                           {rpe}/10
                         </span>
                       </div>
@@ -511,10 +511,10 @@ function ManageWorkouts() {
                   {intensity > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold">
+                        <span className="font-body text-xs text-synthwave-text-muted uppercase font-semibold">
                           Intensity
                         </span>
-                        <span className="font-rajdhani text-xs text-synthwave-text-muted font-bold">
+                        <span className="font-body text-xs text-synthwave-text-muted font-bold">
                           {intensity}/10
                         </span>
                       </div>
@@ -768,7 +768,7 @@ function ManageWorkouts() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="workouts-info"
                 data-tooltip-content="Review, organize, and analyze your complete workout history. Track your fitness journey and monitor your progress over time."
               >
@@ -887,10 +887,10 @@ function ManageWorkouts() {
           {workoutAgentState.error && (
             <div className="text-center py-12">
               <NeonBorder color="pink" className="max-w-md mx-auto p-6">
-                <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">
+                <p className="font-body text-synthwave-neon-pink text-xl font-bold mb-2">
                   Error Loading Workouts
                 </p>
-                <p className="font-rajdhani text-synthwave-text-secondary text-lg">
+                <p className="font-body text-synthwave-text-secondary text-lg">
                   {workoutAgentState.error}
                 </p>
               </NeonBorder>
@@ -985,10 +985,10 @@ function ManageWorkouts() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Workout
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete "
                 {workoutToDelete?.workoutName || "this workout"}
                 "? This action cannot be undone.

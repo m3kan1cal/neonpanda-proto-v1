@@ -113,7 +113,7 @@ export default function RecentPRsCard({
         <span className="text-synthwave-neon-pink shrink-0 mt-1.5">
           <TrophySolidIcon />
         </span>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Recent PRs
         </h3>
       </div>
@@ -138,17 +138,17 @@ export default function RecentPRsCard({
               {isNew && <NewBadge />}
 
               {/* Exercise name -- small muted uppercase section header */}
-              <div className="font-rajdhani text-[11px] text-synthwave-text-secondary uppercase font-semibold tracking-wider truncate mb-0.5">
+              <div className="font-body text-[11px] text-synthwave-text-secondary uppercase font-semibold tracking-wider truncate mb-0.5">
                 {toPascalCase(pr.exercise)}
               </div>
 
               {/* Hero number with unit */}
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="font-barlow text-2xl text-white leading-none">
+                <span className="font-header text-2xl text-white leading-none">
                   {pr.newBest}
                 </span>
                 {unit && (
-                  <span className="font-rajdhani text-sm text-synthwave-text-muted font-medium">
+                  <span className="font-body text-sm text-synthwave-text-muted font-medium">
                     {unit}
                   </span>
                 )}
@@ -176,12 +176,12 @@ export default function RecentPRsCard({
                       <TrendingUpIconTiny className="w-2.5 h-2.5" />
                     </span>
                     {pr.improvement != null && (
-                      <span className="font-rajdhani text-[10px] text-green-400 font-semibold leading-none">
+                      <span className="font-body text-[10px] text-green-400 font-semibold leading-none">
                         +{pr.improvement}
                       </span>
                     )}
                     {pr.improvementPercentage != null && (
-                      <span className="font-rajdhani text-[10px] text-green-400/70 leading-none">
+                      <span className="font-body text-[10px] text-green-400/70 leading-none">
                         ({pr.improvementPercentage}%)
                       </span>
                     )}

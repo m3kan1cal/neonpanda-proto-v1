@@ -284,7 +284,7 @@ export const QuickAccessPopover = ({
     <div className="space-y-2">
       {workoutAgentState.isLoadingRecentItems ? (
         <div className="space-y-3">
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Workouts
           </div>
           {[1, 2, 3].map((i) => (
@@ -304,13 +304,13 @@ export const QuickAccessPopover = ({
         </div>
       ) : workoutAgentState.recentWorkouts.length === 0 ? (
         <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
+          <div className="font-body text-synthwave-text-muted text-sm">
             No workouts found
           </div>
         </div>
       ) : (
         <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Workouts
           </div>
           {workoutAgentState.recentWorkouts.map((workout) => {
@@ -329,13 +329,13 @@ export const QuickAccessPopover = ({
                 {isNew && <NewBadge />}
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    <div className="font-body text-sm text-white font-medium truncate">
                       {workoutAgentRef.current?.formatWorkoutSummary(
                         workout,
                         true
                       ) || "Workout"}
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {workoutAgentRef.current?.formatWorkoutTime(
                         workout.completedAt
                       ) || "Unknown time"}
@@ -375,7 +375,7 @@ export const QuickAccessPopover = ({
     <div className="space-y-2">
       {reportAgentState.isLoadingRecentItems ? (
         <div className="space-y-3">
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Reports
           </div>
           {[1, 2, 3].map((i) => (
@@ -395,13 +395,13 @@ export const QuickAccessPopover = ({
         </div>
       ) : reportAgentState.recentReports.length === 0 ? (
         <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
+          <div className="font-body text-synthwave-text-muted text-sm">
             No reports found
           </div>
         </div>
       ) : (
         <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Reports
           </div>
           {reportAgentState.recentReports.slice(0, 10).map((report) => {
@@ -421,10 +421,10 @@ export const QuickAccessPopover = ({
 
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    <div className="font-body text-sm text-white font-medium truncate">
                       Week {report.weekId}
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {getWeekDateRange(report)} •{" "}
                       <span className="text-synthwave-neon-cyan">
                         {formatWorkoutCount(report.analyticsData?.structured_analytics?.metadata?.sessions_completed || report.metadata?.workoutCount || 0)}
@@ -447,7 +447,7 @@ export const QuickAccessPopover = ({
     <div className="space-y-2">
       {conversationAgentState.isLoadingRecentItems ? (
         <div className="space-y-3">
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Conversations
           </div>
           {[1, 2, 3].map((i) => (
@@ -467,13 +467,13 @@ export const QuickAccessPopover = ({
         </div>
       ) : conversationAgentState.recentConversations.length === 0 ? (
         <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
+          <div className="font-body text-synthwave-text-muted text-sm">
             No conversations found
           </div>
         </div>
       ) : (
         <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Conversations
           </div>
           {conversationAgentState.recentConversations.map((conv) => {
@@ -490,10 +490,10 @@ export const QuickAccessPopover = ({
                 {isRecent && <NewBadge />}
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    <div className="font-body text-sm text-white font-medium truncate">
                       {truncateTitle(conv.title)}
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {formatConversationDate(
                         conv.metadata?.lastActivity || conv.createdAt
                       )}{" "}
@@ -651,7 +651,7 @@ export const QuickAccessPopover = ({
     if (!coachData) {
       return (
         <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
+          <div className="font-body text-synthwave-text-muted text-sm">
             No coach data available
           </div>
         </div>
@@ -662,7 +662,7 @@ export const QuickAccessPopover = ({
     if (!config) {
       return (
         <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
+          <div className="font-body text-synthwave-text-muted text-sm">
             Coach configuration not available
           </div>
         </div>
@@ -675,16 +675,16 @@ export const QuickAccessPopover = ({
       <div className="space-y-4">
         {/* Coach Identity */}
         <div>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Coach Identity
           </div>
           <div className="space-y-3">
             <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
               <div className="flex-1 min-w-0">
-                <div className="font-rajdhani text-sm text-white font-medium truncate">
+                <div className="font-body text-sm text-white font-medium truncate">
                   {config.coach_name?.replace(/_/g, " ") || coachData.name}
                 </div>
-                <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                   {config.metadata?.created_date
                     ? new Date(
                         config.metadata.created_date
@@ -703,20 +703,20 @@ export const QuickAccessPopover = ({
         {/* Coach Personality & Tone */}
         {(config.selected_personality || config.generated_prompts) && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Coach Personality & Tone
             </div>
             <div className="space-y-3">
               {config.selected_personality?.primary_template && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Primary Personality:{" "}
                       {config.selected_personality.primary_template
                         .replace(/_/g, " ")
                         .toUpperCase()}
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.selected_personality.secondary_influences
                         ?.length > 0 && (
                         <>
@@ -756,10 +756,10 @@ export const QuickAccessPopover = ({
               {config.selected_personality?.selection_reasoning && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Personality Selection Reasoning
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
                       {config.selected_personality.selection_reasoning}
                     </div>
                   </div>
@@ -768,10 +768,10 @@ export const QuickAccessPopover = ({
               {config.generated_prompts?.communication_style && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Communication Style Preview
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
                       {config.generated_prompts.communication_style.slice(
                         0,
                         200
@@ -784,10 +784,10 @@ export const QuickAccessPopover = ({
               {config.generated_prompts?.motivation_prompt && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Motivational Approach Preview
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
                       {config.generated_prompts.motivation_prompt.slice(0, 200)}
                       ...
                     </div>
@@ -801,19 +801,19 @@ export const QuickAccessPopover = ({
         {/* Selected Methodology */}
         {config.selected_methodology && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Training Methodology
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     {config.selected_methodology.primary_methodology?.replace(
                       /_/g,
                       " "
                     ) || "Hybrid Training"}
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     <span className="text-synthwave-neon-cyan">
                       {config.selected_methodology.programming_emphasis}
                     </span>{" "}
@@ -840,10 +840,10 @@ export const QuickAccessPopover = ({
               {config.selected_methodology.methodology_reasoning && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Methodology Reasoning
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
                       {config.selected_methodology.methodology_reasoning}
                     </div>
                   </div>
@@ -852,10 +852,10 @@ export const QuickAccessPopover = ({
               {config.selected_methodology.workout_innovation && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Workout Innovation
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       Status:{" "}
                       <span className="text-synthwave-neon-cyan">
                         {config.selected_methodology.workout_innovation}
@@ -871,19 +871,19 @@ export const QuickAccessPopover = ({
         {/* Technical Configuration */}
         {config.technical_config && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Technical Configuration
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     {config.technical_config.experience_level?.toUpperCase() ||
                       "INTERMEDIATE"}{" "}
                     • {config.technical_config.training_frequency || 4}{" "}
                     days/week
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     {config.technical_config.preferred_intensity?.replace(
                       /_/g,
                       " "
@@ -906,18 +906,18 @@ export const QuickAccessPopover = ({
         {/* Safety Profile */}
         {config.metadata?.safety_profile && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Safety & Limitations
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium">
+                  <div className="font-body text-sm text-white font-medium">
                     {config.metadata.safety_profile.experienceLevel ||
                       "Standard"}{" "}
                     Safety Profile
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     Experience Level:{" "}
                     <span className="text-synthwave-neon-cyan">
                       {config.metadata.safety_profile.experienceLevel ||
@@ -929,11 +929,11 @@ export const QuickAccessPopover = ({
               {config.metadata.safety_profile.contraindications?.length > 0 && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Contraindications (
                       {config.metadata.safety_profile.contraindications.length})
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.metadata.safety_profile.contraindications.map(
                         (contra, index) => (
                           <div
@@ -954,11 +954,11 @@ export const QuickAccessPopover = ({
               {config.metadata.safety_profile.modifications?.length > 0 && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Required Modifications (
                       {config.metadata.safety_profile.modifications.length})
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.metadata.safety_profile.modifications.map(
                         (mod, index) => (
                           <div
@@ -982,13 +982,13 @@ export const QuickAccessPopover = ({
         {(config.metadata?.safety_profile?.equipment ||
           config.technical_config?.equipment_available) && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Available Equipment
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium">
+                  <div className="font-body text-sm text-white font-medium">
                     Equipment Types (
                     {
                       (
@@ -999,7 +999,7 @@ export const QuickAccessPopover = ({
                     }{" "}
                     total)
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     {(
                       config.metadata?.safety_profile?.equipment ||
                       config.technical_config?.equipment_available ||
@@ -1023,16 +1023,16 @@ export const QuickAccessPopover = ({
         {/* Modification Capabilities */}
         {config.modification_capabilities && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Coach Capabilities
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     Programming Adaptability
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     Level:{" "}
                     <span className="text-synthwave-neon-cyan">
                       {config.modification_capabilities
@@ -1043,10 +1043,10 @@ export const QuickAccessPopover = ({
               </div>
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     Creative Programming
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     Level:{" "}
                     <span className="text-synthwave-neon-cyan">
                       {config.modification_capabilities.creative_programming ||
@@ -1057,10 +1057,10 @@ export const QuickAccessPopover = ({
               </div>
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     Personality Flexibility
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     Level:{" "}
                     <span className="text-synthwave-neon-cyan">
                       {config.modification_capabilities
@@ -1071,10 +1071,10 @@ export const QuickAccessPopover = ({
               </div>
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     Workout Variety Emphasis
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     Level:{" "}
                     <span className="text-synthwave-neon-cyan">
                       {config.modification_capabilities
@@ -1085,10 +1085,10 @@ export const QuickAccessPopover = ({
               </div>
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     Safety Override Level
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     Level:{" "}
                     <span className="text-synthwave-neon-cyan">
                       {config.modification_capabilities.safety_override_level ||
@@ -1101,7 +1101,7 @@ export const QuickAccessPopover = ({
               {config.modification_capabilities.enabled_modifications && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Enabled Modifications (
                       {
                         config.modification_capabilities.enabled_modifications
@@ -1109,7 +1109,7 @@ export const QuickAccessPopover = ({
                       }{" "}
                       total)
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.modification_capabilities.enabled_modifications.map(
                         (modification, index) => (
                           <div
@@ -1133,16 +1133,16 @@ export const QuickAccessPopover = ({
         {(config.technical_config?.programming_focus ||
           config.technical_config?.specializations) && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Programming Focus
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium">
+                  <div className="font-body text-sm text-white font-medium">
                     Focus Areas & Specializations
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     {config.technical_config.programming_focus?.map(
                       (focus, index) => (
                         <div
@@ -1180,18 +1180,18 @@ export const QuickAccessPopover = ({
         {(config.technical_config?.injury_considerations ||
           config.metadata?.safety_profile?.modifications) && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Injury Considerations & Modifications
             </div>
             <div className="space-y-3">
               {config.technical_config?.injury_considerations && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Injury Considerations (
                       {config.technical_config.injury_considerations.length})
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.technical_config.injury_considerations.map(
                         (injury, index) => (
                           <div
@@ -1212,11 +1212,11 @@ export const QuickAccessPopover = ({
               {config.metadata?.safety_profile?.modifications && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Required Modifications (
                       {config.metadata.safety_profile.modifications.length})
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.metadata.safety_profile.modifications.map(
                         (mod, index) => (
                           <div
@@ -1240,13 +1240,13 @@ export const QuickAccessPopover = ({
         {(config.metadata?.safety_profile?.timeConstraints ||
           config.technical_config?.time_constraints) && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Time Constraints & Preferences
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  <div className="font-body text-sm text-white font-medium truncate">
                     {config.metadata?.safety_profile?.timeConstraints
                       ?.session_duration ||
                       config.technical_config?.time_constraints
@@ -1254,7 +1254,7 @@ export const QuickAccessPopover = ({
                       60}{" "}
                     minute sessions
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     {config.metadata?.safety_profile?.timeConstraints
                       ?.morning_preferred && (
                       <>
@@ -1287,13 +1287,13 @@ export const QuickAccessPopover = ({
         {/* Learning Considerations */}
         {config.metadata?.safety_profile?.learningConsiderations && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Learning Preferences
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium">
+                  <div className="font-body text-sm text-white font-medium">
                     Preferred Learning Methods (
                     {
                       config.metadata.safety_profile.learningConsiderations
@@ -1301,7 +1301,7 @@ export const QuickAccessPopover = ({
                     }
                     )
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     {config.metadata.safety_profile.learningConsiderations.map(
                       (learning, index) => (
                         <div
@@ -1325,13 +1325,13 @@ export const QuickAccessPopover = ({
           config.technical_config?.safety_constraints
             ?.recovery_requirements) && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Recovery Requirements
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium">
+                  <div className="font-body text-sm text-white font-medium">
                     Recovery Focus Areas (
                     {
                       (
@@ -1343,7 +1343,7 @@ export const QuickAccessPopover = ({
                     }
                     )
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     {(
                       config.metadata?.safety_profile?.recoveryNeeds ||
                       config.technical_config?.safety_constraints
@@ -1368,18 +1368,18 @@ export const QuickAccessPopover = ({
         {/* Environmental Factors */}
         {config.metadata?.safety_profile?.environmentalFactors && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Environmental Factors
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium">
+                  <div className="font-body text-sm text-white font-medium">
                     Scheduling Constraints (
                     {config.metadata.safety_profile.environmentalFactors.length}
                     )
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                     {config.metadata.safety_profile.environmentalFactors.map(
                       (factor, index) => (
                         <div
@@ -1401,7 +1401,7 @@ export const QuickAccessPopover = ({
         {/* Safety Constraints Detail */}
         {config.technical_config?.safety_constraints && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Safety Monitoring
             </div>
             <div className="space-y-3">
@@ -1409,7 +1409,7 @@ export const QuickAccessPopover = ({
                 .contraindicated_exercises && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Contraindicated Exercises (
                       {
                         config.technical_config.safety_constraints
@@ -1417,7 +1417,7 @@ export const QuickAccessPopover = ({
                       }
                       )
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.technical_config.safety_constraints.contraindicated_exercises.map(
                         (exercise, index) => (
                           <div
@@ -1438,7 +1438,7 @@ export const QuickAccessPopover = ({
               {config.technical_config.safety_constraints.safety_monitoring && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Safety Monitoring (
                       {
                         config.technical_config.safety_constraints
@@ -1446,7 +1446,7 @@ export const QuickAccessPopover = ({
                       }
                       )
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.technical_config.safety_constraints.safety_monitoring.map(
                         (monitor, index) => (
                           <div
@@ -1466,10 +1466,10 @@ export const QuickAccessPopover = ({
                 .volume_progression_limit && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Volume Progression Limit
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       Limit:{" "}
                       <span className="text-synthwave-neon-cyan">
                         {
@@ -1488,18 +1488,18 @@ export const QuickAccessPopover = ({
         {/* Methodology Experience & Preferences */}
         {config.metadata?.methodology_profile && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Methodology Experience
             </div>
             <div className="space-y-3">
               {config.metadata.methodology_profile.experience && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Training Experience (
                       {config.metadata.methodology_profile.experience.length})
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.metadata.methodology_profile.experience.map(
                         (exp, index) => (
                           <div
@@ -1518,11 +1518,11 @@ export const QuickAccessPopover = ({
               {config.metadata.methodology_profile.preferences && (
                 <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium">
+                    <div className="font-body text-sm text-white font-medium">
                       Training Preferences (
                       {config.metadata.methodology_profile.preferences.length})
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {config.metadata.methodology_profile.preferences.map(
                         (pref, index) => (
                           <div
@@ -1545,16 +1545,16 @@ export const QuickAccessPopover = ({
         {/* Coach Creator Session Summary */}
         {config.metadata?.coach_creator_session_summary && (
           <div>
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Creation Summary
             </div>
             <div className="space-y-3">
               <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium">
+                  <div className="font-body text-sm text-white font-medium">
                     Coach Creator Session
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                  <div className="font-body text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
                     {config.metadata.coach_creator_session_summary}
                   </div>
                 </div>
@@ -1565,17 +1565,17 @@ export const QuickAccessPopover = ({
 
         {/* System Information */}
         <div>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             System Information
           </div>
           <div className="space-y-3">
             <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
               <div className="flex-1 min-w-0">
-                <div className="font-rajdhani text-sm text-white font-medium truncate">
+                <div className="font-body text-sm text-white font-medium truncate">
                   {config.entityType || "coachConfig"} • v
                   {config.metadata?.version || "1.0"}
                 </div>
-                <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                   ID:{" "}
                   <span className="text-synthwave-neon-cyan">
                     {config.coach_id?.split("_").pop() || "main"}

@@ -48,7 +48,7 @@ function CopyButton({ text, resetDelayMs = 2000 }) {
       title={copied ? "Copied!" : "Copy to clipboard"}
     >
       {copied ? <CheckIcon /> : <CopyIcon />}
-      {copied && <span className="text-xs font-rajdhani">Copied!</span>}
+      {copied && <span className="text-xs font-body">Copied!</span>}
     </button>
   );
 }

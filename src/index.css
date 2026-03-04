@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Russo+One&family=Rajdhani:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@300;400;500;600;700;800&family=Russo+One&family=Rajdhani:wght@300;400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Barlow:wght@700;800;900&family=Barlow+Semi+Condensed:wght@700;800;900&family=Fira+Code:wght@400&family=Plus+Jakarta+Sans:wght@400&family=Space+Mono:ital,wght@0,400;1,400&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap");
 
@@ -34,6 +34,11 @@
   --color-synthwave-text-secondary: #b4b4b4;
   --color-synthwave-text-muted: #666666;
 
+  /* Semantic font roles */
+  --font-header: "Barlow", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-ai: "Fira Code", monospace;
+
   /* Font families */
   --font-inter: "Inter", sans-serif;
   --font-rajdhani: "Inter", sans-serif; /* "Rajdhani", sans-serif; */
@@ -43,6 +48,7 @@
   --font-barlow-semi: "Barlow Semi Condensed", sans-serif;
   --font-barlow: "Barlow", sans-serif;
   --font-jakarta: "Plus Jakarta Sans", sans-serif;
+  --font-manrope: "Manrope", sans-serif;
   --font-space-mono: "Space Mono", monospace;
   --font-fira-code: "Fira Code", monospace;
   --font-courier-prime: "Courier Prime", monospace;
@@ -232,8 +238,7 @@
   color: #666666;
   pointer-events: none;
   height: 0;
-  font-family: var(--font-rajdhani);
-  /* font-family: "Rajdhani", sans-serif; */
+  font-family: var(--font-body);
 }
 
 /* Tiptap content area reset */
@@ -241,8 +246,7 @@
   word-wrap: break-word;
   white-space: pre-wrap;
   word-break: break-word;
-  font-family: var(--font-rajdhani);
-  /* font-family: "Rajdhani", sans-serif; */
+  font-family: var(--font-body);
 }
 
 .tiptap-content p {
@@ -474,7 +478,7 @@ input:autofill {
   color: rgb(255 255 255 / 1) !important;
 
   /* Enforce font family */
-  font-family: "Rajdhani", sans-serif !important;
+  font-family: var(--font-body) !important;
 
   /* Enforce other styles to match LoginForm */
   border-color: rgb(255 0 128 / 0.3) !important;

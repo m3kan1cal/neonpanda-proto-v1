@@ -92,10 +92,10 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="font-rajdhani font-bold text-2xl text-white mb-4 uppercase">
+          <h1 className="font-body font-bold text-2xl text-white mb-4 uppercase">
             Forgot Password
           </h1>
-          <p className="font-rajdhani text-synthwave-text-secondary">
+          <p className="font-body text-synthwave-text-secondary">
             Enter the email address associated with your account and we'll send you a code to reset your password.
           </p>
         </div>
@@ -106,11 +106,11 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
 
         {successMessage && (
           <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
-            <p className="font-rajdhani text-synthwave-neon-cyan text-sm">
+            <p className="font-body text-synthwave-neon-cyan text-sm">
               {successMessage}
             </p>
             {countdown > 0 && (
-              <p className="font-rajdhani text-synthwave-neon-cyan text-sm mt-2 opacity-80">
+              <p className="font-body text-synthwave-neon-cyan text-sm mt-2 opacity-80">
                 Redirecting in {countdown} second{countdown !== 1 ? 's' : ''}...
               </p>
             )}
@@ -141,7 +141,7 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
         </div>
 
         <div className="text-center pt-4 border-t border-synthwave-neon-pink/20">
-          <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+          <p className="font-body text-synthwave-text-secondary mb-3">
             Remember your password?
           </p>
           <AuthButton

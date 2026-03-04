@@ -51,7 +51,7 @@ const CollapsibleSection = ({
       >
         <div className="flex items-center space-x-3">
           <div className="text-synthwave-neon-pink">{icon}</div>
-          <h3 className="font-barlow font-bold text-white text-base uppercase">
+          <h3 className="font-header font-bold text-white text-base uppercase">
             {title}
           </h3>
         </div>
@@ -137,7 +137,7 @@ function Changelog() {
                           {entry.changes.added.map((item, i) => (
                             <li
                               key={i}
-                              className="text-synthwave-text-primary font-rajdhani flex items-start"
+                              className="text-synthwave-text-primary font-body flex items-start"
                             >
                               <span className="text-synthwave-neon-cyan mr-2">
                                 •
@@ -171,7 +171,7 @@ function Changelog() {
                           {entry.changes.changed.map((item, i) => (
                             <li
                               key={i}
-                              className="text-synthwave-text-primary font-rajdhani flex items-start"
+                              className="text-synthwave-text-primary font-body flex items-start"
                             >
                               <span className="text-synthwave-neon-purple mr-2">
                                 •
@@ -205,7 +205,7 @@ function Changelog() {
                           {entry.changes.fixed.map((item, i) => (
                             <li
                               key={i}
-                              className="text-synthwave-text-primary font-rajdhani flex items-start"
+                              className="text-synthwave-text-primary font-body flex items-start"
                             >
                               <span className="text-synthwave-neon-pink mr-2">
                                 •
@@ -239,7 +239,7 @@ function Changelog() {
                           {entry.changes.removed.map((item, i) => (
                             <li
                               key={i}
-                              className="text-synthwave-text-primary font-rajdhani flex items-start"
+                              className="text-synthwave-text-primary font-body flex items-start"
                             >
                               <span className="text-orange-400 mr-2">•</span>
                               {item}
