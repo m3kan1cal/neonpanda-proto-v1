@@ -40,7 +40,6 @@ export const ErrorState = ({
   message = "Something went wrong",
   buttonText = "Go Back",
   onButtonClick,
-  variant = "error", // 'error', 'warning', 'info'
 }) => {
   return (
     <div className={`${themeClasses.container} min-h-screen`}>
@@ -82,7 +81,6 @@ export const CenteredErrorState = ({
   message = "Something went wrong",
   buttonText = "Go Back",
   onButtonClick,
-  variant = "error",
 }) => {
   return (
     <div
@@ -122,7 +120,6 @@ export const CenteredErrorState = ({
 export const InlineError = ({
   title = "Error",
   message = "Something went wrong",
-  variant = "error",
   size = "medium", // 'small', 'medium', 'large'
 }) => {
   const getSizeClasses = () => {
