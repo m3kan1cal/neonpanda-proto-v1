@@ -476,7 +476,7 @@ function TrainingGrounds() {
       ) : workoutState.recentWorkouts.length === 0 ? (
         <div className="text-center pb-4">
           <div className="max-w-xs mx-auto">
-            <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+            <p className="font-body text-sm text-synthwave-text-muted mb-4 text-left">
               You haven't logged any workouts yet. Start tracking your training
               to monitor progress and build consistency.
             </p>
@@ -485,7 +485,7 @@ function TrainingGrounds() {
                 <span className={badgePatterns.numberedCircle}>
                   <span className={badgePatterns.numberedCircleText}>1</span>
                 </span>
-                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                   Click "Log Workout" in Quick Actions
                 </p>
               </div>
@@ -493,7 +493,7 @@ function TrainingGrounds() {
                 <span className={badgePatterns.numberedCircle}>
                   <span className={badgePatterns.numberedCircleText}>2</span>
                 </span>
-                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                   OR Use Command Palette (⌘+K) and select "/log-workout"
                 </p>
               </div>
@@ -501,7 +501,7 @@ function TrainingGrounds() {
                 <span className={badgePatterns.numberedCircle}>
                   <span className={badgePatterns.numberedCircleText}>3</span>
                 </span>
-                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                   OR start a conversation and tell your coach about your workout
                 </p>
               </div>
@@ -510,7 +510,7 @@ function TrainingGrounds() {
         </div>
       ) : (
         <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Workouts
           </div>
           {workoutState.recentWorkouts.map((workout) => {
@@ -533,13 +533,13 @@ function TrainingGrounds() {
                 {isNew && <NewBadge />}
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    <div className="font-body text-sm text-white font-medium truncate">
                       {workoutAgentRef.current?.formatWorkoutSummary(
                         workout,
                         true,
                       ) || "Workout"}
                     </div>
-                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                       {workoutAgentRef.current?.formatWorkoutTime(
                         workout.completedAt,
                       ) || "Unknown time"}
@@ -681,7 +681,7 @@ function TrainingGrounds() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="training-grounds-info"
               data-tooltip-content="Your central hub to track progress, access resources, chat with your coach, and manage your complete fitness journey."
             >
@@ -841,17 +841,17 @@ function TrainingGrounds() {
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
                 <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                <h3 className="font-header font-bold text-white text-lg uppercase">
                   Training Programs
                 </h3>
               </div>
-              <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
+              <p className="font-body text-synthwave-text-secondary text-sm mb-6">
                 Structured training programs and workout plans designed by you
                 and your coach.
               </p>
               <div className="text-center pb-4">
                 <div className="max-w-xs mx-auto">
-                  <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+                  <p className="font-body text-sm text-synthwave-text-muted mb-4 text-left">
                     You haven't created any training programs yet. Design a
                     structured program with your coach to optimize your
                     training.
@@ -863,7 +863,7 @@ function TrainingGrounds() {
                           1
                         </span>
                       </span>
-                      <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                      <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                         Click "Design Program" in Quick Actions
                       </p>
                     </div>
@@ -873,7 +873,7 @@ function TrainingGrounds() {
                           2
                         </span>
                       </span>
-                      <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                      <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                         OR Use Command Palette (⌘+K) and select
                         "/design-program"
                       </p>
@@ -884,7 +884,7 @@ function TrainingGrounds() {
                           3
                         </span>
                       </span>
-                      <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                      <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                         OR go to "Programs" and click the "Design New Program"
                         card
                       </p>
@@ -899,11 +899,11 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-barlow font-bold text-white text-lg uppercase">
+              <h3 className="font-header font-bold text-white text-lg uppercase">
                 Conversations
               </h3>
             </div>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
+            <p className="font-body text-synthwave-text-secondary text-sm mb-6">
               Chat with your coach for personalized guidance, workout logging,
               accountability, and support.
             </p>
@@ -918,7 +918,7 @@ function TrainingGrounds() {
                 </div>
               ) : conversationAgentState.recentConversations.length > 0 ? (
                 <>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+                  <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                     Recent Conversations
                   </div>
                   {conversationAgentState.recentConversations.map(
@@ -939,10 +939,10 @@ function TrainingGrounds() {
                           {isRecent && <NewBadge />}
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
-                              <div className="font-rajdhani text-sm text-white font-medium truncate">
+                              <div className="font-body text-sm text-white font-medium truncate">
                                 {truncateTitle(conversation.title)}
                               </div>
-                              <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                              <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                                 {formatConversationDate(
                                   conversation.metadata?.lastActivity ||
                                     conversation.createdAt,
@@ -966,7 +966,7 @@ function TrainingGrounds() {
               ) : (
                 <div className="text-center pb-4">
                   <div className="max-w-xs mx-auto">
-                    <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+                    <p className="font-body text-sm text-synthwave-text-muted mb-4 text-left">
                       You haven't created any conversations yet. Chat with your
                       coach to set goals, log workouts, design training
                       programs, and more.
@@ -978,7 +978,7 @@ function TrainingGrounds() {
                             1
                           </span>
                         </span>
-                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                           Click "Start Conversation" in Quick Actions
                         </p>
                       </div>
@@ -988,7 +988,7 @@ function TrainingGrounds() {
                             2
                           </span>
                         </span>
-                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                           OR Use Command Palette (⌘+K) and select
                           "/start-conversation"
                         </p>
@@ -999,7 +999,7 @@ function TrainingGrounds() {
                             3
                           </span>
                         </span>
-                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                           OR go to "Conversations" and click the "Start New
                           Conversation" card
                         </p>
@@ -1015,11 +1015,11 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-barlow font-bold text-white text-lg uppercase">
+              <h3 className="font-header font-bold text-white text-lg uppercase">
                 Workout History
               </h3>
             </div>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
+            <p className="font-body text-synthwave-text-secondary text-sm mb-6">
               Recent completed workouts and detailed session logs with
               performance tracking.
             </p>
@@ -1032,11 +1032,11 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-barlow font-bold text-white text-lg uppercase">
+              <h3 className="font-header font-bold text-white text-lg uppercase">
                 Reports & Insights
               </h3>
             </div>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
+            <p className="font-body text-synthwave-text-secondary text-sm mb-6">
               Weekly and monthly reports with insights and recommendations.
             </p>
 
@@ -1057,7 +1057,7 @@ function TrainingGrounds() {
               ) : reportsState.recentReports.length === 0 ? (
                 <div className="text-center pb-4">
                   <div className="max-w-xs mx-auto">
-                    <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+                    <p className="font-body text-sm text-synthwave-text-muted mb-4 text-left">
                       You don't have any reports yet. Reports automatically
                       generate weekly to track your progress and provide
                       insights.
@@ -1069,7 +1069,7 @@ function TrainingGrounds() {
                             1
                           </span>
                         </span>
-                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                           Log workouts throughout the week
                         </p>
                       </div>
@@ -1079,7 +1079,7 @@ function TrainingGrounds() {
                             2
                           </span>
                         </span>
-                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                           Reports automatically generate each Sunday
                         </p>
                       </div>
@@ -1089,7 +1089,7 @@ function TrainingGrounds() {
                             3
                           </span>
                         </span>
-                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        <p className="font-body text-sm text-synthwave-text-muted flex-1 pt-0.5">
                           View reports in "Reports" or here on your dashboard
                         </p>
                       </div>
@@ -1098,7 +1098,7 @@ function TrainingGrounds() {
                 </div>
               ) : (
                 <>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+                  <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                     Recent Reports
                   </div>
                   {reportsState.recentReports.map((rep) => {
@@ -1118,10 +1118,10 @@ function TrainingGrounds() {
 
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <div className="font-rajdhani text-sm text-white font-medium truncate">
+                            <div className="font-body text-sm text-white font-medium truncate">
                               Week {rep.weekId}
                             </div>
-                            <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                            <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                               {getWeekDateRange(rep)} •{" "}
                               <span className="text-synthwave-neon-cyan">
                                 {formatWorkoutCount(
@@ -1149,18 +1149,18 @@ function TrainingGrounds() {
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
               <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2"></div>
-              <h3 className="font-barlow font-bold text-white text-lg uppercase">
+              <h3 className="font-header font-bold text-white text-lg uppercase">
                 Messages & Notifications
               </h3>
             </div>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
+            <p className="font-body text-synthwave-text-secondary text-sm mb-6">
               Important messages and notifications from your coach and the
               platform.
             </p>
 
             {/* Recent Changelog Versions */}
             <div className="space-y-2 mb-2">
-              <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                 Recent Updates
               </div>
               {getLatestVersions(5).map((entry, index) => {
@@ -1183,10 +1183,10 @@ function TrainingGrounds() {
                     {isNewRelease && <NewBadge />}
 
                     <div className="flex-1 min-w-0">
-                      <div className="font-rajdhani text-sm text-white font-medium truncate">
+                      <div className="font-body text-sm text-white font-medium truncate">
                         {entry.version}
                       </div>
-                      <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      <div className="font-body text-xs text-synthwave-text-secondary mt-1">
                         {entry.date} •{" "}
                         <span className="text-synthwave-neon-cyan">
                           {counts.total} changes

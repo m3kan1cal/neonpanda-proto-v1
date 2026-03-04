@@ -160,7 +160,7 @@ const MessageItem = memo(
                 containerPatterns.userMessageBubble,
               )}
             >
-              <div className="font-rajdhani text-base leading-relaxed">
+              <div className="font-body text-base leading-relaxed">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -168,7 +168,7 @@ const MessageItem = memo(
             <div
               className={getStreamingMessageClasses(message, agentState, "")}
             >
-              <div className="font-fira-code text-base leading-relaxed text-synthwave-text-secondary">
+              <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -187,7 +187,7 @@ const MessageItem = memo(
               </div>
             )}
 
-            <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+            <span className="text-xs text-synthwave-text-secondary font-body">
               {formatTime(message.timestamp)}
             </span>
             {message.type === "user" && (
@@ -1170,7 +1170,7 @@ function CoachConversations() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="coach-conversation-info"
               data-tooltip-content="Get personalized coaching, workout advice, and motivation from your AI coach. The more you share, the more your coach learns."
             >
@@ -1200,7 +1200,7 @@ function CoachConversations() {
           coachConversationAgentState.conversation.title && (
             <div className="mb-4">
               <div className="flex items-center gap-3 mb-1">
-                <div className="font-rajdhani text-lg text-white flex items-center flex-nowrap">
+                <div className="font-body text-lg text-white flex items-center flex-nowrap">
                   <span className="text-synthwave-neon-cyan mr-2 whitespace-nowrap">
                     Conversation Title:
                   </span>
@@ -1211,7 +1211,7 @@ function CoachConversations() {
                     maxLength={100}
                     showCharacterCount={false}
                     size="medium"
-                    displayClassName="text-white font-rajdhani text-lg"
+                    displayClassName="text-white font-body text-lg"
                     tooltipPrefix="conversation-title"
                   />
                 </div>
@@ -1239,7 +1239,7 @@ function CoachConversations() {
                     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
                       {/* Welcome Header */}
                       <div className="text-center space-y-2">
-                        <h3 className="font-barlow text-xl md:text-2xl text-white uppercase tracking-wider">
+                        <h3 className="font-header text-xl md:text-2xl text-white uppercase tracking-wider">
                           Ready to Train?
                         </h3>
                         <p className={typographyPatterns.emptyStateDescription}>
@@ -1553,10 +1553,10 @@ function CoachConversations() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Conversation
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete this conversation? This action
                 cannot be undone.
               </p>

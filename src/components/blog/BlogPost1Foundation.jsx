@@ -12,7 +12,7 @@ function BlogPost1Foundation() {
       {/* Opening Hook */}
       <section className="mb-16">
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <p className="font-rajdhani text-xl text-white leading-relaxed italic">
+          <p className="font-body text-xl text-white leading-relaxed italic">
             "It's 5:47 AM. A user in Portland just crushed the first test of the
             Crossfit Open and wants to log it before coffee. Another in Miami is
             asking their coach about peaking for their first competition. A
@@ -66,13 +66,13 @@ function BlogPost1Foundation() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-pink mb-4">
             What We Were Up Against
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Bursty traffic patterns:
                 </strong>{" "}
@@ -85,7 +85,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Context is everything:
                 </strong>{" "}
@@ -99,7 +99,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Not all requests are equal:
                 </strong>{" "}
@@ -132,13 +132,13 @@ function BlogPost1Foundation() {
         </p>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
             The Serverless Promise
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-cyan mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-cyan font-semibold">
                   Zero to hero scaling:
                 </strong>{" "}
@@ -152,7 +152,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-cyan mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-cyan font-semibold">
                   No capacity planning headaches:
                 </strong>{" "}
@@ -165,7 +165,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-cyan mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-cyan font-semibold">
                   Sub-2-second responses:
                 </strong>{" "}
@@ -208,11 +208,11 @@ function BlogPost1Foundation() {
                 alt="AWS Lambda"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 AWS Lambda
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani">
+            <p className="text-synthwave-text-secondary font-body">
               TypeScript functions that handle everything from streaming coach
               conversations to building multi-week training programs. Async
               invocations for heavy processing, sync handlers for real-time
@@ -228,11 +228,11 @@ function BlogPost1Foundation() {
                 alt="API Gateway"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 API Gateway v2
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani">
+            <p className="text-synthwave-text-secondary font-body">
               HTTP APIs with Lambda function URLs for streaming responses.
               WebSocket-like experience for real-time coach conversations
               without the WebSocket complexity. (We tried WebSockets. We have
@@ -248,11 +248,11 @@ function BlogPost1Foundation() {
                 alt="Amazon Bedrock"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple">
                 Amazon Bedrock
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani">
+            <p className="text-synthwave-text-secondary font-body">
               Foundation models from Anthropic (Claude Sonnet & Haiku) power our
               AI coaching. Multi-model orchestration with intelligent routing
               between models based on task complexity. More on this later—it's
@@ -268,11 +268,11 @@ function BlogPost1Foundation() {
                 alt="DynamoDB"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 DynamoDB
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani">
+            <p className="text-synthwave-text-secondary font-body">
               Single-table design with composite keys for lightning-fast
               queries. Workout history, coach configurations, and real-time
               metrics—all accessible in single-digit milliseconds. Yes,
@@ -288,11 +288,11 @@ function BlogPost1Foundation() {
                 alt="Amazon S3"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink">
                 Amazon S3
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani">
+            <p className="text-synthwave-text-secondary font-body">
               Cost-optimized archival storage for conversation transcripts,
               detailed workout analyses, and rich media content. 90% storage
               cost reduction compared to keeping everything in DynamoDB. Our
@@ -308,11 +308,11 @@ function BlogPost1Foundation() {
                 alt="Amazon EventBridge"
                 className="w-12 h-12"
               />
-              <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan">
+              <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan">
                 Amazon EventBridge
               </h3>
             </div>
-            <p className="text-synthwave-text-secondary font-rajdhani">
+            <p className="text-synthwave-text-secondary font-body">
               Event-driven architecture for async workflows like weekly report
               generation, analytics processing, and background AI tasks. Loose
               coupling enables independent scaling—each piece evolves without
@@ -337,45 +337,45 @@ function BlogPost1Foundation() {
         </p>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             Everything in One Place
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Workout History
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 Every workout logged through natural language, searchable and
                 analyzable. From "Did Fran in 8:45" to detailed powerlifting
                 sessions with RPE tracking.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-cyan mb-2">
                 Coach Conversations
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 The complete coaching relationship history. Every question,
                 every insight, every PR celebration preserved and searchable.
                 Your coach never forgets.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-purple mb-2">
                 Training Programs
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 Multi-week programs with phase management, progression tracking,
                 and workout templates. A structured roadmap that adapts to real
                 life.
               </p>
             </div>
             <div>
-              <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
+              <h4 className="font-body font-semibold text-synthwave-neon-pink mb-2">
                 Analytics & Reports
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-base">
+              <p className="text-synthwave-text-secondary font-body text-base">
                 Weekly and monthly insights generated by AI. Progress patterns,
                 strength trends, and personalized recommendations—not generic
                 charts.
@@ -395,7 +395,7 @@ function BlogPost1Foundation() {
       <section className="mb-16">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink">
-            <span className="font-inter font-bold text-xl text-synthwave-neon-pink">
+            <span className="font-body font-bold text-xl text-synthwave-neon-pink">
               1
             </span>
           </div>
@@ -405,7 +405,7 @@ function BlogPost1Foundation() {
             >
               Agent Spotlight: The Smart Request Router
             </h2>
-            <p className="font-rajdhani text-synthwave-text-muted italic">
+            <p className="font-body text-synthwave-text-muted italic">
               "The Intelligent Traffic Controller"
             </p>
           </div>
@@ -419,17 +419,17 @@ function BlogPost1Foundation() {
         </p>
 
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Why Not Just Send Everything to Claude?
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             We could. It would work. But it would be slow and expensive.
             Instead, the Router analyzes every message to determine:
           </p>
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-cyan mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-cyan font-semibold">
                   Intent:
                 </strong>{" "}
@@ -441,7 +441,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-cyan mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-cyan font-semibold">
                   Complexity:
                 </strong>{" "}
@@ -453,7 +453,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-cyan mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-cyan font-semibold">
                   Context needs:
                 </strong>{" "}
@@ -472,10 +472,10 @@ function BlogPost1Foundation() {
             <span className={badgePatterns.cyan}>Router Pattern</span>
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             The Router Pattern in Action
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Router Pattern is a foundational agentic AI pattern. Instead of
             sending all requests to a single model, we use AI to analyze intent
             and route to the optimal processing path. It's AI deciding how to
@@ -526,7 +526,7 @@ function BlogPost1Foundation() {
 
         {/* Decision Flow Diagram */}
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-6">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-6">
             Decision Flow Architecture
           </h3>
 
@@ -535,7 +535,7 @@ function BlogPost1Foundation() {
             <div className="flex flex-col items-center space-y-4">
               {/* Entry Point */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   User Message Received
                 </span>
               </div>
@@ -548,10 +548,10 @@ function BlogPost1Foundation() {
 
               {/* Parallel Burst */}
               <div className="bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-cyan">
+                <span className="font-body font-semibold text-synthwave-neon-cyan">
                   🚀 Parallel Burst
                 </span>
-                <p className="text-synthwave-text-secondary font-rajdhani text-sm mt-1">
+                <p className="text-synthwave-text-secondary font-body text-sm mt-1">
                   Router Analysis + DynamoDB Reads (simultaneous)
                 </p>
               </div>
@@ -565,7 +565,7 @@ function BlogPost1Foundation() {
               {/* Analysis Outputs */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
                 <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30 rounded-md p-3 text-center">
-                  <span className="font-rajdhani text-sm text-synthwave-neon-pink">
+                  <span className="font-body text-sm text-synthwave-neon-pink">
                     Intent Classification
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -573,7 +573,7 @@ function BlogPost1Foundation() {
                   </p>
                 </div>
                 <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-md p-3 text-center">
-                  <span className="font-rajdhani text-sm text-synthwave-neon-cyan">
+                  <span className="font-body text-sm text-synthwave-neon-cyan">
                     Complexity Analysis
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -581,7 +581,7 @@ function BlogPost1Foundation() {
                   </p>
                 </div>
                 <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-purple/30 rounded-md p-3 text-center">
-                  <span className="font-rajdhani text-sm text-synthwave-neon-purple">
+                  <span className="font-body text-sm text-synthwave-neon-purple">
                     Context Needs
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -599,7 +599,7 @@ function BlogPost1Foundation() {
               {/* Conditional Processing */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                 <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md p-4">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-purple text-sm">
+                  <span className="font-body font-semibold text-synthwave-neon-purple text-sm">
                     If Workout Detected
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -607,7 +607,7 @@ function BlogPost1Foundation() {
                   </p>
                 </div>
                 <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-md p-4">
-                  <span className="font-rajdhani font-semibold text-synthwave-neon-cyan text-sm">
+                  <span className="font-body font-semibold text-synthwave-neon-cyan text-sm">
                     If Memory Needed
                   </span>
                   <p className="text-synthwave-text-muted text-xs mt-1">
@@ -624,18 +624,18 @@ function BlogPost1Foundation() {
 
               {/* Model Selection */}
               <div className="bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink rounded-md px-6 py-3 text-center w-full max-w-md">
-                <span className="font-rajdhani font-semibold text-synthwave-neon-pink">
+                <span className="font-body font-semibold text-synthwave-neon-pink">
                   Model Selection
                 </span>
                 <div className="flex justify-center gap-4 mt-2">
-                  <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary font-body text-sm">
                     Complex →{" "}
                     <span className="text-synthwave-neon-purple">
                       Sonnet 4.6
                     </span>
                   </span>
                   <span className="text-synthwave-text-muted">|</span>
-                  <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary font-body text-sm">
                     Simple →{" "}
                     <span className="text-synthwave-neon-cyan">Haiku 4.5</span>
                   </span>
@@ -688,17 +688,17 @@ function BlogPost1Foundation() {
 
         {/* What Makes It Agentic */}
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             What Makes This Actually Agentic
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             The Smart Router isn't just following rules—it's making intelligent
             decisions. Here's what sets it apart from a simple switch statement:
           </p>
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Temporal awareness:
                 </strong>{" "}
@@ -710,7 +710,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Multi-intent detection:
                 </strong>{" "}
@@ -723,7 +723,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Context optimization:
                 </strong>{" "}
@@ -735,7 +735,7 @@ function BlogPost1Foundation() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
-              <div className="font-rajdhani">
+              <div className="font-body">
                 <strong className="text-synthwave-neon-pink font-semibold">
                   Cost efficiency:
                 </strong>{" "}
@@ -763,7 +763,7 @@ function BlogPost1Foundation() {
         </p>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-4">
             Key Structure
           </h3>
           <div className="bg-synthwave-bg-primary/30 rounded-md p-4 font-mono text-sm mb-4">
@@ -772,7 +772,7 @@ function BlogPost1Foundation() {
               sk: entity_type#entityId
             </div>
           </div>
-          <p className="text-synthwave-text-secondary font-rajdhani">
+          <p className="text-synthwave-text-secondary font-body">
             This design enables powerful query patterns: get all workouts for a
             user, all conversations with a specific coach, or all programs—in a
             single efficient query. Combined with Global Secondary Indexes
@@ -781,10 +781,10 @@ function BlogPost1Foundation() {
         </div>
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
+          <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-4">
             Throughput Scaling (a.k.a. "Don't Drop Requests")
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani">
+          <p className="text-synthwave-text-secondary font-body">
             Every DynamoDB operation is wrapped in our{" "}
             <code className="text-synthwave-neon-pink bg-synthwave-bg-primary/50 px-1 rounded-md">
               withThroughputScaling()
@@ -811,10 +811,10 @@ function BlogPost1Foundation() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* HTTP API Benefits */}
           <div className={containerPatterns.mediumGlass}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
               HTTP API with Lambda Function URLs
             </h3>
-            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 <span>
@@ -840,10 +840,10 @@ function BlogPost1Foundation() {
 
           {/* Lambda Benefits */}
           <div className={containerPatterns.mediumGlassPink}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-pink mb-3">
               Lambda for AI Workloads
             </h3>
-            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-pink">→</span>
                 <span>
@@ -871,10 +871,10 @@ function BlogPost1Foundation() {
 
           {/* Bedrock Benefits */}
           <div className={containerPatterns.mediumGlassPurple}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-purple mb-3">
               Bedrock Multi-Model Strategy
             </h3>
-            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-purple">→</span>
                 <span>
@@ -901,10 +901,10 @@ function BlogPost1Foundation() {
 
           {/* DynamoDB Benefits */}
           <div className={containerPatterns.mediumGlass}>
-            <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
+            <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
               DynamoDB for Real-Time AI Context
             </h3>
-            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
+            <ul className="space-y-2 font-body text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 <span>
@@ -930,36 +930,36 @@ function BlogPost1Foundation() {
         </div>
 
         <div className={containerPatterns.boldGradient}>
-          <h3 className="font-rajdhani font-semibold text-xl text-white mb-4">
+          <h3 className="font-body font-semibold text-xl text-white mb-4">
             The Result: Sub-2-Second AI Responses
           </h3>
-          <p className="text-synthwave-text-secondary font-rajdhani mb-4">
+          <p className="text-synthwave-text-secondary font-body mb-4">
             By combining serverless compute, intelligent model routing, and
             optimized data access patterns, we achieve response times that feel
             instantaneous. When someone messages their coach:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-pink mb-1">
                 ~100ms
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Router Analysis
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-cyan mb-1">
                 ~50ms
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 Context Loading
               </div>
             </div>
             <div>
-              <div className="text-2xl font-barlow text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-header text-synthwave-neon-purple mb-1">
                 ~500ms
               </div>
-              <div className="font-rajdhani text-sm text-synthwave-text-muted">
+              <div className="font-body text-sm text-synthwave-text-muted">
                 First Chunk Streamed
               </div>
             </div>
@@ -989,7 +989,7 @@ function BlogPost1Foundation() {
 
         <div className={containerPatterns.cardLight}>
           <div className="p-6">
-            <p className="font-rajdhani text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
+            <p className="font-body text-synthwave-text-muted text-sm uppercase tracking-wide mb-2">
               Next in the Series
             </p>
             <Link
@@ -997,10 +997,10 @@ function BlogPost1Foundation() {
               className="group flex items-center justify-between"
             >
               <div>
-                <h3 className="font-barlow text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
+                <h3 className="font-header text-xl text-synthwave-neon-cyan group-hover:text-synthwave-neon-pink transition-colors">
                   Your Coach, Built Your Way
                 </h3>
-                <p className="font-rajdhani text-synthwave-text-secondary">
+                <p className="font-body text-synthwave-text-secondary">
                   The Coach Creator Agent & Hybrid Data Architecture
                 </p>
               </div>

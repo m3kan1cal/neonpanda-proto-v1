@@ -334,7 +334,7 @@ function ManageExercises() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase flex-1">
+          <h3 className="font-header font-bold text-white text-lg uppercase flex-1">
             {exercise.displayName || exercise.exerciseName}
           </h3>
         </div>
@@ -342,7 +342,7 @@ function ManageExercises() {
         {/* Metadata Row - consolidated on one line */}
         <div className="flex items-center flex-wrap gap-4 mb-4">
           {/* Last Performed */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <ClockIconSmall />
             <span className="text-synthwave-text-muted">Completed:</span>
             <span className="text-synthwave-neon-cyan font-medium">
@@ -350,7 +350,7 @@ function ManageExercises() {
             </span>
           </div>
           {/* Session Count */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Sessions:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {exercise.count}
@@ -408,47 +408,47 @@ function ManageExercises() {
             {/* Personal Records Section */}
             {aggregations && (
               <div className={containerPatterns.coachNotesSection}>
-                <h4 className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
+                <h4 className="font-body text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
                   Personal Records
                 </h4>
 
                 <div className="flex items-center gap-4 flex-wrap">
                   {aggregations.prWeight && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                      <span className="font-body text-sm text-synthwave-text-muted">
                         Max Weight:
                       </span>
-                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                      <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                         {aggregations.prWeight} lbs
                       </span>
                     </div>
                   )}
                   {aggregations.prReps && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                      <span className="font-body text-sm text-synthwave-text-muted">
                         Max Reps:
                       </span>
-                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                      <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                         {aggregations.prReps}
                       </span>
                     </div>
                   )}
                   {aggregations.averageWeight && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                      <span className="font-body text-sm text-synthwave-text-muted">
                         Avg Weight:
                       </span>
-                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                      <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                         {Math.round(aggregations.averageWeight)} lbs
                       </span>
                     </div>
                   )}
                   {aggregations.averageReps && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                      <span className="font-body text-sm text-synthwave-text-muted">
                         Avg Reps:
                       </span>
-                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                      <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                         {Math.round(aggregations.averageReps)}
                       </span>
                     </div>
@@ -456,7 +456,7 @@ function ManageExercises() {
                 </div>
                 {aggregations.totalOccurrences && (
                   <div className="mt-3 pt-3 border-t border-synthwave-neon-cyan/10">
-                    <span className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <span className="font-body text-sm text-synthwave-text-secondary">
                       Total Sessions:{" "}
                       <span className="text-base text-synthwave-neon-cyan font-bold">
                         {aggregations.totalOccurrences}
@@ -475,7 +475,7 @@ function ManageExercises() {
                 recentSessions[0].metrics?.intensityMetrics
                   ?.averageIntensity) && (
                 <div className={containerPatterns.coachNotesSection}>
-                  <h4 className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
+                  <h4 className="font-body text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
                     Last Session Stats
                   </h4>
 
@@ -484,10 +484,10 @@ function ManageExercises() {
                       recentSessions[0].metrics?.bestSet?.weight !==
                         undefined && (
                         <div className="flex items-center gap-2">
-                          <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                          <span className="font-body text-sm text-synthwave-text-muted">
                             Best Set:
                           </span>
-                          <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                          <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                             {recentSessions[0].metrics.bestSet.reps}@
                             {recentSessions[0].metrics.bestSet.weight}{" "}
                             {recentSessions[0].metrics.weightUnit || "lbs"}
@@ -496,10 +496,10 @@ function ManageExercises() {
                       )}
                     {recentSessions[0].metrics?.estimated1RM && (
                       <div className="flex items-center gap-2">
-                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                        <span className="font-body text-sm text-synthwave-text-muted">
                           Est. 1RM:
                         </span>
-                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                        <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                           {recentSessions[0].metrics.estimated1RM}{" "}
                           {recentSessions[0].metrics.weightUnit || "lbs"}
                         </span>
@@ -508,10 +508,10 @@ function ManageExercises() {
                     {recentSessions[0].metrics?.intensityMetrics
                       ?.averageIntensity && (
                       <div className="flex items-center gap-2">
-                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                        <span className="font-body text-sm text-synthwave-text-muted">
                           Intensity:
                         </span>
-                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                        <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                           {Math.round(
                             recentSessions[0].metrics.intensityMetrics
                               .averageIntensity * 100,
@@ -527,7 +527,7 @@ function ManageExercises() {
             {/* Recent Sessions Section */}
             {recentSessions.length > 0 && (
               <div className={containerPatterns.coachNotesSection}>
-                <h4 className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
+                <h4 className="font-body text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
                   Recent Sessions
                 </h4>
                 <div className="space-y-2">
@@ -542,10 +542,10 @@ function ManageExercises() {
                       className="flex items-center justify-between py-2 px-3 bg-synthwave-bg-primary/30 cursor-pointer hover:bg-synthwave-bg-primary/50 transition-colors duration-200"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                        <span className="font-body text-sm text-synthwave-neon-cyan font-medium">
                           [{formatSessionDate(session.completedAt)}]
                         </span>
-                        <span className="font-rajdhani text-sm text-synthwave-text-secondary">
+                        <span className="font-body text-sm text-synthwave-text-secondary">
                           {capitalizeFirst(
                             session.originalName || session.exerciseName,
                           )}
@@ -577,7 +577,7 @@ function ManageExercises() {
               recentSessions.length === 0 &&
               exerciseData && (
                 <div className="text-center py-4">
-                  <p className="font-rajdhani text-sm text-synthwave-text-muted">
+                  <p className="font-body text-sm text-synthwave-text-muted">
                     No session data available
                   </p>
                 </div>
@@ -758,7 +758,7 @@ function ManageExercises() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="exercises-info"
                 data-tooltip-content="Browse your exercise history and track your personal records. See progression over time for each movement."
               >
@@ -849,7 +849,7 @@ function ManageExercises() {
                 placeholder="Search exercises..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-10 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="w-full px-4 py-3 pl-10 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-body transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 style={{ boxShadow: "none", outline: "none" }}
                 onFocus={(e) => {
                   e.target.style.outline = "none";
@@ -896,10 +896,10 @@ function ManageExercises() {
           {exerciseAgentState.error && (
             <div className="text-center py-12">
               <NeonBorder color="pink" className="max-w-md mx-auto p-6">
-                <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">
+                <p className="font-body text-synthwave-neon-pink text-xl font-bold mb-2">
                   Error Loading Exercises
                 </p>
-                <p className="font-rajdhani text-synthwave-text-secondary text-lg">
+                <p className="font-body text-synthwave-text-secondary text-lg">
                   {exerciseAgentState.error}
                 </p>
               </NeonBorder>
@@ -911,10 +911,10 @@ function ManageExercises() {
             !exerciseAgentState.error &&
             filteredExercises.length === 0 && (
               <div className="text-center py-12">
-                <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+                <div className="font-body text-synthwave-neon-cyan text-base">
                   {searchQuery ? "No Matching Exercises" : "No Exercises Yet"}
                 </div>
-                <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+                <div className="font-body text-synthwave-text-muted text-sm mt-2">
                   {searchQuery
                     ? `No exercises match "${searchQuery}". Try a different search term.`
                     : "Log some workouts to start tracking your exercise history and progression."}

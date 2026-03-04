@@ -175,27 +175,27 @@ function UpgradePrompt({
 
           {/* Content */}
           <div className="text-center mb-6">
-            <h3 className="font-rajdhani font-bold text-xl text-white mb-2 uppercase">
+            <h3 className="font-body font-bold text-xl text-white mb-2 uppercase">
               Become a Founding Member
             </h3>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-3">
+            <p className="font-body text-synthwave-text-secondary text-sm mb-3">
               You're currently on{" "}
               <span className="text-synthwave-neon-cyan font-semibold">
                 EarlyPanda (Free)
               </span>
               .
             </p>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm">
+            <p className="font-body text-synthwave-text-secondary text-sm">
               {getMessage()}
             </p>
           </div>
 
           {/* Price highlight */}
           <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md p-4 mb-6 text-center">
-            <span className="font-rajdhani text-white text-2xl font-bold">
+            <span className="font-body text-white text-2xl font-bold">
               {electricInfo.price}
             </span>
-            <span className="font-rajdhani text-synthwave-text-muted text-sm ml-2">
+            <span className="font-body text-synthwave-text-muted text-sm ml-2">
               locked forever
             </span>
           </div>

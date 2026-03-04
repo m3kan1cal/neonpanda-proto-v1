@@ -59,11 +59,11 @@ export default function TodaysWorkoutSummary({
           <div
             className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
           ></div>
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
         </div>
-        <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
+        <p className="font-body text-synthwave-text-secondary text-sm mb-6">
           Your scheduled workout for today. Log your performance to track
           progress.
         </p>
@@ -88,10 +88,10 @@ export default function TodaysWorkoutSummary({
             className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
           ></div>
           <div>
-            <h3 className="font-barlow font-bold text-white text-lg uppercase">
+            <h3 className="font-header font-bold text-white text-lg uppercase">
               Today's Workout
             </h3>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mt-1">
+            <p className="font-body text-synthwave-text-secondary text-sm mt-1">
               Your scheduled workout for today. Log your performance to track
               progress.
             </p>

@@ -415,7 +415,7 @@ const CommandPalette = ({
             <div className="w-6 h-6 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
               <span className="text-synthwave-neon-pink text-sm">⚡</span>
             </div>
-            <h2 className="font-barlow text-lg text-white uppercase">
+            <h2 className="font-header text-lg text-white uppercase">
               Command Palette
             </h2>
           </div>
@@ -446,7 +446,7 @@ const CommandPalette = ({
           displayState.commands.length > 0 && (
             <div className="px-6 pb-6">
               {/* Command list header */}
-              <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+              <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
                 Available Commands
               </div>
 
@@ -487,7 +487,7 @@ const CommandPalette = ({
                     }}
                   >
                     <div
-                      className={`font-rajdhani text-base ${
+                      className={`font-body text-base ${
                         index === selectedIndex
                           ? "text-synthwave-neon-pink"
                           : "text-synthwave-neon-pink"
@@ -497,14 +497,14 @@ const CommandPalette = ({
                     </div>
                     <div className="flex-1">
                       <div
-                        className={`font-rajdhani text-base ${
+                        className={`font-body text-base ${
                           index === selectedIndex ? "text-white" : "text-white"
                         }`}
                       >
                         {command.description}
                       </div>
                       <div
-                        className={`font-rajdhani text-sm mt-1 ${
+                        className={`font-body text-sm mt-1 ${
                           index === selectedIndex
                             ? "text-synthwave-text-secondary"
                             : "text-synthwave-text-muted"
@@ -522,17 +522,17 @@ const CommandPalette = ({
         {/* Execution Preview */}
         {displayState.type === "execution-preview" && (
           <div className="px-6 pb-6">
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
               Ready to Execute
             </div>
             <div className="space-y-3">
               {/* Command Info */}
               <div className="flex items-start space-x-3 py-2 px-3 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
-                <div className="font-rajdhani text-base text-synthwave-neon-pink">
+                <div className="font-body text-base text-synthwave-neon-pink">
                   {displayState.command.trigger}
                 </div>
                 <div className="flex-1">
-                  <div className="font-rajdhani text-base text-white">
+                  <div className="font-body text-base text-white">
                     {displayState.command.description}
                   </div>
                 </div>
@@ -540,18 +540,18 @@ const CommandPalette = ({
 
               {/* Content Preview */}
               <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/20 p-4">
-                <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+                <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                   Content
                 </div>
                 <div
-                  className={`font-rajdhani text-sm text-white whitespace-pre-wrap max-h-40 overflow-y-auto ${scrollbarPatterns.cyan}`}
+                  className={`font-body text-sm text-white whitespace-pre-wrap max-h-40 overflow-y-auto ${scrollbarPatterns.cyan}`}
                 >
                   {displayState.content}
                 </div>
               </div>
 
               {!agentState.isExecuting && !agentState.executionResult && (
-                <div className="text-synthwave-text-muted font-rajdhani text-sm px-3">
+                <div className="text-synthwave-text-muted font-body text-sm px-3">
                   Press Enter to execute
                 </div>
               )}
@@ -561,23 +561,23 @@ const CommandPalette = ({
 
         {displayState.type === "instant-command" && (
           <div className="px-6 pb-6">
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
               Ready to Start
             </div>
             <div className="space-y-3">
               <div className="flex items-start space-x-3 py-2 px-3 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
-                <div className="font-rajdhani text-base text-synthwave-neon-pink">
+                <div className="font-body text-base text-synthwave-neon-pink">
                   {displayState.command.trigger}
                 </div>
                 <div className="flex-1">
-                  <div className="font-rajdhani text-base text-white">
+                  <div className="font-body text-base text-white">
                     {displayState.command.description}
                   </div>
                 </div>
               </div>
 
               {!agentState.isExecuting && !agentState.executionResult && (
-                <div className="text-synthwave-text-muted font-rajdhani text-sm px-3">
+                <div className="text-synthwave-text-muted font-body text-sm px-3">
                   Press Enter to start a fresh conversation
                 </div>
               )}
@@ -591,7 +591,7 @@ const CommandPalette = ({
             {agentState.isExecuting && (
               <div className="flex items-center space-x-3 py-3 px-3 rounded-md bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/30">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-synthwave-neon-cyan"></div>
-                <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                <span className="text-synthwave-text-secondary font-body text-sm">
                   Executing command...
                 </span>
               </div>
@@ -605,7 +605,7 @@ const CommandPalette = ({
                     : "bg-red-900/20 border-red-500/30 text-red-400"
                 }`}
               >
-                <div className="font-rajdhani text-sm">
+                <div className="font-body text-sm">
                   {agentState.executionResult.message}
                 </div>
               </div>
@@ -619,10 +619,10 @@ const CommandPalette = ({
           input && (
             <div className="px-6 pb-6">
               <div className="text-center py-8">
-                <div className="text-synthwave-text-muted font-rajdhani text-lg">
+                <div className="text-synthwave-text-muted font-body text-lg">
                   No commands found for "{input}"
                 </div>
-                <div className="text-synthwave-text-muted font-rajdhani text-sm mt-2">
+                <div className="text-synthwave-text-muted font-body text-sm mt-2">
                   Try /log-workout, /create-coach, or /design-program
                 </div>
               </div>
@@ -631,7 +631,7 @@ const CommandPalette = ({
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-synthwave-neon-pink/30 bg-synthwave-bg-primary/30">
-          <div className="flex items-center justify-between text-xs font-rajdhani text-synthwave-text-muted">
+          <div className="flex items-center justify-between text-xs font-body text-synthwave-text-muted">
             <div className="flex items-center space-x-4">
               <span>↑↓ Navigate</span>
               <span>↵ Execute</span>

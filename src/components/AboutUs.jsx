@@ -67,7 +67,7 @@ function AboutUs() {
                 new—intelligent coaching that could adapt to each person's
                 unique situation:
               </p>
-              <ul className="space-y-3 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+              <ul className="space-y-3 text-synthwave-text-primary font-body text-lg ml-6">
                 <li className="flex items-start space-x-3">
                   <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                     •
@@ -261,7 +261,7 @@ function AboutUs() {
                 <div className="flex items-center gap-4 mb-4">
                   {/* Mission Number Circle */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink">
-                    <span className="font-inter font-bold text-xl text-synthwave-neon-pink">
+                    <span className="font-body font-bold text-xl text-synthwave-neon-pink">
                       1
                     </span>
                   </div>
@@ -291,7 +291,7 @@ function AboutUs() {
                 <div className="flex items-center gap-4 mb-4">
                   {/* Mission Number Circle */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan">
-                    <span className="font-inter font-bold text-xl text-synthwave-neon-cyan">
+                    <span className="font-body font-bold text-xl text-synthwave-neon-cyan">
                       2
                     </span>
                   </div>
@@ -319,7 +319,7 @@ function AboutUs() {
                 <div className="flex items-center gap-4 mb-4">
                   {/* Mission Number Circle */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple">
-                    <span className="font-inter font-bold text-xl text-synthwave-neon-purple">
+                    <span className="font-body font-bold text-xl text-synthwave-neon-purple">
                       3
                     </span>
                   </div>
@@ -480,7 +480,7 @@ function AboutUs() {
                       key={idx}
                       className={`${containerPatterns.lightGlass} text-center py-4`}
                     >
-                      <span className="text-synthwave-neon-pink font-rajdhani font-semibold text-lg">
+                      <span className="text-synthwave-neon-pink font-body font-semibold text-lg">
                         {discipline}
                       </span>
                     </div>
@@ -617,7 +617,7 @@ function AboutUs() {
                 >
                   This Might Be For You If:
                 </h3>
-                <ul className="space-y-4 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                <ul className="space-y-4 text-synthwave-text-primary font-body text-lg ml-6">
                   <li className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-cyan mt-1 shrink-0">
                       •
@@ -671,7 +671,7 @@ function AboutUs() {
                 >
                   Our Commitment to You
                 </h3>
-                <ul className="space-y-4 text-synthwave-text-primary font-rajdhani text-lg ml-6">
+                <ul className="space-y-4 text-synthwave-text-primary font-body text-lg ml-6">
                   <li className="flex items-start space-x-3">
                     <span className="text-synthwave-neon-pink mt-1 shrink-0">
                       •

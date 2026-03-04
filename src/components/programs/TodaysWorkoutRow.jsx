@@ -129,10 +129,10 @@ function TodaysWorkoutRow({
             </svg>
           </div>
         </div>
-        <div className="font-rajdhani text-white text-lg uppercase mb-1">
+        <div className="font-body text-white text-lg uppercase mb-1">
           Rest Day
         </div>
-        <div className="font-rajdhani text-sm text-synthwave-text-secondary mb-4">
+        <div className="font-body text-sm text-synthwave-text-secondary mb-4">
           No workouts scheduled today across{" "}
           {activePrograms.length === 1
             ? "your program"
@@ -146,7 +146,7 @@ function TodaysWorkoutRow({
                 key={entry.program.programId}
                 onClick={() => onCompleteRestDay(entry.program)}
                 disabled={isCompletingRestDay}
-                className="px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan font-rajdhani text-xs uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan font-body text-xs uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCompletingRestDay
                   ? "Completing..."
@@ -203,12 +203,12 @@ function TodaysWorkoutRow({
                 </div>
 
                 {/* Rest day message */}
-                <div className="font-barlow font-bold text-white text-xl leading-tight uppercase">
+                <div className="font-header font-bold text-white text-xl leading-tight uppercase">
                   Rest Day
                 </div>
 
                 {/* Meta row */}
-                <div className="flex gap-3 font-rajdhani text-xs text-synthwave-text-secondary">
+                <div className="flex gap-3 font-body text-xs text-synthwave-text-secondary">
                   <span>
                     Day {program.currentDay || 1} of {program.totalDays}
                   </span>
@@ -226,7 +226,7 @@ function TodaysWorkoutRow({
                       onCompleteRestDay(program);
                     }}
                     disabled={isCompletingRestDay}
-                    className="w-full py-3.5 border border-synthwave-neon-cyan/30 rounded-md bg-transparent text-synthwave-neon-cyan font-rajdhani font-bold text-sm tracking-[1.5px] uppercase cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3.5 border border-synthwave-neon-cyan/30 rounded-md bg-transparent text-synthwave-neon-cyan font-body font-bold text-sm tracking-[1.5px] uppercase cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCompletingRestDay
                       ? "Completing..."
@@ -283,12 +283,12 @@ function TodaysWorkoutRow({
               </div>
 
               {/* Hero workout name */}
-              <div className="font-barlow font-bold text-white text-lg leading-tight uppercase">
+              <div className="font-header font-bold text-white text-lg leading-tight uppercase">
                 {templates[0].name}
               </div>
 
               {/* Meta row */}
-              <div className="flex gap-3 font-rajdhani text-xs text-white/50 mb-1.5">
+              <div className="flex gap-3 font-body text-xs text-white/50 mb-1.5">
                 <span>
                   Day {dayNumber || program.currentDay || 1} of{" "}
                   {program.totalDays}
@@ -317,11 +317,11 @@ function TodaysWorkoutRow({
                     >
                       {index + 1}
                     </span>
-                    <span className="font-rajdhani text-sm text-white/70 truncate flex-1 min-w-0">
+                    <span className="font-body text-sm text-white/70 truncate flex-1 min-w-0">
                       {template.name}
                     </span>
                     {template.estimatedDuration && (
-                      <span className="font-rajdhani text-xs text-white/30 shrink-0">
+                      <span className="font-body text-xs text-white/30 shrink-0">
                         ~{template.estimatedDuration}min
                       </span>
                     )}

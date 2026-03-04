@@ -20,7 +20,7 @@ export const HyroxSection = ({
       >
         <div className="flex items-start space-x-3">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Hyrox Race ({hyroxData?.stations?.length || 0} stations,{" "}
             {hyroxData?.runs?.length || 0} runs)
           </h3>
@@ -46,14 +46,14 @@ export const HyroxSection = ({
               {/* Stations */}
               {hyroxData?.stations?.length > 0 && (
                 <div>
-                  <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                  <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Stations
                   </h4>
                   <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                     <div className="space-y-2">
                       {hyroxData.stations.map((station, idx) => (
                         <div key={idx} className="py-2">
-                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-rajdhani">
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
                             <span className="font-bold text-synthwave-neon-cyan text-sm">
                               Station {station.station_number}:{" "}
                               {station.station_name}
@@ -82,7 +82,7 @@ export const HyroxSection = ({
                             )}
                           </div>
                           {station.notes && (
-                            <div className="mt-1 text-sm font-rajdhani text-synthwave-text-secondary italic">
+                            <div className="mt-1 text-sm font-body text-synthwave-text-secondary italic">
                               {station.notes}
                             </div>
                           )}
@@ -95,14 +95,14 @@ export const HyroxSection = ({
               {/* Runs */}
               {hyroxData?.runs?.length > 0 && (
                 <div>
-                  <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                  <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Runs
                   </h4>
                   <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                     <div className="space-y-2">
                       {hyroxData.runs.map((run, idx) => (
                         <div key={idx} className="py-2">
-                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-rajdhani">
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
                             <span className="font-bold text-synthwave-neon-cyan text-sm">
                               Run {run.run_number}
                             </span>
@@ -122,7 +122,7 @@ export const HyroxSection = ({
                             )}
                           </div>
                           {run.notes && (
-                            <div className="mt-1 text-sm font-rajdhani text-synthwave-text-secondary italic">
+                            <div className="mt-1 text-sm font-body text-synthwave-text-secondary italic">
                               {run.notes}
                             </div>
                           )}
@@ -135,7 +135,7 @@ export const HyroxSection = ({
             </div>
           ) : (
             <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-              <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <div className="text-synthwave-text-secondary font-body text-sm">
                 No Hyrox data available. Include station details, times,
                 weights, and run splits when logging.
               </div>

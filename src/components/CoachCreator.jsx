@@ -146,7 +146,7 @@ const MessageItem = memo(
                 "px-4 py-3 shadow-sm bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30",
               )}
             >
-              <div className="font-rajdhani text-base leading-relaxed">
+              <div className="font-body text-base leading-relaxed">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -154,7 +154,7 @@ const MessageItem = memo(
             <div
               className={getStreamingMessageClasses(message, agentState, "")}
             >
-              <div className="font-fira-code text-base leading-relaxed text-synthwave-text-secondary">
+              <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -171,7 +171,7 @@ const MessageItem = memo(
               </div>
             )}
 
-            <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+            <span className="text-xs text-synthwave-text-secondary font-body">
               {formatTime(message.timestamp)}
             </span>
             {message.type === "user" && (
@@ -749,7 +749,7 @@ function CoachCreator() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="coach-creator-info"
               data-tooltip-content="Create your personalized AI coach through an interactive conversation. Vesper will guide you through the process."
             >
@@ -878,10 +878,10 @@ function CoachCreator() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-barlow text-base text-white uppercase tracking-wider">
+                  <h3 className="font-header text-base text-white uppercase tracking-wider">
                     Session Complete
                   </h3>
-                  <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-0.5">
+                  <p className="font-body text-sm text-synthwave-text-secondary mt-0.5">
                     Your coach is being built (2-3 minutes). You can close this
                     page or navigate to your coaches.
                   </p>
@@ -925,10 +925,10 @@ function CoachCreator() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Coach Creator Session
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete this coach creator session? This
                 action cannot be undone.
               </p>
@@ -988,12 +988,12 @@ function CoachCreator() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-synthwave-neon-cyan font-rajdhani text-xl font-bold">
+                <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold">
                   Coach Creator Session Complete!
                 </h3>
               </div>
 
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Great work! W're now crafting a personalized coach tailored
                 specifically to your journey.
               </p>
@@ -1017,7 +1017,7 @@ function CoachCreator() {
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       We're now building your custom AI coach configuration
                     </p>
                   </div>
@@ -1035,7 +1035,7 @@ function CoachCreator() {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       This usually takes 2-5 minutes to complete
                     </p>
                   </div>
@@ -1053,7 +1053,7 @@ function CoachCreator() {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       You can monitor the build progress on your Coaches page
                     </p>
                   </div>

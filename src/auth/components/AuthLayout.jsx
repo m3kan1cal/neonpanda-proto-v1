@@ -21,17 +21,17 @@ const AuthLayout = ({ children, title, subtitle }) => {
             </div>
 
             {/* Always show tagline under logo */}
-            <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+            <p className="font-body text-synthwave-text-secondary mb-3">
               Where intelligent coaching meets grit, sweat, dreams, and science
             </p>
 
             {title && (
-              <h1 className="font-rajdhani font-bold text-2xl text-white mb-2 uppercase">
+              <h1 className="font-body font-bold text-2xl text-white mb-2 uppercase">
                 {title}
               </h1>
             )}
             {subtitle && (
-              <p className="font-rajdhani text-synthwave-text-secondary mb-2">
+              <p className="font-body text-synthwave-text-secondary mb-2">
                 {subtitle}
               </p>
             )}

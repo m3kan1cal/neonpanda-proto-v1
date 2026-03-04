@@ -155,7 +155,7 @@ const PublicHeader = () => {
               {/* Username - also links to settings */}
               <Link
                 to={userId ? `/settings?userId=${userId}` : "/settings"}
-                className="hidden sm:inline-block text-synthwave-neon-pink font-rajdhani font-medium hover:opacity-80 transition-opacity duration-200"
+                className="hidden sm:inline-block text-synthwave-neon-pink font-body font-medium hover:opacity-80 transition-opacity duration-200"
                 title="Settings"
               >
                 {userProfile?.displayName ||
@@ -170,7 +170,7 @@ const PublicHeader = () => {
           {!loading && !isAuthenticated && (
             <button
               onClick={() => navigate("/auth")}
-              className="hidden sm:inline-block px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30"
+              className="hidden sm:inline-block px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30"
             >
               Sign In
             </button>
@@ -210,7 +210,7 @@ const PublicHeader = () => {
                       <Link
                         to={`/coaches?userId=${userId}`}
                         onClick={closeMenu}
-                        className="flex items-center space-x-3 px-4 py-2.5 font-rajdhani font-medium text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                        className="flex items-center space-x-3 px-4 py-2.5 font-body font-medium text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
                       >
                         <svg
                           className="w-5 h-5"
@@ -230,7 +230,7 @@ const PublicHeader = () => {
                       <Link
                         to={`/settings?userId=${userId}`}
                         onClick={closeMenu}
-                        className="flex items-center space-x-3 px-4 py-2.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                        className="flex items-center space-x-3 px-4 py-2.5 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
                       >
                         <SettingsIconTiny className="w-5 h-5" />
                         <span>Settings</span>
@@ -248,7 +248,7 @@ const PublicHeader = () => {
                           key={link.id}
                           to={link.path}
                           onClick={closeMenu}
-                          className="flex items-center space-x-3 px-4 py-2.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200"
+                          className="flex items-center space-x-3 px-4 py-2.5 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200"
                         >
                           <Icon className="w-5 h-5" />
                           <span>{link.label}</span>
@@ -266,7 +266,7 @@ const PublicHeader = () => {
                           closeMenu();
                           signOut();
                         }}
-                        className="flex items-center space-x-3 px-4 py-2.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-200 w-full text-left"
+                        className="flex items-center space-x-3 px-4 py-2.5 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-200 w-full text-left"
                       >
                         <SignOutIconTiny className="w-5 h-5" />
                         <span>Sign Out</span>
@@ -281,7 +281,7 @@ const PublicHeader = () => {
                       <Link
                         to="/auth"
                         onClick={closeMenu}
-                        className="flex items-center space-x-3 px-4 py-2.5 font-rajdhani font-medium text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                        className="flex items-center space-x-3 px-4 py-2.5 font-body font-medium text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
                       >
                         <WaitlistIconTiny className="w-5 h-5" />
                         <span>Sign Up</span>

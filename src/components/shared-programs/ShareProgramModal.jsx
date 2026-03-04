@@ -195,7 +195,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
             <h3 className={`${typographyPatterns.cardTitle} mb-2`}>
               Share Your Journey
             </h3>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm">
+            <p className="font-body text-synthwave-text-secondary text-sm">
               Generate a shareable link for "{program.name}". Anyone with the
               link can preview it and adapt it with their AI coach.
             </p>
@@ -205,7 +205,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
           {loading && (
             <div className="flex flex-col items-center justify-center py-8">
               <div className="w-12 h-12 border-4 border-synthwave-neon-cyan/20 border-t-synthwave-neon-cyan rounded-full animate-spin mb-4"></div>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-body text-sm">
                 Generating share link...
               </p>
             </div>
@@ -215,7 +215,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
           {error && !loading && (
             <div className="text-center mb-4">
               <div className="bg-red-500/10 border border-red-500/30 p-4 mb-4">
-                <p className="text-red-400 font-rajdhani text-sm">{error}</p>
+                <p className="text-red-400 font-body text-sm">{error}</p>
               </div>
               <button
                 onClick={handleRetry}
@@ -237,7 +237,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
                     type="text"
                     value={shareUrl}
                     readOnly
-                    className="flex-1 px-4 py-3 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary font-rajdhani cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="flex-1 px-4 py-3 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary font-body cursor-text select-all transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                     onClick={(e) => e.target.select()}
                     style={{ boxShadow: "none", outline: "none" }}
                     onFocus={(e) => {
@@ -282,7 +282,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
                   </button>
                 </div>
                 {copied && (
-                  <p className="text-synthwave-neon-cyan font-rajdhani text-sm mt-2">
+                  <p className="text-synthwave-neon-cyan font-body text-sm mt-2">
                     Link copied to clipboard!
                   </p>
                 )}

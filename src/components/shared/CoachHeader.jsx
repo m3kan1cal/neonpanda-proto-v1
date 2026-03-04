@@ -32,21 +32,21 @@ const CoachHeader = ({
               maxLength={50}
               showCharacterCount={false}
               size="medium"
-              displayClassName="font-rajdhani font-semibold text-white text-lg"
+              displayClassName="font-body font-semibold text-white text-lg"
               tooltipPrefix={`coach-name-edit`}
             />
           ) : (
-            <h3 className="font-rajdhani font-semibold text-white text-lg">
+            <h3 className="font-body font-semibold text-white text-lg">
               {coachData.name}
             </h3>
           )}
           {isOnline && (
-            <span className="px-2 py-0.5 bg-green-400/20 text-green-300 rounded-full text-xs font-medium font-rajdhani">
+            <span className="px-2 py-0.5 bg-green-400/20 text-green-300 rounded-full text-xs font-medium font-body">
               Online
             </span>
           )}
         </div>
-        <p className="text-sm text-synthwave-text-secondary font-rajdhani">
+        <p className="text-sm text-synthwave-text-secondary font-body">
           {(() => {
             const config = coachData.rawCoach?.coachConfig;
 

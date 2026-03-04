@@ -334,12 +334,12 @@ function ManageMemories() {
           </div>
 
           {/* Title */}
-          <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
+          <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
             Save New Memory
           </h3>
 
           {/* Description */}
-          <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
+          <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
             Record important details for your coach to remember
           </p>
         </div>
@@ -436,7 +436,7 @@ function ManageMemories() {
         {/* Header with pink dot - using first ~35 chars of description */}
         <div className="flex items-start gap-3 mb-2 pr-16">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             {headerText}
           </h3>
         </div>
@@ -444,7 +444,7 @@ function ManageMemories() {
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-4 mb-4 pr-16">
           {/* Created Date */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <ClockIconSmall />
             <span className="text-synthwave-text-muted">Created:</span>
             <span className="text-synthwave-neon-cyan font-medium">
@@ -456,7 +456,7 @@ function ManageMemories() {
             </span>
           </div>
           {/* Usage count */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Used:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {memory.metadata?.usageCount || 0}x
@@ -465,7 +465,7 @@ function ManageMemories() {
           {/* Last used */}
           {memory.metadata?.lastUsed &&
             (memory.metadata?.usageCount || 0) > 0 && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+              <div className="flex items-center gap-1.5 font-body text-sm">
                 <span className="text-synthwave-text-muted">Last Used:</span>
                 <span className="text-synthwave-neon-cyan font-medium">
                   {(
@@ -505,7 +505,7 @@ function ManageMemories() {
             <div
               className={`${containerPatterns.coachNotesSection} animate-fadeIn mb-4`}
             >
-              <p className="font-rajdhani text-sm text-synthwave-text-secondary whitespace-pre-wrap">
+              <p className="font-body text-sm text-synthwave-text-secondary whitespace-pre-wrap">
                 {cleanContent}
               </p>
             </div>
@@ -526,7 +526,7 @@ function ManageMemories() {
                 e.stopPropagation();
                 toggleBadgeCollapse(memory.memoryId);
               }}
-              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink hover:bg-synthwave-neon-cyan/5 text-xs font-rajdhani font-semibold uppercase transition-all duration-200 px-1 py-0.5"
+              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink hover:bg-synthwave-neon-cyan/5 text-xs font-body font-semibold uppercase transition-all duration-200 px-1 py-0.5"
             >
               {isBadgesCollapsed
                 ? `+${allBadges.length - badgeLimit} more`
@@ -543,10 +543,10 @@ function ManageMemories() {
       return (
         <div className="text-center py-12">
           <NeonBorder color="pink" className="max-w-md mx-auto p-6">
-            <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">
+            <p className="font-body text-synthwave-neon-pink text-xl font-bold mb-2">
               Error Loading Memories
             </p>
-            <p className="font-rajdhani text-synthwave-text-secondary text-lg mb-6">
+            <p className="font-body text-synthwave-text-secondary text-lg mb-6">
               {memoryAgentState.error}
             </p>
             <button
@@ -810,10 +810,10 @@ function ManageMemories() {
     return (
       <div className="min-h-screen bg-synthwave-bg-tertiary">
         <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-          <h1 className="font-barlow font-black text-3xl text-white mb-6 uppercase">
+          <h1 className="font-header font-black text-3xl text-white mb-6 uppercase">
             Invalid Access
           </h1>
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-8">
+          <p className="font-body text-lg text-synthwave-text-secondary mb-8">
             User ID is required to access memories.
           </p>
           <button
@@ -840,7 +840,7 @@ function ManageMemories() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="manage-memories-info"
                 data-tooltip-content="Review and manage your stored memories and preferences. Track important information your coaches remember about your goals and fitness journey."
               >
@@ -931,10 +931,10 @@ function ManageMemories() {
           {memoryAgentState.error && (
             <div className="text-center py-12">
               <NeonBorder color="pink" className="max-w-md mx-auto p-6">
-                <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">
+                <p className="font-body text-synthwave-neon-pink text-xl font-bold mb-2">
                   Error Loading Memories
                 </p>
-                <p className="font-rajdhani text-synthwave-text-secondary text-lg">
+                <p className="font-body text-synthwave-text-secondary text-lg">
                   {memoryAgentState.error}
                 </p>
               </NeonBorder>
@@ -956,10 +956,10 @@ function ManageMemories() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Memory
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete this memory? This action cannot
                 be undone.
               </p>

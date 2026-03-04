@@ -865,7 +865,7 @@ function ManagePrograms() {
                   className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
                 >
                   <EditIcon />
-                  <span className="font-rajdhani font-medium text-sm">
+                  <span className="font-body font-medium text-sm">
                     Rename Program
                   </span>
                 </button>
@@ -880,7 +880,7 @@ function ManagePrograms() {
                   <div className="w-4 h-4 flex items-center justify-center">
                     <TrashIcon />
                   </div>
-                  <span className="font-rajdhani font-medium text-sm">
+                  <span className="font-body font-medium text-sm">
                     Delete Program
                   </span>
                 </button>
@@ -948,7 +948,7 @@ function ManagePrograms() {
                 placeholder="Program name..."
                 maxLength={100}
                 size="large"
-                displayClassName="font-barlow font-bold text-white text-xl uppercase"
+                displayClassName="font-header font-bold text-white text-xl uppercase"
                 tooltipPrefix={`program-${program.programId}`}
                 onError={(error) => {
                   setEditingProgramId(null);
@@ -957,7 +957,7 @@ function ManagePrograms() {
                 startInEditMode={true}
               />
             ) : (
-              <h3 className="font-barlow font-bold text-white text-xl uppercase">
+              <h3 className="font-header font-bold text-white text-xl uppercase">
                 {program.name}
               </h3>
             )}
@@ -1447,14 +1447,14 @@ function ManagePrograms() {
             {/* Page Title with Hover Tooltip */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="programs-info"
                 data-tooltip-content="Manage all your training programs. View progress, pause, resume, or complete programs across all your coaches."
               >
                 Your Training Programs
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -1530,7 +1530,7 @@ function ManagePrograms() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
+                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
                   {isCreatingProgram
                     ? "Creating Session..."
                     : "Design New Program"}
@@ -1548,7 +1548,7 @@ function ManagePrograms() {
                 {/* Info Badge */}
                 {!isCreatingProgram && (
                   <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
-                    <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
+                    <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
                       5-10 minute guided conversation
                     </p>
                   </div>
@@ -1629,10 +1629,10 @@ function ManagePrograms() {
         {inProgressSessions && inProgressSessions.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Your In-Progress Program Designs
               </h2>
-              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
+              <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
                 Continue designing your training programs. Pick up exactly where
                 you left off and let's finish building something great together.
               </p>
@@ -1678,7 +1678,7 @@ function ManagePrograms() {
                         className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
                       ></div>
                       <div className="flex-1">
-                        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+                        <h3 className="font-header font-bold text-white text-lg uppercase">
                           Program Design Session
                         </h3>
                       </div>
@@ -1733,7 +1733,7 @@ function ManagePrograms() {
                             />
                           </svg>
                         )}
-                        <span className="font-rajdhani text-sm font-medium">
+                        <span className="font-body text-sm font-medium">
                           {isFailed
                             ? "Build Failed"
                             : isBuilding
@@ -1748,7 +1748,7 @@ function ManagePrograms() {
                       {/* Coach Name */}
                       <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                         <TargetIcon />
-                        <span className="font-rajdhani text-sm">
+                        <span className="font-body text-sm">
                           Coach:{" "}
                           <span className="text-synthwave-neon-cyan">
                             {formatCoachName(session.coachName) || "Unknown"}
@@ -1759,7 +1759,7 @@ function ManagePrograms() {
                       {/* Started Date */}
                       <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                         <CalendarIcon />
-                        <span className="font-rajdhani text-sm">
+                        <span className="font-body text-sm">
                           Started {formatDate(session.startedAt)}
                         </span>
                       </div>
@@ -1779,7 +1779,7 @@ function ManagePrograms() {
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span className="font-rajdhani text-sm">
+                        <span className="font-body text-sm">
                           Last activity {formatDate(session.lastActivity)}
                         </span>
                       </div>
@@ -1801,7 +1801,7 @@ function ManagePrograms() {
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                            <span className="font-rajdhani text-sm font-medium">
+                            <span className="font-body text-sm font-medium">
                               Progress: {session.progressDetails.itemsCompleted}{" "}
                               / {session.progressDetails.totalItems} (
                               {session.progressDetails.percentage}%)
@@ -1822,7 +1822,7 @@ function ManagePrograms() {
                       {/* Error message for failed builds */}
                       {isFailed && session.programGeneration?.error && (
                         <div className="rounded-md bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 p-3 mt-3">
-                          <p className="font-rajdhani text-xs text-synthwave-neon-pink">
+                          <p className="font-body text-xs text-synthwave-neon-pink">
                             {session.programGeneration.error}
                           </p>
                         </div>
@@ -1833,7 +1833,7 @@ function ManagePrograms() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1842,7 +1842,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1855,7 +1855,7 @@ function ManagePrograms() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -1881,14 +1881,14 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
                         </div>
                       ) : (
                         <div className="text-center">
-                          <p className="font-rajdhani text-xs text-synthwave-text-muted">
+                          <p className="font-body text-xs text-synthwave-text-muted">
                             Program is being generated...
                           </p>
                         </div>
@@ -1905,10 +1905,10 @@ function ManagePrograms() {
         {programState.pausedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Paused Training Programs
               </h2>
-              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
+              <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
                 Training programs you've paused. Resume anytime to continue your
                 training journey to achieve something great and personalized to
                 your goals.
@@ -1927,10 +1927,10 @@ function ManagePrograms() {
         {programState.completedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-barlow font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Completed Programs
               </h2>
-              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
+              <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
                 Programs you've successfully completed. Celebrate your
                 achievements!
               </p>
@@ -1961,10 +1961,10 @@ function ManagePrograms() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Program Session
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete this program design session?
                 This action cannot be undone.
               </p>
@@ -2018,10 +2018,10 @@ function ManagePrograms() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Training Program
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete "
                 <strong className="text-white">{programToDelete.name}</strong>"?
                 This will remove it from your programs list.

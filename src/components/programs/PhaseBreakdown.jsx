@@ -39,27 +39,27 @@ export default function PhaseBreakdown({ program }) {
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
         ></div>
-        <h3 className="font-barlow font-bold text-white text-lg uppercase">
+        <h3 className="font-header font-bold text-white text-lg uppercase">
           Current Phase
         </h3>
       </div>
 
       {/* Phase Name */}
       <div className="mb-4">
-        <div className="font-rajdhani text-lg text-white">
+        <div className="font-body text-lg text-white">
           {currentPhase.name || "Phase 1"}
         </div>
       </div>
 
       {/* Phase Intel */}
       <div className="mb-4">
-        <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+        <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
           Phase Intel
         </h4>
         <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
           {/* Progress info */}
           <div className="mb-3">
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary mb-2">
+            <div className="font-body text-sm text-synthwave-text-secondary mb-2">
               Day {daysIntoPhase} of {totalPhaseDays} •{" "}
               {phaseProgressPercentage}% Complete
             </div>
@@ -76,7 +76,7 @@ export default function PhaseBreakdown({ program }) {
           {/* Phase Stats */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             {/* Days Remaining - full width */}
-            <div className="col-span-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-rajdhani text-sm">
+            <div className="col-span-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-body text-sm">
               <span className="text-synthwave-text-secondary shrink-0">
                 Days Remaining:
               </span>
@@ -87,7 +87,7 @@ export default function PhaseBreakdown({ program }) {
             </div>
 
             {/* Start Day */}
-            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+            <div className="flex flex-col gap-0.5 font-body text-sm">
               <span className="text-synthwave-text-secondary">Starts</span>
               <span className="text-synthwave-neon-cyan font-medium">
                 Day {currentPhase.startDay}
@@ -95,7 +95,7 @@ export default function PhaseBreakdown({ program }) {
             </div>
 
             {/* End Day */}
-            <div className="flex flex-col gap-0.5 font-rajdhani text-sm">
+            <div className="flex flex-col gap-0.5 font-body text-sm">
               <span className="text-synthwave-text-secondary">Ends</span>
               <span className="text-synthwave-neon-cyan font-medium">
                 Day {currentPhase.endDay}
@@ -133,7 +133,7 @@ export default function PhaseBreakdown({ program }) {
             <div
               className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
             >
-              <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+              <div className="font-body text-sm text-synthwave-text-secondary">
                 {currentPhase.description}
               </div>
             </div>
@@ -173,7 +173,7 @@ export default function PhaseBreakdown({ program }) {
                 {currentPhase.focusAreas.map((area, idx) => (
                   <li
                     key={idx}
-                    className="flex items-start gap-2 font-rajdhani text-sm text-synthwave-text-secondary"
+                    className="flex items-start gap-2 font-body text-sm text-synthwave-text-secondary"
                   >
                     <span className="text-synthwave-neon-cyan mt-0.5">•</span>
                     <span>{area.replace(/_/g, " ")}</span>
@@ -188,7 +188,7 @@ export default function PhaseBreakdown({ program }) {
       {/* Phase goals if available */}
       {currentPhase.goals && currentPhase.goals.length > 0 && (
         <div>
-          <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
             Phase Targets
           </h4>
           <div className={containerPatterns.coachNotesSection}>
@@ -196,7 +196,7 @@ export default function PhaseBreakdown({ program }) {
               {currentPhase.goals.map((goal, idx) => (
                 <li
                   key={idx}
-                  className="text-sm text-synthwave-text-secondary flex items-start font-rajdhani"
+                  className="text-sm text-synthwave-text-secondary flex items-start font-body"
                 >
                   <span className="text-synthwave-neon-cyan mr-2 font-medium">
                     •

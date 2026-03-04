@@ -18,7 +18,7 @@ export const LoadingSpinner = ({ size = "large", text = "Loading..." }) => {
       <div
         className={`animate-spin rounded-full ${spinnerSize} border-b-2 border-synthwave-neon-cyan mx-auto mb-4`}
       ></div>
-      <p className={`text-synthwave-text-secondary font-rajdhani ${textSize}`}>
+      <p className={`text-synthwave-text-secondary font-body ${textSize}`}>
         {text}
       </p>
     </div>
@@ -59,11 +59,11 @@ export const ErrorState = ({
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h5 className="font-barlow text-lg text-red-400 uppercase">
+            <h5 className="font-header text-lg text-red-400 uppercase">
               {title}
             </h5>
           </div>
-          <p className="text-red-300 font-rajdhani text-sm mb-6">{message}</p>
+          <p className="text-red-300 font-body text-sm mb-6">{message}</p>
           {onButtonClick && (
             <button onClick={onButtonClick} className={buttonPatterns.primary}>
               {buttonText}
@@ -101,11 +101,11 @@ export const CenteredErrorState = ({
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <h5 className="font-barlow text-lg text-red-400 uppercase">
+          <h5 className="font-header text-lg text-red-400 uppercase">
             {title}
           </h5>
         </div>
-        <p className="text-red-300 font-rajdhani text-sm mb-6">{message}</p>
+        <p className="text-red-300 font-body text-sm mb-6">{message}</p>
         {onButtonClick && (
           <button onClick={onButtonClick} className={buttonPatterns.primary}>
             {buttonText}
@@ -167,12 +167,12 @@ export const InlineError = ({
           />
         </svg>
         <div
-          className={`font-barlow text-red-400 ${sizeClasses.title} font-bold uppercase`}
+          className={`font-header text-red-400 ${sizeClasses.title} font-bold uppercase`}
         >
           {title}
         </div>
       </div>
-      <div className={`font-rajdhani text-red-300 ${sizeClasses.message}`}>
+      <div className={`font-body text-red-300 ${sizeClasses.message}`}>
         {message}
       </div>
     </div>
@@ -198,7 +198,7 @@ export const SectionEmptyState = ({
   className,
 }) => (
   <div className={className || "py-3"}>
-    <p className="font-rajdhani text-sm text-synthwave-text-muted">
+    <p className="font-body text-sm text-synthwave-text-muted">
       {message}
       {actionLabel && onAction && (
         <>
@@ -250,13 +250,13 @@ export const EmptyState = ({
   return (
     <div className={`text-center ${sizeClasses.container}`}>
       <div
-        className={`font-rajdhani text-synthwave-text-muted ${sizeClasses.title}`}
+        className={`font-body text-synthwave-text-muted ${sizeClasses.title}`}
       >
         {title}
       </div>
       {message && (
         <div
-          className={`font-rajdhani text-synthwave-text-muted ${sizeClasses.message} mt-1`}
+          className={`font-body text-synthwave-text-muted ${sizeClasses.message} mt-1`}
         >
           {message}
         </div>

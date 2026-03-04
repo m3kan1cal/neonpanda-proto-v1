@@ -488,7 +488,7 @@ function ManageCoachConversations() {
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             {headerText}
           </h3>
         </div>
@@ -497,7 +497,7 @@ function ManageCoachConversations() {
         <div className="flex items-center flex-wrap gap-4 mb-4">
           {/* Started Date */}
           {conversation.metadata?.startedAt && (
-            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <div className="flex items-center gap-1.5 font-body text-sm">
               <ClockIconSmall />
               <span className="text-synthwave-text-muted">Started:</span>
               <span className="text-synthwave-neon-cyan font-medium">
@@ -506,7 +506,7 @@ function ManageCoachConversations() {
             </div>
           )}
           {/* Last Activity */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Last Activity:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {formatDate(
@@ -515,7 +515,7 @@ function ManageCoachConversations() {
             </span>
           </div>
           {/* Message Count */}
-          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+          <div className="flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Messages:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {conversation.metadata?.totalMessages || 0}
@@ -553,10 +553,10 @@ function ManageCoachConversations() {
               >
                 {conversation.firstUserMessage && (
                   <div>
-                    <div className="text-synthwave-neon-pink font-rajdhani text-xs uppercase font-semibold mb-1">
+                    <div className="text-synthwave-neon-pink font-body text-xs uppercase font-semibold mb-1">
                       You:
                     </div>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       {conversation.firstUserMessage.length > 250
                         ? conversation.firstUserMessage.substring(0, 250) +
                           "..."
@@ -566,10 +566,10 @@ function ManageCoachConversations() {
                 )}
                 {conversation.firstAiMessage && (
                   <div>
-                    <div className="text-synthwave-neon-cyan font-rajdhani text-xs uppercase font-semibold mb-1">
+                    <div className="text-synthwave-neon-cyan font-body text-xs uppercase font-semibold mb-1">
                       Coach:
                     </div>
-                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    <p className="font-body text-sm text-synthwave-text-secondary">
                       {conversation.firstAiMessage.length > 250
                         ? conversation.firstAiMessage.substring(0, 250) + "..."
                         : conversation.firstAiMessage}
@@ -595,7 +595,7 @@ function ManageCoachConversations() {
                 e.stopPropagation();
                 toggleBadgeCollapse(conversation.conversationId);
               }}
-              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink hover:bg-synthwave-neon-cyan/5 text-xs font-rajdhani font-semibold uppercase transition-all duration-200 px-1 py-0.5"
+              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink hover:bg-synthwave-neon-cyan/5 text-xs font-body font-semibold uppercase transition-all duration-200 px-1 py-0.5"
             >
               {isBadgesCollapsed
                 ? `+${allBadges.length - badgeLimit} more`
@@ -642,12 +642,12 @@ function ManageCoachConversations() {
           </div>
 
           {/* Title */}
-          <h3 className="font-barlow font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
+          <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
             {isCreatingConversation ? "Creating..." : "Start New Conversation"}
           </h3>
 
           {/* Description */}
-          <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
+          <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
             {isCreatingConversation
               ? "Setting up your new conversation"
               : "Begin a fresh conversation with your coach"}
@@ -676,11 +676,11 @@ function ManageCoachConversations() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h5 className="font-barlow text-lg text-red-400 uppercase">
+              <h5 className="font-header text-lg text-red-400 uppercase">
                 Error Loading Conversations
               </h5>
             </div>
-            <p className="text-red-300 font-rajdhani text-sm">
+            <p className="text-red-300 font-body text-sm">
               {conversationAgentState.error}
             </p>
           </div>
@@ -936,10 +936,10 @@ function ManageCoachConversations() {
     return (
       <div className="min-h-screen bg-synthwave-bg-tertiary">
         <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-          <h1 className="font-barlow font-black text-3xl text-white mb-6 uppercase">
+          <h1 className="font-header font-black text-3xl text-white mb-6 uppercase">
             Invalid Access
           </h1>
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-8">
+          <p className="font-body text-lg text-synthwave-text-secondary mb-8">
             User ID and Coach ID are required to access conversations.
           </p>
           <button
@@ -975,7 +975,7 @@ function ManageCoachConversations() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-barlow font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
                 data-tooltip-id="conversations-info"
                 data-tooltip-content="Review, organize, and manage all your conversations with your coach. Access detailed conversation history and track your coaching progress."
               >
@@ -1106,10 +1106,10 @@ function ManageCoachConversations() {
             className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
           >
             <div className="text-center">
-              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+              <h3 className="text-synthwave-neon-pink font-body text-xl font-bold mb-2">
                 Delete Conversation
               </h3>
-              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+              <p className="font-body text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete this conversation? This action
                 cannot be undone.
               </p>

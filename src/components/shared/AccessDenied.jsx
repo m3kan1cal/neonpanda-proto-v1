@@ -41,11 +41,11 @@ export const AccessDenied = ({
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h5 className="font-barlow text-lg text-red-400 uppercase">
+            <h5 className="font-header text-lg text-red-400 uppercase">
               {title}
             </h5>
           </div>
-          <p className="text-red-300 font-rajdhani text-sm mb-6">{message}</p>
+          <p className="text-red-300 font-body text-sm mb-6">{message}</p>
           <button onClick={handleNavigate} className={buttonPatterns.primary}>
             {buttonText}
           </button>
@@ -65,7 +65,7 @@ export const LoadingScreen = ({ message = "Loading...", className = "" }) => {
     >
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-        <p className="text-synthwave-text-secondary font-rajdhani">{message}</p>
+        <p className="text-synthwave-text-secondary font-body">{message}</p>
       </div>
     </div>
   );

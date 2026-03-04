@@ -23,7 +23,7 @@ export const FunctionalBodybuildingSection = ({
       >
         <div className="flex items-start space-x-3">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Functional Bodybuilding (
             {functionalBodybuildingData?.exercises?.length || 0})
           </h3>
@@ -53,7 +53,7 @@ export const FunctionalBodybuildingSection = ({
                       onClick={() =>
                         toggleSubsection(`funcbb-exercise-${exerciseIndex}`)
                       }
-                      className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+                      className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
                         <span className="uppercase">
@@ -108,7 +108,7 @@ export const FunctionalBodybuildingSection = ({
                         <div className="space-y-2">
                           {exercise.sets?.map((set, setIndex) => (
                             <div key={setIndex} className="py-2">
-                              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-rajdhani">
+                              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
                                 <span className="font-bold text-synthwave-neon-cyan text-sm">
                                   Set {set.set_number}
                                 </span>
@@ -135,7 +135,7 @@ export const FunctionalBodybuildingSection = ({
                                 )}
                               </div>
                               {set.notes && (
-                                <div className="mt-1 text-sm font-rajdhani text-synthwave-text-secondary italic">
+                                <div className="mt-1 text-sm font-body text-synthwave-text-secondary italic">
                                   {set.notes}
                                 </div>
                               )}
@@ -150,7 +150,7 @@ export const FunctionalBodybuildingSection = ({
             </div>
           ) : (
             <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-              <div className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <div className="text-synthwave-text-secondary font-body text-sm">
                 No Functional Bodybuilding data available. Include EMOM
                 structure, movement patterns, tempo, and quality focus when
                 logging.

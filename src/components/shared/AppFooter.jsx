@@ -14,15 +14,15 @@ function AppFooter() {
     getLatestVersions(1)[0]?.version.replace("Release ", "") || "";
 
   return (
-    <div className="mt-auto">
+    <div className="mt-auto pt-8">
       {/* Subtle gradient divider */}
       <div className="h-px bg-gradient-to-r from-transparent via-synthwave-neon-cyan/15 to-transparent mb-6" />
       <div className="flex items-center justify-between pb-2">
         <div className="flex items-center gap-2">
-          <span className="font-rajdhani text-sm text-synthwave-text-muted">
+          <span className="font-body text-sm text-synthwave-text-muted">
             Powered by
           </span>
-          <span className="font-barlow text-sm text-synthwave-neon-cyan uppercase tracking-wider">
+          <span className="font-header text-sm text-synthwave-neon-cyan uppercase tracking-wider">
             NeonPanda
           </span>
           <span className="text-synthwave-text-muted/30 mx-1">/</span>
@@ -36,13 +36,13 @@ function AppFooter() {
           >
             <path d="m22,13v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1H2v1h-1v9h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h2v-1h1v-1h1v-1h1v-1h1v-1h1v-1h1v-1h1v-1h1v-2h-1ZM4,5h1v-1h2v1h1v2h-1v1h-2v-1h-1v-2Z" />
           </svg>
-          <span className="font-rajdhani text-sm text-synthwave-text-muted">
+          <span className="font-body text-sm text-synthwave-text-muted">
             {version}
           </span>
         </div>
         <Link
           to="/changelog"
-          className="font-rajdhani text-sm text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
+          className="font-body text-sm text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
         >
           Changelog
         </Link>

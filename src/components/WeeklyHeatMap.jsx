@@ -103,13 +103,13 @@ const HeatMapLegend = () => {
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
-      <span className="text-synthwave-text-secondary font-rajdhani text-sm font-medium">
+      <span className="text-synthwave-text-secondary font-body text-sm font-medium">
         RPE Scale:
       </span>
       {legendItems.map((item, index) => (
         <div key={index} className="flex items-center gap-1">
           <div className={`w-3 h-3 rounded-md border ${item.color}`}></div>
-          <span className="text-synthwave-text-secondary font-rajdhani text-xs">
+          <span className="text-synthwave-text-secondary font-body text-xs">
             {item.label} {item.range}
           </span>
         </div>
@@ -186,7 +186,7 @@ const WeeklyHeatMapV2 = ({
       <div className="flex items-start justify-between p-6">
         <div className="flex items-start gap-3 flex-1">
           <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-barlow font-bold text-white text-lg uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             Weekly Training Intensity
           </h3>
         </div>
@@ -196,7 +196,7 @@ const WeeklyHeatMapV2 = ({
       <div className="px-6 pb-6 space-y-4">
         {/* Week Summary */}
         <div className="text-center mb-4">
-          <div className="flex justify-center items-center space-x-6 text-sm font-rajdhani">
+          <div className="flex justify-center items-center space-x-6 text-sm font-body">
             <div className="text-synthwave-text-secondary">
               <span className="text-synthwave-neon-cyan font-semibold">
                 {weekStats.totalWorkouts}
@@ -227,7 +227,7 @@ const WeeklyHeatMapV2 = ({
             {DAYS_OF_WEEK.map((day) => (
               <div
                 key={day}
-                className="text-center text-synthwave-text-secondary font-rajdhani text-xs font-medium"
+                className="text-center text-synthwave-text-secondary font-body text-xs font-medium"
               >
                 {day}
               </div>

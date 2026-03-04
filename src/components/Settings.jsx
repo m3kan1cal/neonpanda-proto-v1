@@ -67,7 +67,7 @@ const CollapsibleSection = ({
       >
         <div className="flex items-center space-x-3">
           <div className="text-synthwave-neon-pink">{icon}</div>
-          <h3 className="font-barlow font-bold text-white text-base uppercase">
+          <h3 className="font-header font-bold text-white text-base uppercase">
             {title}
           </h3>
         </div>
@@ -680,7 +680,7 @@ function Settings() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h5 className="font-rajdhani font-bold text-white text-lg">
+                                <h5 className="font-body font-bold text-white text-lg">
                                   {
                                     getTierDisplayInfo(SUBSCRIPTION_TIERS.FREE)
                                       .displayName
@@ -695,7 +695,7 @@ function Settings() {
                                   </span>
                                 )}
                               </div>
-                              <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-3">
+                              <p className="font-body text-synthwave-text-secondary text-sm mb-3">
                                 {
                                   getTierDisplayInfo(SUBSCRIPTION_TIERS.FREE)
                                     .price
@@ -707,7 +707,7 @@ function Settings() {
                                 ).features.map((feature, index) => (
                                   <li
                                     key={index}
-                                    className="flex items-center gap-2 font-rajdhani text-synthwave-text-secondary text-sm"
+                                    className="flex items-center gap-2 font-body text-synthwave-text-secondary text-sm"
                                   >
                                     <div className="text-synthwave-neon-cyan">
                                       <CheckIcon />
@@ -716,7 +716,7 @@ function Settings() {
                                   </li>
                                 ))}
                               </ul>
-                              <p className="mt-3 font-rajdhani text-xs text-synthwave-text-secondary/80 italic border-t border-synthwave-neon-cyan/20 pt-3">
+                              <p className="mt-3 font-body text-xs text-synthwave-text-secondary/80 italic border-t border-synthwave-neon-cyan/20 pt-3">
                                 This free tier is available during our early
                                 release phase while we refine the platform and
                                 gather feedback from our founding community.
@@ -728,7 +728,7 @@ function Settings() {
                                     <button
                                       onClick={handleManageSubscription}
                                       disabled={isCreatingPortalSession}
-                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
+                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
                                     >
                                       {isCreatingPortalSession ? (
                                         <>
@@ -774,7 +774,7 @@ function Settings() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h5 className="font-rajdhani font-bold text-white text-lg">
+                                <h5 className="font-body font-bold text-white text-lg">
                                   {
                                     getTierDisplayInfo(
                                       SUBSCRIPTION_TIERS.ELECTRIC,
@@ -796,7 +796,7 @@ function Settings() {
                                   </span>
                                 )}
                               </div>
-                              <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-3">
+                              <p className="font-body text-synthwave-text-secondary text-sm mb-3">
                                 {
                                   getTierDisplayInfo(
                                     SUBSCRIPTION_TIERS.ELECTRIC,
@@ -813,7 +813,7 @@ function Settings() {
                                 ).features.map((feature, index) => (
                                   <li
                                     key={index}
-                                    className="flex items-center gap-2 font-rajdhani text-synthwave-text-secondary text-sm"
+                                    className="flex items-center gap-2 font-body text-synthwave-text-secondary text-sm"
                                   >
                                     <div className="text-synthwave-neon-pink">
                                       <CheckIcon />
@@ -822,7 +822,7 @@ function Settings() {
                                   </li>
                                 ))}
                               </ul>
-                              <p className="mt-3 font-rajdhani text-xs text-synthwave-text-secondary/80 italic border-t border-synthwave-neon-pink/20 pt-3">
+                              <p className="mt-3 font-body text-xs text-synthwave-text-secondary/80 italic border-t border-synthwave-neon-pink/20 pt-3">
                                 Support platform development and lock in
                                 founding member pricing forever. Your rate stays
                                 fixed as new features land. This exclusive tier
@@ -841,11 +841,11 @@ function Settings() {
                                             <InfoIcon />
                                           </div>
                                           <div className="flex-1">
-                                            <p className="font-rajdhani text-yellow-500 text-sm font-semibold">
+                                            <p className="font-body text-yellow-500 text-sm font-semibold">
                                               Subscription Scheduled for
                                               Cancellation
                                             </p>
-                                            <p className="font-rajdhani text-synthwave-text-secondary text-xs mt-1">
+                                            <p className="font-body text-synthwave-text-secondary text-xs mt-1">
                                               Your subscription will end on{" "}
                                               {new Date(
                                                 subscription.currentPeriodEnd *
@@ -866,7 +866,7 @@ function Settings() {
                                     <button
                                       onClick={handleManageSubscription}
                                       disabled={isCreatingPortalSession}
-                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-rajdhani font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
+                                      className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium text-sm uppercase tracking-wide hover:cursor-pointer"
                                     >
                                       {isCreatingPortalSession ? (
                                         <>
@@ -1119,7 +1119,7 @@ function Settings() {
                   />
 
                   {/* Password Requirements */}
-                  <div className="text-sm font-rajdhani text-synthwave-neon-cyan space-y-1 mb-4 mt-6">
+                  <div className="text-sm font-body text-synthwave-neon-cyan space-y-1 mb-4 mt-6">
                     <p className="font-medium">Password must contain:</p>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>At least 8 characters</li>
@@ -1290,11 +1290,11 @@ function Settings() {
                         <div className="flex-1">
                           <label
                             htmlFor="coachCheckIns"
-                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                            className="font-body text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
                           >
                             Coach Check-ins & Reminders
                           </label>
-                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                          <p className="font-body text-sm text-synthwave-text-secondary mt-1">
                             Receive friendly check-ins from your coach,
                             including activity reminders, motivation boosts,
                             holiday greetings, and more. We're here to support
@@ -1335,11 +1335,11 @@ function Settings() {
                         <div className="flex-1">
                           <label
                             htmlFor="weeklyReports"
-                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                            className="font-body text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
                           >
                             Weekly Progress Reports
                           </label>
-                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                          <p className="font-body text-sm text-synthwave-text-secondary mt-1">
                             Get a summary of your training week delivered to
                             your inbox (coming soon).
                           </p>
@@ -1378,11 +1378,11 @@ function Settings() {
                         <div className="flex-1">
                           <label
                             htmlFor="monthlyReports"
-                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                            className="font-body text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
                           >
                             Monthly Progress Reports
                           </label>
-                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                          <p className="font-body text-sm text-synthwave-text-secondary mt-1">
                             Get a comprehensive monthly summary of your training
                             progress and achievements (coming soon).
                           </p>
@@ -1421,11 +1421,11 @@ function Settings() {
                         <div className="flex-1">
                           <label
                             htmlFor="programUpdates"
-                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                            className="font-body text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
                           >
                             Training Program Updates
                           </label>
-                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                          <p className="font-body text-sm text-synthwave-text-secondary mt-1">
                             Be notified when your training programs are updated
                             or when new workouts are available (coming soon).
                           </p>
@@ -1466,11 +1466,11 @@ function Settings() {
                         <div className="flex-1">
                           <label
                             htmlFor="featureAnnouncements"
-                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                            className="font-body text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
                           >
                             New Feature Announcements
                           </label>
-                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                          <p className="font-body text-sm text-synthwave-text-secondary mt-1">
                             Stay up to date with new features, improvements, and
                             app releases.
                           </p>
@@ -1590,7 +1590,7 @@ function Settings() {
                             </svg>
                           )}
                         </div>
-                        <span className="font-rajdhani text-white font-medium group-hover:text-synthwave-neon-pink transition-colors duration-300">
+                        <span className="font-body text-white font-medium group-hover:text-synthwave-neon-pink transition-colors duration-300">
                           Enforce for all training interactions
                         </span>
                       </label>
@@ -1627,10 +1627,10 @@ function Settings() {
               >
                 <div className="space-y-6 border-2 border-red-500/30 p-6 bg-red-500/5">
                   <div>
-                    <h4 className="font-rajdhani font-bold text-red-400 text-lg mb-2">
+                    <h4 className="font-body font-bold text-red-400 text-lg mb-2">
                       Delete Account
                     </h4>
-                    <p className="font-rajdhani text-synthwave-text-secondary mb-4">
+                    <p className="font-body text-synthwave-text-secondary mb-4">
                       Once you delete your account, there is no going back.
                       Please be certain. This will permanently delete all your
                       data including workouts, conversations, memories, and
@@ -1638,7 +1638,7 @@ function Settings() {
                     </p>
                     <button
                       onClick={handleDeleteAccount}
-                      className="bg-red-500 text-white px-6 py-3 font-rajdhani font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
+                      className="bg-red-500 text-white px-6 py-3 font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
                     >
                       Delete Account
                     </button>
@@ -1646,7 +1646,7 @@ function Settings() {
                       <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                         <InfoIcon />
                       </div>
-                      <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                      <p className="font-body text-sm text-synthwave-text-secondary">
                         This will open your email client to contact our support
                         team.
                       </p>

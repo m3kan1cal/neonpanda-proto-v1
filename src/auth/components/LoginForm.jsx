@@ -177,7 +177,7 @@ const LoginForm = ({
       <form onSubmit={handleSubmit} className="space-y-6">
         {showVerificationSuccess && (
           <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
-            <p className="font-rajdhani text-synthwave-neon-cyan text-sm">
+            <p className="font-body text-synthwave-neon-cyan text-sm">
               Email verified! Your account has been successfully confirmed. You can now sign in with your credentials.
             </p>
           </div>
@@ -185,7 +185,7 @@ const LoginForm = ({
 
         {showPasswordResetSuccess && (
           <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
-            <p className="font-rajdhani text-synthwave-neon-cyan text-sm">
+            <p className="font-body text-synthwave-neon-cyan text-sm">
               Password reset successful! Your password has been updated. You can now sign in with your new password.
             </p>
           </div>
@@ -200,7 +200,7 @@ const LoginForm = ({
 
         {showVerificationOption && (
           <div className="text-center p-4 bg-synthwave-neon-pink/10 rounded-md border border-synthwave-neon-pink/30">
-            <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+            <p className="font-body text-synthwave-text-secondary mb-3">
               Need to verify your email address?
             </p>
             <AuthButton
@@ -262,7 +262,7 @@ const LoginForm = ({
         </div>
 
         <div className="text-center pt-4 border-t border-synthwave-neon-pink/20">
-          <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+          <p className="font-body text-synthwave-text-secondary mb-3">
             Don't have an account?
           </p>
           <AuthButton

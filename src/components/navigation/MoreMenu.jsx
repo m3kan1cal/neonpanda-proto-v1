@@ -186,7 +186,7 @@ const MoreMenu = () => {
           <div
             className={`
             ml-auto min-w-[32px] h-[32px] px-2 rounded-md flex items-center justify-center
-            font-rajdhani font-bold text-sm
+            font-body font-bold text-sm
             transition-all duration-150
             ${item.color === "pink" ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink" : ""}
             ${item.color === "cyan" ? "bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan" : ""}
@@ -281,7 +281,7 @@ const MoreMenu = () => {
             className={`${navigationPatterns.moreMenu.sectionContainer} ${primaryItems.length > 0 ? "border-t border-synthwave-neon-cyan/10" : ""}`}
           >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
+              <h3 className="font-body text-base font-bold text-white uppercase tracking-wider">
                 Your Training
               </h3>
             </div>
@@ -295,7 +295,7 @@ const MoreMenu = () => {
             className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}
           >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
+              <h3 className="font-body text-base font-bold text-white uppercase tracking-wider">
                 Quick Actions
               </h3>
             </div>
@@ -309,7 +309,7 @@ const MoreMenu = () => {
             className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}
           >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
+              <h3 className="font-body text-base font-bold text-white uppercase tracking-wider">
                 Account & Settings
               </h3>
             </div>
@@ -323,7 +323,7 @@ const MoreMenu = () => {
             className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}
           >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
+              <h3 className="font-body text-base font-bold text-white uppercase tracking-wider">
                 Help & Info
               </h3>
             </div>

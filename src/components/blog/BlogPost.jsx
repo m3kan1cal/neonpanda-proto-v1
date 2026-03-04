@@ -195,7 +195,7 @@ function BlogPost({ children }) {
         </div>
         <div className="relative z-10 max-w-4xl mx-auto">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm font-rajdhani mb-6 bg-synthwave-bg-primary/40 backdrop-blur-sm px-4 py-2 rounded-md border border-synthwave-neon-pink/20 w-fit">
+          <div className="flex items-center gap-2 text-sm font-body mb-6 bg-synthwave-bg-primary/40 backdrop-blur-sm px-4 py-2 rounded-md border border-synthwave-neon-pink/20 w-fit">
             <Link
               to="/blog"
               className="text-white hover:text-synthwave-neon-cyan transition-colors font-semibold"
@@ -210,7 +210,7 @@ function BlogPost({ children }) {
           <div className="flex flex-wrap items-center gap-4 mb-4">
             <span className={colors.badge}>{currentPost.agent}</span>
             <span className={badgePatterns.muted}>{currentPost.pattern}</span>
-            <span className="font-rajdhani text-sm text-synthwave-text-muted">
+            <span className="font-body text-sm text-synthwave-text-muted">
               {currentPost.readTime}
             </span>
           </div>
@@ -266,7 +266,7 @@ function BlogPost({ children }) {
                   }`}
                   title={post.title}
                 >
-                  <span className="font-inter font-bold text-sm">
+                  <span className="font-body font-bold text-sm">
                     {post.id}
                   </span>
                 </Link>
@@ -311,14 +311,14 @@ function BlogPost({ children }) {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  <span className="font-rajdhani text-sm uppercase tracking-wide">
+                  <span className="font-body text-sm uppercase tracking-wide">
                     Previous
                   </span>
                 </div>
-                <h3 className="font-barlow text-lg text-white group-hover:text-synthwave-neon-cyan transition-colors">
+                <h3 className="font-header text-lg text-white group-hover:text-synthwave-neon-cyan transition-colors">
                   {prevPost.title}
                 </h3>
-                <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                <p className="font-body text-sm text-synthwave-text-secondary">
                   {prevPost.subtitle}
                 </p>
               </Link>
@@ -333,7 +333,7 @@ function BlogPost({ children }) {
                 className={`${containerPatterns.cardLight} p-6 group text-right`}
               >
                 <div className="flex items-center justify-end gap-2 text-synthwave-text-muted mb-2">
-                  <span className="font-rajdhani text-sm uppercase tracking-wide">
+                  <span className="font-body text-sm uppercase tracking-wide">
                     Next
                   </span>
                   <svg
@@ -350,10 +350,10 @@ function BlogPost({ children }) {
                     />
                   </svg>
                 </div>
-                <h3 className="font-barlow text-lg text-white group-hover:text-synthwave-neon-pink transition-colors">
+                <h3 className="font-header text-lg text-white group-hover:text-synthwave-neon-pink transition-colors">
                   {nextPost.title}
                 </h3>
-                <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                <p className="font-body text-sm text-synthwave-text-secondary">
                   {nextPost.subtitle}
                 </p>
               </Link>

@@ -113,10 +113,10 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="font-rajdhani font-bold text-2xl text-white mb-4 uppercase">
+          <h1 className="font-body font-bold text-2xl text-white mb-4 uppercase">
             Verify Email
           </h1>
-          <p className="font-rajdhani text-synthwave-text-secondary mb-2">
+          <p className="font-body text-synthwave-text-secondary mb-2">
             Check your email for a 6-digit confirmation code. We sent it to:{' '}
             <span className="font-semibold text-synthwave-neon-cyan">{email}</span>
           </p>
@@ -128,7 +128,7 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
 
         {successMessage && (
           <div className="text-center p-3 bg-synthwave-neon-pink/10 rounded-md">
-            <p className="font-rajdhani text-synthwave-neon-pink text-sm">
+            <p className="font-body text-synthwave-neon-pink text-sm">
               {successMessage}
             </p>
           </div>
@@ -169,7 +169,7 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
         </div>
 
         <div className="text-center pt-4 border-t border-synthwave-neon-pink/20">
-          <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+          <p className="font-body text-synthwave-text-secondary mb-3">
             Wrong email address?
           </p>
           <AuthButton
