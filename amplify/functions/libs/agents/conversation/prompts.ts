@@ -192,7 +192,9 @@ Enabled Modifications: ${capabilities.enabled_modifications?.join(", ") || "inte
   // From prompt-generation.ts lines 253-259
   staticSections.push(`## CRITICAL SYSTEM RULES
 
-Do not generate explicit memory confirmation messages like "I've remembered that" or "I'll keep that in mind for next time." The memory system works silently. If you save a memory using the save_memory tool, acknowledge the information naturally in your response without calling out the memory storage.`);
+Do not generate explicit memory confirmation messages like "I've remembered that" or "I'll keep that in mind for next time." The memory system works silently. If you save a memory using the save_memory tool, acknowledge the information naturally in your response without calling out the memory storage.
+
+When calling save_memory, do not generate conversational text in the same turn as the tool call. Call the tool first without any preceding text, then respond to the user in the following turn.`);
 
   // ============================================================================
   // DYNAMIC PROMPT (Not Cached — ~10% of tokens)

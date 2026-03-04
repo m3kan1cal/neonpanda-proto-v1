@@ -60,6 +60,7 @@
   --animate-pulse-glow: pulse-glow 2s ease-in-out infinite alternate;
   --animate-glitch: glitch 2s infinite;
   --animate-scroll-grid: scroll-grid 20s linear infinite;
+  --animate-fade-in-up: fade-in-up 0.3s ease-out both;
 }
 
 /* Keyframes for theme animations */
@@ -97,6 +98,17 @@
   }
   100% {
     background-position: 50px 50px;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

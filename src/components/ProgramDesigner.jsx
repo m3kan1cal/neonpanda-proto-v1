@@ -838,7 +838,7 @@ function ProgramDesigner() {
   if (isValidatingUserId || agentState.isLoadingItem || !agentState.coach) {
     return (
       <div className={layoutPatterns.pageContainer}>
-        <div className={layoutPatterns.contentWrapper}>
+        <div className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6`}>
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left: Title + Coach Card */}
@@ -982,7 +982,7 @@ function ProgramDesigner() {
 
   return (
     <div className={layoutPatterns.pageContainer}>
-      <div className={layoutPatterns.contentWrapper}>
+      <div className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6`}>
         {/* Compact Horizontal Header */}
         <header
           className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
@@ -1046,9 +1046,9 @@ function ProgramDesigner() {
                     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
                       {/* Welcome Header */}
                       <div className="text-center space-y-2">
-                        <h2 className={typographyPatterns.emptyStateHeader}>
+                        <h3 className="font-barlow text-xl md:text-2xl text-white uppercase tracking-wider">
                           Let's Build Your Program
-                        </h2>
+                        </h3>
                         <p className={typographyPatterns.emptyStateDescription}>
                           I'll walk you through 5-10 questions to create
                           something custom. No boring forms – just you and me
@@ -1057,7 +1057,7 @@ function ProgramDesigner() {
                       </div>
 
                       {/* Command Tips Grid */}
-                      <div className="flex flex-col gap-6 w-full max-w-2xl">
+                      <div className="flex flex-col gap-6 w-full max-w-3xl">
                         {/* Program Design Tips */}
                         <div>
                           <h4

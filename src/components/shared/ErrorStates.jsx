@@ -40,20 +40,7 @@ export const ErrorState = ({
   message = "Something went wrong",
   buttonText = "Go Back",
   onButtonClick,
-  variant = "error", // 'error', 'warning', 'info'
 }) => {
-  const getColorClass = () => {
-    switch (variant) {
-      case "warning":
-        return "text-synthwave-neon-orange";
-      case "info":
-        return "text-synthwave-neon-cyan";
-      case "error":
-      default:
-        return "text-synthwave-neon-pink";
-    }
-  };
-
   return (
     <div className={`${themeClasses.container} min-h-screen`}>
       <div className="max-w-4xl mx-auto px-8 py-12 flex justify-center">
@@ -94,20 +81,7 @@ export const CenteredErrorState = ({
   message = "Something went wrong",
   buttonText = "Go Back",
   onButtonClick,
-  variant = "error",
 }) => {
-  const getColorClass = () => {
-    switch (variant) {
-      case "warning":
-        return "text-synthwave-neon-orange";
-      case "info":
-        return "text-synthwave-neon-cyan";
-      case "error":
-      default:
-        return "text-synthwave-neon-pink";
-    }
-  };
-
   return (
     <div
       className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}
@@ -146,21 +120,8 @@ export const CenteredErrorState = ({
 export const InlineError = ({
   title = "Error",
   message = "Something went wrong",
-  variant = "error",
   size = "medium", // 'small', 'medium', 'large'
 }) => {
-  const getColorClass = () => {
-    switch (variant) {
-      case "warning":
-        return "text-synthwave-neon-orange";
-      case "info":
-        return "text-synthwave-neon-cyan";
-      case "error":
-      default:
-        return "text-synthwave-neon-pink";
-    }
-  };
-
   const getSizeClasses = () => {
     switch (size) {
       case "small":
@@ -217,6 +178,42 @@ export const InlineError = ({
     </div>
   );
 };
+
+/**
+ * SectionEmptyState - Minimal single-line empty state for dashboard section cards.
+ *
+ * Replaces the verbose numbered-step pattern with a clean message + optional
+ * inline action link. Keeps visual weight low so the empty state doesn't
+ * compete with real content or CTAs elsewhere on the page.
+ *
+ * @param {string} message - Short descriptive text (e.g. "No programs yet.")
+ * @param {string} [actionLabel] - Label for the inline action link (e.g. "Design one")
+ * @param {Function} [onAction] - Callback invoked when the action link is clicked
+ * @param {string} [className] - Classes applied to the wrapper (replaces default py-3 when provided)
+ */
+export const SectionEmptyState = ({
+  message,
+  actionLabel,
+  onAction,
+  className,
+}) => (
+  <div className={className || "py-3"}>
+    <p className="font-rajdhani text-sm text-synthwave-text-muted">
+      {message}
+      {actionLabel && onAction && (
+        <>
+          {" "}
+          <button
+            onClick={onAction}
+            className="text-synthwave-neon-cyan hover:text-synthwave-neon-cyan/80 transition-colors duration-200 cursor-pointer font-semibold"
+          >
+            {actionLabel} →
+          </button>
+        </>
+      )}
+    </p>
+  </div>
+);
 
 // Empty state component
 export const EmptyState = ({
