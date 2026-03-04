@@ -1127,7 +1127,7 @@ export const typographyPatterns = {
   emptyStateHeader:
     "font-barlow text-2xl md:text-3xl text-white uppercase tracking-wider",
   emptyStateDescription:
-    "font-rajdhani text-base text-synthwave-text-secondary max-w-md",
+    "font-rajdhani text-base text-synthwave-text-secondary max-w-xl",
   emptyStateSectionHeader:
     "font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-3",
   emptyStateCardTitle: "font-semibold text-base text-white mb-1",
@@ -1142,6 +1142,11 @@ export const typographyPatterns = {
   // Section divider -- used in Training Grounds tier headers
   sectionDivider:
     "font-barlow font-bold text-white text-lg uppercase tracking-wider",
+
+  // Section divider line -- gradient fade rule used alongside sectionDivider
+  // Starts with a cyan accent and fades to transparent, adding depth without noise
+  sectionDividerLine:
+    "flex-1 h-px bg-gradient-to-r from-synthwave-neon-cyan/25 to-transparent",
 
   // Program label -- small uppercase identifier used in workout/program cards
   programLabel:

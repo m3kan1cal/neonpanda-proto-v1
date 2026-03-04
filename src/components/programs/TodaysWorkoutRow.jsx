@@ -6,6 +6,7 @@ import {
   buttonPatterns,
   typographyPatterns,
 } from "../../utils/ui/uiPatterns";
+import { SectionEmptyState } from "../shared/ErrorStates";
 
 /**
  * TodaysWorkoutRow - Tier 1 hero component for TrainingGroundsV2
@@ -31,6 +32,7 @@ function TodaysWorkoutRow({
   coachId,
   onCompleteRestDay,
   isCompletingRestDay = false,
+  onDesignProgram,
 }) {
   const navigate = useNavigate();
 
@@ -71,32 +73,14 @@ function TodaysWorkoutRow({
   const activePrograms = programs.filter((p) => p.status === "active");
   if (activePrograms.length === 0) {
     return (
-      <div className={`${containerPatterns.cardMedium} p-6 max-w-md w-fit`}>
-        <div className="text-center pb-2">
-          <div className="max-w-sm">
-            <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
-              You don't have any active training programs yet. Design a
-              structured program with your coach to see today's workouts here.
-            </p>
-            <div className="space-y-2 text-left">
-              <div className="flex items-start gap-2">
-                <span className={badgePatterns.numberedCircle}>
-                  <span className={badgePatterns.numberedCircleText}>1</span>
-                </span>
-                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                  Use Command Palette (⌘+K) and select "/design-program"
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className={badgePatterns.numberedCircle}>
-                  <span className={badgePatterns.numberedCircleText}>2</span>
-                </span>
-                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
-                  OR go to "Programs" and click "Design New Program"
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="rounded-md bg-synthwave-bg-card/20 backdrop-blur-sm border border-dashed border-synthwave-neon-cyan/30 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/50 hover:shadow-sm hover:shadow-synthwave-neon-cyan/20 px-5 py-4 flex items-center justify-between gap-4">
+          <SectionEmptyState
+            message="No active programs yet."
+            actionLabel="Start designing"
+            onAction={onDesignProgram}
+            className="py-0"
+          />
         </div>
       </div>
     );

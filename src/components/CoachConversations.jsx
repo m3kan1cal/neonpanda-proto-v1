@@ -1031,7 +1031,7 @@ function CoachConversations() {
   ) {
     return (
       <div className={layoutPatterns.pageContainer}>
-        <div className={layoutPatterns.contentWrapper}>
+        <div className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6`}>
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left: Title + Coach Card */}
@@ -1160,7 +1160,7 @@ function CoachConversations() {
 
   return (
     <div className={layoutPatterns.pageContainer}>
-      <div className={layoutPatterns.contentWrapper}>
+      <div className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6`}>
         {/* Compact Horizontal Header */}
         <header
           className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
@@ -1239,9 +1239,9 @@ function CoachConversations() {
                     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
                       {/* Welcome Header */}
                       <div className="text-center space-y-2">
-                        <h2 className={typographyPatterns.emptyStateHeader}>
+                        <h3 className="font-barlow text-xl md:text-2xl text-white uppercase tracking-wider">
                           Ready to Train?
-                        </h2>
+                        </h3>
                         <p className={typographyPatterns.emptyStateDescription}>
                           Let's get after it! Chat with me about anything
                           fitness, or use these quick commands to dive right in.
@@ -1249,7 +1249,7 @@ function CoachConversations() {
                       </div>
 
                       {/* Command Tips Grid */}
-                      <div className="flex flex-col gap-6 w-full max-w-2xl">
+                      <div className="flex flex-col gap-6 w-full max-w-3xl">
                         {/* Slash Commands */}
                         <div>
                           <h4
