@@ -56,31 +56,5 @@ export interface ConversationAgentContext extends AgentContext {
   } | null;
 }
 
-/**
- * Streaming events yielded by callBedrockApiStreamForAgent.
- * The agent consumes these to implement the streaming ReAct loop.
- */
-export type StreamAgentEvent =
-  | { type: "text_delta"; text: string }
-  | { type: "tool_use_start"; toolUseId: string; toolName: string }
-  | { type: "tool_use_delta"; toolUseId: string; inputFragment: string }
-  | { type: "tool_use_stop"; toolUseId: string }
-  | {
-      type: "message_complete";
-      stopReason: string;
-      assistantContent: any[];
-      usage: { inputTokens: number; outputTokens: number };
-    };
-
-/**
- * Result returned by StreamingConversationAgent.converseStream()
- * after the generator is fully consumed.
- */
-export interface ConversationAgentResult {
-  fullResponseText: string; // Complete AI response text
-  toolsUsed: string[]; // Tool IDs that were executed
-  modelId: string; // Model used for the final response
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  iterationCount: number; // Number of ReAct loop iterations
-}
+// Re-export shared streaming types from core so existing imports continue to work
+export type { StreamAgentEvent, ConversationAgentResult } from "../core/types";

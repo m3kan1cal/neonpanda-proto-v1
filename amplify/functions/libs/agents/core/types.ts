@@ -17,6 +17,46 @@ export interface AgentContext {
 }
 
 /**
+ * Minimum context required by the StreamingConversationAgent and all shared tools.
+ * Extend this for role-specific contexts (ConversationAgentContext,
+ * CoachCreatorSessionAgentContext, etc.)
+ */
+export interface BaseStreamingAgentContext extends AgentContext {
+  userId: string;
+  userTimezone: string;
+}
+
+/**
+ * Streaming events yielded by callBedrockApiStreamForAgent.
+ * Re-exported here so role-specific agent files can import from the core module.
+ */
+export type StreamAgentEvent =
+  | { type: "text_delta"; text: string }
+  | { type: "tool_use_start"; toolUseId: string; toolName: string }
+  | { type: "tool_use_delta"; toolUseId: string; inputFragment: string }
+  | { type: "tool_use_stop"; toolUseId: string }
+  | {
+      type: "message_complete";
+      stopReason: string;
+      assistantContent: any[];
+      usage: { inputTokens: number; outputTokens: number };
+    };
+
+/**
+ * Result returned by StreamingConversationAgent.converseStream()
+ * after the generator is fully consumed.
+ * Re-exported here so role-specific handler files can import from the core module.
+ */
+export interface ConversationAgentResult {
+  fullResponseText: string;
+  toolsUsed: string[];
+  modelId: string;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  iterationCount: number;
+}
+
+/**
  * Tool definition for agent execution
  * Tools are functions that agents can call to accomplish tasks
  *

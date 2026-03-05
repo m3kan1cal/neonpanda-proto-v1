@@ -1629,7 +1629,7 @@ function ManagePrograms() {
         {inProgressSessions && inProgressSessions.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-bold text-xl md:text-2xl text-white mb-4 uppercase">
                 Your In-Progress Program Designs
               </h2>
               <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1833,7 +1833,7 @@ function ManagePrograms() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1842,7 +1842,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1855,7 +1855,7 @@ function ManagePrograms() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -1881,7 +1881,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1905,7 +1905,7 @@ function ManagePrograms() {
         {programState.pausedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-bold text-xl md:text-2xl text-white mb-4 uppercase">
                 Paused Training Programs
               </h2>
               <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1927,7 +1927,7 @@ function ManagePrograms() {
         {programState.completedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-bold text-xl md:text-2xl text-white mb-4 uppercase">
                 Completed Programs
               </h2>
               <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">

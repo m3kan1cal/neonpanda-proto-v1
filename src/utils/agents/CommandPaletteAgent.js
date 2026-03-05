@@ -400,7 +400,7 @@ export class CommandPaletteAgent {
     const { sessionId } = result;
 
     return {
-      message: "Creating new coach session...",
+      message: "Creating new coach creator session...",
       details: { sessionId },
       navigationData: {
         type: "coach-creator",
