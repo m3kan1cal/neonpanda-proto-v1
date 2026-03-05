@@ -528,10 +528,9 @@ async function* createCoachCreatorEventStreamV2(
       currentQuestion: progress.completed + 1,
     };
 
-    // Save the session — if complete_intake ran, session.isComplete is already true
-    // and configGeneration.status is IN_PROGRESS (set by the tool).
-    // saveSessionAndTriggerCoachConfig is idempotent — it will skip triggering
-    // if the lock is already set.
+    // Save the session — if complete_intake ran, session.isComplete is already true.
+    // This is the ONLY save call for this turn — messages are appended before saving
+    // so they are persisted atomically with any config generation lock.
     const saveResult = await saveSessionAndTriggerCoachConfig(
       userId as string,
       sessionId as string,

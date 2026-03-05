@@ -5,7 +5,6 @@ import {
   queryFromDynamoDB,
   createDynamoDBItem,
   deepMerge,
-  serializeForDynamoDB,
 } from "./core";
 import { logger } from "../functions/libs/logger";
 import {
@@ -38,7 +37,7 @@ export async function saveCoachConfig(
       "SET #attrs = :attrs, entityType = :entityType, updatedAt = :now, createdAt = if_not_exists(createdAt, :now)",
     expressionAttributeNames: { "#attrs": "attributes" },
     expressionAttributeValues: {
-      ":attrs": serializeForDynamoDB(coachConfig),
+      ":attrs": coachConfig,
       ":entityType": "coachConfig",
       ":now": now,
     },

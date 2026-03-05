@@ -33,7 +33,6 @@ import {
   isSessionComplete,
   getTodoItemLabel,
 } from "../../coach-creator/todo-list-utils";
-import { saveSessionAndTriggerCoachConfig } from "../../coach-creator/session-management";
 import { UPDATE_INTAKE_FIELDS_SCHEMA } from "../../schemas/coach-creator-session-tool-schemas";
 
 // ============================================================================
@@ -309,26 +308,10 @@ DO NOT call this tool if required fields are still pending.`,
       context.session.isComplete = true;
       context.session.completedAt = new Date();
 
-      // Trigger the coach config build — saveSessionAndTriggerCoachConfig
-      // handles idempotency checks, lock creation, DynamoDB save, and
-      // async Lambda invocation
-      const saveResult = await saveSessionAndTriggerCoachConfig(
-        context.userId,
-        context.sessionId,
-        context.session,
-        true,
-      );
-
-      console.info("✅ Intake complete, coach config generation triggered:", {
-        coachConfigId: saveResult.coachConfigId,
-        alreadyGenerating: saveResult.alreadyGenerating,
-      });
+      console.info("✅ Intake marked complete. Handler will save and trigger coach config generation.");
 
       return {
         completed: true,
-        coachConfigGenerating: !saveResult.coachConfigId,
-        coachConfigId: saveResult.coachConfigId,
-        alreadyGenerating: saveResult.alreadyGenerating,
         message:
           "Intake complete. Your personalized coach is being built and will appear shortly.",
       };
@@ -340,7 +323,7 @@ DO NOT call this tool if required fields are still pending.`,
 
       return {
         completed: false,
-        reason: "Failed to trigger coach config generation",
+        reason: "Failed to mark intake as complete",
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
