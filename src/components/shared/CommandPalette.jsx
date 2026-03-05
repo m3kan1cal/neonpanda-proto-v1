@@ -458,7 +458,7 @@ const CommandPalette = ({
                   <div
                     key={command.id}
                     ref={index === selectedIndex ? selectedCommandRef : null}
-                    className={`flex items-start space-x-3 py-3 px-3 cursor-pointer transition-colors duration-200 ${
+                    className={`flex items-center justify-between gap-4 py-3 px-3 cursor-pointer transition-colors duration-200 ${
                       index === selectedIndex
                         ? "bg-synthwave-bg-primary/30 border-l-2 border-l-synthwave-neon-pink"
                         : "hover:bg-synthwave-bg-primary/30 border-l-2 border-l-transparent"
@@ -486,32 +486,11 @@ const CommandPalette = ({
                       }
                     }}
                   >
-                    <div
-                      className={`font-body text-base ${
-                        index === selectedIndex
-                          ? "text-synthwave-neon-pink"
-                          : "text-synthwave-neon-pink"
-                      }`}
-                    >
+                    <div className="font-body text-base text-synthwave-neon-pink shrink-0">
                       {command.trigger}
                     </div>
-                    <div className="flex-1">
-                      <div
-                        className={`font-body text-base ${
-                          index === selectedIndex ? "text-white" : "text-white"
-                        }`}
-                      >
-                        {command.description}
-                      </div>
-                      <div
-                        className={`font-body text-sm mt-1 ${
-                          index === selectedIndex
-                            ? "text-synthwave-text-secondary"
-                            : "text-synthwave-text-muted"
-                        }`}
-                      >
-                        {command.example}
-                      </div>
+                    <div className="font-body text-sm text-synthwave-text-muted text-right ml-auto truncate">
+                      {command.description}
                     </div>
                   </div>
                 ))}

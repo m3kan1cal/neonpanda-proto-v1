@@ -1,6 +1,7 @@
 import {
   loadFromDynamoDB,
   saveToDynamoDB,
+  updateToDynamoDB,
   queryFromDynamoDB,
   createDynamoDBItem,
   deepMerge,
@@ -16,23 +17,32 @@ import {
 // ===========================
 
 /**
- * Save coach config directly
+ * Save coach config directly.
+ *
+ * Uses UpdateCommand with if_not_exists(createdAt, :now) so the original
+ * creation timestamp is preserved on re-generation without requiring a
+ * pre-read of the existing item.
  */
 export async function saveCoachConfig(
   userId: string,
   coachConfig: CoachConfig,
   creationTimestamp?: string,
 ): Promise<void> {
-  const timestamp = creationTimestamp || new Date().toISOString();
-  const item = createDynamoDBItem<CoachConfig>(
-    "coachConfig",
-    `user#${userId}`,
-    `coach#${coachConfig.coach_id}`,
-    coachConfig,
-    timestamp,
-  );
+  const now = creationTimestamp || new Date().toISOString();
 
-  await saveToDynamoDB(item);
+  await updateToDynamoDB({
+    pk: `user#${userId}`,
+    sk: `coach#${coachConfig.coach_id}`,
+    updateExpression:
+      "SET #attrs = :attrs, entityType = :entityType, updatedAt = :now, createdAt = if_not_exists(createdAt, :now)",
+    expressionAttributeNames: { "#attrs": "attributes" },
+    expressionAttributeValues: {
+      ":attrs": coachConfig,
+      ":entityType": "coachConfig",
+      ":now": now,
+    },
+    operationName: "Save coachConfig to DynamoDB",
+  });
 }
 
 /**

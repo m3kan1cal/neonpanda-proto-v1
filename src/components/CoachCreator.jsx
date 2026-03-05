@@ -143,7 +143,7 @@ const MessageItem = memo(
               className={getStreamingMessageClasses(
                 message,
                 agentState,
-                "px-4 py-3 shadow-sm bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30",
+                containerPatterns.userMessageBubble,
               )}
             >
               <div className="font-body text-base leading-relaxed">
@@ -283,6 +283,7 @@ function CoachCreator() {
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const lastScrollTimeRef = useRef(0); // For throttling scroll during streaming
+  const completionBannerRef = useRef(null);
 
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -496,6 +497,33 @@ function CoachCreator() {
       clearTimeout(timeout3);
     };
   }, [handleScroll, agentState.messages.length]);
+
+  // Keep --chat-input-height in sync when the completion banner is shown.
+  // ChatInput is unmounted on completion, so its ResizeObserver stops updating
+  // the CSS variable. Without this, the ScrollToBottomButton stays positioned
+  // relative to the old input height instead of the banner's actual height.
+  useEffect(() => {
+    if (!agentState.isComplete) return;
+
+    const updateHeight = () => {
+      const el = completionBannerRef.current;
+      if (el) {
+        document.documentElement.style.setProperty(
+          "--chat-input-height",
+          `${el.offsetHeight}px`,
+        );
+      }
+    };
+
+    updateHeight();
+
+    const el = completionBannerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [agentState.isComplete]);
 
   // Handle message submission
   const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
@@ -856,7 +884,10 @@ function CoachCreator() {
 
       {/* Chat Input Section - show completion message when done, otherwise show input */}
       {agentState.isComplete ? (
-        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-cyan/30 shadow-lg shadow-synthwave-neon-cyan/20 z-50">
+        <div
+          ref={completionBannerRef}
+          className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-cyan/30 shadow-lg shadow-synthwave-neon-cyan/20 z-50"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 flex justify-center">
             <div
               className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}
@@ -994,7 +1025,7 @@ function CoachCreator() {
               </div>
 
               <p className="font-body text-base text-synthwave-text-secondary mb-6">
-                Great work! W're now crafting a personalized coach tailored
+                Great work! We're now crafting a personalized coach tailored
                 specifically to your journey.
               </p>
 

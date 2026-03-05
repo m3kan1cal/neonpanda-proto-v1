@@ -656,7 +656,7 @@ function TrainingGroundsV2() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
-              <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
+              <div className="flex-1 h-px bg-gradient-to-r from-synthwave-neon-cyan/25 to-transparent"></div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {[1, 2].map((i) => (
@@ -687,7 +687,7 @@ function TrainingGroundsV2() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
-              <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
+              <div className="flex-1 h-px bg-gradient-to-r from-synthwave-neon-cyan/25 to-transparent"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left Column: Active Programs, Reports, Workout History, Conversations */}
