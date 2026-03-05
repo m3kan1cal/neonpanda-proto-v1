@@ -244,6 +244,19 @@ export const QUERY_EXERCISE_HISTORY_SCHEMA = {
   required: ["exerciseName"],
 };
 
+export const QUERY_COACHES_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    includeDetails: {
+      type: "boolean",
+      description:
+        "When true, includes full specializations, methodology, and personality details for each coach. When false (default), returns name, ID, and short description only.",
+    },
+  },
+  required: [],
+};
+
 export const LIST_EXERCISE_NAMES_SCHEMA = {
   type: "object",
   additionalProperties: false,

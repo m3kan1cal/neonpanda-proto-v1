@@ -919,7 +919,7 @@ function Coaches() {
                               : coach.coach_id,
                           );
                         }}
-                        className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
+                        className={`cursor-pointer p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
                           openMenuId === coach.coach_id
                             ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                             : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
@@ -1210,7 +1210,7 @@ function Coaches() {
         {inProgressSessions && inProgressSessions.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
+              <h2 className="font-header font-bold text-xl md:text-2xl text-white mb-4 uppercase">
                 Your In-Progress Coaches
               </h2>
               <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1402,7 +1402,7 @@ function Coaches() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1411,7 +1411,7 @@ function Coaches() {
                               e.stopPropagation(); // Prevent card click
                               handleDeleteClick(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1424,7 +1424,7 @@ function Coaches() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -1450,7 +1450,7 @@ function Coaches() {
                               e.stopPropagation(); // Prevent card click
                               handleDeleteClick(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1481,7 +1481,7 @@ function Coaches() {
               <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>
             </div>
 
-            <h2 className="font-header font-black text-xl md:text-2xl text-white mb-4 uppercase">
+            <h2 className="font-header font-bold text-xl md:text-2xl text-white mb-4 uppercase">
               Start Fast with Templates
             </h2>
             <p className="font-body text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1504,9 +1504,7 @@ function Coaches() {
           {/* Templates Error State */}
           {agentState.templatesError && !agentState.templatesLoading && (
             <div className="text-center text-synthwave-neon-pink mb-8">
-              <p className="font-body text-lg">
-                {agentState.templatesError}
-              </p>
+              <p className="font-body text-lg">{agentState.templatesError}</p>
             </div>
           )}
 
@@ -1518,21 +1516,7 @@ function Coaches() {
                 {agentState.templates.map((template) => (
                   <div
                     key={template.template_id}
-                    onClick={() => {
-                      if (
-                        userId &&
-                        creatingTemplateId !== template.template_id
-                      ) {
-                        handleCreateFromTemplate(template.template_id);
-                      }
-                    }}
-                    className={`${containerPatterns.templateCard} p-6 relative flex flex-col justify-between h-full ${
-                      userId && creatingTemplateId !== template.template_id
-                        ? "cursor-pointer"
-                        : creatingTemplateId === template.template_id
-                          ? "cursor-wait"
-                          : "cursor-not-allowed"
-                    }`}
+                    className={`${containerPatterns.templateCard} p-6 relative flex flex-col justify-between h-full`}
                   >
                     <div className="flex-1">
                       {/* New Badge */}
@@ -1577,7 +1561,18 @@ function Coaches() {
 
                     {/* Action Button */}
                     <div className="text-center">
-                      <div
+                      <button
+                        onClick={() => {
+                          if (
+                            userId &&
+                            creatingTemplateId !== template.template_id
+                          ) {
+                            handleCreateFromTemplate(template.template_id);
+                          }
+                        }}
+                        disabled={
+                          !userId || creatingTemplateId === template.template_id
+                        }
                         className={`w-full space-x-2 ${
                           userId
                             ? creatingTemplateId === template.template_id
@@ -1585,12 +1580,6 @@ function Coaches() {
                               : buttonPatterns.primaryMedium
                             : buttonPatterns.primaryMediumDisabled
                         }`}
-                        tabIndex={
-                          userId && creatingTemplateId !== template.template_id
-                            ? 0
-                            : -1
-                        }
-                        role="button"
                       >
                         {creatingTemplateId === template.template_id ? (
                           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
@@ -1604,7 +1593,7 @@ function Coaches() {
                               ? "Create Coach"
                               : "Login Required"}
                         </span>
-                      </div>
+                      </button>
                     </div>
                   </div>
                 ))}

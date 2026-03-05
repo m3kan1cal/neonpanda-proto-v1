@@ -755,7 +755,8 @@ export const compactCardPatterns = {
   coachPillInfo: "flex items-center gap-2 min-w-0",
 
   // Coach name text
-  coachPillName: "font-body font-semibold text-white text-base",
+  coachPillName:
+    "font-body font-semibold text-white text-base min-w-0 truncate",
 
   // Online status text container
   coachPillStatus:

@@ -268,19 +268,19 @@ function ChatInput({
           <div className="flex items-end gap-2 sm:gap-3">
             {/* Text input skeleton — matches TipTap minHeight 60px + rounded-2xl */}
             <div className="flex-1 relative">
-              <div className="w-full h-[80px] bg-synthwave-text-muted/20 animate-pulse"></div>
+              <div className="w-full h-[80px] bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
               {/* Emoji button placeholder (absolute right-3 bottom-3, desktop only) */}
-              <div className="absolute right-3 bottom-3 w-6 h-6 bg-synthwave-text-muted/10 rounded-none animate-pulse hidden md:block"></div>
+              <div className="absolute right-3 bottom-3 w-6 h-6 bg-synthwave-text-muted/10 rounded-md animate-pulse hidden md:block"></div>
             </div>
 
             {/* Send/Voice button skeleton */}
-            <div className="self-end mb-[6px] w-12 h-12 bg-synthwave-text-muted/20 animate-pulse"></div>
+            <div className="self-end mb-[6px] w-12 h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </div>
 
           {/* AI disclaimer and keyboard shortcuts skeleton */}
           <div className="flex items-center justify-between gap-2 mt-3 pr-12 md:pr-[74px]">
-            <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
-            <div className="hidden md:block h-3 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
+            <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-48"></div>
+            <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-64"></div>
           </div>
         </div>
       </div>

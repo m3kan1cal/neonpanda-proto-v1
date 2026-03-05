@@ -220,6 +220,63 @@ export async function saveToDynamoDB<T>(
 }
 
 /**
+ * Generic UpdateCommand wrapper — use when you need partial attribute updates or
+ * conditional expressions like if_not_exists(). Prefer saveToDynamoDB for full
+ * item writes.
+ *
+ * ExpressionAttributeValues are serialized automatically (Dates → ISO strings,
+ * undefined values removed) so callers can pass raw objects.
+ */
+export async function updateToDynamoDB(params: {
+  pk: string;
+  sk: string;
+  updateExpression: string;
+  expressionAttributeNames?: Record<string, string>;
+  expressionAttributeValues: Record<string, any>;
+  conditionExpression?: string;
+  operationName?: string;
+}): Promise<void> {
+  const {
+    pk,
+    sk,
+    updateExpression,
+    expressionAttributeNames,
+    expressionAttributeValues,
+    conditionExpression,
+    operationName = "Update item in DynamoDB",
+  } = params;
+
+  await withThroughputScaling(async () => {
+    try {
+      const command = new UpdateCommand({
+        TableName: getTableName(),
+        Key: { pk, sk },
+        UpdateExpression: updateExpression,
+        ...(expressionAttributeNames && {
+          ExpressionAttributeNames: expressionAttributeNames,
+        }),
+        ExpressionAttributeValues: serializeForDynamoDB(
+          expressionAttributeValues,
+        ),
+        ...(conditionExpression && {
+          ConditionExpression: conditionExpression,
+        }),
+      });
+
+      await docClient.send(command);
+    } catch (error) {
+      logger.error(`❌ Error in ${operationName}:`, {
+        message: error instanceof Error ? error.message : "Unknown error",
+        errorStack: error instanceof Error ? error.stack : "No stack",
+        pk,
+        sk,
+      });
+      throw error;
+    }
+  }, operationName);
+}
+
+/**
  * Enhanced save function that explicitly checks the result and provides detailed error info
  */
 export async function saveToDynamoDBWithResult<T>(

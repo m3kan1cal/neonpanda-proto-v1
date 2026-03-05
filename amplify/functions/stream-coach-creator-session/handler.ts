@@ -14,11 +14,29 @@ import { generateCoachCreatorContextualUpdate } from "../libs/coach-conversation
 import {
   loadSessionData,
   saveSessionAndTriggerCoachConfig,
-  SessionData,
 } from "../libs/coach-creator/session-management";
 import { handleTodoListConversation } from "../libs/coach-creator/conversation-handler";
-import { queryPineconeContext } from "../libs/api-helpers";
+import { queryPineconeContext, MODEL_IDS } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
+import { getSsmStringList } from "../libs/ssm-utils";
+import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { getTodoProgress } from "../libs/coach-creator/todo-list-utils";
+import {
+  saveCoachCreatorSession,
+  getUserProfile,
+  getCoachCreatorSession,
+} from "../../dynamodb/operations";
+
+// V2 agent imports
+import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
+import type { CoachCreatorSessionAgentContext } from "../libs/agents/coach-creator-session/types";
+import { coachCreatorSessionAgentTools } from "../libs/agents/coach-creator-session/tools";
+import {
+  buildCoachCreatorSessionAgentPrompt,
+  selectModelForCoachCreatorAgent,
+} from "../libs/agents/coach-creator-session/prompts";
+import { buildCoachCreatorMessagesWithCaching } from "../libs/agents/coach-creator-session/helpers";
+import type { ConversationAgentResult } from "../libs/agents/core/types";
 
 // Import auth middleware (consolidated)
 import {
@@ -40,9 +58,6 @@ import {
   formatAuthErrorEvent,
   validateStreamingRequestBody,
   getRandomCoachCreatorAcknowledgement,
-  getAIResponseStream,
-  buildMessageContext,
-  formatMemoryContext,
 } from "../libs/streaming";
 
 // Route pattern for coach creator sessions
@@ -65,14 +80,12 @@ interface ValidationParams {
 async function validateAndExtractParams(
   event: AuthenticatedLambdaFunctionURLEvent,
 ): Promise<ValidationParams> {
-  // Extract and validate path parameters
   const pathParams = extractPathParameters(
     event.rawPath,
     COACH_CREATOR_SESSION_ROUTE,
   );
   const { userId, sessionId } = pathParams;
 
-  // Validate required path parameters
   const validation = validateRequiredPathParams(pathParams, [
     "userId",
     "sessionId",
@@ -83,12 +96,8 @@ async function validateAndExtractParams(
     );
   }
 
-  logger.info("✅ Path parameters validated:", {
-    userId,
-    sessionId,
-  });
+  logger.info("✅ Path parameters validated:", { userId, sessionId });
 
-  // Parse and validate request body using shared utility
   const { userResponse, messageTimestamp, imageS3Keys } =
     validateStreamingRequestBody(event.body, userId as string, {
       requireUserResponse: true,
@@ -111,36 +120,52 @@ async function validateAndExtractParams(
   };
 }
 
+// ============================================================================
+// V1/V2 routing helper  (mirrors shouldUseV1FallbackHandler in coach conversation)
+// ============================================================================
+
 /**
- * Main event stream generator for coach creator sessions
+ * Check whether this user should be served by the V1 procedural handler.
+ *
+ * V2 (agent-based) is the default. V1 is the fallback, controlled by the
+ * COACH_CREATOR_V1_FALLBACK_USERS SSM parameter (comma-separated user IDs).
+ * Changes take effect within 5 minutes (cache TTL) with no code deploy.
  */
+async function shouldUseV1FallbackHandler(userId: string): Promise<boolean> {
+  const paramPath = process.env.COACH_CREATOR_V1_FALLBACK_USERS_PARAM;
+  if (!paramPath) {
+    return false;
+  }
+  const fallbackUsers = await getSsmStringList(paramPath);
+  return fallbackUsers.has(userId);
+}
+
+// ============================================================================
+// V1: Existing procedural handler  (renamed, preserved as fallback)
+// ============================================================================
+
 async function* createCoachCreatorEventStream(
   event: AuthenticatedLambdaFunctionURLEvent,
   context: Context,
 ): AsyncGenerator<string, void, unknown> {
-  // Immediately yield start event
   yield formatStartEvent();
-  logger.info("📡 Yielded start event immediately");
+  logger.info("📡 V1: Yielded start event immediately");
 
-  // Yield coach creator acknowledgment immediately while processing starts (as contextual update)
   const randomAcknowledgment = getRandomCoachCreatorAcknowledgement();
   yield formatContextualEvent(randomAcknowledgment, "session_review");
   logger.info(
-    `📡 Yielded coach creator acknowledgment (contextual): "${randomAcknowledgment}"`,
+    `📡 V1: Yielded coach creator acknowledgment: "${randomAcknowledgment}"`,
   );
 
   try {
-    // Step 1: Validate and extract parameters
-    logger.info("🔍 Step 1: Validating parameters");
+    logger.info("🔍 V1 Step 1: Validating parameters");
     const params = await validateAndExtractParams(event);
 
-    // Step 2: Load session data + Pinecone context + contextual update (ALL PARALLELIZED)
     logger.info(
-      "📂 Step 2: Loading session data + Pinecone context + generating contextual update",
+      "📂 V1 Step 2: Loading session data + Pinecone context + generating contextual update",
     );
     const phase1StartTime = Date.now();
 
-    // Parallel execution: session loading + contextual update + Pinecone context query
     const [startingUpdate, sessionData, pineconeResult] = await Promise.all([
       generateCoachCreatorContextualUpdate(
         params.userResponse,
@@ -163,7 +188,7 @@ async function* createCoachCreatorEventStream(
         },
       ).catch((error) => {
         logger.warn(
-          "⚠️ Pinecone query failed, continuing without context:",
+          "⚠️ V1: Pinecone query failed, continuing without context:",
           error,
         );
         return {
@@ -176,35 +201,31 @@ async function* createCoachCreatorEventStream(
     ]);
 
     const phase1Time = Date.now() - phase1StartTime;
-    logger.info(`✅ Phase 1 parallel loading completed in ${phase1Time}ms`);
+    logger.info(`✅ V1: Phase 1 parallel loading completed in ${phase1Time}ms`);
 
-    // Format Pinecone context for prompt injection
     let userHistoryContext = "";
     if (pineconeResult.success && pineconeResult.matches.length > 0) {
       userHistoryContext = formatPineconeContext(pineconeResult.matches);
-      logger.info("✅ Pinecone context retrieved for coach creator:", {
+      logger.info("✅ V1: Pinecone context retrieved for coach creator:", {
         totalMatches: pineconeResult.totalMatches,
         relevantMatches: pineconeResult.relevantMatches,
         contextLength: userHistoryContext.length,
       });
     } else {
-      logger.info("📭 No Pinecone context available for coach creator");
+      logger.info("📭 V1: No Pinecone context available for coach creator");
     }
 
     yield formatContextualEvent(startingUpdate, "session_review");
-    logger.info("💬 Yielded starting update (Vesper):", startingUpdate);
+    logger.info("💬 V1: Yielded starting update (Vesper):", startingUpdate);
 
-    // Step 3: Use the AI-driven to-do list conversation flow
-    logger.info("✨ Using to-do list based conversational flow");
+    logger.info("✨ V1: Using to-do list based conversational flow");
 
-    // Use generator to stream conversation chunks and get processed response
     const conversationGenerator = handleTodoListConversation(
       params.userResponse,
       sessionData.session,
       userHistoryContext,
     );
 
-    // Manually iterate to capture both yielded values and return value
     let processedResponse: any = null;
     let result = await conversationGenerator.next();
 
@@ -213,11 +234,9 @@ async function* createCoachCreatorEventStream(
       result = await conversationGenerator.next();
     }
 
-    // The return value is in result.value after done === true
     processedResponse = result.value;
 
     if (processedResponse) {
-      // Step 4: Save session and trigger coach config if complete
       const saveResult = await saveSessionAndTriggerCoachConfig(
         params.userId,
         params.sessionId,
@@ -225,7 +244,6 @@ async function* createCoachCreatorEventStream(
         processedResponse.isComplete,
       );
 
-      // Step 5: Yield complete event
       yield formatCompleteEvent({
         messageId: `response_${Date.now()}`,
         type: "complete",
@@ -234,7 +252,7 @@ async function* createCoachCreatorEventStream(
         isComplete: processedResponse.isComplete,
         sessionId: params.sessionId,
         progressDetails: processedResponse.progressDetails,
-        nextQuestion: null, // No hardcoded questions in to-do list approach
+        nextQuestion: null,
         coachConfigGenerating:
           processedResponse.isComplete && !saveResult.coachConfigId,
         coachConfigId: saveResult.coachConfigId,
@@ -242,7 +260,7 @@ async function* createCoachCreatorEventStream(
       });
     }
   } catch (error) {
-    logger.error("❌ Error in coach creator streaming:", error);
+    logger.error("❌ V1: Error in coach creator streaming:", error);
     const errorEvent = formatValidationErrorEvent(
       error instanceof Error ? error : new Error("Unknown error occurred"),
     );
@@ -250,9 +268,318 @@ async function* createCoachCreatorEventStream(
   }
 }
 
+// ============================================================================
+// V2: Agent-based handler  (DEFAULT)
+// ============================================================================
+
 /**
- * Internal streaming handler with authentication
+ * Agent-based coach creator event stream.
+ *
+ * Mirrors createCoachConversationEventStreamV2 from stream-coach-conversation.
+ * Key differences:
+ *   - Uses CoachCreatorSessionAgentContext instead of ConversationAgentContext
+ *   - Saves CoachCreatorSession (not CoachConversation)
+ *   - Progress tracking via getTodoProgress() → progressDetails in complete event
+ *   - No coachId/conversationId path params (sessionId only)
  */
+async function* createCoachCreatorEventStreamV2(
+  event: AuthenticatedLambdaFunctionURLEvent,
+  _context: Context,
+): AsyncGenerator<string, void, unknown> {
+  // 1. Yield start event immediately
+  yield formatStartEvent();
+  logger.info("📡 V2: Yielded start event");
+
+  try {
+    // 2. Validate and extract params
+    const pathParams = extractPathParameters(
+      event.rawPath,
+      COACH_CREATOR_SESSION_ROUTE,
+    );
+    const { userId, sessionId } = pathParams;
+
+    if (!userId || !sessionId) {
+      yield formatValidationErrorEvent(
+        new Error("Missing required path parameters"),
+      );
+      return;
+    }
+
+    const { userResponse, messageTimestamp, imageS3Keys } =
+      validateStreamingRequestBody(event.body, userId as string, {
+        requireUserResponse: true,
+        maxImages: 5,
+      });
+
+    const hasImages = !!(imageS3Keys && imageS3Keys.length > 0);
+
+    logger.info("✅ V2: Params validated:", {
+      userId,
+      sessionId,
+      messageLength: userResponse.length,
+      hasImages,
+    });
+
+    // 3. Parallel data loading
+    const [session, userProfile, pineconeResult] = await Promise.all([
+      getCoachCreatorSession(userId as string, sessionId as string),
+      getUserProfile(userId as string),
+      queryPineconeContext(
+        userId as string,
+        `User fitness background, training history, goals, and preferences for coach creation: ${userResponse}`,
+        {
+          workoutTopK: 3,
+          conversationTopK: 3,
+          programTopK: 2,
+          coachCreatorTopK: 2,
+          programDesignerTopK: 2,
+          userMemoryTopK: 2,
+          includeMethodology: false,
+          minScore: 0.5,
+        },
+      ).catch((error) => {
+        logger.warn(
+          "⚠️ V2: Pinecone query failed, continuing without context:",
+          error,
+        );
+        return {
+          success: false,
+          matches: [],
+          totalMatches: 0,
+          relevantMatches: 0,
+        };
+      }),
+    ]);
+
+    if (!session) {
+      throw new Error("Session not found or expired");
+    }
+
+    logger.info("✅ V2: Data loaded:", {
+      messageCount: session.conversationHistory.length,
+      sophisticationLevel: session.sophisticationLevel,
+      hasPinecone: pineconeResult.success && pineconeResult.matches.length > 0,
+    });
+
+    const rawPineconeContext =
+      pineconeResult.success && pineconeResult.matches.length > 0
+        ? formatPineconeContext(pineconeResult.matches)
+        : "";
+
+    const MAX_PINECONE_CONTEXT_CHARS = 6000;
+    const pineconeContext =
+      rawPineconeContext.length > MAX_PINECONE_CONTEXT_CHARS
+        ? rawPineconeContext.slice(0, MAX_PINECONE_CONTEXT_CHARS) +
+          "\n[...context truncated for brevity]"
+        : rawPineconeContext;
+
+    if (rawPineconeContext.length > MAX_PINECONE_CONTEXT_CHARS) {
+      logger.info("⚠️ V2: Pinecone context truncated:", {
+        originalChars: rawPineconeContext.length,
+        cappedChars: MAX_PINECONE_CONTEXT_CHARS,
+      });
+    }
+
+    // 4. Build agent context
+    const userTimezone = getUserTimezoneOrDefault(
+      (userProfile as any)?.timezone || null,
+    );
+
+    const agentContext: CoachCreatorSessionAgentContext = {
+      userId: userId as string,
+      sessionId: sessionId as string,
+      userTimezone,
+      session, // Mutable — tools mutate session.todoList and session.isComplete
+      pineconeContext,
+    };
+
+    // 5. Build system prompts
+    const { staticPrompt, dynamicPrompt } = buildCoachCreatorSessionAgentPrompt(
+      session,
+      {
+        userTimezone,
+        pineconeContext,
+        messageCount: session.conversationHistory.length,
+      },
+    );
+
+    logger.info("✅ V2: System prompt built:", {
+      staticLength: staticPrompt.length,
+      dynamicLength: dynamicPrompt.length,
+    });
+
+    // 6. Convert conversation history to Bedrock format with caching
+    const cachedMessages = await buildCoachCreatorMessagesWithCaching(
+      session.conversationHistory,
+    );
+
+    // 7. Select model
+    const modelId = selectModelForCoachCreatorAgent(
+      session.conversationHistory.length,
+      hasImages,
+    );
+
+    logger.info("✅ V2: Model selected:", {
+      modelId:
+        modelId === MODEL_IDS.PLANNER_MODEL_FULL
+          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
+          : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
+      reason:
+        session.conversationHistory.length > 20
+          ? "long conversation (>20 messages)"
+          : hasImages
+            ? "multimodal (has images)"
+            : "standard turn",
+    });
+
+    // 8. Create agent
+    const agent =
+      new StreamingConversationAgent<CoachCreatorSessionAgentContext>({
+        staticPrompt,
+        dynamicPrompt,
+        tools: coachCreatorSessionAgentTools,
+        modelId,
+        context: agentContext,
+        existingMessages: cachedMessages,
+      });
+
+    // 9. Stream agent response
+    logger.info("🤖 V2: Starting agent stream");
+
+    let fullResponseText = "";
+    let toolsUsed: string[] = [];
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    let iterationCount = 0;
+
+    try {
+      const agentGenerator = agent.converseStream(userResponse, imageS3Keys);
+
+      let result = await agentGenerator.next();
+      while (!result.done) {
+        yield result.value;
+        result = await agentGenerator.next();
+      }
+
+      const agentResult: ConversationAgentResult = result.value;
+      fullResponseText = agentResult.fullResponseText;
+      toolsUsed = agentResult.toolsUsed;
+      totalInputTokens = agentResult.totalInputTokens;
+      totalOutputTokens = agentResult.totalOutputTokens;
+      iterationCount = agentResult.iterationCount;
+
+      logger.info("✅ V2: Agent stream completed:", {
+        responseLength: fullResponseText.length,
+        toolsUsed,
+        totalInputTokens,
+        totalOutputTokens,
+        iterationCount,
+      });
+    } catch (agentError) {
+      logger.error("❌ V2: Agent stream error:", agentError);
+      throw agentError;
+    }
+
+    // 10. Build messages to save in conversation history
+    const newUserMessage = {
+      id: `msg_${Date.now()}_user`,
+      role: "user" as const,
+      content: userResponse,
+      timestamp: messageTimestamp ? new Date(messageTimestamp) : new Date(),
+      ...(hasImages
+        ? {
+            imageS3Keys,
+            messageType: "text_with_images" as const,
+          }
+        : {}),
+    };
+
+    const newAiMessage = {
+      id: `msg_${Date.now()}_assistant`,
+      role: "assistant" as const,
+      content: fullResponseText,
+      timestamp: new Date(),
+      metadata: {
+        model:
+          modelId === MODEL_IDS.PLANNER_MODEL_FULL
+            ? MODEL_IDS.PLANNER_MODEL_DISPLAY
+            : MODEL_IDS.EXECUTOR_MODEL_DISPLAY,
+        agent: {
+          toolsUsed,
+          totalInputTokens,
+          totalOutputTokens,
+          iterationCount,
+        },
+      } as any,
+    };
+
+    // 11. Update session state from agent context (tools mutated session in-place)
+    //     Then append the new messages and save
+    session.conversationHistory.push(newUserMessage, newAiMessage);
+    session.lastActivity = new Date();
+
+    // Compute and persist updated progressDetails
+    const progress = getTodoProgress(agentContext.session.todoList);
+    session.progressDetails = {
+      questionsCompleted: progress.completed,
+      totalQuestions: progress.total,
+      percentage: progress.percentage,
+      sophisticationLevel: session.sophisticationLevel,
+      currentQuestion: progress.completed + 1,
+    };
+
+    // Save the session — if complete_intake ran, session.isComplete is already true
+    // and configGeneration.status is IN_PROGRESS (set by the tool).
+    // saveSessionAndTriggerCoachConfig is idempotent — it will skip triggering
+    // if the lock is already set.
+    const saveResult = await saveSessionAndTriggerCoachConfig(
+      userId as string,
+      sessionId as string,
+      session,
+      session.isComplete,
+    );
+
+    logger.info("✅ V2: Session saved:", {
+      isComplete: session.isComplete,
+      coachConfigGenerating: session.configGeneration?.status === "IN_PROGRESS",
+      coachConfigId: saveResult.coachConfigId,
+      progressPercentage: session.progressDetails.percentage,
+    });
+
+    // 12. Yield complete event
+    yield formatCompleteEvent({
+      messageId: newAiMessage.id,
+      type: "complete",
+      fullMessage: fullResponseText,
+      aiResponse: fullResponseText,
+      isComplete: session.isComplete,
+      sessionId: sessionId as string,
+      progressDetails: session.progressDetails,
+      nextQuestion: null,
+      coachConfigGenerating:
+        session.configGeneration?.status === "IN_PROGRESS" &&
+        !saveResult.coachConfigId,
+      coachConfigId:
+        saveResult.coachConfigId ||
+        (session.configGeneration?.status === "COMPLETE"
+          ? session.configGeneration.coachConfigId
+          : undefined),
+    });
+
+    logger.info("✅ V2: Coach creator agent handler completed successfully");
+  } catch (error) {
+    logger.error("❌ V2: Error in agent handler:", error);
+    const errorEvent = formatValidationErrorEvent(
+      error instanceof Error ? error : new Error("Unknown error occurred"),
+    );
+    yield errorEvent;
+  }
+}
+
+// ============================================================================
+// Internal streaming handler — routes V1 or V2
+// ============================================================================
+
 const internalStreamingHandler: StreamingHandler = async (
   event: AuthenticatedLambdaFunctionURLEvent,
   responseStream: any,
@@ -261,20 +588,27 @@ const internalStreamingHandler: StreamingHandler = async (
   logger.info("🎬 Starting coach creator session streaming handler");
 
   try {
-    // Create SSE event stream
-    const eventGenerator = createCoachCreatorEventStream(event, context);
-    const sseEventStream = Readable.from(eventGenerator);
+    const useV1Fallback = await shouldUseV1FallbackHandler(event.user.userId);
 
-    // Pipeline the SSE stream to response stream
-    await pipeline(sseEventStream, responseStream);
+    if (useV1Fallback) {
+      logger.info("Routing to V1 procedural handler (fallback)", {
+        userId: event.user.userId,
+      });
+      const eventGenerator = createCoachCreatorEventStream(event, context);
+      const sseEventStream = Readable.from(eventGenerator);
+      await pipeline(sseEventStream, responseStream);
+    } else {
+      logger.info("Routing to V2 agent handler (default)");
+      const eventGenerator = createCoachCreatorEventStreamV2(event, context);
+      const sseEventStream = Readable.from(eventGenerator);
+      await pipeline(sseEventStream, responseStream);
+    }
 
     logger.info("✅ Streaming pipeline completed successfully");
 
-    // FIX: Prevent Lambda from hanging - all streaming is complete, don't wait for event loop
     context.callbackWaitsForEmptyEventLoop = false;
   } catch (error) {
     logger.error("❌ Fatal error in streaming handler:", error);
-    // Error will be caught by Lambda runtime
     throw error;
   }
 };
@@ -295,14 +629,12 @@ const authenticatedStreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
-  // Set streaming headers (CORS headers are handled by Lambda Function URL CORS config)
   responseStream = awslambda.HttpResponseStream.from(responseStream, {
     statusCode: 200,
     headers: STREAMING_HEADERS,
   });
 
   try {
-    // Check if this is a health check or OPTIONS request (these don't have proper paths/auth)
     const method = event.requestContext?.http?.method;
     const path = event.rawPath || "";
 
@@ -311,18 +643,12 @@ const authenticatedStreamingHandler = async (
         method,
         path,
       });
-      // Just close the stream for these requests
       responseStream.end();
       return;
     }
 
-    // OPTIONS requests are handled automatically by Lambda Function URL CORS config
-    logger.info("🚀 Processing streaming request:", {
-      method,
-      path,
-    });
+    logger.info("🚀 Processing streaming request:", { method, path });
 
-    // Apply authentication middleware
     return await withStreamingAuth(internalStreamingHandler, {
       allowInternalCalls: false,
       requireUserId: true,
@@ -332,7 +658,6 @@ const authenticatedStreamingHandler = async (
   } catch (error) {
     logger.error("❌ Authentication error:", error);
 
-    // Create error stream using pipeline approach
     const errorEvent = formatAuthErrorEvent(
       error instanceof Error ? error : new Error("Authentication failed"),
     );
@@ -342,8 +667,6 @@ const authenticatedStreamingHandler = async (
   }
 };
 
-// Use awslambda.streamifyResponse to enable streaming responses
-// awslambda is a global object provided by Lambda's Node.js runtime
 logger.info(
   "🔧 awslambda global available:",
   typeof (globalThis as any).awslambda !== "undefined",
@@ -356,7 +679,6 @@ logger.info(
 /* global awslambda */
 let handler: any;
 
-// Check if awslambda global is available and has streamifyResponse
 if (
   typeof awslambda === "undefined" ||
   typeof awslambda.streamifyResponse !== "function"

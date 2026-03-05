@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import BadgeRow from "./shared/BadgeRow";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
@@ -135,12 +136,7 @@ function ManageCoachConversations() {
     coaches: [],
   });
 
-  // Collapsed badges - initialize with all conversation IDs (collapsed by default)
-  const [collapsedBadges, setCollapsedBadges] = useState(() => {
-    return new Set(
-      conversationAgentState.allConversations.map((c) => c.conversationId),
-    );
-  });
+  // Badge collapse state is now handled internally by BadgeRow
 
   // Collapsed previews - initialize with all conversation IDs (collapsed by default)
   const [collapsedPreviews, setCollapsedPreviews] = useState(() => {
@@ -149,14 +145,9 @@ function ManageCoachConversations() {
     );
   });
 
-  // Update collapsed badges and previews when conversations load
+  // Collapse all previews when conversations load
   useEffect(() => {
     if (conversationAgentState.allConversations.length > 0) {
-      setCollapsedBadges(
-        new Set(
-          conversationAgentState.allConversations.map((c) => c.conversationId),
-        ),
-      );
       setCollapsedPreviews(
         new Set(
           conversationAgentState.allConversations.map((c) => c.conversationId),
@@ -164,19 +155,6 @@ function ManageCoachConversations() {
       );
     }
   }, [conversationAgentState.allConversations.length]);
-
-  // Toggle badge collapse
-  const toggleBadgeCollapse = (conversationId) => {
-    setCollapsedBadges((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(conversationId)) {
-        newSet.delete(conversationId);
-      } else {
-        newSet.add(conversationId);
-      }
-      return newSet;
-    });
-  };
 
   // Toggle preview collapse
   const togglePreviewCollapse = (conversationId) => {
@@ -426,7 +404,6 @@ function ManageCoachConversations() {
         ? conversationTitle.substring(0, 35) + "..."
         : conversationTitle;
 
-    const isBadgesCollapsed = collapsedBadges.has(conversation.conversationId);
     const isPreviewCollapsed = collapsedPreviews.has(
       conversation.conversationId,
     );
@@ -456,12 +433,6 @@ function ManageCoachConversations() {
         });
       });
     }
-
-    const badgeLimit = 4;
-    const visibleBadges = isBadgesCollapsed
-      ? allBadges.slice(0, badgeLimit)
-      : allBadges;
-    const hasMoreBadges = allBadges.length > badgeLimit;
 
     return (
       <div
@@ -581,27 +552,12 @@ function ManageCoachConversations() {
           </div>
         )}
 
-        {/* Badge Row - collapsible like memory cards */}
-        <div className="flex flex-wrap items-center gap-2 mt-4">
-          {visibleBadges.map((badge) => (
-            <span key={badge.key} className={badgePatterns.workoutDetail}>
-              {badge.label}
-            </span>
-          ))}
-
-          {hasMoreBadges && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleBadgeCollapse(conversation.conversationId);
-              }}
-              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink hover:bg-synthwave-neon-cyan/5 text-xs font-body font-semibold uppercase transition-all duration-200 px-1 py-0.5"
-            >
-              {isBadgesCollapsed
-                ? `+${allBadges.length - badgeLimit} more`
-                : "less"}
-            </button>
-          )}
+        {/* Badge Row - single line with dynamic overflow */}
+        <div className="mt-4" onClick={(e) => e.stopPropagation()}>
+          <BadgeRow
+            badges={allBadges}
+            badgeClassName={badgePatterns.workoutDetail}
+          />
         </div>
       </div>
     );

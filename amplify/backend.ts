@@ -971,6 +971,19 @@ backend.streamCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
   backend.buildCoachConfig.resources.lambda.functionName,
 );
+backend.streamCoachCreatorSession.addEnvironment(
+  "COACH_CREATOR_V1_FALLBACK_USERS_PARAM",
+  `/${branchName}/neonpanda-proto-v1/config/COACH_CREATOR_V1_FALLBACK_USERS`,
+);
+backend.streamCoachCreatorSession.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["ssm:GetParameter"],
+    resources: [
+      `arn:aws:ssm:*:*:parameter/${branchName}/neonpanda-proto-v1/config/*`,
+    ],
+  }),
+);
 
 backend.streamProgramDesign.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",

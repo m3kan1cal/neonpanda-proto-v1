@@ -190,8 +190,15 @@ export async function saveSessionAndTriggerCoachConfig(
     }
 
     // ✅ CRITICAL: Apply lock to session BEFORE saving (prevents race condition)
-    // This ensures the lock is atomically written with the completion state
-    session = createCoachConfigGenerationLock(session);
+    // This ensures the lock is atomically written with the completion state.
+    // Mutate in-place (not spread) so the caller's reference also sees the lock —
+    // this prevents the handler from triggering a second Lambda invocation after
+    // complete_intake has already triggered the first.
+    session.configGeneration = {
+      status: "IN_PROGRESS" as const,
+      startedAt: new Date(),
+    };
+    session.lastActivity = new Date();
     logger.info("🔒 Applied IN_PROGRESS lock to session before save");
   }
 
