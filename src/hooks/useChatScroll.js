@@ -85,7 +85,7 @@ export function useChatScroll(agentState, dependencyProps = []) {
     scrollToBottom,
     agentState.isStreaming,
     agentState.streamingMessage,
-    dependencyProps,
+    ...dependencyProps,
   ]);
 
   // Set up scroll event listener on window (page scrolls, not container)
