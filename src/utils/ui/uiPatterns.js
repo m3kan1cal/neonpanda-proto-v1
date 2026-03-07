@@ -87,12 +87,22 @@ export const buttonPatterns = {
   // Workout Log mode badge (cyan themed) - shows on AI messages creating workout log artifact
   modeBadgeWorkoutLog:
     "flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 w-fit text-xs font-body font-semibold uppercase tracking-wide text-synthwave-neon-cyan",
+  // Chat mode badge (purple themed) - shows on AI messages in standard coaching conversations
+  modeBadgeChat:
+    "flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 w-fit text-xs font-body font-semibold uppercase tracking-wide text-synthwave-neon-purple",
+  // Coach Creator mode badge (purple themed) - shows on AI messages during coach setup
+  modeBadgeCoachCreator:
+    "flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 w-fit text-xs font-body font-semibold uppercase tracking-wide text-synthwave-neon-purple",
 
   // Tab Toggle Buttons - For switching between views (Weekly/Monthly, Current/All Weeks, etc.)
   tabToggleActive:
-    "px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
+    "cursor-pointer px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
   tabToggleInactive:
-    "px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
+    "cursor-pointer px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
+
+  // Square icon-only send button (48×48px) - chat input send action with purple→pink gradient
+  sendSquare:
+    "w-12 h-12 rounded-md bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0",
 };
 
 // Badge Patterns - Reusable badge/tag components (matches ManageMemories.jsx styling)

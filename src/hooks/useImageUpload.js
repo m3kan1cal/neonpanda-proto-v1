@@ -1,10 +1,24 @@
-import { useState } from 'react';
-import { processMultipleImages, validateImageFile, getFileExtension } from '../utils/imageProcessing';
-import { getApiUrl, authenticatedFetch } from '../utils/apis/apiConfig';
+import { useState, useRef } from "react";
+import {
+  processMultipleImages,
+  validateImageFile,
+  getFileExtension,
+} from "../utils/imageProcessing";
+import { generateUploadUrls, putFileToPresignedUrl } from "../utils/s3Helper";
 
 /**
- * Hook for managing image upload state and operations
- * @returns {Object} Image upload state and methods
+ * Hook for managing image upload state and operations.
+ *
+ * Images are uploaded immediately when selected/pasted rather than waiting for send.
+ * Each image object in `selectedImages` carries its own upload lifecycle:
+ *   uploadStatus: 'uploading' | 'done' | 'error'
+ *   s3Key: null while uploading, string once done
+ *
+ * On send, `uploadImages()` is a fast collector that returns already-uploaded s3Keys.
+ * If any images are still in-flight it waits for their in-progress promise to settle.
+ *
+ * s3Keys are tracked in a ref (uploadedKeysMapRef) rather than derived from React state
+ * to avoid React 18 batching timing issues when reading state at send time.
  */
 export function useImageUpload() {
   const [selectedImages, setSelectedImages] = useState([]);
@@ -13,32 +27,109 @@ export function useImageUpload() {
   const [uploadingImageIds, setUploadingImageIds] = useState(new Set());
   const [error, setError] = useState(null);
 
+  // Tracks the in-flight upload promise for the current batch so `uploadImages`
+  // can await it rather than polling state.
+  const uploadPromiseRef = useRef(null);
+
+  // Synchronously tracks imageId → s3Key for every successfully uploaded image.
+  // Updated synchronously (no React batching), so `uploadImages()` can read it
+  // reliably after awaiting the batch promise without depending on React render timing.
+  const uploadedKeysMapRef = useRef({});
+
   /**
-   * Select and process images
-   * @param {FileList|File[]} files - Files to select
-   * @returns {Promise<Array>} - Array of selected image objects
+   * Upload a batch of already-staged image objects immediately.
+   * Mutates each image's uploadStatus/s3Key in state as it progresses.
+   * Stores the returned Promise in uploadPromiseRef so the send path can await it.
+   *
+   * @param {Array} images - Array of image objects (already added to selectedImages)
+   * @param {string} userId
    */
-  const selectImages = async (files) => {
+  const _uploadBatch = (images, userId) => {
+    const ids = images.map((img) => img.id);
+
+    setIsUploading(true);
+    setUploadingImageIds((prev) => new Set([...prev, ...ids]));
+
+    const promise = (async () => {
+      try {
+        const fileTypes = images.map((img) => img.extension);
+        const uploadUrls = await generateUploadUrls(userId, fileTypes);
+
+        for (let i = 0; i < uploadUrls.length; i++) {
+          const { uploadUrl, s3Key } = uploadUrls[i];
+          const image = images[i];
+
+          await putFileToPresignedUrl(uploadUrl, image.file);
+
+          // Write to ref first (synchronous, no batching concerns), then update state.
+          uploadedKeysMapRef.current[image.id] = s3Key;
+
+          setSelectedImages((prev) =>
+            prev.map((img) =>
+              img.id === image.id
+                ? { ...img, uploadStatus: "done", s3Key }
+                : img,
+            ),
+          );
+
+          setUploadingImageIds((prev) => {
+            const next = new Set(prev);
+            next.delete(image.id);
+            return next;
+          });
+
+          setUploadProgress(Math.round(((i + 1) / uploadUrls.length) * 100));
+        }
+      } catch (err) {
+        setError(err.message || "Failed to upload images");
+        setSelectedImages((prev) =>
+          prev.map((img) =>
+            ids.includes(img.id) && img.uploadStatus !== "done"
+              ? { ...img, uploadStatus: "error" }
+              : img,
+          ),
+        );
+        setUploadingImageIds((prev) => {
+          const next = new Set(prev);
+          ids.forEach((id) => next.delete(id));
+          return next;
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    })();
+
+    uploadPromiseRef.current = promise;
+    return promise;
+  };
+
+  /**
+   * Select, process, and immediately upload images.
+   *
+   * @param {FileList|File[]} files - Files to select
+   * @param {string} userId - Required for immediate upload
+   * @returns {Promise<Array>} - Array of staged image objects
+   */
+  const selectImages = async (files, userId) => {
     try {
       setError(null);
 
       const fileArray = Array.from(files);
 
       if (fileArray.length > 5) {
-        throw new Error('Maximum 5 images allowed');
+        throw new Error("Maximum 5 images allowed");
       }
 
       if (selectedImages.length + fileArray.length > 5) {
-        throw new Error(`Can only select ${5 - selectedImages.length} more image(s)`);
+        throw new Error(
+          `Can only select ${5 - selectedImages.length} more image(s)`,
+        );
       }
 
-      // Validate all files first
-      fileArray.forEach(file => validateImageFile(file));
+      fileArray.forEach((file) => validateImageFile(file));
 
-      // Process images (HEIC conversion, compression)
       const processedFiles = await processMultipleImages(fileArray);
 
-      // Create image objects with preview URLs
       const newImages = processedFiles.map((file, index) => ({
         id: `img-${Date.now()}-${index}`,
         file,
@@ -46,9 +137,15 @@ export function useImageUpload() {
         name: file.name,
         size: file.size,
         extension: getFileExtension(file),
+        uploadStatus: "uploading",
+        s3Key: null,
       }));
 
-      setSelectedImages(prev => [...prev, ...newImages]);
+      setSelectedImages((prev) => [...prev, ...newImages]);
+
+      if (userId) {
+        _uploadBatch(newImages, userId);
+      }
 
       return newImages;
     } catch (err) {
@@ -58,109 +155,53 @@ export function useImageUpload() {
   };
 
   /**
-   * Upload selected images to S3 via presigned URLs
-   * @param {string} userId - The user ID for scoped uploads
-   * @returns {Promise<string[]>} - Array of S3 keys
+   * Collect already-uploaded s3Keys at send time.
+   * Awaits any in-flight upload promise, then reads directly from the ref
+   * (bypassing React state batching to guarantee up-to-date values).
+   *
+   * @returns {Promise<string[]>} - Array of s3Keys for successfully uploaded images
    */
-  const uploadImages = async (userId) => {
-    if (selectedImages.length === 0) {
-      return [];
+  const uploadImages = async () => {
+    if (uploadPromiseRef.current) {
+      await uploadPromiseRef.current.catch(() => {});
     }
 
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      setError(null);
-
-      // ✅ Immediately mark ALL images as uploading (shows spinner instantly)
-      const allImageIds = selectedImages.map(img => img.id);
-      setUploadingImageIds(new Set(allImageIds));
-
-      // Step 1: Get presigned URLs from backend
-      const fileTypes = selectedImages.map(img => img.extension);
-
-      const url = `${getApiUrl('')}/users/${userId}/generate-upload-urls`;
-      const response = await authenticatedFetch(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          fileCount: selectedImages.length,
-          fileTypes,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to generate upload URLs: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      const { uploadUrls } = responseData;
-
-      // Step 2: Upload each image to S3
-      const s3Keys = [];
-
-      for (let i = 0; i < uploadUrls.length; i++) {
-        const { uploadUrl, s3Key } = uploadUrls[i];
-        const image = selectedImages[i];
-
-        // Direct upload to S3 using presigned URL
-        await fetch(uploadUrl, {
-          method: 'PUT',
-          body: image.file,
-          headers: {
-            'Content-Type': image.file.type,
-          },
-        });
-
-        s3Keys.push(s3Key);
-        setUploadProgress(Math.round(((i + 1) / uploadUrls.length) * 100));
-
-        // Mark this image as done uploading (remove from uploading set)
-        setUploadingImageIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(image.id);
-          return newSet;
-        });
-      }
-
-      return s3Keys;
-    } catch (err) {
-      setError(err.message || 'Failed to upload images');
-      // Clear uploading state on error
-      setUploadingImageIds(new Set());
-      throw err;
-    } finally {
-      setIsUploading(false);
-    }
+    // Read from ref — always synchronously up-to-date, no React render required.
+    return Object.values(uploadedKeysMapRef.current);
   };
 
   /**
-   * Remove an image from selection
-   * @param {string} imageId - The image ID to remove
+   * Remove an image from selection.
+   * Uploaded S3 objects are intentionally left in place (short-lived, scoped to userId).
+   *
+   * @param {string} imageId
    */
   const removeImage = (imageId) => {
-    setSelectedImages(prev => {
-      const image = prev.find(img => img.id === imageId);
+    delete uploadedKeysMapRef.current[imageId];
+    setSelectedImages((prev) => {
+      const image = prev.find((img) => img.id === imageId);
       if (image && image.previewUrl) {
         URL.revokeObjectURL(image.previewUrl);
       }
-      return prev.filter(img => img.id !== imageId);
+      return prev.filter((img) => img.id !== imageId);
     });
   };
 
   /**
-   * Clear all selected images
+   * Clear all selected images and reset state.
    */
   const clearImages = () => {
-    selectedImages.forEach(img => {
+    selectedImages.forEach((img) => {
       if (img.previewUrl) {
         URL.revokeObjectURL(img.previewUrl);
       }
     });
+    uploadedKeysMapRef.current = {};
     setSelectedImages([]);
     setError(null);
     setUploadProgress(0);
     setUploadingImageIds(new Set());
+    uploadPromiseRef.current = null;
   };
 
   return {
@@ -176,5 +217,3 @@ export function useImageUpload() {
     setError,
   };
 }
-
-

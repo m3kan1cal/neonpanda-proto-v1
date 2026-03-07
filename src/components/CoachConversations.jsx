@@ -55,6 +55,7 @@ import IconButton from "./shared/IconButton";
 import { logger } from "../utils/logger";
 import {
   WorkoutIconSmall,
+  ChatIconTiny,
   CloseIcon,
   TrashIcon,
   MicIcon,
@@ -144,11 +145,12 @@ const MessageItem = memo(
         <div
           className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
-          {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
+          {/* Coaching Chat Indicator Badge (only for AI messages with explicit chat mode set by v2 handler) */}
           {message.type === "ai" &&
-            message.metadata?.mode === CONVERSATION_MODES.WORKOUT_LOG && (
-              <div className={`${buttonPatterns.modeBadgeWorkoutLog} mb-1`}>
-                <span>Workout Log</span>
+            message.metadata?.mode === CONVERSATION_MODES.CHAT && (
+              <div className={`${buttonPatterns.modeBadgeChat} mb-1`}>
+                <ChatIconTiny className="w-3 h-3" />
+                <span className="translate-y-px">Coaching Chat</span>
               </div>
             )}
 
@@ -690,15 +692,13 @@ function CoachConversations() {
   );
 
   // Handle scroll events to show/hide scroll button
+  // The page uses min-h-screen so the window scrolls, not the messages container.
   const handleScroll = useCallback(() => {
-    if (!messagesContainerRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } =
-      messagesContainerRef.current;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
     const isNearBottom = distanceFromBottom < 100;
-
-    // Only show button if there's actually content to scroll to
     const hasScrollableContent = scrollHeight > clientHeight;
 
     setShowScrollButton(hasScrollableContent && !isNearBottom);
@@ -735,23 +735,20 @@ function CoachConversations() {
     scrollToBottom,
   ]);
 
-  // Set up scroll event listener
+  // Set up scroll event listener on window (page scrolls, not container)
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
     const checkScroll = () => {
       handleScroll();
     };
 
-    container.addEventListener("scroll", checkScroll);
+    window.addEventListener("scroll", checkScroll);
     // Check initial scroll position - use multiple timeouts to catch different render phases
     const timeout1 = setTimeout(checkScroll, 100);
     const timeout2 = setTimeout(checkScroll, 500);
     const timeout3 = setTimeout(checkScroll, 1000);
 
     return () => {
-      container.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("scroll", checkScroll);
       clearTimeout(timeout1);
       clearTimeout(timeout2);
       clearTimeout(timeout3);

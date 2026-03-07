@@ -12,8 +12,7 @@ import React from "react";
  * - Prevents context menu and tap highlighting
  */
 function ScrollToBottomButton({ onClick, show = true, className = "" }) {
-  // Force show for now as requested, but keep the prop for future use
-  const shouldShow = show || true;
+  const shouldShow = show;
 
   if (!shouldShow) return null;
 

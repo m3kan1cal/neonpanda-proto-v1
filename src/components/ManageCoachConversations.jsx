@@ -575,7 +575,7 @@ function ManageCoachConversations() {
             : "cursor-pointer"
         }`}
       >
-        <div className="text-center flex flex-col justify-center items-center h-full min-h-[230px]">
+        <div className="text-center flex flex-col justify-center items-center h-full min-h-[195px]">
           {/* Plus Icon or Spinner */}
           <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
             {isCreatingConversation ? (
