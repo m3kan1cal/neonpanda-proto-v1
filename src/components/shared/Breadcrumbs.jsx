@@ -63,7 +63,7 @@ function Breadcrumbs() {
   return (
     <nav className="fixed top-0 right-0 left-0 md:left-20 z-30 pointer-events-none pt-[env(safe-area-inset-top)]">
       <div className="px-4 pt-2 pb-2 bg-synthwave-gradient border-b border-synthwave-neon-cyan/10">
-        <div className="flex items-center space-x-2 text-sm font-body overflow-x-auto scrollbar-hide pointer-events-auto">
+        <div className="flex items-center gap-2 text-sm font-body overflow-x-auto scrollbar-hide pointer-events-auto">
           {/* Logo - Mobile only */}
           <Link
             to="/"
