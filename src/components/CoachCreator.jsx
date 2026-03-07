@@ -287,7 +287,6 @@ function CoachCreator() {
   // UI-specific state
   const [inputMessage, setInputMessage] = useState("");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);

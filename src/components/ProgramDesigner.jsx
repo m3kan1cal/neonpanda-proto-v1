@@ -326,7 +326,6 @@ function ProgramDesigner() {
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
 
-  const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const completionBannerRef = useRef(null);
   const inputRef = useRef(null);
