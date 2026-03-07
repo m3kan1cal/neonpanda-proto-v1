@@ -440,10 +440,17 @@ const TiptapEditor = forwardRef(
             style={
               scrollOnWrapper
                 ? {
+                    minHeight: showToolbar
+                      ? `calc(${minHeight} + 24px)`
+                      : minHeight,
                     maxHeight: `calc(${maxHeight} + 24px)`,
                     overflowY: "auto",
                   }
-                : undefined
+                : {
+                    minHeight: showToolbar
+                      ? `calc(${minHeight} + 24px)`
+                      : minHeight,
+                  }
             }
           />
 
