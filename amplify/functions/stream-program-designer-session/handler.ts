@@ -740,6 +740,7 @@ async function* createProgramDesignerEventStreamV2(
       programGenerating: programSession.isComplete && !saveResult?.programId,
       programId:
         saveResult?.programId ||
+        buildEvent?.programId ||
         (programSession.programGeneration?.status === "COMPLETE"
           ? (programSession.programGeneration as any).programId
           : undefined),
