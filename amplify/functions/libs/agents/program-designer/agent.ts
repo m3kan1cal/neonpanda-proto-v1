@@ -684,6 +684,8 @@ Now design the complete program using your tools with CORRECT data passing.`;
         success: true,
         programId: results.save.programId,
         programName: this.extractProgramName(),
+        startDate: results.save.startDate,
+        endDate: results.save.endDate,
         totalDays: results.requirements?.programDuration,
         phaseCount: phases.length,
         totalWorkoutTemplates: metrics.totalWorkoutTemplates,
@@ -747,20 +749,19 @@ Now design the complete program using your tools with CORRECT data passing.`;
   }
 
   /**
-   * Extract program name from tool results or generate default
+   * Extract program name from tool results or generate default.
+   * Priority: actual saved name > training goals fallback > generic fallback
    */
   private extractProgramName(): string {
-    const phaseStructureResult = this.toolResults.get("phase_structure");
+    const saveResult = this.toolResults.get("save");
     const requirementsResult = this.toolResults.get("requirements");
 
-    // Try to extract from phase structure or requirements
-    if (phaseStructureResult?.phases?.[0]?.name) {
-      const durationDays = requirementsResult?.programDuration || 56;
-      const durationWeeks = Math.round(durationDays / 7);
-      return `${durationWeeks}-Week Training Program`;
+    // Primary: use the actual name that was saved to DynamoDB
+    if (saveResult?.name) {
+      return saveResult.name;
     }
 
-    // Fallback to todoList
+    // Fallback: construct from training goals + duration
     const todoList = this.config.context.todoList;
     if (todoList?.trainingGoals?.value) {
       const durationDays = requirementsResult?.programDuration || 56;

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Tooltip } from "react-tooltip";
 import EmojiPicker from "emoji-picker-react";
 import {
+  buttonPatterns,
   inputPatterns,
   iconButtonPatterns,
   containerPatterns,
@@ -386,7 +387,7 @@ function ChatInput({
     const files = e.target.files;
     if (files && files.length > 0) {
       try {
-        await selectImages(files);
+        await selectImages(files, userId);
       } catch (err) {
         logger.error("Error selecting images:", err);
       }
@@ -415,7 +416,7 @@ function ChatInput({
 
     if (imageFiles.length > 0) {
       try {
-        await selectImages(imageFiles);
+        await selectImages(imageFiles, userId);
       } catch (err) {
         logger.error("Error processing pasted images:", err);
       }
@@ -544,10 +545,10 @@ function ChatInput({
     const messageToSend = inputMessage.trim();
 
     try {
-      // Upload images if any
+      // Collect already-uploaded s3Keys (upload happened immediately on select/paste)
       let imageS3Keys = [];
-      if (selectedImages.length > 0 && userId) {
-        imageS3Keys = await uploadImages(userId);
+      if (selectedImages.length > 0) {
+        imageS3Keys = await uploadImages();
       }
 
       // Clear input and images BEFORE sending
@@ -726,7 +727,9 @@ function ChatInput({
         {/* Error Display */}
         {imageError && (
           <div className="mb-3">
-            <div className="bg-red-500/10 border border-red-500/30 p-3 flex items-start justify-between">
+            <div
+              className={`${containerPatterns.inlineError} flex items-start justify-between`}
+            >
               <span className="text-sm font-body text-red-400">
                 {imageError}
               </span>
@@ -1289,10 +1292,10 @@ function ChatInput({
             {inputMessage.trim() || selectedImages.length > 0 ? (
               <button
                 type="submit"
-                disabled={isTyping}
-                className="w-12 h-12 rounded-md bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
+                disabled={isTyping || isUploading}
+                className={buttonPatterns.sendSquare}
               >
-                {isTyping ? (
+                {isTyping || isUploading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <SendIcon />

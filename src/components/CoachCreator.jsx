@@ -22,6 +22,7 @@ import {
   SmileIcon,
   MicIcon,
   TrashIcon,
+  CoachIconTiny,
 } from "./themes/SynthwaveComponents";
 import ChatInput from "./shared/ChatInput";
 import ProgressIndicator from "./shared/ProgressIndicator";
@@ -138,6 +139,14 @@ const MessageItem = memo(
         <div
           className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
+          {/* Coach Setup Indicator Badge (all AI messages are part of the coach creation process) */}
+          {message.type === "ai" && (
+            <div className={`${buttonPatterns.modeBadgeCoachCreator} mb-1`}>
+              <CoachIconTiny className="w-3 h-3" />
+              <span className="translate-y-px">Coach Creator</span>
+            </div>
+          )}
+
           {message.type === "user" ? (
             <div
               className={getStreamingMessageClasses(
@@ -432,15 +441,13 @@ function CoachCreator() {
   }, [agentState.isStreaming, agentState.streamingMessage]);
 
   // Handle scroll events to show/hide scroll button
+  // The page uses min-h-screen so the window scrolls, not the messages container.
   const handleScroll = useCallback(() => {
-    if (!messagesContainerRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } =
-      messagesContainerRef.current;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
     const isNearBottom = distanceFromBottom < 100;
-
-    // Only show button if there's actually content to scroll to
     const hasScrollableContent = scrollHeight > clientHeight;
 
     setShowScrollButton(hasScrollableContent && !isNearBottom);
@@ -475,23 +482,20 @@ function CoachCreator() {
     scrollToBottom,
   ]);
 
-  // Set up scroll event listener
+  // Set up scroll event listener on window (page scrolls, not container)
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
     const checkScroll = () => {
       handleScroll();
     };
 
-    container.addEventListener("scroll", checkScroll);
+    window.addEventListener("scroll", checkScroll);
     // Check initial scroll position
     const timeout1 = setTimeout(checkScroll, 100);
     const timeout2 = setTimeout(checkScroll, 500);
     const timeout3 = setTimeout(checkScroll, 1000);
 
     return () => {
-      container.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("scroll", checkScroll);
       clearTimeout(timeout1);
       clearTimeout(timeout2);
       clearTimeout(timeout3);

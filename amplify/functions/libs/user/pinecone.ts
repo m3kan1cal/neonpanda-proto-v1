@@ -26,12 +26,18 @@ export const storeMemoryInPinecone = async (
       contentLength: memory.content.length,
     });
 
+    const createdAtDate = memory.metadata.createdAt;
+    const createdAtStr =
+      createdAtDate instanceof Date && !isNaN(createdAtDate.getTime())
+        ? createdAtDate.toISOString()
+        : new Date().toISOString();
+
     const baseMetadata = {
       recordType: "user_memory",
       memoryId: memory.memoryId,
       memoryType: memory.memoryType,
       importance: memory.metadata.importance,
-      createdAt: memory.metadata.createdAt.toISOString(),
+      createdAt: createdAtStr,
       usageCount: memory.metadata.usageCount,
       tags: memory.metadata.tags || [],
       topics: [

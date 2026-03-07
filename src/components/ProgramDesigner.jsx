@@ -328,6 +328,7 @@ function ProgramDesigner() {
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const completionBannerRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -535,6 +536,33 @@ function ProgramDesigner() {
 
   // Polling removed - not needed for program designer sessions (mirrors CoachCreator)
 
+  // Keep --chat-input-height in sync when the completion banner is shown.
+  // ChatInput is unmounted on completion, so its ResizeObserver stops updating
+  // the CSS variable. Without this, the ScrollToBottomButton stays positioned
+  // relative to the old input height instead of the banner's actual height.
+  useEffect(() => {
+    if (!agentState.isComplete) return;
+
+    const updateHeight = () => {
+      const el = completionBannerRef.current;
+      if (el) {
+        document.documentElement.style.setProperty(
+          "--chat-input-height",
+          `${el.offsetHeight}px`,
+        );
+      }
+    };
+
+    updateHeight();
+
+    const el = completionBannerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [agentState.isComplete]);
+
   const scrollToBottom = useCallback(() => {
     // During streaming, always use instant scroll to prevent animation interruption
     const isStreaming = agentState.isStreaming || agentState.streamingMessage;
@@ -544,16 +572,14 @@ function ProgramDesigner() {
     });
   }, [agentState.isStreaming, agentState.streamingMessage]);
 
-  // Handle scroll events to show/hide scroll button
+  // Handle scroll events to show/hide scroll button.
+  // The page uses min-h-screen so the window scrolls, not the messages container.
   const handleScroll = useCallback(() => {
-    if (!messagesContainerRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } =
-      messagesContainerRef.current;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = window.innerHeight;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
     const isNearBottom = distanceFromBottom < 100;
-
-    // Only show button if there's actually content to scroll to
     const hasScrollableContent = scrollHeight > clientHeight;
 
     setShowScrollButton(hasScrollableContent && !isNearBottom);
@@ -588,23 +614,20 @@ function ProgramDesigner() {
     scrollToBottom,
   ]);
 
-  // Set up scroll event listener
+  // Set up scroll event listener on window (page scrolls, not container)
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
     const checkScroll = () => {
       handleScroll();
     };
 
-    container.addEventListener("scroll", checkScroll);
+    window.addEventListener("scroll", checkScroll);
     // Check initial scroll position
     const timeout1 = setTimeout(checkScroll, 100);
     const timeout2 = setTimeout(checkScroll, 500);
     const timeout3 = setTimeout(checkScroll, 1000);
 
     return () => {
-      container.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("scroll", checkScroll);
       clearTimeout(timeout1);
       clearTimeout(timeout2);
       clearTimeout(timeout3);
@@ -1338,7 +1361,10 @@ function ProgramDesigner() {
 
       {/* Chat Input Section - show completion banner when done, otherwise show input */}
       {agentState.isComplete ? (
-        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-purple/30 shadow-lg shadow-synthwave-neon-purple/20 z-50">
+        <div
+          ref={completionBannerRef}
+          className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-purple/30 shadow-lg shadow-synthwave-neon-purple/20 z-50"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 flex justify-center">
             <div
               className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}
@@ -1361,7 +1387,7 @@ function ProgramDesigner() {
                 </div>
                 <div>
                   <h3 className="font-header text-base text-white uppercase tracking-wider">
-                    Training Program Design Complete
+                    Program Design Complete
                   </h3>
                   <p className="font-body text-sm text-synthwave-text-secondary mt-0.5">
                     Your program is being built (2-3 minutes). You can close
@@ -1501,7 +1527,7 @@ function ProgramDesigner() {
                   </svg>
                 </div>
                 <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold">
-                  Training Program Design Complete!
+                  Program Design Complete!
                 </h3>
               </div>
 

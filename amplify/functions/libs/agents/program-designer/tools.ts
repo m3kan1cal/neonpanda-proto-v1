@@ -221,6 +221,9 @@ export interface ProgramSummaryResult {
 export interface ProgramSaveResult {
   success: boolean;
   programId: string;
+  name: string; // Actual program name saved to DynamoDB
+  startDate?: string; // ISO date string, if set on the program
+  endDate?: string; // ISO date string, if set on the program
   s3Key: string;
   pineconeRecordId: string | null; // "async-pending" if storage was attempted, null if skipped
 }
@@ -1947,6 +1950,9 @@ Returns: success, programId, s3Key, pineconeRecordId`,
     return {
       success: true,
       programId: program.programId,
+      name: program.name,
+      startDate: program.startDate,
+      endDate: program.endDate,
       s3Key,
       pineconeRecordId: pineconeAttempted ? "async-pending" : null,
     };
