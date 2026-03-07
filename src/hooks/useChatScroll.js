@@ -61,11 +61,6 @@ export function useChatScroll(agentState, dependencyProps = []) {
     if (isInitialLoad || !showScrollButton) {
       const isStreaming = agentState.isStreaming || agentState.streamingMessage;
 
-      // Mark initial load as complete once we have messages, so user scroll respects showScrollButton
-      if (agentState.messages?.length > 0 && isInitialLoad) {
-        hasScrolledOnLoad.current = true;
-      }
-
       // Throttle scroll during streaming to ~100ms intervals
       if (isStreaming) {
         const now = Date.now();
@@ -81,6 +76,11 @@ export function useChatScroll(agentState, dependencyProps = []) {
         // during the session so it feels natural.
         const instant = !hasScrolledOnLoad.current;
         scrollToBottom(instant);
+      }
+
+      // Mark initial load as complete once we have messages, so user scroll respects showScrollButton
+      if (agentState.messages?.length > 0 && isInitialLoad) {
+        hasScrolledOnLoad.current = true;
       }
     }
   }, [
