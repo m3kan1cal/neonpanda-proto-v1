@@ -76,7 +76,9 @@ export function useChatScroll(agentState, dependencyProps = []) {
         // during the session so it feels natural. hasScrolledOnLoad tracks which
         // case we're in — false = first load, true = already loaded once.
         const instant = !hasScrolledOnLoad.current;
-        hasScrolledOnLoad.current = true;
+        if (agentState.messages?.length > 0) {
+          hasScrolledOnLoad.current = true;
+        }
         scrollToBottom(instant);
       }
     }
