@@ -1086,8 +1086,8 @@ function Coaches() {
                         </span>
                       </div>
 
-                      {/* Focus Areas - hidden on mobile to reduce card height */}
-                      <div className="hidden md:flex items-start space-x-2 text-synthwave-text-secondary">
+                      {/* Focus Areas */}
+                      <div className="flex items-start space-x-2 text-synthwave-text-secondary">
                         <div className="mt-0.5">
                           <svg
                             className="w-5 h-5"
@@ -1116,7 +1116,7 @@ function Coaches() {
                         </div>
                       </div>
 
-                      {/* Coaching Style - hidden on mobile to reduce card height */}
+                      {/* Coaching Style - hidden on mobile */}
                       {agentRef.current?.getMethodologyPreferencesDisplay(
                         coach,
                       ) && (
