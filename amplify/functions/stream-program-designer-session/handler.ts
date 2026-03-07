@@ -685,7 +685,6 @@ async function* createProgramDesignerEventStreamV2(
       ? {
           userId: userId as string,
           coachId: programSession.coachId,
-          conversationId: "",
           programId: generateProgramId(userId as string),
           sessionId: sessionId as string,
           todoList: agentContext.session.todoList,
