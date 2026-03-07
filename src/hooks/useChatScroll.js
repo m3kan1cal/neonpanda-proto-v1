@@ -73,13 +73,14 @@ export function useChatScroll(agentState, dependencyProps = []) {
       } else {
         // Use instant scroll on initial page load so the page snaps to the bottom
         // consistently. After that, use smooth scroll for new messages arriving
-        // during the session so it feels natural. hasScrolledOnLoad tracks which
-        // case we're in — false = first load, true = already loaded once.
+        // during the session so it feels natural.
         const instant = !hasScrolledOnLoad.current;
-        if (agentState.messages?.length > 0) {
-          hasScrolledOnLoad.current = true;
-        }
         scrollToBottom(instant);
+      }
+
+      // Mark initial load as complete once we have messages, so user scroll respects showScrollButton
+      if (agentState.messages?.length > 0 && isInitialLoad) {
+        hasScrolledOnLoad.current = true;
       }
     }
   }, [
