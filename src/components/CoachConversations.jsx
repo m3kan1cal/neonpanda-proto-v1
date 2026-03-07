@@ -53,6 +53,7 @@ import {
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
 import { logger } from "../utils/logger";
+import { useChatScroll } from "../hooks/useChatScroll";
 import {
   WorkoutIconSmall,
   ChatIconTiny,
@@ -311,7 +312,6 @@ function CoachConversations() {
   const [inputMessage, setInputMessage] = useState("");
   const [showNewConversation, setShowNewConversation] =
     useState(!conversationId);
-  const [showScrollButton, setShowScrollButton] = useState(false);
 
   // Slash command states moved to ChatInput component
 
@@ -330,30 +330,12 @@ function CoachConversations() {
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
 
-  const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const coachAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
-  const lastScrollTimeRef = useRef(0); // For throttling scroll during streaming
   const { success: showSuccess, error: showError } = useToast();
-
-  const hasScrolledOnLoad = useRef(false);
-
-  // Disable browser scroll restoration to prevent stale scroll positions on refresh.
-  // Mobile browsers restore scroll after content changes, causing messages to appear
-  // off-screen or invisible (deferred animations for off-viewport elements).
-  useEffect(() => {
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-    return () => {
-      if ("scrollRestoration" in window.history) {
-        window.history.scrollRestoration = "auto";
-      }
-    };
-  }, []);
 
   // Agent state (managed by CoachConversationAgent)
   const [coachConversationAgentState, setCoachConversationAgentState] =
@@ -688,102 +670,15 @@ function CoachConversations() {
     }
   }, [coachConversationAgentState.messages.length]);
 
-  // Check if user is at bottom of scroll
-  const scrollToBottom = useCallback(
-    (instant = false) => {
-      // During streaming, always use instant scroll to prevent animation interruption
-      const isStreaming =
-        coachConversationAgentState.isStreaming ||
-        coachConversationAgentState.streamingMessage;
-      const shouldUseInstant = instant || isStreaming;
-
-      messagesEndRef.current?.scrollIntoView({
-        behavior: shouldUseInstant ? "auto" : "smooth",
-      });
-    },
+  const { scrollToBottom, showScrollButton, messagesEndRef } = useChatScroll(
+    coachConversationAgentState,
     [
-      coachConversationAgentState.isStreaming,
-      coachConversationAgentState.streamingMessage,
+      coachConversationAgentState.messages,
+      coachConversationAgentState.isTyping,
+      coachConversationAgentState.contextualUpdate,
+      coachConversationAgentState.isLoadingItem,
     ],
   );
-
-
-  // Handle scroll events to show/hide scroll button
-  // The page uses min-h-screen so the window scrolls, not the messages container.
-  const handleScroll = useCallback(() => {
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    const scrollHeight = document.documentElement.scrollHeight;
-    const clientHeight = window.innerHeight;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    const isNearBottom = distanceFromBottom < 100;
-    const hasScrollableContent = scrollHeight > clientHeight;
-
-    setShowScrollButton(hasScrollableContent && !isNearBottom);
-  }, []);
-
-  // Auto-scroll to bottom when new messages arrive.
-  // On initial load (!hasScrolledOnLoad.current) we bypass the showScrollButton guard
-  // because the loading skeleton can make the page scrollable before messages arrive,
-  // causing checkScroll to set showScrollButton=true and block the first scroll entirely.
-  useEffect(() => {
-    const isInitialLoad = !hasScrolledOnLoad.current;
-    if (isInitialLoad || !showScrollButton) {
-      const isStreaming =
-        coachConversationAgentState.isStreaming ||
-        coachConversationAgentState.streamingMessage;
-
-      // Throttle scroll during streaming to ~100ms intervals
-      if (isStreaming) {
-        const now = Date.now();
-        const timeSinceLastScroll = now - lastScrollTimeRef.current;
-
-        if (timeSinceLastScroll >= 100) {
-          lastScrollTimeRef.current = now;
-          scrollToBottom();
-        }
-      } else {
-        // Use instant scroll on initial page load so the page snaps to the bottom
-        // consistently. After that, use smooth scroll for new messages arriving
-        // during the session so it feels natural. hasScrolledOnLoad tracks which
-        // case we're in — false = first load, true = already loaded once.
-        const instant = !hasScrolledOnLoad.current;
-        hasScrolledOnLoad.current = true;
-        scrollToBottom(instant);
-      }
-    }
-  }, [
-    coachConversationAgentState.messages,
-    coachConversationAgentState.isTyping,
-    coachConversationAgentState.contextualUpdate,
-    coachConversationAgentState.streamingMessage, // Added to scroll during streaming
-    coachConversationAgentState.isStreaming,
-    showScrollButton,
-    scrollToBottom,
-  ]);
-
-  // Set up scroll event listener on window (page scrolls, not container)
-  useEffect(() => {
-    const checkScroll = () => {
-      handleScroll();
-    };
-
-    window.addEventListener("scroll", checkScroll);
-    // Check initial scroll position - use multiple timeouts to catch different render phases
-    const timeout1 = setTimeout(checkScroll, 100);
-    const timeout2 = setTimeout(checkScroll, 500);
-    const timeout3 = setTimeout(checkScroll, 1000);
-
-    return () => {
-      window.removeEventListener("scroll", checkScroll);
-      clearTimeout(timeout1);
-      clearTimeout(timeout2);
-      clearTimeout(timeout3);
-    };
-  }, [
-    handleScroll,
-    coachConversationAgentState.messages.length,
-    coachConversationAgentState.isLoadingItem,
-  ]);
 
   // Voice recording functions moved to ChatInput component
 
