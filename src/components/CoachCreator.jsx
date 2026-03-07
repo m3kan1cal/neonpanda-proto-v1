@@ -446,12 +446,13 @@ function CoachCreator() {
     ],
   };
 
-  const scrollToBottom = useCallback(() => {
+  const scrollToBottom = useCallback((instant = false) => {
     // During streaming, always use instant scroll to prevent animation interruption
     const isStreaming = agentState.isStreaming || agentState.streamingMessage;
+    const shouldUseInstant = instant || isStreaming;
 
     messagesEndRef.current?.scrollIntoView({
-      behavior: isStreaming ? "auto" : "smooth",
+      behavior: shouldUseInstant ? "auto" : "smooth",
     });
   }, [agentState.isStreaming, agentState.streamingMessage]);
 
