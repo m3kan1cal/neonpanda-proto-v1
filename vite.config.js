@@ -27,7 +27,7 @@ export default defineConfig({
           // React ecosystem chunk
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           // Utilities chunk
-          utils: ["nanoid", "react-tooltip", "@dotenvx/dotenvx"],
+          utils: ["nanoid", "react-tooltip"],
         },
       },
     },
