@@ -165,6 +165,10 @@ This tool returns structured context organized by:
 - METHODOLOGY COMPARISONS
 - RELEVANT METHODOLOGY KNOWLEDGE
 
+When the knowledge base returns no results: respond from your trained knowledge and be transparent.
+State clearly that the topic isn't in the stored documentation, then explain it from general training
+knowledge. Never treat an empty search result as proof that you don't know the topic.
+
 Do NOT use this for:
 - User-specific workout or program data (use search_knowledge_base, get_recent_workouts, etc.)
 - Simple greetings or acknowledgments`,
@@ -198,7 +202,8 @@ Do NOT use this for:
           console.info("📭 No relevant methodology matches found");
           return {
             success: false,
-            context: "No relevant methodology information found.",
+            context:
+              "No specific methodology documentation found in the knowledge base for this query. Draw on your trained knowledge to answer, and be transparent that you're doing so rather than citing stored documentation.",
             matchCount: 0,
           };
         }
@@ -392,6 +397,7 @@ NOT for:
           entityType: "user_memory",
           memoryType: input.memoryType,
           importance: input.importance,
+          createdAt: memoryData.metadata.createdAt.toISOString(),
         }).catch((err: any) => {
           console.error(
             "⚠️ Pinecone memory storage failed (non-blocking):",
@@ -830,13 +836,19 @@ export function createQueryCoachesTool<
 >(): Tool<TContext> {
   const tool: Tool<TContext> = {
     id: "query_coaches",
-    description: `List all active AI coaches configured for this user.
+    description: `List all active AI coaches configured for this user, including each coach's
+specializations, methodology, programming philosophy, and full technical config.
 
-Use this when:
-- The user asks "what coaches do I have?", "how many coaches do I have?", "show me my coaches", or similar
-- You need to reference another coach by name or compare coaching approaches
-- The user asks about switching coaches or understanding the difference between their coaches
-- You need context about the user's coaching ecosystem (e.g., "do I have a strength coach?")
+Call any time the user mentions a coach or coaching context — "my coach", "my trainer",
+"a coach I worked with", "when I was coached", how a past coach structured training,
+deload preferences from previous coaching, or any coaching-adjacent phrasing. These are
+direct signals that coaching configuration exists in the database. Retrieve it before
+responding — don't assume you already know the answer from conversation context.
+
+Also use this when:
+- The user asks "what coaches do I have?", "how many coaches do I have?", "show me my coaches"
+- You need to compare coaching approaches or reference another coach by name
+- You need context about the user's coaching ecosystem
 
 Returns each coach's name, ID, short description, specializations, methodology, and experience level focus.
 When includeDetails is true, also returns personality template and full technical config.

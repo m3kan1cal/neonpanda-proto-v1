@@ -943,7 +943,7 @@ function logCachePerformance(usage: any, context: string = "API call") {
 
   const inputTokens = usage.inputTokens || 0;
   const cacheReadTokens = usage.cacheReadInputTokens || 0;
-  const cacheCreateTokens = usage.cacheCreationInputTokens || 0;
+  const cacheCreateTokens = usage.cacheWriteInputTokens || 0;
   const outputTokens = usage.outputTokens || 0;
 
   // Calculate cache hit rate
@@ -3425,6 +3425,13 @@ export const querySemanticMemories = async (
 
     const finalMemories = relevantMemories.map((hit: any) => {
       // Convert Pinecone result back to UserMemory-like object
+      const rawCreatedAt = hit.metadata.createdAt;
+      const parsedCreatedAt =
+        rawCreatedAt != null ? new Date(rawCreatedAt) : null;
+      const createdAt =
+        parsedCreatedAt && !isNaN(parsedCreatedAt.getTime())
+          ? parsedCreatedAt
+          : new Date();
       return {
         memoryId: hit.metadata.memoryId,
         userId: hit.metadata.userId || userId,
@@ -3433,7 +3440,7 @@ export const querySemanticMemories = async (
         memoryType: hit.metadata.memoryType,
         metadata: {
           importance: hit.metadata.importance,
-          createdAt: new Date(hit.metadata.createdAt),
+          createdAt,
           usageCount: hit.metadata.usageCount || 0,
           lastUsed: hit.metadata.lastUsed
             ? new Date(hit.metadata.lastUsed)

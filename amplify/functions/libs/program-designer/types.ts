@@ -115,22 +115,45 @@ export interface ProgramDesignerTodoList {
   intensityPreference: TodoItem; // Conservative, moderate, aggressive
   volumeTolerance: TodoItem; // How much work they can handle
 
-  // Optional Advanced (2 fields)
-  deloadPreference: TodoItem; // Built-in recovery weeks
-  progressionStyle: TodoItem; // Linear, undulating, block periodization
+  // Program Periodization (2 fields)
+  deloadPreference: TodoItem; // Built-in recovery weeks ("as needed" is valid)
+  progressionStyle: TodoItem; // Linear, undulating, block periodization ("coach decides" is valid)
 }
 
 /**
- * Required fields for minimum viable program creation
- * Optional fields enhance program but aren't blocking
+ * Required fields for program creation.
+ * All fields except targetEvent are required — each can always be answered
+ * with "none", "no preference", or "coach decides" when applicable.
+ * targetEvent is the only optional field (analogous to competitionGoals in
+ * the coach creator): only relevant if the user has a specific event to
+ * train toward.
  */
 export const REQUIRED_PROGRAM_FIELDS = [
+  // Core Program Definition
   "trainingGoals",
   "programDuration",
   "trainingFrequency",
-  "trainingMethodology",
+  "sessionDuration",
+  // Schedule & Logistics
+  "startDate",
+  "restDaysPreference",
+  // Equipment & Environment
   "equipmentAccess",
+  "trainingEnvironment",
+  // Training Approach
+  "trainingMethodology",
+  "programFocus",
+  "intensityPreference",
+  "volumeTolerance",
+  // User Context
   "experienceLevel",
+  "currentFitnessBaseline",
+  "injuryConsiderations",
+  "movementPreferences",
+  "movementDislikes",
+  // Program Periodization
+  "deloadPreference",
+  "progressionStyle",
 ] as const;
 
 export type RequiredProgramField = (typeof REQUIRED_PROGRAM_FIELDS)[number];

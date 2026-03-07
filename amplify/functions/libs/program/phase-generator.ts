@@ -222,6 +222,41 @@ function validateRestDayCompliance(
 }
 
 /**
+ * Filter workouts that land on rest days
+ * Returns the filtered workouts, the count of workouts removed, and the day numbers that were removed
+ */
+function filterRestDayViolations(
+  workouts: WorkoutTemplate[],
+  startDateValue: string,
+  restDayIndices: number[],
+): {
+  filtered: WorkoutTemplate[];
+  droppedCount: number;
+  violatingDayNumbers: Set<number>;
+} {
+  const programStart = new Date(startDateValue);
+  const violatingDayNumbers = new Set(
+    workouts
+      .filter((w) => {
+        const date = new Date(programStart);
+        date.setDate(programStart.getDate() + (w.dayNumber - 1));
+        const isoDow = date.getDay() === 0 ? 7 : date.getDay();
+        return restDayIndices.includes(isoDow);
+      })
+      .map((w) => w.dayNumber),
+  );
+
+  const beforeCount = workouts.length;
+  const filtered = workouts.filter(
+    (w) => !violatingDayNumbers.has(w.dayNumber),
+  );
+  const droppedCount = beforeCount - filtered.length;
+
+  return { filtered, droppedCount, violatingDayNumbers };
+}
+
+
+/**
  * Generate high-level phase structure (without workouts)
  * This determines how to break the program into logical phases
  *
@@ -636,22 +671,68 @@ ${
 - Distribute workouts across the remaining ${7 - restDayInfo.indices.length} available days per week
 - Ensure training frequency (${context.trainingFrequency} workouts/week) fits within available days
 
-**Example valid weekly schedule (avoiding ${restDayInfo.names.join(", ")}):**
 ${(() => {
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
+  // Build an explicit day-number → weekday/date calendar for this phase so the model
+  // never has to compute which day numbers fall on rest days — it can just read the table.
+  const startDateValue = todoList.startDate?.value;
+  if (!startDateValue) {
+    // Fall back to the generic weekly schedule example when no start date is available
+    const days = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    const availableDays = days.filter(
+      (_, idx) => !restDayInfo.indices.includes(idx + 1),
+    );
+    const workoutDays = availableDays.slice(0, context.trainingFrequency);
+    return `**Example valid weekly schedule (avoiding ${restDayInfo.names.join(", ")}):**\n${workoutDays.map((day) => `- ${day}: Workout`).join("\n")}`;
+  }
+
+  // Parse the start date string into a Date object
+  const programStart = new Date(startDateValue);
+  if (isNaN(programStart.getTime())) {
+    const days = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    const availableDays = days.filter(
+      (_, idx) => !restDayInfo.indices.includes(idx + 1),
+    );
+    const workoutDays = availableDays.slice(0, context.trainingFrequency);
+    return `**Example valid weekly schedule (avoiding ${restDayInfo.names.join(", ")}):**\n${workoutDays.map((day) => `- ${day}: Workout`).join("\n")}`;
+  }
+
+  const DAY_ABBR = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const lines: string[] = [
+    `**PHASE DAY CALENDAR — every day number mapped to its weekday and date:**`,
+    `Use this table directly. Do NOT schedule workouts on REST DAY entries.`,
   ];
-  const availableDays = days.filter(
-    (_, idx) => !restDayInfo.indices.includes(idx + 1),
-  );
-  const workoutDays = availableDays.slice(0, context.trainingFrequency);
-  return workoutDays.map((day) => `- ${day}: Workout`).join("\n");
+
+  for (let day = phase.startDay; day <= phase.endDay; day++) {
+    const date = new Date(programStart);
+    date.setDate(programStart.getDate() + (day - 1));
+    // ISO day-of-week: getDay() returns 0=Sun, need 1=Mon…7=Sun
+    const isoDow = date.getDay() === 0 ? 7 : date.getDay();
+    const isRestDay = restDayInfo.indices.includes(isoDow);
+    const dayAbbr = DAY_ABBR[isoDow - 1];
+    const dateStr = date.toISOString().split("T")[0];
+    const label = isRestDay
+      ? `REST DAY — DO NOT SCHEDULE WORKOUT (${restDayInfo.names[restDayInfo.indices.indexOf(isoDow)]})`
+      : "WORKOUT DAY";
+    lines.push(`Day ${day} (${dayAbbr}, ${dateStr}): ${label}`);
+  }
+
+  return lines.join("\n");
 })()}
 
 `
@@ -851,8 +932,27 @@ Generate the complete phase with all workouts using the tool.`;
             violations: validation.violations,
             restDays: restDayInfo.names,
           });
-          // Log violations but don't fail - AI should have respected the constraints
-          // This is a sanity check to track if the AI is following instructions
+
+          // Safety net: remove workouts that land on rest days.
+          // The calendar mapping in the prompt should prevent this from happening,
+          // but we filter here as a backstop. Removing a workout reduces that week's
+          // frequency — the prompt fix is the primary prevention mechanism.
+          const { filtered, droppedCount, violatingDayNumbers } =
+            filterRestDayViolations(
+              phaseWithWorkouts.workouts,
+              todoList.startDate!.value,
+              restDayInfo.indices,
+            );
+          phaseWithWorkouts.workouts = filtered;
+
+          logger.warn(
+            `🗑️ Dropped ${droppedCount} workout(s) on rest day(s) as safety net:`,
+            {
+              phaseName: phase.name,
+              droppedDayNumbers: Array.from(violatingDayNumbers),
+              remainingWorkouts: phaseWithWorkouts.workouts.length,
+            },
+          );
         } else {
           logger.info("✅ Rest day compliance validated - no violations:", {
             phaseName: phase.name,
@@ -927,6 +1027,24 @@ ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
               violationCount: validation.violations.length,
               violations: validation.violations,
               restDays: restDayInfo.names,
+            },
+          );
+
+          // Safety net: remove workouts that land on rest days (same as tool path).
+          const { filtered, droppedCount, violatingDayNumbers } =
+            filterRestDayViolations(
+              phaseWithWorkouts.workouts,
+              todoList.startDate!.value,
+              restDayInfo.indices,
+            );
+          phaseWithWorkouts.workouts = filtered;
+
+          logger.warn(
+            `🗑️ Dropped ${droppedCount} workout(s) on rest day(s) as safety net (fallback):`,
+            {
+              phaseName: phase.name,
+              droppedDayNumbers: Array.from(violatingDayNumbers),
+              remainingWorkouts: phaseWithWorkouts.workouts.length,
             },
           );
         } else {

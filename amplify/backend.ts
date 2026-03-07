@@ -989,6 +989,19 @@ backend.streamProgramDesign.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
   backend.buildProgram.resources.lambda.functionName,
 );
+backend.streamProgramDesign.addEnvironment(
+  "PROGRAM_DESIGNER_V1_FALLBACK_USERS_PARAM",
+  `/${branchName}/neonpanda-proto-v1/config/PROGRAM_DESIGNER_V1_FALLBACK_USERS`,
+);
+backend.streamProgramDesign.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["ssm:GetParameter"],
+    resources: [
+      `arn:aws:ssm:*:*:parameter/${branchName}/neonpanda-proto-v1/config/*`,
+    ],
+  }),
+);
 
 backend.createCoachConfig.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
