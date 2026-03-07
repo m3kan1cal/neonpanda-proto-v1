@@ -53,6 +53,7 @@ import {
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
 import { logger } from "../utils/logger";
+import { useChatScroll } from "../hooks/useChatScroll";
 import {
   WorkoutIconSmall,
   ChatIconTiny,
@@ -311,7 +312,6 @@ function CoachConversations() {
   const [inputMessage, setInputMessage] = useState("");
   const [showNewConversation, setShowNewConversation] =
     useState(!conversationId);
-  const [showScrollButton, setShowScrollButton] = useState(false);
 
   // Slash command states moved to ChatInput component
 
@@ -330,13 +330,11 @@ function CoachConversations() {
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
 
-  const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const coachAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
-  const lastScrollTimeRef = useRef(0); // For throttling scroll during streaming
   const { success: showSuccess, error: showError } = useToast();
 
   // Agent state (managed by CoachConversationAgent)
@@ -672,92 +670,15 @@ function CoachConversations() {
     }
   }, [coachConversationAgentState.messages.length]);
 
-  // Check if user is at bottom of scroll
-  const scrollToBottom = useCallback(
-    (instant = false) => {
-      // During streaming, always use instant scroll to prevent animation interruption
-      const isStreaming =
-        coachConversationAgentState.isStreaming ||
-        coachConversationAgentState.streamingMessage;
-      const shouldUseInstant = instant || isStreaming;
-
-      messagesEndRef.current?.scrollIntoView({
-        behavior: shouldUseInstant ? "auto" : "smooth",
-      });
-    },
+  const { scrollToBottom, showScrollButton, messagesEndRef } = useChatScroll(
+    coachConversationAgentState,
     [
-      coachConversationAgentState.isStreaming,
-      coachConversationAgentState.streamingMessage,
+      coachConversationAgentState.messages,
+      coachConversationAgentState.isTyping,
+      coachConversationAgentState.contextualUpdate,
+      coachConversationAgentState.isLoadingItem,
     ],
   );
-
-  // Handle scroll events to show/hide scroll button
-  // The page uses min-h-screen so the window scrolls, not the messages container.
-  const handleScroll = useCallback(() => {
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    const scrollHeight = document.documentElement.scrollHeight;
-    const clientHeight = window.innerHeight;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    const isNearBottom = distanceFromBottom < 100;
-    const hasScrollableContent = scrollHeight > clientHeight;
-
-    setShowScrollButton(hasScrollableContent && !isNearBottom);
-  }, []);
-
-  // Auto-scroll to bottom when new messages arrive (only if user is already at bottom)
-  useEffect(() => {
-    if (!showScrollButton) {
-      const isStreaming =
-        coachConversationAgentState.isStreaming ||
-        coachConversationAgentState.streamingMessage;
-
-      // Throttle scroll during streaming to ~100ms intervals
-      if (isStreaming) {
-        const now = Date.now();
-        const timeSinceLastScroll = now - lastScrollTimeRef.current;
-
-        if (timeSinceLastScroll >= 100) {
-          lastScrollTimeRef.current = now;
-          scrollToBottom();
-        }
-      } else {
-        // No throttling for non-streaming updates
-        scrollToBottom();
-      }
-    }
-  }, [
-    coachConversationAgentState.messages,
-    coachConversationAgentState.isTyping,
-    coachConversationAgentState.contextualUpdate,
-    coachConversationAgentState.streamingMessage, // Added to scroll during streaming
-    coachConversationAgentState.isStreaming,
-    showScrollButton,
-    scrollToBottom,
-  ]);
-
-  // Set up scroll event listener on window (page scrolls, not container)
-  useEffect(() => {
-    const checkScroll = () => {
-      handleScroll();
-    };
-
-    window.addEventListener("scroll", checkScroll);
-    // Check initial scroll position - use multiple timeouts to catch different render phases
-    const timeout1 = setTimeout(checkScroll, 100);
-    const timeout2 = setTimeout(checkScroll, 500);
-    const timeout3 = setTimeout(checkScroll, 1000);
-
-    return () => {
-      window.removeEventListener("scroll", checkScroll);
-      clearTimeout(timeout1);
-      clearTimeout(timeout2);
-      clearTimeout(timeout3);
-    };
-  }, [
-    handleScroll,
-    coachConversationAgentState.messages.length,
-    coachConversationAgentState.isLoadingItem,
-  ]);
 
   // Voice recording functions moved to ChatInput component
 
@@ -1197,9 +1118,9 @@ function CoachConversations() {
           coachConversationAgentState.conversation.title && (
             <div className="mb-4">
               <div className="flex items-center gap-3 mb-1">
-                <div className="font-body text-lg text-white flex items-center flex-nowrap">
-                  <span className="text-synthwave-neon-cyan mr-2 whitespace-nowrap">
-                    Conversation Title:
+                <div className="font-body text-lg text-white flex flex-col md:flex-row md:items-center">
+                  <span className="text-synthwave-neon-cyan md:mr-2 whitespace-nowrap mb-1 md:mb-0">
+                    Topic:
                   </span>
                   <InlineEditField
                     value={coachConversationAgentState.conversation.title}
@@ -1224,7 +1145,7 @@ function CoachConversations() {
               {/* Messages Area - with bottom padding for floating input */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-6 py-3 sm:py-6 space-y-8 synthwave-scrollbar-cyan"
+                className="flex-1 overflow-x-hidden px-2 sm:px-6 py-3 sm:py-6 space-y-8 synthwave-scrollbar-cyan"
                 style={{
                   paddingBottom: "calc(var(--chat-input-height, 160px) + 16px)",
                 }}

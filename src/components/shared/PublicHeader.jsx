@@ -19,6 +19,7 @@ import {
   SupportIconTiny,
   CollaborateIconTiny,
   WaitlistIconTiny,
+  SignInIconTiny,
   SignOutIconTiny,
   SettingsIconTiny,
   BlogIconTiny,
@@ -274,7 +275,7 @@ const PublicHeader = () => {
                     </>
                   )}
 
-                  {/* Unauthenticated: Sign Up */}
+                  {/* Unauthenticated: Sign In + Sign Up */}
                   {!isAuthenticated && (
                     <>
                       <div className="my-2 h-px bg-gradient-to-r from-transparent via-synthwave-neon-pink/30 to-transparent" />
@@ -282,6 +283,14 @@ const PublicHeader = () => {
                         to="/auth"
                         onClick={closeMenu}
                         className="flex items-center space-x-3 px-4 py-2.5 font-body font-medium text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                      >
+                        <SignInIconTiny className="w-5 h-5" />
+                        <span>Sign In</span>
+                      </Link>
+                      <Link
+                        to="/auth?view=register"
+                        onClick={closeMenu}
+                        className="flex items-center space-x-3 px-4 py-2.5 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
                       >
                         <WaitlistIconTiny className="w-5 h-5" />
                         <span>Sign Up</span>
