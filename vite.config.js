@@ -23,7 +23,7 @@ export default defineConfig({
             "@aws-sdk/lib-dynamodb",
           ],
           // Amplify chunk
-          amplify: ["aws-amplify", "@aws-amplify/cli"],
+          amplify: ["aws-amplify"],
           // React ecosystem chunk
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           // Utilities chunk
