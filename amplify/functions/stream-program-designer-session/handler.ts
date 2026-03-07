@@ -578,13 +578,13 @@ async function* createProgramDesignerEventStreamV2(
       });
 
     // 10. Emit metadata event before streaming (sets mode on frontend)
+    const initialProgress = getTodoProgress(programSession.todoList);
     yield formatMetadataEvent({
       mode: CONVERSATION_MODES.PROGRAM_DESIGN,
       progress: {
-        questionsCompleted: getTodoProgress(programSession.todoList)
-          .requiredCompleted,
-        estimatedTotal: getTodoProgress(programSession.todoList).requiredTotal,
-        percentage: getTodoProgress(programSession.todoList).requiredPercentage,
+        questionsCompleted: initialProgress.requiredCompleted,
+        estimatedTotal: initialProgress.requiredTotal,
+        percentage: initialProgress.requiredPercentage,
       },
     });
 
@@ -685,7 +685,6 @@ async function* createProgramDesignerEventStreamV2(
       ? {
           userId: userId as string,
           coachId: programSession.coachId,
-          conversationId: "",
           programId: generateProgramId(userId as string),
           sessionId: sessionId as string,
           todoList: agentContext.session.todoList,

@@ -222,6 +222,41 @@ function validateRestDayCompliance(
 }
 
 /**
+ * Filter workouts that land on rest days
+ * Returns the filtered workouts, the count of workouts removed, and the day numbers that were removed
+ */
+function filterRestDayViolations(
+  workouts: WorkoutTemplate[],
+  startDateValue: string,
+  restDayIndices: number[],
+): {
+  filtered: WorkoutTemplate[];
+  droppedCount: number;
+  violatingDayNumbers: Set<number>;
+} {
+  const programStart = new Date(startDateValue);
+  const violatingDayNumbers = new Set(
+    workouts
+      .filter((w) => {
+        const date = new Date(programStart);
+        date.setDate(programStart.getDate() + (w.dayNumber - 1));
+        const isoDow = date.getDay() === 0 ? 7 : date.getDay();
+        return restDayIndices.includes(isoDow);
+      })
+      .map((w) => w.dayNumber),
+  );
+
+  const beforeCount = workouts.length;
+  const filtered = workouts.filter(
+    (w) => !violatingDayNumbers.has(w.dayNumber),
+  );
+  const droppedCount = beforeCount - filtered.length;
+
+  return { filtered, droppedCount, violatingDayNumbers };
+}
+
+
+/**
  * Generate high-level phase structure (without workouts)
  * This determines how to break the program into logical phases
  *
@@ -902,23 +937,13 @@ Generate the complete phase with all workouts using the tool.`;
           // The calendar mapping in the prompt should prevent this from happening,
           // but we filter here as a backstop. Removing a workout reduces that week's
           // frequency — the prompt fix is the primary prevention mechanism.
-          const programStart = new Date(todoList.startDate!.value);
-          const violatingDayNumbers = new Set(
-            phaseWithWorkouts.workouts
-              .filter((w) => {
-                const date = new Date(programStart);
-                date.setDate(programStart.getDate() + (w.dayNumber - 1));
-                const isoDow = date.getDay() === 0 ? 7 : date.getDay();
-                return restDayInfo.indices.includes(isoDow);
-              })
-              .map((w) => w.dayNumber),
-          );
-
-          const beforeCount = phaseWithWorkouts.workouts.length;
-          phaseWithWorkouts.workouts = phaseWithWorkouts.workouts.filter(
-            (w) => !violatingDayNumbers.has(w.dayNumber),
-          );
-          const droppedCount = beforeCount - phaseWithWorkouts.workouts.length;
+          const { filtered, droppedCount, violatingDayNumbers } =
+            filterRestDayViolations(
+              phaseWithWorkouts.workouts,
+              todoList.startDate!.value,
+              restDayInfo.indices,
+            );
+          phaseWithWorkouts.workouts = filtered;
 
           logger.warn(
             `🗑️ Dropped ${droppedCount} workout(s) on rest day(s) as safety net:`,
@@ -1006,23 +1031,13 @@ ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
           );
 
           // Safety net: remove workouts that land on rest days (same as tool path).
-          const programStart = new Date(todoList.startDate!.value);
-          const violatingDayNumbers = new Set(
-            phaseWithWorkouts.workouts
-              .filter((w) => {
-                const date = new Date(programStart);
-                date.setDate(programStart.getDate() + (w.dayNumber - 1));
-                const isoDow = date.getDay() === 0 ? 7 : date.getDay();
-                return restDayInfo.indices.includes(isoDow);
-              })
-              .map((w) => w.dayNumber),
-          );
-
-          const beforeCount = phaseWithWorkouts.workouts.length;
-          phaseWithWorkouts.workouts = phaseWithWorkouts.workouts.filter(
-            (w) => !violatingDayNumbers.has(w.dayNumber),
-          );
-          const droppedCount = beforeCount - phaseWithWorkouts.workouts.length;
+          const { filtered, droppedCount, violatingDayNumbers } =
+            filterRestDayViolations(
+              phaseWithWorkouts.workouts,
+              todoList.startDate!.value,
+              restDayInfo.indices,
+            );
+          phaseWithWorkouts.workouts = filtered;
 
           logger.warn(
             `🗑️ Dropped ${droppedCount} workout(s) on rest day(s) as safety net (fallback):`,
