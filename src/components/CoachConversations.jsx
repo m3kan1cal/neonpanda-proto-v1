@@ -339,6 +339,22 @@ function CoachConversations() {
   const lastScrollTimeRef = useRef(0); // For throttling scroll during streaming
   const { success: showSuccess, error: showError } = useToast();
 
+  const hasScrolledOnLoad = useRef(false);
+
+  // Disable browser scroll restoration to prevent stale scroll positions on refresh.
+  // Mobile browsers restore scroll after content changes, causing messages to appear
+  // off-screen or invisible (deferred animations for off-viewport elements).
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    return () => {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
+
   // Agent state (managed by CoachConversationAgent)
   const [coachConversationAgentState, setCoachConversationAgentState] =
     useState({
@@ -691,6 +707,7 @@ function CoachConversations() {
     ],
   );
 
+
   // Handle scroll events to show/hide scroll button
   // The page uses min-h-screen so the window scrolls, not the messages container.
   const handleScroll = useCallback(() => {
@@ -704,9 +721,13 @@ function CoachConversations() {
     setShowScrollButton(hasScrollableContent && !isNearBottom);
   }, []);
 
-  // Auto-scroll to bottom when new messages arrive (only if user is already at bottom)
+  // Auto-scroll to bottom when new messages arrive.
+  // On initial load (!hasScrolledOnLoad.current) we bypass the showScrollButton guard
+  // because the loading skeleton can make the page scrollable before messages arrive,
+  // causing checkScroll to set showScrollButton=true and block the first scroll entirely.
   useEffect(() => {
-    if (!showScrollButton) {
+    const isInitialLoad = !hasScrolledOnLoad.current;
+    if (isInitialLoad || !showScrollButton) {
       const isStreaming =
         coachConversationAgentState.isStreaming ||
         coachConversationAgentState.streamingMessage;
@@ -721,8 +742,13 @@ function CoachConversations() {
           scrollToBottom();
         }
       } else {
-        // No throttling for non-streaming updates
-        scrollToBottom();
+        // Use instant scroll on initial page load so the page snaps to the bottom
+        // consistently. After that, use smooth scroll for new messages arriving
+        // during the session so it feels natural. hasScrolledOnLoad tracks which
+        // case we're in — false = first load, true = already loaded once.
+        const instant = !hasScrolledOnLoad.current;
+        hasScrolledOnLoad.current = true;
+        scrollToBottom(instant);
       }
     }
   }, [
@@ -1197,9 +1223,9 @@ function CoachConversations() {
           coachConversationAgentState.conversation.title && (
             <div className="mb-4">
               <div className="flex items-center gap-3 mb-1">
-                <div className="font-body text-lg text-white flex items-center flex-nowrap">
-                  <span className="text-synthwave-neon-cyan mr-2 whitespace-nowrap">
-                    Conversation Title:
+                <div className="font-body text-lg text-white flex flex-col md:flex-row md:items-center">
+                  <span className="text-synthwave-neon-cyan md:mr-2 whitespace-nowrap mb-1 md:mb-0">
+                    Topic:
                   </span>
                   <InlineEditField
                     value={coachConversationAgentState.conversation.title}
@@ -1224,7 +1250,7 @@ function CoachConversations() {
               {/* Messages Area - with bottom padding for floating input */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-6 py-3 sm:py-6 space-y-8 synthwave-scrollbar-cyan"
+                className="flex-1 overflow-x-hidden px-2 sm:px-6 py-3 sm:py-6 space-y-8 synthwave-scrollbar-cyan"
                 style={{
                   paddingBottom: "calc(var(--chat-input-height, 160px) + 16px)",
                 }}

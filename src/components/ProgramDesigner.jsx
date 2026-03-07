@@ -335,6 +335,21 @@ function ProgramDesigner() {
   const lastScrollTimeRef = useRef(0); // For throttling scroll during streaming
   const { success: showSuccess, error: showError } = useToast();
 
+  const hasScrolledOnLoad = useRef(false);
+
+  // Disable browser scroll restoration to prevent stale scroll positions on refresh.
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    return () => {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
+
+
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -585,9 +600,13 @@ function ProgramDesigner() {
     setShowScrollButton(hasScrollableContent && !isNearBottom);
   }, []);
 
-  // Auto-scroll to bottom when new messages arrive (only if user is already at bottom)
+  // Auto-scroll to bottom when new messages arrive.
+  // On initial load (!hasScrolledOnLoad.current) we bypass the showScrollButton guard
+  // because the loading skeleton can make the page scrollable before messages arrive,
+  // causing checkScroll to set showScrollButton=true and block the first scroll entirely.
   useEffect(() => {
-    if (!showScrollButton) {
+    const isInitialLoad = !hasScrolledOnLoad.current;
+    if (isInitialLoad || !showScrollButton) {
       const isStreaming = agentState.isStreaming || agentState.streamingMessage;
 
       // Throttle scroll during streaming to ~100ms intervals
@@ -600,8 +619,13 @@ function ProgramDesigner() {
           scrollToBottom();
         }
       } else {
-        // No throttling for non-streaming updates
-        scrollToBottom();
+        // Use instant scroll on initial page load so the page snaps to the bottom
+        // consistently. After that, use smooth scroll for new messages arriving
+        // during the session so it feels natural. hasScrolledOnLoad tracks which
+        // case we're in — false = first load, true = already loaded once.
+        const instant = !hasScrolledOnLoad.current;
+        hasScrolledOnLoad.current = true;
+        scrollToBottom(instant);
       }
     }
   }, [

@@ -54,7 +54,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] animate-fade-in">
       <div
         className={`${containerPatterns.successModal} p-4 md:p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto`}
       >
@@ -67,8 +67,8 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
           />
         </div>
 
-        {/* Header - left aligned like completion modal */}
-        <div className="mb-4 md:mb-6">
+        {/* Header - centered in modal */}
+        <div className="mb-4 md:mb-6 text-center">
           <h1 className={`${typographyPatterns.cardTitle} mb-2`}>
             Ready to start your journey?
           </h1>

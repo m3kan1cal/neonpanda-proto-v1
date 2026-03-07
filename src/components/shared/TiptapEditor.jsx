@@ -1,4 +1,11 @@
-import React, { useEffect, useImperativeHandle, useRef, forwardRef } from "react";
+import React, {
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  forwardRef,
+} from "react";
+import { createPortal } from "react-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -34,6 +41,9 @@ const TiptapEditor = forwardRef(
       // instead of the inner .tiptap-content element. This makes the scrollbar
       // appear flush with the outer border (ideal for chat inputs with custom scrollbar classes).
       scrollOnWrapper = false,
+      // When true, shows an expand/fullscreen button in the toolbar.
+      // Only effective when showToolbar is true and mode is "rich".
+      allowFullscreen = false,
     },
     ref,
   ) => {
@@ -41,6 +51,7 @@ const TiptapEditor = forwardRef(
     // sync effect can skip re-setting the editor when the parent simply
     // bounces that content back as a prop (avoiding the scroll/space bug).
     const lastUserContent = useRef(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const extensions = [
       StarterKit.configure({
@@ -171,6 +182,43 @@ const TiptapEditor = forwardRef(
       }
     }, [content, editor]);
 
+    // Close fullscreen on Escape key
+    useEffect(() => {
+      if (!isFullscreen) return;
+
+      const handleEscapeKey = (e) => {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsFullscreen(false);
+        }
+      };
+
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => document.removeEventListener("keydown", handleEscapeKey);
+    }, [isFullscreen]);
+
+    // Lock body scroll when fullscreen
+    useEffect(() => {
+      if (!isFullscreen) return;
+
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }, [isFullscreen]);
+
+    // Auto-focus editor when entering fullscreen
+    useEffect(() => {
+      if (isFullscreen && editor) {
+        requestAnimationFrame(() => {
+          editor.commands.focus();
+        });
+      }
+    }, [isFullscreen, editor]);
+
     // Expose methods via ref
     useImperativeHandle(
       ref,
@@ -186,6 +234,279 @@ const TiptapEditor = forwardRef(
       [editor],
     );
 
+    const showFullscreenButton =
+      allowFullscreen && showToolbar && mode === "rich";
+
+    // Toolbar shared between inline and fullscreen modes
+    const toolbar = showToolbar && mode === "rich" && editor && (
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-synthwave-neon-cyan/10">
+        {/* Text formatting */}
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            editor.chain().focus().toggleBold().run();
+          }}
+          className={`cursor-pointer px-2.5 py-1 rounded-md text-sm font-bold font-body transition-colors ${
+            editor.isActive("bold")
+              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+          }`}
+          title="Bold"
+        >
+          B
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            editor.chain().focus().toggleItalic().run();
+          }}
+          className={`cursor-pointer px-2.5 py-1 rounded-md text-sm italic font-body transition-colors ${
+            editor.isActive("italic")
+              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+          }`}
+          title="Italic"
+        >
+          I
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            editor.chain().focus().toggleStrike().run();
+          }}
+          className={`cursor-pointer px-2.5 py-1 rounded-md text-sm line-through font-body transition-colors ${
+            editor.isActive("strike")
+              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+          }`}
+          title="Strikethrough"
+        >
+          S
+        </button>
+
+        {/* Divider */}
+        <div className="w-px h-4 bg-synthwave-neon-cyan/20 mx-1 shrink-0" />
+
+        {/* List formatting */}
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            editor.chain().focus().toggleBulletList().run();
+          }}
+          className={`cursor-pointer p-1 rounded-md transition-colors ${
+            editor.isActive("bulletList")
+              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+          }`}
+          title="Bullet list"
+        >
+          <svg
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="9" y1="6" x2="20" y2="6" />
+            <line x1="9" y1="12" x2="20" y2="12" />
+            <line x1="9" y1="18" x2="20" y2="18" />
+            <circle
+              cx="4"
+              cy="6"
+              r="1.5"
+              fill="currentColor"
+              stroke="none"
+            />
+            <circle
+              cx="4"
+              cy="12"
+              r="1.5"
+              fill="currentColor"
+              stroke="none"
+            />
+            <circle
+              cx="4"
+              cy="18"
+              r="1.5"
+              fill="currentColor"
+              stroke="none"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            editor.chain().focus().toggleOrderedList().run();
+          }}
+          className={`cursor-pointer p-1 rounded-md transition-colors ${
+            editor.isActive("orderedList")
+              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+          }`}
+          title="Numbered list"
+        >
+          <svg
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="10" y1="6" x2="21" y2="6" />
+            <line x1="10" y1="12" x2="21" y2="12" />
+            <line x1="10" y1="18" x2="21" y2="18" />
+            <text
+              x="2"
+              y="8"
+              fontSize="6"
+              fill="currentColor"
+              stroke="none"
+              fontFamily="monospace"
+            >
+              1.
+            </text>
+            <text
+              x="2"
+              y="14"
+              fontSize="6"
+              fill="currentColor"
+              stroke="none"
+              fontFamily="monospace"
+            >
+              2.
+            </text>
+            <text
+              x="2"
+              y="20"
+              fontSize="6"
+              fill="currentColor"
+              stroke="none"
+              fontFamily="monospace"
+            >
+              3.
+            </text>
+          </svg>
+        </button>
+
+        {/* Fullscreen toggle */}
+        {showFullscreenButton && (
+          <>
+            <div className="w-px h-4 bg-synthwave-neon-cyan/20 mx-1 shrink-0" />
+            <div className="flex-1" />
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setIsFullscreen((prev) => !prev);
+              }}
+              className="cursor-pointer p-1 rounded-md transition-colors text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+              title={isFullscreen ? "Exit fullscreen" : "Expand editor"}
+            >
+              {isFullscreen ? (
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="4 14 10 14 10 20" />
+                  <polyline points="20 10 14 10 14 4" />
+                  <line x1="14" y1="10" x2="21" y2="3" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+              ) : (
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="14" y2="10" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+              )}
+            </button>
+          </>
+        )}
+      </div>
+    );
+
+    // Fullscreen overlay rendered via portal
+    if (isFullscreen) {
+      return (
+        <>
+          {/* Placeholder to keep layout stable while editor is in portal */}
+          <div
+            className={`tiptap-editor-wrapper ${showToolbar ? "overflow-hidden" : ""} ${className}`}
+            style={
+              scrollOnWrapper
+                ? {
+                    maxHeight: `calc(${maxHeight} + 24px)`,
+                    overflowY: "auto",
+                  }
+                : { minHeight, maxHeight }
+            }
+          />
+
+          {createPortal(
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-fade-in"
+                onClick={() => setIsFullscreen(false)}
+              />
+
+              {/* Fullscreen editor container */}
+              <div
+                className="fixed inset-0 z-50 p-3 sm:p-4 md:p-6 flex flex-col animate-fade-in"
+                onClick={() => setIsFullscreen(false)}
+              >
+                <div
+                  className="tiptap-fullscreen tiptap-editor-wrapper flex-1 flex flex-col w-full max-w-4xl mx-auto rounded-md bg-synthwave-bg-card/95 backdrop-blur-xl border border-synthwave-neon-cyan/20 shadow-lg overflow-hidden text-synthwave-text-secondary"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {toolbar}
+                  <div className="tiptap-fullscreen-content px-4 py-4 flex-1 overflow-y-auto">
+                    <EditorContent editor={editor} />
+                  </div>
+
+                  {/* Done button footer */}
+                  <div className="flex justify-end px-4 py-3 border-t border-synthwave-neon-cyan/10">
+                    <button
+                      type="button"
+                      onClick={() => setIsFullscreen(false)}
+                      className="bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-md font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>,
+            document.body,
+          )}
+        </>
+      );
+    }
+
+    // Default inline rendering
     return (
       <div
         className={`tiptap-editor-wrapper ${showToolbar ? "overflow-hidden" : ""} ${className}`}
@@ -195,166 +516,7 @@ const TiptapEditor = forwardRef(
             : undefined
         }
       >
-        {showToolbar && mode === "rich" && editor && (
-          <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-synthwave-neon-cyan/10">
-            {/* Text formatting */}
-            <button
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().toggleBold().run();
-              }}
-              className={`cursor-pointer px-2.5 py-1 rounded-md text-sm font-bold font-body transition-colors ${
-                editor.isActive("bold")
-                  ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                  : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-              }`}
-              title="Bold"
-            >
-              B
-            </button>
-            <button
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().toggleItalic().run();
-              }}
-              className={`cursor-pointer px-2.5 py-1 rounded-md text-sm italic font-body transition-colors ${
-                editor.isActive("italic")
-                  ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                  : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-              }`}
-              title="Italic"
-            >
-              I
-            </button>
-            <button
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().toggleStrike().run();
-              }}
-              className={`cursor-pointer px-2.5 py-1 rounded-md text-sm line-through font-body transition-colors ${
-                editor.isActive("strike")
-                  ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                  : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-              }`}
-              title="Strikethrough"
-            >
-              S
-            </button>
-
-            {/* Divider */}
-            <div className="w-px h-4 bg-synthwave-neon-cyan/20 mx-1 shrink-0" />
-
-            {/* List formatting */}
-            <button
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().toggleBulletList().run();
-              }}
-              className={`cursor-pointer p-1 rounded-md transition-colors ${
-                editor.isActive("bulletList")
-                  ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                  : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-              }`}
-              title="Bullet list"
-            >
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="9" y1="6" x2="20" y2="6" />
-                <line x1="9" y1="12" x2="20" y2="12" />
-                <line x1="9" y1="18" x2="20" y2="18" />
-                <circle
-                  cx="4"
-                  cy="6"
-                  r="1.5"
-                  fill="currentColor"
-                  stroke="none"
-                />
-                <circle
-                  cx="4"
-                  cy="12"
-                  r="1.5"
-                  fill="currentColor"
-                  stroke="none"
-                />
-                <circle
-                  cx="4"
-                  cy="18"
-                  r="1.5"
-                  fill="currentColor"
-                  stroke="none"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().toggleOrderedList().run();
-              }}
-              className={`cursor-pointer p-1 rounded-md transition-colors ${
-                editor.isActive("orderedList")
-                  ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                  : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-              }`}
-              title="Numbered list"
-            >
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="10" y1="6" x2="21" y2="6" />
-                <line x1="10" y1="12" x2="21" y2="12" />
-                <line x1="10" y1="18" x2="21" y2="18" />
-                <text
-                  x="2"
-                  y="8"
-                  fontSize="6"
-                  fill="currentColor"
-                  stroke="none"
-                  fontFamily="monospace"
-                >
-                  1.
-                </text>
-                <text
-                  x="2"
-                  y="14"
-                  fontSize="6"
-                  fill="currentColor"
-                  stroke="none"
-                  fontFamily="monospace"
-                >
-                  2.
-                </text>
-                <text
-                  x="2"
-                  y="20"
-                  fontSize="6"
-                  fill="currentColor"
-                  stroke="none"
-                  fontFamily="monospace"
-                >
-                  3.
-                </text>
-              </svg>
-            </button>
-          </div>
-        )}
+        {toolbar}
         <div className={contentClassName}>
           <EditorContent editor={editor} />
         </div>

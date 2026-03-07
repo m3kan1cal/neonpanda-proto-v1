@@ -1234,6 +1234,7 @@ General thoughts: `;
                             showToolbar={true}
                             minHeight="60px"
                             maxHeight="260px"
+                            allowFullscreen={true}
                           />
                           {/* Helper text and legends container with proper spacing */}
                           <div className="mt-3 space-y-2">
