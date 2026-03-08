@@ -111,6 +111,12 @@ export function useUpgradePrompts(userId, userData = {}) {
     // Don't show if prompt is already open
     if (isPromptOpen) return;
 
+    // Don't show upgrade prompt if onboarding hasn't been shown yet
+    const onboardingShown = localStorage.getItem(
+      `${STORAGE_KEYS.ONBOARDING_SHOWN}_${userId}`,
+    );
+    if (!onboardingShown) return;
+
     const daysSinceSignup = getDaysSinceSignup();
 
     const triggerResult = checkUpgradeTriggers(

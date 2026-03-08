@@ -291,6 +291,51 @@
   background: #00ffff50;
 }
 
+/* Fullscreen mode overrides - remove height constraints and increase font */
+.tiptap-fullscreen .tiptap-content {
+  max-height: none !important;
+  min-height: 0 !important;
+  height: 100%;
+  overflow-y: auto;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.tiptap-fullscreen .tiptap-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tiptap-fullscreen .tiptap-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-fullscreen .tiptap-content::-webkit-scrollbar-thumb {
+  background: #00ffff30;
+  border-radius: 4px;
+}
+
+.tiptap-fullscreen .tiptap-content::-webkit-scrollbar-thumb:hover {
+  background: #00ffff50;
+}
+
+/* Fullscreen content wrapper scrollbar (the outer scrolling container) */
+.tiptap-fullscreen-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tiptap-fullscreen-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-fullscreen-content::-webkit-scrollbar-thumb {
+  background: #00ffff30;
+  border-radius: 4px;
+}
+
+.tiptap-fullscreen-content::-webkit-scrollbar-thumb:hover {
+  background: #00ffff50;
+}
+
 /* =====================================================================
    Global styles
    ===================================================================== */
@@ -379,14 +424,13 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
    Chat Message Animations
    ========================================================================== */
 
-/* Message entry animation - subtle slide-up + fade-in */
+/* Message entry animation - subtle slide-up only (no opacity to avoid mobile
+   browsers deferring animation for off-screen elements, leaving messages invisible) */
 @keyframes messageSlideIn {
   from {
-    opacity: 0;
     transform: translateY(8px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }

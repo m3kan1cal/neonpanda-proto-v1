@@ -1243,7 +1243,7 @@ function TrainingGroundsV2() {
         {/* ---------------------------------------------------------------- */}
         {isLoadingGreeting ? (
           <p className="font-body text-base text-synthwave-text-muted animate-pulse mb-4 max-w-3xl">
-            Checking in with your coach...
+            Checking in on what's relevant for you today...
           </p>
         ) : (
           <p className="font-body text-base text-synthwave-text-secondary mb-4 max-w-3xl">

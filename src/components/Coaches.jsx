@@ -773,7 +773,7 @@ function Coaches() {
         )}
 
         {/* Coaches Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr animate-fadeIn">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr animate-fadeIn">
           {/* Add New Coach Card */}
           <div
             onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
@@ -783,7 +783,7 @@ function Coaches() {
                 : "cursor-pointer"
             }`}
           >
-            <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
+            <div className="text-center h-full flex flex-col justify-between min-h-[200px] md:min-h-[400px]">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
                 {/* Plus Icon or Spinner */}
@@ -833,7 +833,7 @@ function Coaches() {
 
               {/* Bottom Features - Only show when not creating */}
               {!isCreatingCustomCoach && (
-                <div className="border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
+                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
                   <div className="grid grid-cols-1 gap-2">
                     <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
                       <svg
@@ -1086,8 +1086,8 @@ function Coaches() {
                         </span>
                       </div>
 
-                      {/* Focus Areas - hidden on mobile to reduce card height */}
-                      <div className="hidden md:flex items-start space-x-2 text-synthwave-text-secondary">
+                      {/* Focus Areas */}
+                      <div className="flex items-start space-x-2 text-synthwave-text-secondary">
                         <div className="mt-0.5">
                           <svg
                             className="w-5 h-5"
@@ -1116,7 +1116,7 @@ function Coaches() {
                         </div>
                       </div>
 
-                      {/* Coaching Style - hidden on mobile to reduce card height */}
+                      {/* Coaching Style - hidden on mobile */}
                       {agentRef.current?.getMethodologyPreferencesDisplay(
                         coach,
                       ) && (
