@@ -7,6 +7,7 @@ import {
 } from "../../utils/ui/uiPatterns";
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import { CloseIcon } from "../themes/SynthwaveComponents";
+import { SparklesIcon } from "./icons";
 
 // ---------------------------------------------------------------------------
 // Icons (inline SVG -- matches synthwave icon patterns)
@@ -33,11 +34,7 @@ function TrendUpIcon() {
 
 function TrophyIcon() {
   return (
-    <svg
-      className="w-4 h-4"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
       <path d="M5 3h14v2h2v6h-2v2h-2v2h-2v2h-1v4h3v2H7v-2h3v-4H9v-2H7v-2H5v-2H3V5h2V3zm2 2v2h2v4h2v2h2v-2h2V7h2V5H7z" />
     </svg>
   );
@@ -45,11 +42,7 @@ function TrophyIcon() {
 
 function HeartPulseIcon() {
   return (
-    <svg
-      className="w-4 h-4"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
       <path d="M2 9h3l2-4 3 8 2-4h10v2h-9l-2 4-3-8-2 4H2V9z" />
     </svg>
   );
@@ -57,11 +50,7 @@ function HeartPulseIcon() {
 
 function BrainIcon() {
   return (
-    <svg
-      className="w-4 h-4"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
       <path d="M12 2C8 2 5 5 5 9c0 2 1 4 2 5v4h2v2h6v-2h2v-4c1-1 2-3 2-5 0-4-3-7-7-7zm-1 16h2v-1h-2v1zm3-4h-1v-2h-2v2H9v-1l-1-1c-1-1-2-2.5-2-4 0-3 2.5-5.5 6-5.5S18 6 18 9c0 1.5-1 3-2 4l-1 1v1z" />
     </svg>
   );
@@ -69,11 +58,7 @@ function BrainIcon() {
 
 function ScaleIcon() {
   return (
-    <svg
-      className="w-4 h-4"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
       <path d="M12 3v2h-1v2H9v2H7v2H5v4h4v-2h2v-2h2v2h2v2h4v-4h-2V9h-2V7h-2V5h-1V3z" />
     </svg>
   );
@@ -164,7 +149,11 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
       <>
         <ModalHeader
           title="Session Replay"
-          subtitle={workout?.workoutName || workout?.workoutData?.workout_name || "Recent Session"}
+          subtitle={
+            workout?.workoutName ||
+            workout?.workoutData?.workout_name ||
+            "Recent Session"
+          }
           accentColor="cyan"
         />
 
@@ -316,7 +305,8 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
   // ---- Combined content ----
   const renderCombined = () => {
     const { report, workout } = source;
-    const insights = report?.analyticsData?.structured_analytics?.actionable_insights;
+    const insights =
+      report?.analyticsData?.structured_analytics?.actionable_insights;
 
     return (
       <>
@@ -385,7 +375,11 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
       <>
         <ModalHeader
           title="Session Recap"
-          subtitle={workout?.workoutName || workout?.workoutData?.workout_name || "Recent Workout"}
+          subtitle={
+            workout?.workoutName ||
+            workout?.workoutData?.workout_name ||
+            "Recent Workout"
+          }
           accentColor="cyan"
         />
 
@@ -457,19 +451,6 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function SparklesIcon() {
-  return (
-    <svg
-      className="w-5 h-5"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-    </svg>
-  );
-}
-
 function ModalHeader({ title, subtitle, accentColor = "cyan" }) {
   const accentMap = {
     cyan: "border-synthwave-neon-cyan/20",
@@ -478,14 +459,14 @@ function ModalHeader({ title, subtitle, accentColor = "cyan" }) {
   };
 
   return (
-    <div className={`pb-4 mb-4 border-b ${accentMap[accentColor] || accentMap.cyan}`}>
+    <div
+      className={`pb-4 mb-4 border-b ${accentMap[accentColor] || accentMap.cyan}`}
+    >
       <div className="flex items-center gap-2 mb-1">
         <span className="text-synthwave-neon-cyan drop-shadow-[0_0_6px_#00ffff]">
-          <SparklesIcon />
+          <SparklesIcon className="w-5 h-5" />
         </span>
-        <h3 className={typographyPatterns.cardTitle}>
-          {title}
-        </h3>
+        <h3 className={typographyPatterns.cardTitle}>{title}</h3>
       </div>
       {subtitle && (
         <p className="font-body text-sm font-semibold text-synthwave-neon-cyan mt-1 pl-7">
