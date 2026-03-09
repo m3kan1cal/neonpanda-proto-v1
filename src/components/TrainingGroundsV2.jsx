@@ -54,6 +54,7 @@ import ProgramList from "./programs/ProgramList";
 import RecentPRsCard from "./highlights/RecentPRsCard";
 import StreakCard from "./highlights/StreakCard";
 import TopExercisesCard from "./highlights/TopExercisesCard";
+import CoachBriefingCard from "./highlights/CoachBriefingCard";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
@@ -649,6 +650,23 @@ function TrainingGroundsV2() {
                   className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-md animate-pulse"
                 ></div>
               ))}
+            </div>
+          </div>
+
+          {/* Coach Briefing skeleton -- own section above Today */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+              <div className="flex-1 h-px bg-gradient-to-r from-synthwave-neon-cyan/25 to-transparent"></div>
+            </div>
+            <div className={`${containerPatterns.neonGlassSkeleton} max-w-md`}>
+              <div className={containerPatterns.neonGlassSkeletonInner}>
+                <div className="space-y-2">
+                  <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full" />
+                  <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4" />
+                  <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1405,6 +1423,20 @@ function TrainingGroundsV2() {
             </button>
           </div>
         </div>
+
+        {/* ================================================================ */}
+        {/* AI INSIGHTS -- Coach Briefing (own section, above Today)        */}
+        {/* ================================================================ */}
+        <CoachBriefingCard
+          recentReports={reportsState.recentReports}
+          recentWorkouts={workoutState.recentWorkouts}
+          isLoading={
+            reportsState.isLoadingRecentItems ||
+            workoutState.isLoadingRecentItems
+          }
+          userId={userId}
+          coachId={coachId}
+        />
 
         {/* ================================================================ */}
         {/* TIER 1 -- TODAY                                                  */}

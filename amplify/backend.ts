@@ -91,6 +91,7 @@ import { getSubscriptionStatus } from "./functions/get-subscription-status/resou
 import { createStripePortalSession } from "./functions/create-stripe-portal-session/resource";
 import { processStripeWebhook } from "./functions/process-stripe-webhook/resource";
 import { buildExercise } from "./functions/build-exercise/resource";
+import { buildWorkoutAnalysis } from "./functions/build-workout-analysis/resource";
 import { getExercises } from "./functions/get-exercises/resource";
 import { getExerciseNames } from "./functions/get-exercise-names/resource";
 import { getExercisesCount } from "./functions/get-exercises-count/resource";
@@ -201,6 +202,7 @@ const backend = defineBackend({
   createStripePortalSession,
   processStripeWebhook,
   buildExercise,
+  buildWorkoutAnalysis,
   getExercises,
   getExerciseNames,
   getExercisesCount,
@@ -226,6 +228,9 @@ backend.buildCoachConfig.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildExercise.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildWorkoutAnalysis.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
@@ -404,6 +409,7 @@ const sharedPolicies = new SharedPolicies(
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.buildExercise,
+  backend.buildWorkoutAnalysis, // Needs READ for queryWorkouts(), WRITE for updateWorkout() with insights
   backend.createSharedProgram,
   backend.getSharedProgram, // Needs WRITE for incrementSharedProgramViews()
   backend.deleteSharedProgram,
@@ -476,6 +482,7 @@ const sharedPolicies = new SharedPolicies(
   backend.createMemory,
   backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
   backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
+  backend.buildWorkoutAnalysis, // Needs Bedrock for post-workout AI insights (Haiku 4.5)
   backend.explainTerm, // Added: Needs Bedrock for term explanations (Haiku 4.5)
   backend.generateGreeting, // Added: Needs Bedrock for AI-generated dashboard greetings (Nova 2 Lite)
   backend.warmupPlatform, // Pre-compiles Bedrock grammar caches every 12 hours
@@ -683,6 +690,7 @@ grantLambdaInvokePermissions(backend.createCoachConversation.resources.lambda, [
 // Grant permission to buildWorkout to invoke buildExercise (fire-and-forget exercise extraction)
 grantLambdaInvokePermissions(backend.buildWorkout.resources.lambda, [
   backend.buildExercise.resources.lambda.functionArn,
+  backend.buildWorkoutAnalysis.resources.lambda.functionArn,
 ]);
 
 // ============================================================================
@@ -793,6 +801,7 @@ const allFunctions = [
   backend.createStripePortalSession,
   backend.processStripeWebhook,
   backend.buildExercise,
+  backend.buildWorkoutAnalysis,
   backend.getExercises,
   backend.getExerciseNames,
   backend.getExercisesCount,
@@ -1021,6 +1030,11 @@ backend.logWorkoutTemplate.addEnvironment(
 backend.buildWorkout.addEnvironment(
   "BUILD_EXERCISE_FUNCTION_NAME",
   backend.buildExercise.resources.lambda.functionName,
+);
+
+backend.buildWorkout.addEnvironment(
+  "BUILD_WORKOUT_ANALYSIS_FUNCTION_NAME",
+  backend.buildWorkoutAnalysis.resources.lambda.functionName,
 );
 
 // Stripe environment variables

@@ -176,7 +176,7 @@ function AppContent() {
               ? "pt-16" // Public pages: just header spacing
               : isHomePage
                 ? "pt-4 pb-20 md:pb-0" // App home: minimal top, bottom nav spacing
-                : "pt-12 pb-20 md:pb-0 md:ml-20" // App pages: breadcrumbs + sidebar (always floating overlay)
+                : "pt-12 pb-20 md:pb-0 md:ml-20 md:mr-20" // App pages: breadcrumbs + sidebar (symmetric margins, sidebar is floating overlay)
         }`}
       >
         <Routes>
