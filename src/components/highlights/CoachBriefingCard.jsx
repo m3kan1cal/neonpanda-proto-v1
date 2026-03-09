@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Tooltip } from "react-tooltip";
 import {
   containerPatterns,
@@ -219,6 +219,10 @@ export default function CoachBriefingCard({
     () => selectBriefingSource(recentReports, recentWorkouts),
     [recentReports, recentWorkouts],
   );
+
+  useEffect(() => {
+    setDismissed(false);
+  }, [source]);
 
   // Check localStorage on source change
   const isCurrentlyDismissed = useMemo(
