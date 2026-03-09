@@ -1,4 +1,10 @@
-import { useRef, useEffect, useCallback, useState } from "react";
+import {
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useState,
+} from "react";
 
 /**
  * Custom hook to manage chat scroll behavior across multiple components.
@@ -78,8 +84,14 @@ export function useChatScroll(agentState, dependencyProps = []) {
         scrollToBottom(instant);
       }
 
-      // Mark initial load as complete once we have messages, so user scroll respects showScrollButton
-      if (agentState.messages?.length > 0 && isInitialLoad) {
+      // Only mark initial load complete if the end element exists — if messagesEndRef
+      // is null here (skeleton still showing), the scrollIntoView above was a no-op and
+      // we must not prematurely lock out the next scroll attempt.
+      if (
+        agentState.messages?.length > 0 &&
+        isInitialLoad &&
+        messagesEndRef.current
+      ) {
         hasScrolledOnLoad.current = true;
       }
     }
@@ -90,6 +102,22 @@ export function useChatScroll(agentState, dependencyProps = []) {
     agentState.streamingMessage,
     ...dependencyProps,
   ]);
+
+  // Catch the skeleton→fullUI transition race: when messages arrive while the skeleton is
+  // still visible (e.g. coach data not yet loaded), the scroll useEffect above fires with
+  // a null ref and cannot scroll. This layout effect runs synchronously after every DOM
+  // commit and performs the initial scroll the moment the end element first appears in the
+  // DOM, regardless of which dependency triggered the render.
+  useLayoutEffect(() => {
+    if (
+      !hasScrolledOnLoad.current &&
+      messagesEndRef.current &&
+      agentState.messages?.length > 0
+    ) {
+      messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+      hasScrolledOnLoad.current = true;
+    }
+  });
 
   // Set up scroll event listener on window (page scrolls, not container)
   useEffect(() => {

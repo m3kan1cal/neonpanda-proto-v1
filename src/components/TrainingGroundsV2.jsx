@@ -54,6 +54,7 @@ import ProgramList from "./programs/ProgramList";
 import RecentPRsCard from "./highlights/RecentPRsCard";
 import StreakCard from "./highlights/StreakCard";
 import TopExercisesCard from "./highlights/TopExercisesCard";
+import CoachBriefingCard from "./highlights/CoachBriefingCard";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
@@ -649,6 +650,33 @@ function TrainingGroundsV2() {
                   className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-md animate-pulse"
                 ></div>
               ))}
+            </div>
+          </div>
+
+          {/* Coach Briefing skeleton -- matches CoachBriefingCard's internal skeleton */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+              <div className="flex-1 h-px bg-gradient-to-r from-synthwave-neon-cyan/25 to-transparent"></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className={containerPatterns.neonGlassSkeleton}>
+                <div className={`${containerPatterns.neonGlassSkeletonInner} relative`}>
+                  <div className="absolute top-4 right-4">
+                    <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
+                  </div>
+                  <div className="flex items-center gap-2 pr-10">
+                    <span className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse shrink-0" />
+                    <span className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28 rounded" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full rounded" />
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4 rounded" />
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2 rounded" />
+                  </div>
+                  <div className="h-4 bg-synthwave-text-muted/10 animate-pulse w-24 rounded mt-1" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1405,6 +1433,20 @@ function TrainingGroundsV2() {
             </button>
           </div>
         </div>
+
+        {/* ================================================================ */}
+        {/* AI INSIGHTS -- Coach Briefing (own section, above Today)        */}
+        {/* ================================================================ */}
+        <CoachBriefingCard
+          recentReports={reportsState.recentReports}
+          recentWorkouts={workoutState.recentWorkouts}
+          isLoading={
+            reportsState.isLoadingRecentItems ||
+            workoutState.isLoadingRecentItems
+          }
+          userId={userId}
+          coachId={coachId}
+        />
 
         {/* ================================================================ */}
         {/* TIER 1 -- TODAY                                                  */}
