@@ -253,16 +253,24 @@ export default function CoachBriefingCard({
         {/* Grid -- matches workout card grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <div className={containerPatterns.neonGlassSkeleton}>
-            <div className={containerPatterns.neonGlassSkeletonInner}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse" />
-                <span className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24 rounded" />
+            <div className={`${containerPatterns.neonGlassSkeletonInner} relative`}>
+              {/* Dismiss button placeholder */}
+              <div className="absolute top-4 right-4">
+                <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
               </div>
+              {/* Header row */}
+              <div className="flex items-center gap-2 pr-10">
+                <span className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse shrink-0" />
+                <span className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28 rounded" />
+              </div>
+              {/* Body lines */}
               <div className="space-y-2">
                 <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full rounded" />
                 <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4 rounded" />
                 <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-1/2 rounded" />
               </div>
+              {/* View details placeholder */}
+              <div className="h-4 bg-synthwave-text-muted/10 animate-pulse w-24 rounded mt-1" />
             </div>
           </div>
         </div>
