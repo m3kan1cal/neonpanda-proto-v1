@@ -1302,6 +1302,33 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       });
     }
 
+    // Fire-and-forget workout analysis (non-blocking)
+    const buildWorkoutAnalysisFunction =
+      process.env.BUILD_WORKOUT_ANALYSIS_FUNCTION_NAME;
+    if (buildWorkoutAnalysisFunction) {
+      logger.info("🧠 Invoking workout analysis (async)..");
+      invokeAsyncLambda(
+        buildWorkoutAnalysisFunction,
+        {
+          userId: context.userId,
+          coachId: context.coachId,
+          workoutId: workout.workoutId,
+          workoutData: workoutData,
+          summary: summary,
+          completedAt: completedAtDate.toISOString(),
+          ...(context.templateContext?.scalingAnalysis && {
+            templateComparison: context.templateContext.scalingAnalysis,
+          }),
+        },
+        "workout analysis",
+      ).catch((error) => {
+        logger.error(
+          "⚠️ Failed to invoke build-workout-analysis (non-blocking):",
+          error,
+        );
+      });
+    }
+
     // Update template linkedWorkoutId if from program
     const templateLinked = context.templateContext
       ? await linkWorkoutToTemplate(

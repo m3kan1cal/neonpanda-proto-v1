@@ -32,6 +32,27 @@ export interface WorkoutCharacteristics {
 /**
  * Core workout data structure
  */
+/**
+ * AI-generated post-workout insights from the build-workout-analysis Lambda.
+ * Lightweight analysis comparing this workout against recent training history.
+ */
+export interface WorkoutInsights {
+  /** How this session compares to recent training (volume, intensity, duration) */
+  performanceComparison: string;
+  /** PR highlights or milestone recognition (null if none) */
+  achievements: string | null;
+  /** For template-based workouts: how well they followed the prescription (null if not from program) */
+  scalingAnalysis: string | null;
+  /** Recovery impact based on workout intensity + recent training load */
+  recoveryImpact: string;
+  /** Brief motivational or coaching observation */
+  coachNote: string;
+  /** When insights were generated (ISO timestamp) */
+  generatedAt: string;
+  /** Bedrock model used for generation */
+  modelId: string;
+}
+
 export interface Workout {
   workoutId: string;
   userId: string;
@@ -58,6 +79,8 @@ export interface Workout {
   summary?: string;
   // Root-level workout name for easier access
   workoutName?: string;
+  // AI-generated post-workout insights (from build-workout-analysis Lambda)
+  insights?: WorkoutInsights;
 
   // NEW: Training program template relationship (for implicit grouping)
   templateId?: string; // Links to the WorkoutTemplate this was logged from
