@@ -123,6 +123,7 @@ export const handler = async (event: BuildWorkoutAnalysisEvent) => {
           {
             temperature: TEMPERATURE_PRESETS.STRUCTURED,
             tools: WORKOUT_INSIGHTS_TOOL,
+            expectedToolName: "generate_workout_insights",
           },
         );
 
