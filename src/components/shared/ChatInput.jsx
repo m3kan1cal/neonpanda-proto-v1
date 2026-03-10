@@ -264,22 +264,21 @@ function ChatInput({
   if (showSkeleton) {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
           {/* Input area skeleton */}
-          <div className="flex items-end gap-2 sm:gap-3">
-            {/* Text input skeleton — matches TipTap minHeight 60px + rounded-2xl */}
+          <div className="flex items-end">
+            {/* Text input skeleton — matches TipTap minHeight 60px */}
             <div className="flex-1 relative">
               <div className="w-full h-[80px] bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-              {/* Emoji button placeholder (absolute right-3 bottom-3, desktop only) */}
-              <div className="absolute right-3 bottom-3 w-6 h-6 bg-synthwave-text-muted/10 rounded-md animate-pulse hidden md:block"></div>
+              {/* Emoji button placeholder */}
+              <div className="absolute right-[38px] bottom-[7px] w-6 h-6 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+              {/* Send button placeholder */}
+              <div className="absolute right-[8px] bottom-[7px] w-7 h-7 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
             </div>
-
-            {/* Send/Voice button skeleton */}
-            <div className="self-end mb-[6px] w-12 h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </div>
 
           {/* AI disclaimer and keyboard shortcuts skeleton */}
-          <div className="flex items-center justify-between gap-2 mt-3 pr-12 md:pr-[74px]">
+          <div className="flex items-center justify-between gap-2 mt-3">
             <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-48"></div>
             <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-64"></div>
           </div>
@@ -687,7 +686,7 @@ function ChatInput({
       className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
       data-chat-input-container
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
         {/* Image Preview Grid */}
         {selectedImages.length > 0 && (
           <div className="mb-2">
@@ -764,7 +763,7 @@ function ChatInput({
         {/* Input area */}
         <form
           onSubmit={handleSendMessage}
-          className="flex items-end gap-2 sm:gap-3"
+          className="flex items-end"
         >
           {/* Hidden file input */}
           <input
@@ -1016,7 +1015,7 @@ function ChatInput({
                 const ringPct = progressData.percentage ?? 0;
                 return (
                   <div
-                    className="absolute right-[38px] bottom-[10px]"
+                    className="absolute right-[68px] bottom-[10px]"
                     data-tooltip-id="progress-ring-tooltip"
                     data-tooltip-content={`Progress: ${ringCompleted}/${ringTotal} (${ringPct}%)`}
                   >
@@ -1032,7 +1031,7 @@ function ChatInput({
             {/* Conversation size ring (CoachConversations) */}
             {!progressData && conversationSize && (
               <div
-                className="absolute right-[38px] bottom-[10px]"
+                className="absolute right-[68px] bottom-[10px]"
                 data-tooltip-id="progress-ring-tooltip"
                 data-tooltip-content={`Conversation: ${conversationSize.sizeKB?.toFixed(1)}KB / ${conversationSize.maxSizeKB}KB (${conversationSize.percentage}%)`}
               >
@@ -1049,7 +1048,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`absolute right-[8px] bottom-[7px] p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+                className={`absolute right-[38px] bottom-[7px] p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                   showEmojiPicker
                     ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                     : ""
@@ -1285,53 +1284,53 @@ function ChatInput({
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Voice/Send buttons */}
-          <div className="flex items-center gap-2 self-end mb-[6px]">
-            {inputMessage.trim() || selectedImages.length > 0 ? (
-              <button
-                type="submit"
-                disabled={isTyping || isUploading}
-                className={buttonPatterns.sendSquare}
-              >
-                {isTyping || isUploading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <SendIcon />
-                )}
-              </button>
-            ) : enableRecording ? (
-              <button
-                type="button"
-                onMouseDown={handleStartRecording}
-                onMouseUp={handleStopRecording}
-                onMouseLeave={handleStopRecording}
-                onTouchStart={handleStartRecording}
-                onTouchEnd={handleStopRecording}
-                disabled={isTyping}
-                className={`w-12 h-12 rounded-md transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center shrink-0 ${
-                  isRecording
-                    ? "bg-red-500 text-white animate-pulse"
-                    : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
-                } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
-              >
-                <MicIcon />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled
-                className="w-12 h-12 rounded-md bg-synthwave-bg-primary/30 text-synthwave-text-muted shadow-lg flex items-center justify-center shrink-0 opacity-50 cursor-not-allowed"
-              >
-                <SendIcon />
-              </button>
-            )}
+            {/* Send/Voice button - inside textarea, right side */}
+            <div className="absolute right-[8px] bottom-[7px]">
+              {inputMessage.trim() || selectedImages.length > 0 ? (
+                <button
+                  type="submit"
+                  disabled={isTyping || isUploading}
+                  className={buttonPatterns.sendInline}
+                >
+                  {isTyping || isUploading ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <SendIcon className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              ) : enableRecording ? (
+                <button
+                  type="button"
+                  onMouseDown={handleStartRecording}
+                  onMouseUp={handleStopRecording}
+                  onMouseLeave={handleStopRecording}
+                  onTouchStart={handleStartRecording}
+                  onTouchEnd={handleStopRecording}
+                  disabled={isTyping}
+                  className={`w-7 h-7 rounded-full transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer ${
+                    isRecording
+                      ? "bg-red-500 text-white animate-pulse"
+                      : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
+                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+                >
+                  <MicIcon />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled
+                  className="w-7 h-7 rounded-full bg-synthwave-bg-primary/30 text-synthwave-text-muted flex items-center justify-center opacity-50 cursor-not-allowed"
+                >
+                  <SendIcon className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </form>
 
         {/* AI disclaimer and keyboard shortcuts */}
-        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-synthwave-text-muted font-body pr-12 md:pr-[74px]">
+        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-synthwave-text-muted font-body">
           {/* Left: AI disclaimer - aligned with text input left edge */}
           <div className="flex items-center">
             <span className="text-synthwave-text-muted/80">
