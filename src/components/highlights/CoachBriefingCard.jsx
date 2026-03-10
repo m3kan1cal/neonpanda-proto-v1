@@ -279,7 +279,7 @@ export default function CoachBriefingCard({
           content={truncate(insights.performanceComparison)}
           className="font-body text-sm text-synthwave-text-secondary leading-relaxed mb-2"
         />
-        {insights.achievements && (
+        {insights.achievements && insights.achievements !== "null" && (
           <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/20 rounded-sm">
             <svg
               className="w-3 h-3 text-synthwave-neon-pink"
