@@ -269,7 +269,7 @@ function WeeklyReportViewerV2({
                           label="Total Tonnage"
                           value={
                             structured.volume_breakdown.working_sets
-                              ?.total_tonnage
+                              ?.total_tonnage != null
                               ? `${structured.volume_breakdown.working_sets.total_tonnage.toLocaleString()} lbs`
                               : null
                           }
@@ -588,7 +588,7 @@ function WeeklyReportViewerV2({
                               label="Program Compliance"
                               value={
                                 structured.coaching_synthesis.adherence_analysis
-                                  .program_compliance
+                                  .program_compliance != null
                                   ? `${structured.coaching_synthesis.adherence_analysis.program_compliance}%`
                                   : null
                               }
@@ -817,7 +817,7 @@ function WeeklyReportViewerV2({
                             label="Avg Session Duration"
                             value={
                               structured.training_intelligence.workout_pacing
-                                .avg_session_duration
+                                .avg_session_duration != null
                                 ? `${structured.training_intelligence.workout_pacing.avg_session_duration}m`
                                 : null
                             }
@@ -826,7 +826,7 @@ function WeeklyReportViewerV2({
                             label="Density Score"
                             value={
                               structured.training_intelligence.workout_pacing
-                                .density_score
+                                .density_score != null
                                 ? `${structured.training_intelligence.workout_pacing.density_score}/10`
                                 : null
                             }
@@ -900,7 +900,7 @@ function WeeklyReportViewerV2({
                             label="Progressive Overload Score"
                             value={
                               structured.weekly_progression
-                                .progressive_overload_score
+                                .progressive_overload_score != null
                                 ? `${structured.weekly_progression.progressive_overload_score}/10`
                                 : null
                             }
@@ -996,7 +996,7 @@ function WeeklyReportViewerV2({
                         <ValueDisplay
                           label="Recovery Score"
                           value={
-                            structured.fatigue_management.recovery_score
+                            structured.fatigue_management.recovery_score != null
                               ? `${structured.fatigue_management.recovery_score}/10`
                               : null
                           }

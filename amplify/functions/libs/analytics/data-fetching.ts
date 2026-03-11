@@ -785,6 +785,9 @@ DAILY RPE/INTENSITY CALCULATION REQUIREMENTS:
 - Handle multiple workouts per day by averaging RPE/intensity values
 - Days with no workouts should still appear with workout_count: 0 and null values for averages
 
+OUTPUT REQUIREMENT:
+You MUST call the generate_analytics tool with your complete analysis. Do NOT respond with text — call the tool only.
+
 `;
 };
 
@@ -829,7 +832,51 @@ export const generateAnalytics = async (
 
     logger.info(`✅ Analytics tool result received for user ${userId}`);
 
-    const analyticsData = analyticsResult.input;
+    let analyticsData = analyticsResult.input;
+
+    // RETRY STEP - If the model returned text instead of calling the tool (input is {}),
+    // pass its analysis back as context and ask it to call the tool explicitly.
+    // This is a known failure mode when skipToolEnforcement is true: the model does the
+    // full analysis in <thinking> then responds conversationally instead of using the tool.
+    if (
+      (!analyticsData || Object.keys(analyticsData).length === 0) &&
+      analyticsResult.textResponse
+    ) {
+      logger.warn(
+        `⚠️ Tool-use failed on first attempt for user ${userId} (model returned text). Retrying with prior analysis as context.`,
+        { textResponseLength: analyticsResult.textResponse.length },
+      );
+
+      const retryPrompt =
+        `You previously analyzed the athlete's training data and produced the following analysis:\n\n` +
+        analyticsResult.textResponse.substring(0, 40000) +
+        `\n\nYou MUST now call the generate_analytics tool with the structured data from your analysis above. Do NOT respond with text — call the tool only.`;
+
+      const retryResult = (await callBedrockApi(
+        retryPrompt,
+        "analytics_generation_retry",
+        MODEL_IDS.PLANNER_MODEL_FULL,
+        {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
+          enableThinking: false, // disable thinking on retry to reduce text-mode tendency
+          tools: ANALYTICS_GENERATION_TOOL,
+          expectedToolName: "generate_analytics",
+          skipValidation: true,
+          skipToolEnforcement: true,
+        },
+      )) as BedrockToolUseResult;
+
+      if (retryResult.input && Object.keys(retryResult.input).length > 0) {
+        logger.info(
+          `✅ Analytics retry succeeded for user ${userId} — tool called with ${Object.keys(retryResult.input).length} top-level keys`,
+        );
+        analyticsData = retryResult.input;
+      } else {
+        logger.warn(
+          `⚠️ Analytics retry also failed for user ${userId} — falling through to normalization`,
+        );
+      }
+    }
 
     // NORMALIZATION STEP - Normalize analytics data for schema compliance
     let finalAnalyticsData = analyticsData;
