@@ -561,6 +561,9 @@ export interface BedrockToolUseResult {
   toolName: string;
   input: any;
   stopReason: string;
+  // Populated when the model returned text instead of calling the tool.
+  // Callers can use this to retry with the model's prior analysis as context.
+  textResponse?: string;
 }
 
 // Union type for Bedrock API results (text or tool use)
@@ -1157,12 +1160,14 @@ export const callBedrockApi = async (
           }
         }
 
-        // If we can't parse as JSON, return empty object
+        // If we can't parse as JSON, return empty object with the raw text preserved
+        // so callers can retry using the model's prior analysis as context.
         logger.info("ℹ️ Returning empty tool input (non-JSON text response)");
         return {
           toolName: options.expectedToolName ?? "unknown",
           input: {},
           stopReason: response.stopReason ?? "end_turn",
+          textResponse: textContent ?? undefined,
         };
       }
     }
