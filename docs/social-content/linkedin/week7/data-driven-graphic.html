@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data-Driven Training Decisions - NeonPanda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a0a2e 50%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 60px;
+            gap: 30px;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(90deg, #00e5ff, #ff2d7d, #00e5ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .dashboard-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .metric-card {
+            background: rgba(255, 45, 125, 0.08);
+            border: 2px solid #ff2d7d;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 220px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 45, 125, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:nth-child(1) {
+            background: rgba(0, 229, 255, 0.08);
+            border-color: #00e5ff;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+        }
+
+        .metric-card:nth-child(2) {
+            background: rgba(157, 78, 221, 0.08);
+            border-color: #9d4edd;
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.15);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #ff2d7d;
+            margin-bottom: 8px;
+        }
+
+        .metric-card:nth-child(1) .metric-label {
+            color: #00e5ff;
+        }
+
+        .metric-card:nth-child(2) .metric-label {
+            color: #9d4edd;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #00e5ff, #ff2d7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .metric-text {
+            font-size: 12px;
+            color: #b0b0c0;
+            line-height: 1.5;
+        }
+
+        .insights {
+            background: rgba(0, 229, 255, 0.08);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 8px;
+            padding: 16px 20px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .insights-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #00e5ff;
+            margin-bottom: 10px;
+        }
+
+        .insights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .insight-item {
+            font-size: 11px;
+            color: #a0e7ff;
+            display: flex;
+            gap: 8px;
+            line-height: 1.4;
+        }
+
+        .insight-item::before {
+            content: '→';
+            color: #00e5ff;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ff2d7d;
+            text-shadow: 0 0 10px rgba(255, 45, 125, 0.4);
+            z-index: 20;
+        }
+
+        .corner-accent {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px solid;
+            pointer-events: none;
+        }
+
+        .corner-accent.tl {
+            top: 20px;
+            left: 20px;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+            border-color: rgba(0, 229, 255, 0.3);
+        }
+
+        .corner-accent.br {
+            bottom: 20px;
+            right: 20px;
+            border-left-color: transparent;
+            border-top-color: transparent;
+            border-color: rgba(255, 45, 125, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="corner-accent tl"></div>
+    <div class="corner-accent br"></div>
+
+    <div class="content">
+        <div class="title">Data-Driven Training Decisions</div>
+
+        <div class="dashboard-container">
+            <div class="metric-card">
+                <div class="metric-label">Performance Trend</div>
+                <div class="metric-value">↗ +18%</div>
+                <div class="metric-text">8-week strength progression</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Peak Window</div>
+                <div class="metric-value">W3-W4</div>
+                <div class="metric-text">Strength peaks in weeks 3-4 of cycle</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Recovery Correlation</div>
+                <div class="metric-value">+42%</div>
+                <div class="metric-text">Performance boost after 2 rest days</div>
+            </div>
+        </div>
+
+        <div class="insights">
+            <div class="insights-title">📈 Weekly Insights</div>
+            <div class="insights-list">
+                <div class="insight-item">Bench press stalls after heavy squat days — consider spacing</div>
+                <div class="insight-item">Pulling volume correlates with upper body gains — increase frequency</div>
+                <div class="insight-item">Early overtraining signal: RIR trending down 3 consecutive weeks</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="logo">🐼 NEONPANDA</div>
+</body>
+</html>

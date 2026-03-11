@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonPanda Launch Announcement</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1A0A2E 0%, #0F1233 50%, #1A0A2E 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px;
+        }
+
+        /* Animated background grid */
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image:
+                linear-gradient(90deg, #00E5FF 1px, transparent 1px),
+                linear-gradient(0deg, #00E5FF 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: slide 20s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .panda-visual {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glow-circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(30px);
+            opacity: 0.6;
+        }
+
+        .glow-pink {
+            width: 300px;
+            height: 300px;
+            background: #FF2D7D;
+            top: 50%;
+            right: 10%;
+            transform: translateY(-50%);
+            animation: pulse-pink 3s ease-in-out infinite;
+        }
+
+        .glow-cyan {
+            width: 250px;
+            height: 250px;
+            background: #00E5FF;
+            bottom: 10%;
+            right: 20%;
+            animation: pulse-cyan 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse-pink {
+            0%, 100% { transform: translateY(-50%) scale(1); opacity: 0.6; }
+            50% { transform: translateY(-50%) scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes pulse-cyan {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .panda-icon {
+            font-size: 180px;
+            z-index: 3;
+            filter: drop-shadow(0 0 20px #FF2D7D) drop-shadow(0 0 40px #00E5FF);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        h1 {
+            font-size: 72px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #FF2D7D 0%, #00E5FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 30px rgba(255, 45, 125, 0.3);
+        }
+
+        .tagline {
+            font-size: 24px;
+            color: #00E5FF;
+            font-weight: 500;
+            letter-spacing: 1px;
+            margin-top: 15px;
+            font-style: italic;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+        }
+
+        .cta-text {
+            margin-top: 30px;
+            font-size: 18px;
+            color: #FF2D7D;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.9;
+        }
+
+        /* Neon border accent */
+        .accent-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 150px;
+            height: 4px;
+            background: linear-gradient(90deg, #FF2D7D, #00E5FF);
+            box-shadow: 0 0 20px #FF2D7D, 0 0 40px #00E5FF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid-bg"></div>
+
+        <div class="content">
+            <h1>INTRODUCING<br>NEONPANDA</h1>
+            <div class="tagline">Your AI Coach, Powered by Personality</div>
+            <div class="cta-text">EXPERIENCE COACHING THAT ADAPTS TO YOU</div>
+            <div class="accent-line"></div>
+        </div>
+
+        <div class="panda-visual">
+            <div class="glow-circle glow-pink"></div>
+            <div class="glow-circle glow-cyan"></div>
+            <div class="panda-icon">🐼</div>
+        </div>
+    </div>
+</body>
+</html>

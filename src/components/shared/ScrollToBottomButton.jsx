@@ -24,7 +24,7 @@ function ScrollToBottomButton({ onClick, show = true, className = "" }) {
       style={{
         WebkitTapHighlightColor: "transparent",
         // Use CSS custom property set by ChatInput's ResizeObserver + 16px gap
-        bottom: "calc(var(--chat-input-height, 128px) + 16px)",
+        bottom: "calc(var(--chat-input-height, 128px) + 8px)",
       }}
       onContextMenu={(e) => e.preventDefault()}
     >

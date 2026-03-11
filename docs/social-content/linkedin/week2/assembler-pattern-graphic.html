@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Assembler Pattern</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1A0A2E 0%, #0F1233 50%, #1A0A2E 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.08;
+            background-image:
+                linear-gradient(90deg, #00E5FF 1px, transparent 1px),
+                linear-gradient(0deg, #00E5FF 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .title {
+            position: relative;
+            z-index: 2;
+            font-size: 40px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #FF2D7D 0%, #00E5FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 35px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .pipeline {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1050px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF2D7D 0%, #00E5FF 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: #1A0A2E;
+            box-shadow: 0 0 20px rgba(255, 45, 125, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .step:hover .step-number {
+            transform: scale(1.15);
+            box-shadow: 0 0 30px rgba(255, 45, 125, 0.8), 0 0 20px rgba(0, 229, 255, 0.6);
+        }
+
+        .step-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            color: #FFFFFF;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            max-width: 95px;
+            line-height: 1.3;
+        }
+
+        .step-description {
+            font-size: 9px;
+            text-align: center;
+            color: #00E5FF;
+            max-width: 95px;
+            line-height: 1.2;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .connector {
+            flex-shrink: 0;
+            width: 35px;
+            height: 3px;
+            background: linear-gradient(90deg, #FF2D7D, #00E5FF);
+            position: relative;
+        }
+
+        .connector::after {
+            content: '→';
+            position: absolute;
+            right: -12px;
+            top: -12px;
+            color: #FF2D7D;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .result-section {
+            position: relative;
+            z-index: 2;
+            margin-top: 45px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 2px solid #00E5FF;
+            border-radius: 12px;
+            padding: 20px 30px;
+            max-width: 800px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .result-section:hover {
+            background: rgba(0, 229, 255, 0.15);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #00E5FF;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .result-text {
+            font-size: 13px;
+            color: #CCCCCC;
+            line-height: 1.6;
+            letter-spacing: 0.3px;
+        }
+
+        /* Glow effects */
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.25;
+        }
+
+        .glow-pink {
+            width: 300px;
+            height: 300px;
+            background: #FF2D7D;
+            top: 20%;
+            left: 5%;
+        }
+
+        .glow-cyan {
+            width: 300px;
+            height: 300px;
+            background: #00E5FF;
+            bottom: 10%;
+            right: 5%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid-bg"></div>
+        <div class="glow glow-pink"></div>
+        <div class="glow glow-cyan"></div>
+
+        <div class="title">The Assembler Pattern</div>
+
+        <div class="pipeline">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-label">Load</div>
+                <div class="step-description">Requirements</div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-label">Select</div>
+                <div class="step-description">Personality</div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-label">Select</div>
+                <div class="step-description">Methodology</div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-label">Generate</div>
+                <div class="step-description">Prompts</div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-label">Assemble</div>
+                <div class="step-description">Config</div>
+            </div>
+        </div>
+
+        <div style="position: relative; z-index: 2; width: 100%; max-width: 1050px; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 15px;">
+            <div class="step" style="flex: 1;">
+                <div class="step-number">6</div>
+                <div class="step-label">Validate</div>
+                <div class="step-description">Evaluator</div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="step" style="flex: 1;">
+                <div class="step-number">7</div>
+                <div class="step-label">Normalize</div>
+                <div class="step-description">Format</div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="step" style="flex: 1;">
+                <div class="step-number">8</div>
+                <div class="step-label">Save</div>
+                <div class="step-description">Database</div>
+            </div>
+        </div>
+
+        <div class="result-section">
+            <div class="result-title">✓ Custom AI Coach</div>
+            <div class="result-text">Built for your goals, discipline, and coaching style — not templated, not generic. Assembled.</div>
+        </div>
+    </div>
+</body>
+</html>

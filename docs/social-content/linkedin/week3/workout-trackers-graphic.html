@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Workouts Like Texting a Friend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1A0A2E 0%, #0F1233 50%, #1A0A2E 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            gap: 60px;
+        }
+
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.08;
+            background-image:
+                linear-gradient(90deg, #00E5FF 1px, transparent 1px),
+                linear-gradient(0deg, #00E5FF 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .side {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .side-title {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+        }
+
+        .before-title {
+            color: #FF6B9D;
+        }
+
+        .after-title {
+            color: #00E5FF;
+        }
+
+        /* Before: Traditional tracking */
+        .traditional-tracker {
+            width: 160px;
+            background: rgba(255, 107, 157, 0.1);
+            border: 2px solid #FF6B9D;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 0 15px rgba(255, 107, 157, 0.2);
+        }
+
+        .input-field {
+            background: rgba(255, 107, 157, 0.2);
+            border: 1px solid #FF6B9D;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 9px;
+            color: #CCCCCC;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        .button {
+            background: rgba(255, 107, 157, 0.3);
+            border: 1px solid #FF6B9D;
+            border-radius: 4px;
+            padding: 8px 4px;
+            font-size: 8px;
+            color: #FF6B9D;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .friction-indicator {
+            font-size: 24px;
+            color: #FF6B9D;
+            text-align: center;
+            margin-top: 10px;
+            animation: shake 2s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        .friction-text {
+            font-size: 11px;
+            color: #FF6B9D;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* After: Chat-style logging */
+        .chat-interface {
+            width: 180px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 2px solid #00E5FF;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+            height: 280px;
+            overflow-y: auto;
+        }
+
+        .message {
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 10px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background: rgba(255, 45, 125, 0.3);
+            border: 1px solid #FF2D7D;
+            color: #FFFFFF;
+            margin-left: auto;
+            width: 85%;
+            text-align: right;
+            animation: slideInRight 0.5s ease;
+        }
+
+        .coach-message {
+            background: rgba(0, 229, 255, 0.3);
+            border: 1px solid #00E5FF;
+            color: #FFFFFF;
+            margin-right: auto;
+            width: 85%;
+            animation: slideInLeft 0.5s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .coach-message:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .coach-message:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .flow-indicator {
+            font-size: 24px;
+            color: #00E5FF;
+            text-align: center;
+            margin-top: 10px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .flow-text {
+            font-size: 11px;
+            color: #00E5FF;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Glow effects */
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.25;
+        }
+
+        .glow-pink {
+            width: 300px;
+            height: 300px;
+            background: #FF2D7D;
+            top: 50%;
+            left: 5%;
+            transform: translateY(-50%);
+        }
+
+        .glow-cyan {
+            width: 300px;
+            height: 300px;
+            background: #00E5FF;
+            top: 50%;
+            right: 5%;
+            transform: translateY(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid-bg"></div>
+        <div class="glow glow-pink"></div>
+        <div class="glow glow-cyan"></div>
+
+        <div class="side">
+            <div class="side-title before-title">Traditional</div>
+            <div class="traditional-tracker">
+                <div class="input-field">Select Exercise</div>
+                <div class="input-field">Set 1: Reps</div>
+                <div class="input-field">Set 1: Weight</div>
+                <div class="input-field">Set 2: Reps</div>
+                <div class="input-field">Set 2: Weight</div>
+                <div class="button">ADD SET</div>
+            </div>
+            <div class="friction-indicator">❌</div>
+            <div class="friction-text">Friction</div>
+        </div>
+
+        <div class="side">
+            <div class="side-title after-title">NeonPanda</div>
+            <div class="chat-interface">
+                <div class="coach-message">What did you do today?</div>
+                <div class="user-message">5x5 back squat at 315, then pull-ups</div>
+                <div class="coach-message">Logged ✓</div>
+                <div class="user-message">Ran 5 miles easy</div>
+                <div class="coach-message">Saved ✓</div>
+            </div>
+            <div class="flow-indicator">✓</div>
+            <div class="flow-text">Natural Flow</div>
+        </div>
+    </div>
+</body>
+</html>
