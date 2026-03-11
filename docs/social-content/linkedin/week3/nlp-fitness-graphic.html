@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLP Meets Fitness</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1A0A2E 0%, #0F1233 50%, #1A0A2E 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.08;
+            background-image:
+                linear-gradient(90deg, #00E5FF 1px, transparent 1px),
+                linear-gradient(0deg, #00E5FF 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .title {
+            position: relative;
+            z-index: 2;
+            font-size: 44px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #FF2D7D 0%, #00E5FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .pipeline-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Input section -->
+        .input-section {
+            background: rgba(255, 45, 125, 0.1);
+            border: 2px dashed #FF2D7D;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #FF2D7D;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .input-examples {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .example-tag {
+            background: rgba(255, 45, 125, 0.2);
+            border: 1px solid #FF2D7D;
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-size: 10px;
+            color: #FFFFFF;
+            font-style: italic;
+        }
+
+        /* Pipeline steps -->
+        .steps-flow {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .pipeline-step {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(255, 45, 125, 0.1));
+            border: 2px solid #00E5FF;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pipeline-step::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .pipeline-step:hover {
+            border-color: #FF2D7D;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .pipeline-step:hover::before {
+            opacity: 1;
+        }
+
+        .step-number {
+            position: relative;
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF2D7D, #00E5FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: #1A0A2E;
+            margin: 0 auto 12px;
+            box-shadow: 0 0 15px rgba(255, 45, 125, 0.4);
+        }
+
+        .step-title {
+            position: relative;
+            z-index: 2;
+            font-size: 13px;
+            font-weight: 700;
+            color: #00E5FF;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            position: relative;
+            z-index: 2;
+            font-size: 10px;
+            color: #CCCCCC;
+            line-height: 1.4;
+        }
+
+        /* Second row of steps -->
+        .steps-flow-2 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        /* Output section -->
+        .output-section {
+            background: rgba(0, 229, 255, 0.1);
+            border: 2px dashed #00E5FF;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+        }
+
+        .output-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #00E5FF;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .output-structure {
+            background: rgba(0, 229, 255, 0.15);
+            border-left: 4px solid #00E5FF;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #FFFFFF;
+            line-height: 1.6;
+        }
+
+        /* Glow effects -->
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.25;
+        }
+
+        .glow-pink {
+            width: 300px;
+            height: 300px;
+            background: #FF2D7D;
+            top: 10%;
+            left: 5%;
+        }
+
+        .glow-cyan {
+            width: 300px;
+            height: 300px;
+            background: #00E5FF;
+            bottom: 10%;
+            right: 5%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid-bg"></div>
+        <div class="glow glow-pink"></div>
+        <div class="glow glow-cyan"></div>
+
+        <div class="title">NLP Meets Fitness</div>
+
+        <div class="pipeline-container">
+            <!-- Input -->
+            <div class="input-section">
+                <div class="input-label">Natural Language Input</div>
+                <div class="input-examples">
+                    <div class="example-tag">"5x5 back squat at 315"</div>
+                    <div class="example-tag">"Did Fran in 8:45"</div>
+                    <div class="example-tag">"Ran 5 miles easy"</div>
+                </div>
+            </div>
+
+            <!-- Steps -->
+            <div class="steps-flow">
+                <div class="pipeline-step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Discipline</div>
+                    <div class="step-desc">Detection</div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Data</div>
+                    <div class="step-desc">Extraction</div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Validation</div>
+                    <div class="step-desc">Anomaly Check</div>
+                </div>
+            </div>
+
+            <div class="steps-flow-2">
+                <div class="pipeline-step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Normalization</div>
+                    <div class="step-desc">Standardize</div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Summary</div>
+                    <div class="step-desc">Generation</div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">6</div>
+                    <div class="step-title">Save</div>
+                    <div class="step-desc">Persist</div>
+                </div>
+            </div>
+
+            <!-- Output -->
+            <div class="output-section">
+                <div class="output-label">Structured Workout Data</div>
+                <div class="output-structure">
+                    {<br>
+                    &nbsp;&nbsp;exercise: "Back Squat",<br>
+                    &nbsp;&nbsp;sets: 5,<br>
+                    &nbsp;&nbsp;reps: 5,<br>
+                    &nbsp;&nbsp;weight: 315,<br>
+                    &nbsp;&nbsp;unit: "lbs"<br>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

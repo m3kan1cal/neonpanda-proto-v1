@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Program Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1A0A2E 0%, #0F1233 50%, #1A0A2E 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.08;
+            background-image:
+                linear-gradient(90deg, #00E5FF 1px, transparent 1px),
+                linear-gradient(0deg, #00E5FF 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .title {
+            position: relative;
+            z-index: 2;
+            font-size: 44px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #FF2D7D 0%, #00E5FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        /* Timeline visualization -->
+        .timeline {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 950px;
+            margin-bottom: 40px;
+        }
+
+        .timeline-bar {
+            width: 100%;
+            height: 12px;
+            background: linear-gradient(90deg, #FF2D7D 0%, #FF2D7D 25%, #00E5FF 25%, #00E5FF 50%, #FF2D7D 50%, #FF2D7D 75%, #00E5FF 75%, #00E5FF 100%);
+            border-radius: 6px;
+            box-shadow: 0 0 20px rgba(255, 45, 125, 0.4), 0 0 20px rgba(0, 229, 255, 0.2);
+            margin-bottom: 25px;
+        }
+
+        .phases {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        .phase {
+            background: rgba(0, 229, 255, 0.1);
+            border: 2px solid #00E5FF;
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phase::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            top: 0;
+            left: 0;
+            background: linear-gradient(90deg, #FF2D7D, #00E5FF);
+            z-index: 1;
+        }
+
+        .phase:nth-child(1)::before {
+            background: #FF2D7D;
+        }
+
+        .phase:nth-child(2)::before {
+            background: #00E5FF;
+        }
+
+        .phase:nth-child(3)::before {
+            background: #FF2D7D;
+        }
+
+        .phase:nth-child(4)::before {
+            background: #00E5FF;
+        }
+
+        .phase:hover {
+            background: rgba(0, 229, 255, 0.2);
+            border-color: #FF2D7D;
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px rgba(0, 229, 255, 0.3);
+        }
+
+        .phase-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #00E5FF;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+            margin-top: 8px;
+        }
+
+        .phase-desc {
+            font-size: 10px;
+            color: #CCCCCC;
+            line-height: 1.5;
+        }
+
+        .phase-weeks {
+            font-size: 9px;
+            color: #FF2D7D;
+            margin-top: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Key principles -->
+        .principles {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 950px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .principle {
+            background: linear-gradient(135deg, rgba(255, 45, 125, 0.15), rgba(0, 229, 255, 0.1));
+            border: 2px solid #FF2D7D;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .principle:hover {
+            background: linear-gradient(135deg, rgba(255, 45, 125, 0.2), rgba(0, 229, 255, 0.15));
+            border-color: #00E5FF;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+        }
+
+        .principle-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .principle-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #FF2D7D;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        .principle-text {
+            font-size: 9px;
+            color: #CCCCCC;
+            line-height: 1.4;
+        }
+
+        /* Glow effects -->
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.25;
+        }
+
+        .glow-pink {
+            width: 300px;
+            height: 300px;
+            background: #FF2D7D;
+            top: 20%;
+            left: 5%;
+        }
+
+        .glow-cyan {
+            width: 300px;
+            height: 300px;
+            background: #00E5FF;
+            bottom: 10%;
+            right: 5%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid-bg"></div>
+        <div class="glow glow-pink"></div>
+        <div class="glow glow-cyan"></div>
+
+        <div class="title">AI-Powered Program Design</div>
+
+        <div class="timeline">
+            <div class="timeline-bar"></div>
+
+            <div class="phases">
+                <div class="phase">
+                    <div class="phase-name">Base</div>
+                    <div class="phase-desc">Build Work Capacity & Technique</div>
+                    <div class="phase-weeks">Weeks 1-4</div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-name">Build</div>
+                    <div class="phase-desc">Increase Volume & Intensity</div>
+                    <div class="phase-weeks">Weeks 5-8</div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-name">Peak</div>
+                    <div class="phase-desc">Max Strength or Performance</div>
+                    <div class="phase-weeks">Weeks 9-12</div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-name">Deload</div>
+                    <div class="phase-desc">Recovery & Adaptation</div>
+                    <div class="phase-weeks">Week 13</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="principles">
+            <div class="principle">
+                <div class="principle-icon">📈</div>
+                <div class="principle-title">Progressive<br>Overload</div>
+                <div class="principle-text">Incrementally increase volume and intensity without burnout</div>
+            </div>
+
+            <div class="principle">
+                <div class="principle-icon">🎯</div>
+                <div class="principle-title">Constraints<br>Aware</div>
+                <div class="principle-text">Adapts to your time, equipment, and physical limitations</div>
+            </div>
+
+            <div class="principle">
+                <div class="principle-icon">🔄</div>
+                <div class="principle-title">Adaptive<br>Logic</div>
+                <div class="principle-text">Monitors progress and adjusts phases based on your feedback</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
