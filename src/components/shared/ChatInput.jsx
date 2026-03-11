@@ -761,10 +761,7 @@ function ChatInput({
         )}
 
         {/* Input area */}
-        <form
-          onSubmit={handleSendMessage}
-          className="flex items-end"
-        >
+        <form onSubmit={handleSendMessage} className="flex items-end">
           {/* Hidden file input */}
           <input
             ref={photoInputRef}
@@ -776,452 +773,7 @@ function ChatInput({
           />
           {/* Text input */}
           <div className="flex-1 relative">
-            <TiptapEditor
-              ref={editorRef}
-              content={inputMessage}
-              onUpdate={(html, text) => {
-                setInputMessage(text);
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                window.innerWidth < 768 ? "Talk to me..." : placeholder
-              }
-              disabled={isTyping}
-              mode="rich"
-              className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
-              minHeight="60px"
-              maxHeight="150px"
-              scrollOnWrapper={true}
-              onPaste={handlePaste}
-            />
-            {/* Actions menu button - inside textarea, left side */}
-            <div
-              className="absolute left-[8px] bottom-[7px]"
-              data-quick-actions-container
-            >
-              <button
-                type="button"
-                onClick={() => setShowQuickActionsPopup(!showQuickActionsPopup)}
-                className={`p-1 rounded-md text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
-                  showQuickActionsPopup ? "text-blue-400 bg-blue-400/20" : ""
-                }`}
-                data-tooltip-id="quick-actions-tooltip"
-                data-tooltip-content="Actions"
-                data-tooltip-place="top"
-              >
-                <PlusIconLarge />
-              </button>
-
-              {/* Quick Actions Popup */}
-              {showQuickActionsPopup && (
-                <div
-                  className={`absolute bottom-full mb-2 left-0 w-56 z-50 ${containerPatterns.cardMediumOpaque}`}
-                >
-                  <div className="py-2">
-                    {/* Quick Prompts Menu Item - always show */}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowQuickPromptsSubmenu(!showQuickPromptsSubmenu)
-                        }
-                        onMouseEnter={() =>
-                          window.innerWidth >= 768 &&
-                          setShowQuickPromptsSubmenu(true)
-                        }
-                        onMouseLeave={() =>
-                          window.innerWidth >= 768 &&
-                          setShowQuickPromptsSubmenu(false)
-                        }
-                        className="flex items-center justify-between space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                            />
-                          </svg>
-                          <span>Quick Prompts</span>
-                        </div>
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </button>
-
-                      {/* Quick Prompts Submenu */}
-                      {showQuickPromptsSubmenu && (
-                        <div
-                          className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
-                          data-quick-prompts-submenu
-                          onMouseEnter={() =>
-                            window.innerWidth >= 768 &&
-                            setShowQuickPromptsSubmenu(true)
-                          }
-                          onMouseLeave={() =>
-                            window.innerWidth >= 768 &&
-                            setShowQuickPromptsSubmenu(false)
-                          }
-                        >
-                          <div className="py-2">
-                            {currentPrompts.map((category, categoryIndex) => (
-                              <div
-                                key={categoryIndex}
-                                className="mb-3 last:mb-0"
-                              >
-                                {/* Category Header */}
-                                <div
-                                  className={
-                                    navigationPatterns.quickPrompts
-                                      .categoryHeader
-                                  }
-                                >
-                                  <span>{category.category}</span>
-                                </div>
-
-                                {/* Category Prompts */}
-                                <div className="space-y-0">
-                                  {category.prompts.map(
-                                    (prompt, promptIndex) => (
-                                      <button
-                                        key={promptIndex}
-                                        type="button"
-                                        onClick={() =>
-                                          handleQuickPromptSelect(prompt)
-                                        }
-                                        className={
-                                          navigationPatterns.quickPrompts
-                                            .promptButton
-                                        }
-                                      >
-                                        {prompt}
-                                      </button>
-                                    ),
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Divider - only show if there are attachment options */}
-                    {(enablePhotoAttachment || enableFileAttachment) && (
-                      <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
-                    )}
-
-                    {enablePhotoAttachment && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowQuickActionsPopup(false);
-                          if (onPhotoAttachment) {
-                            onPhotoAttachment();
-                          } else {
-                            photoInputRef.current?.click();
-                          }
-                        }}
-                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
-                      >
-                        <CameraIcon />
-                        <span>Attach Photos</span>
-                      </button>
-                    )}
-
-                    {enableFileAttachment && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowQuickActionsPopup(false);
-                          if (onFileAttachment) {
-                            onFileAttachment();
-                          }
-                        }}
-                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-purple-400 hover:bg-purple-400/10 transition-all duration-300 w-full text-left"
-                      >
-                        <PaperclipIcon />
-                        <span>Attach Files</span>
-                      </button>
-                    )}
-
-                    {/* Divider before utility actions */}
-                    {(showTipsButton || showDeleteButton) && (
-                      <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
-                    )}
-
-                    {showTipsButton && tipsContent && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowQuickActionsPopup(false);
-                          setShowTipsModal(true);
-                        }}
-                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
-                      >
-                        <QuestionIcon />
-                        <span>Tips & Help</span>
-                      </button>
-                    )}
-
-                    {showDeleteButton && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowQuickActionsPopup(false);
-                          onDeleteClick && onDeleteClick();
-                        }}
-                        className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
-                      >
-                        <TrashIcon />
-                        <span>
-                          {context === "creation" ||
-                          context === "program-design"
-                            ? "Delete Session"
-                            : "Delete Conversation"}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Progress ring (CoachCreator / ProgramDesigner) */}
-            {progressData &&
-              (() => {
-                const ringCompleted =
-                  progressData.questionsCompleted ??
-                  progressData.itemsCompleted ??
-                  0;
-                const ringTotal =
-                  progressData.estimatedTotal ?? progressData.totalItems ?? 0;
-                const ringPct = progressData.percentage ?? 0;
-                return (
-                  <div
-                    className="absolute right-[68px] bottom-[10px]"
-                    data-tooltip-id="progress-ring-tooltip"
-                    data-tooltip-content={`Progress: ${ringCompleted}/${ringTotal} (${ringPct}%)`}
-                  >
-                    <ProgressRing
-                      percentage={ringPct}
-                      size={20}
-                      strokeWidth={2}
-                    />
-                  </div>
-                );
-              })()}
-
-            {/* Conversation size ring (CoachConversations) */}
-            {!progressData && conversationSize && (
-              <div
-                className="absolute right-[68px] bottom-[10px]"
-                data-tooltip-id="progress-ring-tooltip"
-                data-tooltip-content={`Conversation: ${conversationSize.sizeKB?.toFixed(1)}KB / ${conversationSize.maxSizeKB}KB (${conversationSize.percentage}%)`}
-              >
-                <ProgressRing
-                  percentage={conversationSize.percentage}
-                  size={20}
-                  strokeWidth={2}
-                  isWarning={conversationSize.isApproachingLimit}
-                />
-              </div>
-            )}
-
-            <div className="relative" data-emoji-picker-container>
-              <button
-                type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`absolute right-[38px] bottom-[7px] p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
-                  showEmojiPicker
-                    ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                    : ""
-                }`}
-                data-tooltip-id="emoji-tooltip"
-                data-tooltip-content="Emojis"
-                data-tooltip-place="top"
-              >
-                <SmileIcon />
-              </button>
-
-              {/* Emoji Picker Popup */}
-              {showEmojiPicker && (
-                <div className="absolute bottom-14 right-0 z-50">
-                  <div
-                    className={`${containerPatterns.cardMediumOpaque} overflow-hidden emoji-picker-synthwave`}
-                  >
-                    <style>{`
-                      .emoji-picker-synthwave .epr-emoji-category-label {
-                        font-family: 'Rajdhani', sans-serif !important;
-                        font-size: 0.75rem !important;
-                        font-weight: 500 !important;
-                        color: #b4b4b4 !important;
-                        text-transform: uppercase !important;
-                        letter-spacing: 0.05em !important;
-                        background-color: transparent !important;
-                        padding: 8px 12px 4px 12px !important;
-                        margin: 0 !important;
-                      }
-
-                      .emoji-picker-synthwave .epr-search-container input {
-                        font-family: 'Rajdhani', sans-serif !important;
-                        font-size: 1rem !important;
-                        background-color: rgba(10, 10, 10, 0.5) !important;
-                        border: 2px solid rgba(255, 0, 128, 0.3) !important;
-                        border-radius: 16px !important;
-                        color: #ffffff !important;
-                        outline: none !important;
-                        box-shadow: none !important;
-                        transition: border-color 300ms !important;
-                        padding: 12px 16px 12px 36px !important;
-                        height: 48px !important;
-                      }
-
-                      .emoji-picker-synthwave .epr-search-container input:hover {
-                        border-color: rgba(255, 0, 128, 0.5) !important;
-                      }
-
-                      .emoji-picker-synthwave .epr-search-container input:focus {
-                        border-color: rgb(255, 0, 128) !important;
-                        background-color: rgba(10, 10, 10, 0.5) !important;
-                        outline: none !important;
-                        box-shadow: none !important;
-                      }
-
-                      .emoji-picker-synthwave .epr-search-container input::placeholder {
-                        color: #666666 !important;
-                      }
-
-                      /* Cyan scrollbar styling */
-                      .emoji-picker-synthwave ::-webkit-scrollbar {
-                        width: 6px !important;
-                      }
-
-                      .emoji-picker-synthwave ::-webkit-scrollbar-track {
-                        background: rgba(21, 23, 35, 0.5) !important;
-                      }
-
-                      .emoji-picker-synthwave ::-webkit-scrollbar-thumb {
-                        background: rgba(0, 255, 255, 0.3) !important;
-                        border-radius: 3px !important;
-                      }
-
-                      .emoji-picker-synthwave ::-webkit-scrollbar-thumb:hover {
-                        background: rgba(0, 255, 255, 0.5) !important;
-                      }
-                    `}</style>
-                    <EmojiPicker
-                      onEmojiClick={handleEmojiClick}
-                      theme="dark"
-                      searchPlaceHolder="Search emojis..."
-                      width={350}
-                      height={450}
-                      emojiStyle="native"
-                      previewConfig={{
-                        showPreview: false,
-                      }}
-                      skinTonesDisabled
-                      searchDisabled={false}
-                      categories={[
-                        {
-                          category: "suggested",
-                          name: "Recently Used",
-                        },
-                        {
-                          category: "activities",
-                          name: "Fitness & Activities",
-                        },
-                        {
-                          category: "smileys_people",
-                          name: "Smileys & People",
-                        },
-                        {
-                          category: "food_drink",
-                          name: "Food & Drink",
-                        },
-                        {
-                          category: "objects",
-                          name: "Objects",
-                        },
-                        {
-                          category: "animals_nature",
-                          name: "Animals & Nature",
-                        },
-                        {
-                          category: "travel_places",
-                          name: "Travel & Places",
-                        },
-                        {
-                          category: "symbols",
-                          name: "Symbols",
-                        },
-                        {
-                          category: "flags",
-                          name: "Flags",
-                        },
-                      ]}
-                      style={{
-                        "--epr-bg-color": "transparent",
-                        "--epr-category-label-bg-color": "transparent",
-                        "--epr-picker-border-color": "transparent",
-                        "--epr-search-input-bg-color": "rgba(10, 10, 10, 0.5)",
-                        "--epr-search-input-bg-color-active":
-                          "rgba(10, 10, 10, 0.7)",
-                        "--epr-search-input-border-color":
-                          "rgba(0, 255, 255, 0.2)",
-                        "--epr-search-input-border-color-active":
-                          "rgba(0, 255, 255, 0.5)",
-                        "--epr-hover-bg-color": "rgba(0, 255, 255, 0.15)",
-                        "--epr-focus-bg-color": "rgba(0, 255, 255, 0.2)",
-                        "--epr-text-color": "#b4b4b4",
-                        "--epr-search-input-text-color": "#f1f5f9",
-                        "--epr-search-input-placeholder-color": "#666666",
-                        "--epr-category-icon-active-color": "#00ffff",
-                        "--epr-skin-tone-picker-menu-color":
-                          "rgba(30, 30, 46, 0.95)",
-                        "--epr-emoji-size": "24px",
-                        "--epr-emoji-padding": "4px",
-                        "--epr-category-padding": "8px",
-                        "--epr-header-padding": "12px",
-                        "--epr-search-input-height": "40px",
-                        "--epr-search-input-padding": "12px",
-                        "--epr-category-label-height": "auto",
-                        fontSize: "0.75rem",
-                        fontFamily: "Rajdhani, sans-serif",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <Tooltip id="emoji-tooltip" {...tooltipPatterns.standard} />
-            <Tooltip id="quick-actions-tooltip" {...tooltipPatterns.standard} />
-            {(progressData || conversationSize) && (
-              <Tooltip
-                id="progress-ring-tooltip"
-                {...tooltipPatterns.standard}
-              />
-            )}
-
-            {/* Slash Command Tooltip */}
+            {/* Slash Command Tooltip - anchored above the full input container */}
             {showSlashCommandTooltip && enableSlashCommands && (
               <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
                 <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
@@ -1285,47 +837,509 @@ function ChatInput({
               </div>
             )}
 
-            {/* Send/Voice button - inside textarea, right side */}
-            <div className="absolute right-[8px] bottom-[7px]">
-              {inputMessage.trim() || selectedImages.length > 0 ? (
-                <button
-                  type="submit"
-                  disabled={isTyping || isUploading}
-                  className={buttonPatterns.sendInline}
-                >
-                  {isTyping || isUploading ? (
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <SendIcon className="w-3.5 h-3.5" />
+            {/* Input container: editor area + button row share the same border/bg */}
+            <div className={inputPatterns.chatInputWrapper}>
+              <TiptapEditor
+                ref={editorRef}
+                content={inputMessage}
+                onUpdate={(html, text) => {
+                  setInputMessage(text);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  window.innerWidth < 768 ? "Talk to me..." : placeholder
+                }
+                disabled={isTyping}
+                mode="rich"
+                className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
+                minHeight="60px"
+                maxHeight="150px"
+                scrollOnWrapper={true}
+                onPaste={handlePaste}
+              />
+
+              {/* Button row: actions on left, controls on right */}
+              <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
+                {/* Left: actions menu button */}
+                <div className="relative" data-quick-actions-container>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowQuickActionsPopup(!showQuickActionsPopup)
+                    }
+                    className={`p-1 rounded-md text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
+                      showQuickActionsPopup
+                        ? "text-blue-400 bg-blue-400/20"
+                        : ""
+                    }`}
+                    data-tooltip-id="quick-actions-tooltip"
+                    data-tooltip-content="Actions"
+                    data-tooltip-place="top"
+                  >
+                    <PlusIconLarge />
+                  </button>
+
+                  {/* Quick Actions Popup */}
+                  {showQuickActionsPopup && (
+                    <div
+                      className={`absolute bottom-full mb-2 left-0 w-56 z-50 ${containerPatterns.cardMediumOpaque}`}
+                    >
+                      <div className="py-2">
+                        {/* Quick Prompts Menu Item - always show */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowQuickPromptsSubmenu(
+                                !showQuickPromptsSubmenu,
+                              )
+                            }
+                            onMouseEnter={() =>
+                              window.innerWidth >= 768 &&
+                              setShowQuickPromptsSubmenu(true)
+                            }
+                            onMouseLeave={() =>
+                              window.innerWidth >= 768 &&
+                              setShowQuickPromptsSubmenu(false)
+                            }
+                            className="flex items-center justify-between space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                />
+                              </svg>
+                              <span>Quick Prompts</span>
+                            </div>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </button>
+
+                          {/* Quick Prompts Submenu */}
+                          {showQuickPromptsSubmenu && (
+                            <div
+                              className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
+                              data-quick-prompts-submenu
+                              onMouseEnter={() =>
+                                window.innerWidth >= 768 &&
+                                setShowQuickPromptsSubmenu(true)
+                              }
+                              onMouseLeave={() =>
+                                window.innerWidth >= 768 &&
+                                setShowQuickPromptsSubmenu(false)
+                              }
+                            >
+                              <div className="py-2">
+                                {currentPrompts.map(
+                                  (category, categoryIndex) => (
+                                    <div
+                                      key={categoryIndex}
+                                      className="mb-3 last:mb-0"
+                                    >
+                                      {/* Category Header */}
+                                      <div
+                                        className={
+                                          navigationPatterns.quickPrompts
+                                            .categoryHeader
+                                        }
+                                      >
+                                        <span>{category.category}</span>
+                                      </div>
+
+                                      {/* Category Prompts */}
+                                      <div className="space-y-0">
+                                        {category.prompts.map(
+                                          (prompt, promptIndex) => (
+                                            <button
+                                              key={promptIndex}
+                                              type="button"
+                                              onClick={() =>
+                                                handleQuickPromptSelect(prompt)
+                                              }
+                                              className={
+                                                navigationPatterns.quickPrompts
+                                                  .promptButton
+                                              }
+                                            >
+                                              {prompt}
+                                            </button>
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Divider - only show if there are attachment options */}
+                        {(enablePhotoAttachment || enableFileAttachment) && (
+                          <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                        )}
+
+                        {enablePhotoAttachment && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowQuickActionsPopup(false);
+                              if (onPhotoAttachment) {
+                                onPhotoAttachment();
+                              } else {
+                                photoInputRef.current?.click();
+                              }
+                            }}
+                            className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                          >
+                            <CameraIcon />
+                            <span>Attach Photos</span>
+                          </button>
+                        )}
+
+                        {enableFileAttachment && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowQuickActionsPopup(false);
+                              if (onFileAttachment) {
+                                onFileAttachment();
+                              }
+                            }}
+                            className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-purple-400 hover:bg-purple-400/10 transition-all duration-300 w-full text-left"
+                          >
+                            <PaperclipIcon />
+                            <span>Attach Files</span>
+                          </button>
+                        )}
+
+                        {/* Divider before utility actions */}
+                        {(showTipsButton || showDeleteButton) && (
+                          <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                        )}
+
+                        {showTipsButton && tipsContent && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowQuickActionsPopup(false);
+                              setShowTipsModal(true);
+                            }}
+                            className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                          >
+                            <QuestionIcon />
+                            <span>Tips & Help</span>
+                          </button>
+                        )}
+
+                        {showDeleteButton && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowQuickActionsPopup(false);
+                              onDeleteClick && onDeleteClick();
+                            }}
+                            className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                          >
+                            <TrashIcon />
+                            <span>
+                              {context === "creation" ||
+                              context === "program-design"
+                                ? "Delete Session"
+                                : "Delete Conversation"}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   )}
-                </button>
-              ) : enableRecording ? (
-                <button
-                  type="button"
-                  onMouseDown={handleStartRecording}
-                  onMouseUp={handleStopRecording}
-                  onMouseLeave={handleStopRecording}
-                  onTouchStart={handleStartRecording}
-                  onTouchEnd={handleStopRecording}
-                  disabled={isTyping}
-                  className={`w-7 h-7 rounded-full transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer ${
-                    isRecording
-                      ? "bg-red-500 text-white animate-pulse"
-                      : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
-                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
-                >
-                  <MicIcon />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled
-                  className="w-7 h-7 rounded-full bg-synthwave-bg-primary/30 text-synthwave-text-muted flex items-center justify-center opacity-50 cursor-not-allowed"
-                >
-                  <SendIcon className="w-3.5 h-3.5" />
-                </button>
-              )}
+                </div>
+
+                {/* Right: progress indicator + emoji + send */}
+                <div className="flex items-center gap-1">
+                  {/* Progress ring (CoachCreator / ProgramDesigner) */}
+                  {progressData &&
+                    (() => {
+                      const ringCompleted =
+                        progressData.questionsCompleted ??
+                        progressData.itemsCompleted ??
+                        0;
+                      const ringTotal =
+                        progressData.estimatedTotal ??
+                        progressData.totalItems ??
+                        0;
+                      const ringPct = progressData.percentage ?? 0;
+                      return (
+                        <div
+                          data-tooltip-id="progress-ring-tooltip"
+                          data-tooltip-content={`Progress: ${ringCompleted}/${ringTotal} (${ringPct}%)`}
+                        >
+                          <ProgressRing
+                            percentage={ringPct}
+                            size={20}
+                            strokeWidth={2}
+                          />
+                        </div>
+                      );
+                    })()}
+
+                  {/* Conversation size ring (CoachConversations) */}
+                  {!progressData && conversationSize && (
+                    <div
+                      data-tooltip-id="progress-ring-tooltip"
+                      data-tooltip-content={`Conversation: ${conversationSize.sizeKB?.toFixed(1)}KB / ${conversationSize.maxSizeKB}KB (${conversationSize.percentage}%)`}
+                    >
+                      <ProgressRing
+                        percentage={conversationSize.percentage}
+                        size={20}
+                        strokeWidth={2}
+                        isWarning={conversationSize.isApproachingLimit}
+                      />
+                    </div>
+                  )}
+
+                  {/* Emoji picker */}
+                  <div className="relative" data-emoji-picker-container>
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className={`p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+                        showEmojiPicker
+                          ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                          : ""
+                      }`}
+                      data-tooltip-id="emoji-tooltip"
+                      data-tooltip-content="Emojis"
+                      data-tooltip-place="top"
+                    >
+                      <SmileIcon />
+                    </button>
+
+                    {/* Emoji Picker Popup */}
+                    {showEmojiPicker && (
+                      <div className="absolute bottom-14 right-0 z-50">
+                        <div
+                          className={`${containerPatterns.cardMediumOpaque} overflow-hidden emoji-picker-synthwave`}
+                        >
+                          <style>{`
+                            .emoji-picker-synthwave .epr-emoji-category-label {
+                              font-family: 'Rajdhani', sans-serif !important;
+                              font-size: 0.75rem !important;
+                              font-weight: 500 !important;
+                              color: #b4b4b4 !important;
+                              text-transform: uppercase !important;
+                              letter-spacing: 0.05em !important;
+                              background-color: transparent !important;
+                              padding: 8px 12px 4px 12px !important;
+                              margin: 0 !important;
+                            }
+
+                            .emoji-picker-synthwave .epr-search-container input {
+                              font-family: 'Rajdhani', sans-serif !important;
+                              font-size: 1rem !important;
+                              background-color: rgba(10, 10, 10, 0.5) !important;
+                              border: 2px solid rgba(255, 0, 128, 0.3) !important;
+                              border-radius: 16px !important;
+                              color: #ffffff !important;
+                              outline: none !important;
+                              box-shadow: none !important;
+                              transition: border-color 300ms !important;
+                              padding: 12px 16px 12px 36px !important;
+                              height: 48px !important;
+                            }
+
+                            .emoji-picker-synthwave .epr-search-container input:hover {
+                              border-color: rgba(255, 0, 128, 0.5) !important;
+                            }
+
+                            .emoji-picker-synthwave .epr-search-container input:focus {
+                              border-color: rgb(255, 0, 128) !important;
+                              background-color: rgba(10, 10, 10, 0.5) !important;
+                              outline: none !important;
+                              box-shadow: none !important;
+                            }
+
+                            .emoji-picker-synthwave .epr-search-container input::placeholder {
+                              color: #666666 !important;
+                            }
+
+                            /* Cyan scrollbar styling */
+                            .emoji-picker-synthwave ::-webkit-scrollbar {
+                              width: 6px !important;
+                            }
+
+                            .emoji-picker-synthwave ::-webkit-scrollbar-track {
+                              background: rgba(21, 23, 35, 0.5) !important;
+                            }
+
+                            .emoji-picker-synthwave ::-webkit-scrollbar-thumb {
+                              background: rgba(0, 255, 255, 0.3) !important;
+                              border-radius: 3px !important;
+                            }
+
+                            .emoji-picker-synthwave ::-webkit-scrollbar-thumb:hover {
+                              background: rgba(0, 255, 255, 0.5) !important;
+                            }
+                          `}</style>
+                          <EmojiPicker
+                            onEmojiClick={handleEmojiClick}
+                            theme="dark"
+                            searchPlaceHolder="Search emojis..."
+                            width={350}
+                            height={450}
+                            emojiStyle="native"
+                            previewConfig={{
+                              showPreview: false,
+                            }}
+                            skinTonesDisabled
+                            searchDisabled={false}
+                            categories={[
+                              {
+                                category: "suggested",
+                                name: "Recently Used",
+                              },
+                              {
+                                category: "activities",
+                                name: "Fitness & Activities",
+                              },
+                              {
+                                category: "smileys_people",
+                                name: "Smileys & People",
+                              },
+                              {
+                                category: "food_drink",
+                                name: "Food & Drink",
+                              },
+                              {
+                                category: "objects",
+                                name: "Objects",
+                              },
+                              {
+                                category: "animals_nature",
+                                name: "Animals & Nature",
+                              },
+                              {
+                                category: "travel_places",
+                                name: "Travel & Places",
+                              },
+                              {
+                                category: "symbols",
+                                name: "Symbols",
+                              },
+                              {
+                                category: "flags",
+                                name: "Flags",
+                              },
+                            ]}
+                            style={{
+                              "--epr-bg-color": "transparent",
+                              "--epr-category-label-bg-color": "transparent",
+                              "--epr-picker-border-color": "transparent",
+                              "--epr-search-input-bg-color":
+                                "rgba(10, 10, 10, 0.5)",
+                              "--epr-search-input-bg-color-active":
+                                "rgba(10, 10, 10, 0.7)",
+                              "--epr-search-input-border-color":
+                                "rgba(0, 255, 255, 0.2)",
+                              "--epr-search-input-border-color-active":
+                                "rgba(0, 255, 255, 0.5)",
+                              "--epr-hover-bg-color": "rgba(0, 255, 255, 0.15)",
+                              "--epr-focus-bg-color": "rgba(0, 255, 255, 0.2)",
+                              "--epr-text-color": "#b4b4b4",
+                              "--epr-search-input-text-color": "#f1f5f9",
+                              "--epr-search-input-placeholder-color": "#666666",
+                              "--epr-category-icon-active-color": "#00ffff",
+                              "--epr-skin-tone-picker-menu-color":
+                                "rgba(30, 30, 46, 0.95)",
+                              "--epr-emoji-size": "24px",
+                              "--epr-emoji-padding": "4px",
+                              "--epr-category-padding": "8px",
+                              "--epr-header-padding": "12px",
+                              "--epr-search-input-height": "40px",
+                              "--epr-search-input-padding": "12px",
+                              "--epr-category-label-height": "auto",
+                              fontSize: "0.75rem",
+                              fontFamily: "Rajdhani, sans-serif",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Send/Voice button */}
+                  {inputMessage.trim() || selectedImages.length > 0 ? (
+                    <button
+                      type="submit"
+                      disabled={isTyping || isUploading}
+                      className={buttonPatterns.sendInline}
+                    >
+                      {isTyping || isUploading ? (
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <SendIcon className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  ) : enableRecording ? (
+                    <button
+                      type="button"
+                      onMouseDown={handleStartRecording}
+                      onMouseUp={handleStopRecording}
+                      onMouseLeave={handleStopRecording}
+                      onTouchStart={handleStartRecording}
+                      onTouchEnd={handleStopRecording}
+                      disabled={isTyping}
+                      className={`w-7 h-7 rounded-full transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer ${
+                        isRecording
+                          ? "bg-red-500 text-white animate-pulse"
+                          : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
+                      } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+                    >
+                      <MicIcon />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled
+                      className="w-7 h-7 rounded-full bg-synthwave-bg-primary/30 text-synthwave-text-muted flex items-center justify-center opacity-50 cursor-not-allowed"
+                    >
+                      <SendIcon className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
+
+            <Tooltip id="emoji-tooltip" {...tooltipPatterns.standard} />
+            <Tooltip id="quick-actions-tooltip" {...tooltipPatterns.standard} />
+            {(progressData || conversationSize) && (
+              <Tooltip
+                id="progress-ring-tooltip"
+                {...tooltipPatterns.standard}
+              />
+            )}
           </div>
         </form>
 
