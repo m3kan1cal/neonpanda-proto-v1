@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Streaming AI Architecture - NeonPanda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a0a2e 50%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 60px;
+            gap: 25px;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(90deg, #00e5ff, #ff2d7d, #00e5ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .flow {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .flow-step {
+            background: rgba(255, 45, 125, 0.1);
+            border: 1px solid #ff2d7d;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #ff2d7d;
+            text-align: center;
+            min-width: 90px;
+            box-shadow: 0 0 10px rgba(255, 45, 125, 0.1);
+        }
+
+        .flow-step:nth-child(2n) {
+            background: rgba(0, 229, 255, 0.1);
+            border-color: #00e5ff;
+            color: #00e5ff;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+        }
+
+        .arrow {
+            color: #ff2d7d;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .details {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .detail-box {
+            background: rgba(255, 45, 125, 0.08);
+            border: 1px solid rgba(255, 45, 125, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            max-width: 180px;
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .detail-box:nth-child(2) {
+            background: rgba(0, 229, 255, 0.08);
+            border-color: rgba(0, 229, 255, 0.3);
+        }
+
+        .detail-box:nth-child(3) {
+            background: rgba(157, 78, 221, 0.08);
+            border-color: rgba(157, 78, 221, 0.3);
+        }
+
+        .detail-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ff2d7d;
+            margin-bottom: 6px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .detail-box:nth-child(2) .detail-title {
+            color: #00e5ff;
+        }
+
+        .detail-box:nth-child(3) .detail-title {
+            color: #9d4edd;
+        }
+
+        .detail-content {
+            font-size: 10px;
+            color: #a0b0c0;
+            line-height: 1.5;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metric {
+            font-size: 10px;
+            color: #b0c0d0;
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .latency-comparison {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .latency {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid;
+            padding: 10px 12px;
+            border-radius: 4px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .latency.slow {
+            border-color: #ff6b6b;
+        }
+
+        .latency.fast {
+            border-color: #00e5ff;
+        }
+
+        .latency-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .latency.slow .latency-label {
+            color: #ff6b6b;
+        }
+
+        .latency.fast .latency-label {
+            color: #00e5ff;
+        }
+
+        .latency-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .logo {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ff2d7d;
+            text-shadow: 0 0 10px rgba(255, 45, 125, 0.4);
+            z-index: 20;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .corner-accent {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px solid;
+            pointer-events: none;
+        }
+
+        .corner-accent.tl {
+            top: 20px;
+            left: 20px;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+            border-color: rgba(0, 229, 255, 0.3);
+        }
+
+        .corner-accent.br {
+            bottom: 20px;
+            left: 20px;
+            border-left-color: transparent;
+            border-top-color: transparent;
+            border-color: rgba(255, 45, 125, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="corner-accent tl"></div>
+    <div class="corner-accent br"></div>
+
+    <div class="content">
+        <div class="title">Real-Time Streaming AI Architecture</div>
+
+        <div class="flow">
+            <div class="flow-step">User<br/>Message</div>
+            <div class="arrow">→</div>
+            <div class="flow-step">Lambda<br/>Function URL</div>
+            <div class="arrow">→</div>
+            <div class="flow-step">Context<br/>Gathering</div>
+            <div class="arrow">→</div>
+            <div class="flow-step">Model<br/>Route</div>
+            <div class="arrow">→</div>
+            <div class="flow-step">Stream<br/>via SSE</div>
+        </div>
+
+        <div class="details">
+            <div class="detail-box">
+                <div class="detail-title">🔍 Context Layer</div>
+                <div class="detail-content">
+                    • User profile<br/>
+                    • Coach config<br/>
+                    • Vector memory (Pinecone)<br/>
+                    • Conv history
+                    <div class="metric">Parallel retrieval<br/>~150ms</div>
+                </div>
+            </div>
+
+            <div class="detail-box">
+                <div class="detail-title">🧠 Smart Routing</div>
+                <div class="detail-content">
+                    • Sonnet 4.6: Complex<br/>
+                    • Haiku 4.5: Quick<br/>
+                    • Nova: Ultra-fast<br/>
+                    <div class="metric">Cost-optimized<br/>token usage</div>
+                </div>
+            </div>
+
+            <div class="detail-box">
+                <div class="detail-title">📡 SSE Streaming</div>
+                <div class="detail-content">
+                    • Token-by-token<br/>
+                    • No buffering<br/>
+                    • Inline workout detection<br/>
+                    <div class="metric">Sub-second start<br/>time</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="latency-comparison">
+            <div class="latency slow">
+                <div class="latency-label">Standard Request</div>
+                <div class="latency-value">2-3s ⏳</div>
+            </div>
+            <div class="latency fast">
+                <div class="latency-label">Streaming Response</div>
+                <div class="latency-value">&lt;500ms ⚡</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="logo">🐼 NEONPANDA</div>
+</body>
+</html>

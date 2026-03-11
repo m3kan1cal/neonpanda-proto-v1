@@ -69,7 +69,7 @@ function ScaleIcon() {
 // ---------------------------------------------------------------------------
 
 function InsightSection({ icon, label, text, accentColor = "cyan" }) {
-  if (!text) return null;
+  if (!text || text === "null") return null;
 
   const colorMap = {
     cyan: "text-synthwave-neon-cyan",
@@ -418,13 +418,13 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div
-        className="fixed inset-0 z-50 p-4 flex items-center justify-center animate-fade-in"
+        className="fixed inset-0 z-[60] p-4 flex items-center justify-center animate-fade-in"
         onClick={onClose}
       >
         <div

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End of One-Size-Fits-All</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1A0A2E 0%, #0F1233 50%, #1A0A2E 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            gap: 80px;
+        }
+
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.08;
+            background-image:
+                linear-gradient(90deg, #00E5FF 1px, transparent 1px),
+                linear-gradient(0deg, #00E5FF 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .section {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .label {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.8;
+        }
+
+        .before-label {
+            color: #FF6B9D;
+        }
+
+        .after-label {
+            color: #00E5FF;
+        }
+
+        /* Before: Generic/Same */
+        .before-visual {
+            width: 180px;
+            height: 280px;
+            background: rgba(255, 107, 157, 0.1);
+            border: 2px solid #FF6B9D;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .before-visual::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 107, 157, 0.2) 0px,
+                rgba(255, 107, 157, 0.2) 1px,
+                transparent 1px,
+                transparent 30px
+            );
+            z-index: 1;
+        }
+
+        .boxes {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        .box {
+            background: rgba(255, 107, 157, 0.2);
+            border: 1px solid #FF6B9D;
+            border-radius: 6px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #CCCCCC;
+            font-weight: 500;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .box:nth-child(1),
+        .box:nth-child(2),
+        .box:nth-child(3) {
+            opacity: 0.6;
+        }
+
+        .before-visual:hover .box:nth-child(1),
+        .before-visual:hover .box:nth-child(2),
+        .before-visual:hover .box:nth-child(3) {
+            opacity: 0.8;
+            border-color: #FF2D7D;
+        }
+
+        .box-text {
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .x-icon {
+            font-size: 20px;
+            color: #FF6B9D;
+            margin-bottom: 10px;
+        }
+
+        /* After: Personalized */
+        .after-visual {
+            width: 180px;
+            height: 280px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 2px solid #00E5FF;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.3);
+        }
+
+        .segments {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: space-around;
+            align-items: stretch;
+        }
+
+        .segment {
+            background: linear-gradient(90deg, rgba(0, 229, 255, 0.3), rgba(255, 45, 125, 0.3));
+            border: 1px solid #00E5FF;
+            border-radius: 8px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .segment::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), transparent);
+            z-index: 1;
+        }
+
+        .segment-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .after-visual:hover .segment {
+            border-color: #00E5FF;
+            box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2);
+        }
+
+        .checkmark {
+            font-size: 20px;
+            color: #00E5FF;
+            margin-bottom: 8px;
+        }
+
+        .arrow {
+            position: relative;
+            z-index: 2;
+            font-size: 48px;
+            color: #FF2D7D;
+            animation: pulse-arrow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-arrow {
+            0%, 100% { transform: translateX(0) scale(1); }
+            50% { transform: translateX(10px) scale(1.1); }
+        }
+
+        /* Glow effects */
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.3;
+        }
+
+        .glow-pink {
+            width: 300px;
+            height: 300px;
+            background: #FF2D7D;
+            top: 50%;
+            left: 10%;
+            transform: translateY(-50%);
+        }
+
+        .glow-cyan {
+            width: 300px;
+            height: 300px;
+            background: #00E5FF;
+            top: 50%;
+            right: 10%;
+            transform: translateY(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid-bg"></div>
+        <div class="glow glow-pink"></div>
+        <div class="glow glow-cyan"></div>
+
+        <div class="section">
+            <div class="label before-label">Before</div>
+            <div class="before-visual">
+                <div class="boxes">
+                    <div class="box">
+                        <span class="box-text">Standard Plan</span>
+                    </div>
+                    <div class="box">
+                        <span class="box-text">Generic</span>
+                    </div>
+                    <div class="box">
+                        <span class="box-text">Rigid</span>
+                    </div>
+                </div>
+            </div>
+            <div class="x-icon">✕</div>
+        </div>
+
+        <div class="section">
+            <div class="arrow">→</div>
+        </div>
+
+        <div class="section">
+            <div class="label after-label">After</div>
+            <div class="after-visual">
+                <div class="segments">
+                    <div class="segment">
+                        <div class="checkmark">✓</div>
+                        <div class="segment-content">Your<br>Goals</div>
+                    </div>
+                    <div class="segment">
+                        <div class="checkmark">✓</div>
+                        <div class="segment-content">Your<br>Style</div>
+                    </div>
+                    <div class="segment">
+                        <div class="checkmark">✓</div>
+                        <div class="segment-content">Your<br>Coach</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
