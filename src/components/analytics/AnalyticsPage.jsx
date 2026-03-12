@@ -14,7 +14,13 @@ import AppFooter from "../shared/AppFooter";
 import TimeRangeSelector, { TIME_RANGES } from "./TimeRangeSelector";
 import VolumeTrendChart from "./VolumeTrendChart";
 import FrequencyChart from "./FrequencyChart";
+import ExerciseSelector from "./ExerciseSelector";
+import StrengthCurveChart from "./StrengthCurveChart";
+import ExerciseVolumeChart from "./ExerciseVolumeChart";
+import PRTimelineChart from "./PRTimelineChart";
 import AnalyticsAgent from "../../utils/agents/AnalyticsAgent";
+import ExerciseAgent from "../../utils/agents/ExerciseAgent";
+import { getExercises } from "../../utils/apis/exerciseApi";
 
 // ---------------------------------------------------------------------------
 // AnalyticsPage — visual analytics hub
@@ -29,7 +35,7 @@ export default function AnalyticsPage() {
   // Time range state
   const [timeRange, setTimeRange] = useState("8w");
 
-  // Agent + data state
+  // Analytics agent + weekly chart data
   const agentRef = useRef(null);
   const [analyticsState, setAnalyticsState] = useState({
     weeklyChartData: [],
@@ -37,7 +43,18 @@ export default function AnalyticsPage() {
     error: null,
   });
 
-  // Initialize agent
+  // Exercise agent + exercise deep dive state
+  const exerciseAgentRef = useRef(null);
+  const [exerciseNames, setExerciseNames] = useState([]);
+  const [isLoadingNames, setIsLoadingNames] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState(null);
+  const [exerciseHistory, setExerciseHistory] = useState({
+    exercises: [],
+    aggregations: null,
+    isLoading: false,
+  });
+
+  // Initialize analytics agent
   useEffect(() => {
     if (!userId) return;
 
@@ -57,7 +74,26 @@ export default function AnalyticsPage() {
     };
   }, [userId]);
 
-  // Fetch data when time range changes
+  // Initialize exercise agent + load names
+  useEffect(() => {
+    if (!userId) return;
+
+    exerciseAgentRef.current = new ExerciseAgent(userId, (newState) => {
+      if (newState.exerciseNames) setExerciseNames(newState.exerciseNames);
+      if (newState.isLoadingNames !== undefined) setIsLoadingNames(newState.isLoadingNames);
+    });
+
+    exerciseAgentRef.current.loadExerciseNames({ limit: 500 });
+
+    return () => {
+      if (exerciseAgentRef.current) {
+        exerciseAgentRef.current.destroy();
+        exerciseAgentRef.current = null;
+      }
+    };
+  }, [userId]);
+
+  // Fetch weekly chart data when time range changes
   const loadData = useCallback(async () => {
     if (!agentRef.current) return;
     const range = TIME_RANGES.find((r) => r.key === timeRange);
@@ -74,6 +110,45 @@ export default function AnalyticsPage() {
       loadData();
     }
   }, [userId, loadData]);
+
+  // Fetch exercise history when selection changes
+  const loadExerciseHistory = useCallback(
+    async (exerciseName) => {
+      if (!userId || !exerciseName) return;
+
+      setExerciseHistory((prev) => ({ ...prev, isLoading: true }));
+
+      try {
+        const result = await getExercises(userId, exerciseName, {
+          limit: 100,
+          sortOrder: "asc",
+        });
+
+        setExerciseHistory({
+          exercises: result.exercises || [],
+          aggregations: result.aggregations || null,
+          isLoading: false,
+        });
+      } catch {
+        setExerciseHistory({ exercises: [], aggregations: null, isLoading: false });
+      }
+    },
+    [userId],
+  );
+
+  const handleExerciseSelect = useCallback(
+    (exerciseName) => {
+      setSelectedExercise(exerciseName);
+      loadExerciseHistory(exerciseName);
+    },
+    [loadExerciseHistory],
+  );
+
+  // Get display name for selected exercise
+  const selectedDisplayName =
+    exerciseNames.find((ex) => ex.exerciseName === selectedExercise)?.displayName ||
+    selectedExercise ||
+    "";
 
   // Auth gate
   if (isAuthLoading) return <FullPageLoader />;
@@ -141,7 +216,7 @@ export default function AnalyticsPage() {
         {/* ---------------------------------------------------------------- */}
         {!isLoading && !error && !hasAnyData && (
           <div
-            className={`${containerPatterns.cardMedium} p-8 text-center`}
+            className={`${containerPatterns.cardMedium} p-8 text-center mb-8`}
           >
             <div className="text-synthwave-neon-purple mb-3 flex justify-center">
               <BarChartIcon />
@@ -158,40 +233,91 @@ export default function AnalyticsPage() {
         )}
 
         {/* ---------------------------------------------------------------- */}
-        {/* CHART GRID                                                       */}
+        {/* PERFORMANCE OVERVIEW CHARTS                                      */}
         {/* ---------------------------------------------------------------- */}
         {(isLoading || hasAnyData) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-            <VolumeTrendChart
-              data={weeklyChartData}
-              isLoading={isLoading}
+          <>
+            <SectionHeader title="Performance Overview" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-10">
+              <VolumeTrendChart
+                data={weeklyChartData}
+                isLoading={isLoading}
+              />
+              <FrequencyChart
+                data={weeklyChartData}
+                isLoading={isLoading}
+              />
+            </div>
+          </>
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* EXERCISE DEEP DIVE                                               */}
+        {/* ---------------------------------------------------------------- */}
+        <SectionHeader title="Exercise Deep Dive" />
+        <div className="mb-5">
+          <ExerciseSelector
+            exercises={exerciseNames}
+            isLoading={isLoadingNames}
+            selectedExercise={selectedExercise}
+            onSelect={handleExerciseSelect}
+          />
+        </div>
+
+        {selectedExercise && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <StrengthCurveChart
+              exerciseData={exerciseHistory.exercises}
+              aggregations={exerciseHistory.aggregations}
+              exerciseName={selectedDisplayName}
+              isLoading={exerciseHistory.isLoading}
             />
-            <FrequencyChart
-              data={weeklyChartData}
-              isLoading={isLoading}
+            <ExerciseVolumeChart
+              exerciseData={exerciseHistory.exercises}
+              exerciseName={selectedDisplayName}
+              isLoading={exerciseHistory.isLoading}
             />
+          </div>
+        )}
+
+        {selectedExercise && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-10">
+            <PRTimelineChart
+              exerciseData={exerciseHistory.exercises}
+              exerciseName={selectedDisplayName}
+              isLoading={exerciseHistory.isLoading}
+            />
+            {/* Exercise aggregation stats card */}
+            <ExerciseStatsCard
+              aggregations={exerciseHistory.aggregations}
+              exerciseName={selectedDisplayName}
+              sessionCount={exerciseHistory.exercises.length}
+              isLoading={exerciseHistory.isLoading}
+            />
+          </div>
+        )}
+
+        {!selectedExercise && (
+          <div className={`${containerPatterns.cardMedium} p-6 mb-10 text-center border-dashed`}>
+            <p className="font-body text-sm text-synthwave-text-muted">
+              Select an exercise above to see strength progression, volume trends, and PR history.
+            </p>
           </div>
         )}
 
         {/* ---------------------------------------------------------------- */}
         {/* COMING SOON TEASER                                               */}
         {/* ---------------------------------------------------------------- */}
-        {hasAnyData && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <ComingSoonCard
-              title="Exercise Deep Dive"
-              description="Track strength progression for any exercise over time"
-            />
-            <ComingSoonCard
-              title="Body Balance"
-              description="Radar chart of push, pull, squat, hinge, carry, and core"
-            />
-            <ComingSoonCard
-              title="Recovery & Load"
-              description="Monitor fatigue and acute:chronic workload ratio"
-            />
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <ComingSoonCard
+            title="Body Balance"
+            description="Radar chart of push, pull, squat, hinge, carry, and core volume"
+          />
+          <ComingSoonCard
+            title="Recovery & Load"
+            description="Monitor fatigue and acute:chronic workload ratio over time"
+          />
+        </div>
 
         <AppFooter />
       </div>
@@ -199,7 +325,86 @@ export default function AnalyticsPage() {
   );
 }
 
-// Placeholder card for upcoming chart types
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function SectionHeader({ title }) {
+  return (
+    <h2 className="font-header font-bold text-white text-lg uppercase tracking-wide mb-4">
+      {title}
+    </h2>
+  );
+}
+
+function ExerciseStatsCard({ aggregations, exerciseName, sessionCount, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className={`${containerPatterns.cardMedium} p-5`}>
+        <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32 mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-4 bg-synthwave-text-muted/10 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const agg = aggregations || {};
+
+  return (
+    <div className={`${containerPatterns.cardMedium} p-5`}>
+      <h3 className="font-header font-bold text-white text-base uppercase tracking-wide mb-1">
+        Exercise Stats
+      </h3>
+      <p className="font-body text-xs text-synthwave-text-secondary mb-4">
+        Aggregated data for {exerciseName}
+      </p>
+
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+        <StatRow label="Total Sessions" value={sessionCount} color="text-white" />
+        <StatRow
+          label="PR Weight"
+          value={agg.prWeight ? `${agg.prWeight} lbs` : "—"}
+          color="text-synthwave-neon-pink"
+        />
+        <StatRow
+          label="Avg Weight"
+          value={agg.averageWeight ? `${Math.round(agg.averageWeight)} lbs` : "—"}
+          color="text-synthwave-neon-cyan"
+        />
+        <StatRow
+          label="Avg Reps"
+          value={agg.averageReps ? `${Number(agg.averageReps).toFixed(1)}` : "—"}
+          color="text-synthwave-neon-cyan"
+        />
+        <StatRow
+          label="PR Volume"
+          value={agg.prVolume ? `${agg.prVolume.toLocaleString()} lbs` : "—"}
+          color="text-synthwave-neon-purple"
+        />
+        <StatRow
+          label="Total Occurrences"
+          value={agg.totalOccurrences || sessionCount}
+          color="text-white"
+        />
+      </div>
+    </div>
+  );
+}
+
+function StatRow({ label, value, color }) {
+  return (
+    <div>
+      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
+        {label}
+      </p>
+      <p className={`font-header font-bold text-sm ${color}`}>{value}</p>
+    </div>
+  );
+}
+
 function ComingSoonCard({ title, description }) {
   return (
     <div
