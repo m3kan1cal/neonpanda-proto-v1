@@ -105,63 +105,6 @@ function TodaysWorkoutRow({
   });
 
   // ---------------------------------------------------------------------------
-  // All-rest-day state
-  // ---------------------------------------------------------------------------
-  const allRestDays = workoutEntries.every((entry) => !entry.hasWorkout);
-
-  if (allRestDays) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="text-synthwave-neon-cyan opacity-50">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="font-body text-white text-lg uppercase">
-              Rest Day
-            </div>
-          </div>
-          <div className="font-body text-sm text-synthwave-text-secondary mb-4">
-            No workouts scheduled today across{" "}
-            {activePrograms.length === 1
-              ? "your program"
-              : `your ${activePrograms.length} programs`}
-            . Enjoy your recovery.
-          </div>
-          {onCompleteRestDay && (
-            <div className="flex flex-wrap gap-2">
-              {workoutEntries.map((entry) => (
-                <button
-                  key={entry.program.programId}
-                  onClick={() => onCompleteRestDay(entry.program)}
-                  disabled={isCompletingRestDay}
-                  className="px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan font-body text-xs uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isCompletingRestDay
-                    ? "Completing..."
-                    : `Complete: ${entry.program.name}`}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ---------------------------------------------------------------------------
   // Neon Glass cards -- wrapping flex layout
   // ---------------------------------------------------------------------------
   return (
