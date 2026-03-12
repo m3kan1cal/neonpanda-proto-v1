@@ -10,6 +10,8 @@ import {
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
+  formPatterns,
+  inputPatterns,
 } from "../utils/ui/uiPatterns";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import CompactCoachCard from "./shared/CompactCoachCard";
@@ -50,6 +52,39 @@ const ClockIconSmall = () => (
   </svg>
 );
 
+// Three-dot vertical menu icon
+const EllipsisVerticalIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+    />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+    />
+  </svg>
+);
+
 function ManageCoachConversations() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -67,6 +102,14 @@ function ManageCoachConversations() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Actions menu state
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Edit modal state
+  const [editingConversation, setEditingConversation] = useState(null);
+  const [editConversationTitle, setEditConversationTitle] = useState("");
+  const [isSavingConversation, setIsSavingConversation] = useState(false);
 
   // Create conversation state
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
@@ -257,10 +300,38 @@ function ManageCoachConversations() {
     }
   }, [isValidatingUserId, conversationAgentState.isLoadingAllItems]);
 
-  // Close delete modal when pressing escape
+  // Close menu when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest(".actions-menu-container")) {
+        setOpenMenuId(null);
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape" && openMenuId) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleEscapeKey);
+      };
+    }
+  }, [openMenuId]);
+
+  // Close delete modal or edit modal when pressing escape
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
+        if (editingConversation) {
+          handleCancelEditConversation();
+          return;
+        }
         if (showDeleteModal) {
           handleDeleteCancel();
         }
@@ -272,7 +343,7 @@ function ManageCoachConversations() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showDeleteModal]);
+  }, [showDeleteModal, editingConversation]);
 
   // Handle coach card click
   const handleCoachCardClick = () => {
@@ -335,6 +406,58 @@ function ManageCoachConversations() {
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
     setConversationToDelete(null);
+  };
+
+  // Edit conversation handlers
+  const handleEditConversationClick = (conversation) => {
+    setEditingConversation(conversation);
+    setEditConversationTitle(conversation.title || "");
+  };
+
+  const handleSaveEditConversation = async () => {
+    if (!editingConversation || !editConversationTitle.trim()) return;
+    setIsSavingConversation(true);
+    try {
+      if (!conversationAgentRef.current) {
+        conversationAgentRef.current = new CoachConversationAgent({
+          userId,
+          onError: (err) => {
+            logger.error("Agent error:", err);
+          },
+        });
+      }
+
+      await conversationAgentRef.current.updateCoachConversation(
+        userId,
+        editingConversation.coachId,
+        editingConversation.conversationId,
+        { title: editConversationTitle.trim() },
+      );
+
+      // Update local state
+      setConversationAgentState((prev) => ({
+        ...prev,
+        allConversations: prev.allConversations.map((conv) =>
+          conv.conversationId === editingConversation.conversationId
+            ? { ...conv, title: editConversationTitle.trim() }
+            : conv,
+        ),
+      }));
+
+      success("Conversation updated successfully");
+      setEditingConversation(null);
+      setEditConversationTitle("");
+    } catch (err) {
+      logger.error("Error updating conversation:", err);
+      error("Failed to update conversation");
+    } finally {
+      setIsSavingConversation(false);
+    }
+  };
+
+  const handleCancelEditConversation = () => {
+    setEditingConversation(null);
+    setEditConversationTitle("");
   };
 
   // Handle creating a new conversation
@@ -444,17 +567,60 @@ function ManageCoachConversations() {
         {/* NEW badge for conversations with recent activity */}
         {isRecent && <NewBadge />}
 
-        {/* Delete button - top right */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteClick(conversation);
-          }}
-          className="absolute top-4 right-4 p-2 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
-          title="Delete conversation"
-        >
-          <TrashIcon />
-        </button>
+        {/* Actions Menu - top right */}
+        <div className="absolute top-4 right-4 actions-menu-container relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenMenuId(
+                openMenuId === conversation.conversationId
+                  ? null
+                  : conversation.conversationId,
+              );
+            }}
+            className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+              openMenuId === conversation.conversationId
+                ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
+                : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
+            }`}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+            aria-label="More actions"
+          >
+            <EllipsisVerticalIcon />
+          </button>
+          {openMenuId === conversation.conversationId && (
+            <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditConversationClick(conversation);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <EditIcon />
+                <span className="font-body font-medium text-sm">
+                  Edit Conversation
+                </span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(conversation);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <TrashIcon />
+                </div>
+                <span className="font-body font-medium text-sm">
+                  Delete Conversation
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Header with pink dot */}
         <div className="flex items-start gap-3 mb-2 pr-16">
@@ -1096,6 +1262,54 @@ function ManageCoachConversations() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Conversation Modal */}
+      {editingConversation && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+          <div
+            className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}
+          >
+            <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold mb-6">
+              Edit Conversation
+            </h3>
+
+            <div className="mb-6">
+              <label className={formPatterns.label}>Title</label>
+              <input
+                type="text"
+                className={inputPatterns.standard}
+                value={editConversationTitle}
+                onChange={(e) => setEditConversationTitle(e.target.value)}
+                placeholder="Enter conversation title"
+              />
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={handleCancelEditConversation}
+                disabled={isSavingConversation}
+                className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEditConversation}
+                disabled={isSavingConversation || !editConversationTitle.trim()}
+                className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+              >
+                {isSavingConversation ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <span>Save</span>
+                )}
+              </button>
             </div>
           </div>
         </div>

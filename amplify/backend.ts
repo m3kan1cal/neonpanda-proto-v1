@@ -66,6 +66,7 @@ import { getMonthlyReport } from "./functions/get-monthly-report/resource";
 import { getMemories } from "./functions/get-memories/resource";
 import { createMemory } from "./functions/create-memory/resource";
 import { deleteMemory } from "./functions/delete-memory/resource";
+import { updateMemory } from "./functions/update-memory/resource";
 import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
 import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
 import { getUserProfile } from "./functions/get-user-profile/resource";
@@ -179,6 +180,7 @@ const backend = defineBackend({
   getMemories,
   createMemory,
   deleteMemory,
+  updateMemory,
   deleteCoachConversation,
   forwardLogsToSns,
   getUserProfile,
@@ -284,6 +286,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getMemories.resources.lambda,
   backend.createMemory.resources.lambda,
   backend.deleteMemory.resources.lambda,
+  backend.updateMemory.resources.lambda,
   backend.deleteCoachConversation.resources.lambda,
   backend.getUserProfile.resources.lambda,
   backend.updateUserProfile.resources.lambda,
@@ -401,6 +404,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildMonthlyAnalytics,
   backend.createMemory,
   backend.deleteMemory,
+  backend.updateMemory,
   backend.updateUserProfile,
   backend.createProgram,
   backend.buildProgram,
@@ -773,6 +777,7 @@ const allFunctions = [
   backend.getMemories,
   backend.createMemory,
   backend.deleteMemory,
+  backend.updateMemory,
   backend.deleteCoachConversation,
   backend.getCoachTemplates,
   backend.getCoachTemplate,

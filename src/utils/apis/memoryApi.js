@@ -139,3 +139,39 @@ export const deleteMemory = async (userId, memoryId) => {
   const result = await response.json();
   return result;
 };
+
+/**
+ * Updates a specific memory's fields
+ * @param {string} userId - The user ID
+ * @param {string} memoryId - The memory ID
+ * @param {Object} updateData - The fields to update
+ * @returns {Promise<Object>} - The API response with the updated memory
+ */
+export const updateMemory = async (userId, memoryId, updateData) => {
+  const url = `${getApiUrl('')}/users/${userId}/memories/${memoryId}`;
+
+  const response = await authenticatedFetch(url, {
+    method: 'PUT',
+    body: JSON.stringify(updateData),
+  });
+
+  if (!response.ok) {
+    logger.error('updateMemory: API Error - Status:', response.status);
+
+    let errorMessage = `API Error: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+        logger.error('updateMemory: Specific error message:', errorMessage);
+      }
+    } catch (jsonError) {
+      logger.warn('updateMemory: Could not parse error response as JSON');
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  const result = await response.json();
+  return result;
+};

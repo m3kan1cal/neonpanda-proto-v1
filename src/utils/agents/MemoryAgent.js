@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { getMemories, deleteMemory, createMemory } from "../apis/memoryApi.js";
+import { getMemories, deleteMemory, createMemory, updateMemory } from "../apis/memoryApi.js";
 import { logger } from "../logger";
 
 /**
@@ -242,6 +242,70 @@ export class MemoryAgent {
       if (this.onError) {
         this.onError(error);
       }
+
+      return false;
+    }
+  }
+
+  /**
+   * Updates a memory's editable fields
+   */
+  async updateMemory(memoryId, updateData) {
+    if (!this.userId) {
+      logger.warn("MemoryAgent.updateMemory: No userId set");
+      return false;
+    }
+
+    if (!memoryId) {
+      logger.error("MemoryAgent.updateMemory: memoryId is required");
+      return false;
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      logger.error("MemoryAgent.updateMemory: updateData is required");
+      return false;
+    }
+
+    logger.info("MemoryAgent.updateMemory: Updating memory:", {
+      memoryId,
+      updateFields: Object.keys(updateData),
+    });
+
+    this._updateState({
+      isLoadingItem: true,
+      error: null,
+    });
+
+    try {
+      const result = await updateMemory(this.userId, memoryId, updateData);
+
+      logger.info(
+        "MemoryAgent.updateMemory: Memory updated successfully:",
+        result
+      );
+
+      // Update the memory in local state
+      const updatedMemory = result.memory || { ...updateData, memoryId };
+      const updatedMemories = this.memoryState.allMemories.map((memory) =>
+        memory.memoryId === memoryId
+          ? { ...memory, ...updatedMemory }
+          : memory
+      );
+
+      this._updateState({
+        allMemories: updatedMemories,
+        isLoadingItem: false,
+        error: null,
+      });
+
+      return result;
+    } catch (error) {
+      logger.error("MemoryAgent.updateMemory: Error updating memory:", error);
+
+      this._updateState({
+        isLoadingItem: false,
+        error: error.message || "Failed to update memory",
+      });
 
       return false;
     }
