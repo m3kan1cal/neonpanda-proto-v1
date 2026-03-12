@@ -1819,7 +1819,7 @@ General thoughts: `;
                 className="absolute inset-0 opacity-0"
                 style={{
                   background:
-                    "radial-gradient(ellipse at center, transparent 0%, rgba(255,20,147,0.2) 40%, rgba(0,255,255,0.3) 60%, rgba(138,43,226,0.4) 80%, #241450 100%)",
+                    "radial-gradient(ellipse at center, transparent 0%, rgba(255,20,147,0.2) 40%, rgba(0,255,255,0.3) 60%, rgba(138,43,226,0.4) 80%, #341460 100%)",
                   animation: "warpTunnel 3s ease-out forwards",
                 }}
               />
