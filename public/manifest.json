@@ -4,8 +4,8 @@
   "description": "Build personalized AI fitness coaches with adaptive intelligence. Get expert guidance tailored to your goals, experience, and preferences.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#16213e",
-  "theme_color": "#16213e",
+  "background_color": "#341460",
+  "theme_color": "#341460",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

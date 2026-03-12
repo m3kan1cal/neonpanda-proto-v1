@@ -427,27 +427,27 @@ export const containerPatterns = {
     "rounded-md bg-synthwave-bg-card/20 backdrop-blur-sm border border-synthwave-neon-pink/20 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/40 hover:shadow-sm hover:shadow-synthwave-neon-pink/20",
 
   cardMedium:
-    "rounded-md bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/40 shadow-sm shadow-synthwave-neon-cyan/20 hover:shadow-sm hover:shadow-synthwave-neon-cyan/30 transition-all duration-300",
+    "rounded-md bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 shadow-sm shadow-synthwave-neon-cyan/10 hover:shadow-sm hover:shadow-synthwave-neon-cyan/15 transition-all duration-300",
 
   cardMediumOpaque:
-    "rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-sm shadow-synthwave-neon-cyan/20",
+    "rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/12 shadow-sm shadow-synthwave-neon-cyan/10",
 
   // Neon Glass cards -- gradient border via padding trick (outer wrapper)
   neonGlassWrapper:
-    "rounded-md p-[2px] bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink cursor-pointer transition-all duration-300 hover:shadow-sm hover:shadow-synthwave-neon-cyan/30",
+    "rounded-md p-[1px] bg-gradient-to-r from-synthwave-neon-cyan/30 via-synthwave-neon-purple/30 to-synthwave-neon-pink/30 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-synthwave-neon-cyan/15",
   // Neon Glass inner panel (always paired with neonGlassWrapper)
   // Uses relative positioning with light navy overlay for lighter appearance
   neonGlassInner:
     "rounded-md relative bg-synthwave-bg-card p-6 h-full flex flex-col gap-3.5 before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-[#7099C8]/[0.08] before:to-transparent before:pointer-events-none before:z-0 [&>*]:relative [&>*]:z-10",
   // Neon Glass muted variant -- for rest day / inactive states (outer wrapper)
   neonGlassMuted:
-    "rounded-md p-[2px] bg-synthwave-text-muted/20 transition-all duration-300",
+    "rounded-md p-[1px] bg-synthwave-text-muted/20 transition-all duration-300",
   // Neon Glass muted inner panel
   neonGlassMutedInner:
     "rounded-md bg-synthwave-bg-card p-6 h-full flex flex-col gap-3",
   // Neon Glass skeleton variant -- dimmed gradient border for loading placeholders
   neonGlassSkeleton:
-    "rounded-md p-[2px] bg-gradient-to-r from-synthwave-neon-cyan/30 via-synthwave-neon-purple/30 to-synthwave-neon-pink/30",
+    "rounded-md p-[1px] bg-gradient-to-r from-synthwave-neon-cyan/30 via-synthwave-neon-purple/30 to-synthwave-neon-pink/30",
   // Neon Glass skeleton inner panel
   neonGlassSkeletonInner:
     "rounded-md bg-synthwave-bg-card/95 p-6 flex flex-col gap-3",
