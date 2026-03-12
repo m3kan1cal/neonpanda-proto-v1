@@ -1389,6 +1389,7 @@ export const streamingPatterns = {
   contextualUpdate: {
     container: "flex flex-col items-start mb-1 animate-message-in",
     borderAccent: "px-4 py-2 border-l-2 border-synthwave-neon-cyan/30 ml-2",
+    borderAccentCompact: "px-4 py-1 border-l-2 border-synthwave-neon-cyan/30 ml-2",
     contentRow: "flex items-center gap-2",
     dotsContainer: "flex space-x-1",
     dot: "w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot",
