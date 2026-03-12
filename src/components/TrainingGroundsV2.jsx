@@ -59,6 +59,7 @@ import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
 import { createProgramDesignerSession } from "../utils/apis/programDesignerApi";
+import { ContextualUpdateIndicator } from "../utils/ui/streamingUiHelper.jsx";
 import { logger } from "../utils/logger";
 
 // ---------------------------------------------------------------------------
@@ -615,7 +616,7 @@ function TrainingGroundsV2() {
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-2">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-md">
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
@@ -661,7 +662,9 @@ function TrainingGroundsV2() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               <div className={containerPatterns.neonGlassSkeleton}>
-                <div className={`${containerPatterns.neonGlassSkeletonInner} relative`}>
+                <div
+                  className={`${containerPatterns.neonGlassSkeletonInner} relative`}
+                >
                   <div className="absolute top-4 right-4">
                     <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
                   </div>
@@ -1270,9 +1273,14 @@ function TrainingGroundsV2() {
         {/* CONTEXTUAL GREETING                                              */}
         {/* ---------------------------------------------------------------- */}
         {isLoadingGreeting ? (
-          <p className="font-body text-base text-synthwave-text-muted animate-pulse mb-4 max-w-3xl">
-            Checking in on what's relevant for you today...
-          </p>
+          <div className="mb-4 max-w-3xl">
+            <ContextualUpdateIndicator
+              content="Checking in on what's relevant for you today..."
+              avatarLabel={coachData?.name?.charAt(0) || "C"}
+              showAvatar={false}
+              compact
+            />
+          </div>
         ) : (
           <p className="font-body text-base text-synthwave-text-secondary mb-4 max-w-3xl">
             {greeting}
