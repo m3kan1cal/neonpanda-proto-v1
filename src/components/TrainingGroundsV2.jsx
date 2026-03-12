@@ -1230,6 +1230,24 @@ function TrainingGroundsV2() {
           </>
         )}
       </div>
+
+      {/* Analytics entry point */}
+      <Link
+        to={`/training-grounds/analytics?userId=${userId}&coachId=${coachId}`}
+        className="mt-3 flex items-center justify-between px-4 py-3 rounded-md bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 hover:bg-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/50 transition-all duration-200 group"
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="text-synthwave-neon-purple">
+            <BarChartIcon />
+          </span>
+          <span className="font-body font-semibold text-sm text-synthwave-neon-purple uppercase tracking-wide">
+            View Analytics
+          </span>
+        </div>
+        <span className="text-synthwave-neon-purple/50 group-hover:text-synthwave-neon-purple transition-colors">
+          <ChevronRightIcon />
+        </span>
+      </Link>
     </div>
   );
 

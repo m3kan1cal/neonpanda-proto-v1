@@ -30,6 +30,7 @@ import ManageExercises from "./components/ManageExercises";
 import ManageMemories from "./components/ManageMemories";
 import ManageCoachConversations from "./components/ManageCoachConversations";
 import ViewReports from "./components/ViewReports";
+import AnalyticsPage from "./components/analytics/AnalyticsPage";
 import WeeklyReports from "./components/WeeklyReports";
 import ManagePrograms from "./components/programs/ManagePrograms";
 import ViewWorkouts from "./components/programs/ViewWorkouts";
@@ -325,6 +326,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <WeeklyReports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-grounds/analytics"
+            element={
+              <ProtectedRoute>
+                <AnalyticsPage />
               </ProtectedRoute>
             }
           />
