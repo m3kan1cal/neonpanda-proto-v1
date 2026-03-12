@@ -578,7 +578,7 @@ function Coaches() {
           {/* Coaches grid skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Add New Coach Card skeleton */}
-            <div className={`${containerPatterns.dashedCard} opacity-60`}>
+            <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
               <div className="text-center h-full flex flex-col justify-between min-h-[350px]">
                 <div className="flex-1 flex flex-col justify-center items-center">
                   <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse mb-4"></div>
