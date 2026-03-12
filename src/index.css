@@ -17,7 +17,7 @@
   /* Synthwave color palette - Backgrounds */
   --color-synthwave-bg-primary: #0d0a1a;
   --color-synthwave-bg-secondary: #1a0d2e;
-  --color-synthwave-bg-tertiary: #1a1032;
+  --color-synthwave-bg-tertiary: #1c1240;
   --color-synthwave-bg-purple: #2a1a4a;
   --color-synthwave-bg-card: #1e1e2e;
 
@@ -124,9 +124,9 @@
 @utility bg-synthwave-gradient {
   background-image: linear-gradient(
     135deg,
-    #1a0d2e 0%,
-    #1a1032 50%,
-    #0d0a1a 100%
+    #220e3c 0%,
+    #1c1240 50%,
+    #110a2c 100%
   );
 }
 
@@ -344,40 +344,34 @@
 html {
   height: 100%;
   height: -webkit-fill-available; /* iOS Safari fix */
-  background-color: #1a1032 !important;
+  background-color: #1c1240 !important;
+  background-image: linear-gradient(
+    135deg,
+    #220e3c 0%,
+    #1c1240 50%,
+    #110a2c 100%
+  ) !important;
+  background-attachment: fixed;
   margin: 0;
   padding: 0;
   overflow-x: hidden; /* Prevent horizontal scrollbar */
+  min-height: 100vh;
 }
 
 body {
-  background-color: #1a1032 !important;
+  background-color: transparent !important;
   margin: 0;
   padding: 0;
   min-height: 100%;
   min-height: -webkit-fill-available; /* iOS Safari fix */
   overflow-x: hidden; /* Prevent horizontal scrollbar */
-}
-
-/* Control overscroll background without disabling behavior */
-html {
-  background-color: #1a1032 !important;
-  min-height: 100vh;
-  /* Allow overscroll but ensure background color is applied */
-  background-attachment: fixed;
-}
-
-/* Additional overscroll background control */
-body {
-  background-color: #1a1032 !important;
-  background-attachment: fixed;
   /* Allow elastic scrolling on iOS */
   -webkit-overflow-scrolling: touch;
 }
 
 /* Ensure root container covers full viewport */
 #root {
-  background-color: #1a1032 !important;
+  background-color: transparent !important;
   min-height: 100vh;
   min-height: -webkit-fill-available; /* iOS Safari fix */
   width: 100%;
@@ -499,8 +493,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
 /* Sidebar nav label fade-in when sidebar expands */
 @keyframes navLabelFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .nav-label-reveal {
   animation: navLabelFadeIn 0.18s ease-out forwards;

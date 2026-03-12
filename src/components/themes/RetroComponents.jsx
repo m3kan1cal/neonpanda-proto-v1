@@ -37,7 +37,7 @@ const css = `
 
     --bg:           #22103e;
     --bg-secondary: #1a0d2e;
-    --bg-tertiary:  #1a1032;
+    --bg-tertiary:  #1c1240;
     --bg-purple:    #2a1a4a;
     --bg-card:      #1e1e2e;
     --bg-raised:    #2a1a4a;
@@ -682,7 +682,7 @@ export default function RetroTemplate() {
             {[
               ["--bg · BG-PRIMARY", "#22103e", "var(--bg)"],
               ["--bg-secondary", "#1a0d2e", "var(--bg-secondary)"],
-              ["--bg-tertiary", "#1a1032", "var(--bg-tertiary)"],
+              ["--bg-tertiary", "#1c1240", "var(--bg-tertiary)"],
               ["--bg-purple", "#2a1a4a", "var(--bg-purple)"],
               ["--bg-card", "#1e1e2e", "var(--bg-card)"],
             ].map(([label, hex, bg]) => (

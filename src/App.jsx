@@ -151,7 +151,7 @@ function AppContent() {
   }, [setIsCommandPaletteOpen, setCommandPaletteCommand]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden flex flex-col">
+    <div className="min-h-screen overflow-x-hidden flex flex-col bg-synthwave-gradient">
       {/* Conditional Navigation: Public Header vs Full App Navigation */}
       {isRetroTemplatePage ? null : isPublicPage ? (
         // Public pages: Simple header only
@@ -169,7 +169,7 @@ function AppContent() {
 
       {/* Main Content - conditional margin based on navigation type */}
       <div
-        className={`flex-1 flex flex-col border-none outline-none bg-synthwave-bg-tertiary ${
+        className={`flex-1 flex flex-col border-none outline-none bg-transparent ${
           isRetroTemplatePage
             ? "pt-0" // Retro template: full viewport, own nav
             : isPublicPage
