@@ -21,6 +21,7 @@ import PRTimelineChart from "./PRTimelineChart";
 import MovementBalanceChart from "./MovementBalanceChart";
 import BodyPartChart from "./BodyPartChart";
 import RecoveryLoadChart from "./RecoveryLoadChart";
+import WeeklyComparisonChart from "./WeeklyComparisonChart";
 import AnalyticsAgent from "../../utils/agents/AnalyticsAgent";
 import ExerciseAgent from "../../utils/agents/ExerciseAgent";
 import { getExercises } from "../../utils/apis/exerciseApi";
@@ -241,12 +242,18 @@ export default function AnalyticsPage() {
         {(isLoading || hasAnyData) && (
           <>
             <SectionHeader title="Performance Overview" />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
               <VolumeTrendChart
                 data={weeklyChartData}
                 isLoading={isLoading}
               />
               <FrequencyChart
+                data={weeklyChartData}
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="mb-10">
+              <WeeklyComparisonChart
                 data={weeklyChartData}
                 isLoading={isLoading}
               />

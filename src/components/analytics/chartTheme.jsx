@@ -52,6 +52,10 @@ export function ChartGradients() {
         <stop offset="0%" stopColor={chartColors.purple} stopOpacity={0.3} />
         <stop offset="100%" stopColor={chartColors.purple} stopOpacity={0.0} />
       </linearGradient>
+      <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={chartColors.green} stopOpacity={0.3} />
+        <stop offset="100%" stopColor={chartColors.green} stopOpacity={0.0} />
+      </linearGradient>
       <filter id="neonGlow">
         <feGaussianBlur stdDeviation="3" result="blur" />
         <feMerge>

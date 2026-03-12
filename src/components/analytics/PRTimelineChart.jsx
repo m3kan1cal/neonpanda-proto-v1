@@ -93,7 +93,7 @@ export default function PRTimelineChart({
       isEmpty={!hasData && !isLoading}
       emptyMessage={exerciseName ? "No PRs found for this exercise yet." : "Select an exercise above to get started."}
     >
-      <div className="w-full" style={{ height: 220 }}>
+      <div className="w-full" style={{ height: 240 }}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart
             margin={{ top: 8, right: 8, bottom: 0, left: -12 }}

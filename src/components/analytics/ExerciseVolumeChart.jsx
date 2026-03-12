@@ -62,7 +62,7 @@ export default function ExerciseVolumeChart({
       isEmpty={!hasData && !isLoading}
       emptyMessage={exerciseName ? "Need at least 2 sessions with volume data." : "Select an exercise above to get started."}
     >
-      <div className="w-full" style={{ height: 220 }}>
+      <div className="w-full" style={{ height: 260 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}

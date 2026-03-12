@@ -29,9 +29,9 @@ export default function StrengthCurveChart({
   exerciseName = "",
   isLoading = false,
 }) {
-  // Transform exercise sessions into chart data — sorted oldest first
-  const chartData = useMemo(() => {
-    return exerciseData
+  // Transform exercise sessions into chart data — sorted oldest first, with PR markers
+  const dataWithPRs = useMemo(() => {
+    const sorted = exerciseData
       .map((session) => {
         const weight = extractWeight(session);
         const reps = extractReps(session);
@@ -41,28 +41,19 @@ export default function StrengthCurveChart({
           sortKey: session.completedAt || session.date || "",
           weight,
           reps,
-          isPR: false, // will mark below
         };
       })
       .filter((d) => d.weight > 0)
-      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-      .map((d, i, arr) => {
-        // Mark PRs — any point where weight is the highest seen so far
-        let maxSoFar = 0;
-        for (let j = 0; j <= i; j++) maxSoFar = Math.max(maxSoFar, arr[j].weight);
-        return { ...d, isPR: d.weight >= maxSoFar && (i === 0 || d.weight > arr[i - 1].weight || maxSoFar > (i > 0 ? Math.max(...arr.slice(0, i).map(x => x.weight)) : 0)) };
-      });
-  }, [exerciseData]);
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
-  // Re-calculate PR markers more cleanly
-  const dataWithPRs = useMemo(() => {
+    // Mark PRs using running max
     let runningMax = 0;
-    return chartData.map((d) => {
+    return sorted.map((d) => {
       const isPR = d.weight > runningMax;
       if (isPR) runningMax = d.weight;
       return { ...d, isPR };
     });
-  }, [chartData]);
+  }, [exerciseData]);
 
   const hasData = dataWithPRs.length >= 2;
   const avgWeight = aggregations?.averageWeight || 0;

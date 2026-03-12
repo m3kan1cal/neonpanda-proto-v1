@@ -150,7 +150,7 @@ export default function RecoveryLoadChart({
               name="Recovery"
               stroke={chartColors.green}
               strokeWidth={2}
-              fill="url(#cyanGradient)"
+              fill="url(#greenGradient)"
               dot={{
                 r: 3,
                 fill: chartColors.green,
