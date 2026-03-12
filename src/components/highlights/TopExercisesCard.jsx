@@ -102,7 +102,7 @@ export default function TopExercisesCard({
                 ex.disciplines.map((d) => (
                   <span
                     key={d}
-                    className={`${badgePatterns.cyanBorder} text-[10px] uppercase leading-none py-0.5 px-1.5`}
+                    className={`hidden sm:inline ${badgePatterns.cyanBorder} text-[10px] uppercase leading-none py-0.5 px-1.5`}
                   >
                     {d}
                   </span>

@@ -120,12 +120,23 @@ export function getStreamingMessageClasses(
  *
  * @param {string} content - The contextual update text to display
  * @param {string} avatarLabel - Single character for the AI avatar (default: "C")
+ * @param {boolean} showAvatar - Whether to show the avatar row below (default: true)
+ * @param {boolean} compact - Reduces vertical padding on the border accent (default: false)
  * @returns {JSX.Element} - Contextual update indicator
  */
-export function ContextualUpdateIndicator({ content, avatarLabel = "C" }) {
+export function ContextualUpdateIndicator({
+  content,
+  avatarLabel = "C",
+  showAvatar = true,
+  compact = false,
+}) {
+  const borderAccentClass = compact
+    ? streamingPatterns.contextualUpdate.borderAccent.replace("py-2", "py-1")
+    : streamingPatterns.contextualUpdate.borderAccent;
+
   return (
     <div className={streamingPatterns.contextualUpdate.container}>
-      <div className={streamingPatterns.contextualUpdate.borderAccent}>
+      <div className={borderAccentClass}>
         <div className={streamingPatterns.contextualUpdate.contentRow}>
           <div className={streamingPatterns.contextualUpdate.dotsContainer}>
             <div
@@ -146,11 +157,13 @@ export function ContextualUpdateIndicator({ content, avatarLabel = "C" }) {
           </span>
         </div>
       </div>
-      <div className={streamingPatterns.avatarRow}>
-        <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
-          {avatarLabel}
+      {showAvatar && (
+        <div className={streamingPatterns.avatarRow}>
+          <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
+            {avatarLabel}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
