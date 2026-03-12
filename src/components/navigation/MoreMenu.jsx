@@ -193,7 +193,7 @@ const MoreMenu = () => {
             ${item.color === "purple" ? "bg-synthwave-neon-purple/10 text-synthwave-neon-purple" : ""}
           `}
           >
-            {badge}
+            {badge > 99 ? "99+" : badge}
           </div>
         )}
 

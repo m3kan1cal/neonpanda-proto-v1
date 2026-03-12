@@ -105,7 +105,7 @@ const BottomNav = () => {
             <div
               className={`${navigationPatterns.mobile.badge} ${colorClasses.shadow}`}
             >
-              {badge}
+              {badge > 99 ? "99+" : badge}
             </div>
           )}
         </div>
