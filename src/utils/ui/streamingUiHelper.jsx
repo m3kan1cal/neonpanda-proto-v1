@@ -131,7 +131,7 @@ export function ContextualUpdateIndicator({
   compact = false,
 }) {
   const borderAccentClass = compact
-    ? streamingPatterns.contextualUpdate.borderAccent.replace("py-2", "py-1")
+    ? streamingPatterns.contextualUpdate.borderAccentCompact
     : streamingPatterns.contextualUpdate.borderAccent;
 
   return (
