@@ -15,7 +15,7 @@ export class AnalyticsAgent {
 
     this.analyticsState = {
       // Chart-ready arrays
-      weeklyChartData: [], // [{ weekId, label, weekStart, tonnage, sessions, avgIntensity, recoveryScore, acRatio }]
+      weeklyChartData: [], // [{ weekId, label, weekStart, tonnage, sessions, recoveryScore, acRatio, patternBalance, bodyPartFrequency, ... }]
 
       // Loading / error
       isLoading: false,
@@ -94,6 +94,7 @@ export class AnalyticsAgent {
     const fatigue = sa.fatigue_management || {};
     const progression = sa.weekly_progression || {};
     const pacing = sa.training_intelligence?.workout_pacing || {};
+    const movement = sa.movement_analysis || {};
 
     // Week label — try weekId first, fall back to date range
     const weekId = report.weekId || meta.week_id || "";
@@ -129,6 +130,15 @@ export class AnalyticsAgent {
 
       // Data quality
       completeness: this._num(meta.data_completeness),
+
+      // Movement analysis — pattern_balance is an object like { squat: { volume, frequency }, ... }
+      patternBalance: movement.pattern_balance || null,
+      bodyPartFrequency: movement.body_part_frequency || null,
+      imbalanceFlags: movement.imbalance_flags || [],
+
+      // Fatigue details
+      suggestedAction: fatigue.suggested_action || null,
+      volumeSpike: !!fatigue.volume_spike,
     };
   }
 

@@ -18,6 +18,9 @@ import ExerciseSelector from "./ExerciseSelector";
 import StrengthCurveChart from "./StrengthCurveChart";
 import ExerciseVolumeChart from "./ExerciseVolumeChart";
 import PRTimelineChart from "./PRTimelineChart";
+import MovementBalanceChart from "./MovementBalanceChart";
+import BodyPartChart from "./BodyPartChart";
+import RecoveryLoadChart from "./RecoveryLoadChart";
 import AnalyticsAgent from "../../utils/agents/AnalyticsAgent";
 import ExerciseAgent from "../../utils/agents/ExerciseAgent";
 import { getExercises } from "../../utils/apis/exerciseApi";
@@ -306,18 +309,29 @@ export default function AnalyticsPage() {
         )}
 
         {/* ---------------------------------------------------------------- */}
-        {/* COMING SOON TEASER                                               */}
+        {/* BODY BALANCE & RECOVERY                                          */}
         {/* ---------------------------------------------------------------- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <ComingSoonCard
-            title="Body Balance"
-            description="Radar chart of push, pull, squat, hinge, carry, and core volume"
-          />
-          <ComingSoonCard
-            title="Recovery & Load"
-            description="Monitor fatigue and acute:chronic workload ratio over time"
-          />
-        </div>
+        {(isLoading || hasAnyData) && (
+          <>
+            <SectionHeader title="Body Balance & Recovery" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+              <MovementBalanceChart
+                weeklyData={weeklyChartData}
+                isLoading={isLoading}
+              />
+              <BodyPartChart
+                weeklyData={weeklyChartData}
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-5 mb-8">
+              <RecoveryLoadChart
+                data={weeklyChartData}
+                isLoading={isLoading}
+              />
+            </div>
+          </>
+        )}
 
         <AppFooter />
       </div>
@@ -405,20 +419,3 @@ function StatRow({ label, value, color }) {
   );
 }
 
-function ComingSoonCard({ title, description }) {
-  return (
-    <div
-      className={`${containerPatterns.cardMedium} p-5 border-dashed opacity-60`}
-    >
-      <h4 className="font-header font-bold text-white text-sm uppercase mb-1">
-        {title}
-      </h4>
-      <p className="font-body text-xs text-synthwave-text-muted">
-        {description}
-      </p>
-      <span className="inline-block mt-2 px-2 py-0.5 rounded-md bg-synthwave-neon-purple/10 text-synthwave-neon-purple font-body text-[10px] uppercase tracking-wide">
-        Coming Soon
-      </span>
-    </div>
-  );
-}
