@@ -427,14 +427,14 @@ export const containerPatterns = {
     "rounded-md bg-synthwave-bg-card/20 backdrop-blur-sm border border-synthwave-neon-pink/20 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/40 hover:shadow-sm hover:shadow-synthwave-neon-pink/20",
 
   cardMedium:
-    "rounded-md bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/40 shadow-sm shadow-synthwave-neon-cyan/20 hover:shadow-sm hover:shadow-synthwave-neon-cyan/30 transition-all duration-300",
+    "rounded-md bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 shadow-sm shadow-synthwave-neon-cyan/10 hover:shadow-sm hover:shadow-synthwave-neon-cyan/15 transition-all duration-300",
 
   cardMediumOpaque:
-    "rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-sm shadow-synthwave-neon-cyan/20",
+    "rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/12 shadow-sm shadow-synthwave-neon-cyan/10",
 
   // Neon Glass cards -- gradient border via padding trick (outer wrapper)
   neonGlassWrapper:
-    "rounded-md p-[1px] bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-synthwave-neon-cyan/30",
+    "rounded-md p-[1px] bg-gradient-to-r from-synthwave-neon-cyan/30 via-synthwave-neon-purple/30 to-synthwave-neon-pink/30 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-synthwave-neon-cyan/15",
   // Neon Glass inner panel (always paired with neonGlassWrapper)
   // Uses relative positioning with light navy overlay for lighter appearance
   neonGlassInner:
