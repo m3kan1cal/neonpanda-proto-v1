@@ -321,6 +321,48 @@ export async function updateMemory(
 }
 
 /**
+ * Update user-editable fields on a memory
+ */
+export async function updateMemoryFields(
+  userId: string,
+  memoryId: string,
+  updates: Partial<UserMemory>,
+): Promise<UserMemory> {
+  const existingItem = await loadFromDynamoDB<UserMemory>(
+    `user#${userId}`,
+    `userMemory#${memoryId}`,
+    'userMemory'
+  );
+
+  if (!existingItem) {
+    throw new Error(`Memory ${memoryId} not found for user ${userId}`);
+  }
+
+  // Merge updates into existing memory
+  const updatedMemory: UserMemory = {
+    ...existingItem.attributes,
+    ...updates,
+    // Preserve immutable fields
+    memoryId: existingItem.attributes.memoryId,
+    userId: existingItem.attributes.userId,
+  };
+
+  // Update the DynamoDB item
+  existingItem.attributes = updatedMemory;
+  existingItem.updatedAt = new Date().toISOString();
+
+  await saveToDynamoDB(existingItem, true /* requireExists */);
+
+  logger.info("Memory fields updated successfully:", {
+    memoryId,
+    userId,
+    updatedFields: Object.keys(updates),
+  });
+
+  return updatedMemory;
+}
+
+/**
  * Delete a memory from DynamoDB
  */
 export async function deleteMemory(

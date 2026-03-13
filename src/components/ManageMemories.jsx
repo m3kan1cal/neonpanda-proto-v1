@@ -8,6 +8,8 @@ import {
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
+  formPatterns,
+  inputPatterns,
 } from "../utils/ui/uiPatterns";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
@@ -47,6 +49,39 @@ const ClockIconSmall = () => (
   </svg>
 );
 
+// Three-dot vertical menu icon
+const EllipsisVerticalIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+    />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+    />
+  </svg>
+);
+
 function ManageMemories() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -64,6 +99,14 @@ function ManageMemories() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [memoryToDelete, setMemoryToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Actions menu state
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Edit modal state
+  const [editingMemory, setEditingMemory] = useState(null);
+  const [editMemoryContent, setEditMemoryContent] = useState("");
+  const [isSavingMemory, setIsSavingMemory] = useState(false);
 
   // Command palette state
   const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
@@ -245,10 +288,38 @@ function ManageMemories() {
     }
   }, [isValidatingUserId, memoryAgentState.isLoadingAllItems]);
 
-  // Close delete modal when pressing escape
+  // Close menu when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest(".actions-menu-container")) {
+        setOpenMenuId(null);
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape" && openMenuId) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleEscapeKey);
+      };
+    }
+  }, [openMenuId]);
+
+  // Close delete modal or edit modal when pressing escape
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
+        if (editingMemory) {
+          handleCancelEditMemory();
+          return;
+        }
         if (showDeleteModal) {
           handleDeleteCancel();
         }
@@ -260,7 +331,7 @@ function ManageMemories() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showDeleteModal]);
+  }, [showDeleteModal, editingMemory]);
 
   // Handle coach card click
   const handleCoachCardClick = () => {
@@ -300,6 +371,36 @@ function ManageMemories() {
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
     setMemoryToDelete(null);
+  };
+
+  // Edit memory handlers
+  const handleEditMemoryClick = (memory) => {
+    setEditingMemory(memory);
+    setEditMemoryContent(memory.content || "");
+  };
+
+  const handleSaveEditMemory = async () => {
+    if (!editingMemory || !editMemoryContent.trim()) return;
+    setIsSavingMemory(true);
+    try {
+      await memoryAgentRef.current.updateMemory(editingMemory.memoryId, {
+        content: editMemoryContent.trim(),
+      });
+
+      success("Memory updated successfully");
+      setEditingMemory(null);
+      setEditMemoryContent("");
+    } catch (err) {
+      logger.error("Error updating memory:", err);
+      error("Failed to update memory");
+    } finally {
+      setIsSavingMemory(false);
+    }
+  };
+
+  const handleCancelEditMemory = () => {
+    setEditingMemory(null);
+    setEditMemoryContent("");
   };
 
   // Handle creating a new memory - opens command palette with /save-memory
@@ -421,17 +522,58 @@ function ManageMemories() {
         {/* NEW badge for memories created within 24 hours */}
         {isNew && <NewBadge />}
 
-        {/* Delete button - top right */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteClick(memory);
-          }}
-          className="absolute top-4 right-4 p-2 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
-          title="Delete memory"
-        >
-          <TrashIcon />
-        </button>
+        {/* Actions Menu - top right */}
+        <div className="absolute top-4 right-4 actions-menu-container relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenMenuId(
+                openMenuId === memory.memoryId ? null : memory.memoryId,
+              );
+            }}
+            className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+              openMenuId === memory.memoryId
+                ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
+                : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
+            }`}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+            aria-label="More actions"
+          >
+            <EllipsisVerticalIcon />
+          </button>
+          {openMenuId === memory.memoryId && (
+            <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditMemoryClick(memory);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <EditIcon />
+                <span className="font-body font-medium text-sm">
+                  Edit Memory
+                </span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(memory);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <TrashIcon />
+                </div>
+                <span className="font-body font-medium text-sm">
+                  Delete Memory
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Header with pink dot - using first ~35 chars of description */}
         <div className="flex items-start gap-3 mb-2 pr-16">
@@ -990,6 +1132,54 @@ function ManageMemories() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Memory Modal */}
+      {editingMemory && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+          <div
+            className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}
+          >
+            <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold mb-6">
+              Edit Memory
+            </h3>
+
+            <div className="mb-6">
+              <label className={formPatterns.label}>Content</label>
+              <textarea
+                className={`${inputPatterns.standard} resize-none`}
+                rows={5}
+                value={editMemoryContent}
+                onChange={(e) => setEditMemoryContent(e.target.value)}
+                placeholder="Enter memory content"
+              />
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={handleCancelEditMemory}
+                disabled={isSavingMemory}
+                className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEditMemory}
+                disabled={isSavingMemory || !editMemoryContent.trim()}
+                className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+              >
+                {isSavingMemory ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <span>Save</span>
+                )}
+              </button>
             </div>
           </div>
         </div>

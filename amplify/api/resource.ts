@@ -46,6 +46,7 @@ export function createCoreApi(
   getMemoriesLambda: lambda.IFunction,
   createMemoryLambda: lambda.IFunction,
   deleteMemoryLambda: lambda.IFunction,
+  updateMemoryLambda: lambda.IFunction,
   deleteCoachConversationLambda: lambda.IFunction,
   getUserProfileLambda: lambda.IFunction,
   updateUserProfileLambda: lambda.IFunction,
@@ -370,6 +371,12 @@ export function createCoreApi(
       deleteMemoryLambda,
     );
 
+  const updateMemoryIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateMemoryIntegration",
+      updateMemoryLambda,
+    );
+
   const deleteCoachConversationIntegration =
     new apigatewayv2_integrations.HttpLambdaIntegration(
       "DeleteCoachConversationIntegration",
@@ -610,6 +617,7 @@ export function createCoreApi(
     getMemories: getMemoriesIntegration,
     createMemory: createMemoryIntegration,
     deleteMemory: deleteMemoryIntegration,
+    updateMemory: updateMemoryIntegration,
     deleteCoachConversation: deleteCoachConversationIntegration,
     getUserProfile: getUserProfileIntegration,
     updateUserProfile: updateUserProfileIntegration,
@@ -1083,6 +1091,13 @@ export function createCoreApi(
     path: "/users/{userId}/memories/{memoryId}",
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteMemory,
+    authorizer: userPoolAuthorizer,
+  });
+
+  httpApi.addRoutes({
+    path: "/users/{userId}/memories/{memoryId}",
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateMemory,
     authorizer: userPoolAuthorizer,
   });
 
