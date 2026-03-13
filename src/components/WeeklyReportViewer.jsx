@@ -11,7 +11,7 @@ import {
   ActivityIcon,
 } from "./themes/SynthwaveComponents";
 import IconButton from "./shared/IconButton";
-import WeeklyHeatMap from "./WeeklyHeatMap";
+import WorkoutHeatMap from "./WorkoutHeatMap";
 
 // Value display component
 const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
@@ -138,9 +138,8 @@ function WeeklyReportViewerV2({
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left column - 60% (3 of 5 columns) */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Weekly Training Intensity Heat Map */}
-          <WeeklyHeatMap
-            dailyVolumeData={structured.raw_aggregations?.daily_volume || []}
+          {/* Workout Intensity Heat Map */}
+          <WorkoutHeatMap
             weekStart={report.weekStart}
             weekEnd={report.weekEnd}
             userId={userId}

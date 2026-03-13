@@ -1381,6 +1381,22 @@ export const heatMapPatterns = {
   // Current day indicator (pulsing dot)
   currentDayIndicator:
     "absolute -top-1 -right-1 w-3 h-3 bg-synthwave-neon-pink rounded-full animate-pulse",
+
+  // Workout tile container - smaller squares for per-workout (not per-day) display
+  workoutTile:
+    "w-9 h-9 rounded-lg border transition-all duration-300 flex flex-col items-center justify-center relative group cursor-pointer shrink-0",
+  workoutTileInteractive:
+    "hover:scale-110 hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 transition-all duration-300",
+  workoutTileStatic: "cursor-default opacity-60",
+
+  // Discipline abbreviation label rendered inside a workout tile
+  disciplineLabel:
+    "text-[9px] font-bold text-white/80 drop-shadow-sm leading-none uppercase",
+
+  // Date group separator elements
+  dateSeparatorLabel:
+    "text-xs font-body text-synthwave-text-secondary uppercase tracking-wider whitespace-nowrap",
+  dateSeparatorLine: "flex-1 h-px bg-synthwave-neon-cyan/20",
 };
 
 // Streaming UI Patterns - Shared styles for streaming message interactions
