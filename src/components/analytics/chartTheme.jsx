@@ -42,7 +42,11 @@ export function ChartGradients() {
     <defs>
       <linearGradient id="pinkGradient" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stopColor={chartColors.neonPink} stopOpacity={0.35} />
-        <stop offset="100%" stopColor={chartColors.neonPink} stopOpacity={0.0} />
+        <stop
+          offset="100%"
+          stopColor={chartColors.neonPink}
+          stopOpacity={0.0}
+        />
       </linearGradient>
       <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stopColor={chartColors.cyan} stopOpacity={0.3} />
@@ -73,7 +77,7 @@ export function SynthwaveTooltip({ active, payload, label, formatter }) {
 
   return (
     <div
-      className="rounded-md px-3 py-2.5 shadow-lg border backdrop-blur-sm"
+      className="rounded-none px-3 py-2.5 shadow-lg border backdrop-blur-sm"
       style={{
         background: chartColors.tooltipBg,
         borderColor: chartColors.tooltipBorder,
@@ -85,9 +89,15 @@ export function SynthwaveTooltip({ active, payload, label, formatter }) {
         </p>
       )}
       {payload.map((entry, i) => {
-        const value = formatter ? formatter(entry.value, entry.name) : entry.value;
+        const value = formatter
+          ? formatter(entry.value, entry.name)
+          : entry.value;
         return (
-          <p key={i} className="font-body text-xs" style={{ color: entry.color }}>
+          <p
+            key={i}
+            className="font-body text-xs"
+            style={{ color: entry.color }}
+          >
             {entry.name}: <span className="font-semibold">{value}</span>
           </p>
         );

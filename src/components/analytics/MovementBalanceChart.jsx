@@ -168,7 +168,7 @@ function BalanceTooltip({ active, payload, label }) {
 
   return (
     <div
-      className="rounded-md px-3 py-2.5 shadow-lg border backdrop-blur-sm"
+      className="rounded-none px-3 py-2.5 shadow-lg border backdrop-blur-sm"
       style={{
         background: chartColors.tooltipBg,
         borderColor: chartColors.tooltipBorder,
