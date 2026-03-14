@@ -477,8 +477,7 @@ export async function updateWorkout(
   // Keep workoutName and workoutData.workout_name in sync regardless of which was updated
   if (updates.workoutData?.workout_name) {
     updatedSession.workoutName = updates.workoutData.workout_name;
-  }
-  if (updates.workoutName && updatedSession.workoutData) {
+  } else if (updates.workoutName && updatedSession.workoutData) {
     updatedSession.workoutData.workout_name = updates.workoutName;
   }
 
