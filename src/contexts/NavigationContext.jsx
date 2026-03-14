@@ -270,7 +270,7 @@ export const NavigationProvider = ({ children }) => {
 
   const getProgressRoute = () => {
     if (!hasCoachContext) return "#";
-    return `/progress?userId=${userId}&coachId=${coachId}`;
+    return `/training-grounds/analytics?userId=${userId}&coachId=${coachId}`;
   };
 
   const getWorkoutsRoute = () => {

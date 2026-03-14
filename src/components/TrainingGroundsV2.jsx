@@ -55,6 +55,7 @@ import RecentPRsCard from "./highlights/RecentPRsCard";
 import StreakCard from "./highlights/StreakCard";
 import TopExercisesCard from "./highlights/TopExercisesCard";
 import CoachBriefingCard from "./highlights/CoachBriefingCard";
+import { extractSparklineData } from "./analytics/Sparkline";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
@@ -877,6 +878,13 @@ function TrainingGroundsV2() {
   const greeting = aiGreeting || staticGreeting;
 
   // ---------------------------------------------------------------------------
+  // Sparkline data extracted from recent reports
+  // ---------------------------------------------------------------------------
+  const { volumeSparkline, frequencySparkline } = extractSparklineData(
+    reportsState.recentReports,
+  );
+
+  // ---------------------------------------------------------------------------
   // Masonry section cards (shared between mobile and desktop layouts)
   // ---------------------------------------------------------------------------
   const renderStreakCard = () => (
@@ -886,6 +894,7 @@ function TrainingGroundsV2() {
       thisWeekWorkoutCount={workoutState.thisWeekWorkoutCount || 0}
       lastWorkoutDaysAgo={workoutState.lastWorkoutDaysAgo || 0}
       isLoading={workoutState.isLoadingTrainingDays}
+      volumeSparkline={volumeSparkline}
     />
   );
 
@@ -1110,6 +1119,7 @@ function TrainingGroundsV2() {
         userId={userId}
         coachId={coachId}
         unitSystem={unitSystem}
+        frequencySparkline={frequencySparkline}
       />
     );
   };
@@ -1233,6 +1243,24 @@ function TrainingGroundsV2() {
           </>
         )}
       </div>
+
+      {/* Analytics entry point */}
+      <Link
+        to={`/training-grounds/analytics?userId=${userId}&coachId=${coachId}`}
+        className="mt-3 flex items-center justify-between px-4 py-3 rounded-md bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 hover:bg-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/50 transition-all duration-200 group"
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="text-synthwave-neon-purple">
+            <BarChartIcon />
+          </span>
+          <span className="font-body font-semibold text-sm text-synthwave-neon-purple uppercase tracking-wide">
+            View Analytics
+          </span>
+        </div>
+        <span className="text-synthwave-neon-purple/50 group-hover:text-synthwave-neon-purple transition-colors">
+          <ChevronRightIcon />
+        </span>
+      </Link>
     </div>
   );
 
