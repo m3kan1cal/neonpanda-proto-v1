@@ -74,58 +74,6 @@ function combineAndDeduplicateMemories(
 }
 
 /**
- * Auto-heal: Ensure a memory exists in Pinecone
- * If the memory is missing from Pinecone (e.g., manually deleted), re-index it
- */
-async function ensureMemoryInPinecone(
-  memory: UserMemory,
-  userId: string,
-): Promise<void> {
-  try {
-    // Only re-index if the memory has valid memoryId and content
-    if (!memory.memoryId) {
-      logger.info(
-        "ℹ️ Skipping Pinecone upsert for non-memory record (expected behavior):",
-        {
-          hasContent: !!memory.content,
-          contentPreview: memory.content?.substring(0, 100),
-          pineconeId: (memory as any).pineconeId,
-          recordType: memory.memoryType,
-        },
-      );
-      return;
-    }
-
-    if (!memory.content || memory.content.length === 0) {
-      logger.warn("⚠️ Skipping Pinecone upsert: memory has no content", {
-        memoryId: memory.memoryId,
-      });
-      return;
-    }
-
-    // Always upsert to ensure consistency (Pinecone upserts are idempotent)
-    // This will update if exists, create if missing
-    logger.info("🔄 Ensuring memory exists in Pinecone:", {
-      memoryId: memory.memoryId,
-      userId,
-      type: memory.memoryType,
-    });
-
-    await storeMemoryInPinecone(memory);
-
-    logger.info("✅ Memory ensured in Pinecone:", {
-      memoryId: memory.memoryId,
-    });
-  } catch (error) {
-    logger.error("❌ Failed to ensure memory in Pinecone:", {
-      memoryId: memory.memoryId,
-      error,
-    });
-    // Don't throw - this is a background healing operation
-  }
-}
-
-/**
  * Retrieves existing memories for context using AI-guided approach (BEFORE AI response generation)
  * Simplified for prototype - uses AI detection to determine semantic vs standard retrieval
  */

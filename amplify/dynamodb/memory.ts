@@ -266,13 +266,14 @@ export async function updateMemory(
     tagUpdates = {
       metadata: {
         ...existingItem.attributes.metadata,
+        usageCount: newUsageCount,
         tags: newTags.slice(0, 10),
       },
     };
   }
 
   const updatedMemory: UserMemory = {
-    ...deepMerge(existingItem.attributes, { ...updates, ...tagUpdates }),
+    ...deepMerge(existingItem.attributes, deepMerge(updates, tagUpdates)),
     // Preserve immutable fields
     memoryId: existingItem.attributes.memoryId,
     userId: existingItem.attributes.userId,
