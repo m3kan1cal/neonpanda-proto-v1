@@ -455,7 +455,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="rounded-md bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
+              <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-body text-synthwave-text-secondary text-sm leading-relaxed"
@@ -624,7 +624,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="rounded-md bg-synthwave-bg-primary/30 p-3 mb-3 animate-fadeIn">
+              <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-body text-synthwave-text-secondary text-sm leading-relaxed"
@@ -681,159 +681,84 @@ function ViewReports() {
     (reportAgentState.isLoadingAllMonthlyItems &&
       reportAgentState.allMonthlyReports.length === 0)
   ) {
+    // Single card skeleton matching the exact real card structure
+    const ReportCardSkeleton = () => (
+      <div className={`${containerPatterns.cardMedium} p-6 mb-6`}>
+        {/* Dot + title */}
+        <div className="flex items-start gap-3 mb-2">
+          <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse" />
+          <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded w-52" />
+        </div>
+
+        {/* Metadata row: Period · Confidence · Generated */}
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded w-28" />
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded w-20" />
+          <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded w-32" />
+        </div>
+
+        {/* Report Summary collapsible toggle row */}
+        <div className="flex items-center justify-between px-2 py-1 -mx-2 mb-2">
+          <div className="h-3.5 bg-synthwave-text-muted/20 animate-pulse rounded w-28" />
+          <div className="w-4 h-4 bg-synthwave-text-muted/20 animate-pulse rounded" />
+        </div>
+
+        {/* Badge row */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded w-20" />
+          <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded w-24" />
+          <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded w-16" />
+        </div>
+      </div>
+    );
+
     return (
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header Skeleton */}
+          {/* Header skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-            {/* Left: Title + Coach Card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              {/* Title skeleton - compact size */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
-
-              {/* Compact coach card skeleton - horizontal pill */}
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse rounded w-48" />
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
-                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse" />
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded w-20" />
               </div>
             </div>
-
-            {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse rounded" />
               </div>
             ))}
           </div>
 
           {/* Tab Switcher skeleton */}
           <div className="flex items-center justify-center gap-2 mb-6 -mt-2">
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
           </div>
 
-          {/* Report cards skeleton */}
+          {/* Report cards skeleton — single column mobile, two columns desktop */}
           <div className="mb-8">
-            {/* Mobile: Single column */}
             <div className="lg:hidden">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className={`${containerPatterns.cardMedium} p-6 mb-6`}
-                >
-                  {/* Header with dot skeleton */}
-                  <div className="flex items-start gap-3 mb-2">
-                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
-                  </div>
-
-                  {/* Metadata row skeleton */}
-                  <div className="flex flex-wrap gap-4 mb-3">
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
-                  </div>
-
-                  {/* Summary skeleton */}
-                  <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
-                    <div className="space-y-2">
-                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
-                    </div>
-                  </div>
-
-                  {/* Badge row skeleton */}
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                  </div>
-                </div>
+              {[1, 2, 3, 4].map((i) => (
+                <ReportCardSkeleton key={i} />
               ))}
             </div>
-            {/* Desktop: Two columns with alternating distribution */}
             <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
-              {/* Left Column - even indices (0, 2, 4) */}
               <div>
-                {[0, 2, 4].map((i) => (
-                  <div
-                    key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
-                  >
-                    {/* Header with dot skeleton */}
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
-                    </div>
-
-                    {/* Metadata row skeleton */}
-                    <div className="flex flex-wrap gap-4 mb-3">
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
-                    </div>
-
-                    {/* Summary skeleton */}
-                    <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
-                      <div className="space-y-2">
-                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
-                      </div>
-                    </div>
-
-                    {/* Badge row skeleton */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                    </div>
-                  </div>
+                {[1, 3].map((i) => (
+                  <ReportCardSkeleton key={i} />
                 ))}
               </div>
-              {/* Right Column - odd indices (1, 3, 5) */}
               <div>
-                {[1, 3, 5].map((i) => (
-                  <div
-                    key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
-                  >
-                    {/* Header with dot skeleton */}
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full shrink-0 mt-2 animate-pulse"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
-                    </div>
-
-                    {/* Metadata row skeleton */}
-                    <div className="flex flex-wrap gap-4 mb-3">
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
-                    </div>
-
-                    {/* Summary skeleton */}
-                    <div className="bg-synthwave-bg-primary/30 p-3 mb-3">
-                      <div className="space-y-2">
-                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
-                      </div>
-                    </div>
-
-                    {/* Badge row skeleton */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                    </div>
-                  </div>
+                {[2, 4].map((i) => (
+                  <ReportCardSkeleton key={i} />
                 ))}
               </div>
             </div>

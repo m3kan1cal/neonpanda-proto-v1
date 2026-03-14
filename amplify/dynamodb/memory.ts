@@ -8,6 +8,7 @@ import {
   withThroughputScaling,
   getTableName,
   UpdateCommand,
+  deepMerge,
 } from "./core";
 import { UserMemory } from "../functions/libs/memory/types";
 import { logger } from "../functions/libs/logger";
@@ -197,11 +198,21 @@ async function incrementMemoryUsage(
 }
 
 /**
- * Update usage statistics for a memory with enhanced tagging
+ * Update a memory's fields and/or usage statistics.
+ *
+ * Mirrors the updateWorkout pattern: loads the existing item, deep-merges
+ * any field updates, and saves back with requireExists. When usageContext is
+ * provided it additionally:
+ *   - Atomically increments the usage count (thread-safe DynamoDB ADD)
+ *   - Computes and merges enriched tags based on the new count and context
+ *
+ * Pinecone sync is the caller's responsibility (handler layer), consistent
+ * with all other DynamoDB operations in this codebase.
  */
 export async function updateMemory(
-  memoryId: string,
   userId: string,
+  memoryId: string,
+  updates: Partial<UserMemory>,
   usageContext?: {
     userMessage?: string;
     messageContext?: string;
@@ -209,115 +220,80 @@ export async function updateMemory(
     retrievalMethod?: "semantic" | "importance" | "hybrid";
     conversationId?: string;
   },
-): Promise<void> {
-  // Atomically increment usage count (thread-safe, efficient)
-  const newUsageCount = await incrementMemoryUsage(memoryId, userId);
-
-  // Load memory for tag updates (only if context provided)
-  if (!usageContext) {
-    // No tag updates needed - we're done
-    logger.info("Memory usage count updated:", {
-      memoryId,
-      userId,
-      newUsageCount,
-    });
-    return;
-  }
-
-  const memory = await loadFromDynamoDB<UserMemory>(
+): Promise<UserMemory> {
+  const existingItem = await loadFromDynamoDB<UserMemory>(
     `user#${userId}`,
     `userMemory#${memoryId}`,
     "userMemory",
   );
 
-  if (!memory) {
-    logger.warn(`Memory ${memoryId} not found for user ${userId}`);
-    return;
+  if (!existingItem) {
+    throw new Error(`Memory ${memoryId} not found for user ${userId}`);
   }
 
-  // Enhanced tagging based on usage context
-  const currentTags = memory.attributes.metadata.tags || [];
-  const newTags = [...currentTags];
+  let tagUpdates: Partial<UserMemory> = {};
 
-  // Add usage-based tags (using the updated count from atomic increment)
-  if (newUsageCount >= 5) {
-    if (!newTags.includes("frequently_used")) {
+  if (usageContext) {
+    // Atomically increment usage count — separate DynamoDB ADD to prevent race conditions
+    const newUsageCount = await incrementMemoryUsage(memoryId, userId);
+
+    const currentTags = existingItem.attributes.metadata?.tags || [];
+    const newTags = [...currentTags];
+
+    if (newUsageCount >= 5 && !newTags.includes("frequently_used")) {
       newTags.push("frequently_used");
     }
-  }
-
-  if (newUsageCount >= 10) {
-    if (!newTags.includes("highly_accessed")) {
+    if (newUsageCount >= 10 && !newTags.includes("highly_accessed")) {
       newTags.push("highly_accessed");
     }
-  }
-
-  if (newUsageCount >= 20) {
-    if (!newTags.includes("critical_memory")) {
+    if (newUsageCount >= 20 && !newTags.includes("critical_memory")) {
       newTags.push("critical_memory");
     }
-  }
 
-  // Add context-based tags from usage context
-  if (usageContext?.contextTypes) {
-    usageContext.contextTypes.forEach((contextType) => {
-      if (!newTags.includes(contextType)) {
-        newTags.push(contextType);
-      }
+    usageContext.contextTypes?.forEach((contextType) => {
+      if (!newTags.includes(contextType)) newTags.push(contextType);
     });
-  }
 
-  // Add retrieval method tags
-  if (usageContext?.retrievalMethod) {
-    const methodTag = `${usageContext.retrievalMethod}_retrieved`;
-    if (!newTags.includes(methodTag)) {
-      newTags.push(methodTag);
+    if (usageContext.retrievalMethod) {
+      const methodTag = `${usageContext.retrievalMethod}_retrieved`;
+      if (!newTags.includes(methodTag)) newTags.push(methodTag);
     }
-  }
 
-  // Add recency tag (memory was just accessed)
-  if (!newTags.includes("recently_accessed")) {
-    newTags.push("recently_accessed");
-  }
-
-  // Limit tags to prevent bloat (max 10 tags)
-  memory.attributes.metadata.tags = newTags.slice(0, 10);
-  memory.updatedAt = new Date().toISOString();
-
-  // Update DynamoDB with new tags
-  await saveToDynamoDB(memory, true /* requireExists */);
-
-  // Update Pinecone with new tags if usage context provided
-  if (usageContext) {
-    try {
-      // Import the Pinecone function dynamically to avoid circular dependencies
-      const { storeMemoryInPinecone } =
-        await import("../functions/libs/user/pinecone");
-      await storeMemoryInPinecone(memory.attributes);
-      logger.info("Memory updated in Pinecone with enhanced tags:", {
-        memoryId,
-        userId,
-        tagCount: memory.attributes.metadata.tags.length,
-      });
-    } catch (error) {
-      logger.warn("Failed to update memory in Pinecone:", error);
+    if (!newTags.includes("recently_accessed")) {
+      newTags.push("recently_accessed");
     }
+
+    tagUpdates = {
+      metadata: {
+        usageCount: newUsageCount,
+        tags: newTags.slice(0, 10),
+      },
+    };
   }
 
-  logger.info("Memory usage updated with enhanced tags:", {
+  const updatedMemory: UserMemory = {
+    ...deepMerge(existingItem.attributes, deepMerge(updates, tagUpdates)),
+    // Preserve immutable fields
+    memoryId: existingItem.attributes.memoryId,
+    userId: existingItem.attributes.userId,
+  };
+
+  const updatedItem = {
+    ...existingItem,
+    attributes: updatedMemory,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
+
+  logger.info("Memory updated successfully:", {
     memoryId,
     userId,
-    newUsageCount,
-    tagCount: memory.attributes.metadata.tags.length,
-    newTags: memory.attributes.metadata.tags,
-    usageContext: usageContext
-      ? {
-          hasUserMessage: !!usageContext.userMessage,
-          contextTypes: usageContext.contextTypes,
-          retrievalMethod: usageContext.retrievalMethod,
-        }
-      : null,
+    updatedFields: Object.keys({ ...updates, ...tagUpdates }),
+    hasUsageContext: !!usageContext,
   });
+
+  return updatedMemory;
 }
 
 /**

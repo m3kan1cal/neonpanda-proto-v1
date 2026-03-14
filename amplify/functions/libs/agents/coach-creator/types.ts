@@ -12,6 +12,7 @@ import type {
   CoachPersonalityTemplate,
   MethodologyTemplate,
 } from "../../coach-creator/types";
+import type { CriticalTrainingDirective } from "../../user/types";
 
 /**
  * Event for triggering coach config generation
@@ -34,6 +35,9 @@ export interface CoachCreatorContext
   // - userId (required)
   // Inherits from BuildCoachConfigEvent:
   // - sessionId (required)
+
+  // Critical training directive from user profile (when enabled)
+  criticalTrainingDirective?: CriticalTrainingDirective;
 }
 
 /**

@@ -59,7 +59,19 @@ energetic package. The coaches you create should feel like:
 
 Think: Electric energy meets approachable excellence. Serious results, refreshingly fun approach.`);
 
-  // 2. Available tools and workflow
+  // 2. Critical training directive (if enabled) — injected early so it anchors all subsequent decisions
+  if (
+    context.criticalTrainingDirective?.enabled &&
+    context.criticalTrainingDirective?.content
+  ) {
+    sections.push(`## 🚨 CRITICAL TRAINING DIRECTIVE — ABSOLUTE PRIORITY
+
+${context.criticalTrainingDirective.content}
+
+This directive is NON-NEGOTIABLE. It MUST be reflected in the coach configuration — specifically in the safety constraints, personality prompts, and any generated workout guidance. Treat it as an absolute constraint when selecting personality templates, methodology templates, and generating coach prompts.`);
+  }
+
+  // 3. Available tools and workflow (renumbered — 2 is now critical directive)
   sections.push(`## YOUR TOOLS AND WORKFLOW
 
 You have 8 tools at your disposal. Here's the REQUIRED workflow:
@@ -113,7 +125,7 @@ You have 8 tools at your disposal. Here's the REQUIRED workflow:
 - Updates session status to COMPLETE
 - **ONLY call after all previous steps complete successfully**`);
 
-  // 3. Available templates reference
+  // 4. Available templates reference
   sections.push(`## AVAILABLE PERSONALITY TEMPLATES
 
 ${COACH_PERSONALITY_TEMPLATES.map(
@@ -135,7 +147,7 @@ ${METHODOLOGY_TEMPLATES.map(
 - Conditioning: ${method.conditioningApproach}`,
 ).join("\n\n")}`);
 
-  // 4. Critical rules
+  // 5. Critical rules
   sections.push(`## CRITICAL RULES
 
 1. **ALWAYS call tools in the correct order**:
@@ -167,7 +179,7 @@ ${METHODOLOGY_TEMPLATES.map(
    - Follow the workflow precisely
    - If validation fails, stop there`);
 
-  // 5. Context information
+  // 6. Context information
   sections.push(`## CONTEXT
 
 **User ID**: ${context.userId}
@@ -179,7 +191,7 @@ ${METHODOLOGY_TEMPLATES.map(
 - Todo list contains structured data from intake questions
 - Use this information to personalize the coach creation`);
 
-  // 6. Safety rules reference
+  // 7. Safety rules reference
   sections.push(`## CRITICAL SAFETY RULES TO INTEGRATE
 
 ${SAFETY_RULES.filter((rule) => rule.severity === "critical")
@@ -191,7 +203,7 @@ All safety considerations from the user's profile must be integrated into:
 - technical_config.safety_constraints
 - generated_prompts.safety_integrated_prompt`);
 
-  // 7. Coach config assembly (automatic)
+  // 8. Coach config assembly (automatic)
   sections.push(`## COACH CONFIG ASSEMBLY (AUTOMATIC)
 
 **IMPORTANT**: You do NOT need to manually construct the coach configuration.
@@ -211,7 +223,7 @@ Simply call \`assemble_coach_config\` with the creation timestamp, and it will:
 
 The tool returns a complete \`coachConfig\` object ready for validation.`);
 
-  // 8. Common scenarios
+  // 9. Common scenarios
   sections.push(`## COMMON SCENARIOS
 
 ### Scenario 1: Standard coach creation (complete session data)
@@ -244,7 +256,7 @@ Response: "Coach creation failed: [validation issues]. Cannot save invalid confi
 
 **CRITICAL**: When validation returns isValid: false, the workflow ENDS.`);
 
-  // 9. Final reminders
+  // 10. Final reminders
   sections.push(`## FINAL REMINDERS
 
 - **NEVER ask clarifying questions** - this is fire-and-forget, user won't see them

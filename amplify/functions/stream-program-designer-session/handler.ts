@@ -516,6 +516,9 @@ async function* createProgramDesignerEventStreamV2(
     const coachPersonality =
       coachConfig?.generated_prompts?.personality_prompt || undefined;
 
+    const criticalTrainingDirective = (userProfile as any)
+      ?.criticalTrainingDirective;
+
     const agentContext: ProgramDesignerSessionAgentContext = {
       userId: userId as string,
       sessionId: sessionId as string,
@@ -525,6 +528,7 @@ async function* createProgramDesignerEventStreamV2(
       coachPersonality,
       session: programSession, // Mutable — tools mutate session.todoList and session.isComplete
       pineconeContext,
+      criticalTrainingDirective,
     };
 
     // 6. Build system prompts
@@ -535,6 +539,7 @@ async function* createProgramDesignerEventStreamV2(
         coachPersonality,
         pineconeContext,
         messageCount: programSession.conversationHistory?.length || 0,
+        criticalTrainingDirective,
       });
 
     logger.info("✅ V2: System prompt built:", {

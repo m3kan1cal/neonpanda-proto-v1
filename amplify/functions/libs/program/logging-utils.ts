@@ -5,11 +5,11 @@
  * Converts natural language templates + user performance to Universal Workout Schema.
  */
 
-import { WORKOUT_SCHEMA } from '../schemas/workout-schema';
-import { getCondensedSchema } from '../object-utils';
-import type { CoachConfig } from '../coach-creator/types';
-import type { UserProfile } from '../user/types';
-import { buildCoachPersonalityPrompt } from '../coach-config/personality-utils';
+import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
+import { getCondensedSchema } from "../object-utils";
+import type { CoachConfig } from "../coach-creator/types";
+import type { UserProfile } from "../user/types";
+import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
 
 /**
  * Build AI extraction prompt for logging a workout template
@@ -51,13 +51,13 @@ export function buildTemplateLoggingPrompt(
     dayNumber: number;
     phaseId: string;
     phaseName: string;
-  }
+  },
 ): { staticPrompt: string; dynamicPrompt: string } {
   // Build coach personality context
   const coachPersonalityPrompt = buildCoachPersonalityPrompt(coachConfig);
 
   // Get critical training directive if available
-  const criticalTrainingDirective = userProfile?.criticalTrainingDirective || null;
+  const criticalTrainingDirective = userProfile?.criticalTrainingDirective;
 
   // STATIC PROMPT (cacheable - 90% cost reduction on cache hits)
   // Contains coach personality, schemas, and extraction instructions that don't change
@@ -69,12 +69,16 @@ WORKOUT LOGGING FROM TRAINING PROGRAM TEMPLATE
 
 You are extracting a workout that was performed based on a training program template.
 
-${criticalTrainingDirective ? `
+${
+  criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+    ? `
 CRITICAL TRAINING DIRECTIVE (User's specific instruction to coach):
-${criticalTrainingDirective}
+${criticalTrainingDirective.content}
 
 Consider this directive when interpreting performance and extracting data.
-` : ''}
+`
+    : ""
+}
 
 ================================================================================
 EXTRACTION INSTRUCTIONS
@@ -153,7 +157,7 @@ ${templateMetadata.coachingNotes}
 
 EXPECTED DETAILS:
 - Duration: ~${templateMetadata.estimatedDuration} minutes
-- Equipment: ${templateMetadata.requiredEquipment.join(', ')}
+- Equipment: ${templateMetadata.requiredEquipment.join(", ")}
 
 USER'S ACTUAL PERFORMANCE (what they actually did):
 ---
@@ -165,51 +169,3 @@ Extract the workout now in Universal Workout Schema format.
 
   return { staticPrompt, dynamicPrompt };
 }
-
-/**
- * Extract lightweight exercise list from natural language workout content
- * Used for quick reference and filtering without full AI processing
- *
- * This is a simple regex-based extraction for basic filtering functionality.
- * For full workout details, use the AI extraction in buildTemplateLoggingPrompt.
- *
- * @param workoutContent - Natural language workout content
- * @returns Array of basic exercise references (exerciseName and guessed movementType)
- */
-export function extractExerciseList(workoutContent: string): Array<{
-  exerciseName: string;
-  movementType: string;
-}> {
-  const exercises: Array<{ exerciseName: string; movementType: string }> = [];
-
-  // Common exercise patterns to look for
-  const exercisePatterns = [
-    // Barbell exercises
-    { regex: /\b(back squat|front squat|squat|deadlift|bench press|overhead press|push press|clean|snatch|thruster|row)\b/gi, type: 'barbell' },
-    // Dumbbell exercises
-    { regex: /\b(dumbbell [a-z\s]+|db [a-z\s]+)\b/gi, type: 'dumbbell' },
-    // Kettlebell exercises
-    { regex: /\b(kettlebell swing|kb swing|turkish get.up)\b/gi, type: 'kettlebell' },
-    // Bodyweight exercises
-    { regex: /\b(pull.?up|push.?up|dip|sit.?up|burpee|lunge|box jump|muscle.?up|handstand)\b/gi, type: 'bodyweight' },
-    // Cardio/monostructural
-    { regex: /\b(assault bike|row|rower|concept2|ski erg|run|running)\b/gi, type: 'cardio' },
-  ];
-
-  for (const pattern of exercisePatterns) {
-    const matches = workoutContent.matchAll(pattern.regex);
-    for (const match of matches) {
-      const name = match[0].trim();
-      // Avoid duplicates
-      if (!exercises.some(ex => ex.exerciseName.toLowerCase() === name.toLowerCase())) {
-        exercises.push({
-          exerciseName: name,
-          movementType: pattern.type,
-        });
-      }
-    }
-  }
-
-  return exercises;
-}
-
