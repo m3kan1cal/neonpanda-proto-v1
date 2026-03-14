@@ -19,6 +19,7 @@
  */
 
 import type { ProgramDesignerSession } from "../../program-designer/types";
+import type { CriticalTrainingDirective } from "../../user/types";
 import {
   getTodoProgress,
   getTodoSummary,
@@ -39,6 +40,7 @@ export function buildProgramDesignerSessionAgentPrompt(
     coachPersonality?: string;
     pineconeContext?: string;
     messageCount?: number;
+    criticalTrainingDirective?: CriticalTrainingDirective;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -343,11 +345,24 @@ If user says "Nothing else, let's go" → call complete_design with "no addition
     timeZone: effectiveTimezone,
   });
 
+  // Section 1: Critical training directive (if enabled) — first so it anchors all responses
+  if (
+    options.criticalTrainingDirective?.enabled &&
+    options.criticalTrainingDirective?.content
+  ) {
+    dynamicSections.push(`## 🚨 CRITICAL TRAINING DIRECTIVE — ABSOLUTE PRIORITY
+
+${options.criticalTrainingDirective.content}
+
+This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints. You MUST incorporate this into every recommendation and program decision.`);
+  }
+
+  // Section 2: Current date & time
   dynamicSections.push(`## CURRENT DATE & TIME
 
 Today is ${formattedDate} at ${formattedTime} (${effectiveTimezone}).`);
 
-  // Section 2: Session progress snapshot
+  // Section 3: Session progress snapshot
   const progress = getTodoProgress(session.todoList);
   const summary = getTodoSummary(session.todoList);
 
@@ -408,7 +423,7 @@ Today is ${formattedDate} at ${formattedTime} (${effectiveTimezone}).`);
 
   dynamicSections.push(progressSection.join("\n"));
 
-  // Section 3: Coach personality (if available)
+  // Section 4: Coach personality (if available)
   if (options.coachPersonality && options.coachPersonality.trim()) {
     dynamicSections.push(`## COACH PERSONALITY GUIDANCE
 
@@ -417,7 +432,7 @@ ${options.coachPersonality.trim()}
 Apply this personality consistently throughout the program design conversation.`);
   }
 
-  // Section 4: User background from Pinecone (if available)
+  // Section 5: User background from Pinecone (if available)
   if (options.pineconeContext && options.pineconeContext.trim()) {
     dynamicSections.push(`## USER BACKGROUND CONTEXT (from prior history)
 

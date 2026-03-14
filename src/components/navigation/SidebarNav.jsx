@@ -127,7 +127,7 @@ const SidebarNav = () => {
     clearTimeout(collapseTimer.current);
     clearTimeout(expandTimer.current);
     setIsHoverExpanded(true);
-    expandTimer.current = setTimeout(() => setIsContentExpanded(true), 160);
+    expandTimer.current = setTimeout(() => setIsContentExpanded(true), 80);
   };
 
   const handleMouseLeave = () => {

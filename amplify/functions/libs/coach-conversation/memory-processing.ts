@@ -54,7 +54,7 @@ export const isMemorySlashCommand = (slashCommandResult: any): boolean => {
  */
 function combineAndDeduplicateMemories(
   semanticMemories: any[],
-  importantMemories: UserMemory[]
+  importantMemories: UserMemory[],
 ): UserMemory[] {
   const memoryMap = new Map<string, UserMemory>();
 
@@ -74,55 +74,6 @@ function combineAndDeduplicateMemories(
 }
 
 /**
- * Auto-heal: Ensure a memory exists in Pinecone
- * If the memory is missing from Pinecone (e.g., manually deleted), re-index it
- */
-async function ensureMemoryInPinecone(
-  memory: UserMemory,
-  userId: string
-): Promise<void> {
-  try {
-    // Only re-index if the memory has valid memoryId and content
-    if (!memory.memoryId) {
-      logger.info("ℹ️ Skipping Pinecone upsert for non-memory record (expected behavior):", {
-        hasContent: !!memory.content,
-        contentPreview: memory.content?.substring(0, 100),
-        pineconeId: (memory as any).pineconeId,
-        recordType: memory.memoryType,
-      });
-      return;
-    }
-
-    if (!memory.content || memory.content.length === 0) {
-      logger.warn("⚠️ Skipping Pinecone upsert: memory has no content", {
-        memoryId: memory.memoryId,
-      });
-      return;
-    }
-
-    // Always upsert to ensure consistency (Pinecone upserts are idempotent)
-    // This will update if exists, create if missing
-    logger.info("🔄 Ensuring memory exists in Pinecone:", {
-      memoryId: memory.memoryId,
-      userId,
-      type: memory.memoryType,
-    });
-
-    await storeMemoryInPinecone(memory);
-
-    logger.info("✅ Memory ensured in Pinecone:", {
-      memoryId: memory.memoryId,
-    });
-  } catch (error) {
-    logger.error("❌ Failed to ensure memory in Pinecone:", {
-      memoryId: memory.memoryId,
-      error,
-    });
-    // Don't throw - this is a background healing operation
-  }
-}
-
-/**
  * Retrieves existing memories for context using AI-guided approach (BEFORE AI response generation)
  * Simplified for prototype - uses AI detection to determine semantic vs standard retrieval
  */
@@ -131,7 +82,7 @@ export async function queryMemories(
   coachId: string,
   userMessage?: string,
   messageContext?: string,
-  options?: { enableReranking?: boolean; minScore?: number }
+  options?: { enableReranking?: boolean; minScore?: number },
 ): Promise<MemoryRetrievalResult> {
   let memories: UserMemory[] = [];
   let retrievalDetection: any = null;
@@ -141,7 +92,7 @@ export async function queryMemories(
       // Use AI to determine if semantic memory retrieval is beneficial
       retrievalDetection = await detectMemoryRetrievalNeed(
         userMessage,
-        messageContext
+        messageContext,
       );
 
       if (
@@ -170,7 +121,7 @@ export async function queryMemories(
 
         memories = combineAndDeduplicateMemories(
           semanticMemories,
-          importantMemories
+          importantMemories,
         );
 
         logger.info("Retrieved hybrid memories:", {
@@ -185,7 +136,7 @@ export async function queryMemories(
           {
             confidence: retrievalDetection.confidence,
             reasoning: retrievalDetection.reasoning,
-          }
+          },
         );
         memories = await queryMemoriesFromDb(userId, coachId, { limit: 10 });
       }
@@ -201,11 +152,14 @@ export async function queryMemories(
       memories.forEach((memory) => {
         // Skip non-memory records without a valid memoryId
         if (!memory.memoryId) {
-          logger.info("ℹ️ Skipping usage update for non-memory record (expected behavior):", {
-            pineconeId: (memory as any).pineconeId,
-            recordType: memory.memoryType,
-            contentPreview: memory.content?.substring(0, 100),
-          });
+          logger.info(
+            "ℹ️ Skipping usage update for non-memory record (expected behavior):",
+            {
+              pineconeId: (memory as any).pineconeId,
+              recordType: memory.memoryType,
+              contentPreview: memory.content?.substring(0, 100),
+            },
+          );
           return;
         }
 
@@ -214,26 +168,28 @@ export async function queryMemories(
           messageContext,
           contextTypes: retrievalDetection?.contextTypes || [],
           retrievalMethod: (() => {
-            if (retrievalDetection?.needsSemanticRetrieval && retrievalDetection.confidence > 0.6) {
-              return 'hybrid'; // Both semantic and importance-based
+            if (
+              retrievalDetection?.needsSemanticRetrieval &&
+              retrievalDetection.confidence > 0.6
+            ) {
+              return "hybrid"; // Both semantic and importance-based
             } else if (retrievalDetection?.needsSemanticRetrieval) {
-              return 'semantic';
+              return "semantic";
             } else {
-              return 'importance';
+              return "importance";
             }
-          })() as 'semantic' | 'importance' | 'hybrid',
+          })() as "semantic" | "importance" | "hybrid",
         };
 
-        // Update memory usage in DynamoDB
-        updateMemory(memory.memoryId, userId, usageContext).catch((err: any) =>
-          logger.warn("Failed to update memory usage with context:", err)
-        );
-
-        // Auto-heal: Ensure memory is indexed in Pinecone
-        // If it's missing from Pinecone (e.g., manually deleted), re-index it
-        ensureMemoryInPinecone(memory, userId).catch((err: any) =>
-          logger.warn("Failed to ensure memory in Pinecone:", err)
-        );
+        // Update memory usage + tags in DynamoDB, then sync updated record to Pinecone
+        updateMemory(userId, memory.memoryId, {}, usageContext)
+          .then((updatedMemory) => storeMemoryInPinecone(updatedMemory))
+          .catch((err: any) =>
+            logger.warn(
+              "Failed to update memory usage or sync to Pinecone:",
+              err,
+            ),
+          );
       });
     }
 
@@ -261,7 +217,7 @@ export async function detectAndProcessMemory(
   coachId: string,
   conversationId: string,
   existingMessages: any[],
-  coachName?: string
+  coachName?: string,
 ): Promise<MemoryProcessingResult> {
   // Check for memory processing (natural language OR slash commands)
   let slashCommand,
@@ -334,7 +290,7 @@ export async function detectAndProcessMemory(
           // Use AI to determine memory characteristics (combined analysis)
           const memoryCharacteristics = await detectMemoryCharacteristics(
             memoryContent.trim(),
-            coachName
+            coachName,
           );
 
           logger.info("🎯 Slash command memory characteristics detected:", {
@@ -352,7 +308,9 @@ export async function detectAndProcessMemory(
           memory = {
             memoryId: generateMemoryId(userId),
             userId,
-            coachId: memoryCharacteristics.isCoachSpecific ? coachId : undefined, // AI determines scope
+            coachId: memoryCharacteristics.isCoachSpecific
+              ? coachId
+              : undefined, // AI determines scope
             memoryType: memoryCharacteristics.type, // AI-determined type
             content: memoryContent.trim(),
             metadata: {
@@ -361,7 +319,10 @@ export async function detectAndProcessMemory(
               createdAt: new Date(),
               lastUsed: new Date(),
               usageCount: 0,
-              tags: [...(memoryCharacteristics.suggestedTags || []), ...(memoryCharacteristics.exerciseTags || [])], // Combine regular and exercise tags
+              tags: [
+                ...(memoryCharacteristics.suggestedTags || []),
+                ...(memoryCharacteristics.exerciseTags || []),
+              ], // Combine regular and exercise tags
             },
           };
         }
@@ -386,13 +347,15 @@ export async function detectAndProcessMemory(
           // Use AI to determine memory characteristics (combined analysis)
           const memoryCharacteristics = await detectMemoryCharacteristics(
             memoryDetection.extractedMemory.content,
-            coachName
+            coachName,
           );
 
           memory = {
             memoryId: generateMemoryId(userId),
             userId,
-            coachId: memoryCharacteristics.isCoachSpecific ? coachId : undefined,
+            coachId: memoryCharacteristics.isCoachSpecific
+              ? coachId
+              : undefined,
             content: memoryDetection.extractedMemory.content,
             memoryType: memoryCharacteristics.type, // AI-determined type
             metadata: {
@@ -401,7 +364,10 @@ export async function detectAndProcessMemory(
               usageCount: 0,
               source: "conversation",
               importance: memoryCharacteristics.importance, // AI-determined importance
-              tags: [...(memoryCharacteristics.suggestedTags || []), ...(memoryCharacteristics.exerciseTags || [])], // Combine regular and exercise tags
+              tags: [
+                ...(memoryCharacteristics.suggestedTags || []),
+                ...(memoryCharacteristics.exerciseTags || []),
+              ], // Combine regular and exercise tags
             },
           };
         }
@@ -417,10 +383,7 @@ export async function detectAndProcessMemory(
             memoryId: memory.memoryId,
           });
         } catch (error) {
-          logger.warn(
-            "Failed to store memory in Pinecone, continuing:",
-            error
-          );
+          logger.warn("Failed to store memory in Pinecone, continuing:", error);
         }
         memoryFeedback = `✅ I've remembered that for you: "${memory.content}"`;
         logger.info("Memory saved:", {
@@ -437,7 +400,7 @@ export async function detectAndProcessMemory(
     } catch (error) {
       logger.error(
         "❌ Failed to process memory, but continuing conversation:",
-        error
+        error,
       );
       memoryFeedback = "❌ Sorry, I couldn't save that memory right now.";
     }

@@ -8,8 +8,12 @@ import {
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
+  formPatterns,
+  inputPatterns,
+  typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import { AccessDenied } from "./shared/AccessDenied";
+import MarkdownRenderer from "./shared/MarkdownRenderer";
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
@@ -27,6 +31,8 @@ import {
   ClockIcon,
   TargetIcon,
   TrashIcon,
+  EllipsisVerticalIcon,
+  EditIcon,
 } from "./themes/SynthwaveComponents";
 
 // Icons
@@ -63,6 +69,15 @@ function ManageWorkouts() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Actions menu state
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Edit modal state
+  const [editingWorkout, setEditingWorkout] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editCompletedAt, setEditCompletedAt] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   // Global Command Palette state
   const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
@@ -244,6 +259,72 @@ function ManageWorkouts() {
     setWorkoutToDelete(null);
   };
 
+  // Handle edit click - open edit modal with pre-filled values
+  const handleEditClick = (workout) => {
+    setEditingWorkout(workout);
+    setEditName(workout.workoutName || workout.workoutData?.workout_name || "");
+    // Format completedAt as datetime-local value (YYYY-MM-DDTHH:MM)
+    if (workout.completedAt) {
+      const date = new Date(workout.completedAt);
+      const localDatetime = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000,
+      )
+        .toISOString()
+        .slice(0, 16);
+      setEditCompletedAt(localDatetime);
+    } else {
+      setEditCompletedAt("");
+    }
+  };
+
+  // Handle save edit
+  const handleSaveEdit = async () => {
+    if (!editingWorkout || !workoutAgentRef.current || !userId) return;
+
+    setIsSaving(true);
+    try {
+      const updates = {
+        workoutName: editName.trim(),
+      };
+      
+      // Only include completedAt if it was actually changed
+      if (editCompletedAt !== "") {
+        const originalDate = new Date(editingWorkout.completedAt);
+        const originalLocalDatetime = new Date(
+          originalDate.getTime() - originalDate.getTimezoneOffset() * 60000,
+        )
+          .toISOString()
+          .slice(0, 16);
+        
+        if (editCompletedAt !== originalLocalDatetime) {
+          updates.completedAt = new Date(editCompletedAt).toISOString();
+        }
+      }
+      
+      await workoutAgentRef.current.updateWorkout(
+        userId,
+        editingWorkout.workoutId,
+        updates,
+      );
+      success("Workout updated successfully");
+      setEditingWorkout(null);
+      setEditName("");
+      setEditCompletedAt("");
+    } catch (err) {
+      logger.error("Error updating workout:", err);
+      error("Failed to update workout");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditingWorkout(null);
+    setEditName("");
+    setEditCompletedAt("");
+  };
+
   // Handle creating a new workout - opens command palette with /log-workout
   const handleLogNewWorkout = () => {
     onCommandPaletteToggle("/log-workout ");
@@ -299,7 +380,7 @@ function ManageWorkouts() {
       <div
         key="create-workout-card"
         onClick={handleLogNewWorkout}
-        className={`${containerPatterns.dashedCard} p-6 mb-6 group cursor-pointer`}
+        className={`${containerPatterns.dashedCard} mb-6 group cursor-pointer`}
       >
         <div className="text-center flex flex-col justify-center items-center h-full min-h-[220px]">
           {/* Plus Icon */}
@@ -379,18 +460,59 @@ function ManageWorkouts() {
         {/* NEW badge */}
         {isNew && <NewBadge />}
 
-        {/* Delete button - top right */}
-        <div className="absolute top-4 right-4">
+        {/* Actions menu - top right */}
+        <div className="absolute top-3 right-3 z-10 actions-menu-container">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDeleteClick(workout);
+              setOpenMenuId(
+                openMenuId === workout.workoutId ? null : workout.workoutId,
+              );
             }}
-            className="p-2 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer"
-            title="Delete workout"
+            className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+              openMenuId === workout.workoutId
+                ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
+                : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
+            }`}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+            aria-label="More actions"
           >
-            <TrashIcon className="w-4 h-4" />
+            <EllipsisVerticalIcon />
           </button>
+
+          {/* Dropdown Menu */}
+          {openMenuId === workout.workoutId && (
+            <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditClick(workout);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <EditIcon />
+                <span className="font-body font-medium text-sm">
+                  Edit Workout
+                </span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(workout);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <TrashIcon />
+                </div>
+                <span className="font-body font-medium text-sm">
+                  Delete Workout
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Header with pink dot */}
@@ -481,9 +603,10 @@ function ManageWorkouts() {
               <div
                 className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
               >
-                <p className="font-body text-sm text-synthwave-text-secondary mb-4">
-                  {workout.summary}
-                </p>
+                <MarkdownRenderer
+                  content={workout.summary}
+                  className="font-body text-sm text-synthwave-text-secondary mb-4"
+                />
 
                 {/* RPE and Intensity Spectrum Bars */}
                 <div className="space-y-3 pt-2">
@@ -566,19 +689,49 @@ function ManageWorkouts() {
     }
   }, [isValidatingUserId, workoutAgentState.isLoadingAllItems]);
 
-  // Close delete modal when pressing escape
+  // Close delete modal or edit modal when pressing escape
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === "Escape" && showDeleteModal) {
-        handleCancelDelete();
+      if (event.key === "Escape") {
+        if (editingWorkout) {
+          handleCancelEdit();
+          return;
+        }
+        if (showDeleteModal) {
+          handleCancelDelete();
+        }
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+    if (showDeleteModal || editingWorkout) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [showDeleteModal, editingWorkout]);
+
+  // Close actions menu when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest(".actions-menu-container")) {
+        setOpenMenuId(null);
+      }
     };
-  }, [showDeleteModal]);
+
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape" && openMenuId) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleEscapeKey);
+      };
+    }
+  }, [openMenuId]);
 
   // Show loading while validating userId or loading workouts
   if (isValidatingUserId || workoutAgentState.isLoadingAllItems) {
@@ -594,14 +747,14 @@ function ManageWorkouts() {
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
@@ -989,23 +1142,25 @@ function ManageWorkouts() {
                 Delete Workout
               </h3>
               <p className="font-body text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete "
-                {workoutToDelete?.workoutName || "this workout"}
-                "? This action cannot be undone.
+                Are you sure you want to delete{" "}
+                <strong className="text-white">
+                  {workoutToDelete?.workoutName || "this workout"}
+                </strong>
+                ? This action cannot be undone.
               </p>
 
-              <div className="flex space-x-4">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`${buttonPatterns.secondaryMedium} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -1020,6 +1175,107 @@ function ManageWorkouts() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Workout Modal */}
+      {editingWorkout && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
+          onKeyDown={(e) => {
+            if (
+              e.key === "Enter" &&
+              e.target.tagName !== "TEXTAREA" &&
+              !e.target.closest('[contenteditable="true"]') &&
+              !isSaving &&
+              editName.trim() &&
+              editCompletedAt
+            ) {
+              e.preventDefault();
+              handleSaveEdit();
+            }
+          }}
+        >
+          <div
+            className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}
+          >
+            <div className="pb-4 mb-5 border-b border-synthwave-neon-cyan/20">
+              <h3 className={typographyPatterns.cardTitle}>Edit Workout</h3>
+            </div>
+
+            {/* Workout Name */}
+            <div className="mb-5">
+              <label className={formPatterns.label}>Workout Name</label>
+              <input
+                type="text"
+                className={`${inputPatterns.standard} text-base hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0`}
+                style={{ boxShadow: "none", outline: "none" }}
+                onFocus={(e) => {
+                  e.target.style.outline = "none";
+                  e.target.style.boxShadow = "none";
+                }}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Enter workout name"
+              />
+            </div>
+
+            {/* Completed At */}
+            <div className="mb-5">
+              <label className={formPatterns.label}>Completed At</label>
+              <input
+                type="datetime-local"
+                className={`${inputPatterns.standard} text-base hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0`}
+                style={{ boxShadow: "none", outline: "none" }}
+                onFocus={(e) => {
+                  e.target.style.outline = "none";
+                  e.target.style.boxShadow = "none";
+                }}
+                value={editCompletedAt}
+                onChange={(e) => setEditCompletedAt(e.target.value)}
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                className={`${buttonPatterns.secondaryMedium} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSaving || !editName.trim() || !editCompletedAt}
+                className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 12h14M12 5l7 7-7 7"
+                      />
+                    </svg>
+                    <span>Save</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

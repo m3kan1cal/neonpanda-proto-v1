@@ -427,30 +427,73 @@ function WeeklyReports() {
   );
 }
 
-// Skeleton loading component matching ProgramDashboard pattern
+// Skeleton card header — dot + title bar + chevron
+function SkeletonCardHeader({ titleWidth = "w-48" }) {
+  return (
+    <div className="flex items-start justify-between p-6">
+      <div className="flex items-start gap-3 flex-1">
+        <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-2" />
+        <div
+          className={`h-6 bg-synthwave-text-muted/20 animate-pulse rounded ${titleWidth}`}
+        />
+      </div>
+      <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded shrink-0" />
+    </div>
+  );
+}
+
+// Skeleton subcontainer label + inner block
+function SkeletonSubcontainer({ rows = 3, gridCols = false }) {
+  return (
+    <div>
+      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-20 mb-2" />
+      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+        {gridCols ? (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            {[...Array(rows * 2)].map((_, i) => (
+              <div key={i} className="flex flex-col gap-1">
+                <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse rounded w-16" />
+                <div className="h-3.5 bg-synthwave-text-muted/20 animate-pulse rounded w-10" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {[...Array(rows)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 bg-synthwave-text-muted/20 animate-pulse rounded ${i === 1 ? "w-5/6" : i === 2 ? "w-4/5" : ""}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ReportsSkeleton() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Compact Horizontal Header Skeleton */}
+        {/* Header skeleton */}
         <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-          {/* Left: Title + Coach Card */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-            {/* Title skeleton - compact size */}
-            <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-64"></div>
-
-            {/* Compact coach card skeleton - horizontal pill */}
+            {/* Title + BETA badge */}
+            <div className="flex items-center gap-3">
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse rounded w-52" />
+              <div className="h-6 w-14 bg-synthwave-text-muted/20 animate-pulse rounded-md" />
+            </div>
+            {/* Coach pill */}
             <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
-              <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+              <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse" />
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded w-20" />
             </div>
           </div>
-
-          {/* Right: Command button skeleton */}
-          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
         </header>
 
-        {/* Quick Stats skeleton */}
+        {/* Quick Stats skeleton — 7 items matching actual stats */}
         <QuickStats
           stats={[1, 2, 3, 4, 5, 6, 7].map((i) => ({
             icon: null,
@@ -462,47 +505,69 @@ function ReportsSkeleton() {
           }))}
         />
 
-        {/* Two-column layout skeleton */}
+        {/* Two-column layout — mirrors the actual lg:grid-cols-5 (3+2) layout */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Left column - 60% */}
+          {/* Left column (col-span-3) */}
           <div className="lg:col-span-3 space-y-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={`${containerPatterns.cardMedium}`}>
-                <div className="flex items-center justify-between p-6">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
-                  </div>
-                  <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
-                </div>
-                <div className="px-6 pb-6 space-y-3">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
-                  </div>
-                </div>
+            {/* Workout Intensity card — summary grid + workouts subcontainer */}
+            <div className={containerPatterns.cardMedium}>
+              <SkeletonCardHeader titleWidth="w-44" />
+              <div className="px-6 pb-6 space-y-4">
+                <SkeletonSubcontainer rows={1} gridCols={true} />
+                <SkeletonSubcontainer rows={2} />
               </div>
-            ))}
+            </div>
+
+            {/* Coach Analysis card — large text block */}
+            <div className={containerPatterns.cardMedium}>
+              <SkeletonCardHeader titleWidth="w-52" />
+              <div className="px-6 pb-6 space-y-4">
+                <SkeletonSubcontainer rows={6} />
+              </div>
+            </div>
+
+            {/* Movement Analysis card */}
+            <div className={containerPatterns.cardMedium}>
+              <SkeletonCardHeader titleWidth="w-44" />
+              <div className="px-6 pb-6 space-y-4">
+                <SkeletonSubcontainer rows={2} gridCols={true} />
+              </div>
+            </div>
           </div>
 
-          {/* Right column - 40% */}
+          {/* Right column (col-span-2) */}
           <div className="lg:col-span-2 space-y-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={`${containerPatterns.cardMedium}`}>
-                <div className="flex items-center justify-between p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-0.5"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
-                  </div>
-                  <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
-                </div>
-                <div className="px-6 pb-6">
-                  <div className="h-16 bg-synthwave-text-muted/20 animate-pulse"></div>
-                </div>
+            {/* Actionable Insights card — bullet list style */}
+            <div className={containerPatterns.cardMedium}>
+              <SkeletonCardHeader titleWidth="w-40" />
+              <div className="px-6 pb-6 space-y-4">
+                <SkeletonSubcontainer rows={4} />
               </div>
-            ))}
+            </div>
+
+            {/* Performance Markers card */}
+            <div className={containerPatterns.cardMedium}>
+              <SkeletonCardHeader titleWidth="w-44" />
+              <div className="px-6 pb-6 space-y-4">
+                <SkeletonSubcontainer rows={2} gridCols={true} />
+              </div>
+            </div>
+
+            {/* Coaching Synthesis card */}
+            <div className={containerPatterns.cardMedium}>
+              <SkeletonCardHeader titleWidth="w-44" />
+              <div className="px-6 pb-6 space-y-4">
+                <SkeletonSubcontainer rows={2} />
+              </div>
+            </div>
+
+            {/* Analysis Metadata card */}
+            <div className={containerPatterns.cardMedium}>
+              <SkeletonCardHeader titleWidth="w-40" />
+              <div className="px-6 pb-6 space-y-4">
+                <SkeletonSubcontainer rows={2} gridCols={true} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

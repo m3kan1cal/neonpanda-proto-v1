@@ -394,7 +394,7 @@ export async function* handleWorkoutCreatorFlow(
                 // Optional fields that may help extraction
                 userTimezone: conversationData.userProfile?.timezone,
                 criticalTrainingDirective:
-                  conversationData.userProfile?.critical_training_directive,
+                  conversationData.userProfile?.criticalTrainingDirective,
               },
               "multi-turn workout creation",
             );

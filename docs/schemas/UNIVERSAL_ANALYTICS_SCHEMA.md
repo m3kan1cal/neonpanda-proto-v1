@@ -1,4 +1,5 @@
 # Universal Weekly Analytics Schema
+
 ## Complete Documentation and AI Generation Guide
 
 ### Version 1.0 | Created for Custom Fitness AI Agents Platform
@@ -27,6 +28,7 @@ This schema defines the structured output format for AI-generated weekly trainin
 ### Key Design Principles
 
 #### 1. **Dual Output Architecture**
+
 ```
 Single AI Call Produces:
 ├── Structured Analytics (machine-readable JSON)
@@ -34,12 +36,13 @@ Single AI Call Produces:
 ```
 
 #### 2. **Hierarchical Information Structure**
+
 ```
 Weekly Analytics
 ├── Metadata (week context, confidence)
 ├── Volume Analysis (tonnage, reps, sets)
 ├── Performance Tracking (PRs, progressions)
-├── Training Intelligence (patterns, optimization)
+├── Training Intel (patterns, optimization)
 ├── Movement Balance (frequency, imbalances)
 ├── Fatigue Management (load, recovery indicators)
 ├── Coaching Insights (technical focus, adherence)
@@ -49,16 +52,19 @@ Weekly Analytics
 ```
 
 #### 3. **Evidence-Based Insights**
+
 - Every recommendation backed by specific data points
 - Confidence scoring for analytical conclusions
 - Clear distinction between facts and interpretations
 
 #### 4. **Coach-Centric Design**
+
 - Technical insights translated to actionable coaching language
 - Prioritized recommendations (top priority, quick wins, red flags)
 - Context-aware suggestions based on athlete profile and history
 
 #### 5. **Data Integrity Focus**
+
 - Comprehensive validation of calculations and cross-references
 - Date consistency enforcement within weekly boundaries
 - Missing data identification and handling strategies
@@ -102,6 +108,7 @@ Weekly Analytics
 ## Core Analytics Sections
 
 ### Metadata Section
+
 **Purpose**: Week context, analysis confidence, and data completeness
 
 ```json
@@ -119,6 +126,7 @@ Weekly Analytics
 ```
 
 #### Validation Requirements
+
 - `week_id` format: YYYY-W{week_number}
 - `date_range` must span exactly 7 days
 - `sessions_completed` ≤ `sessions_planned`
@@ -126,6 +134,7 @@ Weekly Analytics
 - `analysis_confidence`: "high|medium|low"
 
 ### Volume Breakdown Section
+
 **Purpose**: Quantitative training load analysis
 
 ```json
@@ -158,12 +167,14 @@ Weekly Analytics
 ```
 
 #### Validation Requirements
+
 - All tonnage values must be positive numbers
 - `quality_reps` + `failed_reps` + `assisted_reps` + `partial_reps` = `total_reps`
 - `by_movement_detail` array must not be empty if workouts exist
 - Time values in seconds (integers)
 
 ### Performance Markers Section
+
 **Purpose**: Track achievements, benchmarks, and competition readiness
 
 ```json
@@ -194,12 +205,14 @@ Weekly Analytics
 ```
 
 #### Validation Requirements
+
 - PR improvements must be positive values
 - Time values must be realistic (30-7200 seconds for most workouts)
 - `readiness_score` range: 0.0-10.0
 - `rx_status`: "rx|scaled|modified"
 
-### Training Intelligence Section
+### Training Intel Section
+
 **Purpose**: Pattern analysis and optimization insights
 
 ```json
@@ -224,12 +237,14 @@ Weekly Analytics
 ```
 
 #### Validation Requirements
+
 - Percentages as decimals (0.0-1.0)
 - Duration in minutes (positive integers)
 - `density_score` range: 0.0-10.0
 - Ratios as "number:number" strings
 
 ### Movement Analysis Section
+
 **Purpose**: Balance assessment and imbalance detection
 
 ```json
@@ -260,12 +275,14 @@ Weekly Analytics
 ```
 
 #### Validation Requirements
+
 - Frequency values must be positive integers
 - Volume values must be positive numbers
 - `imbalance_flags` array of descriptive strings
 - Body part frequencies should align with movement patterns
 
 ### Fatigue Management Section
+
 **Purpose**: Load monitoring and recovery indicators
 
 ```json
@@ -288,12 +305,14 @@ Weekly Analytics
 ```
 
 #### Validation Requirements
+
 - `acute_chronic_ratio` range: 0.5-2.0 (typical safe range)
 - Boolean flags for indicators
 - `recovery_score` range: 1-10
 - `suggested_action`: "increase|maintain|decrease|deload"
 
 ### Actionable Insights Section
+
 **Purpose**: Prioritized recommendations and next steps
 
 ```json
@@ -322,6 +341,7 @@ Weekly Analytics
 ```
 
 #### Validation Requirements
+
 - All recommendation strings must be specific and actionable
 - `data_support` must reference actual metrics
 - Arrays must contain specific exercise names or technical skills
@@ -334,6 +354,7 @@ Weekly Analytics
 ### Critical Data Validation
 
 #### Date Consistency
+
 ```
 REQUIREMENT: All dates within raw_aggregations.daily_volume
              MUST fall within metadata.date_range
@@ -344,6 +365,7 @@ VALIDATION: foreach entry in daily_volume:
 ```
 
 #### Mathematical Consistency
+
 ```
 REQUIREMENT: Volume calculations must be internally consistent
 
@@ -353,6 +375,7 @@ VALIDATION: sum(by_movement_detail.tonnage) ≈ working_sets.total_tonnage
 ```
 
 #### Logical Constraints
+
 ```
 REQUIREMENT: Performance indicators must be logically sound
 
@@ -385,21 +408,25 @@ def calculate_data_completeness(analytics_data):
 ### Core Generation Principles
 
 #### 1. **Week Boundary Enforcement**
+
 - All analysis MUST be confined to the specified 7-day period
 - Historical references for context only, not included in current week metrics
 - Clear temporal boundaries in data aggregation
 
 #### 2. **Evidence-Based Insights**
+
 - Every recommendation must cite specific data points
 - Avoid speculation without supporting metrics
 - Distinguish between facts and interpretations
 
 #### 3. **Actionability Focus**
+
 - Prioritize concrete, implementable recommendations
 - Avoid vague suggestions like "improve technique"
 - Provide specific targets and timeframes
 
 #### 4. **Safety Integration**
+
 - Prioritize injury risk indicators
 - Flag sudden volume spikes or performance declines
 - Consider fatigue markers in all recommendations
@@ -407,6 +434,7 @@ def calculate_data_completeness(analytics_data):
 ### Prompt Structure Requirements
 
 #### Input Data Processing
+
 ```
 REQUIRED INPUTS:
 - Current week workouts (full UWS data)
@@ -424,6 +452,7 @@ PROCESSING ORDER:
 ```
 
 #### Output Format Enforcement
+
 ```
 CRITICAL REQUIREMENTS:
 - Return ONLY valid JSON with structured_analytics and human_summary
@@ -436,6 +465,7 @@ CRITICAL REQUIREMENTS:
 ### Quality Assurance Patterns
 
 #### Confidence Scoring
+
 ```
 HIGH CONFIDENCE (0.9+):
 - Complete workout data for full week
@@ -454,6 +484,7 @@ LOW CONFIDENCE (0.5-0.7):
 ```
 
 #### Error Prevention
+
 ```
 COMMON PITFALLS TO AVOID:
 - Including dates outside week boundaries in daily_volume
@@ -470,18 +501,21 @@ COMMON PITFALLS TO AVOID:
 ### When Analytics Require Normalization
 
 #### Structural Issues
+
 - Missing required sections
 - Incorrect data types (strings instead of numbers)
 - Invalid nested structure
 - Empty arrays where data should exist
 
 #### Data Consistency Problems
+
 - Dates outside week boundaries
 - Mathematical inconsistencies in totals
 - Impossible values (negative tonnage, >100% failure rates)
 - Cross-section validation failures
 
 #### Quality Threshold Failures
+
 - Data completeness < 0.8
 - Analysis confidence < 0.6
 - Missing top priority insights
@@ -490,29 +524,31 @@ COMMON PITFALLS TO AVOID:
 ### Normalization Strategy
 
 #### Phase 1: Validation Detection
+
 ```typescript
 interface NormalizationIssue {
-  type: 'structural' | 'data_consistency' | 'quality_threshold';
+  type: "structural" | "data_consistency" | "quality_threshold";
   section: string;
   field: string;
   issue: string;
-  severity: 'critical' | 'moderate' | 'minor';
+  severity: "critical" | "moderate" | "minor";
 }
 
 function shouldNormalizeAnalytics(
   analytics: any,
-  weeklyData: UserWeeklyData
+  weeklyData: UserWeeklyData,
 ): NormalizationIssue[] {
   // Return array of issues found
 }
 ```
 
 #### Phase 2: AI-Powered Normalization
+
 ```typescript
 async function normalizeAnalytics(
   malformedAnalytics: any,
   weeklyData: UserWeeklyData,
-  issues: NormalizationIssue[]
+  issues: NormalizationIssue[],
 ): Promise<NormalizedAnalyticsResult> {
   // Use Claude with thinking enabled
   // Focus on structural fixes and data consistency
@@ -521,10 +557,11 @@ async function normalizeAnalytics(
 ```
 
 #### Phase 3: Post-Normalization Validation
+
 ```typescript
 function validateNormalizedAnalytics(
   normalizedAnalytics: any,
-  originalIssues: NormalizationIssue[]
+  originalIssues: NormalizationIssue[],
 ): ValidationResult {
   // Ensure all critical issues resolved
   // Verify data integrity maintained
@@ -537,18 +574,21 @@ function validateNormalizedAnalytics(
 ## Implementation Strategy
 
 ### Phase 1: Enhanced Validation (Current)
+
 - Expand existing `validateAnalyticsSchema` function
 - Add comprehensive data consistency checks
 - Implement mathematical validation
 - Create issue severity classification
 
 ### Phase 2: Normalization Infrastructure
+
 - Create `shouldNormalizeAnalytics` detection function
 - Implement AI-powered normalization process
 - Add normalization confidence scoring
 - Integrate with existing analytics pipeline
 
 ### Phase 3: Advanced Quality Assurance
+
 - Add cross-week trend validation
 - Implement intelligent data estimation for gaps
 - Create normalization effectiveness monitoring
@@ -658,12 +698,12 @@ function validateNormalizedAnalytics(
         "pull_up": 5
       },
       "pattern_balance": {
-        "squat": {"volume": 4125, "frequency": 4},
-        "hinge": {"volume": 4950, "frequency": 3},
-        "push": {"volume": 2220, "frequency": 2},
-        "pull": {"volume": 1890, "frequency": 5},
-        "carry": {"volume": 0, "frequency": 0},
-        "core": {"volume": 0, "frequency": 0}
+        "squat": { "volume": 4125, "frequency": 4 },
+        "hinge": { "volume": 4950, "frequency": 3 },
+        "push": { "volume": 2220, "frequency": 2 },
+        "pull": { "volume": 1890, "frequency": 5 },
+        "carry": { "volume": 0, "frequency": 0 },
+        "core": { "volume": 0, "frequency": 0 }
       },
       "imbalance_flags": ["pull_volume_low_vs_push"],
       "body_part_frequency": {
@@ -760,7 +800,7 @@ function validateNormalizedAnalytics(
       ]
     }
   },
-  "human_summary": "Weekly Training Summary\n\n6 out of 6 planned sessions completed with high data quality\n18,750 lbs total tonnage across 456 reps and 67 working sets\nAverage session duration: 61 minutes with excellent density score (7.8/10)\n\nKey Highlights\nPerformance Records Set:\n\nFront Squat PR: 215lbs x 3 (up from previous 205lbs x 3)\nDeadlift Progress: 275lbs x 3 - on track toward 315lb goal (87% there)\n\nVolume Leaders:\n\nDeadlift: 4,950 lbs (strongest focus)\nBack Squat: 4,125 lbs\nFront Squat: 2,790 lbs\n\nTraining Intelligence Insights:\n\nProgressive overload score: 8.5/10 (excellent)\nVolume increased 12% from previous week\nOptimal exercise ordering maintained\n\nAreas for Improvement:\n\nPull volume slightly low vs push - needs more horizontal pulling\nT2B technique needs consistent skill work\n\nKey Actionable Insights:\n\nPriority: Continue deadlift progression toward 315lb goal (achievable in 4-6 weeks)\nQuick wins: Add more pulling volume, integrate T2B skill work\nNo red flags - training is progressing optimally"
+  "human_summary": "Weekly Training Summary\n\n6 out of 6 planned sessions completed with high data quality\n18,750 lbs total tonnage across 456 reps and 67 working sets\nAverage session duration: 61 minutes with excellent density score (7.8/10)\n\nKey Highlights\nPerformance Records Set:\n\nFront Squat PR: 215lbs x 3 (up from previous 205lbs x 3)\nDeadlift Progress: 275lbs x 3 - on track toward 315lb goal (87% there)\n\nVolume Leaders:\n\nDeadlift: 4,950 lbs (strongest focus)\nBack Squat: 4,125 lbs\nFront Squat: 2,790 lbs\n\nTraining Intel Insights:\n\nProgressive overload score: 8.5/10 (excellent)\nVolume increased 12% from previous week\nOptimal exercise ordering maintained\n\nAreas for Improvement:\n\nPull volume slightly low vs push - needs more horizontal pulling\nT2B technique needs consistent skill work\n\nKey Actionable Insights:\n\nPriority: Continue deadlift progression toward 315lb goal (achievable in 4-6 weeks)\nQuick wins: Add more pulling volume, integrate T2B skill work\nNo red flags - training is progressing optimally"
 }
 ```
 
@@ -774,4 +814,4 @@ The schema's validation-first design enables sophisticated quality assurance whi
 
 ---
 
-*Schema Version 1.0 | Documentation Last Updated: January 2025*
+_Schema Version 1.0 | Documentation Last Updated: January 2025_

@@ -1471,7 +1471,7 @@ export const PauseIcon = () => (
 
 // NEW Badge Component - Used for reports, templates, and other new items
 export const NewBadge = () => (
-  <div className="absolute -top-2 -right-2 z-10">
+  <div className="absolute -top-2 -right-2 z-20">
     <div className="relative">
       {/* Pulsing glow effect */}
       <div className="absolute inset-0 bg-synthwave-neon-pink rounded-full animate-pulse opacity-75 blur-sm scale-110"></div>
@@ -1596,6 +1596,38 @@ export const HeartIcon = ({ className = "w-5 h-5" }) => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+    />
+  </svg>
+);
+
+export const EllipsisVerticalIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+    />
+  </svg>
+);
+
+export const EditIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
     />
   </svg>
 );

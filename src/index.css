@@ -291,6 +291,24 @@
   background: #00ffff50;
 }
 
+/* Pink scrollbar variant — used when TipTap is embedded in form fields */
+.tiptap-editor-pink .tiptap-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tiptap-editor-pink .tiptap-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-editor-pink .tiptap-content::-webkit-scrollbar-thumb {
+  background: #ff007f40;
+  border-radius: 3px;
+}
+
+.tiptap-editor-pink .tiptap-content::-webkit-scrollbar-thumb:hover {
+  background: #ff007f60;
+}
+
 /* Fullscreen mode overrides - remove height constraints and increase font */
 .tiptap-fullscreen .tiptap-content {
   max-height: none !important;
@@ -548,4 +566,19 @@ input:-webkit-autofill:focus {
 input:-webkit-autofill,
 input:autofill {
   transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Datetime-local input — dark mode calendar popup + visible icon */
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) sepia(1) saturate(3) hue-rotate(140deg);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
