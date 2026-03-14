@@ -12,6 +12,7 @@ import {
   getCoachCreatorSession,
   saveCoachCreatorSession,
 } from "../../dynamodb/operations";
+import { getUserProfile } from "../../dynamodb/operations";
 import { CoachCreatorAgent } from "../libs/agents/coach-creator/agent";
 import type { CoachCreatorContext } from "../libs/agents/coach-creator/types";
 import { logger } from "../libs/logger";
@@ -73,15 +74,28 @@ export const handler: Handler<CoachConfigEvent> = async (
       };
       await saveCoachCreatorSession(updatedSession);
 
-      // Step 4: Build agent context
+      // Step 4: Load user profile for critical training directive
+      let criticalTrainingDirective: any;
+      try {
+        const userProfile = await getUserProfile(userId);
+        criticalTrainingDirective = userProfile?.criticalTrainingDirective;
+      } catch (profileError) {
+        logger.warn(
+          "⚠️ Could not load user profile for training directive (non-blocking):",
+          profileError,
+        );
+      }
+
+      // Step 5: Build agent context
       const agentContext: CoachCreatorContext = {
         userId,
         sessionId,
+        criticalTrainingDirective,
       };
 
-      // Step 5: Create CoachCreator agent and run workflow
+      // Step 6: Create CoachCreator agent and run workflow
       logger.info(
-        "🤖 Step 5: Creating CoachCreator agent and starting workflow",
+        "🤖 Step 6: Creating CoachCreator agent and starting workflow",
       );
       const agent = new CoachCreatorAgent(agentContext);
       const result = await agent.createCoach();

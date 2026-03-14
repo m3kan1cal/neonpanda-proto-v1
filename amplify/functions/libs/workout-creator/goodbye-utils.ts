@@ -100,7 +100,7 @@ export async function* handleGoodbyeAutoComplete(
           imageS3Keys: workoutSession.imageS3Keys || [],
           userTimezone: conversationData.userProfile?.timezone,
           criticalTrainingDirective:
-            conversationData.userProfile?.critical_training_directive,
+            conversationData.userProfile?.criticalTrainingDirective,
         },
         "goodbye auto-complete workout creation",
       );

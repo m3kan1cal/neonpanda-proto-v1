@@ -385,12 +385,16 @@ async function* createCoachCreatorEventStreamV2(
       (userProfile as any)?.timezone || null,
     );
 
+    const criticalTrainingDirective = (userProfile as any)
+      ?.criticalTrainingDirective;
+
     const agentContext: CoachCreatorSessionAgentContext = {
       userId: userId as string,
       sessionId: sessionId as string,
       userTimezone,
       session, // Mutable — tools mutate session.todoList and session.isComplete
       pineconeContext,
+      criticalTrainingDirective,
     };
 
     // 5. Build system prompts
@@ -400,6 +404,7 @@ async function* createCoachCreatorEventStreamV2(
         userTimezone,
         pineconeContext,
         messageCount: session.conversationHistory.length,
+        criticalTrainingDirective,
       },
     );
 

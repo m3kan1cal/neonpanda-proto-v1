@@ -594,13 +594,21 @@ function Settings() {
                   </div>
                 </div>
 
-                {/* Other Sections Skeleton */}
-                {[1, 2, 3, 4, 5].map((i) => (
+                {/* Collapsed Sections Skeleton — widths mirror real section title lengths */}
+                {[
+                  { w: "w-48" }, // Profile Information
+                  { w: "w-40" }, // Account Security
+                  { w: "w-32" }, // Preferences
+                  { w: "w-56" }, // Critical Training Directive
+                  { w: "w-28" }, // Danger Zone
+                ].map((section, i) => (
                   <div key={i} className={containerPatterns.collapsibleSection}>
                     <div className={containerPatterns.collapsibleHeader}>
                       <div className="flex items-center space-x-3">
                         <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
-                        <div className="h-4 w-32 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                        <div
+                          className={`h-7 ${section.w} bg-synthwave-text-muted/10 rounded-md animate-pulse`}
+                        ></div>
                       </div>
                       <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
                     </div>

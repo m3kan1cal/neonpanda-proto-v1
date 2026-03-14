@@ -8,6 +8,7 @@
 
 import type { BaseStreamingAgentContext } from "../core/types";
 import type { ProgramDesignerSession } from "../../program-designer/types";
+import type { CriticalTrainingDirective } from "../../user/types";
 
 /**
  * Context passed to every program designer agent tool execute() call.
@@ -32,4 +33,7 @@ export interface ProgramDesignerSessionAgentContext extends BaseStreamingAgentCo
 
   // Pinecone context loaded at request time (user background/history)
   pineconeContext: string;
+
+  // Critical training directive from user profile (when enabled)
+  criticalTrainingDirective?: CriticalTrainingDirective;
 }

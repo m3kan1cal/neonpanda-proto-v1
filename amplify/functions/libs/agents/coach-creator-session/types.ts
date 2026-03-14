@@ -12,6 +12,7 @@ import type {
   CoachCreatorTodoList,
   SophisticationLevel,
 } from "../../coach-creator/types";
+import type { CriticalTrainingDirective } from "../../user/types";
 
 /**
  * Context passed to every coach creator agent tool execute() call.
@@ -31,4 +32,7 @@ export interface CoachCreatorSessionAgentContext extends BaseStreamingAgentConte
 
   // Pinecone context loaded at request time (user background/history)
   pineconeContext: string;
+
+  // Critical training directive from user profile (when enabled)
+  criticalTrainingDirective?: CriticalTrainingDirective;
 }

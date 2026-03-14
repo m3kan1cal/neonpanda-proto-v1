@@ -48,15 +48,17 @@ export interface UserProfile {
     confidence: number; // AI confidence in the profile accuracy (0-1)
     sources: string[]; // Data sources used (e.g., "workouts", "conversations", "memories")
   };
-  criticalTrainingDirective?: {
-    content: string; // The directive text (max 500 characters)
-    enabled: boolean; // Whether the directive is active
-    createdAt: Date; // When the directive was first created
-    updatedAt: Date; // When the directive was last updated
-  };
+  criticalTrainingDirective?: CriticalTrainingDirective;
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface CriticalTrainingDirective {
+  content: string; // The directive text (max 500 characters)
+  enabled: boolean; // Whether the directive is active
+  createdAt: Date; // When the directive was first created
+  updatedAt: Date; // When the directive was last updated
 }
 
 // UserProfileInput removed - no longer needed since operations.ts returns unwrapped types
