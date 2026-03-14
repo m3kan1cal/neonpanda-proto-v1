@@ -285,8 +285,22 @@ function ManageWorkouts() {
     try {
       const updates = {
         workoutName: editName.trim(),
-        completedAt: new Date(editCompletedAt).toISOString(),
       };
+      
+      // Only include completedAt if it was actually changed
+      if (editCompletedAt !== "") {
+        const originalDate = new Date(editingWorkout.completedAt);
+        const originalLocalDatetime = new Date(
+          originalDate.getTime() - originalDate.getTimezoneOffset() * 60000,
+        )
+          .toISOString()
+          .slice(0, 16);
+        
+        if (editCompletedAt !== originalLocalDatetime) {
+          updates.completedAt = new Date(editCompletedAt).toISOString();
+        }
+      }
+      
       await workoutAgentRef.current.updateWorkout(
         userId,
         editingWorkout.workoutId,

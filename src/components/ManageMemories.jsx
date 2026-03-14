@@ -351,7 +351,7 @@ function ManageMemories() {
   };
 
   const handleSaveEditMemory = async () => {
-    if (!editingMemory || !editMemoryContent.trim()) return;
+    if (!editingMemory || !memoryAgentRef.current || !editMemoryContent.trim()) return;
     setIsSavingMemory(true);
     try {
       await memoryAgentRef.current.updateMemory(editingMemory.memoryId, {
