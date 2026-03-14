@@ -474,9 +474,12 @@ export async function updateWorkout(
   // Deep merge updates into existing session to preserve nested properties
   const updatedSession: Workout = deepMerge(existingItem.attributes, updates);
 
-  // Sync root-level workoutName with workoutData.workout_name if it was updated
+  // Keep workoutName and workoutData.workout_name in sync regardless of which was updated
   if (updates.workoutData?.workout_name) {
     updatedSession.workoutName = updates.workoutData.workout_name;
+  }
+  if (updates.workoutName && updatedSession.workoutData) {
+    updatedSession.workoutData.workout_name = updates.workoutName;
   }
 
   // Track when the update was made in extraction metadata
@@ -604,10 +607,7 @@ export async function queryWorkoutsByTemplate(
       updatedAt: new Date(item.updatedAt),
     }));
   } catch (error: any) {
-    logger.error(
-      `Error querying workouts by templateId ${templateId}:`,
-      error,
-    );
+    logger.error(`Error querying workouts by templateId ${templateId}:`, error);
     throw error;
   }
 }

@@ -236,7 +236,7 @@ export const iconButtonPatterns = {
 export const formPatterns = {
   // Label for form inputs (AuthInput, FormInput, Settings)
   label:
-    "block font-body text-lg text-synthwave-text-secondary mb-2 font-medium uppercase tracking-wide",
+    "block font-body text-sm text-synthwave-text-secondary mb-2 font-medium uppercase tracking-wide",
 
   // Error message text below inputs
   errorText: "mt-2 text-red-400 font-body text-sm",
@@ -535,7 +535,7 @@ export const containerPatterns = {
 
   // Collapsible section header
   collapsibleHeader:
-    "w-full px-6 py-4 bg-transparent hover:bg-synthwave-bg-card/20 transition-all duration-200 flex items-center justify-between text-left",
+    "w-full px-6 py-4 bg-transparent hover:bg-synthwave-bg-card/20 transition-all duration-200 flex items-center justify-between text-left cursor-pointer",
 
   // Collapsible section content
   collapsibleContent: "px-6 py-4 bg-synthwave-bg-card/10",
@@ -943,7 +943,7 @@ export const navigationPatterns = {
     // User profile section at bottom
     profileSection: "px-3 py-2 border-t border-synthwave-neon-cyan/10",
     profileButton:
-      "w-full flex items-center gap-3 px-3 py-2 transition-colors duration-150 hover:bg-synthwave-bg-card/60 focus:outline-none",
+      "w-full flex items-center gap-3 px-3 py-2 transition-colors duration-150 hover:bg-synthwave-bg-card/60 focus:outline-none cursor-pointer",
     profileAvatar:
       "w-10 h-10 rounded-full bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink flex items-center justify-center text-white font-header font-bold text-sm shadow-sm ring-2 ring-synthwave-neon-cyan/30",
     profileInfo: "flex-1 min-w-0",
@@ -1367,7 +1367,8 @@ export const heatMapPatterns = {
       low: "bg-yellow-400/60 border-yellow-400/70 hover:bg-yellow-400/80",
       medium: "bg-orange-500/60 border-orange-500/70 hover:bg-orange-500/80",
       high: "bg-synthwave-neon-pink/60 border-synthwave-neon-pink/70 hover:bg-synthwave-neon-pink/80",
-      highest: "bg-purple-600/60 border-purple-600/70 hover:bg-purple-600/80",
+      highest:
+        "bg-synthwave-neon-purple/60 border-synthwave-neon-purple/70 hover:bg-synthwave-neon-purple/80",
     },
   },
 
@@ -1405,7 +1406,8 @@ export const streamingPatterns = {
   contextualUpdate: {
     container: "flex flex-col items-start mb-1 animate-message-in",
     borderAccent: "px-4 py-2 border-l-2 border-synthwave-neon-cyan/30 ml-2",
-    borderAccentCompact: "px-4 py-1 border-l-2 border-synthwave-neon-cyan/30 ml-2",
+    borderAccentCompact:
+      "px-4 py-1 border-l-2 border-synthwave-neon-cyan/30 ml-2",
     contentRow: "flex items-center gap-2",
     dotsContainer: "flex space-x-1",
     dot: "w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot",

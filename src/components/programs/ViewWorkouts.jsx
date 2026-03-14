@@ -1254,12 +1254,12 @@ General thoughts: `;
                                   <div style="max-width: 280px;">
                                     <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff;">RPE Scale (Rate of Perceived Exertion)</div>
                                     <div style="font-size: 14px; line-height: 1.5;">
-                                      <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">10</span> - Maximum effort, can't continue</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #ff6b9d; font-weight: 600;">9</span> - Very hard, barely sustainable</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">7-8</span> - Hard, challenging but manageable</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">4-6</span> - Moderate, can hold conversation</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #00ffff; font-weight: 600;">2-3</span> - Light, could do for hours</div>
-                                      <div><span style="color: #8a2be2; font-weight: 600;">1</span> - Very light, minimal exertion</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #9f00ff; font-weight: 600;">10</span> - Maximum effort, can't continue</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #bf40ff; font-weight: 600;">9</span> - Very hard, barely sustainable</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">7-8</span> - Hard, challenging but manageable</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">4-6</span> - Moderate, can hold conversation</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">2-3</span> - Light, could do for hours</div>
+                                      <div><span style="color: #00ffff; font-weight: 600;">1</span> - Very light, minimal exertion</div>
                                     </div>
                                   </div>
                                 `}

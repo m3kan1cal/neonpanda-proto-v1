@@ -625,7 +625,7 @@ function TrainingGroundsV2() {
           </header>
 
           {/* AI Greeting skeleton */}
-          <div className="mb-4 max-w-3xl">
+          <div className="mb-4 max-w-4xl">
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-full mb-2"></div>
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-2/3"></div>
           </div>
@@ -1273,7 +1273,7 @@ function TrainingGroundsV2() {
         {/* CONTEXTUAL GREETING                                              */}
         {/* ---------------------------------------------------------------- */}
         {isLoadingGreeting ? (
-          <div className="mb-4 max-w-3xl">
+          <div className="mb-4 max-w-4xl">
             <ContextualUpdateIndicator
               content="Checking in on what's relevant for you today..."
               avatarLabel={coachData?.name?.charAt(0) || "C"}
@@ -1282,7 +1282,7 @@ function TrainingGroundsV2() {
             />
           </div>
         ) : (
-          <p className="font-body text-base text-synthwave-text-secondary mb-4 max-w-3xl">
+          <p className="font-body text-base text-synthwave-text-secondary mb-4 max-w-4xl">
             {greeting}
           </p>
         )}

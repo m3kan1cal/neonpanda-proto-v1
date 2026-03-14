@@ -17,6 +17,7 @@ import { Tooltip } from "react-tooltip";
 import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import AppFooter from "../shared/AppFooter";
+import TiptapEditor from "../shared/TiptapEditor";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { logger } from "../../utils/logger";
 import {
@@ -687,7 +688,11 @@ function ManagePrograms() {
       // Update local state
       const updateProgram = (p) =>
         p.programId === editingProgram.programId
-          ? { ...p, name: editProgramName.trim(), description: editProgramDescription.trim() }
+          ? {
+              ...p,
+              name: editProgramName.trim(),
+              description: editProgramDescription.trim(),
+            }
           : p;
 
       setProgramState((prevState) => ({
@@ -901,31 +906,59 @@ function ManagePrograms() {
                   Edit Program
                 </span>
               </button>
+              {(program.status === PROGRAM_STATUS.ACTIVE ||
+                program.status === PROGRAM_STATUS.COMPLETED) && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteClick(program);
+                    handleShareClick(program);
                     setOpenMenuId(null);
                   }}
                   className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
                 >
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    <TrashIcon />
-                  </div>
+                  <svg
+                    className="w-4 h-4 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                    />
+                  </svg>
                   <span className="font-body font-medium text-sm">
-                    Delete Program
+                    Share Program
                   </span>
                 </button>
-              </div>
-            )}
-          </div>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(program);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <TrashIcon />
+                </div>
+                <span className="font-body font-medium text-sm">
+                  Delete Program
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* New Badge - placed after actions menu to appear on top in stacking order */}
         {isNew && <NewBadge />}
 
         <div className="flex-1">
           {/* Program Name */}
-          <div className="flex items-start space-x-3 mb-4">
+          <div className="flex items-start space-x-3 mb-4 pr-10">
             <div
               className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
             ></div>
@@ -1049,7 +1082,7 @@ function ManagePrograms() {
         </div>
 
         {/* Action Buttons - Always show navigation/share, conditionally show status actions */}
-        <div className="mt-6 space-y-2">
+        <div className="mt-3 space-y-2">
           {/* View Dashboard Button - Always visible */}
           <button
             onClick={() => handleViewProgram(program)}
@@ -1059,31 +1092,6 @@ function ManagePrograms() {
             <HomeIcon />
             <span>View Dashboard</span>
           </button>
-
-          {/* Share Button - for active or completed programs */}
-          {(program.status === PROGRAM_STATUS.ACTIVE ||
-            program.status === PROGRAM_STATUS.COMPLETED) && (
-            <button
-              onClick={() => handleShareClick(program)}
-              disabled={isAnyActionInProgress}
-              className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                />
-              </svg>
-              <span>share program</span>
-            </button>
-          )}
 
           {/* Status-specific actions - Only for active/paused */}
           {showActions && program.status === PROGRAM_STATUS.ACTIVE && (
@@ -1220,9 +1228,8 @@ function ManagePrograms() {
                   </div>
                 </div>
 
-                {/* Action buttons skeleton — View Dashboard + Share + Pause/Complete */}
+                {/* Action buttons skeleton — View Dashboard + Pause/Complete */}
                 <div className="mt-6 space-y-2">
-                  <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
                   <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
                   <div className="flex space-x-2">
                     <div className="h-10 flex-1 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
@@ -1888,25 +1895,28 @@ function ManagePrograms() {
                 Delete Program Session
               </h3>
               <p className="font-body text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete this program design session?
-                This action cannot be undone.
+                Are you sure you want to delete{" "}
+                <strong className="text-white">
+                  this program design session
+                </strong>
+                ? This action cannot be undone.
               </p>
 
-              <div className="flex space-x-4">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => {
                     setShowDeleteSessionModal(false);
                     setSessionToDelete(null);
                   }}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`${buttonPatterns.secondaryMedium} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDeleteSession}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -1945,23 +1955,23 @@ function ManagePrograms() {
                 Delete Training Program
               </h3>
               <p className="font-body text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete "
-                <strong className="text-white">{programToDelete.name}</strong>"?
+                Are you sure you want to delete{" "}
+                <strong className="text-white">{programToDelete.name}</strong>?
                 This will remove it from your programs list.
               </p>
 
-              <div className="flex space-x-4">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`${buttonPatterns.secondaryMedium} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -1983,48 +1993,70 @@ function ManagePrograms() {
 
       {/* Edit Program Modal */}
       {editingProgram && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
+          onKeyDown={(e) => {
+            if (
+              e.key === "Enter" &&
+              e.target.tagName !== "TEXTAREA" &&
+              !e.target.closest('[contenteditable="true"]') &&
+              !isSavingProgram &&
+              editProgramName.trim()
+            ) {
+              e.preventDefault();
+              handleSaveEditProgram();
+            }
+          }}
+        >
           <div
             className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}
           >
-            <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold mb-6">
-              Edit Program
-            </h3>
+            <div className="pb-4 mb-5 border-b border-synthwave-neon-cyan/20">
+              <h3 className={typographyPatterns.cardTitle}>Edit Program</h3>
+            </div>
 
-            <div className="mb-4">
+            <div className="mb-5">
               <label className={formPatterns.label}>Program Name</label>
               <input
                 type="text"
-                className={inputPatterns.standard}
+                className={`${inputPatterns.standard} text-base hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0`}
+                style={{ boxShadow: "none", outline: "none" }}
+                onFocus={(e) => {
+                  e.target.style.outline = "none";
+                  e.target.style.boxShadow = "none";
+                }}
                 value={editProgramName}
                 onChange={(e) => setEditProgramName(e.target.value)}
                 placeholder="Enter program name"
               />
             </div>
 
-            <div className="mb-6">
+            <div className="mb-5">
               <label className={formPatterns.label}>Description</label>
-              <textarea
-                className={`${inputPatterns.standard} resize-none`}
-                rows={3}
-                value={editProgramDescription}
-                onChange={(e) => setEditProgramDescription(e.target.value)}
+              <TiptapEditor
+                content={editProgramDescription}
+                onUpdate={(_html, text) => setEditProgramDescription(text)}
                 placeholder="Enter program description"
+                disabled={isSavingProgram}
+                mode="plain"
+                className={`tiptap-editor-pink ${inputPatterns.textarea} text-base disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20`}
+                minHeight="80px"
+                maxHeight="200px"
               />
             </div>
 
-            <div className="flex space-x-4">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleCancelEditProgram}
                 disabled={isSavingProgram}
-                className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${buttonPatterns.secondaryMedium} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEditProgram}
                 disabled={isSavingProgram || !editProgramName.trim()}
-                className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
               >
                 {isSavingProgram ? (
                   <>
@@ -2032,7 +2064,22 @@ function ManagePrograms() {
                     <span>Saving...</span>
                   </>
                 ) : (
-                  <span>Save</span>
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 12h14M12 5l7 7-7 7"
+                      />
+                    </svg>
+                    <span>Save</span>
+                  </>
                 )}
               </button>
             </div>

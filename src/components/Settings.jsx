@@ -67,7 +67,7 @@ const CollapsibleSection = ({
       >
         <div className="flex items-center space-x-3">
           <div className="text-synthwave-neon-pink">{icon}</div>
-          <h3 className="font-header font-bold text-white text-base uppercase">
+          <h3 className="font-header font-bold text-white text-lg uppercase">
             {title}
           </h3>
         </div>
@@ -675,7 +675,7 @@ function Settings() {
                         {/* EarlyPanda Column */}
                         <div className={containerPatterns.mediumGlass}>
                           <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-16 h-16 bg-synthwave-neon-cyan/20 flex items-center justify-center text-synthwave-neon-cyan">
+                            <div className="shrink-0 w-16 h-16 rounded-md bg-synthwave-neon-cyan/20 flex items-center justify-center text-synthwave-neon-cyan">
                               <ClockIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1058,15 +1058,6 @@ function Settings() {
 
                     <div className="flex space-x-4 pt-4 pb-4">
                       <AuthButton
-                        type="submit"
-                        variant="primary"
-                        loading={isSavingProfile}
-                        disabled={isSavingProfile}
-                        className="flex-1"
-                      >
-                        Save Changes
-                      </AuthButton>
-                      <AuthButton
                         type="button"
                         variant="secondary"
                         onClick={handleCancelProfile}
@@ -1074,6 +1065,15 @@ function Settings() {
                         className="flex-1"
                       >
                         Cancel
+                      </AuthButton>
+                      <AuthButton
+                        type="submit"
+                        variant="primary"
+                        loading={isSavingProfile}
+                        disabled={isSavingProfile}
+                        className="flex-1"
+                      >
+                        Save Changes
                       </AuthButton>
                     </div>
                   </form>
@@ -1132,15 +1132,6 @@ function Settings() {
 
                   <div className="flex space-x-4 pt-4 pb-4">
                     <AuthButton
-                      type="submit"
-                      variant="primary"
-                      loading={isSavingPassword}
-                      disabled={isSavingPassword}
-                      className="flex-1"
-                    >
-                      Update Password
-                    </AuthButton>
-                    <AuthButton
                       type="button"
                       variant="secondary"
                       onClick={handleCancelPassword}
@@ -1148,6 +1139,15 @@ function Settings() {
                       className="flex-1"
                     >
                       Cancel
+                    </AuthButton>
+                    <AuthButton
+                      type="submit"
+                      variant="primary"
+                      loading={isSavingPassword}
+                      disabled={isSavingPassword}
+                      className="flex-1"
+                    >
+                      Update Password
                     </AuthButton>
                   </div>
                 </form>
@@ -1494,6 +1494,14 @@ function Settings() {
                   {/* Action Buttons */}
                   <div className="flex space-x-4 pt-4 pb-4">
                     <AuthButton
+                      variant="secondary"
+                      onClick={handleCancelPreferences}
+                      disabled={isSavingPreferences}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </AuthButton>
+                    <AuthButton
                       variant="primary"
                       onClick={handleSavePreferences}
                       loading={isSavingPreferences}
@@ -1501,14 +1509,6 @@ function Settings() {
                       className="flex-1"
                     >
                       Save Preferences
-                    </AuthButton>
-                    <AuthButton
-                      variant="secondary"
-                      onClick={handleCancelPreferences}
-                      disabled={isSavingPreferences}
-                      className="flex-1"
-                    >
-                      Cancel
                     </AuthButton>
                   </div>
                 </div>
@@ -1599,6 +1599,14 @@ function Settings() {
 
                   <div className="flex space-x-4 pt-4 pb-4">
                     <AuthButton
+                      variant="secondary"
+                      onClick={handleCancelDirective}
+                      disabled={isSavingDirective}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </AuthButton>
+                    <AuthButton
                       variant="primary"
                       onClick={handleSaveDirective}
                       loading={isSavingDirective}
@@ -1606,14 +1614,6 @@ function Settings() {
                       className="flex-1"
                     >
                       Save Directive
-                    </AuthButton>
-                    <AuthButton
-                      variant="secondary"
-                      onClick={handleCancelDirective}
-                      disabled={isSavingDirective}
-                      className="flex-1"
-                    >
-                      Cancel
                     </AuthButton>
                   </div>
                 </div>
@@ -1625,7 +1625,7 @@ function Settings() {
                 icon={<DangerIcon />}
                 defaultOpen={false}
               >
-                <div className="space-y-6 border-2 border-red-500/30 p-6 bg-red-500/5">
+                <div className="space-y-6 border-2 border-red-500/30 rounded-md p-6 bg-red-500/5">
                   <div>
                     <h4 className="font-body font-bold text-red-400 text-lg mb-2">
                       Delete Account
@@ -1638,7 +1638,7 @@ function Settings() {
                     </p>
                     <button
                       onClick={handleDeleteAccount}
-                      className="bg-red-500 text-white px-6 py-3 font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
+                      className="bg-red-500 text-black px-6 py-3 rounded-md font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
                     >
                       Delete Account
                     </button>

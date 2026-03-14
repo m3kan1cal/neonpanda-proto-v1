@@ -10,8 +10,10 @@ import {
   tooltipPatterns,
   formPatterns,
   inputPatterns,
+  typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import { AccessDenied } from "./shared/AccessDenied";
+import MarkdownRenderer from "./shared/MarkdownRenderer";
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
@@ -290,11 +292,7 @@ function ManageWorkouts() {
   // Handle edit click - open edit modal with pre-filled values
   const handleEditClick = (workout) => {
     setEditingWorkout(workout);
-    setEditName(
-      workout.workoutName ||
-        workout.workoutData?.workout_name ||
-        "",
-    );
+    setEditName(workout.workoutName || workout.workoutData?.workout_name || "");
     // Format completedAt as datetime-local value (YYYY-MM-DDTHH:MM)
     if (workout.completedAt) {
       const date = new Date(workout.completedAt);
@@ -398,7 +396,7 @@ function ManageWorkouts() {
       <div
         key="create-workout-card"
         onClick={handleLogNewWorkout}
-        className={`${containerPatterns.dashedCard} p-6 mb-6 group cursor-pointer`}
+        className={`${containerPatterns.dashedCard} mb-6 group cursor-pointer`}
       >
         <div className="text-center flex flex-col justify-center items-center h-full min-h-[220px]">
           {/* Plus Icon */}
@@ -479,7 +477,7 @@ function ManageWorkouts() {
         {isNew && <NewBadge />}
 
         {/* Actions menu - top right */}
-        <div className="absolute top-4 right-4 actions-menu-container relative">
+        <div className="absolute top-3 right-3 z-10 actions-menu-container">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -621,9 +619,10 @@ function ManageWorkouts() {
               <div
                 className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
               >
-                <p className="font-body text-sm text-synthwave-text-secondary mb-4">
-                  {workout.summary}
-                </p>
+                <MarkdownRenderer
+                  content={workout.summary}
+                  className="font-body text-sm text-synthwave-text-secondary mb-4"
+                />
 
                 {/* RPE and Intensity Spectrum Bars */}
                 <div className="space-y-3 pt-2">
@@ -706,19 +705,25 @@ function ManageWorkouts() {
     }
   }, [isValidatingUserId, workoutAgentState.isLoadingAllItems]);
 
-  // Close delete modal when pressing escape
+  // Close delete modal or edit modal when pressing escape
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === "Escape" && showDeleteModal) {
-        handleCancelDelete();
+      if (event.key === "Escape") {
+        if (editingWorkout) {
+          handleCancelEdit();
+          return;
+        }
+        if (showDeleteModal) {
+          handleCancelDelete();
+        }
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [showDeleteModal]);
+    if (showDeleteModal || editingWorkout) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [showDeleteModal, editingWorkout]);
 
   // Close actions menu when clicking outside or pressing Escape
   useEffect(() => {
@@ -758,14 +763,14 @@ function ManageWorkouts() {
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
@@ -1153,23 +1158,25 @@ function ManageWorkouts() {
                 Delete Workout
               </h3>
               <p className="font-body text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete "
-                {workoutToDelete?.workoutName || "this workout"}
-                "? This action cannot be undone.
+                Are you sure you want to delete{" "}
+                <strong className="text-white">
+                  {workoutToDelete?.workoutName || "this workout"}
+                </strong>
+                ? This action cannot be undone.
               </p>
 
-              <div className="flex space-x-4">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`${buttonPatterns.secondaryMedium} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -1191,20 +1198,40 @@ function ManageWorkouts() {
 
       {/* Edit Workout Modal */}
       {editingWorkout && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
+          onKeyDown={(e) => {
+            if (
+              e.key === "Enter" &&
+              e.target.tagName !== "TEXTAREA" &&
+              !e.target.closest('[contenteditable="true"]') &&
+              !isSaving &&
+              editName.trim() &&
+              editCompletedAt
+            ) {
+              e.preventDefault();
+              handleSaveEdit();
+            }
+          }}
+        >
           <div
             className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}
           >
-            <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold mb-6">
-              Edit Workout
-            </h3>
+            <div className="pb-4 mb-5 border-b border-synthwave-neon-cyan/20">
+              <h3 className={typographyPatterns.cardTitle}>Edit Workout</h3>
+            </div>
 
             {/* Workout Name */}
-            <div className="mb-4">
+            <div className="mb-5">
               <label className={formPatterns.label}>Workout Name</label>
               <input
                 type="text"
-                className={inputPatterns.standard}
+                className={`${inputPatterns.standard} text-base hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0`}
+                style={{ boxShadow: "none", outline: "none" }}
+                onFocus={(e) => {
+                  e.target.style.outline = "none";
+                  e.target.style.boxShadow = "none";
+                }}
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder="Enter workout name"
@@ -1212,29 +1239,34 @@ function ManageWorkouts() {
             </div>
 
             {/* Completed At */}
-            <div className="mb-6">
+            <div className="mb-5">
               <label className={formPatterns.label}>Completed At</label>
               <input
                 type="datetime-local"
-                className={inputPatterns.standard}
+                className={`${inputPatterns.standard} text-base hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0`}
+                style={{ boxShadow: "none", outline: "none" }}
+                onFocus={(e) => {
+                  e.target.style.outline = "none";
+                  e.target.style.boxShadow = "none";
+                }}
                 value={editCompletedAt}
                 onChange={(e) => setEditCompletedAt(e.target.value)}
               />
             </div>
 
             {/* Buttons */}
-            <div className="flex space-x-4">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleCancelEdit}
                 disabled={isSaving}
-                className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${buttonPatterns.secondaryMedium} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={isSaving || !editName.trim() || !editCompletedAt}
-                className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
               >
                 {isSaving ? (
                   <>
@@ -1242,7 +1274,22 @@ function ManageWorkouts() {
                     <span>Saving...</span>
                   </>
                 ) : (
-                  <span>Save</span>
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 12h14M12 5l7 7-7 7"
+                      />
+                    </svg>
+                    <span>Save</span>
+                  </>
                 )}
               </button>
             </div>

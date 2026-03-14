@@ -363,7 +363,7 @@ function ManageSharedPrograms() {
             />
             <button
               onClick={() => handleCopyLink(shared.sharedProgramId)}
-              className="p-2 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
+              className="p-2 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer"
               aria-label="Copy link"
             >
               {copiedId === shared.sharedProgramId ? (

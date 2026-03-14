@@ -1471,7 +1471,7 @@ export const PauseIcon = () => (
 
 // NEW Badge Component - Used for reports, templates, and other new items
 export const NewBadge = () => (
-  <div className="absolute -top-2 -right-2 z-10">
+  <div className="absolute -top-2 -right-2 z-20">
     <div className="relative">
       {/* Pulsing glow effect */}
       <div className="absolute inset-0 bg-synthwave-neon-pink rounded-full animate-pulse opacity-75 blur-sm scale-110"></div>

@@ -12,10 +12,39 @@ import {
 } from "./themes/SynthwaveComponents";
 import IconButton from "./shared/IconButton";
 import WorkoutHeatMap from "./WorkoutHeatMap";
-
 // Value display component
-const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
+const ValueDisplay = ({
+  label,
+  value,
+  dataPath,
+  className = "",
+  stacked = false,
+}) => {
   if (value === null || value === undefined) return null;
+
+  const displayValue =
+    typeof value === "boolean"
+      ? value
+        ? "Yes"
+        : "No"
+      : String(value).replace(/_/g, " ");
+
+  if (stacked) {
+    return (
+      <div
+        className={`flex flex-col gap-0.5 font-body text-sm ${className}`}
+        data-json-path={dataPath}
+      >
+        <span className="text-synthwave-text-secondary">{label}</span>
+        <span
+          className="text-synthwave-neon-cyan font-medium"
+          data-json-value={JSON.stringify(value)}
+        >
+          {displayValue}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -27,11 +56,7 @@ const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
         className="text-synthwave-neon-cyan font-medium"
         data-json-value={JSON.stringify(value)}
       >
-        {typeof value === "boolean"
-          ? value
-            ? "Yes"
-            : "No"
-          : String(value).replace(/_/g, " ")}
+        {displayValue}
       </span>
     </div>
   );
@@ -44,9 +69,7 @@ function WeeklyReportViewerV2({
   userId,
   coachId,
 }) {
-  const [collapsedSections, setCollapsedSections] = useState(
-    new Set(["coach-analysis"]),
-  );
+  const [collapsedSections, setCollapsedSections] = useState(new Set([]));
   const [collapsedSubsections, setCollapsedSubsections] = useState(
     new Set(["quality-metrics", "extraction-details"]),
   );
@@ -193,7 +216,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Weekly Analysis
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                       <div className="font-body leading-relaxed text-synthwave-text-secondary whitespace-pre-wrap text-sm">
                         {humanSummary}
                       </div>
@@ -262,7 +285,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Working Sets Summary
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <ValueDisplay
                           label="Total Tonnage"
@@ -326,7 +349,7 @@ function WeeklyReportViewerV2({
                               (movement, index) => (
                                 <div
                                   key={index}
-                                  className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4"
+                                  className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4"
                                 >
                                   <div className="flex items-center justify-between mb-2">
                                     <h5 className="font-body font-bold text-synthwave-neon-cyan text-base capitalize">
@@ -414,7 +437,7 @@ function WeeklyReportViewerV2({
                         <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                           Quick Wins
                         </h4>
-                        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                           <ul className="space-y-1">
                             {structured.actionable_insights.quick_wins.map(
                               (win, index) => (
@@ -493,7 +516,7 @@ function WeeklyReportViewerV2({
                             (record, index) => (
                               <div
                                 key={index}
-                                className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4"
+                                className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4"
                               >
                                 <div className="flex items-center justify-between mb-2">
                                   <h5 className="font-body font-bold text-synthwave-neon-pink text-base capitalize">
@@ -515,10 +538,12 @@ function WeeklyReportViewerV2({
                                   <ValueDisplay
                                     label="New Best"
                                     value={record.new_best}
+                                    stacked
                                   />
                                   <ValueDisplay
                                     label="Previous Best"
                                     value={record.previous_best}
+                                    stacked
                                   />
                                 </div>
                               </div>
@@ -580,7 +605,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         Adherence Analysis
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <div className="col-span-2">
                             <ValueDisplay
@@ -643,12 +668,17 @@ function WeeklyReportViewerV2({
                 id="analysis-metadata-content"
                 className="px-6 pb-6 space-y-3"
               >
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <ValueDisplay label="Week ID" value={weekMeta.week_id} />
+                    <ValueDisplay
+                      label="Week ID"
+                      value={weekMeta.week_id}
+                      stacked
+                    />
                     <ValueDisplay
                       label="Sessions Completed"
                       value={weekMeta.sessions_completed}
+                      stacked
                     />
                     <ValueDisplay
                       label="Data Completeness"
@@ -657,10 +687,12 @@ function WeeklyReportViewerV2({
                           ? `${Math.round(weekMeta.data_completeness * 100)}%`
                           : null
                       }
+                      stacked
                     />
                     <ValueDisplay
                       label="Analysis Confidence"
                       value={weekMeta.analysis_confidence}
+                      stacked
                     />
                   </div>
                 </div>
@@ -716,7 +748,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         Body Part Frequency
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <ValueDisplay
                             label="Arms"
@@ -762,7 +794,7 @@ function WeeklyReportViewerV2({
             </div>
           )}
 
-          {/* Training Intelligence */}
+          {/* Training Intel */}
           {structured.training_intelligence && (
             <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
               <div
@@ -782,7 +814,7 @@ function WeeklyReportViewerV2({
                 <div className="flex items-start gap-3 flex-1">
                   <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
                   <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Training Intelligence
+                    Training Intel
                   </h3>
                 </div>
                 <svg
@@ -810,7 +842,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         Workout Pacing
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <ValueDisplay
                             label="Avg Session Duration"
@@ -892,7 +924,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Overall Progression
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <div className="col-span-2">
                           <ValueDisplay
@@ -915,7 +947,7 @@ function WeeklyReportViewerV2({
                       <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                         vs Last Week
                       </h4>
-                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <ValueDisplay
                             label="Volume Change"
@@ -990,7 +1022,7 @@ function WeeklyReportViewerV2({
                     <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Recovery Metrics
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <ValueDisplay
                           label="Recovery Score"
