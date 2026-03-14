@@ -263,12 +263,13 @@ export async function updateMemory(
       newTags.push("recently_accessed");
     }
 
+    // Partial metadata is merged with existingItem.attributes below; full shape comes from there
     tagUpdates = {
       metadata: {
         usageCount: newUsageCount,
         tags: newTags.slice(0, 10),
       },
-    };
+    } as Partial<UserMemory>;
   }
 
   const updatedMemory: UserMemory = {
