@@ -265,7 +265,6 @@ export async function updateMemory(
 
     tagUpdates = {
       metadata: {
-        ...existingItem.attributes.metadata,
         usageCount: newUsageCount,
         tags: newTags.slice(0, 10),
       },
