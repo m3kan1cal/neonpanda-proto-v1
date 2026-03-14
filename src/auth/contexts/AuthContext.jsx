@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   signUp,
   confirmSignUp,
@@ -8,9 +8,9 @@ import {
   confirmResetPassword,
   getCurrentUser,
   fetchUserAttributes,
-  fetchAuthSession
-} from 'aws-amplify/auth';
-import { getUserProfile } from '../../utils/apis/userProfileApi';
+  fetchAuthSession,
+} from "aws-amplify/auth";
+import { getUserProfile } from "../../utils/apis/userProfileApi";
 import { logger } from "../../utils/logger";
 
 const AuthContext = createContext({});
@@ -18,7 +18,7 @@ const AuthContext = createContext({});
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
         await checkAuthState();
       } catch (error) {
         // This should rarely happen now, but just in case
-        logger.error('🚨 Uncaught error in checkAuthState on mount:', error);
+        logger.error("🚨 Uncaught error in checkAuthState on mount:", error);
       }
     };
 
@@ -56,19 +56,23 @@ export const AuthProvider = ({ children }) => {
         ...currentUser,
         // Override username with preferred_username if available
         username: attributes?.preferred_username || currentUser.username,
-        attributes
+        attributes,
       };
 
       // Check if custom user ID is missing and create one if needed
       if (!attributes?.["custom:user_id"]) {
-        const errorMessage = "⚠️ Custom User ID is missing. This user may need manual setup.";
+        const errorMessage =
+          "⚠️ Custom User ID is missing. This user may need manual setup.";
         logger.warn(errorMessage);
 
         if (throwOnMissingUserId) {
           // Create a custom error that LoginForm can catch and display
-          const error = new Error("Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.");
+          const error = new Error(
+            "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.",
+          );
           error.name = "IncompleteAccountSetupException";
-          error.userFriendlyMessage = "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.";
+          error.userFriendlyMessage =
+            "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.";
           throw error;
         }
 
@@ -80,17 +84,29 @@ export const AuthProvider = ({ children }) => {
       setUser(userWithAttributes);
       setIsAuthenticated(true);
       setLoading(false);
-
     } catch (error) {
       logger.error("❌ checkAuthState error:", error);
       logger.error("❌ checkAuthState error name:", error.name);
       logger.error("❌ checkAuthState error message:", error.message);
 
-      // Check if this is a specific auth failure that indicates inconsistent state
-      if (error.message?.includes('User does not exist') ||
-          error.message?.includes('NotAuthorizedException') ||
-          error.name === 'NotAuthorizedException') {
-        logger.warn('🔄 Detected inconsistent auth state - user may need to be signed out');
+      // When the session is expired or invalid, clear stale tokens so the next
+      // sign-in attempt doesn't hit UserAlreadyAuthenticatedException.
+      if (
+        error.message?.includes("User does not exist") ||
+        error.message?.includes("NotAuthorizedException") ||
+        error.name === "NotAuthorizedException"
+      ) {
+        logger.warn(
+          "🔄 Detected inconsistent auth state - clearing stale session",
+        );
+        try {
+          await signOut();
+        } catch (signOutError) {
+          logger.warn(
+            "🔄 Cleanup signOut error (ignored):",
+            signOutError.message,
+          );
+        }
       }
 
       // Batch state updates for unauthenticated state
@@ -99,7 +115,10 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
 
       // Only throw errors when explicitly requested
-      if (throwOnMissingUserId && error.name === "IncompleteAccountSetupException") {
+      if (
+        throwOnMissingUserId &&
+        error.name === "IncompleteAccountSetupException"
+      ) {
         throw error;
       }
 
@@ -108,7 +127,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handleSignUp = async (email, password, username, firstName, lastName) => {
+  const handleSignUp = async (
+    email,
+    password,
+    username,
+    firstName,
+    lastName,
+  ) => {
     try {
       setAuthError(null);
 
@@ -120,9 +145,9 @@ export const AuthProvider = ({ children }) => {
             email,
             preferred_username: username,
             given_name: firstName,
-            family_name: lastName
-          }
-        }
+            family_name: lastName,
+          },
+        },
       });
 
       return { success: true, user };
@@ -136,24 +161,28 @@ export const AuthProvider = ({ children }) => {
     try {
       setAuthError(null);
 
-      logger.info('🔄 About to confirm signup for:', email);
+      logger.info("🔄 About to confirm signup for:", email);
 
       await confirmSignUp({
         username: email,
-        confirmationCode
+        confirmationCode,
       });
 
-      logger.info('✅ Signup confirmed successfully');
+      logger.info("✅ Signup confirmed successfully");
 
       // Check if user was automatically signed in after confirmation
       try {
-        logger.info('🔍 Checking if user was auto-signed in after confirmation...');
+        logger.info(
+          "🔍 Checking if user was auto-signed in after confirmation...",
+        );
         const currentUser = await getCurrentUser();
-        logger.info('🔍 User state after confirmSignUp:', currentUser);
+        logger.info("🔍 User state after confirmSignUp:", currentUser);
 
         if (currentUser) {
-          logger.info('⚠️ User was automatically signed in after confirmation!');
-          logger.info('🔍 Now testing if we can fetch user attributes...');
+          logger.info(
+            "⚠️ User was automatically signed in after confirmation!",
+          );
+          logger.info("🔍 Now testing if we can fetch user attributes...");
 
           // Test fetching attributes with retry logic to handle race condition with post-confirmation trigger
           let attributesFetched = false;
@@ -162,53 +191,82 @@ export const AuthProvider = ({ children }) => {
 
           for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-              logger.info(`🔍 Attempt ${attempt}/${maxRetries}: Fetching user attributes...`);
+              logger.info(
+                `🔍 Attempt ${attempt}/${maxRetries}: Fetching user attributes...`,
+              );
               const testAttributes = await fetchUserAttributes();
-              logger.info('✅ Successfully fetched attributes after auto-signin:', Object.keys(testAttributes));
-              logger.info('🆔 Custom User ID found:', testAttributes['custom:user_id'] || 'NOT_SET');
+              logger.info(
+                "✅ Successfully fetched attributes after auto-signin:",
+                Object.keys(testAttributes),
+              );
+              logger.info(
+                "🆔 Custom User ID found:",
+                testAttributes["custom:user_id"] || "NOT_SET",
+              );
 
               // If we can fetch attributes, proceed with normal auth state update
               await checkAuthState();
-              logger.info('✅ Successfully updated auth state after auto-signin');
+              logger.info(
+                "✅ Successfully updated auth state after auto-signin",
+              );
               attributesFetched = true;
               break;
-
             } catch (attributeError) {
-              logger.warn(`❌ Attempt ${attempt}/${maxRetries} failed:`, attributeError.message);
+              logger.warn(
+                `❌ Attempt ${attempt}/${maxRetries} failed:`,
+                attributeError.message,
+              );
 
               if (attempt === maxRetries) {
-                logger.error('❌ FINAL ATTEMPT FAILED to fetch attributes after auto-signin:', attributeError);
-                logger.error('❌ Attribute error name:', attributeError.name);
-                logger.error('❌ Attribute error message:', attributeError.message);
-                logger.warn('🚨 This could be a race condition with post-confirmation trigger or a real failure!');
-                logger.info('🔄 Signing user out to fix inconsistent state');
+                logger.error(
+                  "❌ FINAL ATTEMPT FAILED to fetch attributes after auto-signin:",
+                  attributeError,
+                );
+                logger.error("❌ Attribute error name:", attributeError.name);
+                logger.error(
+                  "❌ Attribute error message:",
+                  attributeError.message,
+                );
+                logger.warn(
+                  "🚨 This could be a race condition with post-confirmation trigger or a real failure!",
+                );
+                logger.info("🔄 Signing user out to fix inconsistent state");
 
                 // If we can't get the user's attributes properly, sign them out
                 // This prevents the "UserAlreadyAuthenticatedException" issue
                 try {
                   await signOut();
-                  logger.info('✅ Successfully signed out user with broken auth state');
+                  logger.info(
+                    "✅ Successfully signed out user with broken auth state",
+                  );
                 } catch (signOutError) {
-                  logger.error('❌ Failed to sign out user:', signOutError);
+                  logger.error("❌ Failed to sign out user:", signOutError);
                 }
                 break;
               } else {
                 // Wait with exponential backoff before retrying
                 const delay = baseDelay * Math.pow(2, attempt - 1);
-                logger.info(`⏳ Waiting ${delay}ms before retry ${attempt + 1} (race condition with post-confirmation trigger)...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
+                logger.info(
+                  `⏳ Waiting ${delay}ms before retry ${attempt + 1} (race condition with post-confirmation trigger)...`,
+                );
+                await new Promise((resolve) => setTimeout(resolve, delay));
               }
             }
           }
 
           if (!attributesFetched) {
-            logger.error('❌ Failed to fetch attributes after all retry attempts');
+            logger.error(
+              "❌ Failed to fetch attributes after all retry attempts",
+            );
           }
         } else {
-          logger.info('ℹ️ User not automatically signed in - normal flow');
+          logger.info("ℹ️ User not automatically signed in - normal flow");
         }
       } catch (checkError) {
-        logger.info('ℹ️ User not signed in after confirmation (expected):', checkError.message);
+        logger.info(
+          "ℹ️ User not signed in after confirmation (expected):",
+          checkError.message,
+        );
       }
 
       return { success: true };
@@ -219,34 +277,50 @@ export const AuthProvider = ({ children }) => {
   };
 
   const handleSignIn = async (email, password) => {
-    try {
-      setAuthError(null);
-
-      logger.info('AuthContext: About to call Amplify signIn');
-      const signInResult = await signIn({
-        username: email,
-        password
-      });
-
-      logger.info('AuthContext: Amplify signIn result:', signInResult);
-      logger.info('AuthContext: signInResult.isSignedIn:', signInResult.isSignedIn);
-      logger.info('AuthContext: signInResult.nextStep:', signInResult.nextStep);
+    const attemptSignIn = async () => {
+      const signInResult = await signIn({ username: email, password });
 
       if (signInResult.isSignedIn) {
-        await checkAuthState(true); // Refresh user state and throw error if user ID missing
+        await checkAuthState(true);
         return { success: true };
-      } else {
-        // Handle cases where sign in didn't complete
-        logger.info('AuthContext: Sign in not completed, nextStep:', signInResult.nextStep);
-        if (signInResult.nextStep && signInResult.nextStep.signInStep === 'CONFIRM_SIGN_UP') {
-          throw new Error('UserNotConfirmedException');
-        }
-        return { success: false, nextStep: signInResult.nextStep };
       }
+
+      if (
+        signInResult.nextStep &&
+        signInResult.nextStep.signInStep === "CONFIRM_SIGN_UP"
+      ) {
+        throw new Error("UserNotConfirmedException");
+      }
+
+      return { success: false, nextStep: signInResult.nextStep };
+    };
+
+    try {
+      setAuthError(null);
+      logger.info("AuthContext: About to call Amplify signIn");
+      return await attemptSignIn();
     } catch (error) {
-      logger.error('AuthContext signIn error:', error);
-      logger.error('Error name:', error.name);
-      logger.error('Error message:', error.message);
+      // Stale session survived the checkAuthState cleanup — clear it and retry once
+      if (error.name === "UserAlreadyAuthenticatedException") {
+        logger.warn(
+          "AuthContext: Stale session detected during signIn — signing out and retrying",
+        );
+        try {
+          await signOut();
+          return await attemptSignIn();
+        } catch (retryError) {
+          logger.error(
+            "AuthContext: Sign-in retry after signOut failed:",
+            retryError,
+          );
+          setAuthError(retryError.message);
+          throw retryError;
+        }
+      }
+
+      logger.error("AuthContext signIn error:", error);
+      logger.error("Error name:", error.name);
+      logger.error("Error message:", error.message);
       setAuthError(error.message);
       throw error;
     }
@@ -271,13 +345,13 @@ export const AuthProvider = ({ children }) => {
   // Fetch user profile from DynamoDB when user is authenticated
   useEffect(() => {
     const fetchProfile = async () => {
-      if (isAuthenticated && user?.attributes?.['custom:user_id']) {
+      if (isAuthenticated && user?.attributes?.["custom:user_id"]) {
         try {
-          const userId = user.attributes['custom:user_id'];
+          const userId = user.attributes["custom:user_id"];
           const response = await getUserProfile(userId);
           setUserProfile(response.profile);
         } catch (error) {
-          logger.error('❌ Error fetching user profile:', error);
+          logger.error("❌ Error fetching user profile:", error);
           // Don't block app if profile fetch fails - user can still use Cognito attributes
           setUserProfile(null);
         }
@@ -295,7 +369,7 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
 
       await resetPassword({
-        username: email
+        username: email,
       });
 
       return { success: true };
@@ -305,14 +379,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handleConfirmResetPassword = async (email, confirmationCode, newPassword) => {
+  const handleConfirmResetPassword = async (
+    email,
+    confirmationCode,
+    newPassword,
+  ) => {
     try {
       setAuthError(null);
 
       await confirmResetPassword({
         username: email,
         confirmationCode,
-        newPassword
+        newPassword,
       });
 
       return { success: true };
@@ -327,8 +405,9 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
 
       // Temporarily disabled - will implement with direct Cognito call later
-      throw new Error('Resend functionality temporarily unavailable. Please try signing up again.');
-
+      throw new Error(
+        "Resend functionality temporarily unavailable. Please try signing up again.",
+      );
     } catch (error) {
       setAuthError(error.message);
       throw error;
@@ -339,10 +418,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const session = await fetchAuthSession({ forceRefresh });
       return {
-        'Authorization': `Bearer ${session.tokens.idToken.toString()}`
+        Authorization: `Bearer ${session.tokens.idToken.toString()}`,
       };
     } catch (error) {
-      logger.error('Error getting auth headers:', error);
+      logger.error("Error getting auth headers:", error);
       return {};
     }
   };
@@ -367,12 +446,8 @@ export const AuthProvider = ({ children }) => {
     getAuthHeaders,
 
     // Utilities
-    clearError: () => setAuthError(null)
+    clearError: () => setAuthError(null),
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

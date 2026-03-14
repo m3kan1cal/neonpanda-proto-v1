@@ -28,7 +28,7 @@ const LoginForm = ({
         logger.info("Caught UserNotConfirmedException in global handler");
         setShowVerificationOption(true);
         setGlobalError(
-          "Account not confirmed. Please verify your email address to continue."
+          "Account not confirmed. Please verify your email address to continue.",
         );
       }
     };
@@ -37,7 +37,7 @@ const LoginForm = ({
     return () => {
       window.removeEventListener(
         "unhandledrejection",
-        handleUnhandledRejection
+        handleUnhandledRejection,
       );
     };
   }, []);
@@ -101,7 +101,7 @@ const LoginForm = ({
       logger.error("LoginForm error __type:", error.__type);
       logger.error(
         "LoginForm full error object:",
-        JSON.stringify(error, null, 2)
+        JSON.stringify(error, null, 2),
       );
 
       const errorMessage = getErrorMessage(error);
@@ -114,7 +114,7 @@ const LoginForm = ({
       ) {
         logger.info(
           "UserNotConfirmedException detected, redirecting to verification with email:",
-          formData.email.trim()
+          formData.email.trim(),
         );
         setUnconfirmedEmail(formData.email.trim());
 
@@ -126,28 +126,24 @@ const LoginForm = ({
           logger.error("onSwitchToVerification callback not provided");
           setShowVerificationOption(true);
           setGlobalError(
-            "Account not confirmed. Please verify your email address to continue."
+            "Account not confirmed. Please verify your email address to continue.",
           );
         }
       } else if (error.name === "IncompleteAccountSetupException") {
-        logger.info("IncompleteAccountSetupException detected - showing user-friendly error");
+        logger.info(
+          "IncompleteAccountSetupException detected - showing user-friendly error",
+        );
         setGlobalError(error.userFriendlyMessage || error.message);
       } else if (error.name === "UserAlreadyAuthenticatedException") {
-        logger.warn("🚨 State mismatch detected: Amplify says user is signed in, but AuthContext shows null");
-        logger.info("🔄 Attempting to sync AuthContext state with Amplify...");
-
-        try {
-          // Try to update our AuthContext state to match Amplify's internal state
-          await checkAuthState();
-          logger.info("✅ Successfully synced AuthContext state with Amplify - should redirect now");
-          // The AuthRouter will handle the redirect automatically once state is synced
-          return;
-        } catch (syncError) {
-          logger.error("❌ Failed to sync AuthContext state:", syncError);
-          logger.info("🔄 This indicates a deeper authentication issue...");
-          setGlobalError("Authentication state error detected. Please sign out and sign in again, or refresh the page.");
-          return;
-        }
+        // AuthContext.handleSignIn already attempts signOut + retry internally.
+        // If the error still reaches here, the retry itself failed — show a clear message.
+        logger.error(
+          "❌ UserAlreadyAuthenticatedException reached LoginForm after retry:",
+          error,
+        );
+        setGlobalError(
+          "Session error detected. Please refresh the page and try signing in again.",
+        );
       } else if (error.name === "NotAuthorizedException") {
         setFieldError("password", "Incorrect email or password");
       } else if (error.name === "UserNotFoundException") {
@@ -156,12 +152,12 @@ const LoginForm = ({
         // Check if the error message contains the UserNotConfirmedException text
         if (error.message && error.message.includes("User is not confirmed")) {
           logger.info(
-            "UserNotConfirmedException detected via message, redirecting to verification"
+            "UserNotConfirmedException detected via message, redirecting to verification",
           );
           setUnconfirmedEmail(formData.email.trim());
           setShowVerificationOption(true);
           setGlobalError(
-            "Account not confirmed. Please verify your email address to continue."
+            "Account not confirmed. Please verify your email address to continue.",
           );
         } else {
           setGlobalError(errorMessage);
@@ -178,7 +174,8 @@ const LoginForm = ({
         {showVerificationSuccess && (
           <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
             <p className="font-body text-synthwave-neon-cyan text-sm">
-              Email verified! Your account has been successfully confirmed. You can now sign in with your credentials.
+              Email verified! Your account has been successfully confirmed. You
+              can now sign in with your credentials.
             </p>
           </div>
         )}
@@ -186,7 +183,8 @@ const LoginForm = ({
         {showPasswordResetSuccess && (
           <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
             <p className="font-body text-synthwave-neon-cyan text-sm">
-              Password reset successful! Your password has been updated. You can now sign in with your new password.
+              Password reset successful! Your password has been updated. You can
+              now sign in with your new password.
             </p>
           </div>
         )}
