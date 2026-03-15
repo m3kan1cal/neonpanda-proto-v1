@@ -132,9 +132,7 @@ const MoreMenu = () => {
   // Render a standalone reports sub-item (Training Reports / Training Pulse)
   const renderReportsSubItem = ({ id, label, getRoute, Icon }) => {
     const route = getRoute(context);
-    const active = location.pathname.includes(
-      route.split("?")[0].replace(/.*\//, "/"),
-    );
+    const active = isRouteActive(route, location.pathname, context.currentSearchParams);
     const colorClasses = getItemColorClasses("pink", active);
     const getActiveClasses = () =>
       "bg-synthwave-neon-pink/10 border-t-2 border-b-2 border-synthwave-neon-pink/60";

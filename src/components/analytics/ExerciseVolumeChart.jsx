@@ -178,6 +178,7 @@ function DeltaStat({ data, primaryKey = "tonnage", isRepsMode = false }) {
   if (prev === 0) return null;
   const pct = Math.round(((curr - prev) / prev) * 100);
   const isPositive = pct >= 0;
+  const unit = isRepsMode ? "reps" : "lbs";
   return (
     <div className="text-center">
       <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
@@ -188,7 +189,7 @@ function DeltaStat({ data, primaryKey = "tonnage", isRepsMode = false }) {
         style={{ color: isPositive ? chartColors.green : chartColors.warning }}
       >
         {isPositive ? "+" : ""}
-        {pct}%
+        {pct}% {unit}
       </p>
     </div>
   );
