@@ -1,6 +1,7 @@
 import {
   createOkResponse,
   createErrorResponse,
+  LambdaContext,
 } from "../libs/api-helpers";
 import {
   processAllUsersInBatchesMonthly,
@@ -13,8 +14,11 @@ import { logger } from "../libs/logger";
  * Monthly Analytics Lambda Handler
  * Triggered by EventBridge cron on the 1st of each month at 9:00 AM UTC
  */
-export const handler = async (event: MonthlyAnalyticsEvent) => {
-  return withHeartbeat('Monthly Analytics Processing', async () => {
+export const handler = async (
+  event: MonthlyAnalyticsEvent,
+  context: LambdaContext,
+) => {
+  return withHeartbeat("Monthly Analytics Processing", async () => {
     try {
       logger.info("📊 Starting monthly analytics processing:", {
         source: event.source,
@@ -22,13 +26,16 @@ export const handler = async (event: MonthlyAnalyticsEvent) => {
         triggerEvent: event,
       });
 
-      // Process all users in batches
-      const totalProcessedUsers = await processAllUsersInBatchesMonthly(50);
+      // Process all users in batches, passing context for remaining-time checks
+      const totalProcessedUsers = await processAllUsersInBatchesMonthly(
+        50,
+        context.getRemainingTimeInMillis.bind(context),
+      );
 
-    logger.info("✅ Monthly analytics processing completed successfully:", {
-      totalProcessedUsers,
-      completedAt: new Date().toISOString(),
-    });
+      logger.info("✅ Monthly analytics processing completed successfully:", {
+        totalProcessedUsers,
+        completedAt: new Date().toISOString(),
+      });
 
       return createOkResponse({
         message: "Monthly analytics processing completed successfully",
@@ -44,7 +51,7 @@ export const handler = async (event: MonthlyAnalyticsEvent) => {
         {
           error: error instanceof Error ? error.stack : String(error),
           timestamp: new Date().toISOString(),
-        }
+        },
       );
     }
   }); // 10 second default heartbeat interval

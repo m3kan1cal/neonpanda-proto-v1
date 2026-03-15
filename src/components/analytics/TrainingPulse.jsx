@@ -75,6 +75,11 @@ export default function Analytics() {
     isLoading: false,
   });
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Load coach data
   useEffect(() => {
     if (!userId || !coachId) return;

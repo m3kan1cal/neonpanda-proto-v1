@@ -241,7 +241,9 @@ export default function CoachBriefingCard({
         {/* Grid -- matches workout card grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <div className={containerPatterns.neonGlassSkeleton}>
-            <div className={`${containerPatterns.neonGlassSkeletonInner} relative`}>
+            <div
+              className={`${containerPatterns.neonGlassSkeletonInner} relative`}
+            >
               {/* Dismiss button placeholder */}
               <div className="absolute top-4 right-4">
                 <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
@@ -321,35 +323,36 @@ export default function CoachBriefingCard({
           </div>
         )}
 
-        {/* Top priority insight */}
-        {insights?.top_priority?.insight && (
-          <MarkdownRenderer
-            content={truncate(insights.top_priority.insight)}
-            className="font-body text-sm text-synthwave-text-secondary leading-relaxed mb-2"
-          />
-        )}
+        {/* Top priority insight + quick wins as one block to avoid double gap */}
+        <div className="flex flex-col gap-1.5">
+          {insights?.top_priority?.insight && (
+            <MarkdownRenderer
+              content={truncate(insights.top_priority.insight)}
+              className="font-body text-sm text-synthwave-text-secondary leading-relaxed"
+            />
+          )}
 
-        {/* Quick wins preview (max 2) */}
-        {insights?.quick_wins?.length > 0 && (
-          <div className="mt-2">
-            {insights.quick_wins.slice(0, 2).map((win, i) => (
-              <div key={i} className="flex items-start gap-2 py-0.5">
-                <span className="text-synthwave-neon-cyan mt-0.5 shrink-0">
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                  </svg>
-                </span>
-                <span className="font-body text-xs text-synthwave-text-muted">
-                  {truncate(win, 80)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+          {insights?.quick_wins?.length > 0 && (
+            <div>
+              {insights.quick_wins.slice(0, 2).map((win, i) => (
+                <div key={i} className="flex items-start gap-2 py-0.5">
+                  <span className="text-synthwave-neon-cyan mt-0.5 shrink-0">
+                    <svg
+                      className="w-3 h-3"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                    </svg>
+                  </span>
+                  <span className="font-body text-xs text-synthwave-text-muted">
+                    {truncate(win, 80)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </>
     );
   };

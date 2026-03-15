@@ -154,6 +154,14 @@ export const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 } as const;
 
+/**
+ * Minimal Lambda execution context interface.
+ * Captures only the subset of the AWS Lambda Context object used across handlers.
+ */
+export interface LambdaContext {
+  getRemainingTimeInMillis: () => number;
+}
+
 // Helper function to create standardized API responses
 export function createResponse(
   statusCode: number,

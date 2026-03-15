@@ -257,8 +257,8 @@ export async function queryWorkoutSummaries(
         const diagnosticResult = await docClient.send(diagnosticCommand);
         const diagnosticItems = (diagnosticResult.Items || []) as any[];
 
-        logger.warn(
-          "⚠️ No workouts found in date range. Diagnostic query (no date filter):",
+        logger.debug(
+          "No workouts found in date range. Diagnostic query (no date filter):",
           {
             totalWorkoutsForUser:
               diagnosticItems.length > 0 ? `${diagnosticItems.length}+` : 0,
