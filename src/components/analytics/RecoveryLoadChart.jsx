@@ -241,7 +241,7 @@ function RecoveryTooltip({ active, payload, label }) {
           formatted = entry.value.toFixed(2);
           // Add zone label
           const zone =
-            entry.value <= ZONE_GREEN_HIGH
+            entry.value >= ZONE_GREEN_LOW && entry.value <= ZONE_GREEN_HIGH
               ? " (safe)"
               : entry.value <= ZONE_YELLOW_HIGH
                 ? " (caution)"

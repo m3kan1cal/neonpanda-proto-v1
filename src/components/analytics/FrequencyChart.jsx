@@ -18,6 +18,7 @@ import {
   animationDefaults,
   tooltipDefaults,
   cursorBar,
+  Stat,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -136,18 +137,5 @@ export default function FrequencyChart({
         </div>
       )}
     </ChartCard>
-  );
-}
-
-function Stat({ label, value, color }) {
-  return (
-    <div className="text-center">
-      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
-        {label}
-      </p>
-      <p className="font-header font-bold text-sm" style={{ color }}>
-        {value}
-      </p>
-    </div>
   );
 }

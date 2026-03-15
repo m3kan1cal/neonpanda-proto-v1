@@ -18,6 +18,10 @@ import {
   formatCompact,
   tooltipDefaults,
   cursorLine,
+  extractWeight,
+  extractReps,
+  formatDate,
+  Stat,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -238,40 +242,4 @@ function CustomDot({ cx, cy, index, data }) {
   }
 
   return <circle cx={cx} cy={cy} r={3} fill={chartColors.neonPink} />;
-}
-
-function Stat({ label, value, color }) {
-  return (
-    <div className="text-center">
-      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
-        {label}
-      </p>
-      <p className="font-header font-bold text-sm" style={{ color }}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-// Extract the best weight from a session's metrics
-function extractWeight(session) {
-  const m = session.metrics || {};
-  return m.bestSet?.weight || m.maxWeight || m.weight || 0;
-}
-
-// Extract the best reps from a session's metrics
-function extractReps(session) {
-  const m = session.metrics || {};
-  return m.bestSet?.reps || m.reps || 0;
-}
-
-// Format ISO date to short "Mar 3" format
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
-    return dateStr;
-  }
 }

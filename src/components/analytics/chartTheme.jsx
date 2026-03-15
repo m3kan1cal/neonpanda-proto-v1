@@ -158,3 +158,40 @@ export function formatWeekRange(weekStart, weekEnd) {
     return weekStart;
   }
 }
+
+// Extract the best weight from a session's metrics
+export function extractWeight(session) {
+  const m = session.metrics || {};
+  return m.bestSet?.weight || m.maxWeight || m.weight || 0;
+}
+
+// Extract the best reps from a session's metrics
+export function extractReps(session) {
+  const m = session.metrics || {};
+  return m.bestSet?.reps || m.reps || 0;
+}
+
+// Format ISO date to short "Mar 3" format
+export function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
+// Stat component for displaying labeled values with color
+export function Stat({ label, value, color }) {
+  return (
+    <div className="text-center">
+      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
+        {label}
+      </p>
+      <p className="font-header font-bold text-sm" style={{ color }}>
+        {value}
+      </p>
+    </div>
+  );
+}

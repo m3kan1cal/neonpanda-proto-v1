@@ -19,6 +19,8 @@ import {
   formatCompact,
   tooltipDefaults,
   cursorBar,
+  formatDate,
+  Stat,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -169,19 +171,6 @@ export default function ExerciseVolumeChart({
   );
 }
 
-function Stat({ label, value, color }) {
-  return (
-    <div className="text-center">
-      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
-        {label}
-      </p>
-      <p className="font-header font-bold text-sm" style={{ color }}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
 function DeltaStat({ data, primaryKey = "tonnage", isRepsMode = false }) {
   if (data.length < 2) return null;
   const prev = data[data.length - 2]?.[primaryKey] || 0;
@@ -227,14 +216,4 @@ function calculateTonnage(session) {
   const reps = m.bestSet?.reps || m.reps || 0;
   const sets = m.sets || 1;
   return weight * reps * sets;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
-    return dateStr;
-  }
 }

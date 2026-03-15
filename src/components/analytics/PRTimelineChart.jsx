@@ -15,6 +15,9 @@ import {
   axisDefaults,
   gridDefaults,
   animationDefaults,
+  extractWeight,
+  extractReps,
+  formatDate,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -211,24 +214,4 @@ function Legend({ color, label }) {
       </span>
     </div>
   );
-}
-
-function extractWeight(session) {
-  const m = session.metrics || {};
-  return m.bestSet?.weight || m.maxWeight || m.weight || 0;
-}
-
-function extractReps(session) {
-  const m = session.metrics || {};
-  return m.bestSet?.reps || m.reps || 0;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
-    return dateStr;
-  }
 }
