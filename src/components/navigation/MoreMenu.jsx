@@ -130,7 +130,8 @@ const MoreMenu = () => {
     [];
 
   // Render a standalone reports sub-item (Training Reports / Training Pulse)
-  const renderReportsSubItem = ({ id, label, route, Icon }) => {
+  const renderReportsSubItem = ({ id, label, getRoute, Icon }) => {
+    const route = getRoute(context);
     const active = location.pathname.includes(
       route.split("?")[0].replace(/.*\//, "/"),
     );
@@ -345,13 +346,15 @@ const MoreMenu = () => {
                     renderReportsSubItem({
                       id: "reports",
                       label: "Training Reports",
-                      route: `/training-grounds/reports?userId=${context.userId}&coachId=${context.coachId}`,
+                      getRoute: (ctx) =>
+                        `/training-grounds/reports?userId=${ctx.userId}&coachId=${ctx.coachId}`,
                       Icon: TrainingReportsMenuIcon,
                     }),
                     renderReportsSubItem({
                       id: "training-pulse",
                       label: "Training Pulse",
-                      route: `/training-grounds/training-pulse?userId=${context.userId}&coachId=${context.coachId}`,
+                      getRoute: (ctx) =>
+                        `/training-grounds/training-pulse?userId=${ctx.userId}&coachId=${ctx.coachId}`,
                       Icon: TrainingPulseMenuIcon,
                     }),
                   ];
