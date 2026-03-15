@@ -25,6 +25,7 @@ export const routeMap = {
   today: "View Workouts",
   reports: "Reports",
   weekly: "Weekly Reports",
+  "training-pulse": "Training Pulse",
   "template/synthwave": "Synthwave Theme",
 };
 

@@ -67,7 +67,7 @@ const ImageWithPresignedUrl = ({ s3Key, userId, index }) => {
     <>
       {/* Thumbnail */}
       <div
-        className="relative overflow-hidden border-2 border-synthwave-neon-maroon/80 w-32 h-32 bg-synthwave-bg-primary/50 shadow-neon-maroon cursor-zoom-in"
+        className="relative overflow-hidden rounded-md border-2 border-synthwave-neon-maroon/80 w-32 h-32 bg-synthwave-bg-primary/50 shadow-neon-maroon cursor-zoom-in"
         onClick={() => !loading && imageLoaded && setIsOpen(true)}
       >
         {/* Spinner — shown while URL is fetching OR while the browser is painting the image */}

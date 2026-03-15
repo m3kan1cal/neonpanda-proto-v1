@@ -21,6 +21,7 @@ import { useAuth } from "../../auth";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { navigationPatterns, badgePatterns } from "../../utils/ui/uiPatterns";
 import UserAvatar from "../shared/UserAvatar";
+import { BarChartUpIcon, TrainingReportsIcon, TrainingPulseIcon } from "../themes/SynthwaveComponents";
 import {
   navigationItems,
   isItemVisible,
@@ -274,11 +275,6 @@ const SidebarNav = () => {
           `}
         >
           <Icon className="w-5 h-5" />
-
-          {/* Badge dot in rail mode */}
-          {badge !== null && badge !== undefined && effectivelyCollapsed && (
-            <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-synthwave-neon-pink shadow-[0_0_5px_rgba(255,0,128,0.7)]" />
-          )}
         </div>
 
         {/* Label — fades in when expanding, hidden (no layout space) when collapsed */}
@@ -431,6 +427,11 @@ const SidebarNav = () => {
     </svg>
   );
 
+  // Reports & Analytics trigger icon
+  const ReportsAndAnalyticsIcon = ({ className }) => (
+    <BarChartUpIcon className={className} />
+  );
+
   // More Resources trigger icon
   const MoreResourcesIcon = ({ className }) => (
     <svg
@@ -482,6 +483,59 @@ const SidebarNav = () => {
             )}
             <span className={navigationPatterns.desktop.navItemLabel}>
               {item.label}
+            </span>
+          </button>
+        );
+      })}
+    </FlyoutPanel>
+  );
+
+  const isReportsRouteActive =
+    location.pathname.includes("/training-grounds/reports") ||
+    location.pathname.includes("/training-grounds/training-pulse");
+
+  // Reports & Analytics flyout panel
+  const reportsFlyoutPanel = (
+    <FlyoutPanel title="Reports & Analytics">
+      {[
+        {
+          label: "Training Reports",
+          route: `/training-grounds/reports?userId=${context.userId}&coachId=${context.coachId}`,
+          color: "pink",
+          Icon: TrainingReportsIcon,
+        },
+        {
+          label: "Training Pulse",
+          route: `/training-grounds/training-pulse?userId=${context.userId}&coachId=${context.coachId}`,
+          color: "pink",
+          Icon: TrainingPulseIcon,
+        },
+      ].map(({ label, route, color, Icon }) => {
+        const itemColorClasses = getItemColorClasses(color, false);
+        return (
+          <button
+            key={label}
+            onClick={() => {
+              if (route && route !== "#") navigate(route);
+            }}
+            className={`
+              ${navigationPatterns.desktop.navItem}
+              py-2.5
+              ${itemColorClasses.inactive}
+              hover:border-synthwave-neon-pink/50
+              hover:bg-synthwave-bg-primary/20
+              focus:ring-2 focus:ring-synthwave-neon-pink/50
+              focus:outline-none active:outline-none w-full
+            `}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+          >
+            {Icon && (
+              <div className={navigationPatterns.desktop.navItemIcon}>
+                <Icon className="w-5 h-5" />
+              </div>
+            )}
+            <span className={navigationPatterns.desktop.navItemLabel}>
+              {label}
             </span>
           </button>
         );
@@ -570,7 +624,23 @@ const SidebarNav = () => {
           {contextualItems.length > 0 && (
             <>
               <div className={navigationPatterns.sectionSpacing.bottom}>
-                {contextualItems.map((item) => renderNavItem(item))}
+                {contextualItems.map((item) => {
+                  if (item.id === "progress") {
+                    return (
+                      <HoverFlyout
+                        key={item.id}
+                        triggerContent={buildFlyoutTrigger({
+                          color: "pink",
+                          icon: ReportsAndAnalyticsIcon,
+                          label: "Reports & Analytics",
+                          isOpen: isReportsRouteActive,
+                        })}
+                        panelContent={reportsFlyoutPanel}
+                      />
+                    );
+                  }
+                  return renderNavItem(item);
+                })}
               </div>
               <div
                 className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`}

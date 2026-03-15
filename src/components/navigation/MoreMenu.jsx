@@ -7,6 +7,10 @@ import { useNavigationContext } from "../../contexts/NavigationContext";
 import { navigationPatterns } from "../../utils/ui/uiPatterns";
 import { logger } from "../../utils/logger";
 import {
+  TrainingReportsIcon,
+  TrainingPulseIcon,
+} from "../themes/SynthwaveComponents";
+import {
   navigationItems,
   isItemVisible,
   getItemRoute,
@@ -127,6 +131,57 @@ const MoreMenu = () => {
   const utilityItems =
     navigationItems.utility?.filter((item) => isItemVisible(item, context)) ||
     [];
+
+  // Render a standalone reports sub-item (Training Reports / Training Pulse)
+  const renderReportsSubItem = ({ id, label, getRoute, Icon }) => {
+    const route = getRoute(context);
+    const active = isRouteActive(
+      route,
+      location.pathname,
+      context.currentSearchParams,
+    );
+    const colorClasses = getItemColorClasses("pink", active);
+    const getActiveClasses = () =>
+      "bg-synthwave-neon-pink/10 border-t-2 border-b-2 border-synthwave-neon-pink/60";
+
+    return (
+      <button
+        key={id}
+        onClick={() => {
+          triggerHaptic(10);
+          setIsMoreMenuOpen(false);
+          navigate(route);
+        }}
+        className={`
+          ${navigationPatterns.moreMenu.item}
+          ${
+            active
+              ? `${colorClasses.active} ${getActiveClasses()} focus:outline-none active:outline-none font-semibold`
+              : `${colorClasses.inactive} hover:bg-synthwave-bg-card/40 focus:outline-none active:outline-none font-medium`
+          }
+        `}
+        style={{ WebkitTapHighlightColor: "transparent" }}
+      >
+        <div className={active ? colorClasses.glow : ""}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <span className={navigationPatterns.moreMenu.itemLabel}>{label}</span>
+        <svg
+          className={navigationPatterns.moreMenu.itemChevron}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+    );
+  };
 
   // Render menu item
   const renderMenuItem = (item) => {
@@ -285,7 +340,29 @@ const MoreMenu = () => {
                 Your Training
               </h3>
             </div>
-            <div>{contextualItems.map((item) => renderMenuItem(item))}</div>
+            <div>
+              {contextualItems.flatMap((item) => {
+                if (item.id === "progress") {
+                  return [
+                    renderReportsSubItem({
+                      id: "reports",
+                      label: "Training Reports",
+                      getRoute: (ctx) =>
+                        `/training-grounds/reports?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+                      Icon: TrainingReportsIcon,
+                    }),
+                    renderReportsSubItem({
+                      id: "training-pulse",
+                      label: "Training Pulse",
+                      getRoute: (ctx) =>
+                        `/training-grounds/training-pulse?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+                      Icon: TrainingPulseIcon,
+                    }),
+                  ];
+                }
+                return [renderMenuItem(item)];
+              })}
+            </div>
           </div>
         )}
 
