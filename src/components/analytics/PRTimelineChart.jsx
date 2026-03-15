@@ -63,8 +63,9 @@ export default function PRTimelineChart({
           previousBest > 0
             ? Math.round(((weight - previousBest) / previousBest) * 100)
             : 0;
-        const significance =
+        const baseSignificance =
           improvement >= 10 ? "major" : improvement >= 5 ? "moderate" : "minor";
+        const finalSignificance = previousBest === 0 ? "major" : baseSignificance; // first ever is always "major"
 
         prs.push({
           date: formatDate(session.completedAt || session.date),
@@ -72,9 +73,9 @@ export default function PRTimelineChart({
           weight,
           previousBest: previousBest || null,
           improvement,
-          significance: previousBest === 0 ? "major" : significance, // first ever is always "major"
+          significance: finalSignificance,
           reps: extractReps(session),
-          size: SIGNIFICANCE_SIZES[significance] || 100,
+          size: SIGNIFICANCE_SIZES[finalSignificance] || 100,
         });
       }
     }

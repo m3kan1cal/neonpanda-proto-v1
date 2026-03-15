@@ -38,10 +38,6 @@ function formatAbsoluteDelta(current, prior) {
 
 function getWeekLabel(report) {
   if (!report) return null;
-  const sa =
-    report.analyticsData?.structured_analytics ||
-    report.structured_analytics ||
-    {};
   const weekStart = report.weekStart;
   const weekEnd = report.weekEnd;
   if (weekStart && weekEnd) {
