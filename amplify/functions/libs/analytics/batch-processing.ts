@@ -20,7 +20,7 @@ import {
   MonthlyAnalytics,
 } from "./types";
 import { storeDebugDataInS3 } from "../api-helpers";
-import { generateMonthId, getCurrentWeekRange } from "./date-utils";
+import { generateMonthId, getCurrentWeekRange, getCurrentMonthRange } from "./date-utils";
 import { logger } from "../logger";
 
 // Minimum remaining Lambda time (ms) required before starting a new user.
@@ -326,8 +326,8 @@ export const processMonthlyBatch = async (
   );
 
   // Compute the current monthId once for the entire batch (all users share the same period)
-  const now = new Date();
-  const currentMonthId = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  const currentMonthRange = getCurrentMonthRange();
+  const currentMonthId = generateMonthId(currentMonthRange.monthStart);
 
   let processedCount = 0;
 
