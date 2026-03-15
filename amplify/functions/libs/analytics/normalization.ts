@@ -155,11 +155,16 @@ export const normalizeAnalytics = async (
 };
 
 /**
- * Determines if analytics need normalization based on validation issues and data quality
+ * Determines if analytics need normalization based on validation issues and data quality.
+ *
+ * @param options.skipHumanSummaryCheck - When true, omits the human_summary presence check.
+ *   Use this when calling from a context where human_summary has not been generated yet
+ *   (e.g. the assembler evaluates structured_analytics before the summary step).
  */
 export const shouldNormalizeAnalytics = (
   analyticsData: any,
   weeklyData: UserWeeklyData | UserMonthlyData,
+  options?: { skipHumanSummaryCheck?: boolean },
 ): boolean => {
   const issues: NormalizationIssue[] = [];
 
@@ -174,7 +179,7 @@ export const shouldNormalizeAnalytics = (
       corrected: false,
     });
   }
-  if (!analyticsData.human_summary) {
+  if (!options?.skipHumanSummaryCheck && !analyticsData.human_summary) {
     issues.push({
       type: "structural",
       severity: "error",

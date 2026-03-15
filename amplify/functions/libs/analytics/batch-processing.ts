@@ -5,6 +5,8 @@ import {
   QueryAllUsersResult,
   saveWeeklyAnalytics,
   saveMonthlyAnalytics,
+  getWeeklyAnalytics,
+  getMonthlyAnalytics,
 } from "../../../dynamodb/operations";
 import {
   fetchUserWeeklyData,
@@ -18,8 +20,12 @@ import {
   MonthlyAnalytics,
 } from "./types";
 import { storeDebugDataInS3 } from "../api-helpers";
-import { generateMonthId } from "./date-utils";
+import { generateMonthId, getCurrentWeekRange } from "./date-utils";
 import { logger } from "../logger";
+
+// Minimum remaining Lambda time (ms) required before starting a new user.
+// Prevents a new user from starting when there is insufficient budget to complete it.
+const MIN_REMAINING_TIME_MS = 180_000;
 
 /**
  * Helper function to generate week ID from date range
@@ -66,13 +72,52 @@ const generateWeekId = (weekStart: Date): string => {
 export const processBatch = async (
   users: UserProfile[],
   batchNumber: number,
+  getRemainingTimeInMillis?: () => number,
 ): Promise<number> => {
   logger.info(`📊 Processing batch ${batchNumber} with ${users.length} users`);
+
+  // Compute the current weekId once for the entire batch (all users share the same period)
+  const currentWeekRange = getCurrentWeekRange();
+  const currentWeekId = generateWeekId(currentWeekRange.weekStart);
 
   let processedCount = 0;
 
   for (const user of users) {
+    // Time guard: if Lambda is running low on time, stop processing to avoid a timeout mid-user
+    if (getRemainingTimeInMillis) {
+      const remainingMs = getRemainingTimeInMillis();
+      if (remainingMs < MIN_REMAINING_TIME_MS) {
+        logger.warn(
+          `⏱️ Insufficient Lambda time remaining (${Math.round(remainingMs / 1000)}s). ` +
+            `Stopping batch ${batchNumber} after ${processedCount} users. ` +
+            `Remaining users will be picked up on next invocation (idempotency ensures no re-processing).`,
+        );
+        break;
+      }
+    }
+
     try {
+      // Idempotency check: skip user if analytics for this week were already generated
+      try {
+        const existingAnalytics = await getWeeklyAnalytics(
+          user.userId,
+          currentWeekId,
+        );
+        if (existingAnalytics) {
+          logger.info(
+            `⏭️ Skipping user ${user.userId}: weekly analytics for ${currentWeekId} already exist (idempotency).`,
+          );
+          processedCount++;
+          continue;
+        }
+      } catch (idempotencyError) {
+        // Log but do not skip -- safer to re-process than to silently miss a user
+        logger.warn(
+          `⚠️ Idempotency check failed for user ${user.userId}, proceeding with generation:`,
+          idempotencyError,
+        );
+      }
+
       logger.info(`🔍 Processing user: ${user.userId} (${user.email})`);
 
       // Fetch all weekly data for this user
@@ -224,12 +269,25 @@ export const processBatch = async (
  */
 export const processAllUsersInBatches = async (
   batchSize: number = 50,
+  getRemainingTimeInMillis?: () => number,
 ): Promise<number> => {
   let totalProcessedUsers = 0;
   let lastEvaluatedKey: any = undefined;
   let batchNumber = 0;
 
   do {
+    // Time guard at the batch loop level: stop fetching new batches if time is low
+    if (getRemainingTimeInMillis) {
+      const remainingMs = getRemainingTimeInMillis();
+      if (remainingMs < MIN_REMAINING_TIME_MS) {
+        logger.warn(
+          `⏱️ Insufficient Lambda time remaining (${Math.round(remainingMs / 1000)}s). ` +
+            `Stopping after ${batchNumber} batches. Remaining users will be handled on next invocation.`,
+        );
+        break;
+      }
+    }
+
     batchNumber++;
     const result: QueryAllUsersResult = await queryAllUsers(
       batchSize,
@@ -237,7 +295,11 @@ export const processAllUsersInBatches = async (
     );
 
     if (result.users.length > 0) {
-      const processedInBatch = await processBatch(result.users, batchNumber);
+      const processedInBatch = await processBatch(
+        result.users,
+        batchNumber,
+        getRemainingTimeInMillis,
+      );
       totalProcessedUsers += processedInBatch;
     }
 
@@ -257,15 +319,54 @@ export const processAllUsersInBatches = async (
 export const processMonthlyBatch = async (
   users: UserProfile[],
   batchNumber: number,
+  getRemainingTimeInMillis?: () => number,
 ): Promise<number> => {
   logger.info(
     `📊 Processing monthly batch ${batchNumber} with ${users.length} users`,
   );
 
+  // Compute the current monthId once for the entire batch (all users share the same period)
+  const now = new Date();
+  const currentMonthId = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+
   let processedCount = 0;
 
   for (const user of users) {
+    // Time guard: if Lambda is running low on time, stop processing to avoid a timeout mid-user
+    if (getRemainingTimeInMillis) {
+      const remainingMs = getRemainingTimeInMillis();
+      if (remainingMs < MIN_REMAINING_TIME_MS) {
+        logger.warn(
+          `⏱️ Insufficient Lambda time remaining (${Math.round(remainingMs / 1000)}s). ` +
+            `Stopping monthly batch ${batchNumber} after ${processedCount} users. ` +
+            `Remaining users will be picked up on next invocation (idempotency ensures no re-processing).`,
+        );
+        break;
+      }
+    }
+
     try {
+      // Idempotency check: skip user if analytics for this month were already generated
+      try {
+        const existingAnalytics = await getMonthlyAnalytics(
+          user.userId,
+          currentMonthId,
+        );
+        if (existingAnalytics) {
+          logger.info(
+            `⏭️ Skipping user ${user.userId}: monthly analytics for ${currentMonthId} already exist (idempotency).`,
+          );
+          processedCount++;
+          continue;
+        }
+      } catch (idempotencyError) {
+        // Log but do not skip -- safer to re-process than to silently miss a user
+        logger.warn(
+          `⚠️ Monthly idempotency check failed for user ${user.userId}, proceeding with generation:`,
+          idempotencyError,
+        );
+      }
+
       logger.info(`🔍 Processing user: ${user.userId} (${user.email})`);
 
       // Fetch all monthly data for this user
@@ -419,12 +520,25 @@ export const processMonthlyBatch = async (
  */
 export const processAllUsersInBatchesMonthly = async (
   batchSize: number = 50,
+  getRemainingTimeInMillis?: () => number,
 ): Promise<number> => {
   let totalProcessedUsers = 0;
   let lastEvaluatedKey: any = undefined;
   let batchNumber = 0;
 
   do {
+    // Time guard at the batch loop level: stop fetching new batches if time is low
+    if (getRemainingTimeInMillis) {
+      const remainingMs = getRemainingTimeInMillis();
+      if (remainingMs < MIN_REMAINING_TIME_MS) {
+        logger.warn(
+          `⏱️ Insufficient Lambda time remaining (${Math.round(remainingMs / 1000)}s). ` +
+            `Stopping monthly processing after ${batchNumber} batches. Remaining users will be handled on next invocation.`,
+        );
+        break;
+      }
+    }
+
     batchNumber++;
     const result: QueryAllUsersResult = await queryAllUsers(
       batchSize,
@@ -435,6 +549,7 @@ export const processAllUsersInBatchesMonthly = async (
       const processedInBatch = await processMonthlyBatch(
         result.users,
         batchNumber,
+        getRemainingTimeInMillis,
       );
       totalProcessedUsers += processedInBatch;
     }

@@ -7,13 +7,7 @@ import {
   queryCoachConversationSummaries,
   queryWorkoutSummaries,
 } from "../../../dynamodb/operations";
-import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
-import type { BedrockToolUseResult } from "../api-helpers";
-import {
-  shouldNormalizeAnalytics,
-  normalizeAnalytics,
-  generateNormalizationSummary,
-} from "./normalization";
+import { assembleAnalytics } from "./assembler";
 import {
   getCurrentWeekRange,
   getLastNWeeksRange,
@@ -22,7 +16,6 @@ import {
   getCurrentMonthRange,
   getHistoricalMonthRange,
   getUserTimezoneOrDefault,
-  convertUtcToUserDate,
   parseCompletedAt,
 } from "./date-utils";
 import { Workout } from "../workout/types";
@@ -40,10 +33,6 @@ import {
   UserMonthlyData,
   WorkoutSummary,
 } from "./types";
-import {
-  getAnalyticsSchemaWithContext,
-  ANALYTICS_GENERATION_TOOL,
-} from "../schemas/universal-analytics-schema";
 import { logger } from "../logger";
 
 /**
@@ -603,328 +592,27 @@ export const fetchUserWeeklyData = async (
 };
 
 /**
- * Build analytics prompt from user weekly data
- */
-const buildAnalyticsPrompt = (
-  weeklyData: UserWeeklyData | UserMonthlyData,
-  userProfile?: any,
-  criticalTrainingDirective?: { content: string; enabled: boolean },
-): string => {
-  // Build directive section if enabled
-  const directiveSection =
-    criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
-      ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
-
-${criticalTrainingDirective.content}
-
-This directive takes precedence over all other instructions except safety constraints. Apply this when analyzing and summarizing the training data.
-
----
-
-`
-      : "";
-
-  // Build comprehensive athlete profile from AI profile + memories
-  let athleteProfile = "";
-
-  // Add AI-generated athlete profile if available
-  if (userProfile?.athleteProfile?.summary) {
-    athleteProfile += `ATHLETE PROFILE:\n${userProfile.athleteProfile.summary}\n\n`;
-  }
-
-  // Add structured memories
-  if (weeklyData.userContext.memories.length > 0) {
-    athleteProfile += `DETAILED CONTEXT:\n`;
-    athleteProfile += weeklyData.userContext.memories
-      .map((memory) => `${memory.memoryType.toUpperCase()}: ${memory.content}`)
-      .join("\n");
-  }
-
-  // Fallback if no profile data available
-  if (!athleteProfile.trim()) {
-    athleteProfile = "No specific athlete profile available.";
-  }
-
-  // Determine period type for labels
-  const isPeriodWeekly = "weekRange" in weeklyData;
-  const period = isPeriodWeekly ? "weekly" : ("monthly" as const);
-  const periodLabel = isPeriodWeekly ? "THIS WEEK'S" : "THIS MONTH'S";
-  const historicalLabel = isPeriodWeekly ? "PREVIOUS WEEKS" : "PREVIOUS MONTHS";
-
-  // Format current period workout summaries (convert to user's timezone)
-  const currentPeriodWorkouts = weeklyData.workouts.summaries
-    .map((summary) => {
-      // Convert UTC timestamp to user's timezone date
-      const userTimezone = summary.userTimezone || "America/Los_Angeles";
-      const localDate = convertUtcToUserDate(summary.date, userTimezone);
-      return `${localDate} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"}) [workout_id: ${summary.workoutId}]\n${summary.summary}`;
-    })
-    .join("\n\n");
-
-  // Format historical workout summaries chronologically (convert to user's timezone)
-  const historicalSummaries = weeklyData.historical.workoutSummaries
-    .map((summary) => {
-      // Convert UTC timestamp to user's timezone date
-      const userTimezone = summary.userTimezone || "America/Los_Angeles";
-      const localDate = convertUtcToUserDate(summary.date, userTimezone);
-      return `${localDate} - ${summary.workoutName || "Workout"}: ${summary.summary}`;
-    })
-    .join("\n\n");
-
-  // Format coaching conversation summaries
-  const coachingContext = weeklyData.coaching.summaries
-    .map((summary) => {
-      return `Conversation Summary (${summary.metadata.createdAt.toISOString().split("T")[0]}):\n${summary.narrative}\n\nKey Insights: ${summary.structuredData.key_insights.join(", ")}`;
-    })
-    .join("\n\n");
-
-  return `${directiveSection}You are an elite strength and conditioning analyst examining training data from workout and conversation summaries.
-
-ATHLETE CONTEXT:
-${athleteProfile}
-
-COACHING CONVERSATION SUMMARIES (Recent Period):
-${coachingContext || "No recent coaching conversation summaries available."}
-
-${periodLabel} WORKOUT SUMMARIES:
-${currentPeriodWorkouts}
-
-${historicalLabel} WORKOUT SUMMARIES (for trending):
-${historicalSummaries || "No historical data available."}
-
-ANALYZE BASED ON AVAILABLE UWS FIELDS:
-
-1. CORE VOLUME CALCULATIONS
-From UWS movement data, calculate:
-- Total volume INCLUDING:
-  * Complete reps (sets × reps × weight)
-  * Failed reps (if marked - count as 0.5 for volume)
-  * Partial reps (if marked - adjust multiplier)
-  * Assisted reps (if marked - reduce load accordingly)
-  * Drop sets/rest-pause sets (aggregate all work)
-- Exercise order impact (performance degradation in later exercises)
-- Warm-up volume (if tracked separately - exclude from working volume)
-- Competition/test attempts vs training volume
-
-2. ADVANCED SET ANALYSIS
-Detect and handle special set types:
-- Cluster sets (multiple mini-sets with short rest)
-- Supersets/giant sets (from rest_seconds between different movements)
-- Complexes (multiple movements without rest)
-- EMOM/Tabata/Interval work (from workout_structure)
-- Time-restricted sets (AMRAP sets within strength work)
-
-3. PROGRESSIVE OVERLOAD TRACKING
-Week-over-week comparison for repeated movements:
-- Volume progression per movement_id
-- Intensity progression (weight increases)
-- Density progression (same work, less time)
-- Rep quality progression (less failed/assisted reps)
-- Technical progression (from coach notes)
-
-4. WORKOUT SEGMENT ANALYSIS
-For multi-part workouts in UWS:
-- Part A (typically strength) metrics
-- Part B (typically conditioning) metrics
-- Buy-in/Cash-out work (if marked)
-- Skill/technique work (different analysis than strength)
-- Accessory work completion rate
-
-5. FAILURE & INTENSITY ANALYSIS
-Critical for understanding true effort:
-- Failed rep patterns (which set, which exercise)
-- Technical failure vs muscular failure (from notes)
-- Rep drop-off across sets (fatigue accumulation)
-- Time to complete sets (rest-pause indicators)
-- Grinding reps (if bar velocity or time per rep tracked)
-
-6. PERIODIZATION DETECTION
-Identify training phase from patterns:
-- Accumulation (high volume, moderate intensity)
-- Intensification (lower volume, higher intensity)
-- Realization/Peaking (very high intensity, low volume)
-- Deload (>40% volume reduction)
-- Testing week (1RM attempts, benchmark WODs)
-
-${getAnalyticsSchemaWithContext("generation", period)}
-
-CRITICAL ANALYSIS RULES:
-1. ALWAYS compare to previous weeks - never analyze in isolation
-2. Detect workout structure (straight sets vs circuits vs supersets) from rest patterns
-3. Flag any weight that's >20% different from recent history as potential error
-4. Separate competition/testing from training volume
-5. Account for failed work differently than completed work
-6. Recognize deload weeks and adjust expectations accordingly
-7. Use movement_id relationships (e.g., back_squat_variants) if available
-8. Calculate true training density (exclude excessive rest, setup time)
-9. Identify repeated workout templates for accurate comparison
-10. Consider workout time of day if it affects performance
-11. Track exercise substitutions as continuous progression (e.g., box squat → regular squat)
-12. Note when equipment limitations affect programming (e.g., "max weight available")
-
-ERROR HANDLING:
-- If data seems impossible (e.g., 1000lb bench press), flag but still process
-- If movement_id unknown, attempt to categorize by name pattern
-- If no previous data for comparison, note as "baseline week"
-- If workout incomplete, calculate based on completed portion
-- Handle timezone differences in workout timestamps
-
-DATE VALIDATION REQUIREMENTS:
-- All dates in raw_aggregations.daily_volume MUST be within the specified week range
-- Week range is provided in the metadata.date_range (start to end dates)
-- Exclude any daily volume entries with dates outside this range
-- If historical data spans multiple periods, only include current week data in daily_volume
-- Use YYYY-MM-DD format for all dates
-
-DAILY RPE/INTENSITY CALCULATION REQUIREMENTS:
-- For each day in daily_volume, calculate avg_rpe and avg_intensity from workout performance_metrics
-- avg_rpe: Average of all workouts' performance_metrics.perceived_exertion for that date (null if no RPE data)
-- avg_intensity: Average of all workouts' performance_metrics.intensity for that date (null if no intensity data)
-- workout_count: Total number of completed workouts for that date (integer, minimum 0)
-- primary_workout_id: Use the ACTUAL workout_id from the workout data (shown in square brackets like [workout_id: workout_userId_12345_abc]) for the first chronologically completed workout on that date. NEVER generate a fake workout ID. Copy the exact workout_id string. Set to null if no workouts on that date.
-- Handle multiple workouts per day by averaging RPE/intensity values
-- Days with no workouts should still appear with workout_count: 0 and null values for averages
-
-OUTPUT REQUIREMENT:
-You MUST call the generate_analytics tool with your complete analysis. Do NOT respond with text — call the tool only.
-
-`;
-};
-
-/**
- * Step 9-11: Generate analytics using LLM
+ * Generate analytics for a user by delegating to the assembler.
+ *
+ * The assembler replaces the former monolithic Bedrock call with three
+ * parallel focused sub-task calls followed by a human summary call.
+ * See amplify/functions/libs/analytics/assembler.ts for implementation details.
  */
 export const generateAnalytics = async (
   weeklyData: UserWeeklyData | UserMonthlyData,
   userProfile?: any,
 ): Promise<any> => {
   const userId = weeklyData.userId;
-
   logger.info(
-    `🧠 Generating analytics for user ${userId} using Claude Sonnet 4 with thinking`,
+    `Generating ${"weekRange" in weeklyData ? "weekly" : "monthly"} analytics for user ${userId} via assembler.`,
   );
 
   try {
-    // Build the analytics prompt with user profile and critical training directive
-    const analyticsPrompt = buildAnalyticsPrompt(
-      weeklyData,
-      userProfile,
-      userProfile?.criticalTrainingDirective,
-    );
-
-    logger.info(
-      `📝 Analytics prompt built: ${analyticsPrompt.length} characters`,
-    );
-
-    const analyticsResult = (await callBedrockApi(
-      analyticsPrompt,
-      "analytics_generation",
-      MODEL_IDS.PLANNER_MODEL_FULL,
-      {
-        temperature: TEMPERATURE_PRESETS.STRUCTURED,
-        enableThinking: true,
-        tools: ANALYTICS_GENERATION_TOOL,
-        expectedToolName: "generate_analytics",
-        skipValidation: true, // AJV throws before normalization can run; normalizeAnalytics is the intended enforcement layer
-        skipToolEnforcement: true, // schema exceeds Bedrock's ~24 optional-parameter grammar limit; unguarded mode avoids compilation errors
-      },
-    )) as BedrockToolUseResult;
-
-    logger.info(`✅ Analytics tool result received for user ${userId}`);
-
-    let analyticsData = analyticsResult.input;
-
-    // RETRY STEP - If the model returned text instead of calling the tool (input is {}),
-    // pass its analysis back as context and ask it to call the tool explicitly.
-    // This is a known failure mode when skipToolEnforcement is true: the model does the
-    // full analysis in <thinking> then responds conversationally instead of using the tool.
-    if (
-      (!analyticsData || Object.keys(analyticsData).length === 0) &&
-      analyticsResult.textResponse
-    ) {
-      logger.warn(
-        `⚠️ Tool-use failed on first attempt for user ${userId} (model returned text). Retrying with prior analysis as context.`,
-        { textResponseLength: analyticsResult.textResponse.length },
-      );
-
-      const retryPrompt =
-        `You previously analyzed the athlete's training data and produced the following analysis:\n\n` +
-        analyticsResult.textResponse.substring(0, 40000) +
-        `\n\nYou MUST now call the generate_analytics tool with the structured data from your analysis above. Do NOT respond with text — call the tool only.`;
-
-      const retryResult = (await callBedrockApi(
-        retryPrompt,
-        "analytics_generation_retry",
-        MODEL_IDS.PLANNER_MODEL_FULL,
-        {
-          temperature: TEMPERATURE_PRESETS.STRUCTURED,
-          enableThinking: false, // disable thinking on retry to reduce text-mode tendency
-          tools: ANALYTICS_GENERATION_TOOL,
-          expectedToolName: "generate_analytics",
-          skipValidation: true,
-          skipToolEnforcement: true,
-        },
-      )) as BedrockToolUseResult;
-
-      if (retryResult.input && Object.keys(retryResult.input).length > 0) {
-        logger.info(
-          `✅ Analytics retry succeeded for user ${userId} — tool called with ${Object.keys(retryResult.input).length} top-level keys`,
-        );
-        analyticsData = retryResult.input;
-      } else {
-        logger.warn(
-          `⚠️ Analytics retry also failed for user ${userId} — falling through to normalization`,
-        );
-      }
-    }
-
-    // NORMALIZATION STEP - Normalize analytics data for schema compliance
-    let finalAnalyticsData = analyticsData;
-    let normalizationSummary = "Analytics normalization skipped";
-
-    if (shouldNormalizeAnalytics(analyticsData, weeklyData)) {
-      logger.info("🔧 Running normalization on analytics data..", {
-        userId,
-      });
-
-      const normalizationResult = await normalizeAnalytics(
-        analyticsData,
-        weeklyData,
-        userId,
-        true, // Enable thinking for analytics normalization
-      );
-      normalizationSummary = generateNormalizationSummary(normalizationResult);
-
-      logger.info("Analytics normalization completed:", {
-        isValid: normalizationResult.isValid,
-        issuesFound: normalizationResult.issues.length,
-        correctionsMade: normalizationResult.issues.filter((i) => i.corrected)
-          .length,
-        normalizationConfidence: normalizationResult.confidence,
-        summary: normalizationSummary,
-      });
-
-      // Use normalized data if normalization was successful
-      if (
-        normalizationResult.isValid ||
-        normalizationResult.issues.some((i) => i.corrected)
-      ) {
-        finalAnalyticsData = normalizationResult.normalizedData;
-        logger.info(`✅ Using normalized analytics data for user ${userId}`);
-      } else {
-        logger.warn(
-          `⚠️  Analytics normalization failed, using original data for user ${userId}`,
-        );
-      }
-    } else {
-      logger.info(
-        `✅ Analytics normalization skipped for user ${userId}: no critical issues detected`,
-      );
-    }
-
-    return finalAnalyticsData;
+    const result = await assembleAnalytics(weeklyData, userProfile);
+    logger.info(`Analytics assembly complete for user ${userId}.`);
+    return result;
   } catch (error) {
-    logger.error(`❌ Failed to generate analytics for user ${userId}:`, error);
+    logger.error(`Failed to generate analytics for user ${userId}:`, error);
     throw error;
   }
 };

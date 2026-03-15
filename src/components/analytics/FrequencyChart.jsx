@@ -106,9 +106,15 @@ export default function FrequencyChart({
                   key={i}
                   fill={
                     entry.sessions >= weeklyTarget
-                      ? chartColors.cyan
-                      : `${chartColors.cyan}99` // 60% opacity when below target
+                      ? `${chartColors.cyan}33`
+                      : `${chartColors.cyan}1A`
                   }
+                  stroke={
+                    entry.sessions >= weeklyTarget
+                      ? chartColors.cyan
+                      : `${chartColors.cyan}80`
+                  }
+                  strokeWidth={1.5}
                 />
               ))}
             </Bar>

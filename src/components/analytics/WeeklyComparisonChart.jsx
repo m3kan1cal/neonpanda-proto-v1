@@ -172,8 +172,10 @@ function MiniMetricChart({ label, unit, seriesData }) {
               {seriesData.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill={entry.color}
-                  fillOpacity={entry.name === "4W Avg" ? 0.6 : 1}
+                  fill={`${entry.color}${entry.name === "4W Avg" ? "20" : "33"}`}
+                  stroke={entry.color}
+                  strokeWidth={1.5}
+                  strokeOpacity={entry.name === "4W Avg" ? 0.5 : 1}
                 />
               ))}
             </Bar>

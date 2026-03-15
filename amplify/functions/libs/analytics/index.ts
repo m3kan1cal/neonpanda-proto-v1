@@ -5,7 +5,13 @@
  * batch operations, and user data aggregation.
  */
 
-export { processBatch, processAllUsersInBatches, processMonthlyBatch, processAllUsersInBatchesMonthly } from "./batch-processing";
+export {
+  processBatch,
+  processAllUsersInBatches,
+  processMonthlyBatch,
+  processAllUsersInBatchesMonthly,
+} from "./batch-processing";
+export { assembleAnalytics } from "./assembler";
 
 export {
   WeeklyAnalyticsEvent,
