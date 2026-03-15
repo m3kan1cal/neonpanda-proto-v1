@@ -6,7 +6,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { navigationPatterns } from "../../utils/ui/uiPatterns";
 import { logger } from "../../utils/logger";
-import { TrainingReportsIcon, TrainingPulseIcon } from "../themes/SynthwaveComponents";
+import {
+  TrainingReportsIcon,
+  TrainingPulseIcon,
+} from "../themes/SynthwaveComponents";
 import {
   navigationItems,
   isItemVisible,
@@ -132,7 +135,11 @@ const MoreMenu = () => {
   // Render a standalone reports sub-item (Training Reports / Training Pulse)
   const renderReportsSubItem = ({ id, label, getRoute, Icon }) => {
     const route = getRoute(context);
-    const active = isRouteActive(route, location.pathname, context.currentSearchParams);
+    const active = isRouteActive(
+      route,
+      location.pathname,
+      context.currentSearchParams,
+    );
     const colorClasses = getItemColorClasses("pink", active);
     const getActiveClasses = () =>
       "bg-synthwave-neon-pink/10 border-t-2 border-b-2 border-synthwave-neon-pink/60";
@@ -175,10 +182,6 @@ const MoreMenu = () => {
       </button>
     );
   };
-
-  const TrainingReportsMenuIcon = TrainingReportsIcon;
-
-  const TrainingPulseMenuIcon = TrainingPulseIcon;
 
   // Render menu item
   const renderMenuItem = (item) => {
@@ -346,14 +349,14 @@ const MoreMenu = () => {
                       label: "Training Reports",
                       getRoute: (ctx) =>
                         `/training-grounds/reports?userId=${ctx.userId}&coachId=${ctx.coachId}`,
-                      Icon: TrainingReportsMenuIcon,
+                      Icon: TrainingReportsIcon,
                     }),
                     renderReportsSubItem({
                       id: "training-pulse",
                       label: "Training Pulse",
                       getRoute: (ctx) =>
                         `/training-grounds/training-pulse?userId=${ctx.userId}&coachId=${ctx.coachId}`,
-                      Icon: TrainingPulseMenuIcon,
+                      Icon: TrainingPulseIcon,
                     }),
                   ];
                 }
