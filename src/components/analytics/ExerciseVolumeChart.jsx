@@ -160,25 +160,20 @@ export default function ExerciseVolumeChart({
             value={`${formatCompact(avgPrimary)}${isRepsMode ? " reps" : ""}`}
             color={chartColors.purple}
           />
-          <DeltaStat
-            data={chartData}
-            primaryKey={primaryKey}
-            isRepsMode={isRepsMode}
-          />
+          <DeltaStat data={chartData} primaryKey={primaryKey} />
         </div>
       )}
     </ChartCard>
   );
 }
 
-function DeltaStat({ data, primaryKey = "tonnage", isRepsMode = false }) {
+function DeltaStat({ data, primaryKey = "tonnage" }) {
   if (data.length < 2) return null;
   const prev = data[data.length - 2]?.[primaryKey] || 0;
   const curr = data[data.length - 1]?.[primaryKey] || 0;
   if (prev === 0) return null;
   const pct = Math.round(((curr - prev) / prev) * 100);
   const isPositive = pct >= 0;
-  const unit = isRepsMode ? "reps" : "lbs";
   return (
     <div className="text-center">
       <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
@@ -189,7 +184,7 @@ function DeltaStat({ data, primaryKey = "tonnage", isRepsMode = false }) {
         style={{ color: isPositive ? chartColors.green : chartColors.warning }}
       >
         {isPositive ? "+" : ""}
-        {pct}% {unit}
+        {pct}%
       </p>
     </div>
   );
