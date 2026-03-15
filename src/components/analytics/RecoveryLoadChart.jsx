@@ -240,12 +240,16 @@ function RecoveryTooltip({ active, payload, label }) {
         if (entry.name === "A:C Ratio") {
           formatted = entry.value.toFixed(2);
           // Add zone label
-          const zone =
-            entry.value >= ZONE_GREEN_LOW && entry.value <= ZONE_GREEN_HIGH
-              ? " (safe)"
-              : entry.value <= ZONE_YELLOW_HIGH
-                ? " (caution)"
-                : " (danger)";
+          let zone;
+          if (entry.value >= ZONE_GREEN_LOW && entry.value <= ZONE_GREEN_HIGH) {
+            zone = " (safe)";
+          } else if (entry.value < ZONE_GREEN_LOW) {
+            zone = " (low)";
+          } else if (entry.value <= ZONE_YELLOW_HIGH) {
+            zone = " (caution)";
+          } else {
+            zone = " (danger)";
+          }
           formatted += zone;
         }
         return (
