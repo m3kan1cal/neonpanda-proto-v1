@@ -396,7 +396,7 @@ export const inlineEditPatterns = {
 export const imagePreviewPatterns = {
   // Image preview container - for uploaded/selected images (overflow-visible to show remove button)
   container:
-    "relative shrink-0 w-16 h-16 rounded-md border border-synthwave-neon-cyan/30 bg-synthwave-bg-primary",
+    "relative shrink-0 w-16 h-16 rounded-md overflow-hidden border border-synthwave-neon-cyan/30 bg-synthwave-bg-primary",
 
   // Image element - to match container
   image: "w-full h-full object-cover",

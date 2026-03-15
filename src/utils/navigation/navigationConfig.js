@@ -93,7 +93,7 @@ export const navigationItems = {
       label: "Reports & Analytics",
       icon: ReportsIconTiny,
       getRoute: (ctx) =>
-        `/training-grounds/reports?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+        `/training-grounds/training-pulse?userId=${ctx.userId}&coachId=${ctx.coachId}`,
       requiresAuth: true,
       requiresCoach: true,
       badge: (ctx) => ctx.newItemCounts.reports || 0, // Always show count

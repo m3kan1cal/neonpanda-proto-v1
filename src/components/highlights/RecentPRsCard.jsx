@@ -12,6 +12,8 @@ import {
 } from "../themes/SynthwaveComponents";
 import { getPrTypeLabel, getPrUnit } from "../../utils/workout/constants";
 import { formatRelativeTime } from "../../utils/dateUtils";
+import Sparkline from "../analytics/Sparkline";
+import { chartColors } from "../analytics/chartTheme";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -71,6 +73,7 @@ export default function RecentPRsCard({
   userId,
   coachId,
   unitSystem = "imperial",
+  frequencySparkline = [], // [{ value }] for session frequency trend
 }) {
   const navigate = useNavigate();
   const [showAll, setShowAll] = useState(false);
@@ -109,13 +112,28 @@ export default function RecentPRsCard({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <span className="text-synthwave-neon-pink shrink-0 mt-1.5">
-          <TrophySolidIcon />
-        </span>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Recent PRs
-        </h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-start space-x-3">
+          <span className="text-synthwave-neon-pink shrink-0 mt-1.5">
+            <TrophySolidIcon />
+          </span>
+          <h3 className="font-header font-bold text-white text-lg uppercase">
+            Recent PRs
+          </h3>
+        </div>
+        {frequencySparkline.length >= 2 && (
+          <div className="flex items-center gap-1.5">
+            <span className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wider">
+              Freq
+            </span>
+            <Sparkline
+              data={frequencySparkline}
+              color={chartColors.cyan}
+              width={64}
+              height={22}
+            />
+          </div>
+        )}
       </div>
 
       {/* PR achievement cards -- 2-column grid */}

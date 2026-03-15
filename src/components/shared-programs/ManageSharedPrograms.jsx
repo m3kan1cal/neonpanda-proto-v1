@@ -523,7 +523,7 @@ function ManageSharedPrograms() {
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
               </div>
             ))}

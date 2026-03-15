@@ -231,7 +231,9 @@ export async function updateMemory(
     throw new Error(`Memory ${memoryId} not found for user ${userId}`);
   }
 
-  let tagUpdates: Partial<UserMemory> = {};
+  let tagUpdates: Omit<Partial<UserMemory>, "metadata"> & {
+    metadata?: Partial<UserMemory["metadata"]>;
+  } = {};
 
   if (usageContext) {
     // Atomically increment usage count — separate DynamoDB ADD to prevent race conditions

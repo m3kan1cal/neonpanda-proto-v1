@@ -11,6 +11,190 @@ import { logger } from "./logger";
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260314-beta",
+    date: "2026-03-14",
+    changes: {
+      added: [],
+      changed: [
+        "Critical training directive from user profile is now passed into coach creator (build-coach-config), coach creator session agent, and program designer session agent prompts so coach creation and program design respect the user's non-negotiable training instruction.",
+      ],
+      fixed: [
+        "Workout edit completedAt precision loss when saving from the edit modal; timestamp now preserved correctly.",
+        "Missing null guard in memory edit flow that could cause errors when editing memories.",
+        "Memory update logic: usage count increment and metadata/tag merge refactored to match updateWorkout pattern (load, deepMerge updates, save); Pinecone sync moved to caller (memory-processing) after DynamoDB update.",
+        "Duplicate SparklesIcon and other shared icon usage consolidated; dead code removed.",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260313-beta",
+    date: "2026-03-13",
+    changes: {
+      added: [],
+      changed: [],
+      fixed: ["Miscellaneous UI issues."],
+    },
+  },
+  {
+    version: "Release v1.0.20260312-beta",
+    date: "2026-03-12",
+    changes: {
+      added: [
+        "Edit modals for programs, conversations, and memories with PUT /users/{userId}/memories/{memoryId} backend support; memory update uses deepMerge and optional usage-context tagging.",
+        "Workout edit modal with ellipsis menu on manage workouts page.",
+      ],
+      changed: [
+        "Weekly day-grid heat map replaced with per-workout heat map on program/workout views.",
+        "All-rest-day card aligned to workout card grid layout; one rest card per program; allRestDays special case removed.",
+        "borderAccentCompact constant introduced to replace fragile string-replace logic.",
+        "Skeleton card padding aligned to real cards; badge overflow on mobile navigation fixed.",
+      ],
+      fixed: ["Miscellaneous UI issues."],
+    },
+  },
+  {
+    version: "Release v1.0.20260311-beta",
+    date: "2026-03-11",
+    changes: {
+      added: [],
+      changed: [
+        "App background changed from navy to purple-to-dark-purple gradient; gradient stops corrected for consistent purple appearance, with gutters, overscroll, and brightness tuned.",
+        "Neon glass card border reduced to 1px with hover lift effect; card borders muted against the new purple background.",
+      ],
+      fixed: ["Reporting bugs."],
+    },
+  },
+  {
+    version: "Release v1.0.20260310-beta",
+    date: "2026-03-10",
+    changes: {
+      added: [
+        "Social docs.",
+        "Workout page UI improvements: modal overlay, markdown, and intel section.",
+      ],
+      changed: [
+        "Send button moved inside chat input; message-to-input gap reduced.",
+      ],
+      fixed: [
+        "Miscellaneous UI issues.",
+        "Broken CSS comments in LinkedIn graphics.",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260309-beta",
+    date: "2026-03-09",
+    changes: {
+      added: [],
+      changed: [],
+      fixed: [
+        "Duplicate SparklesIcon consolidated into shared module.",
+        "Briefing dismissed state now resets when briefing source changes.",
+        "Miscellaneous issues (parts 1 and 2).",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260308-beta",
+    date: "2026-03-08",
+    changes: {
+      added: ["Training intel on Training Grounds."],
+      changed: [],
+      fixed: ["Miscellaneous issues (parts 1 and 2)."],
+    },
+  },
+  {
+    version: "Release v1.0.20260307-beta",
+    date: "2026-03-07",
+    changes: {
+      added: [
+        "Fullscreen workout notes in Tiptap editor with minHeight placeholder to prevent layout collapse.",
+      ],
+      changed: [
+        "Training Grounds messaging updated.",
+        "Breadcrumb spacing and useChatScroll hook dependencies adjusted; unused ChevronRightIcon removed from Breadcrumbs.",
+        "Scroll behavior: hasScrolledOnLoad gated on message availability; initial load and streaming scroll fixes so users can scroll up during streaming; scroll logic duplication removed; scrollToBottom parameter handling fixed in CoachCreator and ProgramDesigner.",
+        "dependencyProps spread in useEffect dependency array to prevent unnecessary effect firings; duplicate messagesEndRef declarations removed from ProgramDesigner and CoachCreator.",
+      ],
+      fixed: [
+        "Early ref mutation breaking instant scroll on initial load.",
+        "buildEvent.programId included in complete event fallback chain.",
+        "Miscellaneous issues.",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260306-beta",
+    date: "2026-03-06",
+    changes: {
+      added: [
+        "Program designer migrated to conversation agent (streaming, tool-based workflow).",
+        "Additional methodologies in knowledge base.",
+      ],
+      changed: [],
+      fixed: [
+        "Duplicated helper functions and empty conversationId; redundant getTodoProgress calls; duplicated rest-day filter logic extracted.",
+        "buildEvent.programId in complete event fallback chain.",
+        "Build issues.",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260305-beta",
+    date: "2026-03-05",
+    changes: {
+      added: [
+        "Coach creator migrated to agent-based workflow (streaming, tool-based coach config generation).",
+      ],
+      changed: [],
+      fixed: [
+        "Message loss when completing coach intake.",
+        "Double DynamoDB serialization in coach creator flow.",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260303-beta",
+    date: "2026-03-03",
+    changes: {
+      added: [],
+      changed: ["Fonts migrated to new families across the site."],
+      fixed: ["UI empty states.", "Bugbot and copilot issues (parts 1 and 2)."],
+    },
+  },
+  {
+    version: "Release v1.0.20260302-beta",
+    date: "2026-03-02",
+    changes: {
+      added: [],
+      changed: ["Fonts updated site-wide (font upgrade feature)."],
+      fixed: [
+        "Conversation summary bug.",
+        "Various bugs (parts 1–5).",
+        "Bugbot and copilot issues (parts 1–5).",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260228-beta",
+    date: "2026-02-28",
+    changes: {
+      added: [
+        "v2 theme scaffolding for future retro work; shared CopyButton for AI messages (replacing duplicated logic in CoachConversations, CoachCreator, ProgramDesigner).",
+      ],
+      changed: [
+        "Desktop sidebar redesigned as floating icon rail with hover expansion; content margin and breadcrumbs aligned to md:ml-20 / md:left-20.",
+        "Chat UI polish: sharp corners, mobile chat bubbles, input layout consistency; AI chat bubble styling removed; copy button added to coach chat components.",
+        "Tool response validation: normalizeSchemaArrayFields moved to object-utils; invoked before validateToolResponse; conversation summary tool skips client-side AJV validation.",
+      ],
+      fixed: [
+        "TiptapEditor scroll-to-bottom and space-swallowing on keypress in chat input.",
+        "Non-array model responses normalized before schema validation; nullable array fields (e.g. injuries, equipment_used) handled correctly.",
+        "Dependencies updated.",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260301-beta",
     date: "2026-03-01",
     changes: {
