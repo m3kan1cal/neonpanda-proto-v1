@@ -125,13 +125,14 @@ export default function Analytics() {
   useEffect(() => {
     if (!userId) return;
 
-    exerciseAgentRef.current = new ExerciseAgent(userId, (newState) => {
-      if (newState.exerciseNames) setExerciseNames(newState.exerciseNames);
-      if (newState.isLoadingNames !== undefined)
-        setIsLoadingNames(newState.isLoadingNames);
-    });
-
-    exerciseAgentRef.current.loadExerciseNames({ limit: 500 });
+    if (!exerciseAgentRef.current) {
+      exerciseAgentRef.current = new ExerciseAgent(userId, (newState) => {
+        if (newState.exerciseNames) setExerciseNames(newState.exerciseNames);
+        if (newState.isLoadingNames !== undefined)
+          setIsLoadingNames(newState.isLoadingNames);
+      });
+      exerciseAgentRef.current.loadExerciseNames({ limit: 500 });
+    }
 
     return () => {
       if (exerciseAgentRef.current) {
