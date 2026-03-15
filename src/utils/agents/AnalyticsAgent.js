@@ -49,21 +49,19 @@ export class AnalyticsAgent {
     this._updateState({ isLoading: true, error: null });
 
     try {
-      // Calculate the "from" date
+      // Calculate the "from" date with a 1-week buffer to ensure boundary weeks are captured
       const fromDate = new Date();
-      fromDate.setDate(fromDate.getDate() - numWeeks * 7);
+      fromDate.setDate(fromDate.getDate() - (numWeeks + 1) * 7);
 
       const result = await getWeeklyReports(this.userId, {
-        limit: numWeeks + 2, // small buffer
+        limit: numWeeks + 4, // buffer to handle weeks near the boundary
         sortBy: "weekStart",
         sortOrder: "asc",
         fromDate: fromDate.toISOString().split("T")[0],
       });
 
       const reports = result.reports || result.analytics || [];
-      const weeklyChartData = reports.map((r) =>
-        this._transformReport(r),
-      );
+      const weeklyChartData = reports.map((r) => this._transformReport(r));
 
       this._updateState({ weeklyChartData, isLoading: false });
       return weeklyChartData;
@@ -163,8 +161,7 @@ export class AnalyticsAgent {
         const mo = s.toLocaleString("en-US", { month: "short" });
         if (e) {
           const eMo = e.toLocaleString("en-US", { month: "short" });
-          if (mo === eMo)
-            return `${mo} ${s.getDate()}–${e.getDate()}`;
+          if (mo === eMo) return `${mo} ${s.getDate()}–${e.getDate()}`;
           return `${mo} ${s.getDate()}–${eMo} ${e.getDate()}`;
         }
         return `${mo} ${s.getDate()}`;

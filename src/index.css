@@ -273,6 +273,10 @@
   outline: none;
 }
 
+.recharts-surface:focus {
+  outline: none;
+}
+
 /* Tiptap scrollbar inside editor */
 .tiptap-content::-webkit-scrollbar {
   width: 6px;

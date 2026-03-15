@@ -77,7 +77,7 @@ export function SynthwaveTooltip({ active, payload, label, formatter }) {
 
   return (
     <div
-      className="rounded-none px-3 py-2.5 shadow-lg border backdrop-blur-sm"
+      className="rounded-md px-3 py-2.5 shadow-lg border backdrop-blur-sm"
       style={{
         background: chartColors.tooltipBg,
         borderColor: chartColors.tooltipBorder,
@@ -106,13 +106,31 @@ export function SynthwaveTooltip({ active, payload, label, formatter }) {
   );
 }
 
-// Format large numbers compactly (e.g., 12500 → "12.5K")
+// Format large numbers compactly (e.g., 12500 → "12.5K", 10000 → "10K")
 export function formatCompact(num) {
   if (num == null || isNaN(num)) return "—";
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
-  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+  if (num >= 1_000_000) {
+    const v = num / 1_000_000;
+    return `${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)}M`;
+  }
+  if (num >= 1_000) {
+    const v = num / 1_000;
+    return `${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)}K`;
+  }
   return num.toLocaleString();
 }
+
+// Shared Tooltip defaults — spread onto <Tooltip> to disable slide animation
+export const tooltipDefaults = {
+  isAnimationActive: false,
+  offset: 10,
+};
+
+// Cursor styling for bar charts — very subtle dark overlay
+export const cursorBar = { fill: "rgba(255,255,255,0.04)" };
+
+// Cursor styling for line/area charts — thin subtle stroke
+export const cursorLine = { stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 };
 
 // Format a weekId like "2025-W10" → "W10"
 export function formatWeekShort(weekId) {

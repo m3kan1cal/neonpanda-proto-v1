@@ -1,8 +1,6 @@
 import React from "react";
 import { containerPatterns } from "../../utils/ui/uiPatterns";
 import { FireIconSmall } from "../themes/SynthwaveComponents";
-import Sparkline from "../analytics/Sparkline";
-import { chartColors } from "../analytics/chartTheme";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -29,7 +27,6 @@ export default function StreakCard({
   thisWeekWorkoutCount = 0,
   lastWorkoutDaysAgo = 0,
   isLoading = false,
-  volumeSparkline = [], // [{ value }] for volume trend sparkline
 }) {
   // ------ Loading skeleton ------
   if (isLoading) {
@@ -106,21 +103,6 @@ export default function StreakCard({
           />
         </div>
       </div>
-
-      {/* Volume trend sparkline */}
-      {volumeSparkline.length >= 2 && (
-        <div className="flex items-center gap-2 mb-3">
-          <span className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wider">
-            Volume
-          </span>
-          <Sparkline
-            data={volumeSparkline}
-            color={chartColors.neonPink}
-            width={80}
-            height={24}
-          />
-        </div>
-      )}
 
       {/* Nudge / motivation line */}
       <p className="font-body text-xs text-synthwave-text-muted">

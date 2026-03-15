@@ -17,6 +17,8 @@ import {
   gridDefaults,
   animationDefaults,
   formatCompact,
+  tooltipDefaults,
+  cursorBar,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -30,37 +32,63 @@ export default function ExerciseVolumeChart({
   isLoading = false,
 }) {
   // Transform into chart data sorted oldest → newest
-  const chartData = useMemo(() => {
-    return exerciseData
+  const { chartData, isRepsMode } = useMemo(() => {
+    const mapped = exerciseData
       .map((session) => {
         const tonnage = calculateTonnage(session);
+        const sets = session.metrics?.sets || 1;
+        const reps =
+          session.metrics?.bestSet?.reps || session.metrics?.reps || 0;
+        const totalReps = reps * sets;
         const dateStr = formatDate(session.completedAt || session.date);
         return {
           date: dateStr,
           sortKey: session.completedAt || session.date || "",
           tonnage,
-          sets: session.metrics?.sets || 0,
-          reps: session.metrics?.reps || 0,
+          totalReps,
+          sets,
+          reps,
         };
       })
-      .filter((d) => d.tonnage > 0)
+      .filter((d) => d.tonnage > 0 || d.totalReps > 0)
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+    // Detect bodyweight mode: no sessions have tonnage > 0 but some have reps
+    const hasWeightData = mapped.some((d) => d.tonnage > 0);
+    const repsMode = !hasWeightData && mapped.some((d) => d.totalReps > 0);
+
+    return { chartData: mapped, isRepsMode: repsMode };
   }, [exerciseData]);
 
   const hasData = chartData.length >= 2;
+  const primaryKey = isRepsMode ? "totalReps" : "tonnage";
 
-  const avgTonnage =
-    hasData
-      ? Math.round(chartData.reduce((s, d) => s + d.tonnage, 0) / chartData.length)
-      : 0;
+  const avgPrimary = hasData
+    ? Math.round(
+        chartData.reduce((s, d) => s + d[primaryKey], 0) / chartData.length,
+      )
+    : 0;
+
+  const tooltipUnit = isRepsMode ? "reps" : "lbs";
+  const metricLabel = isRepsMode ? "Total Reps" : "Tonnage";
 
   return (
     <ChartCard
       title="Exercise Volume"
-      subtitle={exerciseName ? `Tonnage per session — ${exerciseName}` : "Select an exercise to see volume"}
+      subtitle={
+        exerciseName
+          ? isRepsMode
+            ? `Total reps per session — ${exerciseName}`
+            : `Tonnage per session — ${exerciseName}`
+          : "Select an exercise to see volume"
+      }
       isLoading={isLoading}
       isEmpty={!hasData && !isLoading}
-      emptyMessage={exerciseName ? "Need at least 2 sessions with volume data." : "Select an exercise above to get started."}
+      emptyMessage={
+        exerciseName
+          ? "Need at least 2 sessions with data."
+          : "Select an exercise above to get started."
+      }
     >
       <div className="w-full" style={{ height: 260 }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -76,28 +104,28 @@ export default function ExerciseVolumeChart({
               tickMargin={8}
               interval="preserveStartEnd"
             />
-            <YAxis
-              {...axisDefaults}
-              tickFormatter={formatCompact}
-              width={48}
-            />
+            <YAxis {...axisDefaults} tickFormatter={formatCompact} width={48} />
             <Tooltip
+              {...tooltipDefaults}
+              cursor={cursorBar}
               content={
                 <SynthwaveTooltip
                   formatter={(val, name) =>
-                    name === "Tonnage" ? `${val.toLocaleString()} lbs` : val
+                    name === metricLabel
+                      ? `${val.toLocaleString()} ${tooltipUnit}`
+                      : val
                   }
                 />
               }
             />
-            {avgTonnage > 0 && (
+            {avgPrimary > 0 && (
               <ReferenceLine
-                y={avgTonnage}
+                y={avgPrimary}
                 stroke={chartColors.purple}
                 strokeDasharray="6 4"
                 strokeOpacity={0.4}
                 label={{
-                  value: `Avg ${formatCompact(avgTonnage)}`,
+                  value: `Avg ${formatCompact(avgPrimary)}`,
                   position: "right",
                   fill: chartColors.purple,
                   fontSize: 10,
@@ -106,8 +134,8 @@ export default function ExerciseVolumeChart({
               />
             )}
             <Bar
-              dataKey="tonnage"
-              name="Tonnage"
+              dataKey={primaryKey}
+              name={metricLabel}
               fill={chartColors.cyan}
               radius={[3, 3, 0, 0]}
               maxBarSize={36}
@@ -122,15 +150,19 @@ export default function ExerciseVolumeChart({
         <div className="flex items-center justify-between mt-3 px-1">
           <Stat
             label="Latest"
-            value={formatCompact(chartData[chartData.length - 1]?.tonnage)}
+            value={`${formatCompact(chartData[chartData.length - 1]?.[primaryKey])}${isRepsMode ? " reps" : ""}`}
             color={chartColors.cyan}
           />
           <Stat
             label="Avg"
-            value={formatCompact(avgTonnage)}
+            value={`${formatCompact(avgPrimary)}${isRepsMode ? " reps" : ""}`}
             color={chartColors.purple}
           />
-          <DeltaStat data={chartData} />
+          <DeltaStat
+            data={chartData}
+            primaryKey={primaryKey}
+            isRepsMode={isRepsMode}
+          />
         </div>
       )}
     </ChartCard>
@@ -140,24 +172,34 @@ export default function ExerciseVolumeChart({
 function Stat({ label, value, color }) {
   return (
     <div className="text-center">
-      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">{label}</p>
-      <p className="font-header font-bold text-sm" style={{ color }}>{value}</p>
+      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
+        {label}
+      </p>
+      <p className="font-header font-bold text-sm" style={{ color }}>
+        {value}
+      </p>
     </div>
   );
 }
 
-function DeltaStat({ data }) {
+function DeltaStat({ data, primaryKey = "tonnage", isRepsMode = false }) {
   if (data.length < 2) return null;
-  const prev = data[data.length - 2]?.tonnage || 0;
-  const curr = data[data.length - 1]?.tonnage || 0;
+  const prev = data[data.length - 2]?.[primaryKey] || 0;
+  const curr = data[data.length - 1]?.[primaryKey] || 0;
   if (prev === 0) return null;
   const pct = Math.round(((curr - prev) / prev) * 100);
   const isPositive = pct >= 0;
   return (
     <div className="text-center">
-      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">vs Prior</p>
-      <p className="font-header font-bold text-sm" style={{ color: isPositive ? chartColors.green : chartColors.warning }}>
-        {isPositive ? "+" : ""}{pct}%
+      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
+        vs Prior
+      </p>
+      <p
+        className="font-header font-bold text-sm"
+        style={{ color: isPositive ? chartColors.green : chartColors.warning }}
+      >
+        {isPositive ? "+" : ""}
+        {pct}%
       </p>
     </div>
   );
@@ -170,7 +212,11 @@ function calculateTonnage(session) {
   // If we have detailed per-set data, compute precisely
   if (m.weightsPerSet?.length && m.repsPerSet?.length) {
     let total = 0;
-    for (let i = 0; i < Math.min(m.weightsPerSet.length, m.repsPerSet.length); i++) {
+    for (
+      let i = 0;
+      i < Math.min(m.weightsPerSet.length, m.repsPerSet.length);
+      i++
+    ) {
       total += (m.weightsPerSet[i] || 0) * (m.repsPerSet[i] || 0);
     }
     if (total > 0) return total;

@@ -15,6 +15,8 @@ import {
   axisDefaults,
   gridDefaults,
   animationDefaults,
+  tooltipDefaults,
+  cursorBar,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -39,10 +41,7 @@ const BODY_PART_COLORS = {
   arms: chartColors.yellow,
 };
 
-export default function BodyPartChart({
-  weeklyData = [],
-  isLoading = false,
-}) {
+export default function BodyPartChart({ weeklyData = [], isLoading = false }) {
   // Aggregate body part frequency across all available weeks
   const { chartData, hasData } = useMemo(() => {
     const withBodyParts = weeklyData.filter((w) => w.bodyPartFrequency);
@@ -63,8 +62,7 @@ export default function BodyPartChart({
       key: bp,
       total: totals[bp],
       avgPerWeek: Math.round((totals[bp] / withBodyParts.length) * 10) / 10,
-    }))
-      .sort((a, b) => b.total - a.total); // Sort by most trained
+    })).sort((a, b) => b.total - a.total); // Sort by most trained
 
     return { chartData, hasData: chartData.some((d) => d.total > 0) };
   }, [weeklyData]);
@@ -77,27 +75,29 @@ export default function BodyPartChart({
       isEmpty={!hasData}
       emptyMessage="Body part frequency data will appear once weekly reports include body part analysis."
     >
-      <div className="w-full" style={{ height: 240 }}>
+      <div className="w-full" style={{ height: 200 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
             layout="vertical"
-            margin={{ top: 4, right: 8, bottom: 0, left: 8 }}
+            margin={{ top: 2, right: 8, bottom: 0, left: 8 }}
           >
             <CartesianGrid horizontal={false} {...gridDefaults} />
-            <XAxis
-              type="number"
-              {...axisDefaults}
-              allowDecimals={false}
-            />
+            <XAxis type="number" {...axisDefaults} allowDecimals={false} />
             <YAxis
               type="category"
               dataKey="name"
               {...axisDefaults}
               width={72}
-              tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "inherit" }}
+              tick={{
+                fill: "rgba(255,255,255,0.7)",
+                fontSize: 12,
+                fontFamily: "inherit",
+              }}
             />
             <Tooltip
+              {...tooltipDefaults}
+              cursor={cursorBar}
               content={
                 <SynthwaveTooltip
                   formatter={(val, name) =>
@@ -112,15 +112,20 @@ export default function BodyPartChart({
               dataKey="total"
               name="Frequency"
               radius={[0, 4, 4, 0]}
-              maxBarSize={28}
+              maxBarSize={24}
               {...animationDefaults}
             >
-              {chartData.map((entry) => (
-                <Cell
-                  key={entry.key}
-                  fill={BODY_PART_COLORS[entry.key] || chartColors.cyan}
-                />
-              ))}
+              {chartData.map((entry) => {
+                const color = BODY_PART_COLORS[entry.key] || chartColors.cyan;
+                return (
+                  <Cell
+                    key={entry.key}
+                    fill={`${color}40`}
+                    stroke={color}
+                    strokeWidth={1.5}
+                  />
+                );
+              })}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -128,7 +133,7 @@ export default function BodyPartChart({
 
       {/* Avg per week row */}
       {hasData && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 px-1">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 px-1">
           {chartData.map((d) => (
             <div key={d.key} className="flex items-center gap-1.5">
               <span

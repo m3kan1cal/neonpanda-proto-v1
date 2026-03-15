@@ -1,12 +1,12 @@
 import React from "react";
 import {
-  ResponsiveContainer,
   LineChart,
   Line,
   Area,
   AreaChart,
+  ResponsiveContainer,
 } from "recharts";
-import { chartColors, animationDefaults } from "./chartTheme";
+import { chartColors } from "./chartTheme";
 
 // ---------------------------------------------------------------------------
 // Sparkline — tiny inline trend chart (no axes, no labels, no grid)
@@ -15,10 +15,11 @@ import { chartColors, animationDefaults } from "./chartTheme";
 // Props:
 //   data       — array of objects, each must have a `value` key
 //   color      — stroke/fill color (default: neonPink)
-//   width      — container width (default: 80)
-//   height     — container height (default: 28)
+//   width      — container width in px (default: 80) — ignored when fullWidth=true
+//   height     — container height in px (default: 28)
 //   variant    — "line" | "area" (default: "area")
 //   showDots   — show dots on data points (default: false)
+//   fullWidth  — stretch to fill the parent block element (default: false)
 // ---------------------------------------------------------------------------
 
 export default function Sparkline({
@@ -28,29 +29,55 @@ export default function Sparkline({
   height = 28,
   variant = "area",
   showDots = false,
+  fullWidth = false,
 }) {
   if (!data || data.length < 2) return null;
 
   const ChartComponent = variant === "area" ? AreaChart : LineChart;
   const DataComponent = variant === "area" ? Area : Line;
 
+  const dataLine = (
+    <DataComponent
+      type="monotone"
+      dataKey="value"
+      stroke={color}
+      strokeWidth={1.5}
+      fill={variant === "area" ? color : "none"}
+      fillOpacity={variant === "area" ? 0.15 : 0}
+      dot={showDots ? { r: 1.5, fill: color, strokeWidth: 0 } : false}
+      activeDot={false}
+      isAnimationActive={false}
+    />
+  );
+
+  if (fullWidth) {
+    // Block-level container with known height — ResponsiveContainer measures
+    // correctly here because the parent has a defined layout width.
+    return (
+      <div style={{ width: "100%", height }} className="block overflow-hidden">
+        <ResponsiveContainer width="100%" height="100%">
+          <ChartComponent
+            data={data}
+            margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+          >
+            {dataLine}
+          </ChartComponent>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  // Fixed-pixel mode — avoids ResizeObserver firing with 0/-1 on inline containers.
   return (
-    <div style={{ width, height }} className="inline-block align-middle">
-      <ResponsiveContainer width="100%" height="100%">
-        <ChartComponent data={data} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-          <DataComponent
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={1.5}
-            fill={variant === "area" ? color : "none"}
-            fillOpacity={variant === "area" ? 0.15 : 0}
-            dot={showDots ? { r: 1.5, fill: color, strokeWidth: 0 } : false}
-            activeDot={false}
-            isAnimationActive={false}
-          />
-        </ChartComponent>
-      </ResponsiveContainer>
+    <div className="inline-block align-middle" style={{ width, height }}>
+      <ChartComponent
+        width={width}
+        height={height}
+        data={data}
+        margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+      >
+        {dataLine}
+      </ChartComponent>
     </div>
   );
 }
@@ -72,13 +99,15 @@ export function extractSparklineData(recentReports = []) {
   const sorted = [...recentReports].reverse();
 
   const volumeSparkline = sorted.map((r) => {
-    const sa = r.analyticsData?.structured_analytics || r.structured_analytics || {};
+    const sa =
+      r.analyticsData?.structured_analytics || r.structured_analytics || {};
     const tonnage = sa.volume_breakdown?.working_sets?.total_tonnage;
     return { value: Number(tonnage) || 0 };
   });
 
   const frequencySparkline = sorted.map((r) => {
-    const sa = r.analyticsData?.structured_analytics || r.structured_analytics || {};
+    const sa =
+      r.analyticsData?.structured_analytics || r.structured_analytics || {};
     const sessions = sa.metadata?.sessions_completed;
     return { value: Number(sessions) || 0 };
   });

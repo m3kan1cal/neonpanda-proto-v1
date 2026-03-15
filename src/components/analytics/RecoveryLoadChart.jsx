@@ -17,6 +17,8 @@ import {
   axisDefaults,
   gridDefaults,
   animationDefaults,
+  tooltipDefaults,
+  cursorLine,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -37,9 +39,7 @@ export default function RecoveryLoadChart({
   isLoading = false,
 }) {
   // Filter to weeks that have recovery or ac ratio data
-  const chartData = data.filter(
-    (d) => d.recoveryScore > 0 || d.acRatio > 0,
-  );
+  const chartData = data.filter((d) => d.recoveryScore > 0 || d.acRatio > 0);
   const hasData = chartData.length >= 2;
 
   return (
@@ -102,7 +102,11 @@ export default function RecoveryLoadChart({
               }}
             />
 
-            <Tooltip content={<RecoveryTooltip />} />
+            <Tooltip
+              {...tooltipDefaults}
+              cursor={cursorLine}
+              content={<RecoveryTooltip />}
+            />
 
             {/* Zone shading for A:C ratio */}
             {/* Green zone: 0.8 - 1.3 */}
@@ -199,8 +203,16 @@ export default function RecoveryLoadChart({
           </div>
           <div className="flex items-center gap-2">
             <ZoneBadge color={chartColors.green} label="Safe" range="0.8–1.3" />
-            <ZoneBadge color={chartColors.yellow} label="Caution" range="1.3–1.5" />
-            <ZoneBadge color={chartColors.warning} label="Danger" range=">1.5" />
+            <ZoneBadge
+              color={chartColors.yellow}
+              label="Caution"
+              range="1.3–1.5"
+            />
+            <ZoneBadge
+              color={chartColors.warning}
+              label="Danger"
+              range=">1.5"
+            />
           </div>
         </div>
       )}
@@ -213,7 +225,7 @@ function RecoveryTooltip({ active, payload, label }) {
 
   return (
     <div
-      className="rounded-none px-3 py-2.5 shadow-lg border backdrop-blur-sm"
+      className="rounded-md px-3 py-2.5 shadow-lg border backdrop-blur-sm"
       style={{
         background: chartColors.tooltipBg,
         borderColor: chartColors.tooltipBorder,
@@ -237,7 +249,11 @@ function RecoveryTooltip({ active, payload, label }) {
           formatted += zone;
         }
         return (
-          <p key={i} className="font-body text-xs" style={{ color: entry.color }}>
+          <p
+            key={i}
+            className="font-body text-xs"
+            style={{ color: entry.color }}
+          >
             {entry.name}: <span className="font-semibold">{formatted}</span>
           </p>
         );
@@ -249,8 +265,13 @@ function RecoveryTooltip({ active, payload, label }) {
 function LegendDot({ color, label }) {
   return (
     <div className="flex items-center gap-1">
-      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
-      <span className="font-body text-[10px] text-synthwave-text-muted">{label}</span>
+      <span
+        className="w-2 h-2 rounded-full shrink-0"
+        style={{ background: color }}
+      />
+      <span className="font-body text-[10px] text-synthwave-text-muted">
+        {label}
+      </span>
     </div>
   );
 }

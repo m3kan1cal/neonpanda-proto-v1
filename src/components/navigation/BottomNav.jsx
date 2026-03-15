@@ -21,26 +21,30 @@ const BottomNav = () => {
   const location = useLocation();
   const context = useNavigationContext();
 
-  // Get bottom nav items: Coaches, Training, Progress
+  // Get bottom nav items: Training, Workouts, Analytics, More
   const bottomNavItems = [];
-
-  // Always show Coaches (from primary) - Remove badge for mobile
-  const coachesItem = navigationItems.primary?.find(
-    (item) => item.id === "coaches",
-  );
-  if (coachesItem && isItemVisible(coachesItem, context)) {
-    bottomNavItems.push({ ...coachesItem, badge: undefined }); // Remove badge count for mobile
-  }
 
   // Show Training (training-grounds from contextual)
   const trainingItem = navigationItems.contextual?.find(
     (item) => item.id === "training-grounds",
   );
   if (trainingItem && isItemVisible(trainingItem, context)) {
-    bottomNavItems.push({ ...trainingItem, label: "Training" }); // Shorten label for mobile
+    bottomNavItems.push({ ...trainingItem, label: "Training" });
   }
 
-  // Show Progress (from contextual) - Remove badge for mobile, shorten label
+  // Show Workouts (from contextual)
+  const workoutsItem = navigationItems.contextual?.find(
+    (item) => item.id === "workouts",
+  );
+  if (workoutsItem && isItemVisible(workoutsItem, context)) {
+    bottomNavItems.push({
+      ...workoutsItem,
+      badge: undefined,
+      label: "Workouts",
+    });
+  }
+
+  // Show Analytics / Progress (from contextual) - Remove badge for mobile
   const progressItem = navigationItems.contextual?.find(
     (item) => item.id === "progress",
   );
@@ -49,7 +53,7 @@ const BottomNav = () => {
       ...progressItem,
       badge: undefined,
       label: "Analytics",
-    }); // Remove badge count and shorten label for mobile
+    });
   }
 
   const displayItems = bottomNavItems;
@@ -89,6 +93,7 @@ const BottomNav = () => {
         onClick={() => handleItemClick(item)}
         className={`
             ${navigationPatterns.mobile.item}
+            cursor-pointer
             ${active ? `${colorClasses.active} focus:ring-${item.color} ${navigationPatterns.mobile.itemActiveBg}` : colorClasses.inactive}
             ${active ? "font-semibold" : "font-medium"}
           `}
@@ -133,6 +138,7 @@ const BottomNav = () => {
         onClick={handleMoreClick}
         className={`
           ${navigationPatterns.mobile.item}
+          cursor-pointer
           ${isMoreActive ? `text-synthwave-neon-purple font-semibold ${navigationPatterns.mobile.itemActiveBg}` : "text-synthwave-text-muted hover:text-synthwave-neon-purple font-medium"}
           focus:ring-synthwave-neon-purple/50
         `}

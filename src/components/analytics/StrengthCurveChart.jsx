@@ -16,6 +16,8 @@ import {
   gridDefaults,
   animationDefaults,
   formatCompact,
+  tooltipDefaults,
+  cursorLine,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -30,7 +32,7 @@ export default function StrengthCurveChart({
   isLoading = false,
 }) {
   // Transform exercise sessions into chart data — sorted oldest first, with PR markers
-  const dataWithPRs = useMemo(() => {
+  const { dataWithPRs, isRepsMode } = useMemo(() => {
     const sorted = exerciseData
       .map((session) => {
         const weight = extractWeight(session);
@@ -43,29 +45,73 @@ export default function StrengthCurveChart({
           reps,
         };
       })
-      .filter((d) => d.weight > 0)
+      .filter((d) => d.weight > 0 || d.reps > 0)
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
-    // Mark PRs using running max
+    // Detect bodyweight mode: no sessions have weight > 0 but some have reps
+    const hasWeightData = sorted.some((d) => d.weight > 0);
+    const repsMode = !hasWeightData && sorted.some((d) => d.reps > 0);
+
+    // Mark PRs using running max of primary metric
     let runningMax = 0;
-    return sorted.map((d) => {
-      const isPR = d.weight > runningMax;
-      if (isPR) runningMax = d.weight;
+    const dataWithPRs = sorted.map((d) => {
+      const primaryVal = repsMode ? d.reps : d.weight;
+      const isPR = primaryVal > runningMax;
+      if (isPR) runningMax = primaryVal;
       return { ...d, isPR };
     });
+
+    return { dataWithPRs, isRepsMode: repsMode };
   }, [exerciseData]);
 
   const hasData = dataWithPRs.length >= 2;
   const avgWeight = aggregations?.averageWeight || 0;
   const prWeight = aggregations?.prWeight || 0;
+  const avgReps = aggregations?.averageReps || 0;
+  const prReps = aggregations?.prReps || 0;
+
+  // Derived summary values for both modes
+  const latestPrimary = dataWithPRs[dataWithPRs.length - 1];
+  const latestValue = isRepsMode ? latestPrimary?.reps : latestPrimary?.weight;
+  const latestDisplay =
+    latestValue != null
+      ? isRepsMode
+        ? `${latestValue} reps`
+        : `${latestValue} lbs`
+      : "—";
+  const prDisplay = isRepsMode
+    ? prReps
+      ? `${prReps} reps`
+      : "—"
+    : prWeight
+      ? `${prWeight} lbs`
+      : "—";
+  const avgDisplay = isRepsMode
+    ? avgReps
+      ? `${Math.round(avgReps)} reps`
+      : "—"
+    : avgWeight
+      ? `${Math.round(avgWeight)} lbs`
+      : "—";
+  const avgRefValue = isRepsMode ? avgReps : avgWeight;
 
   return (
     <ChartCard
       title="Strength Curve"
-      subtitle={exerciseName ? `Weight progression for ${exerciseName}` : "Select an exercise to see progression"}
+      subtitle={
+        exerciseName
+          ? isRepsMode
+            ? `Rep progression for ${exerciseName}`
+            : `Weight progression for ${exerciseName}`
+          : "Select an exercise to see progression"
+      }
       isLoading={isLoading}
       isEmpty={!hasData && !isLoading}
-      emptyMessage={exerciseName ? "Need at least 2 sessions with weight data." : "Select an exercise above to get started."}
+      emptyMessage={
+        exerciseName
+          ? "Need at least 2 sessions with data."
+          : "Select an exercise above to get started."
+      }
     >
       <div className="w-full" style={{ height: 260 }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -87,6 +133,8 @@ export default function StrengthCurveChart({
               domain={["auto", "auto"]}
             />
             <Tooltip
+              {...tooltipDefaults}
+              cursor={cursorLine}
               content={
                 <SynthwaveTooltip
                   formatter={(val, name) => {
@@ -97,15 +145,15 @@ export default function StrengthCurveChart({
                 />
               }
             />
-            {/* Average weight reference */}
-            {avgWeight > 0 && (
+            {/* Average reference line */}
+            {avgRefValue > 0 && (
               <ReferenceLine
-                y={avgWeight}
+                y={avgRefValue}
                 stroke={chartColors.cyan}
                 strokeDasharray="6 4"
                 strokeOpacity={0.35}
                 label={{
-                  value: `Avg ${Math.round(avgWeight)}`,
+                  value: `Avg ${Math.round(avgRefValue)}`,
                   position: "right",
                   fill: chartColors.cyan,
                   fontSize: 10,
@@ -113,11 +161,11 @@ export default function StrengthCurveChart({
                 }}
               />
             )}
-            {/* Weight line */}
+            {/* Primary line — weight or reps depending on mode */}
             <Line
               type="monotone"
-              dataKey="weight"
-              name="Weight"
+              dataKey={isRepsMode ? "reps" : "weight"}
+              name={isRepsMode ? "Reps" : "Weight"}
               stroke={chartColors.neonPink}
               strokeWidth={2}
               dot={(props) => <CustomDot {...props} data={dataWithPRs} />}
@@ -129,17 +177,19 @@ export default function StrengthCurveChart({
               }}
               {...animationDefaults}
             />
-            {/* Reps as secondary line */}
-            <Line
-              type="monotone"
-              dataKey="reps"
-              name="Reps"
-              stroke={chartColors.purple}
-              strokeWidth={1}
-              strokeDasharray="4 3"
-              dot={false}
-              {...animationDefaults}
-            />
+            {/* Secondary reps line — only shown in weight mode */}
+            {!isRepsMode && (
+              <Line
+                type="monotone"
+                dataKey="reps"
+                name="Reps"
+                stroke={chartColors.purple}
+                strokeWidth={1}
+                strokeDasharray="4 3"
+                dot={false}
+                {...animationDefaults}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -147,9 +197,13 @@ export default function StrengthCurveChart({
       {/* Summary row */}
       {hasData && (
         <div className="flex items-center justify-between mt-3 px-1">
-          <Stat label="Latest" value={`${dataWithPRs[dataWithPRs.length - 1]?.weight} lbs`} color={chartColors.neonPink} />
-          <Stat label="PR" value={prWeight ? `${prWeight} lbs` : "—"} color={chartColors.green} />
-          <Stat label="Average" value={avgWeight ? `${Math.round(avgWeight)} lbs` : "—"} color={chartColors.cyan} />
+          <Stat
+            label="Latest"
+            value={latestDisplay}
+            color={chartColors.neonPink}
+          />
+          <Stat label="PR" value={prDisplay} color={chartColors.green} />
+          <Stat label="Average" value={avgDisplay} color={chartColors.cyan} />
         </div>
       )}
     </ChartCard>
@@ -164,8 +218,21 @@ function CustomDot({ cx, cy, index, data }) {
   if (isPR) {
     return (
       <g>
-        <circle cx={cx} cy={cy} r={6} fill={chartColors.green} fillOpacity={0.25} />
-        <circle cx={cx} cy={cy} r={4} fill={chartColors.green} stroke="#fff" strokeWidth={1.5} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={6}
+          fill={chartColors.green}
+          fillOpacity={0.25}
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={4}
+          fill={chartColors.green}
+          stroke="#fff"
+          strokeWidth={1.5}
+        />
       </g>
     );
   }
@@ -176,8 +243,12 @@ function CustomDot({ cx, cy, index, data }) {
 function Stat({ label, value, color }) {
   return (
     <div className="text-center">
-      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">{label}</p>
-      <p className="font-header font-bold text-sm" style={{ color }}>{value}</p>
+      <p className="font-body text-[10px] text-synthwave-text-muted uppercase tracking-wide">
+        {label}
+      </p>
+      <p className="font-header font-bold text-sm" style={{ color }}>
+        {value}
+      </p>
     </div>
   );
 }

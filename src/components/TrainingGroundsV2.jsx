@@ -55,6 +55,7 @@ import RecentPRsCard from "./highlights/RecentPRsCard";
 import StreakCard from "./highlights/StreakCard";
 import TopExercisesCard from "./highlights/TopExercisesCard";
 import CoachBriefingCard from "./highlights/CoachBriefingCard";
+import TrainingLoadCard from "./highlights/TrainingLoadCard";
 import { extractSparklineData } from "./analytics/Sparkline";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
@@ -894,7 +895,14 @@ function TrainingGroundsV2() {
       thisWeekWorkoutCount={workoutState.thisWeekWorkoutCount || 0}
       lastWorkoutDaysAgo={workoutState.lastWorkoutDaysAgo || 0}
       isLoading={workoutState.isLoadingTrainingDays}
+    />
+  );
+
+  const renderTrainingLoadCard = () => (
+    <TrainingLoadCard
+      recentReports={reportsState.recentReports}
       volumeSparkline={volumeSparkline}
+      isLoading={reportsState.isLoadingRecentItems}
     />
   );
 
@@ -1246,7 +1254,7 @@ function TrainingGroundsV2() {
 
       {/* Analytics entry point */}
       <Link
-        to={`/training-grounds/analytics?userId=${userId}&coachId=${coachId}`}
+        to={`/training-grounds/training-pulse?userId=${userId}&coachId=${coachId}`}
         className="mt-3 flex items-center justify-between px-4 py-3 rounded-md bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 hover:bg-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/50 transition-all duration-200 group"
       >
         <div className="flex items-center gap-2.5">
@@ -1522,6 +1530,9 @@ function TrainingGroundsV2() {
 
           {/* Mobile: Single column */}
           <div className="md:hidden space-y-6 animate-fade-in-up">
+            {/* Reports & Insights */}
+            {renderReportsCard()}
+
             {/* Active Programs */}
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
@@ -1550,6 +1561,9 @@ function TrainingGroundsV2() {
               />
             </div>
 
+            {/* Training Volume */}
+            {renderTrainingLoadCard()}
+
             {/* Streak */}
             {renderStreakCard()}
 
@@ -1558,9 +1572,6 @@ function TrainingGroundsV2() {
 
             {/* Top Exercises */}
             {renderTopExercisesCard()}
-
-            {/* Reports & Insights */}
-            {renderReportsCard()}
 
             {/* Workout History */}
             {renderWorkoutHistoryCard()}
@@ -1571,11 +1582,13 @@ function TrainingGroundsV2() {
 
           {/* Desktop: Two columns with alternating distribution (masonry) */}
           <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:items-start">
-            {/* Left Column -- Programs + Reports + Recent Conversations */}
+            {/* Left Column -- Reports + Programs + Workout History + Conversations */}
             <div
               className="space-y-6 animate-fade-in-up"
               style={{ animationDelay: "0ms" }}
             >
+              {renderReportsCard()}
+
               <div className={`${containerPatterns.cardMedium} p-6`}>
                 <div className="flex items-start space-x-3 mb-4">
                   <svg
@@ -1603,16 +1616,16 @@ function TrainingGroundsV2() {
                 />
               </div>
 
-              {renderReportsCard()}
               {renderWorkoutHistoryCard()}
               {renderConversationsCard()}
             </div>
 
-            {/* Right Column -- Streak + Recent PRs + Top Exercises */}
+            {/* Right Column -- Training Volume + Streak + Recent PRs + Top Exercises */}
             <div
               className="space-y-6 animate-fade-in-up"
               style={{ animationDelay: "80ms" }}
             >
+              {renderTrainingLoadCard()}
               {renderStreakCard()}
               {renderRecentPRsCard()}
               {renderTopExercisesCard()}

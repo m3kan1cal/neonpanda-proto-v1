@@ -16,6 +16,8 @@ import {
   axisDefaults,
   gridDefaults,
   animationDefaults,
+  tooltipDefaults,
+  cursorBar,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -33,10 +35,9 @@ export default function FrequencyChart({
   const hasData = data.length >= 2;
 
   // Compute average
-  const avgSessions =
-    hasData
-      ? (data.reduce((sum, d) => sum + d.sessions, 0) / data.length).toFixed(1)
-      : 0;
+  const avgSessions = hasData
+    ? (data.reduce((sum, d) => sum + d.sessions, 0) / data.length).toFixed(1)
+    : 0;
 
   return (
     <ChartCard
@@ -66,6 +67,8 @@ export default function FrequencyChart({
               domain={[0, (max) => Math.max(max, weeklyTarget + 1)]}
             />
             <Tooltip
+              {...tooltipDefaults}
+              cursor={cursorBar}
               content={
                 <SynthwaveTooltip
                   formatter={(val, name) =>

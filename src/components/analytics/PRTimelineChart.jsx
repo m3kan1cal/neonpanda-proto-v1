@@ -46,7 +46,9 @@ export default function PRTimelineChart({
     const sorted = [...exerciseData]
       .filter((s) => extractWeight(s) > 0)
       .sort((a, b) =>
-        (a.completedAt || a.date || "").localeCompare(b.completedAt || b.date || ""),
+        (a.completedAt || a.date || "").localeCompare(
+          b.completedAt || b.date || "",
+        ),
       );
 
     let runningMax = 0;
@@ -57,15 +59,12 @@ export default function PRTimelineChart({
       if (weight > runningMax) {
         const previousBest = runningMax;
         runningMax = weight;
-        const improvement = previousBest > 0
-          ? Math.round(((weight - previousBest) / previousBest) * 100)
-          : 0;
+        const improvement =
+          previousBest > 0
+            ? Math.round(((weight - previousBest) / previousBest) * 100)
+            : 0;
         const significance =
-          improvement >= 10
-            ? "major"
-            : improvement >= 5
-              ? "moderate"
-              : "minor";
+          improvement >= 10 ? "major" : improvement >= 5 ? "moderate" : "minor";
 
         prs.push({
           date: formatDate(session.completedAt || session.date),
@@ -88,16 +87,22 @@ export default function PRTimelineChart({
   return (
     <ChartCard
       title="PR Timeline"
-      subtitle={exerciseName ? `Personal records — ${exerciseName}` : "Select an exercise to see PRs"}
+      subtitle={
+        exerciseName
+          ? `Personal records — ${exerciseName}`
+          : "Select an exercise to see PRs"
+      }
       isLoading={isLoading}
       isEmpty={!hasData && !isLoading}
-      emptyMessage={exerciseName ? "No PRs found for this exercise yet." : "Select an exercise above to get started."}
+      emptyMessage={
+        exerciseName
+          ? "No PRs found for this exercise yet."
+          : "Select an exercise above to get started."
+      }
     >
       <div className="w-full" style={{ height: 240 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart
-            margin={{ top: 8, right: 8, bottom: 0, left: -12 }}
-          >
+          <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
             <CartesianGrid {...gridDefaults} />
             <XAxis
               dataKey="date"
@@ -116,16 +121,17 @@ export default function PRTimelineChart({
             />
             <ZAxis dataKey="size" range={[60, 250]} />
             <Tooltip content={<PRTooltip />} />
-            <Scatter
-              data={prData}
-              {...animationDefaults}
-            >
+            <Scatter data={prData} {...animationDefaults}>
               {prData.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill={SIGNIFICANCE_COLORS[entry.significance] || chartColors.cyan}
+                  fill={
+                    SIGNIFICANCE_COLORS[entry.significance] || chartColors.cyan
+                  }
                   fillOpacity={0.85}
-                  stroke={SIGNIFICANCE_COLORS[entry.significance] || chartColors.cyan}
+                  stroke={
+                    SIGNIFICANCE_COLORS[entry.significance] || chartColors.cyan
+                  }
                   strokeWidth={1}
                 />
               ))}
@@ -159,7 +165,7 @@ function PRTooltip({ active, payload }) {
 
   return (
     <div
-      className="rounded-none px-3 py-2.5 shadow-lg border backdrop-blur-sm"
+      className="rounded-md px-3 py-2.5 shadow-lg border backdrop-blur-sm"
       style={{
         background: chartColors.tooltipBg,
         borderColor: chartColors.tooltipBorder,
@@ -170,17 +176,25 @@ function PRTooltip({ active, payload }) {
       </p>
       <p className="font-body text-xs" style={{ color: chartColors.neonPink }}>
         New PR: <span className="font-semibold">{d.weight} lbs</span>
-        {d.reps > 0 && <span className="text-synthwave-text-muted"> × {d.reps} reps</span>}
+        {d.reps > 0 && (
+          <span className="text-synthwave-text-muted"> × {d.reps} reps</span>
+        )}
       </p>
       {d.previousBest && (
         <p className="font-body text-xs text-synthwave-text-secondary">
           Previous: {d.previousBest} lbs
           {d.improvement > 0 && (
-            <span style={{ color: chartColors.green }}> (+{d.improvement}%)</span>
+            <span style={{ color: chartColors.green }}>
+              {" "}
+              (+{d.improvement}%)
+            </span>
           )}
         </p>
       )}
-      <p className="font-body text-[10px] mt-1 uppercase" style={{ color: SIGNIFICANCE_COLORS[d.significance] }}>
+      <p
+        className="font-body text-[10px] mt-1 uppercase"
+        style={{ color: SIGNIFICANCE_COLORS[d.significance] }}
+      >
         {d.significance} PR
       </p>
     </div>
@@ -191,7 +205,9 @@ function Legend({ color, label }) {
   return (
     <div className="flex items-center gap-1">
       <span className="w-2 h-2 rounded-full" style={{ background: color }} />
-      <span className="font-body text-[10px] text-synthwave-text-muted uppercase">{label}</span>
+      <span className="font-body text-[10px] text-synthwave-text-muted uppercase">
+        {label}
+      </span>
     </div>
   );
 }

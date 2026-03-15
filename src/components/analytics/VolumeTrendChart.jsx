@@ -17,6 +17,8 @@ import {
   gridDefaults,
   animationDefaults,
   formatCompact,
+  tooltipDefaults,
+  cursorLine,
 } from "./chartTheme";
 import ChartCard from "./ChartCard";
 
@@ -28,12 +30,9 @@ export default function VolumeTrendChart({ data = [], isLoading = false }) {
   const hasData = data.length >= 2;
 
   // Compute average for reference line
-  const avgTonnage =
-    hasData
-      ? Math.round(
-          data.reduce((sum, d) => sum + d.tonnage, 0) / data.length,
-        )
-      : 0;
+  const avgTonnage = hasData
+    ? Math.round(data.reduce((sum, d) => sum + d.tonnage, 0) / data.length)
+    : 0;
 
   return (
     <ChartCard
@@ -61,14 +60,16 @@ export default function VolumeTrendChart({ data = [], isLoading = false }) {
               {...axisDefaults}
               tickFormatter={formatCompact}
               width={48}
+              tickCount={5}
+              domain={[0, "auto"]}
             />
             <Tooltip
+              {...tooltipDefaults}
+              cursor={cursorLine}
               content={
                 <SynthwaveTooltip
                   formatter={(val, name) =>
-                    name === "Tonnage"
-                      ? `${val.toLocaleString()} lbs`
-                      : val
+                    name === "Tonnage" ? `${val.toLocaleString()} lbs` : val
                   }
                 />
               }
@@ -146,14 +147,20 @@ function Stat({ label, value, color }) {
   );
 }
 
-// Percentage change from second-to-last → last
+// Absolute change from second-to-last → last (in lbs)
 function DeltaStat({ data }) {
   if (data.length < 2) return null;
   const prev = data[data.length - 2]?.tonnage || 0;
   const curr = data[data.length - 1]?.tonnage || 0;
   if (prev === 0) return null;
-  const pct = Math.round(((curr - prev) / prev) * 100);
-  const isPositive = pct >= 0;
+  const diff = curr - prev;
+  const isPositive = diff >= 0;
+  const abs = Math.abs(diff);
+  const sign = isPositive ? "+" : "\u2212";
+  const formatted =
+    abs >= 1000
+      ? `${sign}${(abs / 1000).toFixed(1)}k lbs`
+      : `${sign}${Math.round(abs).toLocaleString()} lbs`;
 
   return (
     <div className="text-center">
@@ -164,8 +171,7 @@ function DeltaStat({ data }) {
         className="font-header font-bold text-sm"
         style={{ color: isPositive ? chartColors.green : chartColors.warning }}
       >
-        {isPositive ? "+" : ""}
-        {pct}%
+        {formatted}
       </p>
     </div>
   );

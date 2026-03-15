@@ -132,7 +132,7 @@ The dedicated page gives athletes a reason to come back ("let me check my analyt
 
 #### 1d. Analytics Page Shell
 
-- [x] Create `src/components/analytics/AnalyticsPage.jsx` — page layout with header, time-range selector, chart grid
+- [x] Create `src/components/analytics/TrainingPulse.jsx` — page layout with header, time-range selector, chart grid
 - [x] Add route `/training-grounds/analytics` to `App.jsx`
 - [x] Add navigation entry point from TrainingGroundsV2 (button in "Reports & Insights" section)
 - [x] Loading states: skeleton cards while reports load
@@ -141,7 +141,7 @@ The dedicated page gives athletes a reason to come back ("let me check my analyt
 #### Data Flow (Phase 1)
 
 ```
-AnalyticsPage mounts
+TrainingPulse mounts
   → AnalyticsAgent.loadWeeklyReportsForRange(timeRange)
     → ReportAgent.loadAllReports({ fromDate, toDate })
       → reportApi.getWeeklyReports(userId, { fromDate, toDate, sortOrder: 'asc' })
@@ -285,7 +285,7 @@ User selects "Back Squat" from ExerciseSelector
 
 ```
 src/components/analytics/
-├── AnalyticsPage.jsx              # ✅ Main page shell + routing
+├── TrainingPulse.jsx              # ✅ Main page shell + routing
 ├── chartTheme.jsx                 # ✅ Colors, gradients, glows, shared config (note: .jsx not .js)
 ├── ChartCard.jsx                  # ✅ Reusable chart container
 ├── TimeRangeSelector.jsx          # ✅ 4W/8W/12W/6M/1Y pill toggle
@@ -394,7 +394,7 @@ src/utils/agents/
 
 ## Open Questions
 
-1. **Time range default:** ~~Should the default view be 8 weeks or 12 weeks?~~ **Resolved:** Default is 8 weeks (`useState("8w")` in `AnalyticsPage.jsx`).
+1. **Time range default:** ~~Should the default view be 8 weeks or 12 weeks?~~ **Resolved:** Default is 8 weeks (`useState("8w")` in `TrainingPulse.jsx`).
 2. **Navigation placement:** ~~Should "Analytics" get its own icon in the main nav, or live under Reports?~~ **Resolved:** Promoted to a top-level contextual nav item — `id: "progress"`, label "Reports & Analytics", routes to `/training-grounds/analytics`.
 3. **Printing/export:** Should users be able to export charts as images or PDFs? _(Not in v1 — deferred. Chart containers are SVG-based and ready to support this.)_
 4. **Coach integration:** Should coaches see athlete analytics? _(Already supported — coaches can view athlete data through existing permissions.)_
