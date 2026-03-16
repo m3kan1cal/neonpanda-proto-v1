@@ -121,4 +121,4 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 };
 
-export const handler = withAuth(baseHandler);
+export const handler = withAuth(baseHandler, { allowInternalCalls: true });
