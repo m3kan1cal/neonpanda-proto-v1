@@ -1266,19 +1266,23 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     await saveWorkout(workout);
     logger.info("✅ Workout saved to DynamoDB");
 
-    // Store workout summary in Pinecone (fire-and-forget, non-blocking)
-    logger.info("📝 Storing workout summary in Pinecone (async)..");
-    storeWorkoutSummaryInPinecone(
-      context.userId,
-      summary,
-      workoutData,
-      workout,
-    ).catch((error) => {
+    // Store workout summary in Pinecone
+    logger.info("📝 Storing workout summary in Pinecone..");
+    let pineconeStored = false;
+    try {
+      await storeWorkoutSummaryInPinecone(
+        context.userId,
+        summary,
+        workoutData,
+        workout,
+      );
+      pineconeStored = true;
+    } catch (error) {
       logger.error(
         "⚠️ Failed to store workout in Pinecone (non-blocking):",
         error,
       );
-    });
+    }
 
     // Fire-and-forget exercise log extraction (non-blocking)
     const buildExerciseFunction = process.env.BUILD_EXERCISE_FUNCTION_NAME;
@@ -1344,7 +1348,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     return {
       workoutId: workout.workoutId,
       success: true,
-      pineconeStored: false, // Fire-and-forget (async), status unknown at return time
+      pineconeStored,
       pineconeRecordId: null,
       templateLinked,
     };

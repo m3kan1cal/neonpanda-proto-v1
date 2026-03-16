@@ -849,6 +849,7 @@ allFunctions.forEach((func) => {
   backend.createProgram,
   backend.buildProgram, // Needs access to S3 for program template storage
   backend.buildWorkout, // Agent-based: also needs S3 for template updates
+  backend.deleteProgram, // Needs access to S3 to hard-delete workout templates
   backend.getWorkoutTemplate,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,

@@ -47,7 +47,7 @@ const LAMBDA_FUNCTION_NAMES = {
   deleteWorkout:
     "amplify-neonpandaprotov1--deleteworkoutlambda15FBE-k79HpBzKYXAZ",
   deleteProgram:
-    "amplify-neonpandaprotov1--deleteprogramlambda205E00-REPLACE_ME",
+    "amplify-neonpandaprotov1--deleteprogramlambda75320-4DhdTfQErohi",
 };
 
 // Known test user ID (both test scripts use this)
