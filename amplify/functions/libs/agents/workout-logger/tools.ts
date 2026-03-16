@@ -1268,6 +1268,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
     // Store workout summary in Pinecone
     logger.info("📝 Storing workout summary in Pinecone..");
+    let pineconeStored = false;
     try {
       await storeWorkoutSummaryInPinecone(
         context.userId,
@@ -1275,6 +1276,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         workoutData,
         workout,
       );
+      pineconeStored = true;
     } catch (error) {
       logger.error(
         "⚠️ Failed to store workout in Pinecone (non-blocking):",
@@ -1346,7 +1348,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     return {
       workoutId: workout.workoutId,
       success: true,
-      pineconeStored: true,
+      pineconeStored,
       pineconeRecordId: null,
       templateLinked,
     };
