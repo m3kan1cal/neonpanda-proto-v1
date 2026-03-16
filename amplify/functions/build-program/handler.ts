@@ -357,44 +357,42 @@ export const handler = async (event: BuildProgramEvent) => {
                 );
 
                 if (program) {
-                  // Generate AI-powered session summary and store in Pinecone (fire-and-forget, non-blocking)
-                  generateProgramDesignerSessionSummary(
-                    existingSession,
-                    program,
-                  )
-                    .then((sessionSummary) =>
-                      storeProgramDesignerSessionSummaryInPinecone(
+                  try {
+                    const sessionSummary =
+                      await generateProgramDesignerSessionSummary(
+                        existingSession,
+                        program,
+                      );
+                    const pineconeResult =
+                      await storeProgramDesignerSessionSummaryInPinecone(
                         event.userId,
                         sessionSummary,
                         existingSession,
                         program,
-                      ),
-                    )
-                    .then((pineconeResult) => {
-                      if (pineconeResult.success) {
-                        logger.info(
-                          "✅ Program designer session stored in Pinecone:",
-                          {
-                            summaryId: pineconeResult.summaryId,
-                            recordId: pineconeResult.recordId,
-                            namespace: pineconeResult.namespace,
-                          },
-                        );
-                      } else {
-                        logger.warn(
-                          "⚠️ Failed to store session in Pinecone (non-blocking):",
-                          {
-                            error: pineconeResult.error,
-                          },
-                        );
-                      }
-                    })
-                    .catch((error) => {
-                      logger.error(
-                        "⚠️ Pinecone session storage error (non-blocking):",
-                        error,
                       );
-                    });
+                    if (pineconeResult.success) {
+                      logger.info(
+                        "✅ Program designer session stored in Pinecone:",
+                        {
+                          summaryId: pineconeResult.summaryId,
+                          recordId: pineconeResult.recordId,
+                          namespace: pineconeResult.namespace,
+                        },
+                      );
+                    } else {
+                      logger.warn(
+                        "⚠️ Failed to store session in Pinecone (non-blocking):",
+                        {
+                          error: pineconeResult.error,
+                        },
+                      );
+                    }
+                  } catch (error) {
+                    logger.error(
+                      "⚠️ Pinecone session storage error (non-blocking):",
+                      error,
+                    );
+                  }
                 } else {
                   logger.warn(
                     "⚠️ Program not found for Pinecone session storage",

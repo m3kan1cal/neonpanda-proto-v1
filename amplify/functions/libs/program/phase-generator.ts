@@ -255,7 +255,6 @@ function filterRestDayViolations(
   return { filtered, droppedCount, violatingDayNumbers };
 }
 
-
 /**
  * Generate high-level phase structure (without workouts)
  * This determines how to break the program into logical phases
@@ -619,12 +618,88 @@ export async function generateSinglePhaseWorkouts(
     isCurrent: p.phaseId === phase.phaseId,
   }));
 
-  const prompt = `${coachPersonalityPrompt}
+  // ── STATIC PROMPT ────────────────────────────────────────────────────────
+  // Content that is identical for every phase generation call and can be
+  // cached by Bedrock. All user/phase-specific data goes in dynamicPrompt.
+  const staticPrompt = `# YOUR TASK
+Generate detailed workout templates for this program phase.
+
+## WORKOUT GENERATION REQUIREMENTS
+
+### Workout Template Structure (CRITICAL):
+Each workout must follow the segmented, implicitly grouped structure:
+
+**Simple Training Days (1 template):**
+- Single template with unique groupId
+- Example: "Strength Day" or "Conditioning Session"
+
+**Complex Training Days (2-5 templates with SAME groupId):**
+- Multiple templates sharing the same groupId (links them to the same day)
+- Each template is independently trackable
+- Examples:
+  * "Strength Block" + "Accessory Work" + "Core Finisher"
+  * "Olympic Lifting" + "Conditioning"
+  * "Upper Body Strength" + "Metcon"
+
+### Template ID Patterns:
+- templateId: "template_\${userId}_\${phaseId}_\${unique}"
+- groupId: "group_\${userId}_\${phaseId}_day\${dayNumber}"
+- Templates for same day MUST share the exact same groupId
+
+### Workout Description (Natural Language):
+- Write as a coach would prescribe it - clear, motivating, and actionable
+- Be specific with sets, reps, weights/percentages, rest periods
+- Include scaling options when appropriate
+- CRITICAL FORMATTING: Use line breaks between exercises for readability
+  * Put each exercise or major section on its own line
+  * For multi-exercise rounds, list each exercise on a separate line
+  * Use blank lines to separate major sections (warmup, main work, finisher)
+  * This improves readability and makes workouts easier to follow
+
+Example (single exercise):
+"Bench Press: Work up to 2x2 @ 90-93% 1RM, rest 4-5 min. Show your pressing strength."
+
+Example (multi-exercise round):
+"Giant Set x3 rounds, 60 sec rest between rounds:
+- Cable Lateral Raise x15 per arm
+- Cable Tricep Pushdown x20
+- Incline DB Curl x15
+- Cable Crossover x15
+- Face Pull x20
+
+Focus on pump, contraction, and celebrating your physique transformation. Finish with 3x20 Cable Crunch for core."
+
+Example (complex workout):
+"Warmup:
+- 3 rounds: 10 air squats, 10 push-ups, 200m jog
+
+Main Work:
+Barbell Back Squat: 5x5 @ 80% 1RM, rest 3 min between sets
+
+Accessory Circuit (3 rounds):
+- Walking Lunges x20 steps
+- Romanian Deadlift x12 @ moderate weight
+- Plank Hold x60 seconds
+Rest 90 seconds between rounds
+
+Finisher:
+AMRAP 8 minutes:
+- 10 Box Jumps (24/20)
+- 15 Kettlebell Swings (53/35)
+- 20 Double Unders"
+
+### Progression Within Phase:
+- Early phase: Lower intensity, focus on movement quality and adaptation
+- Mid phase: Build volume and intensity progressively
+- Late phase: Peak complexity/intensity before next phase (or taper if final phase)
+
+Generate the complete phase with all workouts using the tool.`;
+
+  // ── DYNAMIC PROMPT ───────────────────────────────────────────────────────
+  // All user-specific and phase-specific content. Changes per invocation.
+  const dynamicPrompt = `${coachPersonalityPrompt}
 
 ---
-
-# YOUR TASK
-Generate detailed workout templates for this program phase.
 
 ## CURRENT PHASE:
 ${JSON.stringify(phase, null, 2)}
@@ -656,8 +731,6 @@ ${context.additionalConsiderations}
     : ""
 }## USER MEMORIES & RELEVANT CONTEXT:
 ${memoryContext}
-
-## WORKOUT GENERATION REQUIREMENTS:
 
 ${
   !restDayInfo.isFlexible && restDayInfo.indices.length > 0
@@ -768,68 +841,6 @@ ${(() => {
 - Distribute evenly: aim for ${context.trainingFrequency} workout days per week throughout the phase
 - Deload phases or phases with a specific recovery purpose may warrant slight variation
 
-### Workout Template Structure (CRITICAL):
-Each workout must follow the segmented, implicitly grouped structure:
-
-**Simple Training Days (1 template):**
-- Single template with unique groupId
-- Example: "Strength Day" or "Conditioning Session"
-
-**Complex Training Days (2-5 templates with SAME groupId):**
-- Multiple templates sharing the same groupId (links them to the same day)
-- Each template is independently trackable
-- Examples:
-  * "Strength Block" + "Accessory Work" + "Core Finisher"
-  * "Olympic Lifting" + "Conditioning"
-  * "Upper Body Strength" + "Metcon"
-
-### Template ID Patterns:
-- templateId: "template_\${context.userId}_\${phase.phaseId}_\${unique}"
-- groupId: "group_\${context.userId}_\${phase.phaseId}_day\${dayNumber}"
-- Templates for same day MUST share the exact same groupId
-
-### Workout Description (Natural Language):
-- Write as a coach would prescribe it - clear, motivating, and actionable
-- Be specific with sets, reps, weights/percentages, rest periods
-- Include scaling options when appropriate
-- CRITICAL FORMATTING: Use line breaks between exercises for readability
-  * Put each exercise or major section on its own line
-  * For multi-exercise rounds, list each exercise on a separate line
-  * Use blank lines to separate major sections (warmup, main work, finisher)
-  * This improves readability and makes workouts easier to follow
-
-Example (single exercise):
-"Bench Press: Work up to 2x2 @ 90-93% 1RM, rest 4-5 min. Show your pressing strength."
-
-Example (multi-exercise round):
-"Giant Set x3 rounds, 60 sec rest between rounds:
-- Cable Lateral Raise x15 per arm
-- Cable Tricep Pushdown x20
-- Incline DB Curl x15
-- Cable Crossover x15
-- Face Pull x20
-
-Focus on pump, contraction, and celebrating your physique transformation. Finish with 3x20 Cable Crunch for core."
-
-Example (complex workout):
-"Warmup:
-- 3 rounds: 10 air squats, 10 push-ups, 200m jog
-
-Main Work:
-Barbell Back Squat: 5x5 @ 80% 1RM, rest 3 min between sets
-
-Accessory Circuit (3 rounds):
-- Walking Lunges x20 steps
-- Romanian Deadlift x12 @ moderate weight
-- Plank Hold x60 seconds
-Rest 90 seconds between rounds
-
-Finisher:
-AMRAP 8 minutes:
-- 10 Box Jumps (24/20)
-- 15 Kettlebell Swings (53/35)
-- 20 Double Unders"
-
 ### Equipment Context:
 ${todoList.equipmentAccess?.value ? `Available Equipment: ${JSON.stringify(todoList.equipmentAccess.value)}` : "Use standard gym equipment"}
 ${
@@ -854,27 +865,22 @@ Modify exercises and loading to accommodate these constraints.`
     : "No specific injury considerations."
 }
 
-### Progression Within Phase:
-- Early phase: Lower intensity, focus on movement quality and adaptation
-- Mid phase: Build volume and intensity progressively
-- Late phase: Peak complexity/intensity before next phase (or taper if final phase)
-
 ### Focus Areas for This Phase:
-${phase.focusAreas.map((area) => `- ${area}`).join("\n")}
-
-Generate the complete phase with all workouts using the tool.`;
+${phase.focusAreas.map((area) => `- ${area}`).join("\n")}`;
 
   try {
     // PRIMARY: Tool-based generation
     logger.info("🎯 Attempting tool-based phase workout generation");
 
     const result = await callBedrockApi(
-      prompt,
+      staticPrompt,
       `phase_${phase.phaseId}_generation`,
       MODEL_IDS.PLANNER_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.STRUCTURED,
         enableThinking: true,
+        staticPrompt,
+        dynamicPrompt,
         tools: {
           name: "generate_program_phase",
           description:
@@ -966,7 +972,7 @@ Generate the complete phase with all workouts using the tool.`;
         debugData: {
           phaseId: phase.phaseId,
           phaseName: phase.name,
-          prompt: prompt.substring(0, 5000), // First 5000 chars
+          prompt: (staticPrompt + "\n\n" + dynamicPrompt).substring(0, 5000), // First 5000 chars
           response: JSON.stringify(result.input, null, 2).substring(0, 5000), // First 5000 chars
           method: "tool" as const,
           duration,
@@ -981,7 +987,8 @@ Generate the complete phase with all workouts using the tool.`;
     // FALLBACK: Text-based generation with parsing
     logger.info("⚠️ Falling back to text-based phase workout generation");
 
-    const fallbackPrompt = `${prompt}
+    const fullPrompt = `${staticPrompt}\n\n${dynamicPrompt}`;
+    const fallbackPrompt = `${fullPrompt}
 
 Return ONLY valid JSON matching this structure (no markdown, no explanation):
 ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
