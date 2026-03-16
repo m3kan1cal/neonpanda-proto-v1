@@ -37,6 +37,10 @@ import {
   TEMPERATURE_PRESETS,
 } from "../../api-helpers";
 import {
+  getEnhancedMethodologyContext,
+  formatEnhancedMethodologyContext,
+} from "../../pinecone-utils";
+import {
   generatePhaseStructure,
   generateSinglePhaseWorkouts,
   assembleProgram,
@@ -63,6 +67,7 @@ import {
   checkTrainingFrequencyCompliance,
 } from "./helpers";
 import { calculateEndDate } from "../../program/calendar-utils";
+import { generateEntityId } from "../../id-utils";
 import { logger } from "../../logger";
 
 /**
@@ -275,30 +280,54 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
       throw new Error(`Coach config not found for coachId: ${coachId}`);
     }
 
-    // 2. Query Pinecone for relevant user context
-    logger.info("Querying Pinecone for user context...");
-    const pineconeResult = await queryPineconeContext(
-      userId,
-      `User training history, preferences, goals, and coaching discussions for program design: ${todoList.trainingGoals?.value || "fitness goals"}`,
-      {
-        workoutTopK: 5,
-        conversationTopK: 8, // Higher -- cross-context retrieval is the priority here
-        programTopK: 3,
-        coachCreatorTopK: 2,
-        programDesignerTopK: 2, // Include past program designer session context
-        userMemoryTopK: 3,
-        includeMethodology: true,
-        minScore: 0.5, // Lower threshold for broader recall on conversations
-      },
-    );
+    // 2. Query Pinecone: user context and methodology in parallel (separate queries so
+    //    methodology is never crowded out by user matches during reranking)
+    logger.info("Querying Pinecone for user context and methodology...");
+    const methodologyQuery = `Training program design for: ${todoList.trainingGoals?.value || "fitness goals"}`;
+    const [pineconeResult, methodologyMatches] = await Promise.all([
+      queryPineconeContext(
+        userId,
+        `User training history, preferences, goals, and coaching discussions for program design: ${todoList.trainingGoals?.value || "fitness goals"}`,
+        {
+          workoutTopK: 5,
+          conversationTopK: 8, // Higher -- cross-context retrieval is the priority here
+          programTopK: 3,
+          coachCreatorTopK: 2,
+          programDesignerTopK: 2, // Include past program designer session context
+          userMemoryTopK: 3,
+          includeMethodology: false, // Queried separately below to prevent methodology from being eliminated by reranking
+          minScore: 0.5, // Lower threshold for broader recall on conversations
+        },
+      ),
+      getEnhancedMethodologyContext(methodologyQuery, userId, { topK: 8 }),
+    ]);
 
-    const pineconeContext =
+    const userContext =
       pineconeResult.success && pineconeResult.matches
         ? pineconeResult.matches
             .map((match: any) => match.content || "")
             .filter((content: string) => content.length > 0)
             .join("\n\n")
         : "";
+
+    const methodologyContext =
+      formatEnhancedMethodologyContext(methodologyMatches);
+
+    logger.info("✅ Pinecone queries complete:", {
+      userContextLength: userContext.length,
+      methodologyMatchCount: methodologyMatches.length,
+      methodologyContextLength: methodologyContext.length,
+    });
+
+    // Combine user context and methodology context as separate sections
+    const pineconeContext = [
+      userContext ? `## USER TRAINING HISTORY & CONTEXT:\n${userContext}` : "",
+      methodologyContext
+        ? `## TRAINING METHODOLOGY KNOWLEDGE:\n${methodologyContext}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
 
     // 3. Parse program duration (supports "X weeks", "X months", vague terms, or days as number)
     const programDuration = parseProgramDuration(
@@ -352,6 +381,8 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
       coachName: coachConfig.coach_name,
       hasUserProfile: !!userProfile,
       pineconeContextLength: pineconeContext.length,
+      userContextLength: userContext.length,
+      methodologyMatchCount: methodologyMatches.length,
       programDuration,
       trainingFrequency,
       trainingGoals,
@@ -443,10 +474,19 @@ Returns: Array of phase definitions with phaseId, name, description, startDay, e
 
     const result = await generatePhaseStructure(phaseContext);
 
+    // Overwrite AI-generated phase IDs with proper convention: phase_{userId}_{timestamp}_{shortId}
+    // The AI tends to invent placeholder IDs (e.g., "phase_user_ts001_p1") that don't follow
+    // the project pattern and aren't traceable.
+    result.phases = result.phases.map((phase) => ({
+      ...phase,
+      phaseId: generateEntityId("phase", context.userId),
+    }));
+
     logger.info("✅ Phase structure generated:", {
       phaseCount: result.phases.length,
       phases: result.phases.map((p) => ({
         name: p.name,
+        phaseId: p.phaseId,
         days: `${p.startDay}-${p.endDay}`,
       })),
     });
@@ -1506,14 +1546,16 @@ Returns: success, programId, s3Key, pineconeRecordId`,
         new Set(workoutTemplates.map((w: any) => w.dayNumber as number)),
       ).sort((a, b) => a - b);
 
-      // Check for gaps in coverage
+      // Check for gaps in coverage. With N workouts/week the maximum expected
+      // rest span between consecutive training days is ceil(7/N). Phase boundaries
+      // can add an extra partial week, so we allow 2× that value before flagging.
+      const maxRestDaysBetweenWorkouts =
+        trainingFrequency > 0 ? Math.ceil(7 / trainingFrequency) * 2 : 14; // conservative fallback when frequency unknown
       const gaps: string[] = [];
       let expectedDay = 1;
       for (const dayNum of dayNumbers) {
-        // Allow small gaps (rest days), but flag large gaps
         const gap = dayNum - expectedDay;
-        if (gap > 7) {
-          // More than a week gap
+        if (gap > maxRestDaysBetweenWorkouts) {
           gaps.push(
             `Gap of ${gap} days between day ${expectedDay} and day ${dayNum}`,
           );
