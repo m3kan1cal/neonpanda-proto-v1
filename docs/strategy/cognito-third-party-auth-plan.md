@@ -242,6 +242,16 @@ Sign-In Methods
 - **Link** a new provider (initiates `signInWithRedirect` from Settings page — Cognito auto-links when the same email matches)
 - **Set up email/password** for Google-only users (allows them to create a Cognito password as a fallback sign-in method)
 
+**"Set Up Email/Password" Flow (for Google-only users):**
+
+This follows the industry-standard pattern used by Notion, GitHub, Strava, and Figma. When a social-only user wants to add email/password, the UI shows a lightweight **"Create Password"** form — not a "Change Password" form. The key differences:
+
+1. **No current password field** — the user doesn't have one. This is a "Create Password" form with only new password + confirm.
+2. **No email verification step** — their email is already verified via Google's OAuth claim. Cognito already has `email_verified: true`.
+3. **Server-side implementation** — The frontend cannot use Amplify's `changePassword()` (which requires the current password). Instead, the backend calls **`AdminSetUserPassword`** with `Permanent: true` via the `POST /api/user/identity-providers` endpoint (`action: 'set-password'`).
+4. **Server-side guard** — Only allow this action if `UserStatus === EXTERNAL_PROVIDER` (no existing Cognito password). If the user already has a password, return 400 — they should use the normal "Change Password" flow instead.
+5. **Post-success state refresh** — After the password is set, the frontend refreshes identity state so that: (a) the "Set Up Email/Password" option is replaced with "Change Password", (b) the Disconnect button on Google becomes active (user now has two sign-in methods).
+
 **Safety Check — Cannot Disconnect Last Method:**
 If a user has only one sign-in method (e.g., Google-only), the "Disconnect" button must be disabled or hidden. Attempting to disconnect the last method would lock the user out. The UI should show a tooltip/message: "You must have at least one sign-in method. Set up email/password before disconnecting Google."
 
@@ -309,9 +319,21 @@ const canDisconnectPassword = hasPassword && hasGoogle; // At least one other me
 {
   action: 'list',
 }
+
+// Action: set-password — creates a Cognito password for a federated-only user
+// Uses: AdminSetUserPassword (Cognito API)
+// This follows the same pattern as Notion, GitHub, Strava, and Figma:
+// Google-only users can add email/password as a fallback sign-in method.
+// The UI shows a "Create Password" form (new password + confirm only — no current password field).
+// No email verification step needed — email is already verified via Google's OAuth claim.
+{
+  action: 'set-password',
+  newPassword: 'UserChosenP@ssw0rd',
+}
 ```
 
 **Cognito APIs used:**
+- **`AdminSetUserPassword`** — Sets a permanent password for a user. Called with `Permanent: true` to skip the force-change-password flow. This transitions a federated-only user (`UserStatus: EXTERNAL_PROVIDER`) to having both Google and email/password as sign-in methods. The user can then sign in with either method. **Server-side guard:** Only allow this action if the user currently has no Cognito password (i.e., `UserStatus === EXTERNAL_PROVIDER`). If they already have a password, they should use the normal "Change Password" flow (`changePassword()` from Amplify client SDK, which requires the current password).
 - **`AdminDisableProviderForUser`** — Unlinks a federated identity from a user pool account. After unlinking, the user can no longer sign in via that provider for this account. Requires `ProviderName` (e.g., "Google") and `ProviderAttributeValue` (the user's ID from that provider).
 - **`AdminLinkProviderForUser`** — Links a federated identity to an existing user pool account. Used during the post-confirmation trigger for auto-linking (same email). Could also be exposed for manual linking, but the simpler approach is to let Cognito handle linking automatically when the user signs in with Google from the Settings page.
 
@@ -440,6 +462,7 @@ This means the data layer supports username changes today — we just need to un
     - Backend: server-side enforcement in the identity-providers API endpoint (return 400 if last method)
 14. Create new API endpoint `POST /api/user/identity-providers`:
     - `action: 'disconnect'` — calls `AdminDisableProviderForUser` (with last-method guard)
+    - `action: 'set-password'` — calls `AdminSetUserPassword` with `Permanent: true` (with `EXTERNAL_PROVIDER` status guard). Shows a "Create Password" form on the frontend (new password + confirm only, no current password field, no email verification). Follows the Notion/GitHub/Strava/Figma pattern for adding email/password to a social-only account.
     - `action: 'list'` — returns linked providers (fallback if client-side fetch is insufficient)
 15. Update password section visibility:
     - Hidden for Google-only users (show "Managed by Google" message instead)
@@ -521,6 +544,7 @@ This means the data layer supports username changes today — we just need to un
 7. **Password section visibility:** Conditionally show/hide password change section based on auth method. Derive auth method from Cognito `identities` attribute at runtime (no UserProfile schema change).
 8. **Password reset for Google users:** Handle gracefully in ForgotPasswordForm — catch Cognito error and redirect to Google sign-in instead.
 9. **Cannot disconnect last sign-in method:** Dual enforcement — frontend disables the Disconnect button with tooltip explanation, backend returns 400 as the source-of-truth safety net. Users must set up an alternative method before disconnecting their only one.
+10. **"Set Up Email/Password" for Google-only users:** Uses `AdminSetUserPassword` with `Permanent: true` via the identity-providers endpoint (`action: 'set-password'`). Frontend shows a "Create Password" form (new password + confirm only — no current password, no email verification). This follows the industry pattern used by Notion, GitHub, Strava, and Figma. Server-side guard ensures this action is only available when `UserStatus === EXTERNAL_PROVIDER`.
 
 ## Remaining Open Questions
 
