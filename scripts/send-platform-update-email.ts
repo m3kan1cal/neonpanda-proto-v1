@@ -106,7 +106,7 @@ interface Stats {
 function parseArgs(): Config {
   const args = process.argv.slice(2);
 
-  if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
+  if (args.includes("--help") || args.includes("-h")) {
     console.info(`
 Send Platform Update Email Script
 
