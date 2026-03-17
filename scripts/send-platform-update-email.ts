@@ -33,8 +33,11 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import readline from "readline";
+
+const scriptDir = dirname(fileURLToPath(import.meta.url));
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -42,11 +45,11 @@ const DEFAULT_REGION = "us-west-2";
 const DEFAULT_BATCH_SIZE = 50;
 const DEFAULT_DELAY_MS = 100;
 const FROM_EMAIL = "NeonPanda <no-reply@neonpanda.ai>";
-const EMAIL_SUBJECT = "🚀 The Biggest Update in NeonPanda History";
+const EMAIL_SUBJECT = "The Biggest Update in NeonPanda History";
 const APP_URL = "https://neonpanda.ai";
 const API_URL = "https://api-prod.neonpanda.ai";
 const HTML_TEMPLATE_PATH = join(
-  __dirname,
+  scriptDir,
   "..",
   "public",
   "updates",
@@ -134,8 +137,7 @@ Examples:
     return arg?.split("=").slice(1).join("=");
   };
 
-  const tableName =
-    getArg("table") || process.env.DYNAMODB_TABLE_NAME || "";
+  const tableName = getArg("table") || process.env.DYNAMODB_TABLE_NAME || "";
   if (!tableName) {
     console.error(
       "❌ Table name required. Use --table=NAME or set DYNAMODB_TABLE_NAME env var.",
@@ -224,7 +226,7 @@ YOUR COACH NOW KNOWS EVERYTHING
 We rebuilt the AI coaching engine with full cross-context awareness. Your coach can now search past conversations, query your memories, browse your programs, pull exercise history, log multiple workouts at once, check today's prescribed workout, and more — 11 tools total.
 
 SMARTER WORKOUT LOGGING
-A dedicated 6-step AI pipeline that auto-detects your discipline, extracts all workout data from natural language, validates completeness, normalizes data, and generates summaries. Multi-workout and program linking support included.
+Powered by 10+ tools that work together so the system can make real decisions about what to extract, how to validate, and when to save. Multi-workout support (many workouts in a single message) and program linking included.
 
 COACH CREATOR & PROGRAM DESIGNER — REBUILT
 Both migrated to conversation agent architecture. Agentic memory means no more repeating yourself. Training directives give your coaches deeper understanding.
@@ -357,7 +359,9 @@ async function main() {
   let htmlTemplate: string;
   try {
     htmlTemplate = readFileSync(HTML_TEMPLATE_PATH, "utf-8");
-    console.info(`  ✅ Loaded template (${(htmlTemplate.length / 1024).toFixed(1)} KB)`);
+    console.info(
+      `  ✅ Loaded template (${(htmlTemplate.length / 1024).toFixed(1)} KB)`,
+    );
   } catch (error) {
     console.error(
       `  ❌ Failed to load template at ${HTML_TEMPLATE_PATH}:`,
@@ -428,9 +432,7 @@ async function main() {
   console.info(`  Skipped (no email):    ${stats.skipped.noEmail}`);
   console.info(`  Skipped (opted out):   ${stats.skipped.optedOut}`);
   if (config.testEmail) {
-    console.info(
-      `  Skipped (test filter): ${stats.skipped.testEmailFilter}`,
-    );
+    console.info(`  Skipped (test filter): ${stats.skipped.testEmailFilter}`);
   }
 
   if (stats.eligible === 0) {
@@ -446,7 +448,9 @@ async function main() {
       const name = attrs.displayName || attrs.firstName || "Unknown";
       console.info(`  📧 ${attrs.email} (${name})`);
     }
-    console.info(`\n✅ Dry run complete. ${stats.eligible} emails would be sent.`);
+    console.info(
+      `\n✅ Dry run complete. ${stats.eligible} emails would be sent.`,
+    );
     process.exit(0);
   }
 
@@ -473,7 +477,12 @@ async function main() {
     const personalizedHtml = personalizeHtml(htmlTemplate, email, userId);
     const plainText = buildPlainText(email, userId);
 
-    const result = await sendEmail(sesClient, email, personalizedHtml, plainText);
+    const result = await sendEmail(
+      sesClient,
+      email,
+      personalizedHtml,
+      plainText,
+    );
 
     if (result.success) {
       stats.sent++;
@@ -507,9 +516,7 @@ async function main() {
   console.info(`  Skipped (no email):    ${stats.skipped.noEmail}`);
   console.info(`  Skipped (opted out):   ${stats.skipped.optedOut}`);
   if (config.testEmail) {
-    console.info(
-      `  Skipped (test filter): ${stats.skipped.testEmailFilter}`,
-    );
+    console.info(`  Skipped (test filter): ${stats.skipped.testEmailFilter}`);
   }
   console.info("─".repeat(50));
 
