@@ -38,19 +38,16 @@ This document analyzes the impact and implementation strategy for adding third-p
 
 ---
 
-## Recommended Providers (Immediate Integration)
+## Scope: Google Auth Only (Phase 1)
 
-### 1. Google (Gmail) — **Highest Priority**
+### Google (Gmail) — **Immediate Priority**
 
 **Why:** Largest OAuth provider by market share. Nearly every user has a Google account. Most requested social login option for fitness/consumer apps. Well-documented Cognito integration.
 
 **Cognito Support:** Native first-class support as a social identity provider (not generic OIDC — Cognito has a dedicated Google integration path).
 
-### 2. Apple — **Second Priority**
-
-**Why:** Required by Apple App Store policy if you offer any third-party social login. Even if NeonPanda is web-only today, adding Apple now prevents a blocker if you ship a mobile app. Apple users expect "Sign in with Apple" on iOS/macOS. Good for privacy-conscious fitness users.
-
-**Cognito Support:** Native first-class support as a social identity provider.
+### Future Consideration: Apple
+Apple Sign-In is required by App Store policy if any third-party social login is offered. If/when NeonPanda ships a mobile app, Apple becomes mandatory. Deferred for now to reduce scope.
 
 ### Why NOT Facebook, GitHub, etc.?
 - **Facebook/Meta:** Declining user trust, complex API approval process, less relevant for fitness audience.
@@ -71,7 +68,7 @@ loginWith: {
   email: { verificationEmailStyle: "CODE", ... }
 }
 
-// PROPOSED
+// PROPOSED (Google only)
 loginWith: {
   email: { verificationEmailStyle: "CODE", ... },
   externalProviders: {
@@ -83,31 +80,19 @@ loginWith: {
         email: 'email',
         givenName: 'given_name',
         familyName: 'family_name',
-        preferredUsername: 'email',  // See: Attribute Mapping Concerns
+        preferredUsername: 'email',  // Auto-generate username from email; user can change later
       }
     },
-    apple: {
-      clientId: secret('APPLE_CLIENT_ID'),
-      teamId: secret('APPLE_TEAM_ID'),
-      keyId: secret('APPLE_KEY_ID'),
-      privateKey: secret('APPLE_PRIVATE_KEY'),
-      scopes: ['email', 'name'],
-      attributeMapping: {
-        email: 'email',
-        givenName: 'firstName',
-        familyName: 'lastName',
-        preferredUsername: 'email',
-      }
-    },
+    // Callback URLs derived from existing domain-utils.ts (amplify/functions/libs/domain-utils.ts)
     callbackUrls: [
-      'http://localhost:5173/',          // Local dev
-      'https://dev.neonpanda.ai/',       // Dev
-      'https://www.neonpanda.ai/',       // Production
+      'http://localhost:5173/',          // Sandbox / local dev (isSandbox() || NODE_ENV=development)
+      'https://dev.neonpanda.ai/',       // Non-production branches (develop, feature branches)
+      'https://neonpanda.ai/',           // Production (main branch)
     ],
     logoutUrls: [
       'http://localhost:5173/',
       'https://dev.neonpanda.ai/',
-      'https://www.neonpanda.ai/',
+      'https://neonpanda.ai/',
     ],
     domainPrefix: 'neonpanda-auth',  // Creates: neonpanda-auth.auth.<region>.amazoncognito.com
   }
@@ -136,18 +121,25 @@ loginWith: {
 
 ```typescript
 // In post-confirmation handler, detect federated vs native users:
-const isFederatedUser = event.userName.includes('Google_') ||
-                        event.userName.includes('SignInWithApple_') ||
-                        event.triggerSource === 'PostConfirmation_ConfirmSignUp' &&
-                        !event.request.userAttributes.preferred_username;
+const isFederatedUser = event.userName.startsWith('Google_') ||
+                        event.userName.startsWith('google_');
 
 // For federated users:
-// 1. preferred_username won't exist → fall back to email prefix or display name
-// 2. given_name/family_name come from IdP claims (may be empty for Apple after first login)
+// 1. preferred_username won't exist → auto-generate from email prefix
+//    e.g., "jane@gmail.com" → "jane", with random suffix if taken ("jane_x8k2")
+// 2. given_name/family_name come from Google claims (usually populated)
 // 3. Still need to generate custom:user_id via nanoid
 // 4. Still need to create DynamoDB profile
-// 5. Need account linking check: does a profile already exist for this email?
+// 5. Account linking check: does a profile already exist for this email?
+//    (existing getUserProfileByEmail logic handles this)
 ```
+
+**Username Auto-Generation Strategy:**
+- Extract email prefix: `email.split('@')[0]`
+- Check availability via `getUserProfileByUsername()`
+- If taken, append random 4-char suffix: `jane_x8k2`
+- Store as both Cognito `preferred_username` and DynamoDB `username`
+- User can change later via Settings (see: Username Mutability section below)
 
 **Account Linking Concern:** If a user first registers with email/password as `jane@gmail.com`, then later clicks "Sign in with Google" using the same Gmail, Cognito creates a **separate user**. The existing handler already checks `getUserProfileByEmail(email)` and links to the existing profile — this logic works in our favor but needs to be validated for the federated flow.
 
@@ -211,11 +203,11 @@ const handleFederatedSignIn = async (provider) => {
 
 **What changes:**
 
-- `LoginForm.jsx` — Add "Sign in with Google" and "Sign in with Apple" buttons above/below the email form, with a divider ("or continue with email").
-- `RegisterForm.jsx` — Add the same social buttons. Federated sign-in **is** registration for new users (Cognito auto-creates the user).
-- `AuthRouter.jsx` — May need to handle the OAuth redirect callback state (user returning from Google/Apple).
+- `LoginForm.jsx` — Add "Sign in with Google" button above/below the email form, with a divider ("or continue with email").
+- `RegisterForm.jsx` — Add the same Google button. Federated sign-in **is** registration for new users (Cognito auto-creates the user).
+- `AuthRouter.jsx` — May need to handle the OAuth redirect callback state (user returning from Google).
 - `VerifyEmailForm.jsx` — No changes (federated users skip this).
-- New component: `SocialLoginButtons.jsx` — Shared component with Google/Apple styled buttons.
+- New component: `SocialLoginButtons.jsx` — Shared component with Google styled button (extensible for future providers).
 
 **Risk:** LOW — Purely additive UI changes. Existing forms remain functional.
 
@@ -239,6 +231,52 @@ const handleFederatedSignIn = async (provider) => {
 
 ---
 
+## Username Mutability (Enabling Username Changes)
+
+### Current State
+
+The `preferred_username` attribute in Cognito is already configured as **mutable** (`amplify/auth/resource.ts:17`). The immutability is enforced only at the **application layer** in the API handler:
+
+```typescript
+// amplify/functions/update-user-profile/handler.ts:22-24
+if (updates.email || updates.username) {
+  return createErrorResponse(400, 'Email and username cannot be changed');
+}
+```
+
+Critically, the DynamoDB layer (`amplify/dynamodb/user-profile.ts:209-211`) **already handles GSI key updates** when the profile is saved:
+
+```typescript
+// Lines 209-211 — GSI keys are recalculated on every save
+gsi1pk: `email#${updatedProfile.email}`,
+gsi2pk: `username#${updatedProfile.username}`,
+```
+
+This means the data layer supports username changes today — we just need to unlock it at the API layer.
+
+### What Changes
+
+1. **`update-user-profile/handler.ts`** — Allow `username` updates (keep `email` immutable):
+   - Remove `username` from the immutable fields check
+   - Add username validation: length, allowed characters, no profanity
+   - Check availability via `getUserProfileByUsername()` before accepting
+   - Sync to Cognito `preferred_username` via `AdminUpdateUserAttributes`
+
+2. **`Settings.jsx`** — Make the username field editable:
+   - Currently displays as read-only (line 1017-1019)
+   - Add inline editing with availability check (debounced API call to `check-user-availability`)
+   - Show validation feedback (taken, too short, invalid characters)
+
+3. **`check-user-availability/handler.ts`** — Already supports `?type=username&value=<value>`, no changes needed.
+
+### Risk
+
+**LOW** — The DynamoDB layer already recalculates GSI keys on save. Cognito `preferred_username` is already mutable. The only change is removing the app-level guard and adding proper validation.
+
+**Edge case:** If two users race to claim the same username, DynamoDB's `PutItem` with the GSI won't enforce uniqueness natively (GSIs are eventually consistent and allow duplicates). Mitigation: Use a `ConditionExpression` or check-then-write with optimistic locking pattern. However, this is a rare edge case and can be addressed as a follow-up.
+
+---
+
 ## Pre-Requisites (External Setup)
 
 ### Google OAuth Credentials
@@ -248,46 +286,41 @@ const handleFederatedSignIn = async (provider) => {
 4. Set authorized redirect URI to: `https://neonpanda-auth.auth.<region>.amazoncognito.com/oauth2/idpresponse`
 5. Store Client ID and Client Secret as Amplify secrets
 
-### Apple Sign-In Credentials
-1. Enroll in [Apple Developer Program](https://developer.apple.com/) ($99/year)
-2. Create an App ID with "Sign in with Apple" capability
-3. Create a Services ID (this is the `clientId`)
-4. Create a private key for Sign in with Apple
-5. Store Team ID, Key ID, Client ID, and Private Key as Amplify secrets
-
 ---
 
 ## Implementation Phases
 
-### Phase 1: Infrastructure & Backend (Lower Risk)
-1. Register Google OAuth app and obtain credentials
+### Phase 1: Infrastructure & Backend
+1. Register Google OAuth app in Google Cloud Console and obtain credentials
 2. Store secrets in Amplify: `npx ampx sandbox secret set GOOGLE_CLIENT_ID`, etc.
-3. Update `amplify/auth/resource.ts` with Google external provider config
+3. Update `amplify/auth/resource.ts` with Google external provider config and callback URLs
 4. Update `amplify/functions/post-confirmation/handler.ts` to handle federated users:
-   - Detect federated user via `event.userName` prefix
-   - Handle missing `preferred_username` (fall back to email prefix)
-   - Handle potentially missing `given_name`/`family_name` (Apple only sends on first auth)
-   - Validate account linking logic works for federated users
-5. Deploy to sandbox and test the OAuth flow end-to-end with Postman/curl
+   - Detect federated user via `event.userName` prefix (`Google_` / `google_`)
+   - Auto-generate `preferred_username` from email prefix (with availability check + random suffix fallback)
+   - Handle potentially missing `given_name`/`family_name` gracefully
+   - Validate existing account linking logic works for federated users (same email)
+5. Deploy to sandbox and test the OAuth flow end-to-end
 
 ### Phase 2: Frontend Integration
 6. Add `signInWithRedirect` to `AuthContext.jsx`
-7. Create `SocialLoginButtons.jsx` component
-8. Update `LoginForm.jsx` and `RegisterForm.jsx` with social login buttons
-9. Handle OAuth redirect callback state (loading, errors)
+7. Create `SocialLoginButtons.jsx` component (Google button, extensible for future providers)
+8. Update `LoginForm.jsx` and `RegisterForm.jsx` with Google sign-in button + "or" divider
+9. Handle OAuth redirect callback state (loading spinner, error handling)
 10. Test full flow: Google button → redirect → callback → session → dashboard
 
-### Phase 3: Apple Sign-In
-11. Register Apple Developer account and configure Sign in with Apple
-12. Add Apple provider to `amplify/auth/resource.ts`
-13. Test Apple flow (requires HTTPS, so must test in deployed environment)
+### Phase 3: Username Mutability
+11. Update `update-user-profile/handler.ts` — remove `username` from immutable fields guard
+12. Add username validation (length, character rules, availability check)
+13. Sync username changes to Cognito `preferred_username` via `AdminUpdateUserAttributes`
+14. Update `Settings.jsx` — make username field editable with inline availability check
+15. Test: change username, verify GSI-2 updates, verify old username is freed up
 
 ### Phase 4: Account Linking & Edge Cases
-14. Test: Email user signs in with Google (same email) — verify profile linking
-15. Test: Google user tries email registration (same email) — handle gracefully
-16. Test: MFA interaction with federated users (federated users bypass MFA)
-17. Add UI to Settings page showing linked identity providers
-18. Consider: Allow users to link/unlink providers from Settings
+16. Test: Email user signs in with Google (same email) — verify profile linking
+17. Test: Google user tries email registration (same email) — handle gracefully
+18. Test: MFA interaction with federated users (federated users bypass MFA)
+19. Test: Username auto-generation collision handling
+20. Consider (future): Settings UI showing linked identity providers, link/unlink capability
 
 ---
 
@@ -311,7 +344,8 @@ const handleFederatedSignIn = async (provider) => {
 |------|----------|-----------|------------|
 | Post-confirmation trigger fails for federated users | HIGH | MEDIUM | Defensive attribute handling, thorough testing |
 | Account linking creates duplicate profiles | MEDIUM | LOW | Existing email check logic covers this; needs validation |
-| Apple requires HTTPS for testing | LOW | HIGH | Test in deployed sandbox, not localhost |
+| Username collision during auto-generation | LOW | LOW | Check availability + random suffix fallback |
+| Username change race condition (two users claim same) | LOW | LOW | Rare; mitigate with conditional write or follow-up |
 | Users confused by multiple auth methods | LOW | LOW | Clear UI with "or" divider between methods |
 | MFA bypass for federated users | LOW | LOW | Cognito handles this correctly — federated users trust the IdP |
 | Cognito Plus tier cost increase | LOW | LOW | No per-federation cost; pricing is per-MAU |
@@ -322,20 +356,19 @@ const handleFederatedSignIn = async (provider) => {
 ## Cost Impact
 
 - **Google OAuth:** Free (Google does not charge for OAuth)
-- **Apple Sign-In:** Requires Apple Developer account ($99/year) — you may already have this
-- **Cognito:** No additional per-user cost for federated users. You're already on the Plus tier. Pricing is per monthly active user regardless of auth method.
-- **Amplify Secrets:** $0.40/secret/month for storing OAuth credentials (~$2-3/month for all secrets)
+- **Cognito:** No additional per-user cost for federated users. Already on Plus tier. Pricing is per monthly active user regardless of auth method.
+- **Amplify Secrets:** $0.40/secret/month for storing OAuth credentials (~$0.80/month for Google client ID + secret)
 
 ---
 
-## Open Questions for Discussion
+## Decisions Made
 
-1. **Username for federated users:** When a user signs in with Google, they won't pick a `preferredUsername`. Should we auto-generate one from their email prefix (e.g., `jane` from `jane@gmail.com`) or prompt them to choose one after first login?
+1. **Scope:** Google only for now. Apple deferred until mobile app plans materialize.
+2. **Username for federated users:** Auto-generate from email prefix (e.g., `jane` from `jane@gmail.com`). If taken, append random suffix (`jane_x8k2`). User can change later in Settings.
+3. **Username mutability:** Enable username changes for all users (not just federated). Cognito `preferred_username` is already mutable; DynamoDB GSI updates are already handled by the data layer. Only the API handler guard needs to be relaxed.
+4. **Callback URLs:** Confirmed from existing `amplify/functions/libs/domain-utils.ts`: `http://localhost:5173` (sandbox), `https://dev.neonpanda.ai` (non-prod branches), `https://neonpanda.ai` (production/main).
 
-2. **Callback URLs:** What are the exact production, dev, and local URLs? The plan assumes `www.neonpanda.ai`, `dev.neonpanda.ai`, and `localhost:5173`.
+## Remaining Open Questions
 
-3. **Apple Developer Account:** Do you already have an Apple Developer enrollment, or is that a new cost/step?
-
-4. **Account linking UI:** Should users be able to link/unlink providers from Settings, or is this a future enhancement?
-
-5. **Mobile app plans:** If a mobile app is planned, Apple Sign-In becomes mandatory on Day 1 per App Store policy. This affects priority.
+1. **Account linking UI:** Should users be able to see/link/unlink identity providers from Settings, or defer to a future enhancement?
+2. **Username validation rules:** What length limits and character restrictions for usernames? (e.g., 3-30 chars, alphanumeric + underscores only?)
