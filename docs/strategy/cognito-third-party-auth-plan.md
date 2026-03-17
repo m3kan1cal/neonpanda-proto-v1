@@ -224,10 +224,26 @@ The "Account Security" section currently shows password change fields (current p
 - **Email/password users** (no linked Google): Show the existing password change form as-is.
 - **Linked users** (both email/password AND Google): Show the password change form (they have a Cognito password to change).
 
-**Identity Provider Display:**
-Add a new section in Settings showing the user's linked authentication methods:
-- Show which providers are linked (e.g., "Email/Password", "Google")
-- Future: allow linking/unlinking additional providers
+**Sign-In Methods Section (New):**
+Add a "Sign-In Methods" section in Settings showing the user's linked authentication methods with full management capability. This follows the standard pattern used by Strava, Peloton, MyFitnessPal, Notion, and other major platforms.
+
+```
+Sign-In Methods
+─────────────────────────────────────────────────────────────
+✓ Google          jane@gmail.com        [Disconnect]
+✓ Email/Password  jane@gmail.com        [Change Password]
+─────────────────────────────────────────────────────────────
+                                        [+ Link Google Account]
+```
+
+**Capabilities:**
+- **Display** linked sign-in methods (read from Cognito `identities` claim)
+- **Disconnect** a provider (calls `AdminDisableProviderForUser` via new backend endpoint)
+- **Link** a new provider (initiates `signInWithRedirect` from Settings page — Cognito auto-links when the same email matches)
+- **Set up email/password** for Google-only users (allows them to create a Cognito password as a fallback sign-in method)
+
+**Safety Check — Cannot Disconnect Last Method:**
+If a user has only one sign-in method (e.g., Google-only), the "Disconnect" button must be disabled or hidden. Attempting to disconnect the last method would lock the user out. The UI should show a tooltip/message: "You must have at least one sign-in method. Set up email/password before disconnecting Google."
 
 **How to detect auth method:** Cognito federated users have an `identities` attribute (JSON array) in their user attributes. This can be fetched via `fetchUserAttributes()` in `AuthContext.jsx`. The `identities` attribute contains objects like `{ providerName: "Google", providerType: "Google", ... }`. If `identities` is absent or empty, the user is email/password only.
 
@@ -235,11 +251,14 @@ Add a new section in Settings showing the user's linked authentication methods:
 // In AuthContext.jsx — expose auth provider info
 const attributes = await fetchUserAttributes();
 const identities = attributes.identities ? JSON.parse(attributes.identities) : [];
-const isGoogleUser = identities.some(id => id.providerName === 'Google');
-const hasPassword = !isGoogleUser || /* user also has email/password linked */;
+const linkedProviders = identities.map(id => id.providerName); // e.g., ['Google']
+const hasGoogle = linkedProviders.includes('Google');
+const hasPassword = /* user has a Cognito password (status !== EXTERNAL_PROVIDER) */;
+const canDisconnectGoogle = hasGoogle && hasPassword; // At least one other method exists
+const canDisconnectPassword = hasPassword && hasGoogle; // At least one other method exists
 ```
 
-**Risk:** LOW — Conditional rendering based on auth method. No backend changes needed for this section.
+**Risk:** LOW-MEDIUM — Conditional rendering + backend API call for disconnect. The `AdminDisableProviderForUser` Cognito API is straightforward, but the "last method" safety check is critical to get right.
 
 ---
 
@@ -271,7 +290,45 @@ const hasPassword = !isGoogleUser || /* user also has email/password linked */;
 
 ---
 
-### 8. Profile Update & Cognito Sync (`amplify/functions/libs/user/cognito.ts`)
+### 10. Account Link/Unlink Backend API (New Endpoint)
+
+**What changes:** A new API endpoint is needed to allow users to disconnect a linked identity provider from their account. Cognito provides native APIs for this, but they require admin-level credentials (not client-side callable).
+
+**New endpoint: `POST /api/user/identity-providers`**
+
+```typescript
+// Action: disconnect — removes a linked federated identity
+// Uses: AdminDisableProviderForUser (Cognito API)
+{
+  action: 'disconnect',
+  provider: 'Google',  // The provider to disconnect
+}
+
+// Action: list — returns the user's linked providers (alternative to client-side fetch)
+// Uses: AdminGetUser (Cognito API) → reads identities attribute
+{
+  action: 'list',
+}
+```
+
+**Cognito APIs used:**
+- **`AdminDisableProviderForUser`** — Unlinks a federated identity from a user pool account. After unlinking, the user can no longer sign in via that provider for this account. Requires `ProviderName` (e.g., "Google") and `ProviderAttributeValue` (the user's ID from that provider).
+- **`AdminLinkProviderForUser`** — Links a federated identity to an existing user pool account. Used during the post-confirmation trigger for auto-linking (same email). Could also be exposed for manual linking, but the simpler approach is to let Cognito handle linking automatically when the user signs in with Google from the Settings page.
+
+**Safety check (server-side):** Before disconnecting a provider, the endpoint must verify the user has at least one other sign-in method. This is the **server-side enforcement** of the "cannot disconnect last method" rule — the frontend guard is a UX convenience, but the backend must be the source of truth.
+
+```typescript
+// Before disconnecting:
+// 1. Fetch user from Cognito (AdminGetUser)
+// 2. Check identities array length + whether user has a Cognito password (UserStatus !== EXTERNAL_PROVIDER)
+// 3. If this is the last method, return 400: "Cannot disconnect your only sign-in method"
+```
+
+**Risk:** MEDIUM — New API endpoint with admin-level Cognito calls. The `AdminDisableProviderForUser` call is straightforward, but the "last method" check requires careful logic to cover all states (Google-only, password-only, both).
+
+---
+
+### 11. Profile Update & Cognito Sync (`amplify/functions/libs/user/cognito.ts`)
 
 **What changes:** The `syncProfileToCognito` function uses `AdminUpdateUserAttributes` to push profile changes back to Cognito. For federated users, some attributes may be read-only (mapped from the IdP). Attempting to update IdP-mapped attributes will fail silently or throw.
 
@@ -283,19 +340,14 @@ const hasPassword = !isGoogleUser || /* user also has email/password linked */;
 
 ## User Profile Type Changes
 
-The `UserProfile` interface (`amplify/functions/libs/user/types.ts`) currently has no field for auth provider information. To support the Settings page identity display and password section visibility, we need to track how the user authenticated.
+The `UserProfile` interface (`amplify/functions/libs/user/types.ts`) currently has no field for auth provider information. Since we're now building full link/unlink management in Settings, we need to surface this data.
 
-**Option A (Recommended): Derive from Cognito at runtime**
-- Use `fetchUserAttributes()` in `AuthContext.jsx` to read the `identities` attribute
-- Pass `isGoogleUser` / `hasPassword` as derived state — no schema change needed
-- Pro: Single source of truth (Cognito). Con: Requires an extra attribute fetch.
+**Approach: Derive from Cognito at runtime (no schema change)**
+- **Frontend:** Use `fetchUserAttributes()` in `AuthContext.jsx` to read the `identities` attribute. Expose `linkedProviders`, `hasGoogle`, `hasPassword`, and derived flags like `canDisconnectGoogle`.
+- **Backend (identity-providers endpoint):** Use `AdminGetUser` to read the user's `identities` attribute and `UserStatus` to determine sign-in methods. This is the source of truth for the "last method" safety check.
+- **No DynamoDB schema change needed.** Cognito is the single source of truth for linked identities. Storing a copy in DynamoDB would create drift risk, especially with link/unlink operations.
 
-**Option B: Store in DynamoDB profile**
-- Add `authProviders: string[]` field to `UserProfile` (e.g., `['email', 'google']`)
-- Set during post-confirmation trigger, update on account linking
-- Pro: Available server-side without Cognito call. Con: Can drift from Cognito state.
-
-**Recommendation:** Use **Option A** for the frontend (Settings page display) and consider Option B only if server-side auth-method checks become necessary later.
+**Note:** The `identities` claim is also present in the user's **ID token** (JWT), which means the frontend can read it without an extra API call on every page load. It only needs a fresh `fetchUserAttributes()` call after a link/unlink operation to refresh the state.
 
 ---
 
@@ -371,36 +423,49 @@ This means the data layer supports username changes today — we just need to un
 
 ### Phase 2: Frontend Integration — Auth Flow
 6. Add `signInWithRedirect` to `AuthContext.jsx`
-7. Expose `identities` / `isGoogleUser` / `hasPassword` from `fetchUserAttributes()` in AuthContext
+7. Expose `identities` / `linkedProviders` / `hasPassword` from `fetchUserAttributes()` in AuthContext
 8. Create `SocialLoginButtons.jsx` component (Google button, extensible for future providers)
 9. Update `LoginForm.jsx` and `RegisterForm.jsx` with Google sign-in button + "or" divider
 10. Handle OAuth redirect callback state (loading spinner, error handling)
 11. Test full flow: Google button → redirect → callback → session → dashboard
 
-### Phase 3: Frontend Integration — Settings & Password
-12. Update `Settings.jsx` — conditionally show/hide "Account Security" password section:
-    - Hidden for Google-only users (show "Managed by Google" message)
+### Phase 3: Settings — Sign-In Methods & Password Management
+12. Build "Sign-In Methods" section in `Settings.jsx`:
+    - Display linked providers (Google, Email/Password) with status indicators
+    - "Disconnect" button for each linked provider (calls new backend endpoint)
+    - "Link Google Account" button for email-only users (initiates `signInWithRedirect`)
+    - "Set Up Email/Password" option for Google-only users
+13. Implement "cannot disconnect last sign-in method" safety check:
+    - Frontend: disable Disconnect button when only one method is linked, show tooltip explaining why
+    - Backend: server-side enforcement in the identity-providers API endpoint (return 400 if last method)
+14. Create new API endpoint `POST /api/user/identity-providers`:
+    - `action: 'disconnect'` — calls `AdminDisableProviderForUser` (with last-method guard)
+    - `action: 'list'` — returns linked providers (fallback if client-side fetch is insufficient)
+15. Update password section visibility:
+    - Hidden for Google-only users (show "Managed by Google" message instead)
     - Visible for email/password users (existing behavior)
-    - Visible for linked users (both methods)
-13. Add identity provider display section in Settings (show linked methods)
-14. Update `ForgotPasswordForm.jsx` — handle federated user error gracefully:
+    - Visible for linked users with a Cognito password (both methods)
+16. Update `ForgotPasswordForm.jsx` — handle federated user error gracefully:
     - Catch Cognito error for Google-only users attempting password reset
-    - Show "Sign in with Google instead" message with redirect button
+    - Show "This email uses Google sign-in" message with redirect button
 
 ### Phase 4: Username Mutability
-15. Update `update-user-profile/handler.ts` — remove `username` from immutable fields guard
-16. Add username validation (3-30 chars, alphanumeric + underscores, availability check)
-17. Sync username changes to Cognito `preferred_username` via `AdminUpdateUserAttributes`
-18. Update `Settings.jsx` — make username field editable with inline availability check
-19. Test: change username, verify GSI-2 updates, verify old username is freed up
+17. Update `update-user-profile/handler.ts` — remove `username` from immutable fields guard
+18. Add username validation (3-30 chars, alphanumeric + underscores, availability check)
+19. Sync username changes to Cognito `preferred_username` via `AdminUpdateUserAttributes`
+20. Update `Settings.jsx` — make username field editable with inline availability check
+21. Test: change username, verify GSI-2 updates, verify old username is freed up
 
-### Phase 5: Account Linking & Edge Cases
-20. Test: Email user signs in with Google (same email) — verify profile linking
-21. Test: Google user tries email registration (same email) — handle gracefully
-22. Test: MFA interaction with federated users (federated users bypass MFA)
-23. Test: Username auto-generation collision handling
-24. Test: Google-only user attempts password reset — verify graceful handling
-25. Consider (future): Allow linking/unlinking providers from Settings
+### Phase 5: Integration Testing & Edge Cases
+22. Test: Email user signs in with Google (same email) — verify auto-linking works
+23. Test: Google user tries email registration (same email) — handle gracefully
+24. Test: Disconnect Google from Settings (with email/password as fallback) — verify sign-in still works
+25. Test: Attempt to disconnect last sign-in method — verify frontend + backend both block it
+26. Test: Google-only user sets up email/password, then disconnects Google — verify full flow
+27. Test: Google-only user attempts password reset — verify graceful redirect to Google sign-in
+28. Test: MFA interaction with federated users (federated users bypass Cognito MFA)
+29. Test: Username auto-generation collision handling
+30. Test: Username change from Settings with availability check
 
 ---
 
@@ -423,8 +488,10 @@ This means the data layer supports username changes today — we just need to un
 | Risk | Severity | Likelihood | Mitigation |
 |------|----------|-----------|------------|
 | Post-confirmation trigger fails for federated users | HIGH | MEDIUM | Defensive attribute handling, thorough testing |
+| User disconnects last sign-in method and gets locked out | HIGH | LOW | Frontend disables button + backend returns 400 (dual enforcement) |
 | Account linking creates duplicate profiles | MEDIUM | LOW | Existing email check logic covers this; needs validation |
 | Google user tries password reset (no password exists) | MEDIUM | MEDIUM | Catch Cognito error, show "Sign in with Google" message |
+| AdminDisableProviderForUser fails or partially completes | MEDIUM | LOW | Wrap in error handling, refresh identities from Cognito after call |
 | Username collision during auto-generation | LOW | LOW | Check availability + random suffix fallback |
 | Username change race condition (two users claim same) | LOW | LOW | Rare; mitigate with conditional write or follow-up |
 | Settings page shows password form to Google-only user | LOW | MEDIUM | Derive auth method from Cognito `identities` attribute |
@@ -450,9 +517,11 @@ This means the data layer supports username changes today — we just need to un
 3. **Username mutability:** Enable username changes for all users (not just federated). Cognito `preferred_username` is already mutable; DynamoDB GSI updates are already handled by the data layer. Only the API handler guard needs to be relaxed.
 4. **Username validation rules:** 3-30 characters, alphanumeric + underscores only (`/^[a-zA-Z0-9_]{3,30}$/`).
 5. **Callback URLs:** Confirmed from existing `amplify/functions/libs/domain-utils.ts`: `http://localhost:5173` (sandbox), `https://dev.neonpanda.ai` (non-prod branches), `https://neonpanda.ai` (production/main).
-6. **Settings page identity display:** Show linked auth methods in Settings. Conditionally show/hide password change section based on auth method. Derive auth method from Cognito `identities` attribute at runtime (no UserProfile schema change).
-7. **Password reset for Google users:** Handle gracefully in ForgotPasswordForm — catch Cognito error and redirect to Google sign-in instead.
+6. **Settings page — complete Sign-In Methods management:** Ship a full "Sign-In Methods" section in Settings (Phase 3). Users can view linked providers, disconnect a provider, link Google, and set up email/password. This follows the universal pattern used by Strava, Peloton, MyFitnessPal, Notion, and other major platforms. Users expect a complete experience here.
+7. **Password section visibility:** Conditionally show/hide password change section based on auth method. Derive auth method from Cognito `identities` attribute at runtime (no UserProfile schema change).
+8. **Password reset for Google users:** Handle gracefully in ForgotPasswordForm — catch Cognito error and redirect to Google sign-in instead.
+9. **Cannot disconnect last sign-in method:** Dual enforcement — frontend disables the Disconnect button with tooltip explanation, backend returns 400 as the source-of-truth safety net. Users must set up an alternative method before disconnecting their only one.
 
 ## Remaining Open Questions
 
-1. **Account linking/unlinking:** Should users be able to link additional providers or unlink existing ones from Settings, or is this deferred to a future enhancement? (Displaying linked providers is confirmed for Phase 3.)
+None — all decisions have been made. Ready for implementation.
