@@ -693,18 +693,20 @@ function ChatInput({
             <div className={imagePreviewPatterns.grid}>
               {selectedImages.map((image) => (
                 <div key={image.id} className={imagePreviewPatterns.container}>
-                  <img
-                    src={image.previewUrl}
-                    alt={image.name}
-                    className={imagePreviewPatterns.image}
-                  />
+                  <div className={imagePreviewPatterns.imageWrapper}>
+                    <img
+                      src={image.previewUrl}
+                      alt={image.name}
+                      className={imagePreviewPatterns.image}
+                    />
 
-                  {/* Loading spinner overlay */}
-                  {uploadingImageIds.has(image.id) && (
-                    <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center">
-                      <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  )}
+                    {/* Loading spinner overlay */}
+                    {uploadingImageIds.has(image.id) && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
 
                   <button
                     type="button"
