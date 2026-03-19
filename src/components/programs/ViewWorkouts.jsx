@@ -79,8 +79,14 @@ function ViewWorkouts() {
   const [editedPerformance, setEditedPerformance] = useState("");
 
   // Draft auto-save to localStorage
-  const { getDraft, saveDraft, clearDraft, lastSavedAt, setLastSavedAt } =
-    useWorkoutDraft(userId);
+  const {
+    getDraft,
+    saveDraft,
+    clearDraft,
+    lastSavedAt,
+    setLastSavedAt,
+    cancelPendingDraft,
+  } = useWorkoutDraft(userId);
 
   // State for collapsible workout cards
   const [collapsedCards, setCollapsedCards] = useState(new Set());
@@ -246,6 +252,9 @@ function ViewWorkouts() {
 
   // Start logging - opens the editable form
   const handleLogWorkout = (template) => {
+    // Cancel any pending draft from previous workout to prevent stale timer
+    cancelPendingDraft();
+
     // Copy prescribed description and append placeholders for performance data and athlete notes
     const prescribedWithPlaceholders = `${template.description}
 
@@ -286,6 +295,7 @@ General thoughts: `;
 
   // Cancel logging - closes the form (draft is kept so it can be restored next time)
   const handleCancelLogging = () => {
+    cancelPendingDraft();
     setEditingWorkoutId(null);
     setEditedPerformance("");
     setLastSavedAt(null);

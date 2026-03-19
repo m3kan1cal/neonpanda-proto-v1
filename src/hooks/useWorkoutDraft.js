@@ -17,6 +17,12 @@ const DEBOUNCE_MS = 1000;
 export function useWorkoutDraft(userId) {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const debounceTimerRef = useRef(null);
+  const pendingDraftRef = useRef(null);
+
+  const buildKey = useCallback(
+    (templateId) => `${DRAFT_KEY_PREFIX}_${userId}_${templateId}`,
+    [userId],
+  );
 
   // Prune stale drafts on mount so localStorage doesn't accumulate indefinitely
   useEffect(() => {
@@ -41,17 +47,23 @@ export function useWorkoutDraft(userId) {
     keysToRemove.forEach((key) => localStorage.removeItem(key));
   }, []);
 
-  // Cleanup debounce timer on unmount
+  // Flush pending draft on unmount to prevent data loss
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (pendingDraftRef.current) {
+        const { templateId, content } = pendingDraftRef.current;
+        try {
+          const draft = { content, savedAt: new Date().toISOString() };
+          localStorage.setItem(buildKey(templateId), JSON.stringify(draft));
+        } catch {
+          // fail silently if localStorage is unavailable
+        }
+      }
     };
-  }, []);
-
-  const buildKey = useCallback(
-    (templateId) => `${DRAFT_KEY_PREFIX}_${userId}_${templateId}`,
-    [userId]
-  );
+  }, [buildKey]);
 
   const getDraft = useCallback(
     (templateId) => {
@@ -71,12 +83,13 @@ export function useWorkoutDraft(userId) {
         return null;
       }
     },
-    [buildKey]
+    [buildKey],
   );
 
   const saveDraft = useCallback(
     (templateId, content) => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      pendingDraftRef.current = { templateId, content };
       debounceTimerRef.current = setTimeout(() => {
         try {
           const draft = { content, savedAt: new Date().toISOString() };
@@ -86,9 +99,10 @@ export function useWorkoutDraft(userId) {
           // localStorage may be unavailable or full — fail silently
         }
         debounceTimerRef.current = null;
+        pendingDraftRef.current = null;
       }, DEBOUNCE_MS);
     },
-    [buildKey]
+    [buildKey],
   );
 
   const clearDraft = useCallback(
@@ -97,6 +111,7 @@ export function useWorkoutDraft(userId) {
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
       }
+      pendingDraftRef.current = null;
       try {
         localStorage.removeItem(buildKey(templateId));
       } catch {
@@ -104,8 +119,23 @@ export function useWorkoutDraft(userId) {
       }
       setLastSavedAt(null);
     },
-    [buildKey]
+    [buildKey],
   );
 
-  return { getDraft, saveDraft, clearDraft, lastSavedAt, setLastSavedAt };
+  const cancelPendingDraft = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+      pendingDraftRef.current = null;
+    }
+  }, []);
+
+  return {
+    getDraft,
+    saveDraft,
+    clearDraft,
+    cancelPendingDraft,
+    lastSavedAt,
+    setLastSavedAt,
+  };
 }
