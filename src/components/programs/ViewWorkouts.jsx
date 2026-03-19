@@ -30,6 +30,7 @@ import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import TiptapEditor from "../shared/TiptapEditor";
 import AppFooter from "../shared/AppFooter";
 import { logger } from "../../utils/logger";
+import { useWorkoutDraft } from "../../hooks/useWorkoutDraft";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -76,6 +77,16 @@ function ViewWorkouts() {
   // State for workout logging (replaces fragile refs approach)
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
   const [editedPerformance, setEditedPerformance] = useState("");
+
+  // Draft auto-save to localStorage
+  const {
+    getDraft,
+    saveDraft,
+    clearDraft,
+    lastSavedAt,
+    setLastSavedAt,
+    cancelPendingDraft,
+  } = useWorkoutDraft(userId);
 
   // State for collapsible workout cards
   const [collapsedCards, setCollapsedCards] = useState(new Set());
@@ -241,6 +252,9 @@ function ViewWorkouts() {
 
   // Start logging - opens the editable form
   const handleLogWorkout = (template) => {
+    // Cancel any pending draft from previous workout to prevent stale timer
+    cancelPendingDraft();
+
     // Copy prescribed description and append placeholders for performance data and athlete notes
     const prescribedWithPlaceholders = `${template.description}
 
@@ -257,7 +271,16 @@ Any discomfort or injuries?
 General thoughts: `;
 
     setEditingWorkoutId(template.templateId);
-    setEditedPerformance(prescribedWithPlaceholders);
+    setLastSavedAt(null);
+
+    // Restore draft if one exists, otherwise use the prescribed template
+    const draft = getDraft(template.templateId);
+    if (draft) {
+      setEditedPerformance(draft.content);
+      showSuccess("Draft restored — picking up where you left off");
+    } else {
+      setEditedPerformance(prescribedWithPlaceholders);
+    }
 
     // Smooth scroll to the form that just appeared
     setTimeout(() => {
@@ -270,10 +293,12 @@ General thoughts: `;
     }, 100);
   };
 
-  // Cancel logging - closes the form
+  // Cancel logging - closes the form (draft is kept so it can be restored next time)
   const handleCancelLogging = () => {
+    cancelPendingDraft();
     setEditingWorkoutId(null);
     setEditedPerformance("");
+    setLastSavedAt(null);
   };
 
   // Submit the workout - actually logs it
@@ -314,6 +339,9 @@ General thoughts: `;
       showSuccess(
         "Workout logged successfully! We're processing your workout in the background.",
       );
+
+      // Clear the draft now that the workout has been submitted
+      clearDraft(template.templateId);
 
       // Close the form
       setEditingWorkoutId(null);
@@ -413,6 +441,9 @@ General thoughts: `;
 
       // Show success message
       showSuccess("Workout skipped successfully");
+
+      // Clear any draft for this workout since it's been skipped
+      clearDraft(template.templateId);
 
       // Update local state to mark template as skipped
       setWorkoutData((prevData) => {
@@ -664,7 +695,7 @@ General thoughts: `;
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Program Context Skeleton */}
@@ -758,8 +789,8 @@ General thoughts: `;
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -1217,14 +1248,37 @@ General thoughts: `;
                           id={`workout-form-${template.templateId}`}
                           className="mb-4 animate-slideDown"
                         >
-                          <h4 className="font-body text-sm text-synthwave-neon-pink uppercase font-semibold mb-2">
-                            What You Did
-                          </h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-body text-sm text-synthwave-neon-pink uppercase font-semibold">
+                              What You Did
+                            </h4>
+                            {lastSavedAt && (
+                              <div className="flex items-center gap-1">
+                                <svg
+                                  className="w-3 h-3 text-synthwave-neon-cyan/50"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <span className="text-xs text-synthwave-neon-cyan/50">
+                                  Draft saved
+                                </span>
+                              </div>
+                            )}
+                          </div>
                           <TiptapEditor
                             content={editedPerformance}
-                            onUpdate={(html, text) =>
-                              setEditedPerformance(text)
-                            }
+                            onUpdate={(html, text) => {
+                              setEditedPerformance(text);
+                              saveDraft(editingWorkoutId, text);
+                            }}
                             className={`${containerPatterns.workoutDescriptionEditable.replace("px-4 ", "").replace("py-4 ", "")} text-sm`}
                             contentClassName="px-4 py-3"
                             placeholder="Edit to record what you actually did..."
