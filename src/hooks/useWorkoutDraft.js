@@ -126,9 +126,18 @@ export function useWorkoutDraft(userId) {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
+    }
+    if (pendingDraftRef.current) {
+      const { templateId, content } = pendingDraftRef.current;
+      try {
+        const draft = { content, savedAt: new Date().toISOString() };
+        localStorage.setItem(buildKey(templateId), JSON.stringify(draft));
+      } catch {
+        // fail silently if localStorage is unavailable
+      }
       pendingDraftRef.current = null;
     }
-  }, []);
+  }, [buildKey]);
 
   return {
     getDraft,
