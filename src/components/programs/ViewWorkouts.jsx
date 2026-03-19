@@ -30,6 +30,7 @@ import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import TiptapEditor from "../shared/TiptapEditor";
 import AppFooter from "../shared/AppFooter";
 import { logger } from "../../utils/logger";
+import { useWorkoutDraft } from "../../hooks/useWorkoutDraft";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -76,6 +77,10 @@ function ViewWorkouts() {
   // State for workout logging (replaces fragile refs approach)
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
   const [editedPerformance, setEditedPerformance] = useState("");
+
+  // Draft auto-save to localStorage
+  const { getDraft, saveDraft, clearDraft, lastSavedAt, setLastSavedAt } =
+    useWorkoutDraft(userId);
 
   // State for collapsible workout cards
   const [collapsedCards, setCollapsedCards] = useState(new Set());
@@ -257,7 +262,16 @@ Any discomfort or injuries?
 General thoughts: `;
 
     setEditingWorkoutId(template.templateId);
-    setEditedPerformance(prescribedWithPlaceholders);
+    setLastSavedAt(null);
+
+    // Restore draft if one exists, otherwise use the prescribed template
+    const draft = getDraft(template.templateId);
+    if (draft) {
+      setEditedPerformance(draft.content);
+      showSuccess("Draft restored — picking up where you left off");
+    } else {
+      setEditedPerformance(prescribedWithPlaceholders);
+    }
 
     // Smooth scroll to the form that just appeared
     setTimeout(() => {
@@ -270,10 +284,11 @@ General thoughts: `;
     }, 100);
   };
 
-  // Cancel logging - closes the form
+  // Cancel logging - closes the form (draft is kept so it can be restored next time)
   const handleCancelLogging = () => {
     setEditingWorkoutId(null);
     setEditedPerformance("");
+    setLastSavedAt(null);
   };
 
   // Submit the workout - actually logs it
@@ -314,6 +329,9 @@ General thoughts: `;
       showSuccess(
         "Workout logged successfully! We're processing your workout in the background.",
       );
+
+      // Clear the draft now that the workout has been submitted
+      clearDraft(template.templateId);
 
       // Close the form
       setEditingWorkoutId(null);
@@ -413,6 +431,9 @@ General thoughts: `;
 
       // Show success message
       showSuccess("Workout skipped successfully");
+
+      // Clear any draft for this workout since it's been skipped
+      clearDraft(template.templateId);
 
       // Update local state to mark template as skipped
       setWorkoutData((prevData) => {
@@ -1222,9 +1243,11 @@ General thoughts: `;
                           </h4>
                           <TiptapEditor
                             content={editedPerformance}
-                            onUpdate={(html, text) =>
-                              setEditedPerformance(text)
-                            }
+                            onUpdate={(html, text) => {
+                              setEditedPerformance(text);
+                              saveDraft(editingWorkoutId, text);
+                              setLastSavedAt(new Date());
+                            }}
                             className={`${containerPatterns.workoutDescriptionEditable.replace("px-4 ", "").replace("py-4 ", "")} text-sm`}
                             contentClassName="px-4 py-3"
                             placeholder="Edit to record what you actually did..."
@@ -1234,6 +1257,27 @@ General thoughts: `;
                             maxHeight="260px"
                             allowFullscreen={true}
                           />
+                          {/* Draft saved indicator */}
+                          {lastSavedAt && (
+                            <div className="flex items-center gap-1 mt-1 pl-1">
+                              <svg
+                                className="w-3 h-3 text-synthwave-neon-cyan/50"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              <span className="text-xs text-synthwave-neon-cyan/50">
+                                Draft saved
+                              </span>
+                            </div>
+                          )}
                           {/* Helper text and legends container with proper spacing */}
                           <div className="mt-3 space-y-2">
                             <div className={`pl-2 ${formPatterns.helperText}`}>
