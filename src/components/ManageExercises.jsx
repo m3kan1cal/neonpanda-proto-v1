@@ -633,7 +633,7 @@ function ManageExercises() {
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
@@ -649,7 +649,7 @@ function ManageExercises() {
           {/* Search input skeleton */}
           <div className="mb-6">
             <div className="relative max-w-md">
-              <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+              <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
             </div>
           </div>
 

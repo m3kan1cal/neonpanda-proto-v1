@@ -685,7 +685,7 @@ General thoughts: `;
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Program Context Skeleton */}
@@ -779,8 +779,8 @@ General thoughts: `;
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -1238,9 +1238,31 @@ General thoughts: `;
                           id={`workout-form-${template.templateId}`}
                           className="mb-4 animate-slideDown"
                         >
-                          <h4 className="font-body text-sm text-synthwave-neon-pink uppercase font-semibold mb-2">
-                            What You Did
-                          </h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-body text-sm text-synthwave-neon-pink uppercase font-semibold">
+                              What You Did
+                            </h4>
+                            {lastSavedAt && (
+                              <div className="flex items-center gap-1">
+                                <svg
+                                  className="w-3 h-3 text-synthwave-neon-cyan/50"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <span className="text-xs text-synthwave-neon-cyan/50">
+                                  Draft saved
+                                </span>
+                              </div>
+                            )}
+                          </div>
                           <TiptapEditor
                             content={editedPerformance}
                             onUpdate={(html, text) => {
@@ -1257,27 +1279,6 @@ General thoughts: `;
                             maxHeight="260px"
                             allowFullscreen={true}
                           />
-                          {/* Draft saved indicator */}
-                          {lastSavedAt && (
-                            <div className="flex items-center gap-1 mt-1 pl-1">
-                              <svg
-                                className="w-3 h-3 text-synthwave-neon-cyan/50"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                              <span className="text-xs text-synthwave-neon-cyan/50">
-                                Draft saved
-                              </span>
-                            </div>
-                          )}
                           {/* Helper text and legends container with proper spacing */}
                           <div className="mt-3 space-y-2">
                             <div className={`pl-2 ${formPatterns.helperText}`}>
