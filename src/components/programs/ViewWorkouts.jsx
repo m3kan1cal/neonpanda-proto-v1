@@ -1268,7 +1268,6 @@ General thoughts: `;
                             onUpdate={(html, text) => {
                               setEditedPerformance(text);
                               saveDraft(editingWorkoutId, text);
-                              setLastSavedAt(new Date());
                             }}
                             className={`${containerPatterns.workoutDescriptionEditable.replace("px-4 ", "").replace("py-4 ", "")} text-sm`}
                             contentClassName="px-4 py-3"
