@@ -1243,6 +1243,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         templateId: context.templateContext.templateId,
         groupId: context.templateContext.groupId,
       }),
+      ...(context.imageS3Keys?.length && { imageS3Keys: context.imageS3Keys }),
       extractionMetadata: {
         confidence,
         extractedAt: new Date(),

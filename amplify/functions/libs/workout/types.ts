@@ -95,6 +95,9 @@ export interface Workout {
     phaseId: string;
     phaseName: string;
   };
+  // Photos attached when logging this workout
+  imageS3Keys?: string[];
+
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;
   updatedAt?: Date;
