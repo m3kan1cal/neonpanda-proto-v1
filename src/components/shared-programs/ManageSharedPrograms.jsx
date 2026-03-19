@@ -516,7 +516,7 @@ function ManageSharedPrograms() {
           {/* Header skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded-md animate-pulse w-80"></div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-none animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
@@ -546,7 +546,7 @@ function ManageSharedPrograms() {
                     <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-24"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-20"></div>
                   </div>
-                  <div className="h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse w-full"></div>
+                  <div className="h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse w-full"></div>
                   <div className="flex items-center gap-3 mt-4">
                     <div className="h-8 bg-synthwave-text-muted/20 rounded-md animate-pulse w-32"></div>
                     <div className="h-8 bg-synthwave-text-muted/20 rounded-md animate-pulse w-36"></div>
@@ -570,7 +570,7 @@ function ManageSharedPrograms() {
                       <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-20"></div>
                     </div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse w-full"></div>
+                    <div className="h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse w-full"></div>
                     <div className="flex items-center gap-3 mt-4">
                       <div className="h-8 bg-synthwave-text-muted/20 rounded-md animate-pulse w-32"></div>
                       <div className="h-8 bg-synthwave-text-muted/20 rounded-md animate-pulse w-36"></div>
@@ -592,7 +592,7 @@ function ManageSharedPrograms() {
                       <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-20"></div>
                     </div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-none animate-pulse w-full"></div>
+                    <div className="h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse w-full"></div>
                     <div className="flex items-center gap-3 mt-4">
                       <div className="h-8 bg-synthwave-text-muted/20 rounded-md animate-pulse w-32"></div>
                       <div className="h-8 bg-synthwave-text-muted/20 rounded-md animate-pulse w-36"></div>

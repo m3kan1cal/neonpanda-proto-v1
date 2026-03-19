@@ -265,15 +265,24 @@ function ChatInput({
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
-          {/* Input area skeleton */}
-          <div className="flex items-end">
-            {/* Text input skeleton — matches TipTap minHeight 60px */}
-            <div className="flex-1 relative">
-              <div className="w-full h-[80px] bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-              {/* Emoji button placeholder */}
-              <div className="absolute right-[38px] bottom-[7px] w-6 h-6 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
-              {/* Send button placeholder */}
-              <div className="absolute right-[8px] bottom-[7px] w-7 h-7 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+          {/* Input area skeleton — mirrors chatInputWrapper + button row */}
+          <div className="w-full rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
+            {/* Editor area — TipTap content has min-height 60px, plus pt-3 + pb-2 padding = ~80px total */}
+            <div className="px-4 pt-3 pb-2 min-h-[80px]">
+              <div className="h-4 bg-synthwave-text-muted/15 rounded animate-pulse w-1/3"></div>
+            </div>
+
+            {/* Button row — mirrors pl-3 pr-2 py-1.5 border-t layout */}
+            <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
+              {/* Left: actions (plus) button */}
+              <div className="w-7 h-7 bg-synthwave-text-muted/15 rounded-md animate-pulse"></div>
+
+              {/* Right: progress ring + emoji + send */}
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              </div>
             </div>
           </div>
 
