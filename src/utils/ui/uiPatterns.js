@@ -394,9 +394,12 @@ export const inlineEditPatterns = {
 };
 
 export const imagePreviewPatterns = {
-  // Image preview container - for uploaded/selected images (overflow-visible to show remove button)
+  // Image preview container - overflow-visible so the remove button positioned outside bounds is not clipped
   container:
-    "relative shrink-0 w-16 h-16 rounded-md overflow-hidden border border-synthwave-neon-cyan/30 bg-synthwave-bg-primary",
+    "relative shrink-0 w-16 h-16 rounded-md overflow-visible border border-synthwave-neon-cyan/30 bg-synthwave-bg-primary",
+
+  // Inner wrapper for image and overlays - clips content to rounded corners
+  imageWrapper: "absolute inset-0 overflow-hidden rounded-md",
 
   // Image element - to match container
   image: "w-full h-full object-cover",
