@@ -9,6 +9,7 @@ import {
   tooltipPatterns,
   badgePatterns,
   formPatterns,
+  imagePreviewPatterns,
 } from "../../utils/ui/uiPatterns";
 import { Tooltip } from "react-tooltip";
 import CompactCoachCard from "../shared/CompactCoachCard";
@@ -31,6 +32,8 @@ import TiptapEditor from "../shared/TiptapEditor";
 import AppFooter from "../shared/AppFooter";
 import { logger } from "../../utils/logger";
 import { useWorkoutDraft } from "../../hooks/useWorkoutDraft";
+import { useImageUpload } from "../../hooks/useImageUpload";
+import ImageWithPresignedUrl from "../shared/ImageWithPresignedUrl";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -87,6 +90,19 @@ function ViewWorkouts() {
     setLastSavedAt,
     cancelPendingDraft,
   } = useWorkoutDraft(userId);
+
+  // Photo upload for workout logging
+  const {
+    selectedImages,
+    uploadingImageIds,
+    error: imageError,
+    selectImages,
+    uploadImages,
+    removeImage,
+    clearImages,
+    setError: setImageError,
+  } = useImageUpload();
+  const photoInputRef = useRef(null);
 
   // State for collapsible workout cards
   const [collapsedCards, setCollapsedCards] = useState(new Set());
@@ -299,6 +315,7 @@ General thoughts: `;
     setEditingWorkoutId(null);
     setEditedPerformance("");
     setLastSavedAt(null);
+    clearImages();
   };
 
   // Submit the workout - actually logs it
@@ -314,9 +331,13 @@ General thoughts: `;
         editedPreview: editedPerformance?.substring(0, 100),
       });
 
+      // Collect any uploaded photo S3 keys
+      const imageS3Keys = await uploadImages();
+
       // Prepare workout data for logging
       const workoutData = {
         userPerformance: editedPerformance,
+        ...(imageS3Keys.length > 0 && { imageS3Keys }),
       };
 
       // Determine options for reload
@@ -343,9 +364,10 @@ General thoughts: `;
       // Clear the draft now that the workout has been submitted
       clearDraft(template.templateId);
 
-      // Close the form
+      // Close the form and clear images
       setEditingWorkoutId(null);
       setEditedPerformance("");
+      clearImages();
 
       // Update local state to mark template as completed
       setWorkoutData((prevData) => {
@@ -1288,6 +1310,90 @@ General thoughts: `;
                             maxHeight="260px"
                             allowFullscreen={true}
                           />
+                          {/* Photo attachment section */}
+                          <div className="mt-3">
+                            {/* Hidden file input */}
+                            <input
+                              ref={photoInputRef}
+                              type="file"
+                              accept="image/*,.heic,.heif"
+                              multiple
+                              style={{ display: "none" }}
+                              onChange={async (e) => {
+                                if (e.target.files?.length) {
+                                  try {
+                                    await selectImages(e.target.files, userId);
+                                  } catch (err) {
+                                    logger.error("Error selecting images:", err);
+                                  }
+                                }
+                                if (photoInputRef.current) {
+                                  photoInputRef.current.value = "";
+                                }
+                              }}
+                            />
+
+                            {/* Photo thumbnails strip */}
+                            {selectedImages.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {selectedImages.map((image) => (
+                                  <div key={image.id} className={imagePreviewPatterns.container}>
+                                    <div className={imagePreviewPatterns.imageWrapper}>
+                                      <img
+                                        src={image.previewUrl}
+                                        alt={image.name}
+                                        className={imagePreviewPatterns.image}
+                                      />
+                                      {uploadingImageIds.has(image.id) && (
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                          <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeImage(image.id)}
+                                      className={imagePreviewPatterns.removeButton}
+                                      disabled={uploadingImageIds.has(image.id)}
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                    <div className={imagePreviewPatterns.sizeLabel}>
+                                      {(image.size / 1024).toFixed(0)}KB
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Image error */}
+                            {imageError && (
+                              <div className="mb-2 flex items-center justify-between px-2 py-1 bg-red-900/20 border border-red-500/30 rounded text-xs font-body text-red-400">
+                                <span>{imageError}</span>
+                                <button type="button" onClick={() => setImageError(null)} className="ml-2">
+                                  <XIcon className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Attach photos button */}
+                            {selectedImages.length < 5 && (
+                              <button
+                                type="button"
+                                onClick={() => photoInputRef.current?.click()}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-body text-synthwave-text-muted border border-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/50 hover:text-synthwave-neon-cyan rounded transition-colors duration-200"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>Attach Photos</span>
+                                {selectedImages.length > 0 && (
+                                  <span className="text-synthwave-neon-cyan/60">({selectedImages.length}/5)</span>
+                                )}
+                              </button>
+                            )}
+                          </div>
+
                           {/* Helper text and legends container with proper spacing */}
                           <div className="mt-3 space-y-2">
                             <div className={`pl-2 ${formPatterns.helperText}`}>
@@ -1534,6 +1640,25 @@ General thoughts: `;
                             </div>
                           )}
                       </div>
+
+                      {/* Photos attached to this completed workout */}
+                      {isCompleted && template.imageS3Keys && template.imageS3Keys.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                            Workout Photos
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {template.imageS3Keys.map((s3Key, i) => (
+                              <ImageWithPresignedUrl
+                                key={s3Key}
+                                s3Key={s3Key}
+                                userId={userId}
+                                index={i}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Action Buttons */}
                       <div

@@ -15,7 +15,7 @@ import type { BuildWorkoutEvent } from "../../workout/types";
  * Based on BuildWorkoutEvent but excludes message data (passed separately to agent.converse()).
  */
 export interface WorkoutLoggerContext
-  extends AgentContext, Omit<BuildWorkoutEvent, "userMessage" | "imageS3Keys"> {
+  extends AgentContext, Omit<BuildWorkoutEvent, "userMessage"> {
   // Inherits from AgentContext:
   // - userId (required)
   // Inherits from BuildWorkoutEvent:
