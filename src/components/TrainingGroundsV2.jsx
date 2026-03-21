@@ -205,9 +205,7 @@ function TrainingGroundsV2() {
 
   // AI greeting state
   const [aiGreeting, setAiGreeting] = useState(null);
-  const [isLoadingGreeting, setIsLoadingGreeting] = useState(
-    !!(userId && coachId),
-  );
+  const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
 
   // Component-local UI state
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
