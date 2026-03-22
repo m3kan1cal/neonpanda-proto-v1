@@ -1,28 +1,7 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
 import { badgePatterns } from "../../../utils/ui/uiPatterns";
-
-// Value display component
-const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
-  if (value === null || value === undefined) return null;
-
-  return (
-    <div
-      className={`flex justify-between items-center py-1 ${className}`}
-      data-json-path={dataPath}
-    >
-      <span className="text-synthwave-neon-pink font-body text-base font-medium">
-        {label}:
-      </span>
-      <span
-        className="text-synthwave-text-primary font-body text-base"
-        data-json-value={JSON.stringify(value)}
-      >
-        {typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}
-      </span>
-    </div>
-  );
-};
+import { ValueDisplay } from "../../shared/ValueDisplay";
 
 // Cycling segment display
 const CyclingSegmentDisplay = ({ segment }) => {
@@ -605,23 +584,15 @@ export const CyclingSection = ({
           </div>
           {!collapsedSections.has(segmentsId) && (
             <div className="px-6 pb-6">
-              {cyclingData?.segments?.length > 0 ? (
-                <div className="space-y-3">
-                  {cyclingData.segments.map((segment, index) => (
-                    <CyclingSegmentDisplay
-                      key={index}
-                      segment={segment}
-                      segmentIndex={index}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-                  <div className="text-synthwave-text-secondary font-body text-sm">
-                    No ride segments data available for this workout.
-                  </div>
-                </div>
-              )}
+              <div className="space-y-3">
+                {cyclingData.segments.map((segment, index) => (
+                  <CyclingSegmentDisplay
+                    key={index}
+                    segment={segment}
+                    segmentIndex={index}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
