@@ -537,52 +537,42 @@ export const CyclingSection = ({
   return (
     <>
       {/* Section: Cycling Details */}
-      {cyclingData && (
-        <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
-          <div
-            className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-              collapsedSections.has(detailsId) ? "rounded-md" : "rounded-t-md"
-            }`}
-            onClick={() => toggleCollapse(detailsId)}
-          >
-            <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-header font-bold text-white text-lg uppercase">
-                Cycling Details
-              </h3>
-            </div>
-            <svg
-              className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(detailsId) ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+      <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
+        <div
+          className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+            collapsedSections.has(detailsId) ? "rounded-md" : "rounded-t-md"
+          }`}
+          onClick={() => toggleCollapse(detailsId)}
+        >
+          <div className="flex items-start space-x-3">
+            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
+            <h3 className="font-header font-bold text-white text-lg uppercase">
+              Cycling Details
+            </h3>
           </div>
-          {!collapsedSections.has(detailsId) && (
-            <div className="px-6 pb-6">
-              {cyclingData ? (
-                <CyclingDetails
-                  cyclingData={cyclingData}
-                  containerPatterns={containerPatterns}
-                />
-              ) : (
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-                  <div className="text-synthwave-text-secondary font-body text-sm">
-                    No cycling details data available for this workout.
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <svg
+            className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(detailsId) ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
         </div>
-      )}
+        {!collapsedSections.has(detailsId) && (
+          <div className="px-6 pb-6">
+            <CyclingDetails
+              cyclingData={cyclingData}
+              containerPatterns={containerPatterns}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Section: Ride Segments */}
       {cyclingData?.segments?.length > 0 && (
