@@ -271,7 +271,7 @@ export function shouldAlertCoach(recentSnapshots: EmotionalSnapshot[]): {
       .slice(0, 3)
       .map((s) => s.coachSatisfaction);
     if (
-      satisfactionTrend.every((s, i) => i === 0 || s > satisfactionTrend[i - 1])
+      satisfactionTrend.every((s, i) => i === 0 || s < satisfactionTrend[i - 1])
     ) {
       return {
         shouldAlert: true,

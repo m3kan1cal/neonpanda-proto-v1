@@ -12,11 +12,6 @@
  */
 
 import { logger } from "../libs/logger";
-import {
-  shouldCompressMemory,
-  shouldArchiveMemory,
-} from "../libs/memory/lifecycle";
-import { findExpiredProspectiveMemories } from "../libs/memory/prospective";
 
 export const handler = async (event: any) => {
   const startTime = Date.now();
