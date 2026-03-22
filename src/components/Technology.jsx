@@ -124,7 +124,7 @@ function Technology() {
               with specialized agents for every aspect of your coaching
               experience. Think of it as your personal coaching staff—each
               specialist doing what they do best, seamlessly coordinating across
-              10 supported disciplines to create your perfect training
+              11 supported disciplines to create your perfect training
               experience.
             </p>
 
@@ -235,7 +235,7 @@ function Technology() {
                     and executor models for validation and parallel
                     processing—ensuring your training follows intelligent
                     progression principles whether you're doing CrossFit,
-                    powerlifting, HYROX, or any of our 10 supported disciplines
+                    powerlifting, HYROX, or any of our 11 supported disciplines
                   </p>
                 </div>
               </div>
@@ -509,7 +509,7 @@ function Technology() {
                       <strong className="text-synthwave-neon-cyan">
                         Discipline Detection:
                       </strong>{" "}
-                      Automatic classification across 10 training disciplines
+                      Automatic classification across 11 training disciplines
                       for targeted extraction schemas and methodology alignment
                     </span>
                   </li>
@@ -950,7 +950,7 @@ function Technology() {
                           Additional Specialized Models:
                         </strong>{" "}
                         Custom-selected models optimized for specific coaching
-                        functions across 10 supported disciplines
+                        functions across 11 supported disciplines
                       </span>
                     </li>
                   </ul>
@@ -1172,7 +1172,7 @@ function Technology() {
                 </h4>
                 <p className={`${typographyPatterns.description} mb-4`}>
                   Our training principles are reviewed by certified coaches and
-                  experienced athletes across all 10 supported disciplines. We
+                  experienced athletes across all 11 supported disciplines. We
                   blend cutting-edge AI with time-tested wisdom from established
                   programming methodologies.
                 </p>

@@ -3,6 +3,11 @@ import { Tooltip } from "react-tooltip";
 import { containerPatterns, badgePatterns } from "../utils/ui/uiPatterns";
 import { getPrUnit, getPrTypeLabel } from "../utils/workout/constants";
 import {
+  formatCyclingDuration,
+  formatCyclingDistanceDisplay,
+} from "../utils/dateUtils";
+import { ValueDisplay } from "./shared/ValueDisplay";
+import {
   ChevronDownIcon,
   MetricsIcon,
   NotesIcon,
@@ -21,28 +26,6 @@ import { getDisciplineComponent } from "./workout-viewer/disciplines/DisciplineR
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
 
 // Collapsible section component with numbered badge - ViewWorkouts style
-
-// Value display component with data attributes for JSON reconstruction
-const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
-  if (value === null || value === undefined) return null;
-
-  return (
-    <div
-      className={`flex justify-between items-center py-1 ${className}`}
-      data-json-path={dataPath}
-    >
-      <span className="text-synthwave-neon-pink font-body text-base font-medium">
-        {label}:
-      </span>
-      <span
-        className="text-synthwave-text-primary font-body text-base"
-        data-json-value={JSON.stringify(value)}
-      >
-        {typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}
-      </span>
-    </div>
-  );
-};
 
 // Exercise display component
 const ExerciseDisplay = ({ exercise, roundNumber, exerciseIndex }) => {
@@ -385,6 +368,7 @@ const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
 const WorkoutSummary = ({ workoutData }) => {
   const crossfitData = workoutData.discipline_specific?.crossfit;
   const runningData = workoutData.discipline_specific?.running;
+  const cyclingData = workoutData.discipline_specific?.cycling;
   const powerliftingData = workoutData.discipline_specific?.powerlifting;
 
   return (
@@ -536,6 +520,53 @@ const WorkoutSummary = ({ workoutData }) => {
               label="Route"
               value={runningData.route.name}
               dataPath="workoutData.discipline_specific.running.route.name"
+            />
+          )}
+        </>
+      )}
+
+      {cyclingData && (
+        <>
+          <ValueDisplay
+            label="Ride Type"
+            value={cyclingData.ride_type}
+            dataPath="workoutData.discipline_specific.cycling.ride_type"
+          />
+          <ValueDisplay
+            label="Distance"
+            value={formatCyclingDistanceDisplay(
+              cyclingData.total_distance,
+              cyclingData.distance_unit,
+            )}
+            dataPath="workoutData.discipline_specific.cycling.total_distance"
+          />
+          <ValueDisplay
+            label="Total Time"
+            value={formatCyclingDuration(cyclingData.total_time)}
+            dataPath="workoutData.discipline_specific.cycling.total_time"
+          />
+          <ValueDisplay
+            label="Avg Speed"
+            value={cyclingData.average_speed}
+            dataPath="workoutData.discipline_specific.cycling.average_speed"
+          />
+          <ValueDisplay
+            label="Surface"
+            value={cyclingData.surface}
+            dataPath="workoutData.discipline_specific.cycling.surface"
+          />
+          {cyclingData.elevation_gain && (
+            <ValueDisplay
+              label="Elevation Gain"
+              value={`${cyclingData.elevation_gain} ${cyclingData.elevation_unit || "ft"}`}
+              dataPath="workoutData.discipline_specific.cycling.elevation_gain"
+            />
+          )}
+          {cyclingData.elevation_loss && (
+            <ValueDisplay
+              label="Elevation Loss"
+              value={`${cyclingData.elevation_loss} ${cyclingData.elevation_unit || "ft"}`}
+              dataPath="workoutData.discipline_specific.cycling.elevation_loss"
             />
           )}
         </>
@@ -1217,6 +1248,13 @@ const WorkoutViewer = ({
   // Extract all discipline-specific data for Performance Metrics section
   const crossfitData = workoutData.discipline_specific?.crossfit;
   const runningData = workoutData.discipline_specific?.running;
+  const cyclingData = workoutData.discipline_specific?.cycling;
+  const cyclingDistanceDisplay = cyclingData
+    ? formatCyclingDistanceDisplay(
+        cyclingData.total_distance,
+        cyclingData.distance_unit,
+      )
+    : null;
   const powerliftingData = workoutData.discipline_specific?.powerlifting;
   const bodybuildingData = workoutData.discipline_specific?.bodybuilding;
   const hyroxData = workoutData.discipline_specific?.hyrox;
@@ -1676,6 +1714,86 @@ const WorkoutViewer = ({
                                   </span>
                                 </div>
                               )}
+                          </>
+                        )}
+
+                        {/* Cycling specific fields */}
+                        {cyclingData && (
+                          <>
+                            {cyclingData.ride_type && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Ride Type:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {cyclingData.ride_type}
+                                </span>
+                              </div>
+                            )}
+                            {cyclingDistanceDisplay && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Distance:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {cyclingDistanceDisplay}
+                                </span>
+                              </div>
+                            )}
+                            {cyclingData.total_time && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Total Time:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {formatCyclingDuration(
+                                    cyclingData.total_time,
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {cyclingData.average_speed && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Avg Speed:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {cyclingData.average_speed}
+                                </span>
+                              </div>
+                            )}
+                            {cyclingData.surface && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Surface:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {cyclingData.surface}
+                                </span>
+                              </div>
+                            )}
+                            {cyclingData.elevation_gain && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Elevation Gain:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {cyclingData.elevation_gain}{" "}
+                                  {cyclingData.elevation_unit || "ft"}
+                                </span>
+                              </div>
+                            )}
+                            {cyclingData.elevation_loss && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Elevation Loss:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {cyclingData.elevation_loss}{" "}
+                                  {cyclingData.elevation_unit || "ft"}
+                                </span>
+                              </div>
+                            )}
                           </>
                         )}
 
@@ -2223,6 +2341,10 @@ const WorkoutViewer = ({
                 running: {
                   runningData: disciplineData,
                   sectionIds: [6, 7], // Special case: Running uses array
+                },
+                cycling: {
+                  cyclingData: disciplineData,
+                  sectionIds: [12, 13], // Special case: Cycling uses array
                 },
                 bodybuilding: {
                   bodybuildingData: disciplineData,

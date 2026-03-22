@@ -6,6 +6,7 @@ import { OlympicWeightliftingSection } from "./OlympicWeightliftingSection";
 import { FunctionalBodybuildingSection } from "./FunctionalBodybuildingSection";
 import { CalisthenicsSection } from "./CalisthenicsSection";
 import { RunningSection } from "./RunningSection";
+import { CyclingSection } from "./CyclingSection";
 import { CircuitTrainingSection } from "./CircuitTrainingSection";
 import { HybridSection } from "./HybridSection";
 
@@ -30,6 +31,7 @@ export const DISCIPLINE_COMPONENTS = {
   functional_bodybuilding: FunctionalBodybuildingSection,
   calisthenics: CalisthenicsSection,
   running: RunningSection,
+  cycling: CyclingSection,
   circuit_training: CircuitTrainingSection,
   hybrid: HybridSection,
   // Legacy discipline mapping - use CrossFit component

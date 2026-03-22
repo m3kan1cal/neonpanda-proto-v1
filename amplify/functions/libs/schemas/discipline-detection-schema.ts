@@ -24,6 +24,7 @@ export const DISCIPLINE_DETECTION_SCHEMA = {
         "functional_bodybuilding",
         "calisthenics",
         "running",
+        "cycling",
         "circuit_training",
         "hybrid",
       ],

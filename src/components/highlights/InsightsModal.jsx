@@ -8,6 +8,7 @@ import {
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import { CloseIcon } from "../themes/SynthwaveComponents";
 import { SparklesIcon } from "./icons";
+import { normalizeListFieldToStringArray } from "../../utils/objectUtils";
 
 // ---------------------------------------------------------------------------
 // Icons (inline SVG -- matches synthwave icon patterns)
@@ -209,6 +210,8 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
     const analytics = report?.analyticsData?.structured_analytics;
     const insights = analytics?.actionable_insights;
     const fatigue = analytics?.fatigue_management;
+    const quickWins = normalizeListFieldToStringArray(insights?.quick_wins);
+    const redFlags = normalizeListFieldToStringArray(insights?.red_flags);
 
     return (
       <>
@@ -243,13 +246,13 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
         )}
 
         {/* Quick Wins */}
-        {insights?.quick_wins?.length > 0 && (
+        {quickWins.length > 0 && (
           <div className="mb-5">
             <span className="font-header text-xs uppercase tracking-wider text-synthwave-text-secondary">
               Quick Wins
             </span>
             <div className="mt-1.5 pl-4">
-              {insights.quick_wins.map((win, i) => (
+              {quickWins.map((win, i) => (
                 <QuickWinPill key={i} text={win} />
               ))}
             </div>
@@ -257,13 +260,13 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
         )}
 
         {/* Red Flags */}
-        {insights?.red_flags?.length > 0 && (
+        {redFlags.length > 0 && (
           <div className="mb-5 border-l-2 border-synthwave-neon-pink/40 pl-4">
             <span className="font-header text-xs uppercase tracking-wider text-synthwave-neon-pink">
               Flags
             </span>
             <div className="mt-1.5">
-              {insights.red_flags.map((flag, i) => (
+              {redFlags.map((flag, i) => (
                 <p
                   key={i}
                   className="font-body text-sm text-synthwave-text-secondary mb-1"
