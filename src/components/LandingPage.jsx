@@ -1083,7 +1083,7 @@ function LandingPage() {
                         Your AI Coach
                       </p>
                       <h3 className="text-white text-xl font-body font-bold mb-3">
-                        10 Disciplines. One Platform.
+                        11 Disciplines. One Platform.
                       </h3>
                     </div>
                   </div>
@@ -1383,9 +1383,9 @@ function LandingPage() {
               <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full animate-pulse"></div>
               <span>Public Launch: Q2 2026</span>
             </div>
-            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-pulse"></div>
-              <span>10 Disciplines Supported</span>
+              <span>11 Disciplines Supported</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-pulse"></div>
