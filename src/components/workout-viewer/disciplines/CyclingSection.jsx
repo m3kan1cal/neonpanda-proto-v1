@@ -72,7 +72,8 @@ const CyclingSegmentDisplay = ({ segment, elevationUnit }) => {
         {segment.elevation_change && (
           <span className="text-synthwave-text-secondary">
             {segment.elevation_change > 0 ? "+" : ""}
-            {segment.elevation_change}{elevationUnit || "ft"}
+            {segment.elevation_change}
+            {elevationUnit || "ft"}
           </span>
         )}
 
@@ -195,7 +196,7 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
               { key: "zone7", label: "Z7 Neuromuscular" },
             ].map(({ key, label }) => {
               const seconds = cyclingData.power_zones_distribution[key];
-              if (!seconds) return null;
+              if (seconds == null) return null;
               return (
                 <ValueDisplay
                   key={key}
@@ -367,7 +368,9 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                 <span
                   className="text-synthwave-text-secondary font-body text-base"
                   data-json-path="workoutData.discipline_specific.cycling.route.description"
-                  data-json-value={JSON.stringify(cyclingData.route.description)}
+                  data-json-value={JSON.stringify(
+                    cyclingData.route.description,
+                  )}
                 >
                   {cyclingData.route.description}
                 </span>
@@ -403,7 +406,9 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                   <div
                     className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.cycling.warmup.description"
-                    data-json-value={JSON.stringify(cyclingData.warmup.description)}
+                    data-json-value={JSON.stringify(
+                      cyclingData.warmup.description,
+                    )}
                   >
                     {cyclingData.warmup.description}
                   </div>
@@ -436,7 +441,9 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                   <div
                     className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.cycling.cooldown.description"
-                    data-json-value={JSON.stringify(cyclingData.cooldown.description)}
+                    data-json-value={JSON.stringify(
+                      cyclingData.cooldown.description,
+                    )}
                   >
                     {cyclingData.cooldown.description}
                   </div>
@@ -467,7 +474,9 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                   <span
                     className="text-synthwave-text-secondary font-body text-sm"
                     data-json-path="workoutData.discipline_specific.cycling.fueling.pre_ride"
-                    data-json-value={JSON.stringify(cyclingData.fueling.pre_ride)}
+                    data-json-value={JSON.stringify(
+                      cyclingData.fueling.pre_ride,
+                    )}
                   >
                     {cyclingData.fueling.pre_ride}
                   </span>
