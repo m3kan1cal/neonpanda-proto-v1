@@ -244,7 +244,7 @@ export function shouldAlertCoach(recentSnapshots: EmotionalSnapshot[]): {
   shouldAlert: boolean;
   reason?: string;
 } {
-  if (recentSnapshots.length < 2) return { shouldAlert: false };
+  if (recentSnapshots.length < 3) return { shouldAlert: false };
 
   // Check for sustained low motivation (3+ consecutive sessions)
   const lowMotivation = recentSnapshots
