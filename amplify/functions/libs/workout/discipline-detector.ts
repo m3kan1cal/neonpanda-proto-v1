@@ -30,6 +30,8 @@ You are a fitness discipline classification expert. Analyze this workout descrip
 
 **running**: Distance runs (5k, 10k, half marathon, marathon), pace work, intervals, tempo runs, splits tracking, easy/long/speed runs, race training
 
+**cycling**: Road, mountain, gravel, and track cycling; indoor trainer sessions (Zwift, TrainerRoad, Wahoo SYSTM, Rouvy); power-based training (watts, FTP, NP, TSS, IF, power zones); cadence (rpm); speed-based efforts; criteriums, gran fondos, century rides (100 miles), sportives, time trials; interval workouts by power zone (Z2, sweet spot, threshold, VO2max)
+
 **circuit_training**: Station-based timed intervals, F45, Orange Theory, Barry's Bootcamp, community circuit classes, boot camps, metabolic conditioning circuits, work/rest timing (30s on/30s off), station rotation, round-based circuits, HIIT circuits with stations
 
 **hybrid**: Mixed-modality workouts that combine multiple distinct training styles in one session without clearly belonging to a single discipline. Examples: warmup + strength + cardio + mobility, personal training sessions, open gym mixed work, "general fitness" sessions, workouts with multiple unrelated sections
@@ -65,7 +67,8 @@ Visual indicators often trump text descriptions for discipline classification.
 ### Edge Case Handling
 - **Tempo notation (3-1-1-0)**: Bodybuilding or Functional Bodybuilding (check for EMOM/quality focus)
 - **EMOM with powerlifting movements**: CrossFit (format determines discipline)
-- **Mixed cardio + strength**: Running if cardio dominates, CrossFit if balanced
+- **Mixed cardio + strength**: Running if foot-based cardio dominates, Cycling if bike-based, CrossFit if balanced
+- **Cycling vs Running**: Cycling uses speed (mph/km/h) + optional power/cadence; Running uses pace (min/mile or min/km). "Bike ride", "watts", "rpm", "FTP", "TSS", "Zwift" → cycling
 - **Gymnastics movements in strength workout**: CrossFit if part of metcon, Calisthenics if skill-focused
 
 ### Circuit Training vs CrossFit
@@ -81,6 +84,7 @@ Visual indicators often trump text descriptions for discipline classification.
 **Bodybuilding**: Renaissance Periodization, John Meadows, Gamma Bomb
 **Functional Bodybuilding**: Marcus Filly, Persist, Awaken Training
 **Running**: Hansons, Daniels, Pfitzinger, McMillan
+**Cycling Platforms**: Zwift, TrainerRoad, Wahoo SYSTM, Rouvy, Sufferfest
 
 ### Confidence Scoring
 - **0.9-1.0**: Clear single-discipline indicators (named WOD, explicit program name, race-specific, unambiguous format)
@@ -125,6 +129,14 @@ Visual indicators often trump text descriptions for discipline classification.
 **Running:**
 - "10k tempo run: 7:30/mile pace, splits: 7:28, 7:32, 7:29..." → running, 1.0
 - "Easy 5 mile run, felt good" → running, 0.95
+
+**Cycling:**
+- "60km road ride, avg 32 km/h, NP 210w, TSS 85" → cycling, 1.0
+- "Zwift race 45 mins, 280w avg, 310w NP, IF 0.92" → cycling, 1.0
+- "TrainerRoad sweet spot workout, 90 min, 0.78 IF" → cycling, 1.0
+- "2hr endurance ride at 25mph, 180w avg, HR 148" → cycling, 0.95
+- "Mountain bike ride, 30 miles, 3500ft of climbing" → cycling, 0.95
+- "Century ride: 100 miles in 6h20m" → cycling, 1.0
 
 **Circuit Training:**
 - "F45 class today: 3 rounds through 6 stations, 30s work/15s rest" → circuit_training, 1.0

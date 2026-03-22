@@ -283,7 +283,7 @@ function AboutUs() {
                     Fit matters more than fame
                   </strong>
                   —your coach should work for your specific situation, across
-                  any of our 10 supported disciplines.
+                  any of our 11 supported disciplines.
                 </p>
               </div>
 
@@ -461,7 +461,7 @@ function AboutUs() {
                   Currently Supported Disciplines
                 </h3>
                 <p className={`${typographyPatterns.description} text-lg mb-6`}>
-                  NeonPanda currently supports 10 training disciplines:
+                  NeonPanda currently supports 11 training disciplines:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
@@ -470,6 +470,7 @@ function AboutUs() {
                     "Olympic Weightlifting",
                     "Bodybuilding",
                     "Running",
+                    "Cycling",
                     "HYROX",
                     "Calisthenics",
                     "Functional Bodybuilding",

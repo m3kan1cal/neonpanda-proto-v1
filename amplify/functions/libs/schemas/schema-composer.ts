@@ -27,6 +27,7 @@ import { FUNCTIONAL_BODYBUILDING_SCHEMA_PLUGIN } from "./disciplines/functional-
 import { CALISTHENICS_SCHEMA_PLUGIN } from "./disciplines/calisthenics-schema";
 import { CIRCUIT_TRAINING_SCHEMA_PLUGIN } from "./disciplines/circuit-training-schema";
 import { HYBRID_SCHEMA_PLUGIN } from "./disciplines/hybrid-schema";
+import { CYCLING_SCHEMA_PLUGIN } from "./disciplines/cycling-schema";
 import { logger } from "../logger";
 
 /**
@@ -43,6 +44,7 @@ const DISCIPLINE_PLUGIN_MAP: Record<string, any> = {
   calisthenics: CALISTHENICS_SCHEMA_PLUGIN,
   circuit_training: CIRCUIT_TRAINING_SCHEMA_PLUGIN,
   hybrid: HYBRID_SCHEMA_PLUGIN,
+  cycling: CYCLING_SCHEMA_PLUGIN,
 };
 
 /**

@@ -74,7 +74,7 @@ function LandingPage() {
     {
       heading: "Your coaches, your rules",
       description:
-        "Create AI coaches designed around your exact goals, training style, and preferences—coaches built specifically for you and your unique fitness journey. Whether you need one coach or several for different goals, each one learns what makes you tick and adapts to support you across 10 supported disciplines. Your coaches belong only to you.",
+        "Create AI coaches designed around your exact goals, training style, and preferences—coaches built specifically for you and your unique fitness journey. Whether you need one coach or several for different goals, each one learns what makes you tick and adapts to support you across 11 supported disciplines. Your coaches belong only to you.",
       imageAlt:
         "Multiple AI coaches interface showing different coaching personalities",
       imagePath: "/images/features/webp/your-coaches.webp",
@@ -91,7 +91,7 @@ function LandingPage() {
     {
       heading: "Skip the setup, start training",
       description:
-        "Don't want to build from scratch? No problem. Our library of proven coach templates covers CrossFit, powerlifting, running, HYROX, and more. Each one brings expert-level methodology right out of the box—just pick your style and you're off. Your coach already knows your sport.",
+        "Don't want to build from scratch? No problem. Our library of proven coach templates covers CrossFit, powerlifting, running, cycling, HYROX, and more. Each one brings expert-level methodology right out of the box—just pick your style and you're off. Your coach already knows your sport.",
       imageAlt: "Coach template library showing various coaching styles",
       imagePath: "/images/features/webp/coach-templates.webp",
       color: "pink",
@@ -1088,10 +1088,10 @@ function LandingPage() {
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
-                    Train across 10 supported disciplines with one platform and
+                    Train across 11 supported disciplines with one platform and
                     one coach—CrossFit, Powerlifting, Olympic Weightlifting,
-                    Bodybuilding, Running, HYROX, Calisthenics, Functional
-                    Bodybuilding, Circuit Training, and Hybrid. Create multiple
+                    Bodybuilding, Running, Cycling, HYROX, Calisthenics,
+                    Functional Bodybuilding, Circuit Training, and Hybrid. Create multiple
                     coaches for different training styles, or switch between
                     disciplines as your goals evolve.
                   </p>
