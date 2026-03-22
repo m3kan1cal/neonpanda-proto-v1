@@ -62,7 +62,7 @@ const CyclingSegmentDisplay = ({ segment, elevationUnit }) => {
           </span>
         )}
 
-        {segment.grade_percent && (
+        {segment.grade_percent != null && (
           <span className="text-synthwave-text-secondary">
             {segment.grade_percent > 0 ? "+" : ""}
             {segment.grade_percent}%
@@ -250,7 +250,7 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
             Weather Conditions
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {cyclingData.weather.temperature && (
+            {cyclingData.weather.temperature != null && (
               <ValueDisplay
                 label="Temperature"
                 value={`${cyclingData.weather.temperature}°${cyclingData.weather.temperature_unit || "F"}`}
@@ -264,10 +264,10 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                 dataPath="workoutData.discipline_specific.cycling.weather.conditions"
               />
             )}
-            {cyclingData.weather.wind_speed && (
+            {cyclingData.weather.wind_speed != null && (
               <ValueDisplay
                 label="Wind Speed"
-                value={`${cyclingData.weather.wind_speed} mph`}
+                value={`${cyclingData.weather.wind_speed}`}
                 dataPath="workoutData.discipline_specific.cycling.weather.wind_speed"
               />
             )}
