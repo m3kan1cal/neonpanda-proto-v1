@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { containerPatterns, badgePatterns } from "../utils/ui/uiPatterns";
 import { getPrUnit, getPrTypeLabel } from "../utils/workout/constants";
+import { formatCyclingDuration } from "../utils/dateUtils";
+import { ValueDisplay } from "./shared/ValueDisplay";
 import {
   ChevronDownIcon,
   MetricsIcon,
@@ -21,28 +23,6 @@ import { getDisciplineComponent } from "./workout-viewer/disciplines/DisciplineR
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
 
 // Collapsible section component with numbered badge - ViewWorkouts style
-
-// Value display component with data attributes for JSON reconstruction
-const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
-  if (value === null || value === undefined) return null;
-
-  return (
-    <div
-      className={`flex justify-between items-center py-1 ${className}`}
-      data-json-path={dataPath}
-    >
-      <span className="text-synthwave-neon-pink font-body text-base font-medium">
-        {label}:
-      </span>
-      <span
-        className="text-synthwave-text-primary font-body text-base"
-        data-json-value={JSON.stringify(value)}
-      >
-        {typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}
-      </span>
-    </div>
-  );
-};
 
 // Exercise display component
 const ExerciseDisplay = ({ exercise, roundNumber, exerciseIndex }) => {
@@ -556,11 +536,7 @@ const WorkoutSummary = ({ workoutData }) => {
           />
           <ValueDisplay
             label="Total Time"
-            value={
-              cyclingData.total_time
-                ? `${Math.floor(cyclingData.total_time / 60)}:${String(cyclingData.total_time % 60).padStart(2, "0")}`
-                : null
-            }
+            value={formatCyclingDuration(cyclingData.total_time)}
             dataPath="workoutData.discipline_specific.cycling.total_time"
           />
           <ValueDisplay
@@ -1759,11 +1735,7 @@ const WorkoutViewer = ({
                                   Total Time:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {Math.floor(cyclingData.total_time / 60)}:
-                                  {String(cyclingData.total_time % 60).padStart(
-                                    2,
-                                    "0",
-                                  )}
+                                  {formatCyclingDuration(cyclingData.total_time)}
                                 </span>
                               </div>
                             )}

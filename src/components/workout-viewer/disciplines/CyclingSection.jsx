@@ -2,6 +2,7 @@ import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
 import { badgePatterns } from "../../../utils/ui/uiPatterns";
 import { ValueDisplay } from "../../shared/ValueDisplay";
+import { formatCyclingDuration } from "../../../utils/dateUtils";
 
 // Cycling segment display
 const CyclingSegmentDisplay = ({ segment }) => {
@@ -21,8 +22,7 @@ const CyclingSegmentDisplay = ({ segment }) => {
 
         {segment.time && (
           <span className="text-synthwave-text-secondary">
-            {Math.floor(segment.time / 60)}:
-            {String(segment.time % 60).padStart(2, "0")}
+            {formatCyclingDuration(segment.time)}
           </span>
         )}
 
@@ -196,13 +196,11 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
             ].map(({ key, label }) => {
               const seconds = cyclingData.power_zones_distribution[key];
               if (!seconds) return null;
-              const mins = Math.floor(seconds / 60);
-              const secs = seconds % 60;
               return (
                 <ValueDisplay
                   key={key}
                   label={label}
-                  value={`${mins}:${String(secs).padStart(2, "0")}`}
+                  value={formatCyclingDuration(seconds)}
                   dataPath={`workoutData.discipline_specific.cycling.power_zones_distribution.${key}`}
                 />
               );
@@ -397,7 +395,7 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                 {cyclingData.warmup.time && (
                   <ValueDisplay
                     label="Time"
-                    value={`${Math.floor(cyclingData.warmup.time / 60)}:${String(cyclingData.warmup.time % 60).padStart(2, "0")}`}
+                    value={formatCyclingDuration(cyclingData.warmup.time)}
                     dataPath="workoutData.discipline_specific.cycling.warmup.time"
                   />
                 )}
@@ -430,7 +428,7 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                 {cyclingData.cooldown.time && (
                   <ValueDisplay
                     label="Time"
-                    value={`${Math.floor(cyclingData.cooldown.time / 60)}:${String(cyclingData.cooldown.time % 60).padStart(2, "0")}`}
+                    value={formatCyclingDuration(cyclingData.cooldown.time)}
                     dataPath="workoutData.discipline_specific.cycling.cooldown.time"
                   />
                 )}
