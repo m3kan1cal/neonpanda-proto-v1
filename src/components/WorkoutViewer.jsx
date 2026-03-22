@@ -2226,7 +2226,7 @@ const WorkoutViewer = ({
                 },
                 cycling: {
                   cyclingData: disciplineData,
-                  sectionIds: [8, 9], // Special case: Cycling uses array
+                  sectionIds: [4, 5], // Special case: Cycling uses array
                 },
                 bodybuilding: {
                   bodybuildingData: disciplineData,
