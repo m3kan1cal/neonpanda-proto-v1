@@ -14,6 +14,7 @@ import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
 import { MemoryRetrievalResult } from "./memory-processing";
 import { buildMultimodalContent } from "../streaming";
+import { formatLivingProfileForPrompt } from "../user/living-profile";
 import { logger } from "../logger";
 import {
   CoachMessage,
@@ -205,6 +206,11 @@ export async function generateAIResponse(
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
       includeCacheControl: true, // NEW: Enable caching optimization
       mode: conversationMode || CONVERSATION_MODES.CHAT, // NEW: Conversation mode for specialized prompts
+      prospectiveContext: memoryResult.prospectivePromptSection, // Prospective follow-up items
+      livingProfileContext: userProfile?.livingProfile
+        ? formatLivingProfileForPrompt(userProfile.livingProfile)
+        : undefined,
+      // emotionalContext: loaded from DynamoDB in handler, passed via memoryResult (future)
     };
 
     const { systemPrompt, metadata, staticPrompt, dynamicPrompt } =
@@ -459,6 +465,11 @@ export async function generateAIResponseStream(
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
       includeCacheControl: true, // NEW: Enable caching optimization
       mode: conversationMode || CONVERSATION_MODES.CHAT, // NEW: Conversation mode for specialized prompts
+      prospectiveContext: memoryResult.prospectivePromptSection, // Prospective follow-up items
+      livingProfileContext: userProfile?.livingProfile
+        ? formatLivingProfileForPrompt(userProfile.livingProfile)
+        : undefined,
+      // emotionalContext: loaded from DynamoDB in handler, passed via memoryResult (future)
     };
 
     const { systemPrompt, metadata, staticPrompt, dynamicPrompt } =

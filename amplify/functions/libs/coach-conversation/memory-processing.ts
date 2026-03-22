@@ -11,12 +11,21 @@ import {
   detectMemoryRetrievalNeed,
   generateMemoryId,
   detectMemoryCharacteristics,
+  extractProspectiveMemories,
+  buildProspectiveMemories,
+  filterActiveProspectiveMemories,
+  formatProspectiveMemoriesForPrompt,
+  reinforceMemory,
 } from "../memory";
 import { parseSlashCommand } from "../workout/detection";
 import { logger } from "../logger";
 
 export interface MemoryRetrievalResult {
   memories: UserMemory[];
+  /** Active prospective memories within their trigger window */
+  prospectiveMemories?: UserMemory[];
+  /** Pre-formatted prompt section for prospective memories */
+  prospectivePromptSection?: string;
 }
 
 // Legacy interfaces - keeping for backward compatibility if needed elsewhere
@@ -181,8 +190,27 @@ export async function queryMemories(
           })() as "semantic" | "importance" | "hybrid",
         };
 
-        // Update memory usage + tags in DynamoDB, then sync updated record to Pinecone
-        updateMemory(userId, memory.memoryId, {}, usageContext)
+        // Reinforce lifecycle if present (update stability + reset decay clock)
+        const lifecycleUpdate: Partial<UserMemory> = {};
+        if (memory.metadata.lifecycle) {
+          const lastReinforced = memory.metadata.lifecycle.lastReinforcedAt
+            ? new Date(memory.metadata.lifecycle.lastReinforcedAt).getTime()
+            : new Date(memory.metadata.createdAt).getTime();
+          const elapsedDays =
+            (Date.now() - lastReinforced) / (1000 * 60 * 60 * 24);
+          const reinforced = reinforceMemory(
+            memory.metadata.lifecycle,
+            memory.metadata.importance,
+            elapsedDays,
+          );
+          lifecycleUpdate.metadata = {
+            ...memory.metadata,
+            lifecycle: reinforced,
+          };
+        }
+
+        // Update memory usage + tags + lifecycle in DynamoDB, then sync to Pinecone
+        updateMemory(userId, memory.memoryId, lifecycleUpdate, usageContext)
           .then((updatedMemory) => storeMemoryInPinecone(updatedMemory))
           .catch((err: any) =>
             logger.warn(
@@ -204,7 +232,30 @@ export async function queryMemories(
     throw error; // Simplified - let the error bubble up rather than silent fallback
   }
 
-  return { memories };
+  // Query prospective memories (fast DynamoDB-only, no AI call)
+  let prospectiveMemories: UserMemory[] = [];
+  let prospectivePromptSection: string | undefined;
+  try {
+    const allUserMemories = await queryMemoriesFromDb(userId, coachId, {
+      memoryType: "prospective",
+    });
+    prospectiveMemories = filterActiveProspectiveMemories(allUserMemories);
+
+    if (prospectiveMemories.length > 0) {
+      prospectivePromptSection =
+        formatProspectiveMemoriesForPrompt(prospectiveMemories);
+      logger.info("Active prospective memories found:", {
+        userId,
+        coachId,
+        activeCount: prospectiveMemories.length,
+        totalProspective: allUserMemories.length,
+      });
+    }
+  } catch (error) {
+    logger.warn("Error querying prospective memories, continuing:", error);
+  }
+
+  return { memories, prospectiveMemories, prospectivePromptSection };
 }
 
 /**
@@ -414,6 +465,78 @@ export async function detectAndProcessMemory(
     isNaturalLanguageMemory,
     memoryFeedback,
   };
+}
+
+/**
+ * Extract and save prospective memories from a conversation turn.
+ * This runs as a fire-and-forget async call AFTER the AI response is generated.
+ *
+ * Analyzes both the user message and AI response to capture:
+ * - Future events the user mentioned
+ * - Commitments the user made (including in response to coach suggestions)
+ * - Milestones with timeframes
+ */
+export async function extractAndSaveProspectiveMemories(
+  userMessage: string,
+  aiResponse: string,
+  userId: string,
+  coachId: string,
+  conversationId: string,
+): Promise<void> {
+  try {
+    const currentDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+    const extraction = await extractProspectiveMemories(
+      userMessage,
+      aiResponse,
+      currentDate,
+    );
+
+    if (!extraction.hasProspectiveElements || !extraction.items?.length) {
+      return;
+    }
+
+    const prospectiveMemories = buildProspectiveMemories(
+      extraction,
+      userId,
+      coachId,
+      conversationId,
+    );
+
+    // Save each prospective memory to DynamoDB and Pinecone
+    for (const memory of prospectiveMemories) {
+      try {
+        await saveMemory(memory);
+        try {
+          await storeMemoryInPinecone(memory);
+        } catch (pineconeError) {
+          logger.warn(
+            "Failed to store prospective memory in Pinecone, continuing:",
+            pineconeError,
+          );
+        }
+        logger.info("Prospective memory saved:", {
+          memoryId: memory.memoryId,
+          content: memory.content.substring(0, 80),
+          followUpType: memory.metadata.prospective?.followUpType,
+          targetDate: memory.metadata.prospective?.targetDate,
+          status: memory.metadata.prospective?.status,
+        });
+      } catch (saveError) {
+        logger.error("Failed to save prospective memory:", saveError);
+      }
+    }
+
+    logger.info("Prospective memory extraction complete:", {
+      userId,
+      coachId,
+      conversationId,
+      extracted: prospectiveMemories.length,
+    });
+  } catch (error) {
+    // Fire-and-forget: log but don't throw
+    logger.error("Error in prospective memory extraction pipeline:", error);
+  }
 }
 
 /**

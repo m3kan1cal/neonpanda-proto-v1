@@ -38,6 +38,7 @@ import {
 import {
   queryMemories,
   detectAndProcessMemory,
+  extractAndSaveProspectiveMemories,
   MemoryRetrievalResult,
   getFallbackMemory,
 } from "../libs/coach-conversation/memory-processing";
@@ -1131,6 +1132,21 @@ async function saveConversationAndYieldComplete(
 
     logger.info("🚀 Conversation summary triggered (fire-and-forget)");
   }
+
+  // Fire-and-forget: Extract prospective memories from this conversation turn
+  // Analyzes user message + AI response for future events, commitments, follow-ups
+  extractAndSaveProspectiveMemories(
+    params.userResponse,
+    newAiMessage.content,
+    userId,
+    coachId,
+    conversationId,
+  ).catch((err) => {
+    logger.error(
+      "⚠️ Prospective memory extraction failed (non-blocking):",
+      err,
+    );
+  });
 
   // Prepare Pinecone context for response
   const pineconeMatches = context?.pineconeMatches || [];

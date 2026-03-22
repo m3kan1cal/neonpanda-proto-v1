@@ -11,6 +11,7 @@ import {
   deepMerge,
 } from "./core";
 import { UserMemory } from "../functions/libs/memory/types";
+import { calculateDecayScore } from "../functions/libs/memory/lifecycle";
 import { logger } from "../functions/libs/logger";
 
 // ===========================
@@ -90,7 +91,12 @@ export async function queryMemories(
     );
   }
 
-  // Sort by importance, recency, and usage with balanced scoring
+  // Filter out archived memories by default
+  filteredItems = filteredItems.filter(
+    (memory) => memory.metadata.lifecycle?.state !== "archived",
+  );
+
+  // Sort by importance, decay-based recency, and usage with balanced scoring
   filteredItems.sort((a, b) => {
     // Calculate composite scores for balanced ranking
     const getCompositeScore = (memory: UserMemory) => {
@@ -105,11 +111,10 @@ export async function queryMemories(
       };
       const importanceScore = importanceOrder[memory.metadata.importance] * 100; // Weight: 100
 
-      // Recency score (newer memories get higher scores)
-      const now = new Date().getTime();
-      const createdAt = new Date(memory.metadata.createdAt).getTime();
-      const daysSinceCreated = (now - createdAt) / (1000 * 60 * 60 * 24);
-      const recencyScore = Math.max(0, 30 - daysSinceCreated); // Weight: 30 (memories older than 30 days get 0)
+      // Decay-based recency score (replaces flat 30-day window)
+      // Uses DSR model: memories reinforced often decay slower
+      // Falls back to flat scoring for memories without lifecycle data
+      const recencyScore = calculateDecayScore(memory); // 0-30 range
 
       // Usage score (capped to prevent overwhelming recency)
       const usageScore = Math.min(memory.metadata.usageCount * 2, 20); // Weight: 2 per use, max 20

@@ -44,6 +44,8 @@ import { deleteProgramDesignerSession } from "./functions/delete-program-designe
 import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
+import { buildLivingProfile } from "./functions/build-living-profile/resource";
+import { runMemoryLifecycle } from "./functions/run-memory-lifecycle/resource";
 import { getWorkouts } from "./functions/get-workouts/resource";
 import { getWorkout } from "./functions/get-workout/resource";
 import { updateWorkout } from "./functions/update-workout/resource";
@@ -164,6 +166,8 @@ const backend = defineBackend({
   createWorkout,
   buildWorkout,
   buildConversationSummary,
+  buildLivingProfile,
+  runMemoryLifecycle,
   getWorkouts,
   getWorkout,
   updateWorkout,
@@ -236,6 +240,12 @@ backend.buildWorkoutAnalysis.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildLivingProfile.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.runMemoryLifecycle.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 
@@ -396,6 +406,8 @@ const sharedPolicies = new SharedPolicies(
   backend.deleteCoachConversation,
   backend.buildWorkout,
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.runMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
@@ -481,6 +493,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout, // Agent-based workout extraction with Bedrock
   backend.buildProgram, // Agent-based program generation with Bedrock
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
   backend.createMemory,
@@ -499,6 +512,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout, // Agent-based workout extraction with debug logging
   backend.buildCoachConfig,
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
   backend.buildProgram, // Agent-based program generation with debug logging
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
@@ -665,6 +679,12 @@ grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildConversationSummary.resources.lambda.functionArn,
 ]);
 
+// Grant permission to buildConversationSummary to invoke buildLivingProfile
+grantLambdaInvokePermissions(
+  backend.buildConversationSummary.resources.lambda,
+  [backend.buildLivingProfile.resources.lambda.functionArn],
+);
+
 // Grant permission to streamCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
   backend.streamCoachCreatorSession.resources.lambda,
@@ -761,6 +781,8 @@ const allFunctions = [
   backend.createWorkout,
   backend.buildWorkout,
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.runMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
@@ -954,6 +976,12 @@ backend.sendCoachConversationMessage.addEnvironment(
 backend.sendCoachConversationMessage.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
   backend.buildConversationSummary.resources.lambda.functionName,
+);
+
+// Living profile is triggered by the conversation summary builder
+backend.buildConversationSummary.addEnvironment(
+  "BUILD_LIVING_PROFILE_FUNCTION_NAME",
+  backend.buildLivingProfile.resources.lambda.functionName,
 );
 
 backend.streamCoachConversation.addEnvironment(

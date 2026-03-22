@@ -4,6 +4,7 @@ import {
   callBedrockApi,
   storeDebugDataInS3,
   BedrockToolUseResult,
+  invokeAsyncLambda,
 } from "../libs/api-helpers";
 import {
   saveCoachConversationSummary,
@@ -21,6 +22,7 @@ import {
 } from "../libs/coach-conversation";
 import { updateCoachConversation } from "../../dynamodb/operations";
 import { CONVERSATION_SUMMARY_TOOL } from "../libs/schemas/conversation-summary-schema";
+import { extractEmotionalSnapshot } from "../libs/memory/emotional";
 import { logger } from "../libs/logger";
 
 export const handler = async (event: BuildCoachConversationSummaryEvent) => {
@@ -275,6 +277,56 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
           ? pineconeResult.recordId
           : null,
     });
+
+    // Fire-and-forget: Extract emotional snapshot from this conversation
+    extractEmotionalSnapshot(
+      summary.narrative,
+      event.userId,
+      event.coachId,
+      event.conversationId,
+    )
+      .then((snapshot) => {
+        if (snapshot) {
+          // TODO: Save snapshot to DynamoDB (emotionalSnapshot#{snapshotId})
+          // For now, log it — DynamoDB storage will be wired in the lifecycle Lambda
+          logger.info("Emotional snapshot extracted:", {
+            snapshotId: snapshot.snapshotId,
+            dominantEmotion: snapshot.dominantEmotion,
+            motivation: snapshot.motivation,
+            stress: snapshot.stress,
+          });
+        }
+      })
+      .catch((err) => {
+        logger.error(
+          "⚠️ Emotional snapshot extraction failed (non-blocking):",
+          err,
+        );
+      });
+
+    // Fire-and-forget: Trigger living profile update with the new summary data
+    const buildLivingProfileFunctionName =
+      process.env.BUILD_LIVING_PROFILE_FUNCTION_NAME;
+    if (buildLivingProfileFunctionName) {
+      invokeAsyncLambda(
+        buildLivingProfileFunctionName,
+        {
+          userId: event.userId,
+          coachId: event.coachId,
+          conversationId: event.conversationId,
+          totalConversations:
+            summary.metadata.messageRange.totalMessages,
+          coachName: coachConfig.coach_name,
+        },
+        `build living profile for user ${event.userId}`,
+      ).catch((err) => {
+        logger.error(
+          "⚠️ Living profile trigger failed (non-blocking):",
+          err,
+        );
+      });
+      logger.info("🧠 Living profile update triggered (fire-and-forget)");
+    }
 
     return createOkResponse({
       success: true,

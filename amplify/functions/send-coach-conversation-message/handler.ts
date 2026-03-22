@@ -16,6 +16,7 @@ import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-dete
 import {
   queryMemories,
   detectAndProcessMemory,
+  extractAndSaveProspectiveMemories,
 } from "../libs/coach-conversation/memory-processing";
 import {
   generateAIResponse,
@@ -374,6 +375,20 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
   }
 
+  // Fire-and-forget: Extract prospective memories from this conversation turn
+  extractAndSaveProspectiveMemories(
+    userResponse,
+    aiResponseContent,
+    userId,
+    coachId,
+    conversationId,
+  ).catch((err) => {
+    logger.error(
+      "⚠️ Prospective memory extraction failed (non-blocking):",
+      err,
+    );
+  });
+
   try {
     // Safely access context properties with fallbacks
     const pineconeMatches = context?.pineconeMatches || [];
@@ -635,6 +650,20 @@ async function generateSSEStream(
         );
       }
     }
+
+    // Fire-and-forget: Extract prospective memories from this conversation turn
+    extractAndSaveProspectiveMemories(
+      userResponse,
+      fullAiResponse,
+      userId,
+      coachId,
+      conversationId,
+    ).catch((err) => {
+      logger.error(
+        "⚠️ Prospective memory extraction failed (non-blocking):",
+        err,
+      );
+    });
 
     // Send completion message with conversation size tracking
     const completeData = {
