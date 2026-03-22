@@ -1243,6 +1243,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         templateId: context.templateContext.templateId,
         groupId: context.templateContext.groupId,
       }),
+      ...(context.imageS3Keys?.length && { imageS3Keys: context.imageS3Keys }),
       extractionMetadata: {
         confidence,
         extractedAt: new Date(),
@@ -1264,7 +1265,11 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
     // Save to DynamoDB
     await saveWorkout(workout);
-    logger.info("✅ Workout saved to DynamoDB");
+    logger.info("✅ Workout saved to DynamoDB", {
+      workoutId: workout.workoutId,
+      imageS3Keys: workout.imageS3Keys ?? [],
+      imageCount: workout.imageS3Keys?.length ?? 0,
+    });
 
     // Store workout summary in Pinecone
     logger.info("📝 Storing workout summary in Pinecone..");
@@ -1343,7 +1348,13 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         )
       : false;
 
-    logger.info("✅ Workout saved successfully");
+    logger.info("✅ Workout saved successfully", {
+      workoutId: workout.workoutId,
+      pineconeStored,
+      templateLinked,
+      imageS3Keys: workout.imageS3Keys ?? [],
+      imageCount: workout.imageS3Keys?.length ?? 0,
+    });
 
     return {
       workoutId: workout.workoutId,

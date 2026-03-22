@@ -202,14 +202,15 @@ function ManageCoachConversations() {
           error: null,
         }));
 
-        // Get the specific coach details using CoachAgent
+        // Fetch coach details and conversations in parallel — conversations
+        // don't depend on coachData to be fetched, only to be enriched after.
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
-        const coachData = await coachAgentRef.current.loadCoachDetails(
-          userId,
-          coachId,
-        );
+        const [coachData, result] = await Promise.all([
+          coachAgentRef.current.loadCoachDetails(userId, coachId),
+          getCoachConversations(userId, coachId, { includeFirstMessages: true }),
+        ]);
 
         if (!coachData) {
           setConversationAgentState((prev) => ({
@@ -219,11 +220,6 @@ function ManageCoachConversations() {
           }));
           return;
         }
-
-        // Load conversations for this specific coach (include first messages for preview)
-        const result = await getCoachConversations(userId, coachId, {
-          includeFirstMessages: true,
-        });
         const conversations = (result.conversations || []).map((conv) => ({
           ...conv,
           coachName: coachData.name,

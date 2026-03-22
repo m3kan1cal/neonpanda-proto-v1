@@ -168,7 +168,7 @@ If the workout matches a program template, include the templateContext for prope
         conversationId: context.conversationId,
         userMessage: workoutMessage,
         coachConfig: context.coachConfig,
-        imageS3Keys: [],
+        imageS3Keys: context.imageS3Keys ?? [],
         userTimezone: context.userTimezone,
         criticalTrainingDirective: context.criticalTrainingDirective,
         isSlashCommand: isSlashCmd,
@@ -189,7 +189,10 @@ If the workout matches a program template, include the templateContext for prope
         "conversation agent workout logging",
       );
 
-      console.info("✅ Workout creation triggered successfully");
+      console.info("✅ Workout creation triggered successfully", {
+        imageS3Keys: context.imageS3Keys ?? [],
+        imageCount: context.imageS3Keys?.length ?? 0,
+      });
 
       return {
         triggered: true,

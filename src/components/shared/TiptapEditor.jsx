@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import { buttonPatterns } from "../../utils/ui/uiPatterns";
 
 /**
  * Shared Tiptap Editor Component
@@ -44,6 +45,14 @@ const TiptapEditor = forwardRef(
       // When true, shows an expand/fullscreen button in the toolbar.
       // Only effective when showToolbar is true and mode is "rich".
       allowFullscreen = false,
+      // Accent color for toolbar borders and active button states.
+      // "cyan" (default) suits chat inputs; "pink" suits form inputs.
+      variant = "cyan",
+      // When provided, a camera icon button is rendered in the toolbar.
+      // Only effective when showToolbar is true and mode is "rich".
+      onAttachPhoto = null,
+      attachPhotoDisabled = false,
+      attachPhotoCount = 0,
     },
     ref,
   ) => {
@@ -237,9 +246,23 @@ const TiptapEditor = forwardRef(
     const showFullscreenButton =
       allowFullscreen && showToolbar && mode === "rich";
 
+    const isPink = variant === "pink";
+    const accentBorderB = isPink
+      ? "border-b border-synthwave-neon-pink/10"
+      : "border-b border-synthwave-neon-cyan/10";
+    const accentActive = isPink
+      ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+      : "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10";
+    const accentInactive = isPink
+      ? "text-synthwave-text-muted hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+      : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10";
+    const accentDivider = isPink
+      ? "bg-synthwave-neon-pink/20"
+      : "bg-synthwave-neon-cyan/20";
+
     // Toolbar shared between inline and fullscreen modes
     const toolbar = showToolbar && mode === "rich" && editor && (
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-synthwave-neon-cyan/10">
+      <div className={`flex items-center gap-0.5 px-2 py-1.5 ${accentBorderB}`}>
         {/* Text formatting */}
         <button
           type="button"
@@ -248,9 +271,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleBold().run();
           }}
           className={`cursor-pointer px-2.5 py-1 rounded-md text-sm font-bold font-body transition-colors ${
-            editor.isActive("bold")
-              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+            editor.isActive("bold") ? accentActive : accentInactive
           }`}
           title="Bold"
         >
@@ -263,9 +284,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleItalic().run();
           }}
           className={`cursor-pointer px-2.5 py-1 rounded-md text-sm italic font-body transition-colors ${
-            editor.isActive("italic")
-              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+            editor.isActive("italic") ? accentActive : accentInactive
           }`}
           title="Italic"
         >
@@ -278,9 +297,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleStrike().run();
           }}
           className={`cursor-pointer px-2.5 py-1 rounded-md text-sm line-through font-body transition-colors ${
-            editor.isActive("strike")
-              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+            editor.isActive("strike") ? accentActive : accentInactive
           }`}
           title="Strikethrough"
         >
@@ -288,7 +305,7 @@ const TiptapEditor = forwardRef(
         </button>
 
         {/* Divider */}
-        <div className="w-px h-4 bg-synthwave-neon-cyan/20 mx-1 shrink-0" />
+        <div className={`w-px h-4 ${accentDivider} mx-1 shrink-0`} />
 
         {/* List formatting */}
         <button
@@ -298,9 +315,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleBulletList().run();
           }}
           className={`cursor-pointer p-1 rounded-md transition-colors ${
-            editor.isActive("bulletList")
-              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+            editor.isActive("bulletList") ? accentActive : accentInactive
           }`}
           title="Bullet list"
         >
@@ -328,9 +343,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleOrderedList().run();
           }}
           className={`cursor-pointer p-1 rounded-md transition-colors ${
-            editor.isActive("orderedList")
-              ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-              : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+            editor.isActive("orderedList") ? accentActive : accentInactive
           }`}
           title="Numbered list"
         >
@@ -379,10 +392,50 @@ const TiptapEditor = forwardRef(
           </svg>
         </button>
 
+        {/* Attach photo */}
+        {onAttachPhoto && (
+          <>
+            <div className={`w-px h-4 ${accentDivider} mx-1 shrink-0`} />
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                if (!attachPhotoDisabled) onAttachPhoto();
+              }}
+              disabled={attachPhotoDisabled}
+              className={`cursor-pointer p-1 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${accentInactive}`}
+              title={
+                attachPhotoDisabled
+                  ? "Maximum 5 photos"
+                  : "Attach photos (up to 5)"
+              }
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </button>
+            {attachPhotoCount > 0 && (
+              <span className="text-xs font-body text-synthwave-text-muted px-0.5">
+                {attachPhotoCount}/5
+              </span>
+            )}
+          </>
+        )}
+
         {/* Fullscreen toggle */}
         {showFullscreenButton && (
           <>
-            <div className="w-px h-4 bg-synthwave-neon-cyan/20 mx-1 shrink-0" />
+            <div className={`w-px h-4 ${accentDivider} mx-1 shrink-0`} />
             <div className="flex-1" />
             <button
               type="button"
@@ -390,7 +443,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 setIsFullscreen((prev) => !prev);
               }}
-              className="cursor-pointer p-1 rounded-md transition-colors text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+              className={`cursor-pointer p-1 rounded-md transition-colors ${accentInactive}`}
               title={isFullscreen ? "Exit fullscreen" : "Expand editor"}
             >
               {isFullscreen ? (
@@ -468,7 +521,7 @@ const TiptapEditor = forwardRef(
                 onClick={() => setIsFullscreen(false)}
               >
                 <div
-                  className="tiptap-fullscreen tiptap-editor-wrapper flex-1 flex flex-col w-full max-w-4xl mx-auto rounded-md bg-synthwave-bg-card/95 backdrop-blur-xl border border-synthwave-neon-cyan/20 shadow-lg overflow-hidden text-synthwave-text-secondary"
+                  className={`tiptap-fullscreen tiptap-editor-wrapper${isPink ? " tiptap-editor-pink" : ""} flex-1 flex flex-col w-full max-w-4xl mx-auto rounded-md bg-synthwave-bg-card/95 backdrop-blur-xl border ${isPink ? "border-synthwave-neon-pink/20" : "border-synthwave-neon-cyan/20"} shadow-lg overflow-hidden text-synthwave-text-secondary`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {toolbar}
@@ -477,11 +530,13 @@ const TiptapEditor = forwardRef(
                   </div>
 
                   {/* Done button footer */}
-                  <div className="flex justify-end px-4 py-3 border-t border-synthwave-neon-cyan/10">
+                  <div
+                    className={`flex justify-end px-4 py-3 border-t ${isPink ? "border-synthwave-neon-pink/10" : "border-synthwave-neon-cyan/10"}`}
+                  >
                     <button
                       type="button"
                       onClick={() => setIsFullscreen(false)}
-                      className="bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-md font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
+                      className={buttonPatterns.primaryMedium}
                     >
                       Done
                     </button>

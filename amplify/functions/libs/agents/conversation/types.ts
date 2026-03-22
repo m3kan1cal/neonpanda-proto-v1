@@ -33,6 +33,8 @@ export interface ConversationAgentContext extends AgentContext {
     enabled: boolean;
     directive: string;
   };
+  // S3 keys for images attached to the current message
+  imageS3Keys?: string[];
   // Active program (loaded in handler, null if no active program)
   activeProgram?: {
     programId: string;

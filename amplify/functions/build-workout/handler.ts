@@ -98,6 +98,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
         userTimezone: event.userTimezone || "America/Los_Angeles",
         criticalTrainingDirective: event.criticalTrainingDirective,
         templateContext: event.templateContext,
+        imageS3Keys: event.imageS3Keys,
       };
 
       // Create WorkoutLogger agent

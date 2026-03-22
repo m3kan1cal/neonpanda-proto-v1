@@ -603,7 +603,7 @@ export const containerPatterns = {
   // Scrollable AI response content area - for explanation popups, AI text blocks with overflow
   // Pink scrollbar, 300px max height, standard body text sizing
   aiResponseContent:
-    "font-body text-sm text-synthwave-text-secondary leading-relaxed max-h-[300px] overflow-y-auto synthwave-scrollbar pr-1",
+    "font-ai text-sm text-synthwave-text-secondary leading-relaxed max-h-[300px] overflow-y-auto synthwave-scrollbar pr-1",
 
   // Card action dropdown menu container
   actionDropdown:
