@@ -1,31 +1,11 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
 import { badgePatterns } from "../../../utils/ui/uiPatterns";
-
-// Value display component
-const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
-  if (value === null || value === undefined) return null;
-
-  return (
-    <div
-      className={`flex justify-between items-center py-1 ${className}`}
-      data-json-path={dataPath}
-    >
-      <span className="text-synthwave-neon-pink font-body text-base font-medium">
-        {label}:
-      </span>
-      <span
-        className="text-synthwave-text-primary font-body text-base"
-        data-json-value={JSON.stringify(value)}
-      >
-        {typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}
-      </span>
-    </div>
-  );
-};
+import { ValueDisplay } from "../../shared/ValueDisplay";
+import { formatCyclingDuration } from "../../../utils/dateUtils";
 
 // Cycling segment display
-const CyclingSegmentDisplay = ({ segment }) => {
+const CyclingSegmentDisplay = ({ segment, elevationUnit }) => {
   return (
     <div className="py-2">
       {/* Segment Name and All Details on One Line */}
@@ -42,8 +22,7 @@ const CyclingSegmentDisplay = ({ segment }) => {
 
         {segment.time && (
           <span className="text-synthwave-text-secondary">
-            {Math.floor(segment.time / 60)}:
-            {String(segment.time % 60).padStart(2, "0")}
+            {formatCyclingDuration(segment.time)}
           </span>
         )}
 
@@ -93,7 +72,7 @@ const CyclingSegmentDisplay = ({ segment }) => {
         {segment.elevation_change && (
           <span className="text-synthwave-text-secondary">
             {segment.elevation_change > 0 ? "+" : ""}
-            {segment.elevation_change}ft
+            {segment.elevation_change}{elevationUnit || "ft"}
           </span>
         )}
 
@@ -217,13 +196,11 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
             ].map(({ key, label }) => {
               const seconds = cyclingData.power_zones_distribution[key];
               if (!seconds) return null;
-              const mins = Math.floor(seconds / 60);
-              const secs = seconds % 60;
               return (
                 <ValueDisplay
                   key={key}
                   label={label}
-                  value={`${mins}:${String(secs).padStart(2, "0")}`}
+                  value={formatCyclingDuration(seconds)}
                   dataPath={`workoutData.discipline_specific.cycling.power_zones_distribution.${key}`}
                 />
               );
@@ -418,7 +395,7 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                 {cyclingData.warmup.time && (
                   <ValueDisplay
                     label="Time"
-                    value={`${Math.floor(cyclingData.warmup.time / 60)}:${String(cyclingData.warmup.time % 60).padStart(2, "0")}`}
+                    value={formatCyclingDuration(cyclingData.warmup.time)}
                     dataPath="workoutData.discipline_specific.cycling.warmup.time"
                   />
                 )}
@@ -451,7 +428,7 @@ const CyclingDetails = ({ cyclingData, containerPatterns }) => {
                 {cyclingData.cooldown.time && (
                   <ValueDisplay
                     label="Time"
-                    value={`${Math.floor(cyclingData.cooldown.time / 60)}:${String(cyclingData.cooldown.time % 60).padStart(2, "0")}`}
+                    value={formatCyclingDuration(cyclingData.cooldown.time)}
                     dataPath="workoutData.discipline_specific.cycling.cooldown.time"
                   />
                 )}
@@ -530,62 +507,52 @@ export const CyclingSection = ({
   toggleCollapse,
   containerPatterns,
 }) => {
-  if (!cyclingData && !true) return null;
+  if (!cyclingData) return null;
 
   const [detailsId, segmentsId] = sectionIds;
 
   return (
     <>
       {/* Section: Cycling Details */}
-      {(cyclingData || true) && (
-        <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
-          <div
-            className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-              collapsedSections.has(detailsId) ? "rounded-md" : "rounded-t-md"
-            }`}
-            onClick={() => toggleCollapse(detailsId)}
-          >
-            <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-header font-bold text-white text-lg uppercase">
-                Cycling Details
-              </h3>
-            </div>
-            <svg
-              className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(detailsId) ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+      <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
+        <div
+          className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+            collapsedSections.has(detailsId) ? "rounded-md" : "rounded-t-md"
+          }`}
+          onClick={() => toggleCollapse(detailsId)}
+        >
+          <div className="flex items-start space-x-3">
+            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
+            <h3 className="font-header font-bold text-white text-lg uppercase">
+              Cycling Details
+            </h3>
           </div>
-          {!collapsedSections.has(detailsId) && (
-            <div className="px-6 pb-6">
-              {cyclingData ? (
-                <CyclingDetails
-                  cyclingData={cyclingData}
-                  containerPatterns={containerPatterns}
-                />
-              ) : (
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-                  <div className="text-synthwave-text-secondary font-body text-sm">
-                    No cycling details data available for this workout.
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <svg
+            className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(detailsId) ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
         </div>
-      )}
+        {!collapsedSections.has(detailsId) && (
+          <div className="px-6 pb-6">
+            <CyclingDetails
+              cyclingData={cyclingData}
+              containerPatterns={containerPatterns}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Section: Ride Segments */}
-      {(cyclingData?.segments?.length > 0 || true) && (
+      {cyclingData?.segments?.length > 0 && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
@@ -615,23 +582,16 @@ export const CyclingSection = ({
           </div>
           {!collapsedSections.has(segmentsId) && (
             <div className="px-6 pb-6">
-              {cyclingData?.segments?.length > 0 ? (
-                <div className="space-y-3">
-                  {cyclingData.segments.map((segment, index) => (
-                    <CyclingSegmentDisplay
-                      key={index}
-                      segment={segment}
-                      segmentIndex={index}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
-                  <div className="text-synthwave-text-secondary font-body text-sm">
-                    No ride segments data available for this workout.
-                  </div>
-                </div>
-              )}
+              <div className="space-y-3">
+                {cyclingData.segments.map((segment, index) => (
+                  <CyclingSegmentDisplay
+                    key={index}
+                    segment={segment}
+                    segmentIndex={index}
+                    elevationUnit={cyclingData.elevation_unit}
+                  />
+                ))}
+              </div>
             </div>
           )}
 

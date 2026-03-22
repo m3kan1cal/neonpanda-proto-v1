@@ -530,7 +530,7 @@ function AboutUs() {
                 <p className={`${typographyPatterns.description} text-lg`}>
                   Create AI coaches that understand your specific situation so
                   well that interacting with them feels like talking to someone
-                  who's been training with you for years. Across 10 disciplines,
+                  who's been training with you for years. Across 11 disciplines,
                   with more launching soon.
                 </p>
               </div>
