@@ -512,6 +512,8 @@ function WorkoutDetails() {
             onSaveWorkoutTitle={handleSaveWorkoutTitle}
             formatDate={formatDate}
             unitSystem={unitSystem}
+            imageS3Keys={workout.imageS3Keys}
+            userId={userId}
           />
         ) : (
           <div className="flex items-center justify-center h-full">

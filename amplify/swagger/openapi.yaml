@@ -427,6 +427,11 @@ components:
               type: string
             rounds_completed:
               type: number
+        imageS3Keys:
+          type: array
+          items:
+            type: string
+          description: S3 keys for photos attached when logging this workout
         extractedAt:
           type: string
           format: date-time
@@ -717,7 +722,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [firstName, lastName, email, subject, message, contactType]
+              required:
+                [firstName, lastName, email, subject, message, contactType]
               properties:
                 firstName:
                   type: string

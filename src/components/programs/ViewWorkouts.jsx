@@ -5,10 +5,12 @@ import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
   containerPatterns,
+  inputPatterns,
   layoutPatterns,
   tooltipPatterns,
   badgePatterns,
   formPatterns,
+  imagePreviewPatterns,
 } from "../../utils/ui/uiPatterns";
 import { Tooltip } from "react-tooltip";
 import CompactCoachCard from "../shared/CompactCoachCard";
@@ -31,6 +33,8 @@ import TiptapEditor from "../shared/TiptapEditor";
 import AppFooter from "../shared/AppFooter";
 import { logger } from "../../utils/logger";
 import { useWorkoutDraft } from "../../hooks/useWorkoutDraft";
+import { useImageUpload } from "../../hooks/useImageUpload";
+import ImageWithPresignedUrl from "../shared/ImageWithPresignedUrl";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -88,6 +92,40 @@ function ViewWorkouts() {
     cancelPendingDraft,
   } = useWorkoutDraft(userId);
 
+  // Photo upload for workout logging
+  const {
+    selectedImages,
+    uploadingImageIds,
+    error: imageError,
+    selectImages,
+    uploadImages,
+    removeImage,
+    clearImages,
+    setError: setImageError,
+  } = useImageUpload();
+  const photoInputRef = useRef(null);
+
+  const handleEditorPaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imageFiles = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) imageFiles.push(file);
+      }
+    }
+    if (imageFiles.length > 0) {
+      try {
+        await selectImages(imageFiles, userId);
+      } catch (err) {
+        logger.error("Error processing pasted images:", err);
+      }
+    }
+  };
+
   // State for collapsible workout cards
   const [collapsedCards, setCollapsedCards] = useState(new Set());
 
@@ -119,17 +157,10 @@ function ViewWorkouts() {
       setIsLoading(true);
       setError(null);
 
-      // Initialize coach agent if needed
+      // Initialize agents (synchronous) before firing parallel fetches
       if (!coachAgentRef.current) {
         coachAgentRef.current = new CoachAgent({ userId });
       }
-      const coach = await coachAgentRef.current.loadCoachDetails(
-        userId,
-        coachId,
-      );
-      setCoachData(coach);
-
-      // Initialize program agent if needed
       if (!programAgentRef.current) {
         programAgentRef.current = new ProgramAgent(
           userId,
@@ -156,8 +187,12 @@ function ViewWorkouts() {
         );
       }
 
-      // Load program
-      const programData = await programAgentRef.current.loadProgram(programId);
+      // Load coach and program in parallel — neither depends on the other
+      const [coach, programData] = await Promise.all([
+        coachAgentRef.current.loadCoachDetails(userId, coachId),
+        programAgentRef.current.loadProgram(programId),
+      ]);
+      setCoachData(coach);
 
       if (!programData || !programData.program) {
         throw new Error("Program not found");
@@ -299,6 +334,7 @@ General thoughts: `;
     setEditingWorkoutId(null);
     setEditedPerformance("");
     setLastSavedAt(null);
+    clearImages();
   };
 
   // Submit the workout - actually logs it
@@ -314,9 +350,13 @@ General thoughts: `;
         editedPreview: editedPerformance?.substring(0, 100),
       });
 
+      // Collect any uploaded photo S3 keys
+      const imageS3Keys = await uploadImages();
+
       // Prepare workout data for logging
       const workoutData = {
         userPerformance: editedPerformance,
+        ...(imageS3Keys.length > 0 && { imageS3Keys }),
       };
 
       // Determine options for reload
@@ -343,9 +383,10 @@ General thoughts: `;
       // Clear the draft now that the workout has been submitted
       clearDraft(template.templateId);
 
-      // Close the form
+      // Close the form and clear images
       setEditingWorkoutId(null);
       setEditedPerformance("");
+      clearImages();
 
       // Update local state to mark template as completed
       setWorkoutData((prevData) => {
@@ -1273,36 +1314,126 @@ General thoughts: `;
                               </div>
                             )}
                           </div>
-                          <TiptapEditor
-                            content={editedPerformance}
-                            onUpdate={(html, text) => {
-                              setEditedPerformance(text);
-                              saveDraft(editingWorkoutId, text);
-                            }}
-                            className={`${containerPatterns.workoutDescriptionEditable.replace("px-4 ", "").replace("py-4 ", "")} text-sm`}
-                            contentClassName="px-4 py-3"
-                            placeholder="Edit to record what you actually did..."
-                            mode="rich"
-                            showToolbar={true}
-                            minHeight="60px"
-                            maxHeight="260px"
-                            allowFullscreen={true}
-                          />
-                          {/* Helper text and legends container with proper spacing */}
-                          <div className="mt-3 space-y-2">
-                            <div className={`pl-2 ${formPatterns.helperText}`}>
-                              <span className="text-synthwave-neon-cyan">
-                                Edit above to record actual performance
-                              </span>{" "}
-                              - weights used, reps completed, RPE, intensity,
-                              movement substitutions, athlete notes, etc.
-                            </div>
+                          <div className={inputPatterns.chatInputWrapper}>
+                            {/* Hidden file input */}
+                            <input
+                              ref={photoInputRef}
+                              type="file"
+                              accept="image/*,.heic,.heif"
+                              multiple
+                              style={{ display: "none" }}
+                              onChange={async (e) => {
+                                if (e.target.files?.length) {
+                                  try {
+                                    await selectImages(e.target.files, userId);
+                                  } catch (err) {
+                                    logger.error(
+                                      "Error selecting images:",
+                                      err,
+                                    );
+                                  }
+                                }
+                                if (photoInputRef.current) {
+                                  photoInputRef.current.value = "";
+                                }
+                              }}
+                            />
 
-                            {/* RPE/Intensity Helper - Compact Info Icons */}
-                            <div className="flex items-center gap-4 px-2 pb-2">
+                            <TiptapEditor
+                              content={editedPerformance}
+                              onUpdate={(html, text) => {
+                                setEditedPerformance(text);
+                                saveDraft(editingWorkoutId, text);
+                              }}
+                              onPaste={handleEditorPaste}
+                              onAttachPhoto={() =>
+                                photoInputRef.current?.click()
+                              }
+                              attachPhotoDisabled={selectedImages.length >= 5}
+                              attachPhotoCount={selectedImages.length}
+                              variant="pink"
+                              className="tiptap-editor-pink w-full rounded-t-md text-sm"
+                              contentClassName="px-4 py-3"
+                              placeholder="Edit to record what you actually did..."
+                              mode="rich"
+                              showToolbar={true}
+                              minHeight="60px"
+                              maxHeight="260px"
+                              allowFullscreen={true}
+                            />
+
+                            {/* Photo thumbnails strip */}
+                            {selectedImages.length > 0 && (
+                              <div className="flex flex-wrap gap-2 px-3 pb-2">
+                                {selectedImages.map((image) => (
+                                  <div
+                                    key={image.id}
+                                    className={imagePreviewPatterns.container}
+                                  >
+                                    <div
+                                      className={
+                                        imagePreviewPatterns.imageWrapper
+                                      }
+                                    >
+                                      <img
+                                        src={image.previewUrl}
+                                        alt={image.name}
+                                        className={imagePreviewPatterns.image}
+                                      />
+                                      {uploadingImageIds.has(image.id) && (
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                          <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeImage(image.id)}
+                                      className={
+                                        imagePreviewPatterns.removeButton
+                                      }
+                                      disabled={uploadingImageIds.has(image.id)}
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                    <div
+                                      className={imagePreviewPatterns.sizeLabel}
+                                    >
+                                      {(image.size / 1024).toFixed(0)}KB
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Image error */}
+                            {imageError && (
+                              <div className="mx-3 mb-2 flex items-center justify-between px-2 py-1 bg-red-900/20 border border-red-500/30 rounded text-xs font-body text-red-400">
+                                <span>{imageError}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setImageError(null)}
+                                  className="ml-2"
+                                >
+                                  <XIcon className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Helper text + RPE/Intensity on the same row */}
+                          <div className="mt-2 px-1 flex items-center justify-between gap-4 pb-2">
+                            <p className="text-xs text-synthwave-text-secondary">
+                              Edit above to record actual performance - weights
+                              used, reps completed, RPE, intensity, movement
+                              substitutions, athlete notes, etc.
+                            </p>
+
+                            {/* RPE/Intensity Helper - right-aligned */}
+                            <div className="flex items-center gap-3 shrink-0">
                               {/* RPE Helper */}
                               <div
-                                className="flex items-center gap-2 cursor-help"
+                                className="flex items-center gap-1.5 cursor-help"
                                 data-tooltip-id="rpe-scale"
                                 data-tooltip-html={`
                                   <div style="max-width: 280px;">
@@ -1319,7 +1450,7 @@ General thoughts: `;
                                 `}
                               >
                                 <svg
-                                  className="w-5 h-5 text-synthwave-neon-cyan shrink-0"
+                                  className="w-4 h-4 text-synthwave-neon-cyan shrink-0"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1331,31 +1462,31 @@ General thoughts: `;
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                   />
                                 </svg>
-                                <span className={formPatterns.helperText}>
+                                <span className="font-body text-xs text-synthwave-text-secondary">
                                   RPE Scale
                                 </span>
                               </div>
 
                               {/* Intensity Helper */}
                               <div
-                                className="flex items-center gap-2 cursor-help"
+                                className="flex items-center gap-1.5 cursor-help"
                                 data-tooltip-id="intensity-scale"
                                 data-tooltip-html={`
                                   <div style="max-width: 280px;">
                                     <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff;">Intensity Scale</div>
                                     <div style="font-size: 14px; line-height: 1.5;">
-                                      <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">10</span> - All-out effort, sprint finish</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #ff6b9d; font-weight: 600;">8-9</span> - Very high, near maximal</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">6-7</span> - High, working hard</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">4-5</span> - Moderate, steady pace</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #00ffff; font-weight: 600;">2-3</span> - Low, warm-up pace</div>
-                                      <div><span style="color: #8a2be2; font-weight: 600;">1</span> - Minimal, recovery pace</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #9f00ff; font-weight: 600;">10</span> - All-out effort, sprint finish</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #bf40ff; font-weight: 600;">8-9</span> - Very high, near maximal</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">6-7</span> - High, working hard</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">4-5</span> - Moderate, steady pace</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">2-3</span> - Low, warm-up pace</div>
+                                      <div><span style="color: #00ffff; font-weight: 600;">1</span> - Minimal, recovery pace</div>
                                     </div>
                                   </div>
                                 `}
                               >
                                 <svg
-                                  className="w-5 h-5 text-synthwave-neon-pink shrink-0"
+                                  className="w-4 h-4 text-synthwave-neon-pink shrink-0"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1367,7 +1498,7 @@ General thoughts: `;
                                     d="M13 10V3L4 14h7v7l9-11h-7z"
                                   />
                                 </svg>
-                                <span className={formPatterns.helperText}>
+                                <span className="font-body text-xs text-synthwave-text-secondary">
                                   Intensity Scale
                                 </span>
                               </div>
@@ -1383,9 +1514,7 @@ General thoughts: `;
                             Coach Notes
                           </h4>
                           <div className={containerPatterns.coachNotesSection}>
-                            <div className="font-body text-sm text-synthwave-text-secondary">
-                              {template.notes}
-                            </div>
+                            <MarkdownRenderer content={template.notes} />
                           </div>
                         </div>
                       )}
@@ -1534,6 +1663,27 @@ General thoughts: `;
                             </div>
                           )}
                       </div>
+
+                      {/* Photos attached to this completed workout */}
+                      {isCompleted &&
+                        template.imageS3Keys &&
+                        template.imageS3Keys.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                              Workout Photos
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {template.imageS3Keys.map((s3Key, i) => (
+                                <ImageWithPresignedUrl
+                                  key={s3Key}
+                                  s3Key={s3Key}
+                                  userId={userId}
+                                  index={i}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                       {/* Action Buttons */}
                       <div

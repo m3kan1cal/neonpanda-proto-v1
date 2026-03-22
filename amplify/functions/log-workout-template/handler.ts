@@ -54,13 +54,24 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     const body = JSON.parse(event.body);
-    const { userPerformance, feedback, completedAt } = body;
+    const { userPerformance, feedback, completedAt, imageS3Keys } = body;
 
     if (!userPerformance || typeof userPerformance !== "string") {
       return createErrorResponse(
         400,
         "userPerformance is required (string describing what you did)",
       );
+    }
+
+    if (imageS3Keys !== undefined) {
+      if (!Array.isArray(imageS3Keys) || imageS3Keys.length > 5) {
+        return createErrorResponse(400, "imageS3Keys must be an array of up to 5 S3 keys");
+      }
+      for (const key of imageS3Keys) {
+        if (typeof key !== "string" || !key.startsWith(`user-uploads/${userId}/`)) {
+          return createErrorResponse(403, "Invalid image key");
+        }
+      }
     }
 
     // Fetch user profile, program, and coach config in parallel
@@ -243,7 +254,8 @@ ${userPerformance}`;
       messageTimestamp: new Date().toISOString(),
       userTimezone,
       isSlashCommand: false,
-      templateContext, // NEW: Pass template context
+      templateContext,
+      ...(imageS3Keys?.length && { imageS3Keys }),
     };
 
     const buildWorkoutFunctionName = process.env.BUILD_WORKOUT_FUNCTION_NAME;

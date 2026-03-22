@@ -11,7 +11,18 @@ import { logger } from "../../utils/logger";
  * @param {string} userId - The user ID for authentication
  * @param {number} index - The index of the image (for alt text)
  */
-const ImageWithPresignedUrl = ({ s3Key, userId, index }) => {
+const VARIANT_STYLES = {
+  maroon: "border-synthwave-neon-maroon/40 shadow-[0_0_6px_rgba(139,0,69,0.2)]",
+  cyan: "border-synthwave-neon-cyan/40 shadow-[0_0_6px_rgba(0,255,255,0.15)]",
+};
+
+const ImageWithPresignedUrl = ({
+  s3Key,
+  userId,
+  index,
+  thumbnailSize = "w-24 h-24",
+  variant = "maroon",
+}) => {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -67,7 +78,7 @@ const ImageWithPresignedUrl = ({ s3Key, userId, index }) => {
     <>
       {/* Thumbnail */}
       <div
-        className="relative overflow-hidden rounded-md border-2 border-synthwave-neon-maroon/80 w-32 h-32 bg-synthwave-bg-primary/50 shadow-neon-maroon cursor-zoom-in"
+        className={`relative overflow-hidden rounded-md border ${VARIANT_STYLES[variant] ?? VARIANT_STYLES.maroon} ${thumbnailSize} bg-synthwave-bg-primary/50 cursor-zoom-in`}
         onClick={() => !loading && imageLoaded && setIsOpen(true)}
       >
         {/* Spinner — shown while URL is fetching OR while the browser is painting the image */}
@@ -92,17 +103,19 @@ const ImageWithPresignedUrl = ({ s3Key, userId, index }) => {
       {/* Lightbox — same markup as LandingPage.jsx; z-[60] sits above the z-50 chat input bar */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="relative max-w-[90vw] max-h-[90vh] p-4"
+            className="relative flex items-center justify-center"
+            style={{ maxWidth: "85vw", maxHeight: "80vh" }}
             onClick={(e) => e.stopPropagation()}
           >
             <img
               src={imageUrl}
               alt={`Uploaded image ${index + 1}`}
-              className="max-w-full max-h-full object-contain rounded-md shadow-2xl"
+              className="block object-contain rounded-md shadow-2xl"
+              style={{ maxWidth: "85vw", maxHeight: "80vh" }}
             />
             <button
               onClick={() => setIsOpen(false)}
