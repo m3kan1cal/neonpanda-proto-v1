@@ -314,16 +314,12 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
           userId: event.userId,
           coachId: event.coachId,
           conversationId: event.conversationId,
-          totalConversations:
-            summary.metadata.messageRange.totalMessages,
+          totalConversations: coachConfig.metadata.total_conversations,
           coachName: coachConfig.coach_name,
         },
         `build living profile for user ${event.userId}`,
       ).catch((err) => {
-        logger.error(
-          "⚠️ Living profile trigger failed (non-blocking):",
-          err,
-        );
+        logger.error("⚠️ Living profile trigger failed (non-blocking):", err);
       });
       logger.info("🧠 Living profile update triggered (fire-and-forget)");
     }

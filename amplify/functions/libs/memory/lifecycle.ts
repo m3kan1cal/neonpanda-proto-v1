@@ -18,8 +18,8 @@ import { logger } from "../logger";
 
 // ── FSRS v6 Constants ──
 
-/** FSRS v6 decay constant */
-const DECAY = 0.1542;
+/** FSRS v6 decay constant (negative for proper power-law decay) */
+const DECAY = -0.5;
 
 /** Derived factor for 90% target retention: (0.9^(1/DECAY) - 1) */
 const FACTOR = Math.pow(0.9, 1 / DECAY) - 1;
@@ -102,9 +102,7 @@ export function getCompressionThresholdDays(
   targetRetention: number = 0.3,
 ): number {
   if (stability <= 0 || targetRetention <= 0 || targetRetention >= 1) return 0;
-  return (
-    ((Math.pow(targetRetention, 1 / DECAY) - 1) / FACTOR) * 9 * stability
-  );
+  return ((Math.pow(targetRetention, 1 / DECAY) - 1) / FACTOR) * 9 * stability;
 }
 
 // ── Lifecycle State Management ──
@@ -193,8 +191,7 @@ export function calculateDecayScore(memory: UserMemory): number {
   const lastReinforced = lifecycle.lastReinforcedAt
     ? new Date(lifecycle.lastReinforcedAt).getTime()
     : new Date(memory.metadata.createdAt).getTime();
-  const elapsedDays =
-    (Date.now() - lastReinforced) / (1000 * 60 * 60 * 24);
+  const elapsedDays = (Date.now() - lastReinforced) / (1000 * 60 * 60 * 24);
 
   const retrievability = calculateRetrievability(
     elapsedDays,

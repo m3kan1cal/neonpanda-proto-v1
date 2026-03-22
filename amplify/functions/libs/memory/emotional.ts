@@ -10,11 +10,7 @@
  *   weekly: calculateEmotionalTrends() from snapshots → DynamoDB
  */
 
-import {
-  callBedrockApi,
-  MODEL_IDS,
-  TEMPERATURE_PRESETS,
-} from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { EMOTIONAL_SNAPSHOT_SCHEMA } from "../schemas/emotional-snapshot-schema";
 import { EmotionalSnapshot, EmotionalTrend } from "./emotional-types";
 import { logger } from "../logger";
@@ -90,7 +86,12 @@ Use the extract_emotional_snapshot tool to assess the athlete's emotional state 
       triggers: result.triggers || [],
       conversationTopics: result.conversationTopics || [],
       dayOfWeek: now.toLocaleDateString("en-US", { weekday: "long" }),
-      timeOfDay: now.getHours() < 12 ? "morning" : now.getHours() < 17 ? "afternoon" : "evening",
+      timeOfDay:
+        now.getHours() < 12
+          ? "morning"
+          : now.getHours() < 17
+            ? "afternoon"
+            : "evening",
     };
 
     logger.info("Emotional snapshot extracted:", {
@@ -126,8 +127,12 @@ export function calculateEmotionalTrends(
   const last = sorted[sorted.length - 1];
 
   // Calculate averages
-  const avg = (key: keyof Pick<EmotionalSnapshot, "motivation" | "energy" | "confidence" | "stress">) =>
-    sorted.reduce((sum, s) => sum + s[key], 0) / sorted.length;
+  const avg = (
+    key: keyof Pick<
+      EmotionalSnapshot,
+      "motivation" | "energy" | "confidence" | "stress"
+    >,
+  ) => sorted.reduce((sum, s) => sum + s[key], 0) / sorted.length;
 
   const averages = {
     motivation: Math.round(avg("motivation") * 10) / 10,
@@ -141,9 +146,16 @@ export function calculateEmotionalTrends(
   const firstHalf = sorted.slice(0, mid);
   const secondHalf = sorted.slice(mid);
 
-  const getTrend = (key: keyof Pick<EmotionalSnapshot, "motivation" | "energy" | "confidence" | "stress">) => {
-    const firstAvg = firstHalf.reduce((sum, s) => sum + s[key], 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((sum, s) => sum + s[key], 0) / secondHalf.length;
+  const getTrend = (
+    key: keyof Pick<
+      EmotionalSnapshot,
+      "motivation" | "energy" | "confidence" | "stress"
+    >,
+  ) => {
+    const firstAvg =
+      firstHalf.reduce((sum, s) => sum + s[key], 0) / firstHalf.length;
+    const secondAvg =
+      secondHalf.reduce((sum, s) => sum + s[key], 0) / secondHalf.length;
     const diff = secondAvg - firstAvg;
     if (diff > 0.5) return "rising" as const;
     if (diff < -0.5) return "declining" as const;
@@ -202,9 +214,7 @@ ${latest.emotionalNarrative}
       trendSignals.push("energy declining");
 
     if (trendSignals.length > 0) {
-      sections.push(
-        `## Recent Trends\n⚠️ ${trendSignals.join(", ")}`,
-      );
+      sections.push(`## Recent Trends\n⚠️ ${trendSignals.join(", ")}`);
     }
   }
 
@@ -230,11 +240,11 @@ ${latest.emotionalNarrative}
  * Determine if the coach should be alerted about concerning emotional patterns.
  * Threshold-based rules (no AI needed).
  */
-export function shouldAlertCoach(
-  recentSnapshots: EmotionalSnapshot[],
-): { shouldAlert: boolean; reason?: string } {
-  if (recentSnapshots.length < 2)
-    return { shouldAlert: false };
+export function shouldAlertCoach(recentSnapshots: EmotionalSnapshot[]): {
+  shouldAlert: boolean;
+  reason?: string;
+} {
+  if (recentSnapshots.length < 2) return { shouldAlert: false };
 
   // Check for sustained low motivation (3+ consecutive sessions)
   const lowMotivation = recentSnapshots
@@ -260,7 +270,9 @@ export function shouldAlertCoach(
     const satisfactionTrend = recentSnapshots
       .slice(0, 3)
       .map((s) => s.coachSatisfaction);
-    if (satisfactionTrend.every((s, i) => i === 0 || s < satisfactionTrend[i - 1])) {
+    if (
+      satisfactionTrend.every((s, i) => i === 0 || s > satisfactionTrend[i - 1])
+    ) {
       return {
         shouldAlert: true,
         reason: "Coach satisfaction has been declining for 3 sessions",
