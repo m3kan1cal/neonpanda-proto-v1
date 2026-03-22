@@ -5,7 +5,7 @@ import { ValueDisplay } from "../../shared/ValueDisplay";
 import { formatCyclingDuration } from "../../../utils/dateUtils";
 
 // Cycling segment display
-const CyclingSegmentDisplay = ({ segment }) => {
+const CyclingSegmentDisplay = ({ segment, elevationUnit }) => {
   return (
     <div className="py-2">
       {/* Segment Name and All Details on One Line */}
@@ -72,7 +72,7 @@ const CyclingSegmentDisplay = ({ segment }) => {
         {segment.elevation_change && (
           <span className="text-synthwave-text-secondary">
             {segment.elevation_change > 0 ? "+" : ""}
-            {segment.elevation_change}ft
+            {segment.elevation_change}{elevationUnit || "ft"}
           </span>
         )}
 
@@ -588,6 +588,7 @@ export const CyclingSection = ({
                     key={index}
                     segment={segment}
                     segmentIndex={index}
+                    elevationUnit={cyclingData.elevation_unit}
                   />
                 ))}
               </div>

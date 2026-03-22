@@ -105,6 +105,11 @@ export const CYCLING_SCHEMA_PLUGIN = {
         type: ["number", "null"],
         description: "Elevation loss in feet or meters",
       },
+      elevation_unit: {
+        type: ["string", "null"],
+        enum: ["ft", "m", null],
+        description: "Unit of elevation (feet or meters)",
+      },
       power_zones_distribution: {
         type: ["object", "null"],
         additionalProperties: false,
