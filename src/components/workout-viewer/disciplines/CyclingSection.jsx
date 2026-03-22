@@ -530,14 +530,14 @@ export const CyclingSection = ({
   toggleCollapse,
   containerPatterns,
 }) => {
-  if (!cyclingData && !true) return null;
+  if (!cyclingData) return null;
 
   const [detailsId, segmentsId] = sectionIds;
 
   return (
     <>
       {/* Section: Cycling Details */}
-      {(cyclingData || true) && (
+      {cyclingData && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
@@ -585,7 +585,7 @@ export const CyclingSection = ({
       )}
 
       {/* Section: Ride Segments */}
-      {(cyclingData?.segments?.length > 0 || true) && (
+      {cyclingData?.segments?.length > 0 && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
