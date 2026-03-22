@@ -558,14 +558,14 @@ const WorkoutSummary = ({ workoutData }) => {
           {cyclingData.elevation_gain && (
             <ValueDisplay
               label="Elevation Gain"
-              value={`${cyclingData.elevation_gain}${cyclingData.elevation_unit || "ft"}`}
+              value={`${cyclingData.elevation_gain} ${cyclingData.elevation_unit || "ft"}`}
               dataPath="workoutData.discipline_specific.cycling.elevation_gain"
             />
           )}
           {cyclingData.elevation_loss && (
             <ValueDisplay
               label="Elevation Loss"
-              value={`${cyclingData.elevation_loss}${cyclingData.elevation_unit || "ft"}`}
+              value={`${cyclingData.elevation_loss} ${cyclingData.elevation_unit || "ft"}`}
               dataPath="workoutData.discipline_specific.cycling.elevation_loss"
             />
           )}
@@ -1778,7 +1778,7 @@ const WorkoutViewer = ({
                                   Elevation Gain:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {cyclingData.elevation_gain}
+                                  {cyclingData.elevation_gain}{" "}
                                   {cyclingData.elevation_unit || "ft"}
                                 </span>
                               </div>
@@ -1789,7 +1789,7 @@ const WorkoutViewer = ({
                                   Elevation Loss:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {cyclingData.elevation_loss}
+                                  {cyclingData.elevation_loss}{" "}
                                   {cyclingData.elevation_unit || "ft"}
                                 </span>
                               </div>

@@ -72,7 +72,7 @@ const CyclingSegmentDisplay = ({ segment, elevationUnit }) => {
         {segment.elevation_change && (
           <span className="text-synthwave-text-secondary">
             {segment.elevation_change > 0 ? "+" : ""}
-            {segment.elevation_change}
+            {segment.elevation_change}{" "}
             {elevationUnit || "ft"}
           </span>
         )}
