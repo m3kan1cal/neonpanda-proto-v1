@@ -1298,11 +1298,18 @@ async function* createCoachConversationEventStreamV2(
       ...new Set([...historicalImageKeys, ...(params.imageS3Keys ?? [])]),
     ];
 
-    if (allImageS3Keys.length > 0) {
+    // Cap accumulated images to 5 (matching log-workout-template constraint)
+    // to prevent unbounded image accumulation from multiple user messages
+    const cappedImageS3Keys = allImageS3Keys.slice(0, 5);
+    const imageCountTruncated = allImageS3Keys.length > 5;
+
+    if (cappedImageS3Keys.length > 0) {
       logger.info("V2: Image S3 keys collected for agent context", {
         currentMessageImages: params.imageS3Keys?.length ?? 0,
         historicalImages: historicalImageKeys.length,
         totalUniqueImages: allImageS3Keys.length,
+        cappedToMaxImages: cappedImageS3Keys.length,
+        imageCountTruncated,
         lastLogWorkoutBoundaryIndex: lastLogWorkoutIndex,
       });
     }
@@ -1327,7 +1334,7 @@ async function* createCoachConversationEventStreamV2(
             phases: activeProgram.phases || [],
           }
         : null,
-      ...(allImageS3Keys.length && { imageS3Keys: allImageS3Keys }),
+      ...(cappedImageS3Keys.length && { imageS3Keys: cappedImageS3Keys }),
     };
 
     // 5. Build system prompt
