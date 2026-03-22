@@ -197,3 +197,24 @@ export const formatCyclingDuration = (seconds) => {
   }
   return `${minutes}:${String(secs).padStart(2, "0")}`;
 };
+
+/**
+ * Distance + unit for cycling summaries. Omits missing unit so we never show "60 undefined".
+ * @param {number|string|null|undefined} totalDistance
+ * @param {string|null|undefined} distanceUnit
+ * @returns {string|null}
+ */
+export const formatCyclingDistanceDisplay = (totalDistance, distanceUnit) => {
+  if (
+    totalDistance === null ||
+    totalDistance === undefined ||
+    totalDistance === ""
+  ) {
+    return null;
+  }
+  const d = String(totalDistance);
+  if (distanceUnit) {
+    return `${d} ${distanceUnit}`;
+  }
+  return d;
+};

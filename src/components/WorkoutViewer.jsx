@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { containerPatterns, badgePatterns } from "../utils/ui/uiPatterns";
 import { getPrUnit, getPrTypeLabel } from "../utils/workout/constants";
-import { formatCyclingDuration } from "../utils/dateUtils";
+import {
+  formatCyclingDuration,
+  formatCyclingDistanceDisplay,
+} from "../utils/dateUtils";
 import { ValueDisplay } from "./shared/ValueDisplay";
 import {
   ChevronDownIcon,
@@ -531,7 +534,10 @@ const WorkoutSummary = ({ workoutData }) => {
           />
           <ValueDisplay
             label="Distance"
-            value={`${cyclingData.total_distance} ${cyclingData.distance_unit}`}
+            value={formatCyclingDistanceDisplay(
+              cyclingData.total_distance,
+              cyclingData.distance_unit,
+            )}
             dataPath="workoutData.discipline_specific.cycling.total_distance"
           />
           <ValueDisplay
@@ -1243,6 +1249,12 @@ const WorkoutViewer = ({
   const crossfitData = workoutData.discipline_specific?.crossfit;
   const runningData = workoutData.discipline_specific?.running;
   const cyclingData = workoutData.discipline_specific?.cycling;
+  const cyclingDistanceDisplay = cyclingData
+    ? formatCyclingDistanceDisplay(
+        cyclingData.total_distance,
+        cyclingData.distance_unit,
+      )
+    : null;
   const powerliftingData = workoutData.discipline_specific?.powerlifting;
   const bodybuildingData = workoutData.discipline_specific?.bodybuilding;
   const hyroxData = workoutData.discipline_specific?.hyrox;
@@ -1718,14 +1730,13 @@ const WorkoutViewer = ({
                                 </span>
                               </div>
                             )}
-                            {cyclingData.total_distance && (
+                            {cyclingDistanceDisplay && (
                               <div className="flex items-center gap-1.5 font-body text-sm">
                                 <span className="text-synthwave-text-secondary">
                                   Distance:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {cyclingData.total_distance}{" "}
-                                  {cyclingData.distance_unit}
+                                  {cyclingDistanceDisplay}
                                 </span>
                               </div>
                             )}
@@ -1735,7 +1746,9 @@ const WorkoutViewer = ({
                                   Total Time:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {formatCyclingDuration(cyclingData.total_time)}
+                                  {formatCyclingDuration(
+                                    cyclingData.total_time,
+                                  )}
                                 </span>
                               </div>
                             )}
@@ -1765,7 +1778,8 @@ const WorkoutViewer = ({
                                   Elevation Gain:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {cyclingData.elevation_gain}{cyclingData.elevation_unit || "ft"}
+                                  {cyclingData.elevation_gain}
+                                  {cyclingData.elevation_unit || "ft"}
                                 </span>
                               </div>
                             )}
@@ -1775,7 +1789,8 @@ const WorkoutViewer = ({
                                   Elevation Loss:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {cyclingData.elevation_loss}{cyclingData.elevation_unit || "ft"}
+                                  {cyclingData.elevation_loss}
+                                  {cyclingData.elevation_unit || "ft"}
                                 </span>
                               </div>
                             )}
