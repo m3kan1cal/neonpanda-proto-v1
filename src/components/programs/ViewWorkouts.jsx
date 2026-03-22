@@ -157,17 +157,10 @@ function ViewWorkouts() {
       setIsLoading(true);
       setError(null);
 
-      // Initialize coach agent if needed
+      // Initialize agents (synchronous) before firing parallel fetches
       if (!coachAgentRef.current) {
         coachAgentRef.current = new CoachAgent({ userId });
       }
-      const coach = await coachAgentRef.current.loadCoachDetails(
-        userId,
-        coachId,
-      );
-      setCoachData(coach);
-
-      // Initialize program agent if needed
       if (!programAgentRef.current) {
         programAgentRef.current = new ProgramAgent(
           userId,
@@ -194,8 +187,12 @@ function ViewWorkouts() {
         );
       }
 
-      // Load program
-      const programData = await programAgentRef.current.loadProgram(programId);
+      // Load coach and program in parallel — neither depends on the other
+      const [coach, programData] = await Promise.all([
+        coachAgentRef.current.loadCoachDetails(userId, coachId),
+        programAgentRef.current.loadProgram(programId),
+      ]);
+      setCoachData(coach);
 
       if (!programData || !programData.program) {
         throw new Error("Program not found");

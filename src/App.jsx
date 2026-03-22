@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { Suspense, lazy, useEffect, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -18,31 +18,33 @@ import PrivacyPolicy from "./components/PrivacyPolicy";
 import TermsOfService from "./components/TermsOfService";
 import FAQs from "./components/FAQs";
 import ContactForm from "./components/ContactForm";
-import CoachCreator from "./components/CoachCreator";
-import Coaches from "./components/Coaches";
-import TrainingGroundsV2 from "./components/TrainingGroundsV2";
-import CoachConversations from "./components/CoachConversations";
-import ProgramDesigner from "./components/ProgramDesigner";
-import StreamingDebugTest from "./components/StreamingDebugTest";
-import WorkoutDetails from "./components/WorkoutDetails";
-import ManageWorkouts from "./components/ManageWorkouts";
-import ManageExercises from "./components/ManageExercises";
-import ManageMemories from "./components/ManageMemories";
-import ManageCoachConversations from "./components/ManageCoachConversations";
-import ViewReports from "./components/ViewReports";
-import Analytics from "./components/analytics/TrainingPulse";
-import WeeklyReports from "./components/WeeklyReports";
-import ManagePrograms from "./components/programs/ManagePrograms";
-import ViewWorkouts from "./components/programs/ViewWorkouts";
-import ProgramDashboard from "./components/programs/ProgramDashboard";
 import Changelog from "./components/Changelog";
-import Settings from "./components/Settings";
 import Theme from "./components/Theme";
 import RetroTemplate from "./components/themes/RetroComponents";
 import BlogIndex from "./components/blog/BlogIndex";
 import BlogPostRouter from "./components/blog/BlogPostRouter";
 import SharedProgramPreview from "./components/shared-programs/SharedProgramPreview";
-import ManageSharedPrograms from "./components/shared-programs/ManageSharedPrograms";
+
+// Heavy authenticated pages — lazy loaded so they don't bloat the initial bundle
+const CoachCreator = lazy(() => import("./components/CoachCreator"));
+const Coaches = lazy(() => import("./components/Coaches"));
+const TrainingGroundsV2 = lazy(() => import("./components/TrainingGroundsV2"));
+const CoachConversations = lazy(() => import("./components/CoachConversations"));
+const ProgramDesigner = lazy(() => import("./components/ProgramDesigner"));
+const StreamingDebugTest = lazy(() => import("./components/StreamingDebugTest"));
+const WorkoutDetails = lazy(() => import("./components/WorkoutDetails"));
+const ManageWorkouts = lazy(() => import("./components/ManageWorkouts"));
+const ManageExercises = lazy(() => import("./components/ManageExercises"));
+const ManageMemories = lazy(() => import("./components/ManageMemories"));
+const ManageCoachConversations = lazy(() => import("./components/ManageCoachConversations"));
+const ViewReports = lazy(() => import("./components/ViewReports"));
+const Analytics = lazy(() => import("./components/analytics/TrainingPulse"));
+const WeeklyReports = lazy(() => import("./components/WeeklyReports"));
+const ManagePrograms = lazy(() => import("./components/programs/ManagePrograms"));
+const ViewWorkouts = lazy(() => import("./components/programs/ViewWorkouts"));
+const ProgramDashboard = lazy(() => import("./components/programs/ProgramDashboard"));
+const Settings = lazy(() => import("./components/Settings"));
+const ManageSharedPrograms = lazy(() => import("./components/shared-programs/ManageSharedPrograms"));
 import { WelcomePage } from "./components/subscription";
 import {
   NavigationProvider,
@@ -180,6 +182,7 @@ function AppContent() {
                 : "pt-12 pb-20 md:pb-0 md:ml-20 md:mr-20" // App pages: breadcrumbs + sidebar (symmetric margins, sidebar is floating overlay)
         }`}
       >
+        <Suspense fallback={<div className="min-h-screen bg-synthwave-gradient" />}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
@@ -380,6 +383,7 @@ function AppContent() {
 
           {/* Trailing slash redirects handled at server level via amplify.yml */}
         </Routes>
+        </Suspense>
       </div>
       <ToastContainer />
 

@@ -99,15 +99,12 @@ export default function ProgramDashboard() {
         );
       }
 
-      // Load coach data
-      const coach = await coachAgentRef.current.loadCoachDetails(
-        userId,
-        coachId,
-      );
+      // Load coach and program in parallel — neither depends on the other
+      const [coach, programData] = await Promise.all([
+        coachAgentRef.current.loadCoachDetails(userId, coachId),
+        programAgentRef.current.loadProgram(programId),
+      ]);
       setCoachData(coach);
-
-      // Load program with full details
-      const programData = await programAgentRef.current.loadProgram(programId);
 
       if (!programData || !programData.program) {
         throw new Error("Program not found");
@@ -115,42 +112,33 @@ export default function ProgramDashboard() {
 
       setProgram(programData.program);
 
-      // Load ALL workout templates for the calendar
-      const allTemplatesData =
-        await programAgentRef.current.loadWorkoutTemplates(programId, {});
+      // Load all templates and today's workout in parallel.
+      // Today's workout is only relevant for active/paused programs.
+      const loadTodaysWorkout =
+        programData.program.status === "active" ||
+        programData.program.status === "paused"
+          ? programAgentRef.current
+              .loadWorkoutTemplates(programId, { today: true })
+              .catch((todayError) => {
+                // If loading today's workout fails, treat as rest day
+                logger.warn("Could not load today's workout:", todayError);
+                return null;
+              })
+          : Promise.resolve(null);
+
+      const [allTemplatesData, todayData] = await Promise.all([
+        programAgentRef.current.loadWorkoutTemplates(programId, {}),
+        loadTodaysWorkout,
+      ]);
 
       if (allTemplatesData) {
         setProgramDetails(allTemplatesData);
       }
 
-      // Load today's workout (only for active/paused programs)
-      // Note: Completed programs don't have "today's workout"
-      if (
-        programData.program.status === "active" ||
-        programData.program.status === "paused"
-      ) {
-        try {
-          const todayData = await programAgentRef.current.loadWorkoutTemplates(
-            programId,
-            {
-              today: true,
-            },
-          );
-
-          if (todayData) {
-            setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
-          } else {
-            // null response means rest day
-            setTodaysWorkout(null);
-          }
-        } catch (todayError) {
-          // If loading today's workout fails, just set it to null
-          // (e.g., program is complete, no more scheduled workouts)
-          logger.warn("Could not load today's workout:", todayError);
-          setTodaysWorkout(null);
-        }
+      if (todayData) {
+        setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
       } else {
-        // Completed or archived programs don't have "today's workout"
+        // null means rest day or completed/archived program
         setTodaysWorkout(null);
       }
     } catch (err) {
