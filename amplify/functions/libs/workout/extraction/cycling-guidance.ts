@@ -39,12 +39,12 @@ RIDE TYPE MAPPING:
 |- "Gran fondo", "sportive" → gran_fondo
 
 CYCLING EXTRACTION EXAMPLES:
-|- "60km road ride, avg 32 km/h, NP 210w, TSS 85, HR 148 avg" → distance: 60, distance_unit: km, total_time: 6750s, normalized_power: 210, training_stress_score: 85, average_heart_rate: 148
+|- "60km road ride, avg 32 km/h, NP 210w, TSS 85, HR 148 avg" → total_distance: 60, distance_unit: km, total_time: 6750s, normalized_power: 210, training_stress_score: 85, average_heart_rate: 148
 |- "2hr endurance ride at 25mph, 180w avg, 88 rpm" → total_time: 7200s, average_speed: "25 mph", average_power: 180, average_cadence: 88, ride_type: endurance
 |- "Zwift race, 45 mins, 280w avg, 310w NP, IF 0.92" → ride_type: virtual, total_time: 2700s, average_power: 280, normalized_power: 310, intensity_factor: 0.92
 |- "4x8min threshold intervals at FTP (280w), 3min rest" → ride_type: interval, 4 segments of type interval, average_power: 280 per segment, time: 480s each
-|- "Century ride: 100 miles, 6h20m, 195w NP, TSS 340" → distance: 100, distance_unit: miles, total_time: 22800s, normalized_power: 195, training_stress_score: 340
-|- "Morning group ride, 45km, hilly, 2200ft climbing" → ride_type: group_ride, distance: 45, elevation_gain: 2200
+|- "Century ride: 100 miles, 6h20m, 195w NP, TSS 340" → total_distance: 100, distance_unit: miles, total_time: 22800s, normalized_power: 195, training_stress_score: 340
+|- "Morning group ride, 45km, hilly, 2200ft climbing" → ride_type: group_ride, total_distance: 45, elevation_gain: 2200
 |- "TrainerRoad Sweet Spot Base: 90min, 0.78 IF, TSS 92" → ride_type: indoor_trainer, total_time: 5400s, intensity_factor: 0.78, training_stress_score: 92
 
 CYCLING SEGMENT STRUCTURE:
