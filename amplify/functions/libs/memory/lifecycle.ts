@@ -39,7 +39,7 @@ const INITIAL_STABILITY: Record<string, number> = {
  * Calculate retrievability — the probability (0-1) that this memory can be recalled.
  * Uses the FSRS v6 power-law forgetting curve.
  *
- * R(t, S) = (1 + FACTOR * t / (9 * S))^DECAY
+ * R(t, S) = (1 + FACTOR * t / S)^DECAY
  *
  * @param elapsedDays - Days since last reinforcement (or creation if never reinforced)
  * @param stability - Current stability in days
@@ -51,7 +51,7 @@ export function calculateRetrievability(
 ): number {
   if (stability <= 0) return 0;
   if (elapsedDays <= 0) return 1;
-  return Math.pow(1 + (FACTOR * elapsedDays) / (9 * stability), DECAY);
+  return Math.pow(1 + (FACTOR * elapsedDays) / stability, DECAY);
 }
 
 /**
@@ -91,7 +91,7 @@ export function updateStabilityAfterReinforcement(
  * Calculate when a memory should be considered for compression.
  * Returns the number of days until retrievability drops to the target threshold.
  *
- * I(r, S) = (r^(1/DECAY) - 1) / FACTOR * 9 * S
+ * I(r, S) = (r^(1/DECAY) - 1) / FACTOR * S
  *
  * @param stability - Current stability in days
  * @param targetRetention - Retrievability threshold (default 0.3 = compress when 70% forgotten)
@@ -102,7 +102,7 @@ export function getCompressionThresholdDays(
   targetRetention: number = 0.3,
 ): number {
   if (stability <= 0 || targetRetention <= 0 || targetRetention >= 1) return 0;
-  return ((Math.pow(targetRetention, 1 / DECAY) - 1) / FACTOR) * 9 * stability;
+  return ((Math.pow(targetRetention, 1 / DECAY) - 1) / FACTOR) * stability;
 }
 
 // ── Lifecycle State Management ──
