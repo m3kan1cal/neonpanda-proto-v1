@@ -1735,7 +1735,9 @@ const WorkoutViewer = ({
                                   Total Time:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {formatCyclingDuration(cyclingData.total_time)}
+                                  {formatCyclingDuration(
+                                    cyclingData.total_time,
+                                  )}
                                 </span>
                               </div>
                             )}
@@ -1765,7 +1767,8 @@ const WorkoutViewer = ({
                                   Elevation Gain:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {cyclingData.elevation_gain}{cyclingData.elevation_unit || "ft"}
+                                  {cyclingData.elevation_gain}
+                                  {cyclingData.elevation_unit || "ft"}
                                 </span>
                               </div>
                             )}
@@ -1775,7 +1778,8 @@ const WorkoutViewer = ({
                                   Elevation Loss:
                                 </span>
                                 <span className="text-synthwave-neon-cyan font-medium">
-                                  {cyclingData.elevation_loss}{cyclingData.elevation_unit || "ft"}
+                                  {cyclingData.elevation_loss}
+                                  {cyclingData.elevation_unit || "ft"}
                                 </span>
                               </div>
                             )}
@@ -2329,7 +2333,7 @@ const WorkoutViewer = ({
                 },
                 cycling: {
                   cyclingData: disciplineData,
-                  sectionIds: [4, 5], // Special case: Cycling uses array
+                  sectionIds: [12, 13], // Special case: Cycling uses array
                 },
                 bodybuilding: {
                   bodybuildingData: disciplineData,
