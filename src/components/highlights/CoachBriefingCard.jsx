@@ -8,6 +8,7 @@ import {
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import InsightsModal from "./InsightsModal";
 import { SparklesIcon } from "./icons";
+import { normalizeListFieldToStringArray } from "../../utils/objectUtils";
 
 // ---------------------------------------------------------------------------
 // Icons
@@ -308,6 +309,7 @@ export default function CoachBriefingCard({
     const analytics = report?.analyticsData?.structured_analytics;
     const insights = analytics?.actionable_insights;
     const fatigue = analytics?.fatigue_management;
+    const quickWins = normalizeListFieldToStringArray(insights?.quick_wins);
     const hasDeloadWarning =
       fatigue?.suggested_action === "deload" ||
       fatigue?.suggested_action === "reduce";
@@ -332,9 +334,9 @@ export default function CoachBriefingCard({
             />
           )}
 
-          {insights?.quick_wins?.length > 0 && (
+          {quickWins.length > 0 && (
             <div>
-              {insights.quick_wins.slice(0, 2).map((win, i) => (
+              {quickWins.slice(0, 2).map((win, i) => (
                 <div key={i} className="flex items-start gap-2 py-0.5">
                   <span className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                     <svg

@@ -16,6 +16,7 @@ import { FUNCTIONAL_BODYBUILDING_EXTRACTION_GUIDANCE } from "./functional-bodybu
 import { CALISTHENICS_EXTRACTION_GUIDANCE } from "./calisthenics-guidance";
 import { CIRCUIT_TRAINING_EXTRACTION_GUIDANCE } from "./circuit-training-guidance";
 import { HYBRID_EXTRACTION_GUIDANCE } from "./hybrid-guidance";
+import { CYCLING_EXTRACTION_GUIDANCE } from "./cycling-guidance";
 import { logger } from "../../logger";
 
 /**
@@ -32,6 +33,7 @@ const DISCIPLINE_GUIDANCE_MAP: Record<string, string> = {
   calisthenics: CALISTHENICS_EXTRACTION_GUIDANCE,
   circuit_training: CIRCUIT_TRAINING_EXTRACTION_GUIDANCE,
   hybrid: HYBRID_EXTRACTION_GUIDANCE,
+  cycling: CYCLING_EXTRACTION_GUIDANCE,
 };
 
 /**

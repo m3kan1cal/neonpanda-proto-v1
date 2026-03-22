@@ -178,3 +178,43 @@ export const formatRelativeTime = (dateInput) => {
     return "";
   }
 };
+
+/**
+ * Format duration in seconds as H:MM:SS for cycling, or MM:SS for shorter durations
+ * For cycling workouts which routinely exceed 60 minutes, this ensures readability
+ * @param {number} seconds - Duration in seconds
+ * @returns {string} - Formatted duration string (e.g., "6:20:00" or "45:30")
+ */
+export const formatCyclingDuration = (seconds) => {
+  if (seconds === null || seconds === undefined || seconds < 0) return null;
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+};
+
+/**
+ * Distance + unit for cycling summaries. Omits missing unit so we never show "60 undefined".
+ * @param {number|string|null|undefined} totalDistance
+ * @param {string|null|undefined} distanceUnit
+ * @returns {string|null}
+ */
+export const formatCyclingDistanceDisplay = (totalDistance, distanceUnit) => {
+  if (
+    totalDistance === null ||
+    totalDistance === undefined ||
+    totalDistance === ""
+  ) {
+    return null;
+  }
+  const d = String(totalDistance);
+  if (distanceUnit) {
+    return `${d} ${distanceUnit}`;
+  }
+  return d;
+};
