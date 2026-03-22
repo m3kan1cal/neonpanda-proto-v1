@@ -1295,7 +1295,7 @@ async function* createCoachConversationEventStreamV2(
       .flatMap((m: CoachMessage) => m.imageS3Keys!);
 
     const allImageS3Keys = [
-      ...new Set([...historicalImageKeys, ...(params.imageS3Keys ?? [])]),
+      ...new Set([...(params.imageS3Keys ?? []), ...historicalImageKeys]),
     ];
 
     // Cap accumulated images to 5 (matching log-workout-template constraint)
