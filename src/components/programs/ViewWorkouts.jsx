@@ -5,6 +5,7 @@ import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
   containerPatterns,
+  inputPatterns,
   layoutPatterns,
   tooltipPatterns,
   badgePatterns,
@@ -103,6 +104,27 @@ function ViewWorkouts() {
     setError: setImageError,
   } = useImageUpload();
   const photoInputRef = useRef(null);
+
+  const handleEditorPaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imageFiles = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) imageFiles.push(file);
+      }
+    }
+    if (imageFiles.length > 0) {
+      try {
+        await selectImages(imageFiles, userId);
+      } catch (err) {
+        logger.error("Error processing pasted images:", err);
+      }
+    }
+  };
 
   // State for collapsible workout cards
   const [collapsedCards, setCollapsedCards] = useState(new Set());
@@ -1295,23 +1317,7 @@ General thoughts: `;
                               </div>
                             )}
                           </div>
-                          <TiptapEditor
-                            content={editedPerformance}
-                            onUpdate={(html, text) => {
-                              setEditedPerformance(text);
-                              saveDraft(editingWorkoutId, text);
-                            }}
-                            className={`${containerPatterns.workoutDescriptionEditable.replace("px-4 ", "").replace("py-4 ", "")} text-sm`}
-                            contentClassName="px-4 py-3"
-                            placeholder="Edit to record what you actually did..."
-                            mode="rich"
-                            showToolbar={true}
-                            minHeight="60px"
-                            maxHeight="260px"
-                            allowFullscreen={true}
-                          />
-                          {/* Photo attachment section */}
-                          <div className="mt-3">
+                          <div className={inputPatterns.chatInputWrapper}>
                             {/* Hidden file input */}
                             <input
                               ref={photoInputRef}
@@ -1324,7 +1330,10 @@ General thoughts: `;
                                   try {
                                     await selectImages(e.target.files, userId);
                                   } catch (err) {
-                                    logger.error("Error selecting images:", err);
+                                    logger.error(
+                                      "Error selecting images:",
+                                      err,
+                                    );
                                   }
                                 }
                                 if (photoInputRef.current) {
@@ -1333,12 +1342,42 @@ General thoughts: `;
                               }}
                             />
 
+                            <TiptapEditor
+                              content={editedPerformance}
+                              onUpdate={(html, text) => {
+                                setEditedPerformance(text);
+                                saveDraft(editingWorkoutId, text);
+                              }}
+                              onPaste={handleEditorPaste}
+                              onAttachPhoto={() =>
+                                photoInputRef.current?.click()
+                              }
+                              attachPhotoDisabled={selectedImages.length >= 5}
+                              attachPhotoCount={selectedImages.length}
+                              variant="pink"
+                              className="tiptap-editor-pink w-full rounded-t-md text-sm"
+                              contentClassName="px-4 py-3"
+                              placeholder="Edit to record what you actually did..."
+                              mode="rich"
+                              showToolbar={true}
+                              minHeight="60px"
+                              maxHeight="260px"
+                              allowFullscreen={true}
+                            />
+
                             {/* Photo thumbnails strip */}
                             {selectedImages.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mb-2">
+                              <div className="flex flex-wrap gap-2 px-3 pb-2">
                                 {selectedImages.map((image) => (
-                                  <div key={image.id} className={imagePreviewPatterns.container}>
-                                    <div className={imagePreviewPatterns.imageWrapper}>
+                                  <div
+                                    key={image.id}
+                                    className={imagePreviewPatterns.container}
+                                  >
+                                    <div
+                                      className={
+                                        imagePreviewPatterns.imageWrapper
+                                      }
+                                    >
                                       <img
                                         src={image.previewUrl}
                                         alt={image.name}
@@ -1353,12 +1392,16 @@ General thoughts: `;
                                     <button
                                       type="button"
                                       onClick={() => removeImage(image.id)}
-                                      className={imagePreviewPatterns.removeButton}
+                                      className={
+                                        imagePreviewPatterns.removeButton
+                                      }
                                       disabled={uploadingImageIds.has(image.id)}
                                     >
                                       <XIcon className="w-3 h-3" />
                                     </button>
-                                    <div className={imagePreviewPatterns.sizeLabel}>
+                                    <div
+                                      className={imagePreviewPatterns.sizeLabel}
+                                    >
                                       {(image.size / 1024).toFixed(0)}KB
                                     </div>
                                   </div>
@@ -1368,47 +1411,32 @@ General thoughts: `;
 
                             {/* Image error */}
                             {imageError && (
-                              <div className="mb-2 flex items-center justify-between px-2 py-1 bg-red-900/20 border border-red-500/30 rounded text-xs font-body text-red-400">
+                              <div className="mx-3 mb-2 flex items-center justify-between px-2 py-1 bg-red-900/20 border border-red-500/30 rounded text-xs font-body text-red-400">
                                 <span>{imageError}</span>
-                                <button type="button" onClick={() => setImageError(null)} className="ml-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setImageError(null)}
+                                  className="ml-2"
+                                >
                                   <XIcon className="w-3 h-3" />
                                 </button>
                               </div>
                             )}
-
-                            {/* Attach photos button */}
-                            {selectedImages.length < 5 && (
-                              <button
-                                type="button"
-                                onClick={() => photoInputRef.current?.click()}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-body text-synthwave-text-muted border border-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/50 hover:text-synthwave-neon-cyan rounded transition-colors duration-200"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span>Attach Photos</span>
-                                {selectedImages.length > 0 && (
-                                  <span className="text-synthwave-neon-cyan/60">({selectedImages.length}/5)</span>
-                                )}
-                              </button>
-                            )}
                           </div>
 
-                          {/* Helper text and legends container with proper spacing */}
-                          <div className="mt-3 space-y-2">
-                            <div className={`pl-2 ${formPatterns.helperText}`}>
-                              <span className="text-synthwave-neon-cyan">
-                                Edit above to record actual performance
-                              </span>{" "}
-                              - weights used, reps completed, RPE, intensity,
-                              movement substitutions, athlete notes, etc.
-                            </div>
+                          {/* Helper text + RPE/Intensity on the same row */}
+                          <div className="mt-2 px-1 flex items-center justify-between gap-4 pb-2">
+                            <p className="text-xs text-synthwave-text-secondary">
+                              Edit above to record actual performance - weights
+                              used, reps completed, RPE, intensity, movement
+                              substitutions, athlete notes, etc.
+                            </p>
 
-                            {/* RPE/Intensity Helper - Compact Info Icons */}
-                            <div className="flex items-center gap-4 px-2 pb-2">
+                            {/* RPE/Intensity Helper - right-aligned */}
+                            <div className="flex items-center gap-3 shrink-0">
                               {/* RPE Helper */}
                               <div
-                                className="flex items-center gap-2 cursor-help"
+                                className="flex items-center gap-1.5 cursor-help"
                                 data-tooltip-id="rpe-scale"
                                 data-tooltip-html={`
                                   <div style="max-width: 280px;">
@@ -1425,7 +1453,7 @@ General thoughts: `;
                                 `}
                               >
                                 <svg
-                                  className="w-5 h-5 text-synthwave-neon-cyan shrink-0"
+                                  className="w-4 h-4 text-synthwave-neon-cyan shrink-0"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1437,31 +1465,31 @@ General thoughts: `;
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                   />
                                 </svg>
-                                <span className={formPatterns.helperText}>
+                                <span className="font-body text-xs text-synthwave-text-secondary">
                                   RPE Scale
                                 </span>
                               </div>
 
                               {/* Intensity Helper */}
                               <div
-                                className="flex items-center gap-2 cursor-help"
+                                className="flex items-center gap-1.5 cursor-help"
                                 data-tooltip-id="intensity-scale"
                                 data-tooltip-html={`
                                   <div style="max-width: 280px;">
                                     <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff;">Intensity Scale</div>
                                     <div style="font-size: 14px; line-height: 1.5;">
-                                      <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">10</span> - All-out effort, sprint finish</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #ff6b9d; font-weight: 600;">8-9</span> - Very high, near maximal</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">6-7</span> - High, working hard</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">4-5</span> - Moderate, steady pace</div>
-                                      <div style="margin-bottom: 4px;"><span style="color: #00ffff; font-weight: 600;">2-3</span> - Low, warm-up pace</div>
-                                      <div><span style="color: #8a2be2; font-weight: 600;">1</span> - Minimal, recovery pace</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #9f00ff; font-weight: 600;">10</span> - All-out effort, sprint finish</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #bf40ff; font-weight: 600;">8-9</span> - Very high, near maximal</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">6-7</span> - High, working hard</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">4-5</span> - Moderate, steady pace</div>
+                                      <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">2-3</span> - Low, warm-up pace</div>
+                                      <div><span style="color: #00ffff; font-weight: 600;">1</span> - Minimal, recovery pace</div>
                                     </div>
                                   </div>
                                 `}
                               >
                                 <svg
-                                  className="w-5 h-5 text-synthwave-neon-pink shrink-0"
+                                  className="w-4 h-4 text-synthwave-neon-pink shrink-0"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1473,7 +1501,7 @@ General thoughts: `;
                                     d="M13 10V3L4 14h7v7l9-11h-7z"
                                   />
                                 </svg>
-                                <span className={formPatterns.helperText}>
+                                <span className="font-body text-xs text-synthwave-text-secondary">
                                   Intensity Scale
                                 </span>
                               </div>
@@ -1489,9 +1517,7 @@ General thoughts: `;
                             Coach Notes
                           </h4>
                           <div className={containerPatterns.coachNotesSection}>
-                            <div className="font-body text-sm text-synthwave-text-secondary">
-                              {template.notes}
-                            </div>
+                            <MarkdownRenderer content={template.notes} />
                           </div>
                         </div>
                       )}
@@ -1642,23 +1668,25 @@ General thoughts: `;
                       </div>
 
                       {/* Photos attached to this completed workout */}
-                      {isCompleted && template.imageS3Keys && template.imageS3Keys.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                            Workout Photos
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {template.imageS3Keys.map((s3Key, i) => (
-                              <ImageWithPresignedUrl
-                                key={s3Key}
-                                s3Key={s3Key}
-                                userId={userId}
-                                index={i}
-                              />
-                            ))}
+                      {isCompleted &&
+                        template.imageS3Keys &&
+                        template.imageS3Keys.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                              Workout Photos
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {template.imageS3Keys.map((s3Key, i) => (
+                                <ImageWithPresignedUrl
+                                  key={s3Key}
+                                  s3Key={s3Key}
+                                  userId={userId}
+                                  index={i}
+                                />
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       {/* Action Buttons */}
                       <div

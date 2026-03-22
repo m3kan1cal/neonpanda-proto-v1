@@ -1268,6 +1268,45 @@ async function* createCoachConversationEventStreamV2(
         }
       : undefined;
 
+    // Collect images from user messages since the last logged workout.
+    // findLastIndex locates the most recent assistant message that used log_workout;
+    // we only gather user-attached images AFTER that boundary to avoid leaking
+    // images from previously logged workouts into the current one.
+    const messages = existingConversation.messages;
+    let lastLogWorkoutIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i] as CoachMessage;
+      if (
+        m.role === "assistant" &&
+        (m.metadata as any)?.agent?.toolsUsed?.includes("log_workout")
+      ) {
+        lastLogWorkoutIndex = i;
+        break;
+      }
+    }
+
+    const messagesSinceLastLog =
+      lastLogWorkoutIndex >= 0
+        ? existingConversation.messages.slice(lastLogWorkoutIndex + 1)
+        : existingConversation.messages;
+
+    const historicalImageKeys = messagesSinceLastLog
+      .filter((m: CoachMessage) => m.role === "user" && m.imageS3Keys?.length)
+      .flatMap((m: CoachMessage) => m.imageS3Keys!);
+
+    const allImageS3Keys = [
+      ...new Set([...historicalImageKeys, ...(params.imageS3Keys ?? [])]),
+    ];
+
+    if (allImageS3Keys.length > 0) {
+      logger.info("V2: Image S3 keys collected for agent context", {
+        currentMessageImages: params.imageS3Keys?.length ?? 0,
+        historicalImages: historicalImageKeys.length,
+        totalUniqueImages: allImageS3Keys.length,
+        lastLogWorkoutBoundaryIndex: lastLogWorkoutIndex,
+      });
+    }
+
     const agentContext: ConversationAgentContext = {
       userId,
       coachId,
@@ -1288,6 +1327,7 @@ async function* createCoachConversationEventStreamV2(
             phases: activeProgram.phases || [],
           }
         : null,
+      ...(allImageS3Keys.length && { imageS3Keys: allImageS3Keys }),
     };
 
     // 5. Build system prompt

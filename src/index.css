@@ -358,6 +358,24 @@
   background: #00ffff50;
 }
 
+/* Pink fullscreen scrollbar overrides — portal container gets tiptap-editor-pink when variant="pink" */
+.tiptap-editor-pink.tiptap-fullscreen .tiptap-content::-webkit-scrollbar-thumb {
+  background: #ff007f30;
+}
+
+.tiptap-editor-pink.tiptap-fullscreen
+  .tiptap-content::-webkit-scrollbar-thumb:hover {
+  background: #ff007f50;
+}
+
+.tiptap-editor-pink .tiptap-fullscreen-content::-webkit-scrollbar-thumb {
+  background: #ff007f30;
+}
+
+.tiptap-editor-pink .tiptap-fullscreen-content::-webkit-scrollbar-thumb:hover {
+  background: #ff007f50;
+}
+
 /* =====================================================================
    Global styles
    ===================================================================== */

@@ -18,6 +18,7 @@ import {
 import InlineEditField from "./shared/InlineEditField";
 import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import { getDisciplineComponent } from "./workout-viewer/disciplines/DisciplineRegistry";
+import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
 
 // Collapsible section component with numbered badge - ViewWorkouts style
 
@@ -1149,6 +1150,8 @@ const WorkoutViewer = ({
   onSaveWorkoutTitle,
   formatDate,
   unitSystem = "imperial",
+  imageS3Keys,
+  userId,
 }) => {
   // Collapse state management - default: all sections expanded
   const [collapsedSections, setCollapsedSections] = useState(new Set([]));
@@ -2274,6 +2277,71 @@ const WorkoutViewer = ({
                 />
               );
             })()}
+
+          {/* Workout Photos — bottom of left column */}
+          {imageS3Keys?.length > 0 && (
+            <div
+              className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}
+            >
+              <div
+                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+                  collapsedSections.has("photos")
+                    ? "rounded-md"
+                    : "rounded-t-md"
+                }`}
+                onClick={() => toggleCollapse("photos")}
+                role="button"
+                tabIndex={0}
+                aria-expanded={!collapsedSections.has("photos")}
+                aria-controls="workout-photos-content"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleCollapse("photos");
+                  }
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0" />
+                  <span className="font-header font-bold text-white text-lg uppercase">
+                    Workout Photos
+                  </span>
+                  <span className="text-synthwave-text-secondary font-body text-sm">
+                    ({imageS3Keys.length})
+                  </span>
+                </div>
+                <svg
+                  className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("photos") ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+              {!collapsedSections.has("photos") && (
+                <div id="workout-photos-content" className="px-6 pb-6">
+                  <div className="flex flex-wrap gap-2">
+                    {imageS3Keys.map((s3Key, i) => (
+                      <ImageWithPresignedUrl
+                        key={s3Key}
+                        s3Key={s3Key}
+                        userId={userId}
+                        index={i}
+                        thumbnailSize="w-20 h-20"
+                        variant="cyan"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right column - 40% (2 of 5 columns) */}
@@ -2503,60 +2571,65 @@ const WorkoutViewer = ({
                         className={`${containerPatterns.coachNotesSection} animate-fadeIn space-y-3`}
                       >
                         {/* Performance Comparison */}
-                        {workout.insights.performanceComparison && workout.insights.performanceComparison !== "null" && (
-                          <div>
-                            <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
-                              Performance
-                            </span>
-                            <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
-                              {workout.insights.performanceComparison}
-                            </p>
-                          </div>
-                        )}
+                        {workout.insights.performanceComparison &&
+                          workout.insights.performanceComparison !== "null" && (
+                            <div>
+                              <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
+                                Performance
+                              </span>
+                              <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
+                                {workout.insights.performanceComparison}
+                              </p>
+                            </div>
+                          )}
                         {/* Achievements */}
-                        {workout.insights.achievements && workout.insights.achievements !== "null" && (
-                          <div>
-                            <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
-                              Achievements
-                            </span>
-                            <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
-                              {workout.insights.achievements}
-                            </p>
-                          </div>
-                        )}
+                        {workout.insights.achievements &&
+                          workout.insights.achievements !== "null" && (
+                            <div>
+                              <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
+                                Achievements
+                              </span>
+                              <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
+                                {workout.insights.achievements}
+                              </p>
+                            </div>
+                          )}
                         {/* Scaling Analysis */}
-                        {workout.insights.scalingAnalysis && workout.insights.scalingAnalysis !== "null" && (
-                          <div>
-                            <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
-                              Template Adherence
-                            </span>
-                            <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
-                              {workout.insights.scalingAnalysis}
-                            </p>
-                          </div>
-                        )}
+                        {workout.insights.scalingAnalysis &&
+                          workout.insights.scalingAnalysis !== "null" && (
+                            <div>
+                              <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
+                                Template Adherence
+                              </span>
+                              <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
+                                {workout.insights.scalingAnalysis}
+                              </p>
+                            </div>
+                          )}
                         {/* Recovery Impact */}
-                        {workout.insights.recoveryImpact && workout.insights.recoveryImpact !== "null" && (
-                          <div>
-                            <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
-                              Recovery Impact
-                            </span>
-                            <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
-                              {workout.insights.recoveryImpact}
-                            </p>
-                          </div>
-                        )}
+                        {workout.insights.recoveryImpact &&
+                          workout.insights.recoveryImpact !== "null" && (
+                            <div>
+                              <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
+                                Recovery Impact
+                              </span>
+                              <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5">
+                                {workout.insights.recoveryImpact}
+                              </p>
+                            </div>
+                          )}
                         {/* Coach Note */}
-                        {workout.insights.coachNote && workout.insights.coachNote !== "null" && (
-                          <div>
-                            <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
-                              Coach's Note
-                            </span>
-                            <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5 italic">
-                              {workout.insights.coachNote}
-                            </p>
-                          </div>
-                        )}
+                        {workout.insights.coachNote &&
+                          workout.insights.coachNote !== "null" && (
+                            <div>
+                              <span className="font-body text-xs uppercase tracking-wider text-synthwave-neon-cyan">
+                                Coach's Note
+                              </span>
+                              <p className="text-synthwave-text-secondary font-body text-sm leading-relaxed mt-0.5 italic">
+                                {workout.insights.coachNote}
+                              </p>
+                            </div>
+                          )}
                         <div className="mt-3 p-3 bg-synthwave-bg-primary/30 rounded-md border border-synthwave-neon-cyan/20">
                           <span className="text-synthwave-neon-cyan font-body text-sm font-medium">
                             Generated by AI
