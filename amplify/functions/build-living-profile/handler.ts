@@ -56,9 +56,7 @@ export const handler = async (event: BuildLivingProfileEvent) => {
     const summaryText =
       typeof conversationSummary === "string"
         ? conversationSummary
-        : (conversationSummary as any).summary ||
-          (conversationSummary as any).content ||
-          JSON.stringify(conversationSummary);
+        : conversationSummary.narrative;
 
     // Generate or update the living profile
     const livingProfile = await generateLivingProfile({
