@@ -184,24 +184,3 @@ export function buildBehavioralMemories(
       },
     }));
 }
-
-/**
- * Format behavioral memories for prompt injection.
- * Presents patterns as coaching guidance, not raw data.
- */
-function formatBehavioralPatternsForPrompt(
-  memories: UserMemory[],
-): string {
-  if (memories.length === 0) return "";
-
-  const sections = [
-    `## Observed Behavioral Patterns
-_These are patterns you've noticed over time — use them to guide your approach, not as labels._`,
-  ];
-
-  for (const memory of memories.slice(0, 5)) {
-    sections.push(`- ${memory.content}`);
-  }
-
-  return sections.join("\n");
-}

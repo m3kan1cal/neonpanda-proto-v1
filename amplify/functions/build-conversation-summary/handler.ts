@@ -285,57 +285,56 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
           : null,
     });
 
-    // Fire-and-forget: Extract and persist emotional snapshot from this conversation
-    extractEmotionalSnapshot(
-      summary.narrative,
-      event.userId,
-      event.coachId,
-      event.conversationId,
-    )
-      .then(async (snapshot) => {
-        if (snapshot) {
-          await saveEmotionalSnapshot(snapshot);
-          logger.info("Emotional snapshot saved:", {
-            snapshotId: snapshot.snapshotId,
-            dominantEmotion: snapshot.dominantEmotion,
-            motivation: snapshot.motivation,
-            stress: snapshot.stress,
-          });
-        }
-      })
-      .catch((err) => {
-        logger.error(
-          "⚠️ Emotional snapshot extraction failed (non-blocking):",
-          err,
-        );
-      });
+    // Extract and persist emotional snapshot from this conversation
+    try {
+      const snapshot = await extractEmotionalSnapshot(
+        summary.narrative,
+        event.userId,
+        event.coachId,
+        event.conversationId,
+      );
+      if (snapshot) {
+        await saveEmotionalSnapshot(snapshot);
+        logger.info("Emotional snapshot saved:", {
+          snapshotId: snapshot.snapshotId,
+          dominantEmotion: snapshot.dominantEmotion,
+          motivation: snapshot.motivation,
+          stress: snapshot.stress,
+        });
+      }
+    } catch (err) {
+      logger.error("⚠️ Emotional snapshot extraction failed:", err);
+    }
 
-    // Fire-and-forget: Extract episodic moments and save as global memories
-    extractEpisodicMoments(summary.narrative, coachConfig.coach_name)
-      .then(async (extraction) => {
-        const memories = buildEpisodicMemories(
-          extraction,
-          event.userId,
-          event.conversationId,
+    // Extract episodic moments and save as global memories
+    try {
+      const extraction = await extractEpisodicMoments(
+        summary.narrative,
+        coachConfig.coach_name,
+      );
+      const memories = buildEpisodicMemories(
+        extraction,
+        event.userId,
+        event.conversationId,
+      );
+      for (const memory of memories) {
+        memory.metadata.lifecycle = initializeLifecycle(
+          memory.metadata.importance,
         );
-        for (const memory of memories) {
-          memory.metadata.lifecycle = initializeLifecycle(
-            memory.metadata.importance,
-          );
-          await saveMemory(memory);
-          await storeMemoryInPinecone(memory).catch((err) => {
-            logger.warn("Pinecone sync failed for episodic memory:", err);
-          });
-        }
-        if (memories.length > 0) {
-          logger.info("Episodic memories saved:", { count: memories.length });
-        }
-      })
-      .catch((err) => {
-        logger.error("⚠️ Episodic extraction failed (non-blocking):", err);
-      });
+        await saveMemory(memory);
+        await storeMemoryInPinecone(memory).catch((err) => {
+          logger.warn("Pinecone sync failed for episodic memory:", err);
+        });
+      }
+      if (memories.length > 0) {
+        logger.info("Episodic memories saved:", { count: memories.length });
+      }
+    } catch (err) {
+      logger.error("⚠️ Episodic extraction failed:", err);
+    }
 
     // Fire-and-forget: Trigger living profile update with the new summary data
+    // (invokeAsyncLambda completes quickly by delegating to another Lambda)
     const buildLivingProfileFunctionName =
       process.env.BUILD_LIVING_PROFILE_FUNCTION_NAME;
     if (buildLivingProfileFunctionName) {
