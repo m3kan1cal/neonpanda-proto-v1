@@ -23,6 +23,13 @@ import {
 import { updateCoachConversation } from "../../dynamodb/operations";
 import { CONVERSATION_SUMMARY_TOOL } from "../libs/schemas/conversation-summary-schema";
 import { extractEmotionalSnapshot } from "../libs/memory/emotional";
+import {
+  extractEpisodicMoments,
+  buildEpisodicMemories,
+} from "../libs/memory/episodic";
+import { initializeLifecycle } from "../libs/memory/lifecycle";
+import { saveEmotionalSnapshot, saveMemory } from "../../dynamodb/memory";
+import { storeMemoryInPinecone } from "../libs/user/pinecone";
 import { logger } from "../libs/logger";
 
 export const handler = async (event: BuildCoachConversationSummaryEvent) => {
@@ -278,18 +285,17 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
           : null,
     });
 
-    // Fire-and-forget: Extract emotional snapshot from this conversation
+    // Fire-and-forget: Extract and persist emotional snapshot from this conversation
     extractEmotionalSnapshot(
       summary.narrative,
       event.userId,
       event.coachId,
       event.conversationId,
     )
-      .then((snapshot) => {
+      .then(async (snapshot) => {
         if (snapshot) {
-          // TODO: Save snapshot to DynamoDB (emotionalSnapshot#{snapshotId})
-          // For now, log it — DynamoDB storage will be wired in the lifecycle Lambda
-          logger.info("Emotional snapshot extracted:", {
+          await saveEmotionalSnapshot(snapshot);
+          logger.info("Emotional snapshot saved:", {
             snapshotId: snapshot.snapshotId,
             dominantEmotion: snapshot.dominantEmotion,
             motivation: snapshot.motivation,
@@ -302,6 +308,31 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
           "⚠️ Emotional snapshot extraction failed (non-blocking):",
           err,
         );
+      });
+
+    // Fire-and-forget: Extract episodic moments and save as global memories
+    extractEpisodicMoments(summary.narrative, coachConfig.coach_name)
+      .then(async (extraction) => {
+        const memories = buildEpisodicMemories(
+          extraction,
+          event.userId,
+          event.conversationId,
+        );
+        for (const memory of memories) {
+          memory.metadata.lifecycle = initializeLifecycle(
+            memory.metadata.importance,
+          );
+          await saveMemory(memory);
+          await storeMemoryInPinecone(memory).catch((err) => {
+            logger.warn("Pinecone sync failed for episodic memory:", err);
+          });
+        }
+        if (memories.length > 0) {
+          logger.info("Episodic memories saved:", { count: memories.length });
+        }
+      })
+      .catch((err) => {
+        logger.error("⚠️ Episodic extraction failed (non-blocking):", err);
       });
 
     // Fire-and-forget: Trigger living profile update with the new summary data

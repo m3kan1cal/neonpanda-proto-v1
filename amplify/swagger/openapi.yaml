@@ -479,7 +479,7 @@ components:
           type: string
         memoryType:
           type: string
-          enum: [preference, goal, constraint, instruction, context]
+          enum: [preference, goal, constraint, instruction, context, prospective, episodic, behavioral]
         metadata:
           type: object
           properties:
@@ -496,6 +496,50 @@ components:
             importance:
               type: string
               enum: [high, medium, low]
+            tags:
+              type: array
+              items:
+                type: string
+            prospective:
+              type: object
+              description: Metadata for prospective (forward-looking) memories
+              properties:
+                targetDate:
+                  type: string
+                  format: date
+                targetDateType:
+                  type: string
+                  enum: [specific, approximate, recurring, relative]
+                followUpType:
+                  type: string
+                  enum: [event_outcome, commitment_check, milestone, try_new_thing, general]
+                followUpPrompt:
+                  type: string
+                status:
+                  type: string
+                  enum: [pending, triggered, resolved, expired]
+                triggerWindow:
+                  type: object
+                  properties:
+                    startDaysBefore:
+                      type: integer
+                    endDaysAfter:
+                      type: integer
+            lifecycle:
+              type: object
+              description: FSRS-based temporal decay metadata
+              properties:
+                state:
+                  type: string
+                  enum: [active, compressed, archived]
+                stability:
+                  type: number
+                  description: Days until retrievability drops to ~37%
+                reinforcementCount:
+                  type: integer
+                lastReinforcedAt:
+                  type: string
+                  format: date-time
             tags:
               type: array
               items:
@@ -2394,6 +2438,58 @@ paths:
                         type: string
 
   /users/{userId}/memories/{memoryId}:
+    put:
+      tags: [Memories]
+      summary: Update a memory
+      description: Updates a memory's fields (content, memoryType, metadata). Cannot update memoryId or userId. Syncs changes to Pinecone.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/MemoryIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  description: Updated memory content
+                memoryType:
+                  type: string
+                  enum: [preference, goal, constraint, instruction, context, prospective, episodic, behavioral]
+                metadata:
+                  type: object
+                  properties:
+                    importance:
+                      type: string
+                      enum: [high, medium, low]
+                    tags:
+                      type: array
+                      items:
+                        type: string
+      responses:
+        "200":
+          description: Memory updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                      memory:
+                        $ref: "#/components/schemas/Memory"
+                      updateFields:
+                        type: array
+                        items:
+                          type: string
+        "400":
+          description: Invalid request (missing fields, restricted field update)
+        "404":
+          description: Memory not found
     delete:
       tags: [Memories]
       summary: Delete a memory

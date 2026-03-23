@@ -12,11 +12,7 @@
  * - "Tends to underreport difficulty of workouts"
  */
 
-import {
-  callBedrockApi,
-  MODEL_IDS,
-  TEMPERATURE_PRESETS,
-} from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { UserMemory } from "./types";
 import { generateMemoryId } from "./utils";
 import { logger } from "../logger";
@@ -40,8 +36,7 @@ const BEHAVIORAL_PATTERN_SCHEMA = {
         properties: {
           pattern: {
             type: "string",
-            description:
-              "Concise description of the observed behavior pattern",
+            description: "Concise description of the observed behavior pattern",
           },
           patternType: {
             type: "string",
@@ -162,11 +157,11 @@ Use the detect_behavioral_patterns tool to identify behavioral patterns.`;
 
 /**
  * Convert detected behavioral patterns into UserMemory objects.
+ * Behavioral memories are always global (coachId: null) — accessible by all coaches.
  */
 export function buildBehavioralMemories(
   detection: BehavioralDetectionResult,
   userId: string,
-  coachId: string,
 ): UserMemory[] {
   if (!detection.patterns?.length) return [];
 
@@ -175,7 +170,7 @@ export function buildBehavioralMemories(
     .map((pattern) => ({
       memoryId: generateMemoryId(userId),
       userId,
-      coachId,
+      coachId: null,
       content: `${pattern.pattern} — ${pattern.coachingImplication}`,
       memoryType: "behavioral" as const,
       metadata: {
@@ -184,9 +179,7 @@ export function buildBehavioralMemories(
         usageCount: 0,
         source: "system_extraction" as const,
         importance:
-          pattern.confidence >= 0.8
-            ? ("high" as const)
-            : ("medium" as const),
+          pattern.confidence >= 0.8 ? ("high" as const) : ("medium" as const),
         tags: ["behavioral", pattern.patternType, "observed_pattern"],
       },
     }));

@@ -10,11 +10,7 @@
  * - "Celebrated completing their first full program without missing a session"
  */
 
-import {
-  callBedrockApi,
-  MODEL_IDS,
-  TEMPERATURE_PRESETS,
-} from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { UserMemory } from "./types";
 import { generateMemoryId } from "./utils";
 import { logger } from "../logger";
@@ -148,11 +144,11 @@ Use the extract_episodic_moments tool to identify any significant shared moments
 
 /**
  * Convert extracted episodic moments into UserMemory objects.
+ * Episodic memories are always global (coachId: null) — accessible by all coaches.
  */
 export function buildEpisodicMemories(
   extraction: EpisodicExtractionResult,
   userId: string,
-  coachId: string,
   conversationId: string,
 ): UserMemory[] {
   if (!extraction.moments?.length) return [];
@@ -160,7 +156,7 @@ export function buildEpisodicMemories(
   return extraction.moments.map((moment) => ({
     memoryId: generateMemoryId(userId),
     userId,
-    coachId,
+    coachId: null,
     content: moment.moment,
     memoryType: "episodic" as const,
     metadata: {
@@ -169,11 +165,7 @@ export function buildEpisodicMemories(
       usageCount: 0,
       source: "system_extraction" as const,
       importance: moment.significance === "high" ? "high" : "medium",
-      tags: [
-        "episodic",
-        moment.emotionalValence,
-        ...moment.themes.slice(0, 3),
-      ],
+      tags: ["episodic", moment.emotionalValence, ...moment.themes.slice(0, 3)],
     },
   }));
 }

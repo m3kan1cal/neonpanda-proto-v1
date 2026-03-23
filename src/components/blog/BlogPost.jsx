@@ -62,6 +62,16 @@ const blogPosts = [
     pattern: "Streaming Tool-Use",
     color: "cyan",
   },
+  {
+    id: 6,
+    slug: "a-coach-that-remembers",
+    title: "A Coach That Actually Remembers",
+    subtitle: "The 4-Layer Memory Architecture",
+    readTime: "12 min read",
+    agent: "Memory System",
+    pattern: "Cognitive Architecture",
+    color: "purple",
+  },
 ];
 
 function BlogPost({ children }) {
@@ -183,7 +193,9 @@ function BlogPost({ children }) {
                     ? "training-program.jpg"
                     : currentPost.slug === "the-symphony"
                       ? "functional-gym.jpg"
-                      : "barbells-plates.jpg"
+                      : currentPost.slug === "a-coach-that-remembers"
+                        ? "barbells-plates.jpg"
+                        : "barbells-plates.jpg"
             })`,
             backgroundSize: "cover",
             backgroundPosition: "center",
@@ -203,7 +215,9 @@ function BlogPost({ children }) {
               Blog
             </Link>
             <span className="text-white/70">/</span>
-            <span className={colors.text}>Part {currentPost.id} of 5</span>
+            <span className={colors.text}>
+              Part {currentPost.id} of {blogPosts.length}
+            </span>
           </div>
 
           {/* Post Meta */}
@@ -242,6 +256,11 @@ function BlogPost({ children }) {
                 <span className="text-white">When All Agents </span>
                 <span className={colors.text}>Converge</span>
               </>
+            ) : currentPost.slug === "a-coach-that-remembers" ? (
+              <>
+                <span className="text-white">A Coach That Actually </span>
+                <span className={colors.text}>Remembers</span>
+              </>
             ) : (
               <span className={colors.text}>{currentPost.title}</span>
             )}
@@ -266,9 +285,7 @@ function BlogPost({ children }) {
                   }`}
                   title={post.title}
                 >
-                  <span className="font-body font-bold text-sm">
-                    {post.id}
-                  </span>
+                  <span className="font-body font-bold text-sm">{post.id}</span>
                 </Link>
               );
             })}

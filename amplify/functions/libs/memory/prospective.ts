@@ -10,11 +10,7 @@
  * - "Going on vacation Aug 1-15" → Adjust expectations, welcome back
  */
 
-import {
-  callBedrockApi,
-  MODEL_IDS,
-  TEMPERATURE_PRESETS,
-} from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { PROSPECTIVE_MEMORY_EXTRACTION_SCHEMA } from "../schemas/prospective-memory-schema";
 import {
   UserMemory,
@@ -22,6 +18,7 @@ import {
   ProspectiveExtractionResult,
 } from "./types";
 import { generateMemoryId } from "./utils";
+import { initializeLifecycle } from "./lifecycle";
 import { logger } from "../logger";
 import { fixDoubleEncodedProperties } from "../response-utils";
 
@@ -165,6 +162,7 @@ export function buildProspectiveMemories(
           endDaysAfter: item.triggerWindowDaysAfter,
         },
       },
+      lifecycle: initializeLifecycle(item.importance),
     },
   }));
 }
@@ -192,7 +190,10 @@ export function filterActiveProspectiveMemories(
     if (!prospective) return false;
 
     // Only show pending or triggered
-    if (prospective.status !== "pending" && prospective.status !== "triggered") {
+    if (
+      prospective.status !== "pending" &&
+      prospective.status !== "triggered"
+    ) {
       return false;
     }
 
@@ -263,9 +264,7 @@ These are things to naturally follow up on based on previous conversations. Weav
     sections.push("\n## TODAY");
     for (const memory of today) {
       const p = memory.metadata.prospective!;
-      sections.push(
-        `- **${memory.content}**\n  → ${p.followUpPrompt}`,
-      );
+      sections.push(`- **${memory.content}**\n  → ${p.followUpPrompt}`);
     }
   }
 
@@ -293,10 +292,7 @@ These are things to naturally follow up on based on previous conversations. Weav
     sections.push("\n## FOLLOW UP");
     for (const { memory, daysSince } of recent) {
       const p = memory.metadata.prospective!;
-      const timeLabel =
-        daysSince === 1
-          ? "Yesterday"
-          : `${daysSince} days ago`;
+      const timeLabel = daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
       sections.push(
         `- ${timeLabel}: **${memory.content}**\n  → ${p.followUpPrompt}`,
       );
@@ -356,7 +352,10 @@ export function findExpiredProspectiveMemories(
 
     const prospective = memory.metadata.prospective;
     if (!prospective) return false;
-    if (prospective.status !== "pending" && prospective.status !== "triggered") {
+    if (
+      prospective.status !== "pending" &&
+      prospective.status !== "triggered"
+    ) {
       return false;
     }
 

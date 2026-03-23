@@ -8,9 +8,14 @@ import {
   withThroughputScaling,
   getTableName,
   UpdateCommand,
+  QueryCommand,
   deepMerge,
 } from "./core";
 import { UserMemory } from "../functions/libs/memory/types";
+import {
+  EmotionalSnapshot,
+  EmotionalTrend,
+} from "../functions/libs/memory/emotional-types";
 import { calculateDecayScore } from "../functions/libs/memory/lifecycle";
 import { logger } from "../functions/libs/logger";
 
@@ -327,4 +332,153 @@ export async function deleteMemory(
     }
     throw error;
   }
+}
+
+// ===========================
+// EMOTIONAL SNAPSHOT OPERATIONS
+// ===========================
+
+/**
+ * Save an emotional snapshot to DynamoDB
+ */
+export async function saveEmotionalSnapshot(
+  snapshot: EmotionalSnapshot,
+): Promise<void> {
+  const timestamp = new Date().toISOString();
+  const item = createDynamoDBItem<EmotionalSnapshot>(
+    "emotionalSnapshot",
+    `user#${snapshot.userId}`,
+    `emotionalSnapshot#${snapshot.snapshotId}`,
+    snapshot,
+    timestamp,
+  );
+  await saveToDynamoDB(item);
+  logger.info("Emotional snapshot saved:", {
+    snapshotId: snapshot.snapshotId,
+    userId: snapshot.userId,
+    coachId: snapshot.coachId,
+  });
+}
+
+/**
+ * Query emotional snapshots for a user.
+ * Passing coachId filters to that coach's snapshots plus any global ones.
+ * Pass undefined to load all snapshots across all coaches.
+ */
+export async function queryEmotionalSnapshots(
+  userId: string,
+  coachId?: string,
+  options?: { limit?: number },
+): Promise<EmotionalSnapshot[]> {
+  const items = await queryFromDynamoDB<EmotionalSnapshot>(
+    `user#${userId}`,
+    "emotionalSnapshot#",
+    "emotionalSnapshot",
+  );
+
+  let results = items.map((item) => item.attributes);
+
+  if (coachId) {
+    results = results.filter((s) => s.coachId === coachId || !s.coachId);
+  }
+
+  results.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+
+  if (options?.limit) {
+    results = results.slice(0, options.limit);
+  }
+
+  return results;
+}
+
+// ===========================
+// EMOTIONAL TREND OPERATIONS
+// ===========================
+
+/**
+ * Save an emotional trend to DynamoDB
+ */
+export async function saveEmotionalTrend(
+  trend: EmotionalTrend,
+  userId: string,
+): Promise<void> {
+  const timestamp = new Date().toISOString();
+  const item = createDynamoDBItem<EmotionalTrend>(
+    "emotionalTrend",
+    `user#${userId}`,
+    `emotionalTrend#${trend.period}#${trend.periodStart}`,
+    trend,
+    timestamp,
+  );
+  await saveToDynamoDB(item);
+  logger.info("Emotional trend saved:", {
+    userId,
+    period: trend.period,
+    periodStart: trend.periodStart,
+  });
+}
+
+/**
+ * Get the most recent emotional trend for a user by period
+ */
+export async function getLatestEmotionalTrend(
+  userId: string,
+  period: "weekly" | "monthly",
+): Promise<EmotionalTrend | null> {
+  const items = await queryFromDynamoDB<EmotionalTrend>(
+    `user#${userId}`,
+    `emotionalTrend#${period}#`,
+    "emotionalTrend",
+  );
+
+  if (items.length === 0) return null;
+
+  const sorted = items
+    .map((item) => item.attributes)
+    .sort(
+      (a, b) =>
+        new Date(b.periodStart).getTime() - new Date(a.periodStart).getTime(),
+    );
+
+  return sorted[0];
+}
+
+// ===========================
+// BATCH / ADMIN OPERATIONS
+// ===========================
+
+/**
+ * Query all distinct user partition keys that have at least one userMemory entity.
+ * Used by the dispatch-memory-lifecycle coordinator to build the fan-out list.
+ * Paginates through all results using LastEvaluatedKey.
+ */
+export async function queryAllUserMemoryPartitions(): Promise<string[]> {
+  const tableName = getTableName();
+  const pkSet = new Set<string>();
+  let lastEvaluatedKey: any = undefined;
+
+  do {
+    const result = await withThroughputScaling(async () => {
+      const command = new QueryCommand({
+        TableName: tableName,
+        IndexName: "gsi3",
+        KeyConditionExpression: "entityType = :entityType",
+        ExpressionAttributeValues: { ":entityType": "userMemory" },
+        ProjectionExpression: "pk",
+        ExclusiveStartKey: lastEvaluatedKey,
+      });
+      return docClient.send(command);
+    }, "Query user memory partitions via GSI3");
+
+    for (const item of result.Items || []) {
+      if (item.pk) pkSet.add(item.pk as string);
+    }
+
+    lastEvaluatedKey = result.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+
+  logger.info("User memory partitions queried:", { totalUsers: pkSet.size });
+  return Array.from(pkSet);
 }

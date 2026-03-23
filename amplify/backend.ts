@@ -45,7 +45,11 @@ import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
 import { buildLivingProfile } from "./functions/build-living-profile/resource";
-import { runMemoryLifecycle } from "./functions/run-memory-lifecycle/resource";
+import {
+  dispatchMemoryLifecycle,
+  createMemoryLifecycleSchedule,
+} from "./functions/memory/dispatch-memory-lifecycle/resource";
+import { processMemoryLifecycle } from "./functions/memory/process-memory-lifecycle/resource";
 import { getWorkouts } from "./functions/get-workouts/resource";
 import { getWorkout } from "./functions/get-workout/resource";
 import { updateWorkout } from "./functions/update-workout/resource";
@@ -65,10 +69,10 @@ import {
 } from "./functions/build-monthly-analytics/resource";
 import { getMonthlyReports } from "./functions/get-monthly-reports/resource";
 import { getMonthlyReport } from "./functions/get-monthly-report/resource";
-import { getMemories } from "./functions/get-memories/resource";
-import { createMemory } from "./functions/create-memory/resource";
-import { deleteMemory } from "./functions/delete-memory/resource";
-import { updateMemory } from "./functions/update-memory/resource";
+import { getMemories } from "./functions/memory/get-memories/resource";
+import { createMemory } from "./functions/memory/create-memory/resource";
+import { deleteMemory } from "./functions/memory/delete-memory/resource";
+import { updateMemory } from "./functions/memory/update-memory/resource";
 import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
 import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
 import { getUserProfile } from "./functions/get-user-profile/resource";
@@ -167,7 +171,8 @@ const backend = defineBackend({
   buildWorkout,
   buildConversationSummary,
   buildLivingProfile,
-  runMemoryLifecycle,
+  dispatchMemoryLifecycle,
+  processMemoryLifecycle,
   getWorkouts,
   getWorkout,
   updateWorkout,
@@ -245,7 +250,10 @@ backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
 backend.buildLivingProfile.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
-backend.runMemoryLifecycle.resources.lambda.configureAsyncInvoke({
+backend.dispatchMemoryLifecycle.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.processMemoryLifecycle.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 
@@ -407,7 +415,8 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout,
   backend.buildConversationSummary,
   backend.buildLivingProfile,
-  backend.runMemoryLifecycle,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
@@ -496,6 +505,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildLivingProfile,
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
+  backend.processMemoryLifecycle, // Needs Bedrock for memory compression (Nova 2 Lite)
   backend.createMemory,
   backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
   backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
@@ -717,6 +727,17 @@ grantLambdaInvokePermissions(backend.buildWorkout.resources.lambda, [
   backend.buildWorkoutAnalysis.resources.lambda.functionArn,
 ]);
 
+// Grant permission to dispatchMemoryLifecycle to invoke processMemoryLifecycle (fan-out per user)
+grantLambdaInvokePermissions(backend.dispatchMemoryLifecycle.resources.lambda, [
+  backend.processMemoryLifecycle.resources.lambda.functionArn,
+]);
+
+// Pass the processor function name to the dispatcher at deploy time
+backend.dispatchMemoryLifecycle.resources.lambda.addEnvironment(
+  "PROCESS_MEMORY_LIFECYCLE_FUNCTION_NAME",
+  backend.processMemoryLifecycle.resources.lambda.functionName,
+);
+
 // ============================================================================
 // CLOUDWATCH LOGS PERMISSIONS
 // ============================================================================
@@ -782,7 +803,8 @@ const allFunctions = [
   backend.buildWorkout,
   backend.buildConversationSummary,
   backend.buildLivingProfile,
-  backend.runMemoryLifecycle,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
@@ -1272,6 +1294,16 @@ const warmupPlatformSchedule = createWarmupPlatformSchedule(
 
 console.info(
   "✅ Platform warmup scheduled (every 12 hours): pre-compiles Bedrock grammar caches",
+);
+
+// Create EventBridge schedule for daily memory lifecycle (3am UTC)
+const memoryLifecycleSchedule = createMemoryLifecycleSchedule(
+  backend.dispatchMemoryLifecycle.stack,
+  backend.dispatchMemoryLifecycle.resources.lambda,
+);
+
+console.info(
+  "✅ Memory lifecycle scheduled (daily at 3am UTC): compress, archive, expire, behavioral + trends",
 );
 
 // ============================================================================

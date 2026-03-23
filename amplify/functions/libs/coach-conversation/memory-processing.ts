@@ -17,6 +17,7 @@ import {
   formatProspectiveMemoriesForPrompt,
   reinforceMemory,
 } from "../memory";
+import { initializeLifecycle } from "../memory/lifecycle";
 import { parseSlashCommand } from "../workout/detection";
 import { logger } from "../logger";
 
@@ -374,6 +375,7 @@ export async function detectAndProcessMemory(
                 ...(memoryCharacteristics.suggestedTags || []),
                 ...(memoryCharacteristics.exerciseTags || []),
               ], // Combine regular and exercise tags
+              lifecycle: initializeLifecycle(memoryCharacteristics.importance),
             },
           };
         }
@@ -419,6 +421,7 @@ export async function detectAndProcessMemory(
                 ...(memoryCharacteristics.suggestedTags || []),
                 ...(memoryCharacteristics.exerciseTags || []),
               ], // Combine regular and exercise tags
+              lifecycle: initializeLifecycle(memoryCharacteristics.importance),
             },
           };
         }

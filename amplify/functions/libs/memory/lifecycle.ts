@@ -1,14 +1,19 @@
 /**
- * Memory Lifecycle Module — DSR-Inspired Temporal Decay
+ * Memory Lifecycle Module — FSRS-4.5 Inspired Temporal Decay
  *
  * Replaces the flat 30-day recency scoring with a real decay curve based on
- * the FSRS v6 algorithm (Free Spaced Repetition Scheduler). Core insight:
+ * the FSRS-4.5 algorithm (Free Spaced Repetition Scheduler). Core insight:
  * memory stability GROWS with each successful retrieval (spaced repetition effect).
  *
- * Three key functions from FSRS v6:
+ * Three key functions from FSRS-4.5:
  * 1. calculateRetrievability — how "fresh" a memory is right now
  * 2. updateStabilityAfterReinforcement — how much stronger a memory gets after use
  * 3. getCompressionThresholdDays — when to consider compressing/archiving
+ *
+ * Note: Uses FSRS-4.5 constants (DECAY=-0.5, FACTOR=19/81) rather than FSRS v6
+ * trainable parameters (w[20], default 0.1542) because we are not training on
+ * user review data. The forgetting curve formula is identical; only the parameter
+ * source differs.
  *
  * Reference: https://github.com/open-spaced-repetition/free-spaced-repetition-scheduler
  */
@@ -16,12 +21,12 @@
 import { UserMemory, MemoryLifecycleMetadata } from "./types";
 import { logger } from "../logger";
 
-// ── FSRS v6 Constants ──
+// ── FSRS-4.5 Constants ──
 
-/** FSRS v6 decay constant (negative for proper power-law decay) */
+/** FSRS-4.5 decay constant (negative for proper power-law decay) */
 const DECAY = -0.5;
 
-/** Derived factor for 90% target retention: (0.9^(1/DECAY) - 1) */
+/** Derived FSRS-4.5 factor for 90% target retention: (0.9^(1/DECAY) - 1) = 19/81 ≈ 0.2346 */
 const FACTOR = Math.pow(0.9, 1 / DECAY) - 1;
 
 // ── Initial Stability by Importance ──
@@ -37,7 +42,7 @@ const INITIAL_STABILITY: Record<string, number> = {
 
 /**
  * Calculate retrievability — the probability (0-1) that this memory can be recalled.
- * Uses the FSRS v6 power-law forgetting curve.
+ * Uses the FSRS-4.5 power-law forgetting curve.
  *
  * R(t, S) = (1 + FACTOR * t / S)^DECAY
  *
@@ -59,7 +64,7 @@ export function calculateRetrievability(
  * Stability grows MORE when a memory is retrieved at lower retrievability
  * (the "desirable difficulty" effect from spaced repetition).
  *
- * Simplified from FSRS v6:
+ * Simplified from FSRS-4.5:
  * S' = S * (e^0.5 * (11 - D) * S^-0.2 * (e^(0.1*(1-R)) - 1) + 1)
  *
  * @param stability - Current stability in days

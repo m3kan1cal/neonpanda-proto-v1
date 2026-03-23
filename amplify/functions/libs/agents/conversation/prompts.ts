@@ -49,6 +49,7 @@ export function buildConversationAgentPrompt(
       totalWorkouts: number;
     } | null;
     coachCreatorSessionSummary?: string;
+    emotionalContext?: string;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -252,6 +253,11 @@ when making recommendations, but apply it contextually based on the situation.`)
 
 Note: Use the get_todays_workout tool to see today's prescribed workout details, exercises, sets, and reps.
 This context tells you the user has an active program, but you need to call the tool to get specifics.`);
+  }
+
+  // Section 4: Emotional Context (conditional — dynamic, changes each session)
+  if (options.emotionalContext) {
+    dynamicSections.push(options.emotionalContext);
   }
 
   // Join sections with separators
