@@ -3,6 +3,7 @@
  */
 
 import { UserProfile } from './types';
+import { detectInjectionAttempt, sanitizeUserContent } from '../security/prompt-sanitizer';
 
 /**
  * Validation result for Critical Training Directive
@@ -39,20 +40,10 @@ export const validateCriticalTrainingDirective = (
     };
   }
 
-  // Basic content validation (block obvious jailbreak attempts)
+  // Content validation — use the centralized injection detection (40+ patterns)
   if (directive.content) {
-    const content = directive.content.toLowerCase();
-    const blockedPatterns = [
-      'ignore all previous',
-      'disregard all',
-      'forget all instructions',
-      'system prompt',
-      'jailbreak',
-      'ignore safety',
-      'bypass constraints'
-    ];
-
-    if (blockedPatterns.some(pattern => content.includes(pattern))) {
+    const { detected } = detectInjectionAttempt(directive.content);
+    if (detected) {
       return {
         isValid: false,
         error: 'Invalid directive content. Please remove system override attempts.'
@@ -61,6 +52,23 @@ export const validateCriticalTrainingDirective = (
   }
 
   return { isValid: true };
+};
+
+/**
+ * Sanitize Critical Training Directive content.
+ * Strips injection tokens and enforces the 500-char length limit.
+ */
+export const sanitizeCriticalTrainingDirective = (
+  directive: UserProfile['criticalTrainingDirective']
+): UserProfile['criticalTrainingDirective'] => {
+  if (!directive || !directive.content) {
+    return directive;
+  }
+
+  return {
+    ...directive,
+    content: sanitizeUserContent(directive.content, 500),
+  };
 };
 
 /**

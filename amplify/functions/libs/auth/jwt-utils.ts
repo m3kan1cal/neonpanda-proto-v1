@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
+import jwksRsa from 'jwks-rsa';
 import { logger } from "../logger";
 
 /**
@@ -18,16 +18,90 @@ export interface JWTClaims {
   iat: number; // Issued at timestamp
   token_use: 'id' | 'access';
   auth_time: number;
-  // Add other common claims as needed
+}
+
+// Module-level JWKS client — cached across warm Lambda invocations
+let jwksClient: jwksRsa.JwksClient | null = null;
+
+function getJwksClient(): jwksRsa.JwksClient {
+  if (!jwksClient) {
+    const region = process.env.AWS_REGION || 'us-east-1';
+    const userPoolId = process.env.USER_POOL_ID;
+
+    if (!userPoolId) {
+      throw new Error('USER_POOL_ID environment variable is not set');
+    }
+
+    jwksClient = jwksRsa({
+      jwksUri: `https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`,
+      cache: true,
+      cacheMaxEntries: 5,
+      cacheMaxAge: 600000, // 10 minutes
+    });
+  }
+  return jwksClient;
 }
 
 /**
- * Shared JWT decoding logic for both API Gateway and Lambda Function URL auth
+ * Fetch the signing key for a given JWT kid from Cognito JWKS endpoint.
+ */
+async function getSigningKey(kid: string): Promise<string> {
+  const client = getJwksClient();
+  const key = await client.getSigningKey(kid);
+  return key.getPublicKey();
+}
+
+/**
+ * Verify and decode a Cognito JWT token, checking signature, expiry, issuer, and audience.
+ */
+export async function verifyJwtToken(token: string): Promise<JWTClaims> {
+  // Decode header to get kid — do not trust claims yet
+  const decoded = jwt.decode(token, { complete: true });
+
+  if (!decoded || typeof decoded === 'string') {
+    throw new Error('Invalid JWT token format');
+  }
+
+  const kid = decoded.header.kid;
+  if (!kid) {
+    throw new Error('JWT is missing kid header — cannot verify signature');
+  }
+
+  const region = process.env.AWS_REGION || 'us-east-1';
+  const userPoolId = process.env.USER_POOL_ID;
+
+  if (!userPoolId) {
+    throw new Error('USER_POOL_ID environment variable is not set');
+  }
+
+  const expectedIssuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
+
+  const publicKey = await getSigningKey(kid);
+
+  const claims = jwt.verify(token, publicKey, {
+    algorithms: ['RS256'],
+    issuer: expectedIssuer,
+  }) as JWTClaims;
+
+  // Explicit claim checks
+  if (!claims.sub) {
+    throw new Error('JWT missing sub claim');
+  }
+  if (claims.token_use !== 'id' && claims.token_use !== 'access') {
+    throw new Error(`Unexpected token_use: ${claims.token_use}`);
+  }
+
+  return claims;
+}
+
+/**
+ * Decode a JWT without signature verification.
+ * ONLY use this for the API Gateway path where the JWT authorizer has
+ * already validated the token before the Lambda is invoked.
+ * Do NOT use this on the streaming (Lambda Function URL) path.
  */
 export function decodeJwtToken(token: string): JWTClaims {
   try {
-    // Note: In production, you'd verify the token signature with the proper secret/key
-    // For now, we'll decode without verification (matches development needs)
     const claims = jwt.decode(token) as JWTClaims;
 
     if (!claims) {
@@ -62,6 +136,5 @@ export function parseAuthHeader(authHeader: string): string {
     throw new Error('Authorization header required');
   }
 
-  // Parse JWT token (Bearer token expected)
   return authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
 }

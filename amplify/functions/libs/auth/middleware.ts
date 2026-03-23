@@ -6,12 +6,32 @@ import {
 } from "aws-lambda";
 import { createErrorResponse } from "../api-helpers";
 import { logger } from "../logger";
+import { getSsmParameter } from "../ssm-utils";
 import {
   decodeJwtToken,
+  verifyJwtToken,
   extractUserId,
   parseAuthHeader,
   JWTClaims,
 } from "./jwt-utils";
+
+const DEV_BYPASS_SSM_PARAM = "/neonpanda/DEV_BYPASS_ENABLED";
+
+/**
+ * Check whether the dev bypass is permitted.
+ * Requires BOTH NODE_ENV === 'development' AND the SSM flag to be 'true'.
+ * Defaults to disabled if the parameter is missing or unreadable.
+ */
+async function isDevBypassAllowed(): Promise<boolean> {
+  if (process.env.NODE_ENV !== "development") {
+    return false;
+  }
+  const ssmFlag = await getSsmParameter(DEV_BYPASS_SSM_PARAM, {
+    defaultValue: "false",
+    cacheTtlMs: 60000, // Re-check every 60 seconds
+  });
+  return ssmFlag === "true";
+}
 
 export interface AuthenticatedEvent extends APIGatewayProxyEventV2WithJWTAuthorizer {
   user: {
@@ -47,22 +67,23 @@ export const withAuth = (
       rawEvent: JSON.stringify(event, null, 2),
     });
 
-    // Dev mode bypass for testing
-    if (
-      process.env.NODE_ENV === "development" &&
-      event.headers?.["x-dev-bypass"] === "true"
-    ) {
-      const authenticatedEvent = event as AuthenticatedEvent;
-      authenticatedEvent.user = {
-        userId: "dev_user_" + Math.random().toString(36).substr(2, 9),
-        username: "dev_user",
-        email: "dev@test.com",
-      };
-      logger.info(
-        "🔓 Dev mode bypass activated for user:",
-        authenticatedEvent.user.userId,
-      );
-      return handler(authenticatedEvent);
+    // Dev mode bypass for testing — requires NODE_ENV=development AND SSM flag enabled
+    if (event.headers?.["x-dev-bypass"] === "true") {
+      const bypassAllowed = await isDevBypassAllowed();
+      if (bypassAllowed) {
+        const authenticatedEvent = event as AuthenticatedEvent;
+        authenticatedEvent.user = {
+          userId: "dev_user_" + Math.random().toString(36).substr(2, 9),
+          username: "dev_user",
+          email: "dev@test.com",
+        };
+        logger.warn(
+          "🔓 Dev mode bypass activated for user:",
+          authenticatedEvent.user.userId,
+        );
+        return handler(authenticatedEvent);
+      }
+      logger.warn("🚫 Dev bypass header present but bypass is not enabled — ignoring");
     }
 
     // Safe access to claims with detailed error logging
@@ -201,24 +222,24 @@ export function withStreamingAuth(
       );
       const { userId: pathUserId } = pathParams;
 
-      // Dev mode bypass for testing
-      if (
-        process.env.NODE_ENV === "development" &&
-        event.headers?.["x-dev-bypass"] === "true"
-      ) {
-        const authenticatedEvent = event as AuthenticatedLambdaFunctionURLEvent;
-        authenticatedEvent.user = {
-          userId:
-            pathUserId || "dev_user_" + Math.random().toString(36).substr(2, 9),
-          username: "dev_user",
-          email: "dev@test.com",
-        };
-
-        logger.info(
-          "🔓 Dev mode bypass activated for streaming user:",
-          authenticatedEvent.user.userId,
-        );
-        return handler(authenticatedEvent, responseStream, context);
+      // Dev mode bypass for testing — requires NODE_ENV=development AND SSM flag enabled
+      if (event.headers?.["x-dev-bypass"] === "true") {
+        const bypassAllowed = await isDevBypassAllowed();
+        if (bypassAllowed) {
+          const authenticatedEvent = event as AuthenticatedLambdaFunctionURLEvent;
+          authenticatedEvent.user = {
+            userId:
+              pathUserId || "dev_user_" + Math.random().toString(36).substr(2, 9),
+            username: "dev_user",
+            email: "dev@test.com",
+          };
+          logger.warn(
+            "🔓 Dev mode bypass activated for streaming user:",
+            authenticatedEvent.user.userId,
+          );
+          return handler(authenticatedEvent, responseStream, context);
+        }
+        logger.warn("🚫 Dev bypass header present but bypass is not enabled — ignoring");
       }
 
       // Handle internal Lambda-to-Lambda calls (no JWT context)
@@ -254,9 +275,9 @@ export function withStreamingAuth(
         throw new Error("Authorization header required");
       }
 
-      // Use shared JWT utilities
+      // Verify JWT signature against Cognito JWKS (streaming path — not covered by API Gateway authorizer)
       const token = parseAuthHeader(authHeader);
-      const claims = decodeJwtToken(token);
+      const claims = await verifyJwtToken(token);
       const authenticatedUserId = extractUserId(claims);
 
       // Validate that authenticated user matches path user (if required)
