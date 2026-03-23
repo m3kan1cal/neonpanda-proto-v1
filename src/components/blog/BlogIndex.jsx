@@ -86,6 +86,24 @@ const blogPosts = [
       "Semantic Memory",
     ],
   },
+  {
+    id: 6,
+    slug: "a-coach-that-remembers",
+    title: "A Coach That Actually Remembers",
+    subtitle: "The 4-Layer Memory Architecture",
+    description:
+      "How we built a cognitive memory system that gives your AI coach a real mental model of who you are — with prospective follow-ups, FSRS-based temporal decay, emotional intelligence, and a Living Profile that deepens with every conversation.",
+    readTime: "12 min read",
+    agent: "Memory System",
+    pattern: "Cognitive Architecture",
+    color: "purple",
+    topics: [
+      "FSRS Temporal Decay",
+      "Prospective Memory",
+      "Living Profile",
+      "Emotional Intelligence",
+    ],
+  },
 ];
 
 function BlogIndex() {

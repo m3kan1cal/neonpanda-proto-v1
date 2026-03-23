@@ -146,12 +146,24 @@ MEMORY TYPES:
 - constraint: Physical limitations, time constraints, equipment limitations
 - instruction: Specific coaching instructions or approaches
 - context: Personal context, background, lifestyle factors
+- prospective: Future events, commitments, or follow-ups with timeframes
+
+PROSPECTIVE MEMORY DETECTION:
+Even if the user is NOT making an explicit memory request, check if their message mentions:
+- Future events with dates ("marathon in October", "competition next month")
+- Commitments to try something ("I'll try sumo deadlifts next week")
+- Schedule changes ("going on vacation Aug 1-15", "starting new job Monday")
+- Milestones with timeframes ("want to hit 315 by June")
+
+If you detect a prospective element, set hasProspectiveElement to true and fill in prospectiveDetails.
+This is INDEPENDENT of isMemoryRequest — a message can have a prospective element without being an explicit memory request.
 
 GUIDELINES:
-- Be conservative: only detect clear, explicit memory requests
+- Be conservative for isMemoryRequest: only detect clear, explicit memory requests
+- Be more generous for hasProspectiveElement: capture any forward-looking events worth following up on
 - Content should be concise but capture the essential information
 - Importance: high=critical for coaching, medium=helpful context, low=nice to know
-- If unsure, set isMemoryRequest to false
+- If unsure about memory request, set isMemoryRequest to false
 - If isMemoryRequest is false, set extractedMemory to null`;
 
   const userPrompt = `${messageContext ? `CONVERSATION CONTEXT:\n${messageContext}\n\n` : ""}USER MESSAGE TO ANALYZE:\n"${userMessage}"
@@ -491,6 +503,7 @@ Memory Types:
 - constraint: Physical limitations, time constraints, equipment limitations
 - instruction: Specific coaching instructions, form cues, reminders
 - context: Personal context, background, lifestyle factors
+- prospective: Future events, commitments, or follow-ups with timeframes
 
 Importance Levels:
 - high: Critical for safe and effective coaching (injuries, major goals, key preferences)
@@ -501,7 +514,17 @@ Scope Determination:
 - isCoachSpecific: true if the memory is specific to this coaching relationship
 - isCoachSpecific: false if it's general user information applicable to any coach
 
-Suggested Tags: Relevant keywords for easy retrieval (max 5 tags)`;
+Suggested Tags: Relevant keywords for easy retrieval (max 5 tags)
+
+=== PROSPECTIVE ELEMENT DETECTION ===
+INDEPENDENTLY of memory request detection, check if the message mentions:
+- Future events with dates ("marathon in October", "competition next month")
+- Commitments ("I'll try sumo deadlifts next week", "starting 4 days a week")
+- Schedule changes ("going on vacation", "starting new job Monday")
+- Milestones with timeframes ("want to hit 315 by June")
+
+Set hasProspectiveElement to true if ANY forward-looking element is found.
+This is INDEPENDENT of isMemoryRequest — capture prospective elements even in casual conversation.`;
 
   const userPrompt = `ANALYZE THIS MESSAGE:
 Message: "${userMessage}"

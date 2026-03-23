@@ -262,6 +262,12 @@ export interface PromptGenerationOptions {
   };
   userTimezone?: string; // User's timezone for temporal context (e.g., 'America/Los_Angeles')
   mode?: ConversationMode; // NEW: Conversation mode for specialized prompts
+  /** Pre-formatted prospective memory prompt section (follow-up items) */
+  prospectiveContext?: string;
+  /** Pre-formatted living profile prompt section */
+  livingProfileContext?: string;
+  /** Pre-formatted emotional context prompt section */
+  emotionalContext?: string;
 }
 
 /**

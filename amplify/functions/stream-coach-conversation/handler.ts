@@ -38,6 +38,7 @@ import {
 import {
   queryMemories,
   detectAndProcessMemory,
+  extractAndSaveProspectiveMemories,
   MemoryRetrievalResult,
   getFallbackMemory,
 } from "../libs/coach-conversation/memory-processing";
@@ -63,6 +64,11 @@ import {
 import { parseSlashCommand, isWorkoutSlashCommand } from "../libs/workout";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { queryPrograms } from "../../dynamodb/program";
+import {
+  queryEmotionalSnapshots,
+  getLatestEmotionalTrend,
+} from "../../dynamodb/memory";
+import { formatEmotionalContextForPrompt } from "../libs/memory/emotional";
 import { buildMessagesWithHistoryCaching } from "../libs/coach-conversation/response-orchestrator";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
 import {
@@ -1132,6 +1138,21 @@ async function saveConversationAndYieldComplete(
     logger.info("🚀 Conversation summary triggered (fire-and-forget)");
   }
 
+  // Fire-and-forget: Extract prospective memories from this conversation turn
+  // Analyzes user message + AI response for future events, commitments, follow-ups
+  extractAndSaveProspectiveMemories(
+    params.userResponse,
+    newAiMessage.content,
+    userId,
+    coachId,
+    conversationId,
+  ).catch((err) => {
+    logger.error(
+      "⚠️ Prospective memory extraction failed (non-blocking):",
+      err,
+    );
+  });
+
   // Prepare Pinecone context for response
   const pineconeMatches = context?.pineconeMatches || [];
   const pineconeContextText = context?.pineconeContext || "";
@@ -1237,11 +1258,15 @@ async function* createCoachConversationEventStreamV2(
       existingConversation,
       coachConfig,
       activeProgramResult,
+      emotionalSnapshots,
+      emotionalTrend,
     ] = await Promise.all([
       getUserProfile(userId),
       getCoachConversation(userId, coachId, conversationId),
       getCoachConfig(userId, coachId),
       queryPrograms(userId, { includeStatus: ["active"], limit: 1 }),
+      queryEmotionalSnapshots(userId, undefined, { limit: 5 }).catch(() => []),
+      getLatestEmotionalTrend(userId, "weekly").catch(() => null),
     ]);
 
     if (!existingConversation || !coachConfig) {
@@ -1255,6 +1280,11 @@ async function* createCoachConversationEventStreamV2(
     });
 
     // 4. Build agent context
+    const emotionalContext = formatEmotionalContextForPrompt(
+      emotionalSnapshots,
+      emotionalTrend,
+    );
+
     const userTimezone = getUserTimezoneOrDefault(
       (userProfile as any)?.timezone || null,
     );
@@ -1347,6 +1377,7 @@ async function* createCoachConversationEventStreamV2(
         activeProgram: agentContext.activeProgram,
         coachCreatorSessionSummary:
           coachConfig.metadata?.coach_creator_session_summary,
+        emotionalContext: emotionalContext || undefined,
       },
     );
 

@@ -41,6 +41,9 @@ export const generateSystemPrompt = (
     pineconeContext,
     includeCacheControl = false,
     mode = CONVERSATION_MODES.CHAT, // NEW: Conversation mode (chat or build)
+    prospectiveContext,
+    livingProfileContext,
+    emotionalContext,
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
@@ -418,13 +421,28 @@ Begin each conversation by acknowledging the user and being ready to help them w
 
 ⚠️ TEMPORAL ANCHOR: All temporal references (today/tomorrow/yesterday) and future planning must use THIS date, not workout completion dates. If user reports past workout with >3 day gap, acknowledge the time elapsed.`);
 
-  // 2. Memories (if available)
+  // 2. Living Profile (if available)
+  if (livingProfileContext) {
+    dynamicPromptSections.push(livingProfileContext);
+  }
+
+  // 3. Emotional Context (if available)
+  if (emotionalContext) {
+    dynamicPromptSections.push(emotionalContext);
+  }
+
+  // 4. Prospective Follow-Up Items (if available)
+  if (prospectiveContext) {
+    dynamicPromptSections.push(prospectiveContext);
+  }
+
+  // 3. Memories (if available)
   if (userMemories.length > 0) {
     const memoriesSection = generateMemoriesSection(userMemories);
     dynamicPromptSections.push(memoriesSection);
   }
 
-  // 3. User Context (if provided and enabled)
+  // 4. User Context (if provided and enabled)
   if (includeUserContext && conversationContext) {
     const userContextSection = generateUserContext(conversationContext);
     if (userContextSection) {
@@ -432,13 +450,13 @@ Begin each conversation by acknowledging the user and being ready to help them w
     }
   }
 
-  // 4. Recent Workout Context (if available)
+  // 5. Recent Workout Context (if available)
   if (workoutContext.length > 0) {
     const workoutContextSection = generateWorkoutContext(workoutContext);
     dynamicPromptSections.push(workoutContextSection);
   }
 
-  // 5. Pinecone Semantic Context (if available)
+  // 6. Pinecone Semantic Context (if available)
   if (pineconeContext) {
     dynamicPromptSections.push(`# SEMANTIC CONTEXT
 ${pineconeContext}
@@ -446,7 +464,7 @@ ${pineconeContext}
 IMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.`);
   }
 
-  // 6. Conversation History - REMOVED
+  // 7. Conversation History - REMOVED
   // History is now handled in the messages array for better caching
   // (See response-orchestrator.ts for history caching implementation)
 

@@ -6,6 +6,7 @@ import BlogPost2CoachCreator from "./BlogPost2CoachCreator";
 import BlogPost3WorkoutLogger from "./BlogPost3WorkoutLogger";
 import BlogPost4ProgramDesigner from "./BlogPost4ProgramDesigner";
 import BlogPost5Orchestration from "./BlogPost5Orchestration";
+import BlogPost6Memory from "./BlogPost6Memory";
 
 // Map slugs to their corresponding blog post components
 const blogPostComponents = {
@@ -14,6 +15,7 @@ const blogPostComponents = {
   "every-rep-counts": BlogPost3WorkoutLogger,
   "training-programs-that-think": BlogPost4ProgramDesigner,
   "the-symphony": BlogPost5Orchestration,
+  "a-coach-that-remembers": BlogPost6Memory,
 };
 
 // Published blog posts
@@ -23,6 +25,7 @@ const publishedSlugs = [
   "every-rep-counts",
   "training-programs-that-think",
   "the-symphony",
+  "a-coach-that-remembers",
 ];
 
 function BlogPostRouter() {
