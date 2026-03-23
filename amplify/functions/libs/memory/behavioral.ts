@@ -189,7 +189,7 @@ export function buildBehavioralMemories(
  * Format behavioral memories for prompt injection.
  * Presents patterns as coaching guidance, not raw data.
  */
-export function formatBehavioralPatternsForPrompt(
+function formatBehavioralPatternsForPrompt(
   memories: UserMemory[],
 ): string {
   if (memories.length === 0) return "";

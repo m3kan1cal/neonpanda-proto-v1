@@ -240,7 +240,7 @@ ${latest.emotionalNarrative}
  * Determine if the coach should be alerted about concerning emotional patterns.
  * Threshold-based rules (no AI needed).
  */
-export function shouldAlertCoach(recentSnapshots: EmotionalSnapshot[]): {
+function shouldAlertCoach(recentSnapshots: EmotionalSnapshot[]): {
   shouldAlert: boolean;
   reason?: string;
 } {
@@ -271,7 +271,7 @@ export function shouldAlertCoach(recentSnapshots: EmotionalSnapshot[]): {
       .slice(0, 3)
       .map((s) => s.coachSatisfaction);
     if (
-      satisfactionTrend.every((s, i) => i === 0 || s < satisfactionTrend[i - 1])
+      satisfactionTrend.every((s, i) => i === 0 || s > satisfactionTrend[i - 1])
     ) {
       return {
         shouldAlert: true,
