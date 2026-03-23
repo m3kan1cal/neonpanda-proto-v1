@@ -21,6 +21,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       "constraint",
       "instruction",
       "context",
+      "prospective",
+      "episodic",
+      "behavioral",
     ];
     if (!validMemoryTypes.includes(memoryType)) {
       return createErrorResponse(
