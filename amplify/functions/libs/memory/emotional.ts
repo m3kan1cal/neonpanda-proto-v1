@@ -15,6 +15,7 @@ import { EMOTIONAL_SNAPSHOT_SCHEMA } from "../schemas/emotional-snapshot-schema"
 import { EmotionalSnapshot, EmotionalTrend } from "./emotional-types";
 import { logger } from "../logger";
 import { fixDoubleEncodedProperties } from "../response-utils";
+import { getUserTimezoneOrDefault } from "../analytics/date-utils";
 
 /**
  * Extract an emotional snapshot from a conversation summary.
@@ -26,6 +27,7 @@ export async function extractEmotionalSnapshot(
   userId: string,
   coachId: string,
   conversationId: string,
+  userTimezone?: string,
 ): Promise<EmotionalSnapshot | null> {
   const systemPrompt = `You are analyzing a coaching conversation summary to assess the athlete's emotional state. Provide honest, calibrated scores — not everything is a 7/10.
 
@@ -69,6 +71,24 @@ Use the extract_emotional_snapshot tool to assess the athlete's emotional state 
     const fixedInput = fixDoubleEncodedProperties(response.input);
     const result = fixedInput as any;
     const now = new Date();
+    const timezone = getUserTimezoneOrDefault(userTimezone);
+
+    // Convert UTC time to user's timezone for dayOfWeek and timeOfDay
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      weekday: "long",
+      hour: "2-digit",
+      hour12: false,
+    });
+
+    const parts = formatter.formatToParts(now);
+    const dayOfWeek =
+      parts.find((p) => p.type === "weekday")?.value || "Unknown";
+    const hourStr = parts.find((p) => p.type === "hour")?.value || "0";
+    const hour = parseInt(hourStr, 10);
+
+    const timeOfDay =
+      hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
 
     const snapshot: EmotionalSnapshot = {
       snapshotId: `es_${userId}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
@@ -85,13 +105,8 @@ Use the extract_emotional_snapshot tool to assess the athlete's emotional state 
       emotionalNarrative: result.emotionalNarrative,
       triggers: result.triggers || [],
       conversationTopics: result.conversationTopics || [],
-      dayOfWeek: now.toLocaleDateString("en-US", { weekday: "long" }),
-      timeOfDay:
-        now.getHours() < 12
-          ? "morning"
-          : now.getHours() < 17
-            ? "afternoon"
-            : "evening",
+      dayOfWeek,
+      timeOfDay,
     };
 
     logger.info("Emotional snapshot extracted:", {

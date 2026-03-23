@@ -88,7 +88,91 @@ export interface BehavioralDetectionResult {
     confidence: number;
     evidence: string;
     coachingImplication: string;
+    existingMemoryId?: string;
   }>;
+}
+
+/**
+ * Calculate similarity score between two strings (0-1 scale).
+ * Used to match detected patterns against existing ones for deduplication.
+ */
+function calculateStringSimilarity(str1: string, str2: string): number {
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+
+  if (s1 === s2) return 1.0;
+
+  // Levenshtein distance approach
+  const longer = s1.length > s2.length ? s1 : s2;
+  const shorter = s1.length > s2.length ? s2 : s1;
+
+  if (longer.length === 0) return 1.0;
+
+  const editDistance = getEditDistance(shorter, longer);
+  return (longer.length - editDistance) / longer.length;
+}
+
+/**
+ * Calculate Levenshtein distance between two strings
+ */
+function getEditDistance(s1: string, s2: string): number {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= s1.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= s2.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= s1.length; i++) {
+    for (let j = 1; j <= s2.length; j++) {
+      if (s1[i - 1] === s2[j - 1]) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1,
+        );
+      }
+    }
+  }
+
+  return matrix[s1.length][s2.length];
+}
+
+/**
+ * Find existing memory that matches a detected pattern.
+ * Uses string similarity (0.7+ = match) and pattern type to identify duplicates.
+ */
+function findMatchingExistingMemory(
+  detectedPattern: string,
+  patternType: string,
+  existingPatterns: UserMemory[],
+): UserMemory | undefined {
+  return existingPatterns.find((existing) => {
+    const existingMeta = existing.metadata as any;
+    const existingPatternType = existingMeta.tags?.find((t: string) =>
+      ["training", "communication", "adherence", "emotional", "avoidance"].includes(
+        t,
+      ),
+    );
+
+    if (existingPatternType !== patternType) {
+      return false;
+    }
+
+    // Extract just the pattern description (before the " — " separator)
+    const existingContent = existing.content.split(" — ")[0];
+    const similarity = calculateStringSimilarity(
+      detectedPattern,
+      existingContent,
+    );
+
+    return similarity >= 0.7;
+  });
 }
 
 /**
@@ -148,7 +232,22 @@ Use the detect_behavioral_patterns tool to identify behavioral patterns.`;
     }
 
     const fixedInput = fixDoubleEncodedProperties(response.input);
-    return fixedInput as BehavioralDetectionResult;
+    const result = fixedInput as BehavioralDetectionResult;
+
+    // Match detected patterns against existing ones and add existingMemoryId if matched
+    result.patterns = result.patterns.map((pattern) => {
+      const matchingMemory = findMatchingExistingMemory(
+        pattern.pattern,
+        pattern.patternType,
+        existingPatterns,
+      );
+      return {
+        ...pattern,
+        existingMemoryId: matchingMemory?.memoryId,
+      };
+    });
+
+    return result;
   } catch (error) {
     logger.error("Error detecting behavioral patterns:", error);
     return { patterns: [] };
@@ -156,31 +255,52 @@ Use the detect_behavioral_patterns tool to identify behavioral patterns.`;
 }
 
 /**
- * Convert detected behavioral patterns into UserMemory objects.
+ * Convert detected behavioral patterns into UserMemory objects or update objects.
  * Behavioral memories are always global (coachId: null) — accessible by all coaches.
+ * If a pattern has an existingMemoryId, returns an update; otherwise returns a new memory.
  */
 export function buildBehavioralMemories(
   detection: BehavioralDetectionResult,
   userId: string,
-): UserMemory[] {
+): (UserMemory | { memoryId: string; updates: Partial<UserMemory> })[] {
   if (!detection.patterns?.length) return [];
 
   return detection.patterns
     .filter((p) => p.confidence >= 0.5)
-    .map((pattern) => ({
-      memoryId: generateMemoryId(userId),
-      userId,
-      coachId: null,
-      content: `${pattern.pattern} — ${pattern.coachingImplication}`,
-      memoryType: "behavioral" as const,
-      metadata: {
-        createdAt: new Date(),
-        lastUsed: new Date(),
-        usageCount: 0,
-        source: "system_extraction" as const,
-        importance:
-          pattern.confidence >= 0.8 ? ("high" as const) : ("medium" as const),
-        tags: ["behavioral", pattern.patternType, "observed_pattern"],
-      },
-    }));
+    .map((pattern) => {
+      const memoryContent = `${pattern.pattern} — ${pattern.coachingImplication}`;
+
+      // If this pattern already exists, return an update object
+      if (pattern.existingMemoryId) {
+        return {
+          memoryId: pattern.existingMemoryId,
+          updates: {
+            content: memoryContent,
+            metadata: {
+              lastUsed: new Date(),
+              importance:
+                pattern.confidence >= 0.8 ? ("high" as const) : ("medium" as const),
+            },
+          },
+        };
+      }
+
+      // Otherwise, return a new memory object
+      return {
+        memoryId: generateMemoryId(userId),
+        userId,
+        coachId: null,
+        content: memoryContent,
+        memoryType: "behavioral" as const,
+        metadata: {
+          createdAt: new Date(),
+          lastUsed: new Date(),
+          usageCount: 0,
+          source: "system_extraction" as const,
+          importance:
+            pattern.confidence >= 0.8 ? ("high" as const) : ("medium" as const),
+          tags: ["behavioral", pattern.patternType, "observed_pattern"],
+        },
+      };
+    }) as (UserMemory | { memoryId: string; updates: Partial<UserMemory> })[];
 }

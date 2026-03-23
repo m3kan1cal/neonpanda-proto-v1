@@ -292,6 +292,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
         event.userId,
         event.coachId,
         event.conversationId,
+        (userProfile as any)?.timezone,
       );
       if (snapshot) {
         await saveEmotionalSnapshot(snapshot);

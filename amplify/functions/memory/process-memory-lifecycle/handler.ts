@@ -198,28 +198,53 @@ async function processWeeklyTasks(userId: string): Promise<void> {
     );
     const behavioralMemories = buildBehavioralMemories(detection, userId);
 
+    let updatedCount = 0;
+    let createdCount = 0;
+
     await Promise.allSettled(
-      behavioralMemories.map(async (memory) => {
+      behavioralMemories.map(async (item) => {
         try {
-          memory.metadata.lifecycle = initializeLifecycle(
-            memory.metadata.importance,
-          );
-          await saveMemory(memory);
-          await storeMemoryInPinecone(memory).catch((err) => {
-            logger.warn("Pinecone sync failed for behavioral memory:", {
-              memoryId: memory.memoryId,
-              err,
+          // Check if this is an update or a new memory
+          if ("updates" in item) {
+            // Update existing memory
+            const updatedMemory = await updateMemory(
+              userId,
+              item.memoryId,
+              item.updates,
+            );
+            await storeMemoryInPinecone(updatedMemory).catch((err) => {
+              logger.warn("Pinecone sync failed for updated behavioral memory:", {
+                memoryId: item.memoryId,
+                err,
+              });
             });
-          });
+            updatedCount++;
+          } else {
+            // Save new memory
+            const memory = item as UserMemory;
+            memory.metadata.lifecycle = initializeLifecycle(
+              memory.metadata.importance,
+            );
+            await saveMemory(memory);
+            await storeMemoryInPinecone(memory).catch((err) => {
+              logger.warn("Pinecone sync failed for behavioral memory:", {
+                memoryId: memory.memoryId,
+                err,
+              });
+            });
+            createdCount++;
+          }
         } catch (err) {
-          logger.error("Failed to save behavioral memory:", { err });
+          logger.error("Failed to process behavioral memory:", { err });
         }
       }),
     );
 
-    logger.info("Behavioral memories saved:", {
+    logger.info("Behavioral memories processed:", {
       userId,
-      count: behavioralMemories.length,
+      created: createdCount,
+      updated: updatedCount,
+      total: behavioralMemories.length,
     });
   }
 
