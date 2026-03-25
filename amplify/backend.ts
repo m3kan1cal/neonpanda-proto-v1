@@ -531,13 +531,18 @@ const sharedPolicies = new SharedPolicies(
 
 // Provision a Bedrock Guardrail to protect against prompt injection,
 // jailbreaks, PII leakage, and off-topic content (OWASP LLM01, LLM06).
+const { resourceName: guardrailName } = createBranchAwareResourceName(
+  backend.streamCoachConversation.stack,
+  "bedrock-guardrail",
+  "Bedrock Guardrail",
+);
 const bedrockGuardrail = new CfnGuardrail(
   backend.streamCoachConversation.stack,
-  "NeonPandaBedrockGuardrail",
+  "BedrockGuardrail",
   {
-    name: createBranchAwareResourceName(branchName, "NeonPandaGuardrail"),
+    name: guardrailName,
     description:
-      "Protects NeonPanda AI coaching prompts against injection, jailbreaks, and PII leakage",
+      "Protects AI coaching prompts against injection, jailbreaks, and PII leakage",
     blockedInputMessaging:
       "I'm unable to process that request. Please keep your message focused on fitness coaching.",
     blockedOutputsMessaging:
@@ -611,29 +616,24 @@ const bedrockGuardrail = new CfnGuardrail(
   },
 );
 
-// Distribute guardrail ID to all Bedrock-using Lambda functions as env vars
+// Distribute guardrail ID to functions where user-controlled content flows into prompts
+// or where multi-turn agent loops allow model output to feed back as input.
+// Internal-only functions (summaries, analytics, memory lifecycle, etc.) are excluded —
+// their inputs are pre-sanitized system content and don't warrant the per-character guardrail cost.
 const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
+  // User-facing: direct user input flows into these prompts
+  backend.streamCoachConversation,
+  backend.streamCoachCreatorSession,
+  backend.streamProgramDesign,
+  backend.sendCoachConversationMessage,
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
-  backend.streamCoachCreatorSession,
-  backend.buildCoachConfig,
-  backend.sendCoachConversationMessage,
-  backend.streamCoachConversation,
-  backend.streamProgramDesign,
-  backend.buildWorkout,
-  backend.buildProgram,
-  backend.buildConversationSummary,
-  backend.buildLivingProfile,
-  backend.buildWeeklyAnalytics,
-  backend.buildMonthlyAnalytics,
-  backend.processMemoryLifecycle,
-  backend.createMemory,
-  backend.logWorkoutTemplate,
-  backend.buildExercise,
-  backend.buildWorkoutAnalysis,
   backend.explainTerm,
   backend.generateGreeting,
-  backend.warmupPlatform,
+  // Agent loops: multi-turn tool-use where model output feeds back as input
+  backend.buildWorkout,
+  backend.buildProgram,
+  backend.buildCoachConfig,
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {

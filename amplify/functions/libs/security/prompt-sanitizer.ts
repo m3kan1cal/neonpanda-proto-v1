@@ -40,28 +40,26 @@ const INJECTION_PATTERNS: string[] = [
   "revised instructions:",
   "your new instructions",
 
-  // Role and persona switching
-  "you are now",
+  // Role and persona switching (unambiguously AI-targeted only)
+  // Note: broad phrases like "act as a", "switch to", "you are now", "pretend to be",
+  // "no restrictions", "without restrictions" are intentionally excluded — they produce
+  // false positives on legitimate fitness content (e.g., "switch to sumo deadlifts",
+  // "no restrictions on my diet"). The Bedrock Guardrail PROMPT_ATTACK filter handles
+  // nuanced role-switching attempts with contextual understanding.
   "act as if you are",
-  "act as a",
-  "pretend you are",
-  "pretend to be",
   "roleplay as",
   "play the role of",
   "your new persona",
   "from now on you are",
   "from now on, you are",
-  "switch to",
   "change your role",
 
-  // Jailbreaks by name
+  // Jailbreaks by name (unambiguous named modes)
   "jailbreak",
   "dan mode",
   "developer mode",
   "unrestricted mode",
   "do anything now",
-  "no restrictions",
-  "without restrictions",
   "bypass your",
   "bypass all",
   "ignore safety",
@@ -109,7 +107,7 @@ export function detectInjectionAttempt(text: string): InjectionDetectionResult {
   const normalized = text.normalize("NFC").toLowerCase();
 
   const matched = INJECTION_PATTERNS.some((pattern) =>
-    normalized.includes(pattern)
+    normalized.includes(pattern),
   );
 
   if (matched) {
@@ -137,7 +135,7 @@ export function detectInjectionAttempt(text: string): InjectionDetectionResult {
  */
 export function sanitizeUserContent(
   text: string,
-  maxLength: number = 2000
+  maxLength: number = 2000,
 ): string {
   if (!text) return "";
 

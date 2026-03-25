@@ -9,7 +9,10 @@ import {
   CONVERSATION_MODES,
 } from "./types";
 import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
-import { sanitizeUserContent, wrapUserContent } from "../security/prompt-sanitizer";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Generates a complete system prompt from a coach configuration
@@ -424,20 +427,35 @@ Begin each conversation by acknowledging the user and being ready to help them w
 
   // 2. Living Profile (if available) — sanitized and wrapped as user data
   if (livingProfileContext) {
-    const sanitizedLivingProfile = sanitizeUserContent(livingProfileContext, 3000);
-    dynamicPromptSections.push(wrapUserContent(sanitizedLivingProfile, "living_profile"));
+    const sanitizedLivingProfile = sanitizeUserContent(
+      livingProfileContext,
+      3000,
+    );
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedLivingProfile, "living_profile"),
+    );
   }
 
   // 3. Emotional Context (if available) — sanitized and wrapped as user data
   if (emotionalContext) {
-    const sanitizedEmotionalContext = sanitizeUserContent(emotionalContext, 1000);
-    dynamicPromptSections.push(wrapUserContent(sanitizedEmotionalContext, "emotional_context"));
+    const sanitizedEmotionalContext = sanitizeUserContent(
+      emotionalContext,
+      1000,
+    );
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedEmotionalContext, "emotional_context"),
+    );
   }
 
   // 4. Prospective Follow-Up Items (if available) — sanitized and wrapped as user data
   if (prospectiveContext) {
-    const sanitizedProspectiveContext = sanitizeUserContent(prospectiveContext, 1500);
-    dynamicPromptSections.push(wrapUserContent(sanitizedProspectiveContext, "prospective_followup"));
+    const sanitizedProspectiveContext = sanitizeUserContent(
+      prospectiveContext,
+      1500,
+    );
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedProspectiveContext, "prospective_followup"),
+    );
   }
 
   // 3. Memories (if available) — sanitized per-memory before section generation
@@ -447,7 +465,9 @@ Begin each conversation by acknowledging the user and being ready to help them w
       content: sanitizeUserContent(memory.content, 500),
     }));
     const memoriesSection = generateMemoriesSection(sanitizedMemories);
-    dynamicPromptSections.push(wrapUserContent(memoriesSection, "user_memories"));
+    dynamicPromptSections.push(
+      wrapUserContent(memoriesSection, "user_memories"),
+    );
   }
 
   // 4. User Context (if provided and enabled) — userName and goals sanitized inside generateUserContext
@@ -458,7 +478,9 @@ Begin each conversation by acknowledging the user and being ready to help them w
         ? sanitizeUserContent(conversationContext.userName, 128)
         : conversationContext.userName,
       currentGoals: conversationContext.currentGoals
-        ? conversationContext.currentGoals.map((g: string) => sanitizeUserContent(g, 200))
+        ? conversationContext.currentGoals.map((g: string) =>
+            sanitizeUserContent(g, 200),
+          )
         : conversationContext.currentGoals,
     };
     const userContextSection = generateUserContext(sanitizedContext);
@@ -467,19 +489,23 @@ Begin each conversation by acknowledging the user and being ready to help them w
     }
   }
 
-  // 5. Recent Workout Context (if available)
+  // 5. Recent Workout Context (if available) — wrapped as user-derived data (contains user-entered exercise names/notes)
   if (workoutContext.length > 0) {
     const workoutContextSection = generateWorkoutContext(workoutContext);
-    dynamicPromptSections.push(workoutContextSection);
+    dynamicPromptSections.push(
+      wrapUserContent(workoutContextSection, "workout_history"),
+    );
   }
 
   // 6. Pinecone Semantic Context (if available) — sanitized and wrapped as user-derived data
+  // The IMPORTANT instruction is placed outside the wrapper so it is treated as a system directive,
+  // not as user DATA (which would contradict its intent).
   if (pineconeContext) {
     const sanitizedPinecone = sanitizeUserContent(pineconeContext, 4000);
-    dynamicPromptSections.push(wrapUserContent(
-      `${sanitizedPinecone}\n\nIMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.`,
-      "semantic_search"
-    ));
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedPinecone, "semantic_search") +
+        "\n\nIMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.",
+    );
   }
 
   // 7. Conversation History - REMOVED

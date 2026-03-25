@@ -21,6 +21,13 @@ const DEV_BYPASS_SSM_PARAM = "/neonpanda/DEV_BYPASS_ENABLED";
  * Check whether the dev bypass is permitted.
  * Requires BOTH NODE_ENV === 'development' AND the SSM flag to be 'true'.
  * Defaults to disabled if the parameter is missing or unreadable.
+ *
+ * Security note: DEV_BYPASS_SSM_PARAM is intentionally NOT covered by the IAM grants
+ * on any deployed Lambda (those grants only cover /${branchName}/neonpanda-proto-v1/config/*).
+ * getSsmParameter swallows AccessDenied and returns "false", so this bypass is inert in
+ * all deployed environments by design. To enable it for local sandbox testing, you must:
+ *   1. Create the SSM parameter at DEV_BYPASS_SSM_PARAM with value "true"
+ *   2. Grant ssm:GetParameter on that path to the specific target function
  */
 async function isDevBypassAllowed(): Promise<boolean> {
   if (process.env.NODE_ENV !== "development") {
@@ -83,7 +90,9 @@ export const withAuth = (
         );
         return handler(authenticatedEvent);
       }
-      logger.warn("🚫 Dev bypass header present but bypass is not enabled — ignoring");
+      logger.warn(
+        "🚫 Dev bypass header present but bypass is not enabled — ignoring",
+      );
     }
 
     // Safe access to claims with detailed error logging
@@ -226,10 +235,12 @@ export function withStreamingAuth(
       if (event.headers?.["x-dev-bypass"] === "true") {
         const bypassAllowed = await isDevBypassAllowed();
         if (bypassAllowed) {
-          const authenticatedEvent = event as AuthenticatedLambdaFunctionURLEvent;
+          const authenticatedEvent =
+            event as AuthenticatedLambdaFunctionURLEvent;
           authenticatedEvent.user = {
             userId:
-              pathUserId || "dev_user_" + Math.random().toString(36).substr(2, 9),
+              pathUserId ||
+              "dev_user_" + Math.random().toString(36).substr(2, 9),
             username: "dev_user",
             email: "dev@test.com",
           };
@@ -239,7 +250,9 @@ export function withStreamingAuth(
           );
           return handler(authenticatedEvent, responseStream, context);
         }
-        logger.warn("🚫 Dev bypass header present but bypass is not enabled — ignoring");
+        logger.warn(
+          "🚫 Dev bypass header present but bypass is not enabled — ignoring",
+        );
       }
 
       // Handle internal Lambda-to-Lambda calls (no JWT context)

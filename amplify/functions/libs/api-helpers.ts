@@ -125,22 +125,34 @@ const bedrockClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-west-2",
 });
 
+type GuardrailConfig = {
+  guardrailIdentifier: string;
+  guardrailVersion: string;
+  trace: string;
+};
+
 /**
- * Build guardrail config for ConverseCommand calls.
- * Returns undefined if BEDROCK_GUARDRAIL_ID is not set (e.g., local dev or tests).
- * When set, the guardrail is applied inline — no separate API call, covered by
- * existing bedrock:InvokeModel permission.
+ * Lazy singleton for guardrail config. Env vars are stable for the lifetime of
+ * a Lambda invocation, so we read them once and cache the result. Returns undefined
+ * when BEDROCK_GUARDRAIL_ID is not set (e.g., local dev or tests).
+ * Guardrail is applied inline — no separate API call, covered by existing bedrock:InvokeModel permission.
  */
-function buildGuardrailConfig():
-  | { guardrailIdentifier: string; guardrailVersion: string; trace: string }
-  | undefined {
-  const guardrailId = process.env.BEDROCK_GUARDRAIL_ID;
-  if (!guardrailId) return undefined;
-  return {
-    guardrailIdentifier: guardrailId,
-    guardrailVersion: process.env.BEDROCK_GUARDRAIL_VERSION || "DRAFT",
-    trace: "enabled",
-  };
+let _guardrailConfig: GuardrailConfig | undefined;
+let _guardrailConfigResolved = false;
+
+function getGuardrailConfig(): GuardrailConfig | undefined {
+  if (!_guardrailConfigResolved) {
+    const guardrailId = process.env.BEDROCK_GUARDRAIL_ID;
+    _guardrailConfig = guardrailId
+      ? {
+          guardrailIdentifier: guardrailId,
+          guardrailVersion: process.env.BEDROCK_GUARDRAIL_VERSION || "DRAFT",
+          trace: "enabled",
+        }
+      : undefined;
+    _guardrailConfigResolved = true;
+  }
+  return _guardrailConfig;
 }
 
 // Create Lambda client for async invocations
@@ -1082,7 +1094,9 @@ export const callBedrockApi = async (
         },
       }),
       // Guardrail: prompt injection + jailbreak + PII protection
-      ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+      ...(getGuardrailConfig() && {
+        guardrailConfig: getGuardrailConfig(),
+      }),
     });
 
     logger.info("Converse command created successfully..");
@@ -1364,7 +1378,9 @@ export const callBedrockApiStream = async (
       },
       ...buildNativeReasoningFields(useNativeReasoning),
       // Guardrail: prompt injection + jailbreak + PII protection
-      ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+      ...(getGuardrailConfig() && {
+        guardrailConfig: getGuardrailConfig(),
+      }),
       // Add beta headers for advanced schema features if specified
       ...(options?.anthropicBeta && {
         additionalModelRequestFields: {
@@ -1500,7 +1516,9 @@ export const callBedrockApiMultimodal = async (
         },
       }),
       // Guardrail: prompt injection + jailbreak + PII protection
-      ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+      ...(getGuardrailConfig() && {
+        guardrailConfig: getGuardrailConfig(),
+      }),
     });
 
     logger.info("Multimodal converse command created successfully..");
@@ -1692,7 +1710,9 @@ export const callBedrockApiWithJsonOutput = async (
       },
       ...buildNativeReasoningFields(useNativeReasoning),
       // Guardrail: prompt injection + jailbreak + PII protection
-      ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+      ...(getGuardrailConfig() && {
+        guardrailConfig: getGuardrailConfig(),
+      }),
     });
 
     const heartbeatInterval = setInterval(() => {
@@ -1806,7 +1826,9 @@ export const callBedrockApiMultimodalWithJsonOutput = async (
       },
       ...buildNativeReasoningFields(useNativeReasoning),
       // Guardrail: prompt injection + jailbreak + PII protection
-      ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+      ...(getGuardrailConfig() && {
+        guardrailConfig: getGuardrailConfig(),
+      }),
     });
 
     const response = await bedrockClient.send(command);
@@ -1933,7 +1955,7 @@ export const callBedrockApiForAgent = async (
       },
     }),
     // Guardrail: prompt injection + jailbreak + PII protection
-    ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+    ...(getGuardrailConfig() && { guardrailConfig: getGuardrailConfig() }),
   });
 
   // Safety net: abort after 180s to prevent indefinite hangs that silently
@@ -2054,7 +2076,9 @@ export const callBedrockApiStreamForAgent = async function* (
         },
       }),
       // Guardrail: prompt injection + jailbreak + PII protection
-      ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+      ...(getGuardrailConfig() && {
+        guardrailConfig: getGuardrailConfig(),
+      }),
     });
 
     const response = await bedrockClient.send(command);
@@ -2336,7 +2360,9 @@ export const callBedrockApiMultimodalStream = async (
         },
       }),
       // Guardrail: prompt injection + jailbreak + PII protection
-      ...(buildGuardrailConfig() && { guardrailConfig: buildGuardrailConfig() }),
+      ...(getGuardrailConfig() && {
+        guardrailConfig: getGuardrailConfig(),
+      }),
     });
 
     logger.info("Multimodal converse stream command created successfully..");
