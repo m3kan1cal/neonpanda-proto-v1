@@ -177,7 +177,7 @@ function BlogIndex() {
           <p
             className={`${typographyPatterns.heroSubtitle} max-w-3xl mx-auto mb-8`}
           >
-            A 5-part technical journey from serverless foundations to
+            A 6-part technical journey from serverless foundations to
             multi-agent orchestration. Discover how we built an AI coaching
             platform that feels like magic, powered by best-in-class technology.
           </p>
@@ -187,7 +187,7 @@ function BlogIndex() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full"></div>
               <span className="text-synthwave-text-secondary">
-                5 Technical Posts
+                6 Technical Posts
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -224,7 +224,7 @@ function BlogIndex() {
 
               {/* Posts */}
               <div className="space-y-8">
-                {blogPosts.map((post, index) => {
+                {[...blogPosts].reverse().map((post, index) => {
                   const colors = getColorClasses(post.color);
                   const isEven = index % 2 === 0;
 
@@ -254,7 +254,7 @@ function BlogIndex() {
                       <div
                         className={`lg:w-[calc(50%-3rem)] ${isEven ? "lg:mr-auto" : "lg:ml-auto"}`}
                       >
-                        {post.id <= 5 ? (
+                        {post.id <= 6 ? (
                           <Link
                             to={`/blog/${post.slug}`}
                             className={`block ${containerPatterns.cardLight} p-6 hover:${colors.border} transition-all duration-300 group`}
@@ -275,7 +275,7 @@ function BlogIndex() {
                                 </span>
                               </div>
                               <span className="font-body text-synthwave-text-muted text-sm">
-                                Part {post.id} of 5
+                                Part {post.id} of 6
                               </span>
                             </div>
 
@@ -370,7 +370,7 @@ function BlogIndex() {
                                 </span>
                               </div>
                               <span className="font-body text-synthwave-text-muted text-sm">
-                                Part {post.id} of 5
+                                Part {post.id} of 6
                               </span>
                             </div>
 

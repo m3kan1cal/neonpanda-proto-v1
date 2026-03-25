@@ -1,8 +1,10 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   containerPatterns,
   typographyPatterns,
   badgePatterns,
+  buttonPatterns,
 } from "../../utils/ui/uiPatterns";
 
 function BlogPost6Memory() {
@@ -47,6 +49,42 @@ function BlogPost6Memory() {
           model of who you are—one that strengthens with every conversation,
           fades when neglected, and evolves as you do. This is the system that
           turns an AI chatbot into a coaching relationship.
+        </p>
+      </section>
+
+      {/* Agent Spotlight: Memory System */}
+      <section className="mb-16">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center bg-synthwave-neon-purple/20 border-2 border-synthwave-neon-purple">
+            <span className="font-body font-bold text-xl text-synthwave-neon-purple">
+              6
+            </span>
+          </div>
+          <div>
+            <h2
+              className={`${typographyPatterns.sectionTitle} text-synthwave-neon-purple mb-0`}
+            >
+              Agent Spotlight: Memory System
+            </h2>
+            <p className="font-body text-synthwave-text-muted italic">
+              "The Cognitive Architecture"
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-6">
+          <span className={badgePatterns.purple}>Memory System</span>
+          <span className={badgePatterns.muted}>Cognitive Architecture</span>
+          <span className={badgePatterns.cyan}>FSRS-4.5</span>
+          <span className={badgePatterns.pink}>Living Profile</span>
+        </div>
+
+        <p className={`${typographyPatterns.description} mb-6`}>
+          The Memory System is the connective tissue of NeonPanda—the layer that
+          transforms isolated conversations into a continuous coaching
+          relationship. While the other agents handle workouts, programs, and
+          real-time orchestration, the Memory System ensures that every
+          interaction builds on everything that came before.
         </p>
       </section>
 
@@ -156,7 +194,7 @@ function BlogPost6Memory() {
           scans for forward-looking commitments, events, and milestones:
         </p>
 
-        <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
+        <div className={`${containerPatterns.mediumGlass} mb-8`}>
           <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
             What Gets Extracted
           </h3>
@@ -313,7 +351,7 @@ function BlogPost6Memory() {
           coaching system.
         </p>
         <p className={`${typographyPatterns.description} mb-6`}>
-          We implemented a temporal decay model based on FSRS v6 (Free Spaced
+          We implemented a temporal decay model based on FSRS-4.5 (Free Spaced
           Repetition Scheduler)—the same algorithm behind some of the best
           flashcard learning systems in the world. The core insight from spaced
           repetition research: memory stability grows with each successful
@@ -328,9 +366,9 @@ function BlogPost6Memory() {
           <div className="space-y-4 font-body text-synthwave-text-secondary">
             <p>
               Every memory starts with an initial{" "}
-              <strong className="text-white">stability</strong>—how many days
-              until it fades to 37% retrievability. High-importance memories
-              start at 30 days. Low-importance ones start at 7.
+              <strong className="text-white">stability</strong>—the number of
+              days before its retrievability drops to 90%. High-importance
+              memories start at 30 days. Low-importance ones start at 7.
             </p>
             <p>
               Each time a memory is retrieved and used in conversation, it gets{" "}
@@ -388,7 +426,7 @@ function BlogPost6Memory() {
           monthly trends—pure math, no AI needed for the trend calculation.
         </p>
 
-        <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
+        <div className={`${containerPatterns.mediumGlass} mb-8`}>
           <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
             How the Coach Adapts
           </h3>
@@ -446,6 +484,16 @@ function BlogPost6Memory() {
                 1.
               </span>
               <span>
+                <strong className="text-white">Current Date & Time</strong> —
+                temporal anchor so the coach knows "today" for prospective
+                memory filtering and follow-ups
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-synthwave-neon-purple font-bold mt-0.5">
+                2.
+              </span>
+              <span>
                 <strong className="text-white">Living Profile</strong> — the
                 coach's mental model of who you are, loaded first to set the
                 foundation
@@ -453,7 +501,7 @@ function BlogPost6Memory() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-purple font-bold mt-0.5">
-                2.
+                3.
               </span>
               <span>
                 <strong className="text-white">Emotional Context</strong> —
@@ -462,7 +510,7 @@ function BlogPost6Memory() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-purple font-bold mt-0.5">
-                3.
+                4.
               </span>
               <span>
                 <strong className="text-white">
@@ -473,35 +521,55 @@ function BlogPost6Memory() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-purple font-bold mt-0.5">
-                4.
-              </span>
-              <span>
-                <strong className="text-white">Active Memories</strong> —
-                FSRS-ranked, relevant memories grouped by type
-              </span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-synthwave-neon-purple font-bold mt-0.5">
                 5.
               </span>
               <span>
-                <strong className="text-white">
-                  Recent workouts, semantic context, user data
-                </strong>{" "}
-                — the real-time operational context
+                <strong className="text-white">Agent Tools</strong> — the
+                Conversation Agent retrieves FSRS-ranked memories, recent
+                workouts, and semantic context on demand via specialized tools
               </span>
             </li>
           </ol>
         </div>
 
+        <div className={`${containerPatterns.mediumGlass} mb-8`}>
+          <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
+            Memory Pipeline Architecture
+          </h3>
+          <pre className="font-mono text-xs sm:text-sm text-synthwave-text-secondary overflow-x-auto leading-relaxed">
+            {`Conversation Turn (sync path)
+  ├── Load Living Profile         ← DynamoDB (pre-built)
+  ├── Load Emotional Context      ← DynamoDB (pre-computed)
+  ├── Filter Prospective Memories ← Date math (no AI call)
+  └── Conversation Agent uses tools on demand:
+        ├── retrieve_memories     ← FSRS-ranked from DynamoDB
+        └── search_knowledge_base ← Semantic from Pinecone
+
+After AI Response (fire-and-forget)
+  └── Extract prospective memories from user msg + AI response
+
+After Conversation Summary (async Lambda chain)
+  ├── Extract emotional snapshot  → DynamoDB
+  ├── Extract episodic moments    → DynamoDB + Pinecone
+  └── Build/update Living Profile → DynamoDB
+
+Daily Batch (3am UTC, EventBridge)
+  └── Per-user lifecycle processor (parallel fan-out)
+        ├── Compress decayed memories (retrievability < 30%)
+        ├── Archive forgotten memories (retrievability < 10%)
+        ├── Expire stale prospective memories
+        └── (Sunday) Behavioral detection + emotional trends`}
+          </pre>
+        </div>
+
         <p className={`${typographyPatterns.description} mb-6`}>
-          The pipeline is designed for speed. Memory retrieval is a DynamoDB
-          query (sub-50ms). Prospective filtering is pure date math (no AI
-          call). The Living Profile is pre-built asynchronously and just loaded
-          from the user record. Emotional context is pre-computed. The only AI
-          call on the sync path is the optional semantic memory retrieval from
-          Pinecone—and that only fires when the system detects it would actually
-          help.
+          The pipeline is designed for speed. The first four layers are
+          pre-computed and loaded in parallel before the conversation even
+          starts—Living Profile from DynamoDB, emotional context pre-aggregated,
+          prospective filtering as pure date math (no AI call). The Conversation
+          Agent then retrieves FSRS-ranked memories and semantic context on
+          demand through its tool suite, pulling exactly what it needs for each
+          turn.
         </p>
         <p className={`${typographyPatterns.description}`}>
           The heavy work—living profile updates, emotional extraction, episodic
@@ -558,25 +626,25 @@ function BlogPost6Memory() {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className={`${containerPatterns.mediumGlassCyan} p-6`}>
+          <div className={`${containerPatterns.mediumGlass} p-6`}>
             <h3 className="font-body font-semibold text-lg text-synthwave-neon-cyan mb-3">
               Memory Types
             </h3>
             <div className="space-y-2 font-body text-synthwave-text-secondary text-sm">
               <p>
-                <span className={badgePatterns.cyan}>Explicit</span>{" "}
-                Preferences, goals, constraints, instructions, context
+                <strong className="text-white">Explicit:</strong> Preferences,
+                goals, constraints, instructions, context
               </p>
               <p>
-                <span className={badgePatterns.purple}>Prospective</span>{" "}
+                <strong className="text-white">Prospective:</strong>{" "}
                 Forward-looking events, commitments, milestones
               </p>
               <p>
-                <span className={badgePatterns.pink}>Episodic</span> Significant
+                <strong className="text-white">Episodic:</strong> Significant
                 shared moments and breakthroughs
               </p>
               <p>
-                <span className={badgePatterns.muted}>Behavioral</span> Observed
+                <strong className="text-white">Behavioral:</strong> Observed
                 patterns from longitudinal data
               </p>
             </div>
@@ -592,8 +660,8 @@ function BlogPost6Memory() {
                 (structured) + Pinecone (semantic)
               </p>
               <p>
-                <strong className="text-white">Decay:</strong> FSRS v6 power-law
-                forgetting curve
+                <strong className="text-white">Decay:</strong> FSRS-4.5
+                power-law forgetting curve
               </p>
               <p>
                 <strong className="text-white">Profile:</strong>{" "}
@@ -645,26 +713,28 @@ function BlogPost6Memory() {
       </section>
 
       {/* The Full System, Now Live */}
-      <section className="mb-8">
+      <section className="mb-16">
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-purple mb-6`}
         >
           The Full System, Now Live
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
-          All four upgrades are fully operational. Prospective memory and the
+          All four layers are fully operational. Prospective memory and the
           Living Profile have been running in production since day one. FSRS-4.5
           decay scoring replaced the flat 30-day window with real cognitive
           curves. And now the final two layers are wired in.
         </p>
         <p className={`${typographyPatterns.description} mb-6`}>
-          Every conversation summary now triggers two background extractions.
-          The first captures an emotional snapshot—motivation, energy,
-          confidence, stress—scored and timestamped, then aggregated into weekly
-          trends. The second pulls episodic moments: the breakthrough sets, the
-          admissions of burnout, the race-day outcomes. These memories are
-          stored globally so every coach context benefits from them, not just
-          the one that was open when they happened.
+          Every conversation summary triggers three background operations. The
+          first captures an emotional snapshot—motivation, energy, confidence,
+          stress—scored and timestamped, then aggregated into weekly trends. The
+          second pulls episodic moments: the breakthrough sets, the admissions
+          of burnout, the race-day outcomes. These memories are stored globally
+          so every coach context benefits from them, not just the one that was
+          open when they happened. The third fires the Living Profile Lambda,
+          which synthesizes everything into an updated mental model, ready for
+          the next conversation.
         </p>
         <p className={`${typographyPatterns.description} mb-6`}>
           Every night at 3am, a lifecycle dispatcher runs across every user. It
@@ -681,6 +751,124 @@ function BlogPost6Memory() {
           a machine and more like working with someone who genuinely knows you.
           Memory is how we get there—and now the full system is running.
         </p>
+      </section>
+
+      {/* Final CTA */}
+      <section className="mb-8">
+        <div className={`${containerPatterns.boldGradient} text-center`}>
+          <h2 className={`${typographyPatterns.sectionTitle} mb-4`}>
+            Ready to Experience a Coach That{" "}
+            <span className="text-synthwave-neon-purple">Remembers</span>?
+          </h2>
+          <p
+            className={`${typographyPatterns.description} mb-8 max-w-2xl mx-auto`}
+          >
+            You&apos;ve seen how the memory architecture works. Now experience
+            the difference it makes. Sign up for NeonPanda and start a coaching
+            relationship that deepens with every conversation.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/auth" className={buttonPatterns.heroCTA}>
+              Sign Up
+            </Link>
+            <Link to="/technology" className={buttonPatterns.secondary}>
+              Explore Full Technology
+            </Link>
+          </div>
+
+          <div className="flex flex-wrap gap-6 justify-center items-center text-sm font-body text-synthwave-text-secondary mt-8">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full animate-pulse"></div>
+              <span>Public Launch: Q2 2026</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-pulse"></div>
+              <span>4-Layer Memory Architecture</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-pulse"></div>
+              <span>FSRS-4.5 Cognitive Decay</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Series Navigation */}
+      <section className="mb-8">
+        <div className={containerPatterns.cardLight}>
+          <div className="p-6">
+            <p className="font-body text-synthwave-text-muted text-sm uppercase tracking-wide mb-4">
+              Explore the Full Series
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link
+                to="/blog/the-foundation"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-pink">
+                    1
+                  </span>
+                </div>
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-pink transition-colors">
+                  The Foundation of Everything
+                </span>
+              </Link>
+              <Link
+                to="/blog/your-coach-your-way"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-cyan">
+                    2
+                  </span>
+                </div>
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-cyan transition-colors">
+                  Your Coach, Built Your Way
+                </span>
+              </Link>
+              <Link
+                to="/blog/every-rep-counts"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-purple/20 flex items-center justify-center">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-purple">
+                    3
+                  </span>
+                </div>
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-purple transition-colors">
+                  Every Rep Counts, Every Time
+                </span>
+              </Link>
+              <Link
+                to="/blog/training-programs-that-think"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-pink">
+                    4
+                  </span>
+                </div>
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-pink transition-colors">
+                  Training Programs That Think
+                </span>
+              </Link>
+              <Link
+                to="/blog/the-symphony"
+                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
+                  <span className="font-body font-bold text-sm text-synthwave-neon-cyan">
+                    5
+                  </span>
+                </div>
+                <span className="font-body text-synthwave-text-primary group-hover:text-synthwave-neon-cyan transition-colors">
+                  When All Agents Converge
+                </span>
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
     </>
   );
