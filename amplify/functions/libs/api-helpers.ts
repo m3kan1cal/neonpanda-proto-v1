@@ -7,6 +7,7 @@ import {
   ConverseCommand,
   ConverseStreamCommand,
   OutputFormatType,
+  GuardrailTrace,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   LambdaClient,
@@ -128,7 +129,7 @@ const bedrockClient = new BedrockRuntimeClient({
 type GuardrailConfig = {
   guardrailIdentifier: string;
   guardrailVersion: string;
-  trace: string;
+  trace: GuardrailTrace;
 };
 
 /**
@@ -147,7 +148,7 @@ function getGuardrailConfig(): GuardrailConfig | undefined {
       ? {
           guardrailIdentifier: guardrailId,
           guardrailVersion: process.env.BEDROCK_GUARDRAIL_VERSION || "DRAFT",
-          trace: "enabled",
+          trace: GuardrailTrace.ENABLED,
         }
       : undefined;
     _guardrailConfigResolved = true;
