@@ -431,7 +431,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
         onClick={onClose}
       >
         <div
-          className={`${containerPatterns.successModal} p-6 relative w-full max-w-lg max-h-[85vh] overflow-y-auto`}
+          className={`${containerPatterns.successModal} p-6 relative w-full max-w-2xl max-h-[85vh] overflow-y-auto synthwave-scrollbar-cyan`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}

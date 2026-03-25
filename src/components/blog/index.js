@@ -6,3 +6,4 @@ export { default as BlogPost2CoachCreator } from "./BlogPost2CoachCreator";
 export { default as BlogPost3WorkoutLogger } from "./BlogPost3WorkoutLogger";
 export { default as BlogPost4ProgramDesigner } from "./BlogPost4ProgramDesigner";
 export { default as BlogPost5Orchestration } from "./BlogPost5Orchestration";
+export { default as BlogPost6Memory } from "./BlogPost6Memory";

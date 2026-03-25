@@ -318,11 +318,11 @@ export const inlineEditPatterns = {
   // Edit button patterns (show on hover in display mode)
   editButton: {
     small:
-      "p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100",
+      "p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer",
     medium:
-      "p-1.5 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
+      "p-1.5 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
     large:
-      "p-2 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
+      "p-2 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
   },
 
   // Save button patterns (pink primary action)

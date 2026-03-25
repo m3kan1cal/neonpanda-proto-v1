@@ -38,6 +38,7 @@ import {
 import {
   queryMemories,
   detectAndProcessMemory,
+  extractAndSaveProspectiveMemories,
   MemoryRetrievalResult,
   getFallbackMemory,
 } from "../libs/coach-conversation/memory-processing";
@@ -63,6 +64,17 @@ import {
 import { parseSlashCommand, isWorkoutSlashCommand } from "../libs/workout";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { queryPrograms } from "../../dynamodb/program";
+import {
+  queryMemories as queryMemoriesFromDb,
+  queryEmotionalSnapshots,
+  getLatestEmotionalTrend,
+} from "../../dynamodb/memory";
+import { formatEmotionalContextForPrompt } from "../libs/memory/emotional";
+import { formatLivingProfileForPrompt } from "../libs/user/living-profile";
+import {
+  filterActiveProspectiveMemories,
+  formatProspectiveMemoriesForPrompt,
+} from "../libs/memory/prospective";
 import { buildMessagesWithHistoryCaching } from "../libs/coach-conversation/response-orchestrator";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
 import {
@@ -1132,6 +1144,21 @@ async function saveConversationAndYieldComplete(
     logger.info("🚀 Conversation summary triggered (fire-and-forget)");
   }
 
+  // Fire-and-forget: Extract prospective memories from this conversation turn
+  // Analyzes user message + AI response for future events, commitments, follow-ups
+  extractAndSaveProspectiveMemories(
+    params.userResponse,
+    newAiMessage.content,
+    userId,
+    coachId,
+    conversationId,
+  ).catch((err) => {
+    logger.error(
+      "⚠️ Prospective memory extraction failed (non-blocking):",
+      err,
+    );
+  });
+
   // Prepare Pinecone context for response
   const pineconeMatches = context?.pineconeMatches || [];
   const pineconeContextText = context?.pineconeContext || "";
@@ -1237,24 +1264,51 @@ async function* createCoachConversationEventStreamV2(
       existingConversation,
       coachConfig,
       activeProgramResult,
+      emotionalSnapshots,
+      emotionalTrend,
+      prospectiveMemoriesRaw,
     ] = await Promise.all([
       getUserProfile(userId),
       getCoachConversation(userId, coachId, conversationId),
       getCoachConfig(userId, coachId),
       queryPrograms(userId, { includeStatus: ["active"], limit: 1 }),
+      queryEmotionalSnapshots(userId, undefined, { limit: 5 }).catch(() => []),
+      getLatestEmotionalTrend(userId, "weekly").catch(() => null),
+      queryMemoriesFromDb(userId, coachId, { memoryType: "prospective" }).catch(
+        () => [],
+      ),
     ]);
 
     if (!existingConversation || !coachConfig) {
       throw new Error("Failed to load conversation or coach config");
     }
 
+    // 4. Build agent context
+    const emotionalContext = formatEmotionalContextForPrompt(
+      emotionalSnapshots,
+      emotionalTrend,
+    );
+
+    const livingProfileContext = userProfile?.livingProfile
+      ? formatLivingProfileForPrompt(userProfile.livingProfile)
+      : undefined;
+
+    const activeProspectiveMemories = filterActiveProspectiveMemories(
+      prospectiveMemoriesRaw,
+    );
+    const prospectiveContext =
+      activeProspectiveMemories.length > 0
+        ? formatProspectiveMemoriesForPrompt(activeProspectiveMemories)
+        : undefined;
+
     logger.info("✅ V2: Data loaded:", {
       hasUserProfile: !!userProfile,
       existingMessageCount: existingConversation.messages.length,
       hasActiveProgram: activeProgramResult.length > 0,
+      hasLivingProfile: !!userProfile?.livingProfile,
+      activeProspectiveCount: activeProspectiveMemories.length,
     });
 
-    // 4. Build agent context
     const userTimezone = getUserTimezoneOrDefault(
       (userProfile as any)?.timezone || null,
     );
@@ -1347,6 +1401,9 @@ async function* createCoachConversationEventStreamV2(
         activeProgram: agentContext.activeProgram,
         coachCreatorSessionSummary:
           coachConfig.metadata?.coach_creator_session_summary,
+        emotionalContext: emotionalContext || undefined,
+        livingProfileContext,
+        prospectiveContext,
       },
     );
 
@@ -1495,14 +1552,34 @@ async function* createCoachConversationEventStreamV2(
       maxSizeKB: 400,
     });
 
-    // 13. Fire-and-forget: conversation summary
-    detectAndProcessConversationSummary(
-      userId,
-      coachId,
-      conversationId,
-      params.userResponse,
-      existingConversation.messages.length + 2,
-    );
+    // 13. Invoke post-turn Lambda (awaited so the SDK call completes before the runtime freezes).
+    // invokeAsyncLambda uses InvocationType.Event — it returns as soon as AWS accepts the
+    // invocation (~50ms), not when process-post-turn finishes. The user's stream is unaffected
+    // since this runs before the complete event is yielded in step 14.
+    const postTurnFunctionName = process.env.PROCESS_POST_TURN_FUNCTION_NAME;
+    if (postTurnFunctionName) {
+      await invokeAsyncLambda(
+        postTurnFunctionName,
+        {
+          userId,
+          coachId,
+          conversationId,
+          userMessage: params.userResponse,
+          aiResponse: newAiMessage.content,
+          currentMessageCount: existingConversation.messages.length + 2,
+        },
+        `post-turn processing for conversation ${conversationId}`,
+      ).catch((err) => {
+        logger.error(
+          "⚠️ Failed to invoke process-post-turn (non-blocking):",
+          err,
+        );
+      });
+    } else {
+      logger.warn(
+        "⚠️ PROCESS_POST_TURN_FUNCTION_NAME not set — skipping post-turn processing",
+      );
+    }
 
     // 14. Yield complete event
     yield formatCompleteEvent({

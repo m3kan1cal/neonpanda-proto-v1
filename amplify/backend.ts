@@ -44,6 +44,13 @@ import { deleteProgramDesignerSession } from "./functions/delete-program-designe
 import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
+import { buildLivingProfile } from "./functions/build-living-profile/resource";
+import { processPostTurn } from "./functions/process-post-turn/resource";
+import {
+  dispatchMemoryLifecycle,
+  createMemoryLifecycleSchedule,
+} from "./functions/memory/dispatch-memory-lifecycle/resource";
+import { processMemoryLifecycle } from "./functions/memory/process-memory-lifecycle/resource";
 import { getWorkouts } from "./functions/get-workouts/resource";
 import { getWorkout } from "./functions/get-workout/resource";
 import { updateWorkout } from "./functions/update-workout/resource";
@@ -63,10 +70,10 @@ import {
 } from "./functions/build-monthly-analytics/resource";
 import { getMonthlyReports } from "./functions/get-monthly-reports/resource";
 import { getMonthlyReport } from "./functions/get-monthly-report/resource";
-import { getMemories } from "./functions/get-memories/resource";
-import { createMemory } from "./functions/create-memory/resource";
-import { deleteMemory } from "./functions/delete-memory/resource";
-import { updateMemory } from "./functions/update-memory/resource";
+import { getMemories } from "./functions/memory/get-memories/resource";
+import { createMemory } from "./functions/memory/create-memory/resource";
+import { deleteMemory } from "./functions/memory/delete-memory/resource";
+import { updateMemory } from "./functions/memory/update-memory/resource";
 import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
 import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
 import { getUserProfile } from "./functions/get-user-profile/resource";
@@ -164,6 +171,10 @@ const backend = defineBackend({
   createWorkout,
   buildWorkout,
   buildConversationSummary,
+  buildLivingProfile,
+  processPostTurn,
+  dispatchMemoryLifecycle,
+  processMemoryLifecycle,
   getWorkouts,
   getWorkout,
   updateWorkout,
@@ -236,6 +247,18 @@ backend.buildWorkoutAnalysis.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildLivingProfile.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.processPostTurn.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.dispatchMemoryLifecycle.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.processMemoryLifecycle.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 
@@ -396,6 +419,10 @@ const sharedPolicies = new SharedPolicies(
   backend.deleteCoachConversation,
   backend.buildWorkout,
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.processPostTurn,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
@@ -481,8 +508,11 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout, // Agent-based workout extraction with Bedrock
   backend.buildProgram, // Agent-based program generation with Bedrock
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.processPostTurn, // Needs Bedrock for analyze_complexity (Nova 2 Lite) + prospective memory extraction
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
+  backend.processMemoryLifecycle, // Needs Bedrock for memory compression (Nova 2 Lite)
   backend.createMemory,
   backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
   backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
@@ -499,6 +529,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout, // Agent-based workout extraction with debug logging
   backend.buildCoachConfig,
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
   backend.buildProgram, // Agent-based program generation with debug logging
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
@@ -663,7 +694,19 @@ grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildWorkout.resources.lambda.functionArn,
   backend.buildProgram.resources.lambda.functionArn,
   backend.buildConversationSummary.resources.lambda.functionArn,
+  backend.processPostTurn.resources.lambda.functionArn,
 ]);
+
+// Grant permission to processPostTurn to invoke buildConversationSummary
+grantLambdaInvokePermissions(backend.processPostTurn.resources.lambda, [
+  backend.buildConversationSummary.resources.lambda.functionArn,
+]);
+
+// Grant permission to buildConversationSummary to invoke buildLivingProfile
+grantLambdaInvokePermissions(
+  backend.buildConversationSummary.resources.lambda,
+  [backend.buildLivingProfile.resources.lambda.functionArn],
+);
 
 // Grant permission to streamCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
@@ -696,6 +739,17 @@ grantLambdaInvokePermissions(backend.buildWorkout.resources.lambda, [
   backend.buildExercise.resources.lambda.functionArn,
   backend.buildWorkoutAnalysis.resources.lambda.functionArn,
 ]);
+
+// Grant permission to dispatchMemoryLifecycle to invoke processMemoryLifecycle (fan-out per user)
+grantLambdaInvokePermissions(backend.dispatchMemoryLifecycle.resources.lambda, [
+  backend.processMemoryLifecycle.resources.lambda.functionArn,
+]);
+
+// Pass the processor function name to the dispatcher at deploy time
+backend.dispatchMemoryLifecycle.addEnvironment(
+  "PROCESS_MEMORY_LIFECYCLE_FUNCTION_NAME",
+  backend.processMemoryLifecycle.resources.lambda.functionName,
+);
 
 // ============================================================================
 // CLOUDWATCH LOGS PERMISSIONS
@@ -761,6 +815,10 @@ const allFunctions = [
   backend.createWorkout,
   backend.buildWorkout,
   backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.processPostTurn,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
@@ -956,6 +1014,18 @@ backend.sendCoachConversationMessage.addEnvironment(
   backend.buildConversationSummary.resources.lambda.functionName,
 );
 
+// Living profile is triggered by the conversation summary builder
+backend.buildConversationSummary.addEnvironment(
+  "BUILD_LIVING_PROFILE_FUNCTION_NAME",
+  backend.buildLivingProfile.resources.lambda.functionName,
+);
+
+// Post-turn Lambda needs to invoke conversation summary
+backend.processPostTurn.addEnvironment(
+  "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
+  backend.buildConversationSummary.resources.lambda.functionName,
+);
+
 backend.streamCoachConversation.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
   backend.buildWorkout.resources.lambda.functionName,
@@ -967,6 +1037,10 @@ backend.streamCoachConversation.addEnvironment(
 backend.streamCoachConversation.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
   backend.buildConversationSummary.resources.lambda.functionName,
+);
+backend.streamCoachConversation.addEnvironment(
+  "PROCESS_POST_TURN_FUNCTION_NAME",
+  backend.processPostTurn.resources.lambda.functionName,
 );
 backend.streamCoachConversation.addEnvironment(
   "V1_FALLBACK_USERS_PARAM",
@@ -1244,6 +1318,16 @@ const warmupPlatformSchedule = createWarmupPlatformSchedule(
 
 console.info(
   "✅ Platform warmup scheduled (every 12 hours): pre-compiles Bedrock grammar caches",
+);
+
+// Create EventBridge schedule for daily memory lifecycle (3am UTC)
+const memoryLifecycleSchedule = createMemoryLifecycleSchedule(
+  backend.dispatchMemoryLifecycle.stack,
+  backend.dispatchMemoryLifecycle.resources.lambda,
+);
+
+console.info(
+  "✅ Memory lifecycle scheduled (daily at 3am UTC): compress, archive, expire, behavioral + trends",
 );
 
 // ============================================================================

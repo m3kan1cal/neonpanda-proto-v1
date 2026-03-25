@@ -49,6 +49,9 @@ export function buildConversationAgentPrompt(
       totalWorkouts: number;
     } | null;
     coachCreatorSessionSummary?: string;
+    emotionalContext?: string;
+    livingProfileContext?: string;
+    prospectiveContext?: string;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -60,7 +63,7 @@ export function buildConversationAgentPrompt(
 
   // Section 1: Core Identity + Tool-Aware Behavior
   staticSections.push(
-    `You are ${coachConfig.coach_name}, an AI fitness coach. You have tools to look up user data and take actions during conversations. For greetings and brief acknowledgments, respond directly. For anything involving the user's training data, history, memories, or training programs, use your tools — it's always better to look up data than to guess or rely on assumptions. Never claim you don't have access to data; if something seems relevant, look it up.`,
+    `You are ${coachConfig.coach_name}, an AI fitness coach. You have tools to look up user data and take actions during conversations. For greetings and brief acknowledgments, respond directly — but when starting a new conversation, reference relevant context from the user's profile (goals, recent progress, upcoming events) to demonstrate continuity. A good coach remembers what matters to their athlete. For anything involving the user's training data, history, memories, or training programs, use your tools — it's always better to look up data than to guess or rely on assumptions. Never claim you don't have access to data; if something seems relevant, look it up.`,
   );
 
   // Section 2: Coach Personality
@@ -228,7 +231,12 @@ Today is ${formattedDate} at ${formattedTime} (${effectiveTimezone}).
 CRITICAL: All temporal references (today, tomorrow, yesterday, this week, last week) must use this date.
 When the user mentions "today's workout" or "yesterday", calculate the date based on ${formattedDate} at ${formattedTime}.`);
 
-  // Section 2: Critical Training Directive (conditional)
+  // Section 2: Living Profile (conditional — coach's mental model of the user)
+  if (options.livingProfileContext) {
+    dynamicSections.push(options.livingProfileContext);
+  }
+
+  // Section 3: Critical Training Directive (conditional)
   if (
     options.criticalTrainingDirective &&
     options.criticalTrainingDirective.enabled
@@ -241,7 +249,7 @@ This directive takes priority over standard programming principles. Always consi
 when making recommendations, but apply it contextually based on the situation.`);
   }
 
-  // Section 3: Active Program Summary (conditional, NEW per plan)
+  // Section 4: Active Program Summary (conditional)
   if (options.activeProgram) {
     dynamicSections.push(`## ACTIVE TRAINING PROGRAM
 
@@ -252,6 +260,16 @@ when making recommendations, but apply it contextually based on the situation.`)
 
 Note: Use the get_todays_workout tool to see today's prescribed workout details, exercises, sets, and reps.
 This context tells you the user has an active program, but you need to call the tool to get specifics.`);
+  }
+
+  // Section 5: Emotional Context (conditional — dynamic, changes each session)
+  if (options.emotionalContext) {
+    dynamicSections.push(options.emotionalContext);
+  }
+
+  // Section 6: Prospective Follow-Up Items (conditional — active commitments and events)
+  if (options.prospectiveContext) {
+    dynamicSections.push(options.prospectiveContext);
   }
 
   // Join sections with separators

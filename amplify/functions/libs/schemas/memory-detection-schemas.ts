@@ -39,9 +39,11 @@ export const MEMORY_REQUEST_DETECTION_SCHEMA = {
             "constraint",
             "instruction",
             "context",
+            "prospective",
             "other",
           ],
-          description: "Category of the memory content",
+          description:
+            "Category of the memory content. Use 'prospective' for future events, commitments, or follow-ups with timeframes.",
         },
         importance: {
           type: "string",
@@ -50,6 +52,61 @@ export const MEMORY_REQUEST_DETECTION_SCHEMA = {
         },
       },
       required: ["content", "type", "importance"],
+    },
+    hasProspectiveElement: {
+      type: "boolean",
+      description:
+        "True if the message mentions a future event, commitment, or timeframe that the coach should follow up on (e.g., 'marathon in October', 'trying sumo next week', 'vacation next month'). Can be true even if isMemoryRequest is false.",
+    },
+    prospectiveDetails: {
+      type: "object",
+      additionalProperties: false,
+      description:
+        "Details about the prospective element if hasProspectiveElement is true",
+      properties: {
+        content: {
+          type: "string",
+          description:
+            "Concise description of the future event/commitment (e.g., 'User has a marathon on October 15')",
+        },
+        targetDate: {
+          type: "string",
+          description:
+            "ISO date if determinable (e.g., '2026-10-15'). Omit if unknown.",
+        },
+        targetDateType: {
+          type: "string",
+          enum: ["specific", "approximate", "recurring", "relative"],
+          description: "How precise the date reference is",
+        },
+        relativeTimeframe: {
+          type: "string",
+          description:
+            "Original phrasing for relative dates (e.g., 'next week', 'in 2 months')",
+        },
+        followUpType: {
+          type: "string",
+          enum: [
+            "event_outcome",
+            "commitment_check",
+            "milestone",
+            "try_new_thing",
+            "general",
+          ],
+          description: "What kind of follow-up this requires",
+        },
+        followUpPrompt: {
+          type: "string",
+          description:
+            "Natural coaching prompt for follow-up (e.g., 'Ask how the marathon went')",
+        },
+      },
+      required: [
+        "content",
+        "targetDateType",
+        "followUpType",
+        "followUpPrompt",
+      ],
     },
   },
   required: ["reasoning", "isMemoryRequest", "confidence"],
@@ -111,9 +168,11 @@ export const CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA = {
             "constraint",
             "instruction",
             "context",
+            "prospective",
             "other",
           ],
-          description: "Primary category of the memory",
+          description:
+            "Primary category of the memory. Use 'prospective' for future events, commitments, or follow-ups with timeframes.",
         },
         importance: {
           type: "string",
@@ -146,6 +205,11 @@ export const CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA = {
     overallConfidence: {
       type: "number",
       description: "Overall confidence in the analysis from 0.0 to 1.0",
+    },
+    hasProspectiveElement: {
+      type: "boolean",
+      description:
+        "True if the message mentions a future event, commitment, or timeframe that the coach should follow up on. Can be true independently of isMemoryRequest.",
     },
   },
   required: [
@@ -199,9 +263,11 @@ export const MEMORY_CHARACTERISTICS_SCHEMA = {
         "constraint",
         "instruction",
         "context",
+        "prospective",
         "other",
       ],
-      description: "Primary category of the memory - choose exactly one",
+      description:
+        "Primary category of the memory - choose exactly one. Use 'prospective' for future events, commitments, or follow-ups with timeframes.",
     },
     importance: {
       type: "string",
