@@ -45,6 +45,7 @@ import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
 import { buildLivingProfile } from "./functions/build-living-profile/resource";
+import { processPostTurn } from "./functions/process-post-turn/resource";
 import {
   dispatchMemoryLifecycle,
   createMemoryLifecycleSchedule,
@@ -172,6 +173,7 @@ const backend = defineBackend({
   buildWorkout,
   buildConversationSummary,
   buildLivingProfile,
+  processPostTurn,
   dispatchMemoryLifecycle,
   processMemoryLifecycle,
   getWorkouts,
@@ -249,6 +251,9 @@ backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildLivingProfile.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.processPostTurn.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.dispatchMemoryLifecycle.resources.lambda.configureAsyncInvoke({
@@ -416,6 +421,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout,
   backend.buildConversationSummary,
   backend.buildLivingProfile,
+  backend.processPostTurn,
   backend.dispatchMemoryLifecycle,
   backend.processMemoryLifecycle,
   backend.getWorkouts,
@@ -504,6 +510,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildProgram, // Agent-based program generation with Bedrock
   backend.buildConversationSummary,
   backend.buildLivingProfile,
+  backend.processPostTurn, // Needs Bedrock for analyze_complexity (Nova 2 Lite) + prospective memory extraction
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
   backend.processMemoryLifecycle, // Needs Bedrock for memory compression (Nova 2 Lite)
@@ -630,10 +637,7 @@ const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
-  func.addEnvironment(
-    "BEDROCK_GUARDRAIL_ID",
-    bedrockGuardrail.attrGuardrailId,
-  );
+  func.addEnvironment("BEDROCK_GUARDRAIL_ID", bedrockGuardrail.attrGuardrailId);
   func.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
 });
 
@@ -807,6 +811,12 @@ grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildWorkout.resources.lambda.functionArn,
   backend.buildProgram.resources.lambda.functionArn,
   backend.buildConversationSummary.resources.lambda.functionArn,
+  backend.processPostTurn.resources.lambda.functionArn,
+]);
+
+// Grant permission to processPostTurn to invoke buildConversationSummary
+grantLambdaInvokePermissions(backend.processPostTurn.resources.lambda, [
+  backend.buildConversationSummary.resources.lambda.functionArn,
 ]);
 
 // Grant permission to buildConversationSummary to invoke buildLivingProfile
@@ -853,7 +863,7 @@ grantLambdaInvokePermissions(backend.dispatchMemoryLifecycle.resources.lambda, [
 ]);
 
 // Pass the processor function name to the dispatcher at deploy time
-backend.dispatchMemoryLifecycle.resources.lambda.addEnvironment(
+backend.dispatchMemoryLifecycle.addEnvironment(
   "PROCESS_MEMORY_LIFECYCLE_FUNCTION_NAME",
   backend.processMemoryLifecycle.resources.lambda.functionName,
 );
@@ -923,6 +933,7 @@ const allFunctions = [
   backend.buildWorkout,
   backend.buildConversationSummary,
   backend.buildLivingProfile,
+  backend.processPostTurn,
   backend.dispatchMemoryLifecycle,
   backend.processMemoryLifecycle,
   backend.getWorkouts,
@@ -1126,6 +1137,12 @@ backend.buildConversationSummary.addEnvironment(
   backend.buildLivingProfile.resources.lambda.functionName,
 );
 
+// Post-turn Lambda needs to invoke conversation summary
+backend.processPostTurn.addEnvironment(
+  "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
+  backend.buildConversationSummary.resources.lambda.functionName,
+);
+
 // USER_POOL_ID needed by withStreamingAuth for JWT signature verification via JWKS
 backend.streamCoachConversation.addEnvironment(
   "USER_POOL_ID",
@@ -1142,6 +1159,10 @@ backend.streamCoachConversation.addEnvironment(
 backend.streamCoachConversation.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
   backend.buildConversationSummary.resources.lambda.functionName,
+);
+backend.streamCoachConversation.addEnvironment(
+  "PROCESS_POST_TURN_FUNCTION_NAME",
+  backend.processPostTurn.resources.lambda.functionName,
 );
 backend.streamCoachConversation.addEnvironment(
   "V1_FALLBACK_USERS_PARAM",

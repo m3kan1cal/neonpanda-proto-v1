@@ -34,6 +34,11 @@ const BEHAVIORAL_PATTERN_SCHEMA = {
         type: "object",
         additionalProperties: false,
         properties: {
+          existingMemoryId: {
+            type: "string",
+            description:
+              "If this pattern updates an existing one, provide the existing pattern's ID. Leave empty for genuinely new patterns.",
+          },
           pattern: {
             type: "string",
             description: "Concise description of the observed behavior pattern",
@@ -93,89 +98,6 @@ export interface BehavioralDetectionResult {
 }
 
 /**
- * Calculate similarity score between two strings (0-1 scale).
- * Used to match detected patterns against existing ones for deduplication.
- */
-function calculateStringSimilarity(str1: string, str2: string): number {
-  const s1 = str1.toLowerCase().trim();
-  const s2 = str2.toLowerCase().trim();
-
-  if (s1 === s2) return 1.0;
-
-  // Levenshtein distance approach
-  const longer = s1.length > s2.length ? s1 : s2;
-  const shorter = s1.length > s2.length ? s2 : s1;
-
-  if (longer.length === 0) return 1.0;
-
-  const editDistance = getEditDistance(shorter, longer);
-  return (longer.length - editDistance) / longer.length;
-}
-
-/**
- * Calculate Levenshtein distance between two strings
- */
-function getEditDistance(s1: string, s2: string): number {
-  const matrix: number[][] = [];
-
-  for (let i = 0; i <= s1.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= s2.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= s1.length; i++) {
-    for (let j = 1; j <= s2.length; j++) {
-      if (s1[i - 1] === s2[j - 1]) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1,
-        );
-      }
-    }
-  }
-
-  return matrix[s1.length][s2.length];
-}
-
-/**
- * Find existing memory that matches a detected pattern.
- * Uses string similarity (0.7+ = match) and pattern type to identify duplicates.
- */
-function findMatchingExistingMemory(
-  detectedPattern: string,
-  patternType: string,
-  existingPatterns: UserMemory[],
-): UserMemory | undefined {
-  return existingPatterns.find((existing) => {
-    const existingMeta = existing.metadata as any;
-    const existingPatternType = existingMeta.tags?.find((t: string) =>
-      ["training", "communication", "adherence", "emotional", "avoidance"].includes(
-        t,
-      ),
-    );
-
-    if (existingPatternType !== patternType) {
-      return false;
-    }
-
-    // Extract just the pattern description (before the " — " separator)
-    const existingContent = existing.content.split(" — ")[0];
-    const similarity = calculateStringSimilarity(
-      detectedPattern,
-      existingContent,
-    );
-
-    return similarity >= 0.7;
-  });
-}
-
-/**
  * Detect behavioral patterns from conversation summaries and workout data.
  * Runs weekly as part of the memory lifecycle job.
  * Uses Sonnet for synthesizing longitudinal data.
@@ -186,7 +108,7 @@ export async function detectBehavioralPatterns(
 ): Promise<BehavioralDetectionResult> {
   const existingPatternsText =
     existingPatterns.length > 0
-      ? `\n\nEXISTING PATTERNS (update confidence or mark as weakening if contradicted):\n${existingPatterns.map((p) => `- ${p.content}`).join("\n")}`
+      ? `\n\nEXISTING PATTERNS — If a detected pattern is semantically the same as an existing one, set existingMemoryId to that pattern's ID. Only omit existingMemoryId for genuinely new patterns not covered below:\n${existingPatterns.map((p) => `- [${p.memoryId}] ${p.content}`).join("\n")}`
       : "";
 
   const systemPrompt = `You are analyzing a series of coaching conversation summaries to detect implicit behavioral patterns — things the user does consistently but hasn't explicitly stated.
@@ -203,7 +125,8 @@ GUIDELINES:
 - A pattern needs evidence across at least 2-3 conversations to be meaningful
 - If an existing pattern is contradicted, don't include it (let confidence decay naturally)
 - New patterns start at 0.5-0.6 confidence; increase with more evidence
-- Each pattern must include a concrete coaching implication${existingPatternsText}`;
+- Each pattern must include a concrete coaching implication
+- CRITICAL: When an existing pattern covers the same observation, you MUST set existingMemoryId to its ID rather than creating a duplicate. Update the confidence, evidence, and coachingImplication as needed.${existingPatternsText}`;
 
   const userPrompt = `CONVERSATION SUMMARIES (chronological):
 ${conversationSummaries.map((s, i) => `--- Summary ${i + 1} ---\n${s}`).join("\n\n")}
@@ -234,17 +157,34 @@ Use the detect_behavioral_patterns tool to identify behavioral patterns.`;
     const fixedInput = fixDoubleEncodedProperties(response.input);
     const result = fixedInput as BehavioralDetectionResult;
 
-    // Match detected patterns against existing ones and add existingMemoryId if matched
+    const existingIds = new Set(existingPatterns.map((p) => p.memoryId));
+
+    const rawUpdates = result.patterns.filter((p) => p.existingMemoryId).length;
+
     result.patterns = result.patterns.map((pattern) => {
-      const matchingMemory = findMatchingExistingMemory(
-        pattern.pattern,
-        pattern.patternType,
-        existingPatterns,
-      );
-      return {
-        ...pattern,
-        existingMemoryId: matchingMemory?.memoryId,
-      };
+      if (
+        pattern.existingMemoryId &&
+        !existingIds.has(pattern.existingMemoryId)
+      ) {
+        logger.warn("AI returned invalid existingMemoryId, treating as new:", {
+          existingMemoryId: pattern.existingMemoryId,
+          pattern: pattern.pattern,
+        });
+        return { ...pattern, existingMemoryId: undefined };
+      }
+      return pattern;
+    });
+
+    const validUpdates = result.patterns.filter(
+      (p) => p.existingMemoryId,
+    ).length;
+
+    logger.info("Behavioral pattern dedup results:", {
+      totalDetected: result.patterns.length,
+      existingPatternsProvided: existingPatterns.length,
+      aiMatchedToExisting: rawUpdates,
+      validAfterCheck: validUpdates,
+      newPatterns: result.patterns.length - validUpdates,
     });
 
     return result;
@@ -279,7 +219,9 @@ export function buildBehavioralMemories(
             metadata: {
               lastUsed: new Date(),
               importance:
-                pattern.confidence >= 0.8 ? ("high" as const) : ("medium" as const),
+                pattern.confidence >= 0.8
+                  ? ("high" as const)
+                  : ("medium" as const),
             },
           },
         };

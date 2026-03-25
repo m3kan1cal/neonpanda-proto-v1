@@ -106,19 +106,21 @@ const MarkdownRendererComponent = ({ content, className = "" }) => {
           // List items - white bullet for unordered lists
           li: ({ children, ordered }) => {
             if (ordered) {
-              return <li className="leading-normal pl-1">{children}</li>;
+              return <li className="leading-relaxed pl-1">{children}</li>;
             }
             return (
               <li className="flex items-start space-x-3">
-                <span className="text-white shrink-0 font-bold">•</span>
-                <span className="flex-1 leading-normal">{children}</span>
+                <span className="text-white shrink-0 font-bold leading-relaxed">
+                  •
+                </span>
+                <span className="flex-1 leading-relaxed">{children}</span>
               </li>
             );
           },
 
           // Paragraphs
           p: ({ children }) => (
-            <p className="leading-normal mb-2">{children}</p>
+            <p className="leading-relaxed mb-3">{children}</p>
           ),
 
           // Code blocks and inline code
