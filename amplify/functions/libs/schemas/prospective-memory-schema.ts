@@ -75,12 +75,12 @@ export const PROSPECTIVE_MEMORY_EXTRACTION_SCHEMA = {
           triggerWindowDaysBefore: {
             type: "number",
             description:
-              "Days before target date to start surfacing (e.g., 3 for events, 1 for small commitments). Default 2.",
+              "Days before target date to start surfacing. Use 90 for major events (races, competitions), 7 for medium events and vacations, 2 for small commitments.",
           },
           triggerWindowDaysAfter: {
             type: "number",
             description:
-              "Days after target date to keep surfacing for follow-up (e.g., 5 for events, 3 for commitments). Default 3.",
+              "Days after target date to keep surfacing for follow-up. Use 7 for major events, 5 for medium events, 3 for vacations and small commitments.",
           },
           originalContext: {
             type: "string",

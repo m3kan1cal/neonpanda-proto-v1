@@ -65,10 +65,10 @@ DATE RESOLUTION:
 - If unsure of exact date, use targetDateType "approximate" or "relative"
 
 TRIGGER WINDOW GUIDELINES:
-- Major events (competition, race): startDaysBefore=7, endDaysAfter=5
-- Medium events (try something new, start routine): startDaysBefore=2, endDaysAfter=3
-- Small commitments (do X next session): startDaysBefore=1, endDaysAfter=2
-- Vacations/breaks: startDaysBefore=3, endDaysAfter=2
+- Major events (competition, race, big goal milestone): startDaysBefore=90, endDaysAfter=7
+- Medium events (try something new, start routine): startDaysBefore=7, endDaysAfter=5
+- Vacations/breaks: startDaysBefore=7, endDaysAfter=3
+- Small commitments (do X next session): startDaysBefore=2, endDaysAfter=3
 
 BE SELECTIVE: Only extract genuinely forward-looking items that a good coach would naturally follow up on. Don't extract trivial mentions.`;
 
