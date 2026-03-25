@@ -2,8 +2,11 @@
  * User Profile Validation Utilities
  */
 
-import { UserProfile } from './types';
-import { detectInjectionAttempt, sanitizeUserContent } from '../security/prompt-sanitizer';
+import { UserProfile } from "./types";
+import {
+  detectInjectionAttempt,
+  sanitizeUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Validation result for Critical Training Directive
@@ -18,7 +21,7 @@ export interface DirectiveValidationResult {
  * Returns validation result with error message if invalid
  */
 export const validateCriticalTrainingDirective = (
-  directive: UserProfile['criticalTrainingDirective']
+  directive: UserProfile["criticalTrainingDirective"],
 ): DirectiveValidationResult => {
   if (!directive) {
     return { isValid: true };
@@ -28,15 +31,15 @@ export const validateCriticalTrainingDirective = (
   if (directive.content && directive.content.length > 500) {
     return {
       isValid: false,
-      error: 'Critical Training Directive must be 500 characters or less'
+      error: "Critical Training Directive must be 500 characters or less",
     };
   }
 
   // Validate enabled is boolean
-  if (typeof directive.enabled !== 'boolean') {
+  if (typeof directive.enabled !== "boolean") {
     return {
       isValid: false,
-      error: 'Critical Training Directive enabled must be a boolean'
+      error: "Critical Training Directive enabled must be a boolean",
     };
   }
 
@@ -46,7 +49,8 @@ export const validateCriticalTrainingDirective = (
     if (detected) {
       return {
         isValid: false,
-        error: 'Invalid directive content. Please remove system override attempts.'
+        error:
+          "Invalid directive content. Please remove system override attempts.",
       };
     }
   }
@@ -55,29 +59,12 @@ export const validateCriticalTrainingDirective = (
 };
 
 /**
- * Sanitize Critical Training Directive content.
- * Strips injection tokens and enforces the 500-char length limit.
- */
-export const sanitizeCriticalTrainingDirective = (
-  directive: UserProfile['criticalTrainingDirective']
-): UserProfile['criticalTrainingDirective'] => {
-  if (!directive || !directive.content) {
-    return directive;
-  }
-
-  return {
-    ...directive,
-    content: sanitizeUserContent(directive.content, 500),
-  };
-};
-
-/**
  * Normalize Critical Training Directive with timestamps
  * Sets createdAt if not present, always updates updatedAt
  */
 export const normalizeCriticalTrainingDirective = (
-  directive: UserProfile['criticalTrainingDirective']
-): UserProfile['criticalTrainingDirective'] => {
+  directive: UserProfile["criticalTrainingDirective"],
+): UserProfile["criticalTrainingDirective"] => {
   if (!directive) {
     return undefined;
   }
@@ -87,7 +74,6 @@ export const normalizeCriticalTrainingDirective = (
   return {
     ...directive,
     createdAt: directive.createdAt || now,
-    updatedAt: now
+    updatedAt: now,
   };
 };
-
