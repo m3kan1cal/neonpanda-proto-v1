@@ -1149,6 +1149,10 @@ backend.streamCoachConversation.addEnvironment(
   backend.auth.resources.userPool.userPoolId,
 );
 backend.streamCoachConversation.addEnvironment(
+  "APP_CLIENT_ID",
+  backend.auth.resources.userPoolClient.clientId,
+);
+backend.streamCoachConversation.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
   backend.buildWorkout.resources.lambda.functionName,
 );
@@ -1184,6 +1188,10 @@ backend.streamCoachCreatorSession.addEnvironment(
   backend.auth.resources.userPool.userPoolId,
 );
 backend.streamCoachCreatorSession.addEnvironment(
+  "APP_CLIENT_ID",
+  backend.auth.resources.userPoolClient.clientId,
+);
+backend.streamCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
   backend.buildCoachConfig.resources.lambda.functionName,
 );
@@ -1205,6 +1213,10 @@ backend.streamCoachCreatorSession.resources.lambda.addToRolePolicy(
 backend.streamProgramDesign.addEnvironment(
   "USER_POOL_ID",
   backend.auth.resources.userPool.userPoolId,
+);
+backend.streamProgramDesign.addEnvironment(
+  "APP_CLIENT_ID",
+  backend.auth.resources.userPoolClient.clientId,
 );
 backend.streamProgramDesign.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
