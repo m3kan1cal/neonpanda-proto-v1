@@ -53,6 +53,7 @@ async function getSigningKey(kid: string): Promise<string> {
 
 /**
  * Verify and decode a Cognito JWT token, checking signature, expiry, issuer, and audience.
+ * Requires APP_CLIENT_ID environment variable to be set for audience validation.
  */
 export async function verifyJwtToken(token: string): Promise<JWTClaims> {
   // Decode header to get kid — do not trust claims yet
@@ -75,12 +76,18 @@ export async function verifyJwtToken(token: string): Promise<JWTClaims> {
   }
 
   const expectedIssuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
+  const appClientId = process.env.APP_CLIENT_ID;
+
+  if (!appClientId) {
+    throw new Error('APP_CLIENT_ID environment variable is not set');
+  }
 
   const publicKey = await getSigningKey(kid);
 
   const claims = jwt.verify(token, publicKey, {
     algorithms: ['RS256'],
     issuer: expectedIssuer,
+    audience: appClientId,
   }) as JWTClaims;
 
   // Explicit claim checks

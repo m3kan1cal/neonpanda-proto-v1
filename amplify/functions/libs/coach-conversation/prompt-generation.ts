@@ -485,7 +485,9 @@ Begin each conversation by acknowledging the user and being ready to help them w
     };
     const userContextSection = generateUserContext(sanitizedContext);
     if (userContextSection) {
-      dynamicPromptSections.push(userContextSection);
+      dynamicPromptSections.push(
+        wrapUserContent(userContextSection, "user_context"),
+      );
     }
   }
 
