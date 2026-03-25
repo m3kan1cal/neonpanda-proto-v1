@@ -489,11 +489,16 @@ Begin each conversation by acknowledging the user and being ready to help them w
     }
   }
 
-  // 5. Recent Workout Context (if available) — wrapped as user-derived data (contains user-entered exercise names/notes)
+  // 5. Recent Workout Context (if available) — sanitized and wrapped as user-derived data
+  // Exercise names and notes are user-entered and may contain structural injection tokens.
   if (workoutContext.length > 0) {
     const workoutContextSection = generateWorkoutContext(workoutContext);
+    const sanitizedWorkoutContext = sanitizeUserContent(
+      workoutContextSection,
+      3000,
+    );
     dynamicPromptSections.push(
-      wrapUserContent(workoutContextSection, "workout_history"),
+      wrapUserContent(sanitizedWorkoutContext, "workout_history"),
     );
   }
 

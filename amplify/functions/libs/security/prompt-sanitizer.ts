@@ -23,6 +23,13 @@ import { logger } from "../logger";
  * Not exposed in error messages to prevent iterative bypass attempts.
  */
 const INJECTION_PATTERNS: string[] = [
+  // Short, broad patterns (critical for defense-in-depth)
+  // These catch common override attempts with minimal false positives in fitness context
+  "system prompt",
+  "bypass constraints",
+  "ignore all previous",
+  "disregard all",
+
   // Classic instruction overrides
   "ignore all previous instructions",
   "ignore previous instructions",
