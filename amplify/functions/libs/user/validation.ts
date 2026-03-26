@@ -3,10 +3,7 @@
  */
 
 import { UserProfile } from "./types";
-import {
-  detectInjectionAttempt,
-  sanitizeUserContent,
-} from "../security/prompt-sanitizer";
+import { detectInjectionAttempt } from "../security/prompt-sanitizer";
 
 /**
  * Validation result for Critical Training Directive
