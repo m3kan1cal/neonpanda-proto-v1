@@ -156,6 +156,24 @@ function getGuardrailConfig(): GuardrailConfig | undefined {
   return _guardrailConfig;
 }
 
+function getGuardrailConfigForStreaming():
+  | {
+      guardrailIdentifier: string;
+      guardrailVersion: string;
+      trace: typeof GuardrailTrace.ENABLED;
+      streamProcessingMode: "SYNC";
+    }
+  | undefined {
+  const baseConfig = getGuardrailConfig();
+  if (!baseConfig) {
+    return undefined;
+  }
+  return {
+    ...baseConfig,
+    streamProcessingMode: "SYNC",
+  };
+}
+
 // Create Lambda client for async invocations
 const lambdaClient = new LambdaClient({
   region: process.env.AWS_REGION || "us-west-2",
@@ -1355,7 +1373,7 @@ export const callBedrockApiStream = async (
       useNativeReasoning,
     });
 
-    const guardrailConfig = getGuardrailConfig();
+    const guardrailConfig = getGuardrailConfigForStreaming();
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: [
@@ -1380,7 +1398,7 @@ export const callBedrockApiStream = async (
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
-      // Guardrail: prompt injection + jailbreak + PII protection
+      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
       ...(guardrailConfig && {
         guardrailConfig,
       }),
@@ -2119,7 +2137,7 @@ export const callBedrockApiStreamForAgent = async function* (
     // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
     const toolConfig = buildToolConfigForAgent(tools, useCaching);
 
-    const guardrailConfig = getGuardrailConfig();
+    const guardrailConfig = getGuardrailConfigForStreaming();
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
@@ -2135,7 +2153,7 @@ export const callBedrockApiStreamForAgent = async function* (
           anthropic_beta: options.anthropicBeta,
         },
       }),
-      // Guardrail: prompt injection + jailbreak + PII protection
+      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
       ...(guardrailConfig && {
         guardrailConfig,
       }),
@@ -2409,7 +2427,7 @@ export const callBedrockApiMultimodalStream = async (
       hasImages,
     });
 
-    const guardrailConfig = getGuardrailConfig();
+    const guardrailConfig = getGuardrailConfigForStreaming();
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
@@ -2431,7 +2449,7 @@ export const callBedrockApiMultimodalStream = async (
           anthropic_beta: options.anthropicBeta,
         },
       }),
-      // Guardrail: prompt injection + jailbreak + PII protection
+      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
       ...(guardrailConfig && {
         guardrailConfig,
       }),
