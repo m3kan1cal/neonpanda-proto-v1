@@ -155,7 +155,10 @@ export function sanitizeUserContent(
     // eslint-disable-next-line no-control-regex
     sanitized = sanitized.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, "");
 
-    // 3. Strip LLM structural injection tokens
+    // 3. Strip LLM structural injection tokens.
+    //    Loop until stable to defeat recursive nesting attacks where stripping
+    //    an inner tag reconstructs a valid outer tag (e.g.,
+    //    "</user_provided_</user_provided_context>context>" → "</user_provided_context>").
     const structuralTokens = [
       /\[INST\]/gi,
       /\[\/INST\]/gi,
@@ -169,9 +172,13 @@ export function sanitizeUserContent(
       /<user_provided_context[^>]*>/gi,
       /<\/user_provided_context\s*>/gi,
     ];
-    for (const token of structuralTokens) {
-      sanitized = sanitized.replace(token, "");
-    }
+    let prev;
+    do {
+      prev = sanitized;
+      for (const token of structuralTokens) {
+        sanitized = sanitized.replace(token, "");
+      }
+    } while (sanitized !== prev);
 
     // 4. Truncate to maxLength
     if (sanitized.length > maxLength) {
