@@ -137,7 +137,8 @@ type GuardrailConfig = {
  * Lazy singleton for guardrail config. Env vars are stable for the lifetime of
  * a Lambda invocation, so we read them once and cache the result. Returns undefined
  * when BEDROCK_GUARDRAIL_ID is not set (e.g., local dev or tests).
- * Guardrail is applied inline — no separate API call, covered by existing bedrock:InvokeModel permission.
+ * Guardrail is applied inline via the Converse API guardrailConfig parameter.
+ * Requires bedrock:ApplyGuardrail IAM permission on the guardrail resource.
  */
 let _guardrailConfig: GuardrailConfig | undefined;
 let _guardrailConfigResolved = false;
@@ -1426,7 +1427,6 @@ export const callBedrockApiStream = async (
       try {
         let fullResponse = "";
         let reasoningLength = 0;
-        let contentChunks: string[] = [];
         let stopReason = "";
         let guardrailBlocked = false;
 
@@ -1457,7 +1457,9 @@ export const callBedrockApiStream = async (
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
-            contentChunks.push(deltaText);
+            if (!guardrailBlocked) {
+              yield deltaText;
+            }
           }
 
           // Handle end of stream
@@ -1467,11 +1469,6 @@ export const callBedrockApiStream = async (
                 "Bedrock stream blocked by guardrail: " +
                   AI_ERROR_FALLBACK_MESSAGE,
               );
-            }
-
-            // Only yield content if guardrail hasn't blocked it
-            for (const chunk of contentChunks) {
-              yield chunk;
             }
 
             logger.info("=== BEDROCK STREAMING API CALL SUCCESS ===");
@@ -2483,7 +2480,6 @@ export const callBedrockApiMultimodalStream = async (
         let streamEnded = false;
         let reasoningLength = 0;
         let guardrailBlocked = false;
-        let contentChunks: string[] = [];
 
         for await (const chunk of response.stream!) {
           // Capture guardrail intervention early
@@ -2514,7 +2510,9 @@ export const callBedrockApiMultimodalStream = async (
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
-            contentChunks.push(deltaText);
+            if (!guardrailBlocked) {
+              yield deltaText;
+            }
           }
 
           // Mark stream as ended but continue to capture metadata
@@ -2524,11 +2522,6 @@ export const callBedrockApiMultimodalStream = async (
                 "Bedrock multimodal stream blocked by guardrail: " +
                   AI_ERROR_FALLBACK_MESSAGE,
               );
-            }
-
-            // Only yield content if guardrail hasn't blocked it
-            for (const chunk of contentChunks) {
-              yield chunk;
             }
 
             logger.info(
