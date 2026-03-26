@@ -67,8 +67,6 @@ const INJECTION_PATTERNS: string[] = [
   "developer mode",
   "unrestricted mode",
   "do anything now",
-  "bypass your",
-  "bypass all",
   "ignore safety",
   "ignore your safety",
 

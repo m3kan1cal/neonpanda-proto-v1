@@ -1426,11 +1426,18 @@ export const callBedrockApiStream = async (
         let fullResponse = "";
         let reasoningLength = 0;
         let stopReason = "";
+        let guardrailBlocked = false;
 
         for await (const chunk of response.stream!) {
           // Capture stop reason for guardrail check
           if (chunk.messageStop) {
             stopReason = chunk.messageStop.stopReason || "";
+            if (stopReason === "guardrail_intervened") {
+              guardrailBlocked = true;
+              logger.warn("🛡️ Bedrock guardrail intervened on stream", {
+                guardrailAction: (chunk as any).guardrailAction,
+              });
+            }
           }
 
           // Handle Nova reasoning content (log but don't yield to user)
@@ -1448,15 +1455,15 @@ export const callBedrockApiStream = async (
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
-            yield deltaText;
+            // Only yield content if guardrail hasn't blocked it
+            if (!guardrailBlocked) {
+              yield deltaText;
+            }
           }
 
           // Handle end of stream
           if (chunk.messageStop) {
-            if (stopReason === "guardrail_intervened") {
-              logger.warn("🛡️ Bedrock guardrail intervened on stream", {
-                guardrailAction: (chunk as any).guardrailAction,
-              });
+            if (guardrailBlocked) {
               throw new Error(
                 "Bedrock stream blocked by guardrail: " +
                   AI_ERROR_FALLBACK_MESSAGE,
@@ -2471,8 +2478,22 @@ export const callBedrockApiMultimodalStream = async (
         let fullResponse = "";
         let streamEnded = false;
         let reasoningLength = 0;
+        let guardrailBlocked = false;
 
         for await (const chunk of response.stream!) {
+          // Capture guardrail intervention early
+          if (chunk.messageStop) {
+            if (chunk.messageStop.stopReason === "guardrail_intervened") {
+              guardrailBlocked = true;
+              logger.warn(
+                "🛡️ Bedrock guardrail intervened on multimodal stream",
+                {
+                  guardrailAction: (chunk as any).guardrailAction,
+                },
+              );
+            }
+          }
+
           // Handle Nova reasoning content (log but don't yield to user)
           if (
             useNativeReasoning &&
@@ -2488,18 +2509,15 @@ export const callBedrockApiMultimodalStream = async (
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
-            yield deltaText;
+            // Only yield content if guardrail hasn't blocked it
+            if (!guardrailBlocked) {
+              yield deltaText;
+            }
           }
 
           // Mark stream as ended but continue to capture metadata
           if (chunk.messageStop) {
-            if (chunk.messageStop.stopReason === "guardrail_intervened") {
-              logger.warn(
-                "🛡️ Bedrock guardrail intervened on multimodal stream",
-                {
-                  guardrailAction: (chunk as any).guardrailAction,
-                },
-              );
+            if (guardrailBlocked) {
               throw new Error(
                 "Bedrock multimodal stream blocked by guardrail: " +
                   AI_ERROR_FALLBACK_MESSAGE,
