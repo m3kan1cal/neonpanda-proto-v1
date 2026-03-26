@@ -1139,12 +1139,12 @@ export const callBedrockApi = async (
     logger.info("Response received from Bedrock");
     logger.info("Response metadata:", response.$metadata);
 
-    // Handle guardrail intervention — return safe fallback instead of throwing
+    // Handle guardrail intervention — throw error for explicit caller handling
     if (response.stopReason === "guardrail_intervened") {
       logger.warn("🛡️ Bedrock guardrail intervened", {
         guardrailAction: (response as any).guardrailAction,
       });
-      return AI_ERROR_FALLBACK_MESSAGE;
+      throw new Error("Bedrock API blocked by guardrail");
     }
 
     // Log response structure without full content to avoid token waste
@@ -1553,12 +1553,12 @@ export const callBedrockApiMultimodal = async (
       logCachePerformance(response.usage, "Multimodal API");
     }
 
-    // Handle guardrail intervention — return safe fallback instead of throwing
+    // Handle guardrail intervention — throw error for explicit caller handling
     if (response.stopReason === "guardrail_intervened") {
       logger.warn("🛡️ Bedrock guardrail intervened on multimodal call", {
         guardrailAction: (response as any).guardrailAction,
       });
-      return AI_ERROR_FALLBACK_MESSAGE;
+      throw new Error("Bedrock multimodal API blocked by guardrail");
     }
 
     // Log Nova reasoning content if present
