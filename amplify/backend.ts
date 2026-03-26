@@ -598,7 +598,7 @@ const bedrockGuardrail = new CfnGuardrail(
         { type: "MISCONDUCT", inputStrength: "HIGH", outputStrength: "HIGH" },
         {
           type: "PROMPT_ATTACK",
-          inputStrength: "HIGH",
+          inputStrength: "LOW",
           outputStrength: "NONE",
         },
       ],
@@ -629,11 +629,11 @@ const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.explainTerm,
-  backend.generateGreeting,
-  // Agent loops: multi-turn tool-use where model output feeds back as input
-  backend.buildWorkout,
-  backend.buildProgram,
-  backend.buildCoachConfig,
+  // Note: generateGreeting, buildWorkout, buildProgram, buildCoachConfig excluded.
+  // generateGreeting: inputs are validated scalars and system-generated prompts.
+  // build* agent loops: multi-turn tool calls where all inputs are system-generated
+  // tool results (DynamoDB, S3), not user-controlled content. Including them adds
+  // per-character guardrail cost across multiple agent turns with no security benefit.
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
