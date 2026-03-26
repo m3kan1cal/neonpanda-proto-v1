@@ -9,6 +9,10 @@ import {
   CONVERSATION_MODES,
 } from "./types";
 import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Generates a complete system prompt from a coach configuration
@@ -421,47 +425,94 @@ Begin each conversation by acknowledging the user and being ready to help them w
 
 ⚠️ TEMPORAL ANCHOR: All temporal references (today/tomorrow/yesterday) and future planning must use THIS date, not workout completion dates. If user reports past workout with >3 day gap, acknowledge the time elapsed.`);
 
-  // 2. Living Profile (if available)
+  // 2. Living Profile (if available) — sanitized and wrapped as user data
   if (livingProfileContext) {
-    dynamicPromptSections.push(livingProfileContext);
+    const sanitizedLivingProfile = sanitizeUserContent(
+      livingProfileContext,
+      3000,
+    );
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedLivingProfile, "living_profile"),
+    );
   }
 
-  // 3. Emotional Context (if available)
+  // 3. Emotional Context (if available) — sanitized and wrapped as user data
   if (emotionalContext) {
-    dynamicPromptSections.push(emotionalContext);
+    const sanitizedEmotionalContext = sanitizeUserContent(
+      emotionalContext,
+      1000,
+    );
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedEmotionalContext, "emotional_context"),
+    );
   }
 
-  // 4. Prospective Follow-Up Items (if available)
+  // 4. Prospective Follow-Up Items (if available) — sanitized and wrapped as user data
   if (prospectiveContext) {
-    dynamicPromptSections.push(prospectiveContext);
+    const sanitizedProspectiveContext = sanitizeUserContent(
+      prospectiveContext,
+      1500,
+    );
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedProspectiveContext, "prospective_followup"),
+    );
   }
 
-  // 3. Memories (if available)
+  // 3. Memories (if available) — sanitized per-memory before section generation
   if (userMemories.length > 0) {
-    const memoriesSection = generateMemoriesSection(userMemories);
-    dynamicPromptSections.push(memoriesSection);
+    const sanitizedMemories = userMemories.map((memory) => ({
+      ...memory,
+      content: sanitizeUserContent(memory.content, 500),
+    }));
+    const memoriesSection = generateMemoriesSection(sanitizedMemories);
+    dynamicPromptSections.push(
+      wrapUserContent(memoriesSection, "user_memories"),
+    );
   }
 
-  // 4. User Context (if provided and enabled)
+  // 4. User Context (if provided and enabled) — userName and goals sanitized inside generateUserContext
   if (includeUserContext && conversationContext) {
-    const userContextSection = generateUserContext(conversationContext);
+    const sanitizedContext = {
+      ...conversationContext,
+      userName: conversationContext.userName
+        ? sanitizeUserContent(conversationContext.userName, 128)
+        : conversationContext.userName,
+      currentGoals: conversationContext.currentGoals
+        ? conversationContext.currentGoals.map((g: string) =>
+            sanitizeUserContent(g, 200),
+          )
+        : conversationContext.currentGoals,
+    };
+    const userContextSection = generateUserContext(sanitizedContext);
     if (userContextSection) {
-      dynamicPromptSections.push(userContextSection);
+      dynamicPromptSections.push(
+        wrapUserContent(userContextSection, "user_context"),
+      );
     }
   }
 
-  // 5. Recent Workout Context (if available)
+  // 5. Recent Workout Context (if available) — sanitized and wrapped as user-derived data
+  // Exercise names and notes are user-entered and may contain structural injection tokens.
   if (workoutContext.length > 0) {
     const workoutContextSection = generateWorkoutContext(workoutContext);
-    dynamicPromptSections.push(workoutContextSection);
+    const sanitizedWorkoutContext = sanitizeUserContent(
+      workoutContextSection,
+      3000,
+    );
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedWorkoutContext, "workout_history"),
+    );
   }
 
-  // 6. Pinecone Semantic Context (if available)
+  // 6. Pinecone Semantic Context (if available) — sanitized and wrapped as user-derived data
+  // The IMPORTANT instruction is placed outside the wrapper so it is treated as a system directive,
+  // not as user DATA (which would contradict its intent).
   if (pineconeContext) {
-    dynamicPromptSections.push(`# SEMANTIC CONTEXT
-${pineconeContext}
-
-IMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.`);
+    const sanitizedPinecone = sanitizeUserContent(pineconeContext, 4000);
+    dynamicPromptSections.push(
+      wrapUserContent(sanitizedPinecone, "semantic_search") +
+        "\n\nIMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.",
+    );
   }
 
   // 7. Conversation History - REMOVED

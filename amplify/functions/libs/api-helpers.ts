@@ -7,6 +7,7 @@ import {
   ConverseCommand,
   ConverseStreamCommand,
   OutputFormatType,
+  GuardrailTrace,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   LambdaClient,
@@ -124,6 +125,54 @@ export const AI_ERROR_FALLBACK_MESSAGE =
 const bedrockClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-west-2",
 });
+
+type GuardrailConfig = {
+  guardrailIdentifier: string;
+  guardrailVersion: string;
+  trace: GuardrailTrace;
+};
+
+/**
+ * Lazy singleton for guardrail config. Env vars are stable for the lifetime of
+ * a Lambda invocation, so we read them once and cache the result. Returns undefined
+ * when BEDROCK_GUARDRAIL_ID is not set (e.g., local dev or tests).
+ * Guardrail is applied inline — no separate API call, covered by existing bedrock:InvokeModel permission.
+ */
+let _guardrailConfig: GuardrailConfig | undefined;
+let _guardrailConfigResolved = false;
+
+function getGuardrailConfig(): GuardrailConfig | undefined {
+  if (!_guardrailConfigResolved) {
+    const guardrailId = process.env.BEDROCK_GUARDRAIL_ID;
+    _guardrailConfig = guardrailId
+      ? {
+          guardrailIdentifier: guardrailId,
+          guardrailVersion: process.env.BEDROCK_GUARDRAIL_VERSION || "DRAFT",
+          trace: GuardrailTrace.ENABLED,
+        }
+      : undefined;
+    _guardrailConfigResolved = true;
+  }
+  return _guardrailConfig;
+}
+
+function getGuardrailConfigForStreaming():
+  | {
+      guardrailIdentifier: string;
+      guardrailVersion: string;
+      trace: typeof GuardrailTrace.ENABLED;
+      streamProcessingMode: "SYNC";
+    }
+  | undefined {
+  const baseConfig = getGuardrailConfig();
+  if (!baseConfig) {
+    return undefined;
+  }
+  return {
+    ...baseConfig,
+    streamProcessingMode: "SYNC",
+  };
+}
 
 // Create Lambda client for async invocations
 const lambdaClient = new LambdaClient({
@@ -1042,6 +1091,7 @@ export const callBedrockApi = async (
       logger.info("🎯 Response prefilling enabled:", options.prefillResponse);
     }
 
+    const guardrailConfig = getGuardrailConfig();
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
@@ -1062,6 +1112,10 @@ export const callBedrockApi = async (
         additionalModelRequestFields: {
           anthropic_beta: options.anthropicBeta,
         },
+      }),
+      // Guardrail: prompt injection + jailbreak + PII protection
+      ...(guardrailConfig && {
+        guardrailConfig,
       }),
     });
 
@@ -1102,6 +1156,14 @@ export const callBedrockApi = async (
 
     logger.info("Response received from Bedrock");
     logger.info("Response metadata:", response.$metadata);
+
+    // Handle guardrail intervention — throw error for explicit caller handling
+    if (response.stopReason === "guardrail_intervened") {
+      logger.warn("🛡️ Bedrock guardrail intervened", {
+        guardrailAction: (response as any).guardrailAction,
+      });
+      throw new Error("Bedrock API blocked by guardrail");
+    }
 
     // Log response structure without full content to avoid token waste
     logger.info("Response structure:", {
@@ -1311,6 +1373,7 @@ export const callBedrockApiStream = async (
       useNativeReasoning,
     });
 
+    const guardrailConfig = getGuardrailConfigForStreaming();
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: [
@@ -1335,6 +1398,10 @@ export const callBedrockApiStream = async (
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
+      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
+      ...(guardrailConfig && {
+        guardrailConfig,
+      }),
       // Add beta headers for advanced schema features if specified
       ...(options?.anthropicBeta && {
         additionalModelRequestFields: {
@@ -1358,8 +1425,21 @@ export const callBedrockApiStream = async (
       try {
         let fullResponse = "";
         let reasoningLength = 0;
+        let stopReason = "";
+        let guardrailBlocked = false;
 
         for await (const chunk of response.stream!) {
+          // Capture stop reason for guardrail check
+          if (chunk.messageStop) {
+            stopReason = chunk.messageStop.stopReason || "";
+            if (stopReason === "guardrail_intervened") {
+              guardrailBlocked = true;
+              logger.warn("🛡️ Bedrock guardrail intervened on stream", {
+                guardrailAction: (chunk as any).guardrailAction,
+              });
+            }
+          }
+
           // Handle Nova reasoning content (log but don't yield to user)
           if (
             useNativeReasoning &&
@@ -1375,11 +1455,21 @@ export const callBedrockApiStream = async (
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
-            yield deltaText;
+            // Only yield content if guardrail hasn't blocked it
+            if (!guardrailBlocked) {
+              yield deltaText;
+            }
           }
 
           // Handle end of stream
           if (chunk.messageStop) {
+            if (guardrailBlocked) {
+              throw new Error(
+                "Bedrock stream blocked by guardrail: " +
+                  AI_ERROR_FALLBACK_MESSAGE,
+              );
+            }
+
             logger.info("=== BEDROCK STREAMING API CALL SUCCESS ===");
             logger.info(
               "Stream complete. Total response length:",
@@ -1448,6 +1538,7 @@ export const callBedrockApiMultimodal = async (
       hasImages,
     });
 
+    const guardrailConfig = getGuardrailConfig();
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
@@ -1469,6 +1560,10 @@ export const callBedrockApiMultimodal = async (
           anthropic_beta: options.anthropicBeta,
         },
       }),
+      // Guardrail: prompt injection + jailbreak + PII protection
+      ...(guardrailConfig && {
+        guardrailConfig,
+      }),
     });
 
     logger.info("Multimodal converse command created successfully..");
@@ -1481,6 +1576,14 @@ export const callBedrockApiMultimodal = async (
     // Log cache performance metrics if available
     if (response.usage) {
       logCachePerformance(response.usage, "Multimodal API");
+    }
+
+    // Handle guardrail intervention — throw error for explicit caller handling
+    if (response.stopReason === "guardrail_intervened") {
+      logger.warn("🛡️ Bedrock guardrail intervened on multimodal call", {
+        guardrailAction: (response as any).guardrailAction,
+      });
+      throw new Error("Bedrock multimodal API blocked by guardrail");
     }
 
     // Log Nova reasoning content if present
@@ -1634,6 +1737,7 @@ export const callBedrockApiWithJsonOutput = async (
 
     const effectiveUserMessage = userMessage.trim() || "Please proceed.";
 
+    const guardrailConfig = getGuardrailConfig();
     const command = new ConverseCommand({
       modelId,
       messages: [
@@ -1659,6 +1763,10 @@ export const callBedrockApiWithJsonOutput = async (
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
+      // Guardrail: prompt injection + jailbreak + PII protection
+      ...(guardrailConfig && {
+        guardrailConfig,
+      }),
     });
 
     const heartbeatInterval = setInterval(() => {
@@ -1678,6 +1786,16 @@ export const callBedrockApiWithJsonOutput = async (
 
     if (response.usage) {
       logCachePerformance(response.usage, "JSON Output API");
+    }
+
+    // Handle guardrail intervention — return fallback object instead of throwing
+    if (response.stopReason === "guardrail_intervened") {
+      logger.warn("🛡️ Bedrock guardrail intervened on JSON output", {
+        guardrailAction: (response as any).guardrailAction,
+      });
+      throw new Error(
+        `Bedrock JSON output blocked by guardrail for schema: ${options.schemaName}`,
+      );
     }
 
     const contentItem = response.output?.message?.content?.[0];
@@ -1751,6 +1869,7 @@ export const callBedrockApiMultimodalWithJsonOutput = async (
       hasImages,
     });
 
+    const guardrailConfig = getGuardrailConfig();
     const command = new ConverseCommand({
       modelId,
       messages,
@@ -1771,12 +1890,26 @@ export const callBedrockApiMultimodalWithJsonOutput = async (
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
+      // Guardrail: prompt injection + jailbreak + PII protection
+      ...(guardrailConfig && {
+        guardrailConfig,
+      }),
     });
 
     const response = await bedrockClient.send(command);
 
     if (response.usage) {
       logCachePerformance(response.usage, "Multimodal JSON Output API");
+    }
+
+    // Handle guardrail intervention — throw with descriptive error instead of attempting to parse blocked message
+    if (response.stopReason === "guardrail_intervened") {
+      logger.warn("🛡️ Bedrock guardrail intervened on multimodal JSON output", {
+        guardrailAction: (response as any).guardrailAction,
+      });
+      throw new Error(
+        `Bedrock multimodal JSON output blocked by guardrail for schema: ${options.schemaName}`,
+      );
     }
 
     const contentItem = response.output?.message?.content?.[0];
@@ -1879,6 +2012,7 @@ export const callBedrockApiForAgent = async (
   // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
   const toolConfig = buildToolConfigForAgent(tools, useCaching);
 
+  const guardrailConfig = getGuardrailConfig();
   const command = new ConverseCommand({
     modelId: modelId,
     messages: messages,
@@ -1896,6 +2030,8 @@ export const callBedrockApiForAgent = async (
         anthropic_beta: options.anthropicBeta,
       },
     }),
+    // Guardrail: prompt injection + jailbreak + PII protection
+    ...(guardrailConfig && { guardrailConfig }),
   });
 
   // Safety net: abort after 180s to prevent indefinite hangs that silently
@@ -1926,6 +2062,14 @@ export const callBedrockApiForAgent = async (
   // Log cache performance if usage data available
   if (response.usage) {
     logCachePerformance(response.usage, "Agent API");
+  }
+
+  // Handle guardrail intervention — return response with blocked indicator for agent loop
+  if (response.stopReason === "guardrail_intervened") {
+    logger.warn("🛡️ Bedrock guardrail intervened on agent call", {
+      guardrailAction: (response as any).guardrailAction,
+    });
+    throw new Error("Bedrock agent call blocked by guardrail");
   }
 
   // Log Nova reasoning content if present (for observability, caller handles extraction)
@@ -2000,6 +2144,7 @@ export const callBedrockApiStreamForAgent = async function* (
     // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
     const toolConfig = buildToolConfigForAgent(tools, useCaching);
 
+    const guardrailConfig = getGuardrailConfigForStreaming();
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
@@ -2014,6 +2159,10 @@ export const callBedrockApiStreamForAgent = async function* (
         additionalModelRequestFields: {
           anthropic_beta: options.anthropicBeta,
         },
+      }),
+      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
+      ...(guardrailConfig && {
+        guardrailConfig,
       }),
     });
 
@@ -2186,6 +2335,17 @@ export const callBedrockApiStreamForAgent = async function* (
       // Handle message stop
       if (chunk.messageStop) {
         stopReason = chunk.messageStop.stopReason || "end_turn";
+
+        if (stopReason === "guardrail_intervened") {
+          logger.warn(
+            "🛡️ Bedrock guardrail intervened on streaming agent call",
+            {
+              guardrailAction: (chunk as any).guardrailAction,
+            },
+          );
+          throw new Error("Bedrock streaming agent call blocked by guardrail");
+        }
+
         logger.info("=== BEDROCK STREAMING AGENT API CALL SUCCESS ===");
         logger.info("Stream complete. Stop reason:", stopReason);
         logger.info("Total text response length:", fullTextResponse.length);
@@ -2274,6 +2434,7 @@ export const callBedrockApiMultimodalStream = async (
       hasImages,
     });
 
+    const guardrailConfig = getGuardrailConfigForStreaming();
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
@@ -2295,6 +2456,10 @@ export const callBedrockApiMultimodalStream = async (
           anthropic_beta: options.anthropicBeta,
         },
       }),
+      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
+      ...(guardrailConfig && {
+        guardrailConfig,
+      }),
     });
 
     logger.info("Multimodal converse stream command created successfully..");
@@ -2313,8 +2478,22 @@ export const callBedrockApiMultimodalStream = async (
         let fullResponse = "";
         let streamEnded = false;
         let reasoningLength = 0;
+        let guardrailBlocked = false;
 
         for await (const chunk of response.stream!) {
+          // Capture guardrail intervention early
+          if (chunk.messageStop) {
+            if (chunk.messageStop.stopReason === "guardrail_intervened") {
+              guardrailBlocked = true;
+              logger.warn(
+                "🛡️ Bedrock guardrail intervened on multimodal stream",
+                {
+                  guardrailAction: (chunk as any).guardrailAction,
+                },
+              );
+            }
+          }
+
           // Handle Nova reasoning content (log but don't yield to user)
           if (
             useNativeReasoning &&
@@ -2330,11 +2509,21 @@ export const callBedrockApiMultimodalStream = async (
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
-            yield deltaText;
+            // Only yield content if guardrail hasn't blocked it
+            if (!guardrailBlocked) {
+              yield deltaText;
+            }
           }
 
           // Mark stream as ended but continue to capture metadata
           if (chunk.messageStop) {
+            if (guardrailBlocked) {
+              throw new Error(
+                "Bedrock multimodal stream blocked by guardrail: " +
+                  AI_ERROR_FALLBACK_MESSAGE,
+              );
+            }
+
             logger.info(
               "=== BEDROCK MULTIMODAL STREAMING API CALL SUCCESS ===",
             );
