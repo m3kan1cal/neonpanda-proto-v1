@@ -8,6 +8,7 @@ import {
   ConverseStreamCommand,
   OutputFormatType,
   GuardrailTrace,
+  GuardrailStreamProcessingMode,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   LambdaClient,
@@ -160,8 +161,8 @@ function getGuardrailConfigForStreaming():
   | {
       guardrailIdentifier: string;
       guardrailVersion: string;
-      trace: typeof GuardrailTrace.ENABLED;
-      streamProcessingMode: "SYNC";
+      trace: GuardrailTrace;
+      streamProcessingMode: GuardrailStreamProcessingMode;
     }
   | undefined {
   const baseConfig = getGuardrailConfig();
@@ -170,7 +171,7 @@ function getGuardrailConfigForStreaming():
   }
   return {
     ...baseConfig,
-    streamProcessingMode: "SYNC",
+    streamProcessingMode: GuardrailStreamProcessingMode.SYNC,
   };
 }
 
