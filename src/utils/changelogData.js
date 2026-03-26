@@ -11,6 +11,39 @@ import { logger } from "./logger";
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260325-beta",
+    date: "2026-03-25",
+    changes: {
+      added: [
+        "Cycling added as the 11th training discipline, with full metrics support: power zones, elevation, speed, cadence, heart rate, distance, and TrainerRoad ride type mapping.",
+        "4-tier user memory system: prospective goals, living athlete profile, lifecycle events, and emotional snapshots; memory types integrated into conversation summaries and coach prompts.",
+        "Auto-save for workout log drafts to localStorage; draft is restored on re-open and flushed on submit or cancel.",
+        "Image support when logging workouts via chat; images wired through the workout template logging pipeline with a 5-image cap.",
+        "Bedrock system prompt hardening against prompt injection (Phases 1–3): XML wrapper isolation, sanitizer, and guardrail integration.",
+        "Platform upgrade email script for user communication.",
+      ],
+      changed: [
+        "Static greeting now displays immediately on load instead of blocking on the AI response, reducing perceived latency.",
+        "Frontend performance improved with lazy loading and parallel data fetches.",
+        "AI response text now uses the dedicated font-ai typeface for clearer visual distinction.",
+      ],
+      fixed: [
+        "Streaming guardrail issues: explicit SYNC mode added, injection pattern false positives corrected, guardrail intervention handling fixed, and duplicate getGuardrailConfig calls removed.",
+        "JWT validation: token_use claim checked and audience validation tightened; XML wrapper breakout vulnerability closed.",
+        "XML tag asymmetry in prompt sanitizer corrected.",
+        "Behavioral memory deduplication and emotional snapshot timezone handling corrected.",
+        "FSRS formula: removed erroneous ÷9 and ×9 factors from decay constant calculation.",
+        "Memory system logic: satisfaction decline check, low-motivation alert guard (now requires minimum 3 snapshots), totalConversations count, and narrative field extraction from CoachConversationSummary all corrected.",
+        "Fire-and-forget Bedrock calls now properly awaited to prevent silent failures.",
+        "Chat image handling: current-message images now prioritized over historical images; accumulated image count capped at 5.",
+        "Workout draft save: data loss on unmount fixed, stale debounce indicator resolved, premature setLastSavedAt call removed.",
+        "Cycling section: ID collisions with CrossFit and Powerlifting sections resolved, metrics display corrected, time formatting fixed, elevation unit display corrected, falsy checks for zero numeric values and wind speed updated, power zone seconds null-guard added, and schema field name in extraction guidance corrected.",
+        "Coach card display bugs resolved.",
+        "Program build pipeline issues resolved.",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260314-beta",
     date: "2026-03-14",
     changes: {
