@@ -167,7 +167,7 @@ export function sanitizeUserContent(
       /<\|user\|>/gi,
       /<\|assistant\|>/gi,
       /<user_provided_context[^>]*>/gi,
-      /<\/user_provided_context>/gi,
+      /<\/user_provided_context\s*>/gi,
     ];
     for (const token of structuralTokens) {
       sanitized = sanitized.replace(token, "");
