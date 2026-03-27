@@ -21,6 +21,7 @@ import { logger } from "../../logger";
 
 const CACHE_STEP_SIZE = 10; // Move cache boundary in 10-message increments
 const MIN_CACHE_THRESHOLD = 12; // Start caching when conversation has > 12 messages
+const MAX_HISTORY_IMAGES = 20; // Cap total image blocks sent to Bedrock per request
 
 /**
  * Returns the message content to send to Bedrock.
@@ -79,7 +80,7 @@ export async function buildMessagesWithCaching(
     logger.info(
       `📝 Short conversation (${messageCount} messages) - no history caching`,
     );
-    return buildBedrockMessages(messages);
+    return buildBedrockMessages(messages, { expandImages: true });
   }
 
   const cachedCount =
@@ -97,8 +98,11 @@ export async function buildMessagesWithCaching(
 
   const messagesArray: any[] = [];
 
-  // Cached messages (text only — older messages don't carry active S3 refs)
-  const cachedBedrock = await buildBedrockMessages(cachedMessages);
+  // Cached messages are always text-only to avoid fetching stale S3 images
+  // and to prevent unbounded image accumulation in long conversations.
+  const cachedBedrock = await buildBedrockMessages(cachedMessages, {
+    expandImages: false,
+  });
   messagesArray.push(...cachedBedrock);
 
   // Insert cache point after the cached block
@@ -110,8 +114,10 @@ export async function buildMessagesWithCaching(
     ],
   });
 
-  // Dynamic messages (may include multimodal)
-  const dynamicBedrock = await buildBedrockMessages(dynamicMessages);
+  // Dynamic (recent) messages may include multimodal image blocks
+  const dynamicBedrock = await buildBedrockMessages(dynamicMessages, {
+    expandImages: true,
+  });
   messagesArray.push(...dynamicBedrock);
 
   return messagesArray;
@@ -119,14 +125,20 @@ export async function buildMessagesWithCaching(
 
 /**
  * Convert a slice of CoachMessage[] to Bedrock format.
- * Multimodal messages are expanded; text-only messages get a simple text block.
+ *
+ * @param expandImages - When true, messages with imageS3Keys are fetched from
+ *   S3 and sent as Bedrock image blocks (up to MAX_HISTORY_IMAGES total).
+ *   When false, all messages are converted to text-only regardless of images.
  */
-async function buildBedrockMessages(messages: CoachMessage[]): Promise<any[]> {
+async function buildBedrockMessages(
+  messages: CoachMessage[],
+  options: { expandImages?: boolean } = {},
+): Promise<any[]> {
+  const { expandImages = false } = options;
   const result: any[] = [];
+  let imageCount = 0;
 
   for (const msg of messages) {
-    // Guardrail-flagged messages are always sent as redacted text, regardless of
-    // whether they originally had images. Avoids unnecessary S3 fetches.
     if (msg.metadata?.guardrailWarning) {
       result.push({
         role: msg.role,
@@ -135,14 +147,17 @@ async function buildBedrockMessages(messages: CoachMessage[]): Promise<any[]> {
       continue;
     }
 
-    if (
+    const hasImages =
+      expandImages &&
       msg.messageType === "text_with_images" &&
       msg.imageS3Keys &&
-      msg.imageS3Keys.length > 0
-    ) {
+      msg.imageS3Keys.length > 0;
+
+    if (hasImages && imageCount + msg.imageS3Keys!.length <= MAX_HISTORY_IMAGES) {
       try {
         const multimodalMessages = await buildMultimodalContent([msg as any]);
         if (multimodalMessages.length > 0) {
+          imageCount += msg.imageS3Keys!.length;
           result.push(multimodalMessages[0]);
         } else {
           result.push({
@@ -161,11 +176,20 @@ async function buildBedrockMessages(messages: CoachMessage[]): Promise<any[]> {
         });
       }
     } else {
+      if (hasImages && imageCount + msg.imageS3Keys!.length > MAX_HISTORY_IMAGES) {
+        logger.info(
+          `⚠️ Image cap reached (${MAX_HISTORY_IMAGES}), converting remaining image messages to text-only`,
+        );
+      }
       result.push({
         role: msg.role,
         content: [{ text: getRedactedContent(msg) }],
       });
     }
+  }
+
+  if (imageCount > 0) {
+    logger.info(`🖼️ Expanded ${imageCount} images in history messages`);
   }
 
   return result;
