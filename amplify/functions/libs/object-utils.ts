@@ -400,8 +400,8 @@ export const normalizeSchemaArrayFields = (
       // validation passes rather than throwing and killing the Lambda.
       if (requiredFields.includes(key)) {
         response[key] = [];
-        logger.warn(
-          `⚠️ normalizeSchemaArrayFields: required array field "${key}" was missing from model response — backfilled with []`,
+        logger.info(
+          `normalizeSchemaArrayFields: required array field "${key}" was missing from model response — backfilled with []`,
         );
       }
       continue;
