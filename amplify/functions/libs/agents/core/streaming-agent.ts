@@ -218,6 +218,7 @@ export class StreamingConversationAgent<
         if (event.type === "text_delta") {
           if (needsSeparator) {
             fullResponseText += "\n\n";
+            this._fullResponseText += "\n\n";
             yield formatChunkEvent("\n\n");
             needsSeparator = false;
           }
