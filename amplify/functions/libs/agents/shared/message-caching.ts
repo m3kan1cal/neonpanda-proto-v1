@@ -153,7 +153,7 @@ async function buildBedrockMessages(
       msg.imageS3Keys &&
       msg.imageS3Keys.length > 0;
 
-    if (hasImages && imageCount < MAX_HISTORY_IMAGES) {
+    if (hasImages && imageCount + msg.imageS3Keys!.length <= MAX_HISTORY_IMAGES) {
       try {
         const multimodalMessages = await buildMultimodalContent([msg as any]);
         if (multimodalMessages.length > 0) {
@@ -176,7 +176,7 @@ async function buildBedrockMessages(
         });
       }
     } else {
-      if (hasImages && imageCount >= MAX_HISTORY_IMAGES) {
+      if (hasImages && imageCount + msg.imageS3Keys!.length > MAX_HISTORY_IMAGES) {
         logger.info(
           `⚠️ Image cap reached (${MAX_HISTORY_IMAGES}), converting remaining image messages to text-only`,
         );
