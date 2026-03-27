@@ -10,9 +10,12 @@ const pipeline = util.promisify(stream.pipeline);
 // No import or declaration is required - it's automatically available
 
 // Import business logic utilities
-import { MODEL_IDS, queryPineconeContext } from "../libs/api-helpers";
+import {
+  MODEL_IDS,
+  queryPineconeContext,
+  GuardrailInterventionError,
+} from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
-import { getSsmStringList } from "../libs/ssm-utils";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { getTodoProgress } from "../libs/program-designer/todo-list-utils";
 import { saveSessionAndTriggerProgramGeneration } from "../libs/program-designer/session-management";
@@ -28,7 +31,6 @@ import {
   MESSAGE_TYPES,
   CONVERSATION_MODES,
 } from "../libs/coach-conversation/types";
-import { handleProgramDesignerFlow } from "../libs/program-designer/handler-helpers";
 import { isProgramDesignCommand } from "../libs/program-designer";
 import { parseSlashCommand } from "../libs/workout";
 
@@ -56,84 +58,19 @@ import {
   validateRequiredPathParams,
   STREAMING_ROUTE_PATTERNS,
   formatStartEvent,
-  formatChunkEvent,
-  formatContextualEvent,
   formatMetadataEvent,
   formatCompleteEvent,
   formatAuthErrorEvent,
   formatValidationErrorEvent,
+  formatGuardrailWarningEvent,
   validateStreamingRequestBody,
-  getRandomCoachAcknowledgement,
-  type ConversationData,
-  type BusinessLogicParams,
 } from "../libs/streaming";
-
-// Program Designer specific ValidationParams (session-based, not conversation-based)
-interface ValidationParams {
-  userId: string;
-  sessionId: string; // Session ID instead of conversationId
-  userResponse: string;
-  messageTimestamp: string;
-  imageS3Keys?: string[];
-}
 
 // Use centralized route pattern constant - matches CoachCreator session-based pattern
 const PROGRAM_DESIGNER_SESSION_ROUTE =
   STREAMING_ROUTE_PATTERNS.PROGRAM_DESIGNER_SESSION ||
   "/users/{userId}/program-designer-sessions/{sessionId}/stream";
 
-// Extract validation logic
-async function validateAndExtractParams(
-  event: AuthenticatedLambdaFunctionURLEvent,
-  maxImages: number = 0,
-): Promise<ValidationParams> {
-  // Extract and validate path parameters
-  const pathParams = extractPathParameters(
-    event.rawPath,
-    PROGRAM_DESIGNER_SESSION_ROUTE,
-  );
-  const { userId, sessionId } = pathParams;
-
-  // Validate required path parameters
-  const validation = validateRequiredPathParams(pathParams, [
-    "userId",
-    "sessionId",
-  ]);
-  if (!validation.isValid) {
-    throw new Error(
-      `Missing required path parameters: ${validation.missing.join(", ")}. Expected: ${PROGRAM_DESIGNER_SESSION_ROUTE}`,
-    );
-  }
-
-  logger.info("✅ Path parameters validated:", {
-    userId,
-    sessionId,
-  });
-
-  // Parse and validate request body using shared utility
-  const { userResponse, messageTimestamp, imageS3Keys } =
-    validateStreamingRequestBody(event.body, userId as string, {
-      requireUserResponse: true,
-      maxImages,
-    });
-
-  logger.info("✅ Request body validated:", {
-    hasUserResponse: !!userResponse,
-    hasMessageTimestamp: !!messageTimestamp,
-    userResponseLength: userResponse?.length || 0,
-    imageCount: imageS3Keys?.length || 0,
-  });
-
-  return {
-    userId: userId as string,
-    sessionId: sessionId as string,
-    userResponse,
-    messageTimestamp,
-    imageS3Keys: imageS3Keys || [],
-  };
-}
-
-// Extract data loading logic - session-based (no conversation creation)
 async function loadSessionData(
   userId: string,
   sessionId: string,
@@ -182,208 +119,6 @@ async function loadSessionData(
     coachConfig,
     userProfile: userProfile || undefined,
   };
-}
-
-// ============================================================================
-// V1/V2 routing helper
-// ============================================================================
-
-/**
- * Check whether this user should be served by the V1 procedural handler.
- *
- * V2 (agent-based) is the default. V1 is the fallback, controlled by the
- * PROGRAM_DESIGNER_V1_FALLBACK_USERS SSM parameter (comma-separated user IDs).
- * Changes take effect within 5 minutes (cache TTL) with no code deploy.
- */
-async function shouldUseV1FallbackHandler(userId: string): Promise<boolean> {
-  const paramPath = process.env.PROGRAM_DESIGNER_V1_FALLBACK_USERS_PARAM;
-  if (!paramPath) {
-    return false;
-  }
-  const fallbackUsers = await getSsmStringList(paramPath);
-  return fallbackUsers.has(userId);
-}
-
-// ============================================================================
-// V1: Existing procedural handler  (renamed, preserved as fallback)
-// ============================================================================
-
-/**
- * Generator function that yields SSE events for program designer flow
- * Pattern: Matches coach-creator-session exactly
- */
-async function* createProgramDesignerEventStreamV1(
-  event: AuthenticatedLambdaFunctionURLEvent,
-  context: Context,
-): AsyncGenerator<string, void, unknown> {
-  // Yield start event IMMEDIATELY (this happens right away)
-  yield formatStartEvent();
-  logger.info("📡 V1: Yielded start event immediately");
-
-  try {
-    // Validate and extract parameters (no images in V1)
-    const params = await validateAndExtractParams(event, 0);
-
-    const { userId, sessionId, userResponse, messageTimestamp } = params;
-
-    logger.info(
-      "🚀 V1: Starting program design business logic (Session-Based)",
-      {
-        userId,
-        sessionId,
-        userResponseLength: userResponse.length,
-      },
-    );
-
-    // Yield initial acknowledgment while processing starts
-    const acknowledgment = getRandomCoachAcknowledgement();
-    yield formatContextualEvent(acknowledgment);
-    logger.info(
-      `📡 V1: Yielded coach acknowledgment (contextual): "${acknowledgment}"`,
-    );
-
-    // Load session data + Pinecone context in parallel
-    logger.info("🔄 V1: Loading session data + Pinecone context...");
-    const [sessionData, pineconeResult] = await Promise.all([
-      loadSessionData(userId, sessionId),
-      queryPineconeContext(
-        userId,
-        `User training history, preferences, goals, and coaching discussions for program design: ${userResponse}`,
-        {
-          workoutTopK: 5,
-          conversationTopK: 5,
-          programTopK: 3,
-          coachCreatorTopK: 2,
-          programDesignerTopK: 2,
-          userMemoryTopK: 2,
-          includeMethodology: false,
-          minScore: 0.5,
-        },
-      ).catch((error) => {
-        logger.warn(
-          "⚠️ V1: Pinecone query failed, continuing without context:",
-          error,
-        );
-        return {
-          success: false,
-          matches: [],
-          totalMatches: 0,
-          relevantMatches: 0,
-        };
-      }),
-    ]);
-
-    const { programSession, coachConfig, userProfile } = sessionData;
-
-    // Format Pinecone context for prompt injection
-    let pineconeContext = "";
-    if (pineconeResult.success && pineconeResult.matches.length > 0) {
-      pineconeContext = formatPineconeContext(pineconeResult.matches);
-      logger.info("✅ V1: Pinecone context retrieved for program designer:", {
-        totalMatches: pineconeResult.totalMatches,
-        relevantMatches: pineconeResult.relevantMatches,
-        contextLength: pineconeContext.length,
-      });
-    } else {
-      logger.info("📭 V1: No Pinecone context available for program designer");
-    }
-
-    logger.info("✅ V1: Session data loaded", {
-      sessionId: programSession.sessionId,
-      coachId: programSession.coachId,
-      conversationHistoryLength:
-        programSession.conversationHistory?.length || 0,
-      isComplete: programSession.isComplete,
-    });
-
-    // Add user message to session conversation history (full CoachMessage format)
-    const userMessage: CoachMessage = {
-      id: `msg_${Date.now()}_${userId}_user`,
-      role: "user",
-      content: userResponse,
-      timestamp: new Date(messageTimestamp || new Date().toISOString()),
-      messageType:
-        params.imageS3Keys && params.imageS3Keys.length > 0
-          ? "text_with_images"
-          : "text",
-      ...(params.imageS3Keys && params.imageS3Keys.length > 0
-        ? { imageS3Keys: params.imageS3Keys }
-        : {}),
-    };
-    programSession.conversationHistory =
-      programSession.conversationHistory || [];
-    programSession.conversationHistory.push(userMessage);
-    programSession.lastActivity = new Date();
-
-    logger.info("📝 V1: User message added to session conversation history", {
-      conversationHistoryLength: programSession.conversationHistory.length,
-    });
-
-    // Save updated session with user message
-    await saveProgramDesignerSession(programSession);
-
-    // Check for slash command to restart
-    const slashCommandResult = parseSlashCommand(userResponse);
-    const isProgramDesignSlashCommand =
-      slashCommandResult.isSlashCommand &&
-      isProgramDesignCommand(slashCommandResult.command);
-
-    if (isProgramDesignSlashCommand) {
-      logger.info("⚡ V1: Restarting session due to slash command");
-      programSession.isDeleted = true;
-      programSession.completedAt = new Date();
-      await saveProgramDesignerSession(programSession);
-      // TODO: Create new session and redirect
-      yield formatCompleteEvent({
-        messageId: `restart_${Date.now()}`,
-      });
-      return;
-    }
-
-    // Build context with Pinecone data for cross-context awareness
-    const sessionContext = pineconeContext
-      ? {
-          pineconeContext: {
-            formatted: pineconeContext,
-            matches: pineconeResult.matches,
-          },
-        }
-      : {};
-
-    // Build business logic params (session-based, no conversation)
-    const businessLogicParams: BusinessLogicParams = {
-      userId,
-      coachId: programSession.coachId,
-      conversationId: "", // Not used in program designer flow
-      userResponse,
-      messageTimestamp,
-      existingConversation: null as any, // Not used
-      coachConfig,
-      userProfile,
-      context: sessionContext,
-    };
-
-    // Continue the session flow
-    // Note: Progress metadata will be sent by handleProgramDesignerFlow after processing
-    const conversationData = {
-      existingConversation: null as any,
-      coachConfig,
-      userProfile,
-      context: sessionContext,
-    };
-
-    yield* handleProgramDesignerFlow(
-      businessLogicParams,
-      conversationData,
-      programSession,
-    );
-  } catch (error) {
-    logger.error("❌ V1: Error in program designer streaming:", error);
-    const errorEvent = formatValidationErrorEvent(
-      error instanceof Error ? error : new Error("Unknown error occurred"),
-    );
-    yield errorEvent;
-  }
 }
 
 // ============================================================================
@@ -601,6 +336,7 @@ async function* createProgramDesignerEventStreamV2(
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let iterationCount = 0;
+    let guardrailWarning = false;
 
     try {
       const agentGenerator = agent.converseStream(userResponse, imageS3Keys);
@@ -626,8 +362,17 @@ async function* createProgramDesignerEventStreamV2(
         iterationCount,
       });
     } catch (agentError) {
-      logger.error("❌ V2: Agent stream error:", agentError);
-      throw agentError;
+      if (agentError instanceof GuardrailInterventionError) {
+        logger.warn(
+          "🛡️ V2: Guardrail intervened (ASYNC) — emitting warning event",
+        );
+        guardrailWarning = true;
+        fullResponseText = agent.getFullResponseText();
+        yield formatGuardrailWarningEvent();
+      } else {
+        logger.error("❌ V2: Agent stream error:", agentError);
+        throw agentError;
+      }
     }
 
     // 12. Build messages to save in conversation history
@@ -642,6 +387,7 @@ async function* createProgramDesignerEventStreamV2(
             messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
           }
         : {}),
+      ...(guardrailWarning ? { metadata: { guardrailWarning: true } } : {}),
     };
 
     const newAiMessage: CoachMessage = {
@@ -661,6 +407,7 @@ async function* createProgramDesignerEventStreamV2(
           totalOutputTokens,
           iterationCount,
         },
+        ...(guardrailWarning ? { guardrailWarning: true } : {}),
       } as any,
     };
 
@@ -766,13 +513,9 @@ async function* createProgramDesignerEventStreamV2(
 }
 
 // ============================================================================
-// Internal streaming handler — routes V1 or V2
+// Internal streaming handler
 // ============================================================================
 
-/**
- * Internal streaming handler with authentication
- * Pattern: Matches coach-creator-session exactly
- */
 const internalStreamingHandler: StreamingHandler = async (
   event: AuthenticatedLambdaFunctionURLEvent,
   responseStream: any,
@@ -781,21 +524,9 @@ const internalStreamingHandler: StreamingHandler = async (
   logger.info("🎬 Starting program designer session streaming handler");
 
   try {
-    const useV1Fallback = await shouldUseV1FallbackHandler(event.user.userId);
-
-    if (useV1Fallback) {
-      logger.info("Routing to V1 procedural handler (fallback)", {
-        userId: event.user.userId,
-      });
-      const eventGenerator = createProgramDesignerEventStreamV1(event, context);
-      const sseEventStream = Readable.from(eventGenerator);
-      await pipeline(sseEventStream, responseStream);
-    } else {
-      logger.info("Routing to V2 agent handler (default)");
-      const eventGenerator = createProgramDesignerEventStreamV2(event, context);
-      const sseEventStream = Readable.from(eventGenerator);
-      await pipeline(sseEventStream, responseStream);
-    }
+    const eventGenerator = createProgramDesignerEventStreamV2(event, context);
+    const sseEventStream = Readable.from(eventGenerator);
+    await pipeline(sseEventStream, responseStream);
 
     logger.info("✅ Streaming pipeline completed successfully");
 

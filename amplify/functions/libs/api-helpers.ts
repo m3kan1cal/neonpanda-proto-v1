@@ -122,6 +122,18 @@ export const MODEL_IDS = {
 export const AI_ERROR_FALLBACK_MESSAGE =
   "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!";
 
+/**
+ * Thrown when an ASYNC Bedrock guardrail intervention is detected at messageStop.
+ * By this point, content has already been streamed to the client, so the handler
+ * should emit a guardrail_warning SSE event rather than treating this as a hard failure.
+ */
+export class GuardrailInterventionError extends Error {
+  constructor(message: string = "Guardrail intervention detected") {
+    super(message);
+    this.name = "GuardrailInterventionError";
+  }
+}
+
 // Create Bedrock Runtime client
 const bedrockClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-west-2",
@@ -172,7 +184,7 @@ function getGuardrailConfigForStreaming():
   }
   return {
     ...baseConfig,
-    streamProcessingMode: GuardrailStreamProcessingMode.SYNC,
+    streamProcessingMode: GuardrailStreamProcessingMode.ASYNC,
   };
 }
 
@@ -1159,12 +1171,14 @@ export const callBedrockApi = async (
     logger.info("Response received from Bedrock");
     logger.info("Response metadata:", response.$metadata);
 
-    // Handle guardrail intervention — throw error for explicit caller handling
+    // Handle guardrail intervention — throw for explicit caller handling.
+    // With ASYNC mode, content has already been streamed; callers should emit
+    // a guardrail_warning SSE event rather than treating this as a hard failure.
     if (response.stopReason === "guardrail_intervened") {
       logger.warn("🛡️ Bedrock guardrail intervened", {
         guardrailAction: (response as any).guardrailAction,
       });
-      throw new Error("Bedrock API blocked by guardrail");
+      throw new GuardrailInterventionError("Bedrock API blocked by guardrail");
     }
 
     // Log response structure without full content to avoid token waste
@@ -1579,12 +1593,16 @@ export const callBedrockApiMultimodal = async (
       logCachePerformance(response.usage, "Multimodal API");
     }
 
-    // Handle guardrail intervention — throw error for explicit caller handling
+    // Handle guardrail intervention — throw for explicit caller handling.
+    // With ASYNC mode, content has already been streamed; callers should emit
+    // a guardrail_warning SSE event rather than treating this as a hard failure.
     if (response.stopReason === "guardrail_intervened") {
       logger.warn("🛡️ Bedrock guardrail intervened on multimodal call", {
         guardrailAction: (response as any).guardrailAction,
       });
-      throw new Error("Bedrock multimodal API blocked by guardrail");
+      throw new GuardrailInterventionError(
+        "Bedrock multimodal API blocked by guardrail",
+      );
     }
 
     // Log Nova reasoning content if present
@@ -2341,10 +2359,14 @@ export const callBedrockApiStreamForAgent = async function* (
           logger.warn(
             "🛡️ Bedrock guardrail intervened on streaming agent call",
             {
-              guardrailAction: (chunk as any).guardrailAction,
+              stopReason,
+              streamedTextLength: fullTextResponse.length,
+              chunkKeys: Object.keys(chunk),
             },
           );
-          throw new Error("Bedrock streaming agent call blocked by guardrail");
+          throw new GuardrailInterventionError(
+            "Bedrock streaming agent call blocked by guardrail",
+          );
         }
 
         logger.info("=== BEDROCK STREAMING AGENT API CALL SUCCESS ===");
@@ -2390,6 +2412,9 @@ export const callBedrockApiStreamForAgent = async function* (
       usage: usage || { inputTokens: 0, outputTokens: 0 },
     };
   } catch (error: any) {
+    if (error instanceof GuardrailInterventionError) {
+      throw error;
+    }
     logAwsError(error, "BEDROCK STREAMING AGENT API CALL");
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";

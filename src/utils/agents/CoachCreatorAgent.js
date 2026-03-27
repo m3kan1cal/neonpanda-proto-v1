@@ -156,7 +156,7 @@ export class CoachCreatorAgent {
 
     // Skip loading if this session was just created (prevents overwriting initial message)
     if (this.isNewlyCreated && this.sessionId === sessionId) {
-      logger.info('⏭️ Skipping loadExistingSession - session was just created');
+      logger.info("⏭️ Skipping loadExistingSession - session was just created");
       this.isNewlyCreated = false; // Reset flag for future loads
       return;
     }
@@ -182,7 +182,9 @@ export class CoachCreatorAgent {
         progressData = {
           questionsCompleted: sessionData.progressDetails.questionsCompleted,
           estimatedTotal: sessionData.progressDetails.totalQuestions,
-          percentage: sessionData.isComplete ? 100 : sessionData.progressDetails.percentage,
+          percentage: sessionData.isComplete
+            ? 100
+            : sessionData.progressDetails.percentage,
           sophisticationLevel: sessionData.progressDetails.sophisticationLevel,
           currentQuestion: sessionData.progressDetails.currentQuestion,
         };
@@ -199,7 +201,7 @@ export class CoachCreatorAgent {
         sessionData.conversationHistory.forEach((message) => {
           conversationMessages.push({
             id: messageId++,
-            type: message.role === 'user' ? 'user' : 'ai',
+            type: message.role === "user" ? "user" : "ai",
             content: message.content,
             timestamp: message.timestamp || new Date().toISOString(),
             imageS3Keys: message.imageS3Keys || undefined,
@@ -208,7 +210,9 @@ export class CoachCreatorAgent {
       } else {
         // Fallback: If no conversation history yet (should not happen in practice)
         // The backend always stores the initial AI message in conversationHistory
-        logger.warn('⚠️ No conversation history found in session, using fallback message');
+        logger.warn(
+          "⚠️ No conversation history found in session, using fallback message",
+        );
 
         const fallbackMessage = `Hey! Ready to create your AI coach? Let's build a coach that actually gets YOU. What are your main fitness goals right now?`;
 
@@ -221,8 +225,9 @@ export class CoachCreatorAgent {
       }
 
       // Check if session is already complete (coach config already generated)
-      const isSessionComplete = sessionData.isComplete ||
-                                sessionData.configGeneration?.status === 'COMPLETE';
+      const isSessionComplete =
+        sessionData.isComplete ||
+        sessionData.configGeneration?.status === "COMPLETE";
 
       // Update state with loaded messages
       this._updateState({
@@ -287,7 +292,7 @@ export class CoachCreatorAgent {
         this.userId,
         this.sessionId,
         messageContent.trim(),
-        imageS3Keys
+        imageS3Keys,
       );
 
       // Prepare AI response
@@ -435,7 +440,7 @@ export class CoachCreatorAgent {
           this.userId,
           this.sessionId,
           messageContent.trim(),
-          imageS3Keys
+          imageS3Keys,
         );
 
         // Process the stream
@@ -445,7 +450,7 @@ export class CoachCreatorAgent {
             this._updateState({
               contextualUpdate: {
                 content: content.trim(),
-                stage: stage || 'processing',
+                stage: stage || "processing",
               },
             });
           },
@@ -458,6 +463,12 @@ export class CoachCreatorAgent {
 
             // Append each chunk to the streaming message
             streamingMsg.append(content);
+          },
+
+          onGuardrailWarning: async (_message) => {
+            // ASYNC guardrail intervention detected after streaming completed.
+            // Flag the message so the UI can display a safety warning indicator.
+            streamingMsg.updateMetadata({ guardrailWarning: true });
           },
 
           onComplete: async (chunk) => {
@@ -520,7 +531,7 @@ export class CoachCreatorAgent {
           updateCoachCreatorSession,
           [this.userId, this.sessionId, messageContent.trim()],
           (result) => this._handleFallbackResult(result),
-          "coach creator session"
+          "coach creator session",
         );
       }
     } catch (error) {
@@ -640,7 +651,7 @@ export class CoachCreatorAgent {
     this.state = {
       ...this.state,
       messages: this.state.messages.map((msg) =>
-        msg.id === messageId ? { ...msg, content } : msg
+        msg.id === messageId ? { ...msg, content } : msg,
       ),
       // Update streamingMessage in agent state for UI helpers
       streamingMessage: content,
@@ -661,11 +672,11 @@ export class CoachCreatorAgent {
         if (msg.id === messageId) {
           return {
             ...msg,
-            metadata: { ...msg.metadata, ...metadata }
+            metadata: { ...msg.metadata, ...metadata },
           };
         }
         return msg;
-      })
+      }),
     };
     if (typeof this.onStateChange === "function") {
       this.onStateChange(this.state);
@@ -699,7 +710,7 @@ export class CoachCreatorAgent {
     // Notify navigation handler
     this.onNavigation("session-complete", {
       userId: this.userId,
-      sessionId: this.sessionId
+      sessionId: this.sessionId,
     });
   }
 
@@ -795,7 +806,9 @@ export class CoachCreatorAgent {
    */
   static async getCompletedSessions(userId, options = {}) {
     if (!userId) {
-      logger.warn("Cannot load completed coach creator sessions without userId");
+      logger.warn(
+        "Cannot load completed coach creator sessions without userId",
+      );
       return [];
     }
 
@@ -835,7 +848,6 @@ export class CoachCreatorAgent {
       throw error;
     }
   }
-
 }
 
 export default CoachCreatorAgent;

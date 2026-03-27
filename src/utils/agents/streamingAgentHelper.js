@@ -11,6 +11,7 @@ import { logger } from "../logger";
  * @param {Function} onContextual - Called for contextual updates (chunk) - optional
  * @param {Function} onMetadata - Called for early metadata (chunk) - optional
  * @param {Function} onSuggestion - Called for suggestion events (chunk) - optional
+ * @param {Function} onGuardrailWarning - Called when a guardrail_warning event is received (message) - optional
  * @param {Function} onComplete - Called when streaming completes (chunk)
  * @param {Function} onFallback - Called for fallback response (data)
  * @param {Function} onError - Called for errors (errorMessage)
@@ -23,6 +24,7 @@ export async function processStreamingChunks(
     onContextual,
     onMetadata,
     onSuggestion,
+    onGuardrailWarning,
     onComplete,
     onFallback,
     onError,
@@ -55,6 +57,11 @@ export async function processStreamingChunks(
         if (now - lastPaintYield > 32) {
           await new Promise((resolve) => requestAnimationFrame(resolve));
           lastPaintYield = performance.now();
+        }
+      } else if (chunk.type === "guardrail_warning") {
+        // ASYNC guardrail intervention — content already streamed; flag the message for display
+        if (onGuardrailWarning) {
+          await onGuardrailWarning(chunk.message);
         }
       } else if (chunk.type === "complete") {
         return await onComplete(chunk);

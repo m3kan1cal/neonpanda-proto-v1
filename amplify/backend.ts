@@ -621,7 +621,9 @@ const bedrockGuardrail = new CfnGuardrail(
 // Internal-only functions (summaries, analytics, memory lifecycle, etc.) are excluded —
 // their inputs are pre-sanitized system content and don't warrant the per-character guardrail cost.
 const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
-  // User-facing: direct user input flows into these prompts
+  // User-facing: direct user input flows into these prompts.
+  // Streaming functions use ASYNC guardrail mode (content streams immediately,
+  // guardrail evaluates in background) to avoid SYNC mode's chunk-batching latency.
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.streamProgramDesign,
@@ -629,11 +631,6 @@ const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.explainTerm,
-  // Note: generateGreeting, buildWorkout, buildProgram, buildCoachConfig excluded.
-  // generateGreeting: inputs are validated scalars and system-generated prompts.
-  // build* agent loops: multi-turn tool calls where all inputs are system-generated
-  // tool results (DynamoDB, S3), not user-controlled content. Including them adds
-  // per-character guardrail cost across multiple agent turns with no security benefit.
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
@@ -1168,19 +1165,6 @@ backend.streamCoachConversation.addEnvironment(
   "PROCESS_POST_TURN_FUNCTION_NAME",
   backend.processPostTurn.resources.lambda.functionName,
 );
-backend.streamCoachConversation.addEnvironment(
-  "V1_FALLBACK_USERS_PARAM",
-  `/${branchName}/neonpanda-proto-v1/config/V1_FALLBACK_USERS`,
-);
-backend.streamCoachConversation.resources.lambda.addToRolePolicy(
-  new PolicyStatement({
-    effect: Effect.ALLOW,
-    actions: ["ssm:GetParameter"],
-    resources: [
-      `arn:aws:ssm:*:*:parameter/${branchName}/neonpanda-proto-v1/config/*`,
-    ],
-  }),
-);
 
 // USER_POOL_ID needed by withStreamingAuth for JWT signature verification via JWKS
 backend.streamCoachCreatorSession.addEnvironment(
@@ -1195,19 +1179,6 @@ backend.streamCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
   backend.buildCoachConfig.resources.lambda.functionName,
 );
-backend.streamCoachCreatorSession.addEnvironment(
-  "COACH_CREATOR_V1_FALLBACK_USERS_PARAM",
-  `/${branchName}/neonpanda-proto-v1/config/COACH_CREATOR_V1_FALLBACK_USERS`,
-);
-backend.streamCoachCreatorSession.resources.lambda.addToRolePolicy(
-  new PolicyStatement({
-    effect: Effect.ALLOW,
-    actions: ["ssm:GetParameter"],
-    resources: [
-      `arn:aws:ssm:*:*:parameter/${branchName}/neonpanda-proto-v1/config/*`,
-    ],
-  }),
-);
 
 // USER_POOL_ID needed by withStreamingAuth for JWT signature verification via JWKS
 backend.streamProgramDesign.addEnvironment(
@@ -1221,19 +1192,6 @@ backend.streamProgramDesign.addEnvironment(
 backend.streamProgramDesign.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
   backend.buildProgram.resources.lambda.functionName,
-);
-backend.streamProgramDesign.addEnvironment(
-  "PROGRAM_DESIGNER_V1_FALLBACK_USERS_PARAM",
-  `/${branchName}/neonpanda-proto-v1/config/PROGRAM_DESIGNER_V1_FALLBACK_USERS`,
-);
-backend.streamProgramDesign.resources.lambda.addToRolePolicy(
-  new PolicyStatement({
-    effect: Effect.ALLOW,
-    actions: ["ssm:GetParameter"],
-    resources: [
-      `arn:aws:ssm:*:*:parameter/${branchName}/neonpanda-proto-v1/config/*`,
-    ],
-  }),
 );
 
 backend.createCoachConfig.addEnvironment(

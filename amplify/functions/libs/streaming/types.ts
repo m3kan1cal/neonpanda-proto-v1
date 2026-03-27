@@ -38,7 +38,8 @@ export type SseEvent =
       confidence: number;
     } // User confirmation request with action buttons
   | SseCompleteEvent
-  | { type: "error"; message: string; code?: string };
+  | { type: "error"; message: string; code?: string }
+  | { type: "guardrail_warning"; message: string };
 
 // Auth types for Lambda Function URL streaming
 export interface AuthenticatedUser {
