@@ -621,7 +621,9 @@ const bedrockGuardrail = new CfnGuardrail(
 // Internal-only functions (summaries, analytics, memory lifecycle, etc.) are excluded —
 // their inputs are pre-sanitized system content and don't warrant the per-character guardrail cost.
 const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
-  // User-facing: direct user input flows into these prompts
+  // User-facing: direct user input flows into these prompts.
+  // Streaming functions use ASYNC guardrail mode (content streams immediately,
+  // guardrail evaluates in background) to avoid SYNC mode's chunk-batching latency.
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.streamProgramDesign,
@@ -629,11 +631,6 @@ const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.explainTerm,
-  // Note: generateGreeting, buildWorkout, buildProgram, buildCoachConfig excluded.
-  // generateGreeting: inputs are validated scalars and system-generated prompts.
-  // build* agent loops: multi-turn tool calls where all inputs are system-generated
-  // tool results (DynamoDB, S3), not user-controlled content. Including them adds
-  // per-character guardrail cost across multiple agent turns with no security benefit.
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {

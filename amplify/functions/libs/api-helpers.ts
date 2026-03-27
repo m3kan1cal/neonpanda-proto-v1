@@ -172,7 +172,7 @@ function getGuardrailConfigForStreaming():
   }
   return {
     ...baseConfig,
-    streamProcessingMode: GuardrailStreamProcessingMode.SYNC,
+    streamProcessingMode: GuardrailStreamProcessingMode.ASYNC,
   };
 }
 

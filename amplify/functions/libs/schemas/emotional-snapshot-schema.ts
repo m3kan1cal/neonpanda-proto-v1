@@ -18,26 +18,31 @@ export const EMOTIONAL_SNAPSHOT_SCHEMA = {
       type: "number",
       description:
         "Motivation level 1-10 (1=completely unmotivated, 10=fired up and driven)",
+      default: 5,
     },
     energy: {
       type: "number",
       description:
         "Energy level 1-10 (1=exhausted/drained, 10=high energy and alert)",
+      default: 5,
     },
     confidence: {
       type: "number",
       description:
         "Confidence level 1-10 (1=deeply insecure about training, 10=supremely confident)",
+      default: 5,
     },
     stress: {
       type: "number",
       description:
         "Stress level 1-10 (1=completely relaxed, 10=overwhelmed with stress)",
+      default: 5,
     },
     coachSatisfaction: {
       type: "number",
       description:
         "Satisfaction with coaching 1-10 (1=frustrated with coach, 10=loves the coaching)",
+      default: 5,
     },
     dominantEmotion: {
       type: "string",
