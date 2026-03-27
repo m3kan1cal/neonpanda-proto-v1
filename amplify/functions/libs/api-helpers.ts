@@ -2088,7 +2088,9 @@ export const callBedrockApiForAgent = async (
     logger.warn("🛡️ Bedrock guardrail intervened on agent call", {
       guardrailAction: (response as any).guardrailAction,
     });
-    throw new Error("Bedrock agent call blocked by guardrail");
+    throw new GuardrailInterventionError(
+      "Bedrock agent call blocked by guardrail",
+    );
   }
 
   // Log Nova reasoning content if present (for observability, caller handles extraction)
