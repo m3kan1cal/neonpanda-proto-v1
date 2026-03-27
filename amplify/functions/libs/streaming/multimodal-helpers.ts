@@ -83,28 +83,31 @@ export async function buildMultimodalContent(
   for (const msg of messages) {
     const contentBlocks: any[] = [];
 
-    // Add text first (if present)
     if (msg.content && msg.content.trim()) {
       contentBlocks.push({
         text: msg.content,
       });
     }
 
-    // Add images if this message has them
     if (
       msg.messageType === "text_with_images" &&
       msg.imageS3Keys &&
       msg.imageS3Keys.length > 0
     ) {
-      for (const s3Key of msg.imageS3Keys) {
-        const imageBytes = await fetchImageFromS3(s3Key);
+      const fetchResults = await Promise.all(
+        msg.imageS3Keys.map(async (s3Key) => {
+          const imageBytes = await fetchImageFromS3(s3Key);
+          return { s3Key, imageBytes };
+        }),
+      );
 
+      for (const { s3Key, imageBytes } of fetchResults) {
         if (imageBytes) {
           contentBlocks.push({
             image: {
               format: getImageFormat(s3Key),
               source: {
-                bytes: imageBytes, // Converse API uses bytes directly
+                bytes: imageBytes,
               },
             },
           });

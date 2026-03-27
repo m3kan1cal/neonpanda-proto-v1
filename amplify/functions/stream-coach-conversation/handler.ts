@@ -171,7 +171,13 @@ async function* createCoachConversationEventStreamV2(
       hasImages: !!(params.imageS3Keys && params.imageS3Keys.length > 0),
     });
 
+    const timings: Record<string, number> = {};
+    const mark = (label: string, start: number) => {
+      timings[label] = Date.now() - start;
+    };
+
     // 3. Parallel data loading (DynamoDB only — no Smart Router!)
+    let stepStart = Date.now();
     const [
       userProfile,
       existingConversation,
@@ -191,6 +197,8 @@ async function* createCoachConversationEventStreamV2(
         () => [],
       ),
     ]);
+
+    mark("dataLoading", stepStart);
 
     if (!existingConversation || !coachConfig) {
       throw new Error("Failed to load conversation or coach config");
@@ -305,6 +313,7 @@ async function* createCoachConversationEventStreamV2(
     };
 
     // 5. Build system prompt
+    stepStart = Date.now();
     const { staticPrompt, dynamicPrompt } = buildConversationAgentPrompt(
       coachConfig,
       {
@@ -320,16 +329,21 @@ async function* createCoachConversationEventStreamV2(
       },
     );
 
+    mark("promptBuild", stepStart);
+
     logger.info("✅ V2: System prompt built:", {
       staticLength: staticPrompt.length,
       dynamicLength: dynamicPrompt.length,
     });
 
     // 6. Build conversation history with caching
+    stepStart = Date.now();
     const cachedMessages = await buildMessagesWithCaching(
       existingConversation.messages,
       "coach conversation",
     );
+
+    mark("historyCaching", stepStart);
 
     // 7. Select model
     const modelId = selectModelForConversationAgent(
@@ -365,6 +379,9 @@ async function* createCoachConversationEventStreamV2(
 
     // 10. Stream agent response — yields SSE events directly
     logger.info("🤖 V2: Starting agent stream");
+    logger.info("⏱️ V2: Pre-stream timings (ms):", timings);
+
+    stepStart = Date.now();
 
     let fullResponseText = "";
     let toolsUsed: string[] = [];
@@ -394,12 +411,15 @@ async function* createCoachConversationEventStreamV2(
       totalOutputTokens = agentResult.totalOutputTokens;
       iterationCount = agentResult.iterationCount;
 
+      mark("agentStream", stepStart);
+
       logger.info("✅ V2: Agent stream completed:", {
         responseLength: fullResponseText.length,
         toolsUsed,
         totalInputTokens,
         totalOutputTokens,
         iterationCount,
+        timingsMs: timings,
       });
     } catch (agentError) {
       if (agentError instanceof GuardrailInterventionError) {
