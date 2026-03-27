@@ -22,11 +22,13 @@ import {
   CONVERSATION_MODES,
   MESSAGE_TYPES,
 } from "./types";
+import {
+  buildMessagesWithCaching,
+  redactGuardrailMessages,
+} from "../agents/shared/message-caching";
 
 // Configuration constants
 const ENABLE_S3_DEBUG_LOGGING = true; // Always log system prompts to S3 for debugging and monitoring
-const CACHE_STEP_SIZE = 10; // Move cache boundary in 10-message increments
-const MIN_CACHE_THRESHOLD = 12; // Start caching when conversation has > 12 messages (so we cache at least 10)
 
 /**
  * Smart model selection based on router analysis
@@ -52,92 +54,6 @@ export function selectModelForConversation(
   );
 
   return modelToUse;
-}
-
-/**
- * Helper function to build messages array with STEPPED conversation history caching
- *
- * Uses a "stepped boundary" approach where the cache boundary moves in 10-message increments:
- * - 12-19 messages → cache first 10
- * - 20-29 messages → cache first 20
- * - 30-39 messages → cache first 30
- *
- * This maximizes cache reuse while growing cache coverage with the conversation.
- * Bedrock's content-based cache means expanding from [0-20] to [0-30] results in:
- * - Cache HIT on messages 0-20 (90% discount)
- * - Cache CREATE on messages 21-30 (25% markup)
- *
- * @param existingMessages - All existing conversation messages
- * @returns Messages array with cache point inserted at stepped boundaries
- */
-export function buildMessagesWithHistoryCaching(
-  existingMessages: any[],
-): any[] {
-  const messageCount = existingMessages.length;
-
-  // Don't cache short conversations
-  if (messageCount < MIN_CACHE_THRESHOLD) {
-    logger.info(
-      `📝 Short conversation (${messageCount} messages) - no history caching`,
-    );
-    return existingMessages.map((msg) => ({
-      role: msg.role,
-      content: [{ text: msg.content }],
-    }));
-  }
-
-  // Calculate stepped cache boundary: floor to nearest CACHE_STEP_SIZE
-  // Examples: 12-19 msgs → cache 10, 20-29 msgs → cache 20, 30-39 msgs → cache 30
-  const cachedCount =
-    Math.floor((messageCount - 2) / CACHE_STEP_SIZE) * CACHE_STEP_SIZE;
-  const cachedMessages = existingMessages.slice(0, cachedCount);
-  const dynamicMessages = existingMessages.slice(cachedCount);
-
-  logger.info(
-    `💰 STEPPED HISTORY CACHING: Boundary at ${cachedCount} messages`,
-    {
-      totalMessages: messageCount,
-      cached: cachedCount,
-      dynamic: dynamicMessages.length,
-      stepSize: CACHE_STEP_SIZE,
-      nextBoundary: cachedCount + CACHE_STEP_SIZE,
-      minThreshold: MIN_CACHE_THRESHOLD,
-    },
-  );
-
-  // Build messages array with cache point
-  const messagesArray: any[] = [];
-
-  // Add cached messages (will be reused across requests)
-  cachedMessages.forEach((msg) => {
-    messagesArray.push({
-      role: msg.role,
-      content: [{ text: msg.content }],
-    });
-  });
-
-  // Insert cache point marker at stepped boundary
-  messagesArray.push({
-    role: "user",
-    content: [
-      {
-        text: `---stepped-cache-boundary-${cachedCount}---`,
-      },
-      {
-        cachePoint: { type: "default" },
-      },
-    ],
-  });
-
-  // Add dynamic messages (everything after cache boundary)
-  dynamicMessages.forEach((msg) => {
-    messagesArray.push({
-      role: msg.role,
-      content: [{ text: msg.content }],
-    });
-  });
-
-  return messagesArray;
 }
 
 export interface ResponseGenerationResult {
@@ -327,7 +243,7 @@ export async function generateAIResponse(
         };
 
         const allMessages: CoachMessage[] = [
-          ...existingMessages,
+          ...redactGuardrailMessages(existingMessages),
           currentUserMessage,
         ];
         const converseMessages = await buildMultimodalContent(allMessages);
@@ -355,8 +271,10 @@ export async function generateAIResponse(
       } else {
         // Text-only response with conversation history caching
         // Build messages array with history caching (if conversation is long enough)
-        const messagesWithHistory =
-          buildMessagesWithHistoryCaching(existingMessages);
+        const messagesWithHistory = await buildMessagesWithCaching(
+          existingMessages,
+          "coach conversation",
+        );
 
         // Add new user message
         messagesWithHistory.push({
@@ -585,7 +503,7 @@ export async function generateAIResponseStream(
         };
 
         const allMessages: CoachMessage[] = [
-          ...existingMessages,
+          ...redactGuardrailMessages(existingMessages),
           currentUserMessage,
         ];
         const converseMessages = await buildMultimodalContent(allMessages);
@@ -618,8 +536,10 @@ export async function generateAIResponseStream(
       } else {
         // Text-only streaming response with conversation history caching
         // Build messages array with history caching (if conversation is long enough)
-        const messagesWithHistory =
-          buildMessagesWithHistoryCaching(existingMessages);
+        const messagesWithHistory = await buildMessagesWithCaching(
+          existingMessages,
+          "coach conversation",
+        );
 
         // Add new user message
         messagesWithHistory.push({

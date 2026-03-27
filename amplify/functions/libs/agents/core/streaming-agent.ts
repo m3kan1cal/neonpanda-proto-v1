@@ -78,6 +78,7 @@ export class StreamingConversationAgent<
   private toolsUsed: string[] = [];
   private totalInputTokens = 0;
   private totalOutputTokens = 0;
+  private _fullResponseText = "";
 
   /**
    * @param config.staticPrompt      - Large, cacheable portion of system prompt
@@ -158,6 +159,7 @@ export class StreamingConversationAgent<
     let shouldContinue = true;
     let iterationCount = 0;
     let fullResponseText = "";
+    this._fullResponseText = "";
 
     const iterationMessages = [
       "Processing your request...",
@@ -220,6 +222,7 @@ export class StreamingConversationAgent<
             needsSeparator = false;
           }
           fullResponseText += event.text;
+          this._fullResponseText += event.text;
           yield formatChunkEvent(event.text);
         } else if (event.type === "tool_use_start") {
           currentToolUseId = event.toolUseId;
@@ -446,5 +449,14 @@ export class StreamingConversationAgent<
       totalOutputTokens: this.totalOutputTokens,
       iterationCount,
     };
+  }
+
+  /**
+   * Returns the full accumulated response text streamed so far.
+   * Useful when a GuardrailInterventionError interrupts converseStream early —
+   * the handler can recover the partial/full text to persist alongside the warning.
+   */
+  getFullResponseText(): string {
+    return this._fullResponseText;
   }
 }

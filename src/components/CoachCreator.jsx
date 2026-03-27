@@ -148,6 +148,17 @@ const MessageItem = memo(
             </div>
           )}
 
+          {/* Guardrail Warning Banner — shown when ASYNC guardrail flagged this response */}
+          {message.type === "ai" && message.metadata?.guardrailWarning && (
+            <div className={`${containerPatterns.guardrailWarningBanner}`}>
+              <span>⚠️</span>
+              <span>
+                This response was reviewed by our safety system — treat with
+                caution.
+              </span>
+            </div>
+          )}
+
           {message.type === "user" ? (
             <div
               className={getStreamingMessageClasses(

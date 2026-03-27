@@ -585,6 +585,12 @@ export class CoachConversationAgent {
             streamingMsg.append(content);
           },
 
+          onGuardrailWarning: async (_message) => {
+            // ASYNC guardrail intervention detected after streaming completed.
+            // Flag the message so the UI can display a safety warning indicator.
+            streamingMsg.updateMetadata({ guardrailWarning: true });
+          },
+
           onComplete: async (chunk) => {
             // Clear contextual update on completion
             this._updateState({ contextualUpdate: null });

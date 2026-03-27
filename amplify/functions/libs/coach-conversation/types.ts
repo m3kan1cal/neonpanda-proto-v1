@@ -85,6 +85,7 @@ export interface CoachMessage {
     mode?: ConversationMode; // Track which mode this message was created in
     isRedirectMessage?: boolean; // Flag for redirect messages (e.g. to program designer)
     isQuestion?: boolean; // Flag if this message is a question (used in session-based flows)
+    guardrailWarning?: boolean; // Set when Bedrock guardrail flagged this message/response pair
     progress?: {
       completed: number;
       total: number;

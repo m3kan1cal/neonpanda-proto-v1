@@ -168,6 +168,19 @@ export function formatValidationErrorEvent(error: Error): string {
 }
 
 /**
+ * Creates a formatted guardrail warning SSE event.
+ *
+ * Emitted when an ASYNC Bedrock guardrail intervention is detected after streaming
+ * has completed. Content was already delivered to the client, so this event signals
+ * the frontend to display a warning indicator rather than discarding the response.
+ */
+export function formatGuardrailWarningEvent(
+  message: string = "This response was reviewed by our safety system. Please treat it with caution.",
+): string {
+  return formatSseEvent({ type: "guardrail_warning", message });
+}
+
+/**
  * Creates a formatted SSE suggestion event for user confirmation
  * Used to ask user before changing modes or starting sessions
  *
