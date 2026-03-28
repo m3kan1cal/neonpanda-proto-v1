@@ -266,7 +266,7 @@ When the user mentions "today's workout" or "yesterday", calculate the date base
   ) {
     dynamicSections.push(`## CRITICAL TRAINING DIRECTIVE
 
-${options.criticalTrainingDirective.directive}
+${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.directive, 2000), "critical_training_directive")}
 
 This directive takes priority over standard programming principles. Always consider it
 when making recommendations, but apply it contextually based on the situation.`);

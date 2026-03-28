@@ -6,6 +6,10 @@ import {
 import { CoachConfig } from "../coach-creator/types";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { logger } from "../logger";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Sanitizes a string array from model output, handling the case where Claude
@@ -62,8 +66,7 @@ export function buildCoachConversationSummaryPrompt(
       ? `
 
 🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
-
-${criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive takes precedence over all other instructions except safety constraints. Consider this when summarizing the user's preferences and communication style.
 

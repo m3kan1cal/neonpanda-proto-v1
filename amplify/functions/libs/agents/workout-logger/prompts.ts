@@ -7,6 +7,10 @@
 
 import type { WorkoutLoggerContext } from "./types";
 import { buildCoachPersonalityPrompt } from "../../coach-config/personality-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build the complete system prompt for the WorkoutLogger agent
@@ -288,7 +292,7 @@ ${
   context.criticalTrainingDirective?.enabled
     ? `
 🚨 **CRITICAL TRAINING DIRECTIVE**:
-${context.criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(context.criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive takes precedence over standard extraction but does NOT prevent workout logging.
 `
