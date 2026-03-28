@@ -21,6 +21,7 @@ import {
   sendCoachConversationMessage,
   getCoachConfig,
   getUserProfile,
+  getCoachConversationSummary,
 } from "../../dynamodb/operations";
 import {
   CoachMessage,
@@ -39,6 +40,7 @@ import {
   filterActiveProspectiveMemories,
   formatProspectiveMemoriesForPrompt,
 } from "../libs/memory/prospective";
+import { formatConversationSummaryForPrompt } from "../libs/coach-conversation/summary";
 import { buildMessagesWithCaching } from "../libs/agents/shared/message-caching";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
@@ -186,6 +188,7 @@ async function* createCoachConversationEventStreamV2(
       emotionalSnapshots,
       emotionalTrend,
       prospectiveMemoriesRaw,
+      conversationSummary,
     ] = await Promise.all([
       getUserProfile(userId),
       getCoachConversation(userId, coachId, conversationId),
@@ -196,6 +199,7 @@ async function* createCoachConversationEventStreamV2(
       queryMemoriesFromDb(userId, coachId, { memoryType: "prospective" }).catch(
         () => [],
       ),
+      getCoachConversationSummary(userId, conversationId).catch(() => null),
     ]);
 
     mark("dataLoading", stepStart);
@@ -222,12 +226,16 @@ async function* createCoachConversationEventStreamV2(
         ? formatProspectiveMemoriesForPrompt(activeProspectiveMemories)
         : undefined;
 
+    const conversationSummaryContext =
+      formatConversationSummaryForPrompt(conversationSummary);
+
     logger.info("✅ V2: Data loaded:", {
       hasUserProfile: !!userProfile,
       existingMessageCount: existingConversation.messages.length,
       hasActiveProgram: activeProgramResult.length > 0,
       hasLivingProfile: !!userProfile?.livingProfile,
       activeProspectiveCount: activeProspectiveMemories.length,
+      hasConversationSummary: !!conversationSummary,
     });
 
     const userTimezone = getUserTimezoneOrDefault(
@@ -323,6 +331,7 @@ async function* createCoachConversationEventStreamV2(
         activeProgram: agentContext.activeProgram,
         coachCreatorSessionSummary:
           coachConfig.metadata?.coach_creator_session_summary,
+        conversationSummaryContext,
         emotionalContext: emotionalContext || undefined,
         livingProfileContext,
         prospectiveContext,

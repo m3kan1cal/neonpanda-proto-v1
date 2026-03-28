@@ -49,6 +49,7 @@ export function buildConversationAgentPrompt(
       totalWorkouts: number;
     } | null;
     coachCreatorSessionSummary?: string;
+    conversationSummaryContext?: string;
     emotionalContext?: string;
     livingProfileContext?: string;
     prospectiveContext?: string;
@@ -236,7 +237,12 @@ When the user mentions "today's workout" or "yesterday", calculate the date base
     dynamicSections.push(options.livingProfileContext);
   }
 
-  // Section 3: Critical Training Directive (conditional)
+  // Section 3: Conversation History Summary (conditional — rolling summary of older context)
+  if (options.conversationSummaryContext) {
+    dynamicSections.push(options.conversationSummaryContext);
+  }
+
+  // Section 4: Critical Training Directive (conditional)
   if (
     options.criticalTrainingDirective &&
     options.criticalTrainingDirective.enabled
@@ -249,7 +255,7 @@ This directive takes priority over standard programming principles. Always consi
 when making recommendations, but apply it contextually based on the situation.`);
   }
 
-  // Section 4: Active Program Summary (conditional)
+  // Section 5: Active Program Summary (conditional)
   if (options.activeProgram) {
     dynamicSections.push(`## ACTIVE TRAINING PROGRAM
 
@@ -262,12 +268,12 @@ Note: Use the get_todays_workout tool to see today's prescribed workout details,
 This context tells you the user has an active program, but you need to call the tool to get specifics.`);
   }
 
-  // Section 5: Emotional Context (conditional — dynamic, changes each session)
+  // Section 6: Emotional Context (conditional — dynamic, changes each session)
   if (options.emotionalContext) {
     dynamicSections.push(options.emotionalContext);
   }
 
-  // Section 6: Prospective Follow-Up Items (conditional — active commitments and events)
+  // Section 7: Prospective Follow-Up Items (conditional — active commitments and events)
   if (options.prospectiveContext) {
     dynamicSections.push(options.prospectiveContext);
   }
@@ -349,9 +355,9 @@ export function selectModelForConversationAgent(
 
   // Sonnet 4.5 for complex conversations (long history means more nuance needed)
   // Haiku 4.5 for shorter/simpler conversations
-  // Threshold lowered from >30 to >20: by message 20+ the conversation has enough
-  // context that the smarter model meaningfully improves tool-use accuracy
-  if (existingMessageCount > 20 || hasImages) {
+  // Threshold at 40: balances Haiku's speed advantage for mid-length conversations
+  // against Sonnet's superior tool-use accuracy for complex, long conversations
+  if (existingMessageCount > 40 || hasImages) {
     return MODEL_IDS.PLANNER_MODEL_FULL; // Sonnet 4.5
   }
   return MODEL_IDS.EXECUTOR_MODEL_FULL; // Haiku 4.5
