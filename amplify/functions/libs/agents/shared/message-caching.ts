@@ -22,6 +22,7 @@ import { logger } from "../../logger";
 const CACHE_STEP_SIZE = 10; // Move cache boundary in 10-message increments
 const MIN_CACHE_THRESHOLD = 12; // Start caching when conversation has > 12 messages
 const MAX_HISTORY_IMAGES = 20; // Cap total image blocks sent to Bedrock per request
+const MAX_CONTEXT_MESSAGES = 60; // Only send the most recent N messages to Bedrock
 
 /**
  * Returns the message content to send to Bedrock.
@@ -74,22 +75,51 @@ export async function buildMessagesWithCaching(
   messages: CoachMessage[],
   logLabel: string,
 ): Promise<any[]> {
-  const messageCount = messages.length;
   const startTime = Date.now();
+
+  // Trim older messages to cap input tokens on very long conversations.
+  // The system prompt already carries rich context (emotional state, living
+  // profile, prospective memories, coach creator summary) so the AI retains
+  // awareness of the user even without the full raw history.
+  let effectiveMessages = messages;
+  let trimmedCount = 0;
+
+  if (messages.length > MAX_CONTEXT_MESSAGES) {
+    trimmedCount = messages.length - MAX_CONTEXT_MESSAGES;
+    // Ensure trimmedCount is even to maintain message role alternation.
+    // If trimmedCount is odd, effectiveMessages[0] would be an assistant message,
+    // which combined with the injected synthetic user→assistant pair would create
+    // consecutive assistant messages, violating Bedrock's alternating role requirement.
+    if (trimmedCount % 2 === 1) {
+      trimmedCount += 1;
+    }
+    effectiveMessages = messages.slice(trimmedCount);
+    logger.info(`✂️ Trimmed ${trimmedCount} older messages from history`, {
+      original: messages.length,
+      kept: effectiveMessages.length,
+      maxContextMessages: MAX_CONTEXT_MESSAGES,
+    });
+  }
+
+  const messageCount = effectiveMessages.length;
 
   if (messageCount < MIN_CACHE_THRESHOLD) {
     logger.info(
       `📝 Short conversation (${messageCount} messages) - no history caching`,
     );
-    const result = await buildBedrockMessages(messages, { expandImages: true });
-    logger.info(`⏱️ buildMessagesWithCaching (${logLabel}) took ${Date.now() - startTime}ms for ${messageCount} messages`);
+    const result = await buildBedrockMessages(effectiveMessages, {
+      expandImages: true,
+    });
+    logger.info(
+      `⏱️ buildMessagesWithCaching (${logLabel}) took ${Date.now() - startTime}ms for ${messageCount} messages`,
+    );
     return result;
   }
 
   const cachedCount =
     Math.floor((messageCount - 2) / CACHE_STEP_SIZE) * CACHE_STEP_SIZE;
-  const cachedMessages = messages.slice(0, cachedCount);
-  const dynamicMessages = messages.slice(cachedCount);
+  const cachedMessages = effectiveMessages.slice(0, cachedCount);
+  const dynamicMessages = effectiveMessages.slice(cachedCount);
 
   logger.info(`💰 STEPPED HISTORY CACHING (${logLabel}):`, {
     totalMessages: messageCount,
@@ -100,6 +130,27 @@ export async function buildMessagesWithCaching(
   });
 
   const messagesArray: any[] = [];
+
+  // If older messages were trimmed, insert a notice so the model knows
+  // it's seeing a partial window and should rely on system prompt context.
+  if (trimmedCount > 0) {
+    const hasSummary = logLabel === "coach conversation";
+    const summaryNote = hasSummary
+      ? " A conversation history summary is provided in the system prompt — use it for context about topics discussed before this window."
+      : "";
+    messagesArray.push({
+      role: "user",
+      content: [
+        {
+          text: `[System note: This conversation has ${messages.length} total messages. The earliest ${trimmedCount} messages have been omitted.${summaryNote}]`,
+        },
+      ],
+    });
+    messagesArray.push({
+      role: "assistant",
+      content: [{ text: "Understood." }],
+    });
+  }
 
   // Cached messages are always text-only to avoid fetching stale S3 images
   // and to prevent unbounded image accumulation in long conversations.
@@ -123,7 +174,9 @@ export async function buildMessagesWithCaching(
   });
   messagesArray.push(...dynamicBedrock);
 
-  logger.info(`⏱️ buildMessagesWithCaching (${logLabel}) took ${Date.now() - startTime}ms for ${messageCount} messages`);
+  logger.info(
+    `⏱️ buildMessagesWithCaching (${logLabel}) took ${Date.now() - startTime}ms for ${messageCount} messages`,
+  );
 
   return messagesArray;
 }
@@ -225,7 +278,10 @@ async function buildBedrockMessages(
         msg.imageS3Keys &&
         msg.imageS3Keys.length > 0;
 
-      if (hasImages && expandedImageCount + msg.imageS3Keys!.length > MAX_HISTORY_IMAGES) {
+      if (
+        hasImages &&
+        expandedImageCount + msg.imageS3Keys!.length > MAX_HISTORY_IMAGES
+      ) {
         logger.info(
           `⚠️ Image cap reached (${MAX_HISTORY_IMAGES}), converting remaining image messages to text-only`,
         );
