@@ -138,7 +138,8 @@ save_memory:
 - Save information the user wants persisted across conversations
 - Explicit trigger phrases ("remember that", "remember this", "don't forget", "keep in mind", "for future reference") are strong signals — the user is directly asking you to persist something, so save it
 - Also use for implicit sharing of lasting constraints, goals, or preferences (e.g., injury notes, training limitations, personal records they want tracked)
-- When in doubt about whether to save, save — it's low cost and improves future personalization
+- When in doubt about whether something is lasting, lean toward saving — but limit to ONE save_memory call per turn. If the user shares multiple memorable details in one message, combine them into a single memory with the most important category.
+- Do NOT save overlapping memories — if the information is substantially similar to something already discussed or saved in this conversation, skip the save.
 - Not for transient information ("I'm tired today") or mid-workout progress updates
 
 log_workout:

@@ -588,14 +588,19 @@ const bedrockGuardrail = new CfnGuardrail(
       ],
     },
 
-    // Content filters at HIGH sensitivity for harmful content
+    // Content filters: HATE, INSULTS, SEXUAL, VIOLENCE, MISCONDUCT are set to LOW (not HIGH)
+    // because HIGH-sensitivity classifiers are context-unaware and produce frequent false
+    // positives on legitimate fitness terminology (e.g. "skull crushers", "CrossFit bars",
+    // aggressive coaching language). LOW only triggers on unambiguously harmful content,
+    // acting as a last-line backstop while Claude's built-in contextual safety handles nuance.
+    // PROMPT_ATTACK is kept at LOW input (catches injection patterns alongside topic policy).
     contentPolicyConfig: {
       filtersConfig: [
-        { type: "HATE", inputStrength: "HIGH", outputStrength: "HIGH" },
-        { type: "INSULTS", inputStrength: "HIGH", outputStrength: "HIGH" },
-        { type: "SEXUAL", inputStrength: "HIGH", outputStrength: "HIGH" },
-        { type: "VIOLENCE", inputStrength: "HIGH", outputStrength: "HIGH" },
-        { type: "MISCONDUCT", inputStrength: "HIGH", outputStrength: "HIGH" },
+        { type: "HATE", inputStrength: "LOW", outputStrength: "LOW" },
+        { type: "INSULTS", inputStrength: "LOW", outputStrength: "LOW" },
+        { type: "SEXUAL", inputStrength: "LOW", outputStrength: "LOW" },
+        { type: "VIOLENCE", inputStrength: "LOW", outputStrength: "LOW" },
+        { type: "MISCONDUCT", inputStrength: "LOW", outputStrength: "LOW" },
         {
           type: "PROMPT_ATTACK",
           inputStrength: "LOW",

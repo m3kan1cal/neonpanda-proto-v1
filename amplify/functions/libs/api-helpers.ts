@@ -1414,7 +1414,7 @@ export const callBedrockApiStream = async (
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
-      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
+      // Guardrail: prompt injection + jailbreak + PII protection with ASYNC mode for streaming
       ...(guardrailConfig && {
         guardrailConfig,
       }),
@@ -2181,7 +2181,7 @@ export const callBedrockApiStreamForAgent = async function* (
           anthropic_beta: options.anthropicBeta,
         },
       }),
-      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
+      // Guardrail: prompt injection + jailbreak + PII protection with ASYNC mode for streaming
       ...(guardrailConfig && {
         guardrailConfig,
       }),
@@ -2484,7 +2484,7 @@ export const callBedrockApiMultimodalStream = async (
           anthropic_beta: options.anthropicBeta,
         },
       }),
-      // Guardrail: prompt injection + jailbreak + PII protection with SYNC mode for streaming
+      // Guardrail: prompt injection + jailbreak + PII protection with ASYNC mode for streaming
       ...(guardrailConfig && {
         guardrailConfig,
       }),

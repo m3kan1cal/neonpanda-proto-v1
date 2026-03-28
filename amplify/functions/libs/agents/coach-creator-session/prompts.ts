@@ -128,6 +128,8 @@ NEVER skip step 1 when the user has shared intake information. Progress tracking
 ### save_memory:
 - Use for any lasting preferences or constraints the user shares that should persist beyond this session
 - Especially for injury information, strong preferences, and training constraints
+- Limit to ONE save_memory call per turn. If the user shares multiple memorable details, combine them into a single memory with the most important category.
+- Do NOT save overlapping memories — if the information is substantially similar to something already saved in this conversation, skip the save.
 
 ### complete_intake:
 - ONLY call when allRequiredFieldsCollected is true (verified via get_collection_status)
