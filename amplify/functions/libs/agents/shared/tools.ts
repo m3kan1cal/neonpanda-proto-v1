@@ -352,7 +352,11 @@ even without a trigger phrase:
 Physical limitations and injury history are particularly high-value memories — they
 affect every future session and should always be saved when mentioned.
 
-When in doubt, save — it's low cost and improves future personalization.
+When in doubt about whether something is lasting, lean toward saving — but limit to ONE
+save_memory call per turn. If the user shares multiple memorable details in one message,
+combine them into a single memory with the most important category. Do NOT save overlapping
+memories — if the information is substantially similar to something already saved in this
+conversation, skip the save.
 
 NOT for:
 - Transient information: "I'm tired today"
