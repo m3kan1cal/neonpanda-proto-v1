@@ -366,10 +366,10 @@ async function* createCoachConversationEventStreamV2(
           ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
           : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
       reason:
-        existingConversation.messages.length > 20
-          ? "long conversation (>20 messages)"
-          : params.imageS3Keys && params.imageS3Keys.length > 0
-            ? "multimodal (has images)"
+        params.imageS3Keys && params.imageS3Keys.length > 0
+          ? "multimodal (has images)"
+          : existingConversation.messages.length > 40
+            ? "long conversation (>40 messages)"
             : "simple conversation",
     });
 

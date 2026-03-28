@@ -127,11 +127,15 @@ export async function buildMessagesWithCaching(
   // If older messages were trimmed, insert a notice so the model knows
   // it's seeing a partial window and should rely on system prompt context.
   if (trimmedCount > 0) {
+    const hasSummary = logLabel === "coach conversation";
+    const summaryNote = hasSummary
+      ? " A conversation history summary is provided in the system prompt — use it for context about topics discussed before this window."
+      : "";
     messagesArray.push({
       role: "user",
       content: [
         {
-          text: `[System note: This conversation has ${messages.length} total messages. The earliest ${trimmedCount} messages have been omitted. A conversation history summary is provided in the system prompt — use it for context about topics discussed before this window.]`,
+          text: `[System note: This conversation has ${messages.length} total messages. The earliest ${trimmedCount} messages have been omitted.${summaryNote}]`,
         },
       ],
     });
