@@ -11,6 +11,26 @@ import { logger } from "./logger";
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260328-beta",
+    date: "2026-03-28",
+    changes: {
+      added: [
+        "Rolling conversation summary injected into the conversation agent prompt as dynamic context, giving the model awareness of older message history beyond the active 60-message window.",
+      ],
+      changed: [
+        "S3 image fetches in the message-caching pipeline are now parallelized, reducing latency for multimodal conversations with image history.",
+        "Conversation history trimmed to the most recent 60 messages on long conversations; model is notified via a synthetic context note when earlier messages have been omitted.",
+        "Guardrail warning flag corrected to apply only to AI responses — user messages are no longer flagged or redacted in future context when a guardrail fires, preserving conversation continuity.",
+        "Prompt injection defense extended to the conversation agent prompt path: conversation summary, living profile, emotional context, and prospective context are now sanitized and XML-wrapped before injection into the system prompt.",
+        "Critical training directive sanitized and wrapped as user-provided context across all prompt builders (conversation, coach creator, program designer, workout logger, workout extraction, detection, summary), consistent with the defense-in-depth approach applied to other user-derived fields.",
+      ],
+      fixed: [
+        "Non-streaming agent guardrail error type mismatch corrected.",
+        "Message role alternation fixed when trimming odd-length conversation arrays, ensuring valid user/assistant alternation for Bedrock.",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260327-beta",
     date: "2026-03-27",
     changes: {
