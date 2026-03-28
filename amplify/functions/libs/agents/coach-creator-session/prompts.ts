@@ -25,6 +25,10 @@ import {
   getTodoProgress,
   getTodoSummary,
 } from "../../coach-creator/todo-list-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build system prompt for the coach creator streaming agent.
@@ -218,7 +222,7 @@ If user says "yes" / "let's go" / "ready" → call complete_intake.`);
   ) {
     dynamicSections.push(`## 🚨 CRITICAL TRAINING DIRECTIVE — ABSOLUTE PRIORITY
 
-${options.criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints. You MUST factor this into the intake you're collecting and ensure it informs the coach design.`);
   }

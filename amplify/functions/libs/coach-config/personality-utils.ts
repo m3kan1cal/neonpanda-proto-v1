@@ -7,6 +7,10 @@
 
 import type { CoachConfig, DynamoDBItem } from "../coach-creator/types";
 import type { UserProfile } from "../user/types";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Extract coach configuration data from DynamoDB item or direct config
@@ -244,7 +248,8 @@ ${personalityContext.motivationPrompt}`);
     personalityContext.criticalTrainingDirective?.enabled
   ) {
     sections.push(`🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY
-${personalityContext.criticalTrainingDirective.content}
+
+${wrapUserContent(sanitizeUserContent(personalityContext.criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints.
 You MUST incorporate this into every recommendation, workout, and program decision.`);

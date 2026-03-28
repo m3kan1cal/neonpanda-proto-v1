@@ -24,6 +24,10 @@ import {
   getTodoProgress,
   getTodoSummary,
 } from "../../program-designer/todo-list-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build system prompt for the program designer streaming agent.
@@ -354,7 +358,7 @@ If user says "Nothing else, let's go" → call complete_design with "no addition
   ) {
     dynamicSections.push(`## 🚨 CRITICAL TRAINING DIRECTIVE — ABSOLUTE PRIORITY
 
-${options.criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints. You MUST incorporate this into every recommendation and program decision.`);
   }
