@@ -86,6 +86,13 @@ export async function buildMessagesWithCaching(
 
   if (messages.length > MAX_CONTEXT_MESSAGES) {
     trimmedCount = messages.length - MAX_CONTEXT_MESSAGES;
+    // Ensure trimmedCount is even to maintain message role alternation.
+    // If trimmedCount is odd, effectiveMessages[0] would be an assistant message,
+    // which combined with the injected synthetic user→assistant pair would create
+    // consecutive assistant messages, violating Bedrock's alternating role requirement.
+    if (trimmedCount % 2 === 1) {
+      trimmedCount += 1;
+    }
     effectiveMessages = messages.slice(trimmedCount);
     logger.info(`✂️ Trimmed ${trimmedCount} older messages from history`, {
       original: messages.length,
