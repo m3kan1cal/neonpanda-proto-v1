@@ -300,7 +300,6 @@ async function* createCoachCreatorEventStreamV2(
             messageType: "text_with_images" as const,
           }
         : {}),
-      ...(guardrailWarning ? { metadata: { guardrailWarning: true } } : {}),
     };
 
     const newAiMessage = {
