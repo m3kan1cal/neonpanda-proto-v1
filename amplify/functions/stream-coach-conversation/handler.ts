@@ -458,7 +458,6 @@ async function* createCoachConversationEventStreamV2(
             messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
           }
         : {}),
-      ...(guardrailWarning ? { metadata: { guardrailWarning: true } } : {}),
     };
 
     const newAiMessage: CoachMessage = {
