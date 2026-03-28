@@ -25,6 +25,10 @@ import {
   getTodoProgress,
   getTodoSummary,
 } from "../../coach-creator/todo-list-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build system prompt for the coach creator streaming agent.
@@ -128,6 +132,8 @@ NEVER skip step 1 when the user has shared intake information. Progress tracking
 ### save_memory:
 - Use for any lasting preferences or constraints the user shares that should persist beyond this session
 - Especially for injury information, strong preferences, and training constraints
+- Limit to ONE save_memory call per turn. If the user shares multiple memorable details, combine them into a single memory with the most important category.
+- Do NOT save overlapping memories — if the information is substantially similar to something already saved in this conversation, skip the save.
 
 ### complete_intake:
 - ONLY call when allRequiredFieldsCollected is true (verified via get_collection_status)
@@ -216,7 +222,7 @@ If user says "yes" / "let's go" / "ready" → call complete_intake.`);
   ) {
     dynamicSections.push(`## 🚨 CRITICAL TRAINING DIRECTIVE — ABSOLUTE PRIORITY
 
-${options.criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints. You MUST factor this into the intake you're collecting and ensure it informs the coach design.`);
   }

@@ -11,6 +11,67 @@ import { logger } from "./logger";
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260327-beta",
+    date: "2026-03-27",
+    changes: {
+      added: [
+        "Guardrail redaction for conversation history: messages flagged by Bedrock guardrails are replaced with neutral placeholders before being sent back to the model, preventing re-triggered violations on subsequent turns.",
+        "Frontend guardrail warning display in coach conversation, coach creator, and program designer UIs; flagged messages show a visual indicator to the user.",
+        "Guardrail intervention event support in the streaming agent helper so the frontend can detect and display warnings in real time.",
+      ],
+      changed: [
+        "Coach conversation handler fully migrated to V2 agent pattern; legacy V1 streaming code paths removed (~1,100 lines).",
+        "Coach creator session and program designer session handlers cleaned up: legacy streaming orchestration removed in favor of shared agent infrastructure.",
+        "Shared message-caching module promoted to single source of truth for stepped history caching across all streaming handlers (coach conversation, coach creator, program designer).",
+        "Conversation history images are now only expanded for recent (dynamic) messages; older cached messages are sent as text-only to reduce payload size and avoid Bedrock many-image dimension limits.",
+        "Model response normalization for missing required array fields downgraded from warn to info, since models routinely omit empty arrays when reporting no results.",
+      ],
+      fixed: [
+        "Bedrock many-image ValidationException: conversation history with 9+ images caused a dimension limit error (max 2000px for many-image requests) after the message-caching migration; resolved by restricting image expansion to the dynamic (recent) message window only.",
+        "Streaming guardrail logic: additional fixes for SYNC mode enforcement, closing tag regex whitespace variants, and removal of unused imports.",
+        "Prompt sanitizer hardening: closing tag regex updated to handle whitespace variants that could bypass sanitization.",
+        "Guardrail configuration for greeting generation handler corrected.",
+        "Emotional snapshot schema validation updated with missing field definitions.",
+        "Tool validation AJV configuration refined for broader model compatibility.",
+        "Shared IAM policies restructured for clarity.",
+        "Blog post header image updated.",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260325-beta",
+    date: "2026-03-25",
+    changes: {
+      added: [
+        "Cycling added as the 11th training discipline, with full metrics support: power zones, elevation, speed, cadence, heart rate, distance, and TrainerRoad ride type mapping.",
+        "4-tier user memory system: prospective goals, living athlete profile, lifecycle events, and emotional snapshots; memory types integrated into conversation summaries and coach prompts.",
+        "Auto-save for workout log drafts to localStorage; draft is restored on re-open and flushed on submit or cancel.",
+        "Image support when logging workouts via chat; images wired through the workout template logging pipeline with a 5-image cap.",
+        "Bedrock system prompt hardening against prompt injection (Phases 1–3): XML wrapper isolation, sanitizer, and guardrail integration.",
+        "Platform upgrade email script for user communication.",
+      ],
+      changed: [
+        "Static greeting now displays immediately on load instead of blocking on the AI response, reducing perceived latency.",
+        "Frontend performance improved with lazy loading and parallel data fetches.",
+        "AI response text now uses the dedicated font-ai typeface for clearer visual distinction.",
+      ],
+      fixed: [
+        "Streaming guardrail issues: explicit SYNC mode added, injection pattern false positives corrected, guardrail intervention handling fixed, and duplicate getGuardrailConfig calls removed.",
+        "JWT validation: token_use claim checked and audience validation tightened; XML wrapper breakout vulnerability closed.",
+        "XML tag asymmetry in prompt sanitizer corrected.",
+        "Behavioral memory deduplication and emotional snapshot timezone handling corrected.",
+        "FSRS formula: removed erroneous ÷9 and ×9 factors from decay constant calculation.",
+        "Memory system logic: satisfaction decline check, low-motivation alert guard (now requires minimum 3 snapshots), totalConversations count, and narrative field extraction from CoachConversationSummary all corrected.",
+        "Fire-and-forget Bedrock calls now properly awaited to prevent silent failures.",
+        "Chat image handling: current-message images now prioritized over historical images; accumulated image count capped at 5.",
+        "Workout draft save: data loss on unmount fixed, stale debounce indicator resolved, premature setLastSavedAt call removed.",
+        "Cycling section: ID collisions with CrossFit and Powerlifting sections resolved, metrics display corrected, time formatting fixed, elevation unit display corrected, falsy checks for zero numeric values and wind speed updated, power zone seconds null-guard added, and schema field name in extraction guidance corrected.",
+        "Coach card display bugs resolved.",
+        "Program build pipeline issues resolved.",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260314-beta",
     date: "2026-03-14",
     changes: {

@@ -2,8 +2,10 @@ import { Stack } from "aws-cdk-lib";
 import { ManagedPolicy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
-import { BranchInfo, getBranchAwareResourceName } from "./functions/libs/branch-naming";
-
+import {
+  BranchInfo,
+  getBranchAwareResourceName,
+} from "./functions/libs/branch-naming";
 
 /**
  * Creates shared managed policies to avoid exceeding Lambda's 20KB policy size limit.
@@ -25,7 +27,7 @@ export class SharedPolicies {
     stack: Stack,
     coreTable: Table,
     branchName: string,
-    appsBucketArn: string
+    appsBucketArn: string,
   ) {
     // ========================================================================
     // DynamoDB Read/Write Policy
@@ -58,7 +60,7 @@ export class SharedPolicies {
             resources: [coreTable.tableArn],
           }),
         ],
-      }
+      },
     );
 
     // ========================================================================
@@ -89,7 +91,7 @@ export class SharedPolicies {
             resources: [coreTable.tableArn],
           }),
         ],
-      }
+      },
     );
 
     // ========================================================================
@@ -105,6 +107,7 @@ export class SharedPolicies {
           actions: [
             "bedrock:InvokeModel",
             "bedrock:InvokeModelWithResponseStream",
+            "bedrock:ApplyGuardrail",
           ],
           resources: ["*"],
         }),
@@ -148,7 +151,7 @@ export class SharedPolicies {
             ],
           }),
         ],
-      }
+      },
     );
 
     // ========================================================================
@@ -262,7 +265,7 @@ export class SharedPolicies {
       | "s3Analytics"
       | "s3Apps"
       | "cognitoAdmin"
-    >
+    >,
   ) {
     policies.forEach((policy) => {
       switch (policy) {
@@ -299,10 +302,10 @@ export const createBedrockPolicy = (): PolicyStatement => {
   return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'bedrock:InvokeModel',
-      'bedrock:InvokeModelWithResponseStream',
-      'bedrock:Converse',
-      'bedrock:ConverseStream'
+      "bedrock:InvokeModel",
+      "bedrock:InvokeModelWithResponseStream",
+      "bedrock:Converse",
+      "bedrock:ConverseStream",
     ],
     resources: [
       // Claude models - both foundation models and inference profiles
@@ -310,21 +313,21 @@ export const createBedrockPolicy = (): PolicyStatement => {
       `arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-*`,
       `arn:aws:bedrock:*:*:inference-profile/anthropic.claude-*`,
       // Allow all Bedrock models as fallback
-      `arn:aws:bedrock:*:*:*`
-    ]
+      `arn:aws:bedrock:*:*:*`,
+    ],
   });
 };
 
 /**
  * Lambda invocation policy for async function calls
  */
-export const createLambdaInvokePolicy = (targetFunctionArns: string[]): PolicyStatement => {
+export const createLambdaInvokePolicy = (
+  targetFunctionArns: string[],
+): PolicyStatement => {
   return new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: [
-      'lambda:InvokeFunction'
-    ],
-    resources: targetFunctionArns
+    actions: ["lambda:InvokeFunction"],
+    resources: targetFunctionArns,
   });
 };
 
@@ -333,7 +336,7 @@ export const createLambdaInvokePolicy = (targetFunctionArns: string[]): PolicySt
  */
 export const grantBedrockPermissions = (functions: IFunction[]): void => {
   const bedrockPolicy = createBedrockPolicy();
-  functions.forEach(func => {
+  functions.forEach((func) => {
     func.addToRolePolicy(bedrockPolicy);
   });
 };
@@ -341,32 +344,30 @@ export const grantBedrockPermissions = (functions: IFunction[]): void => {
 /**
  * S3 policy for debugging logs storage - branch-aware subfolders
  */
-export const createS3DebugPolicy = (branchName: string = 'main'): PolicyStatement => {
+export const createS3DebugPolicy = (
+  branchName: string = "main",
+): PolicyStatement => {
   const bucketPath = `arn:aws:s3:::midgard-sandbox-logs/${branchName}/debug/*`;
 
   return new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: [
-      's3:PutObject',
-      's3:PutObjectAcl'
-    ],
-    resources: [bucketPath]
+    actions: ["s3:PutObject", "s3:PutObjectAcl"],
+    resources: [bucketPath],
   });
 };
 
 /**
  * S3 policy for analytics storage - branch-aware subfolders
  */
-export const createS3AnalyticsPolicy = (branchName: string = 'main'): PolicyStatement => {
+export const createS3AnalyticsPolicy = (
+  branchName: string = "main",
+): PolicyStatement => {
   const bucketPath = `arn:aws:s3:::midgard-sandbox-logs/${branchName}/analytics/weekly-analytics/*`;
 
   return new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: [
-      's3:PutObject',
-      's3:PutObjectAcl'
-    ],
-    resources: [bucketPath]
+    actions: ["s3:PutObject", "s3:PutObjectAcl"],
+    resources: [bucketPath],
   });
 };
 
@@ -375,7 +376,7 @@ export const createS3AnalyticsPolicy = (branchName: string = 'main'): PolicyStat
  */
 export const grantLambdaInvokePermissions = (
   sourceFunction: IFunction,
-  targetFunctionArns: string[]
+  targetFunctionArns: string[],
 ): void => {
   const lambdaInvokePolicy = createLambdaInvokePolicy(targetFunctionArns);
   sourceFunction.addToRolePolicy(lambdaInvokePolicy);
@@ -384,9 +385,12 @@ export const grantLambdaInvokePermissions = (
 /**
  * Helper function to grant S3 debug permissions
  */
-export const grantS3DebugPermissions = (functions: IFunction[], branchName: string = 'main'): void => {
+export const grantS3DebugPermissions = (
+  functions: IFunction[],
+  branchName: string = "main",
+): void => {
   const s3Policy = createS3DebugPolicy(branchName);
-  functions.forEach(func => {
+  functions.forEach((func) => {
     func.addToRolePolicy(s3Policy);
   });
 };
@@ -394,9 +398,12 @@ export const grantS3DebugPermissions = (functions: IFunction[], branchName: stri
 /**
  * Helper function to grant S3 analytics permissions
  */
-export const grantS3AnalyticsPermissions = (functions: IFunction[], branchName: string = 'main'): void => {
+export const grantS3AnalyticsPermissions = (
+  functions: IFunction[],
+  branchName: string = "main",
+): void => {
   const s3Policy = createS3AnalyticsPolicy(branchName);
-  functions.forEach(func => {
+  functions.forEach((func) => {
     func.addToRolePolicy(s3Policy);
   });
 };
@@ -408,12 +415,12 @@ export const createCognitoAdminPolicy = (): PolicyStatement => {
   return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'cognito-idp:AdminUpdateUserAttributes',
-      'cognito-idp:AdminGetUser'
+      "cognito-idp:AdminUpdateUserAttributes",
+      "cognito-idp:AdminGetUser",
     ],
     resources: [
-      '*' // Post-confirmation triggers need access to the user pool they're attached to
-    ]
+      "*", // Post-confirmation triggers need access to the user pool they're attached to
+    ],
   });
 };
 
@@ -422,7 +429,7 @@ export const createCognitoAdminPolicy = (): PolicyStatement => {
  */
 export const grantCognitoAdminPermissions = (functions: IFunction[]): void => {
   const cognitoPolicy = createCognitoAdminPolicy();
-  functions.forEach(func => {
+  functions.forEach((func) => {
     func.addToRolePolicy(cognitoPolicy);
   });
 };
@@ -434,13 +441,13 @@ export const createDynamoDBPolicy = (): PolicyStatement => {
   return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'dynamodb:PutItem',
-      'dynamodb:UpdateItem',
-      'dynamodb:GetItem',
-      'dynamodb:Query',
-      'dynamodb:DeleteItem'
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:GetItem",
+      "dynamodb:Query",
+      "dynamodb:DeleteItem",
     ],
-    resources: ['*'] // Will be scoped by table name in environment
+    resources: ["*"], // Will be scoped by table name in environment
   });
 };
 
@@ -451,12 +458,12 @@ export const createDynamoDBThroughputPolicy = (): PolicyStatement => {
   return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'dynamodb:DescribeTable',
-      'dynamodb:UpdateTable',
-      'dynamodb:DescribeTimeToLive',
-      'dynamodb:ListTagsOfResource'
+      "dynamodb:DescribeTable",
+      "dynamodb:UpdateTable",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:ListTagsOfResource",
     ],
-    resources: ['*'] // Will be scoped by table name in environment
+    resources: ["*"], // Will be scoped by table name in environment
   });
 };
 
@@ -465,7 +472,7 @@ export const createDynamoDBThroughputPolicy = (): PolicyStatement => {
  */
 export const grantDynamoDBPermissions = (functions: IFunction[]): void => {
   const dynamoPolicy = createDynamoDBPolicy();
-  functions.forEach(func => {
+  functions.forEach((func) => {
     func.addToRolePolicy(dynamoPolicy);
   });
 };
@@ -473,9 +480,11 @@ export const grantDynamoDBPermissions = (functions: IFunction[]): void => {
 /**
  * Helper function to grant DynamoDB throughput management permissions
  */
-export const grantDynamoDBThroughputPermissions = (functions: IFunction[]): void => {
+export const grantDynamoDBThroughputPermissions = (
+  functions: IFunction[],
+): void => {
   const throughputPolicy = createDynamoDBThroughputPolicy();
-  functions.forEach(func => {
+  functions.forEach((func) => {
     func.addToRolePolicy(throughputPolicy);
   });
 };
@@ -486,10 +495,12 @@ export const grantDynamoDBThroughputPermissions = (functions: IFunction[]): void
  */
 export const createS3AppsPolicy = (branchInfo: BranchInfo): PolicyStatement => {
   // Use standard branch-aware naming helper
-  let bucketName = getBranchAwareResourceName(branchInfo, { baseName: 'midgard-apps' });
+  let bucketName = getBranchAwareResourceName(branchInfo, {
+    baseName: "midgard-apps",
+  });
 
   // Override for S3: ensure main branch also gets -main suffix (matches bucket creation logic)
-  if (!branchInfo.isSandbox && branchInfo.branchName === 'main') {
+  if (!branchInfo.isSandbox && branchInfo.branchName === "main") {
     bucketName = `${bucketName}-main`;
   }
 
@@ -498,12 +509,12 @@ export const createS3AppsPolicy = (branchInfo: BranchInfo): PolicyStatement => {
   return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      's3:GetObject',
-      's3:PutObject',
-      's3:PutObjectAcl',
-      's3:DeleteObject'
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:DeleteObject",
     ],
-    resources: [bucketPath]
+    resources: [bucketPath],
   });
 };
 
@@ -512,11 +523,11 @@ export const createS3AppsPolicy = (branchInfo: BranchInfo): PolicyStatement => {
  */
 export const grantS3AppsPermissions = (
   functions: IFunction[],
-  branchInfo: BranchInfo
+  branchInfo: BranchInfo,
 ): void => {
   const policy = createS3AppsPolicy(branchInfo);
 
-  functions.forEach(func => {
+  functions.forEach((func) => {
     func.addToRolePolicy(policy);
   });
 };

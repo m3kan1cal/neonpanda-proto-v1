@@ -29,34 +29,28 @@
  */
 
 // Core type definitions
-export * from './types';
+export * from "./types";
 
 // Business logic types for streaming functions
-export * from './business-types';
+export * from "./business-types";
 
 // Pipeline-compatible SSE formatters
-export * from './formatters';
+export * from "./formatters";
 
 // Path parameter utilities
-export * from './path-utils';
+export * from "./path-utils";
 
 // Route pattern constants
-export * from './route-patterns';
-
-// Chunk optimization utilities
-export * from './chunk-optimizer';
+export * from "./route-patterns";
 
 // Request validation utilities
-export * from './request-validation';
-
-// Acknowledgement utilities
-export * from './acknowledgements';
+export * from "./request-validation";
 
 // Multimodal helpers (includes S3 image fetching and Bedrock formatting)
-export * from './multimodal-helpers';
+export * from "./multimodal-helpers";
 
 // Memory helpers
-export * from './memory-helpers';
+export * from "./memory-helpers";
 
 // Note: Authentication middleware moved to ../auth/middleware.ts
 
@@ -72,22 +66,14 @@ export {
   formatCompleteEvent,
   formatAuthErrorEvent,
   formatValidationErrorEvent,
+  formatGuardrailWarningEvent,
   getErrorCodeFromError,
   createStreamTerminator,
-} from './formatters';
+} from "./formatters";
 
 export {
   extractPathParameters,
   validateRequiredPathParams,
-} from './path-utils';
-
-export {
-  optimizeStreamingChunk,
-  optimizeChunkStream,
-  createOptimizedChunkStream,
-  STREAMING_BUFFER_CONFIG,
-  type ChunkOptimizerOptions,
-  type OptimizedChunk,
-} from './chunk-optimizer';
+} from "./path-utils";
 
 // Auth exports moved to ../auth/middleware.ts

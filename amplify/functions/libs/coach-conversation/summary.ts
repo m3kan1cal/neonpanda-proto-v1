@@ -6,6 +6,10 @@ import {
 import { CoachConfig } from "../coach-creator/types";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { logger } from "../logger";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Sanitizes a string array from model output, handling the case where Claude
@@ -62,8 +66,7 @@ export function buildCoachConversationSummaryPrompt(
       ? `
 
 🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
-
-${criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive takes precedence over all other instructions except safety constraints. Consider this when summarizing the user's preferences and communication style.
 
@@ -309,6 +312,54 @@ function migrateLegacyStructuredData(data: any): any {
       Array.isArray(data.conversation_tags) ? data.conversation_tags : [],
     ),
   };
+}
+
+/**
+ * Format a conversation summary for injection into the coach system prompt.
+ *
+ * Returns a markdown string with the narrative and key structured fields, or
+ * undefined if no summary exists. The dynamic prompt builder skips undefined sections.
+ *
+ * Only includes high-value fields (goals, progress, insights, context) to keep
+ * token cost modest. Skips tags, preferences, and constraints which are lower-signal
+ * for in-context coaching decisions.
+ */
+export function formatConversationSummaryForPrompt(
+  summary: CoachConversationSummary | null,
+): string | undefined {
+  if (!summary) return undefined;
+
+  const sd = summary.structuredData;
+  const sections: string[] = [];
+
+  sections.push(`## CONVERSATION HISTORY SUMMARY
+
+This is a rolling summary of the conversation so far. Use it to maintain continuity,
+especially for topics discussed in earlier messages that may not appear in the recent history.
+
+### Narrative
+${summary.narrative}`);
+
+  const formatList = (items: string[]): string =>
+    items.map((item) => `- ${item}`).join("\n");
+
+  if (sd.current_goals.length > 0) {
+    sections.push(`### Current Goals\n${formatList(sd.current_goals)}`);
+  }
+
+  if (sd.recent_progress.length > 0) {
+    sections.push(`### Recent Progress\n${formatList(sd.recent_progress)}`);
+  }
+
+  if (sd.key_insights.length > 0) {
+    sections.push(`### Key Insights\n${formatList(sd.key_insights)}`);
+  }
+
+  if (sd.important_context.length > 0) {
+    sections.push(`### Important Context\n${formatList(sd.important_context)}`);
+  }
+
+  return sections.join("\n\n");
 }
 
 /**

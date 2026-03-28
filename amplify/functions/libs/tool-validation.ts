@@ -14,14 +14,15 @@
 
 import Ajv, { ValidateFunction } from "ajv";
 
-const ajv = new Ajv({ allErrors: true });
+const ajv = new Ajv({ allErrors: true, useDefaults: true });
 
 const schemaCache = new Map<string, ValidateFunction>();
 
 /**
- * Validate a tool response against its JSON Schema. Pure — throws on failure,
- * does not mutate the response. Callers are responsible for any normalization
- * (e.g. `normalizeSchemaArrayFields`) before calling this function.
+ * Validate a tool response against its JSON Schema. Throws on failure.
+ * With `useDefaults: true`, AJV will backfill missing properties that declare
+ * a `default` in the schema before validation runs — so required fields with
+ * defaults degrade gracefully instead of failing the entire pipeline.
  *
  * @param toolName - The name of the tool (used as the cache key)
  * @param response - The parsed tool input returned by the model

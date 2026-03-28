@@ -417,6 +417,11 @@ export const imagePreviewPatterns = {
 };
 
 export const containerPatterns = {
+  // Guardrail warning banner — displayed above AI message content when the ASYNC
+  // guardrail flagged the response after it was already streamed to the user.
+  guardrailWarningBanner:
+    "flex items-center gap-2 px-3 py-1.5 mb-2 rounded text-xs font-medium bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 text-synthwave-neon-pink/80",
+
   // Main content containers - Subtle glassmorphism (recommended)
   mainContent:
     "rounded-md bg-synthwave-bg-card/30 backdrop-blur-xl border border-synthwave-neon-cyan/10 shadow-sm shadow-synthwave-neon-cyan/5 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15",

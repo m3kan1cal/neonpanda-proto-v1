@@ -194,7 +194,7 @@ function BlogPost({ children }) {
                     : currentPost.slug === "the-symphony"
                       ? "functional-gym.jpg"
                       : currentPost.slug === "a-coach-that-remembers"
-                        ? "barbells-plates.jpg"
+                        ? "coach-athlete.jpg"
                         : "barbells-plates.jpg"
             })`,
             backgroundSize: "cover",

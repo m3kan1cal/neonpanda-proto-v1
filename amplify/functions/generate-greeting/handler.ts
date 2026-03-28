@@ -30,6 +30,7 @@ import {
   buildGreetingUserPrompt,
   extractCoachPersonality,
 } from "../libs/coach-config/greeting-prompts";
+import { sanitizeUserContent } from "../libs/security/prompt-sanitizer";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -73,6 +74,19 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(
       400,
       "todaysWorkoutCount is required and must be a non-negative number",
+    );
+  }
+
+  // Sanitize optional string fields before they flow into the prompt
+  if (requestBody.todaysWorkoutNames) {
+    requestBody.todaysWorkoutNames = requestBody.todaysWorkoutNames
+      .filter((name): name is string => typeof name === "string")
+      .map((name) => sanitizeUserContent(name, 100));
+  }
+  if (requestBody.lastWorkoutDate) {
+    requestBody.lastWorkoutDate = sanitizeUserContent(
+      requestBody.lastWorkoutDate,
+      30,
     );
   }
 

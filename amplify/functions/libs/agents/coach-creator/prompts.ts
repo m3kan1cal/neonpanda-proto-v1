@@ -11,6 +11,10 @@ import {
   METHODOLOGY_TEMPLATES,
   SAFETY_RULES,
 } from "../../coach-creator/coach-generation";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build the complete system prompt for the CoachCreator agent
@@ -66,7 +70,7 @@ Think: Electric energy meets approachable excellence. Serious results, refreshin
   ) {
     sections.push(`## 🚨 CRITICAL TRAINING DIRECTIVE — ABSOLUTE PRIORITY
 
-${context.criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(context.criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive is NON-NEGOTIABLE. It MUST be reflected in the coach configuration — specifically in the safety constraints, personality prompts, and any generated workout guidance. Treat it as an absolute constraint when selecting personality templates, methodology templates, and generating coach prompts.`);
   }

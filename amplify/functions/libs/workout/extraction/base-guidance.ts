@@ -4,6 +4,10 @@
  */
 
 import type { CoachConfig } from "../../coach-creator/types";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 export const BASE_EXTRACTION_GUIDANCE = `
 EXTRACTION REQUIREMENTS:
@@ -200,8 +204,7 @@ export function buildBasePrompt(
   const directiveSection =
     criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
       ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
-
-${criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive takes precedence over all other instructions except safety constraints. Apply this when interpreting and structuring the workout data.
 

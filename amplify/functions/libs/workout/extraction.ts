@@ -30,6 +30,10 @@ import {
   WorkoutTimeExtractionResult,
 } from "../schemas/workout-time-extraction-schema";
 import { DISCIPLINE_CLASSIFICATION_SCHEMA } from "../schemas/discipline-classification-schema";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Prompt for AI-based workout complexity detection
@@ -344,8 +348,7 @@ export const buildWorkoutExtractionPrompt = (
   const directiveSection =
     criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
       ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
-
-${criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive takes precedence over all other instructions except safety constraints. Apply this when interpreting and structuring the workout data.
 

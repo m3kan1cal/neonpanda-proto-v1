@@ -10,22 +10,20 @@ const pipeline = util.promisify(stream.pipeline);
 // No import or declaration is required - it's automatically available
 
 // Import business logic utilities
-import { generateCoachCreatorContextualUpdate } from "../libs/coach-conversation/contextual-updates";
+import { saveSessionAndTriggerCoachConfig } from "../libs/coach-creator/session-management";
 import {
-  loadSessionData,
-  saveSessionAndTriggerCoachConfig,
-} from "../libs/coach-creator/session-management";
-import { handleTodoListConversation } from "../libs/coach-creator/conversation-handler";
-import { queryPineconeContext, MODEL_IDS } from "../libs/api-helpers";
+  queryPineconeContext,
+  MODEL_IDS,
+  GuardrailInterventionError,
+} from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
-import { getSsmStringList } from "../libs/ssm-utils";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
-import { getTodoProgress } from "../libs/coach-creator/todo-list-utils";
 import {
   saveCoachCreatorSession,
   getUserProfile,
   getCoachCreatorSession,
 } from "../../dynamodb/operations";
+import { getTodoProgress } from "../libs/coach-creator/todo-list-utils";
 
 // V2 agent imports
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
@@ -51,222 +49,17 @@ import {
   validateRequiredPathParams,
   STREAMING_ROUTE_PATTERNS,
   formatStartEvent,
-  formatChunkEvent,
-  formatContextualEvent,
   formatCompleteEvent,
   formatValidationErrorEvent,
   formatAuthErrorEvent,
+  formatGuardrailWarningEvent,
   validateStreamingRequestBody,
-  getRandomCoachCreatorAcknowledgement,
 } from "../libs/streaming";
 
 // Route pattern for coach creator sessions
 const COACH_CREATOR_SESSION_ROUTE =
   STREAMING_ROUTE_PATTERNS.COACH_CREATOR_SESSION ||
   "/users/{userId}/coach-creator-sessions/{sessionId}/stream";
-
-// Validation params interface
-interface ValidationParams {
-  userId: string;
-  sessionId: string;
-  userResponse: string;
-  messageTimestamp: string;
-  imageS3Keys?: string[];
-}
-
-/**
- * Extract and validate request parameters
- */
-async function validateAndExtractParams(
-  event: AuthenticatedLambdaFunctionURLEvent,
-): Promise<ValidationParams> {
-  const pathParams = extractPathParameters(
-    event.rawPath,
-    COACH_CREATOR_SESSION_ROUTE,
-  );
-  const { userId, sessionId } = pathParams;
-
-  const validation = validateRequiredPathParams(pathParams, [
-    "userId",
-    "sessionId",
-  ]);
-  if (!validation.isValid) {
-    throw new Error(
-      `Missing required path parameters: ${validation.missing.join(", ")}. Expected: ${COACH_CREATOR_SESSION_ROUTE}`,
-    );
-  }
-
-  logger.info("✅ Path parameters validated:", { userId, sessionId });
-
-  const { userResponse, messageTimestamp, imageS3Keys } =
-    validateStreamingRequestBody(event.body, userId as string, {
-      requireUserResponse: true,
-      maxImages: 5,
-    });
-
-  logger.info("✅ Request body validated:", {
-    hasUserResponse: !!userResponse,
-    hasMessageTimestamp: !!messageTimestamp,
-    userResponseLength: userResponse.length,
-    imageCount: imageS3Keys?.length || 0,
-  });
-
-  return {
-    userId: userId as string,
-    sessionId: sessionId as string,
-    userResponse,
-    messageTimestamp,
-    imageS3Keys,
-  };
-}
-
-// ============================================================================
-// V1/V2 routing helper  (mirrors shouldUseV1FallbackHandler in coach conversation)
-// ============================================================================
-
-/**
- * Check whether this user should be served by the V1 procedural handler.
- *
- * V2 (agent-based) is the default. V1 is the fallback, controlled by the
- * COACH_CREATOR_V1_FALLBACK_USERS SSM parameter (comma-separated user IDs).
- * Changes take effect within 5 minutes (cache TTL) with no code deploy.
- */
-async function shouldUseV1FallbackHandler(userId: string): Promise<boolean> {
-  const paramPath = process.env.COACH_CREATOR_V1_FALLBACK_USERS_PARAM;
-  if (!paramPath) {
-    return false;
-  }
-  const fallbackUsers = await getSsmStringList(paramPath);
-  return fallbackUsers.has(userId);
-}
-
-// ============================================================================
-// V1: Existing procedural handler  (renamed, preserved as fallback)
-// ============================================================================
-
-async function* createCoachCreatorEventStream(
-  event: AuthenticatedLambdaFunctionURLEvent,
-  context: Context,
-): AsyncGenerator<string, void, unknown> {
-  yield formatStartEvent();
-  logger.info("📡 V1: Yielded start event immediately");
-
-  const randomAcknowledgment = getRandomCoachCreatorAcknowledgement();
-  yield formatContextualEvent(randomAcknowledgment, "session_review");
-  logger.info(
-    `📡 V1: Yielded coach creator acknowledgment: "${randomAcknowledgment}"`,
-  );
-
-  try {
-    logger.info("🔍 V1 Step 1: Validating parameters");
-    const params = await validateAndExtractParams(event);
-
-    logger.info(
-      "📂 V1 Step 2: Loading session data + Pinecone context + generating contextual update",
-    );
-    const phase1StartTime = Date.now();
-
-    const [startingUpdate, sessionData, pineconeResult] = await Promise.all([
-      generateCoachCreatorContextualUpdate(
-        params.userResponse,
-        "session_review",
-        {},
-      ),
-      loadSessionData(params.userId, params.sessionId),
-      queryPineconeContext(
-        params.userId,
-        `User fitness background, training history, goals, and preferences for coach creation: ${params.userResponse}`,
-        {
-          workoutTopK: 3,
-          conversationTopK: 3,
-          programTopK: 2,
-          coachCreatorTopK: 2,
-          programDesignerTopK: 2,
-          userMemoryTopK: 2,
-          includeMethodology: false,
-          minScore: 0.5,
-        },
-      ).catch((error) => {
-        logger.warn(
-          "⚠️ V1: Pinecone query failed, continuing without context:",
-          error,
-        );
-        return {
-          success: false,
-          matches: [],
-          totalMatches: 0,
-          relevantMatches: 0,
-        };
-      }),
-    ]);
-
-    const phase1Time = Date.now() - phase1StartTime;
-    logger.info(`✅ V1: Phase 1 parallel loading completed in ${phase1Time}ms`);
-
-    let userHistoryContext = "";
-    if (pineconeResult.success && pineconeResult.matches.length > 0) {
-      userHistoryContext = formatPineconeContext(pineconeResult.matches);
-      logger.info("✅ V1: Pinecone context retrieved for coach creator:", {
-        totalMatches: pineconeResult.totalMatches,
-        relevantMatches: pineconeResult.relevantMatches,
-        contextLength: userHistoryContext.length,
-      });
-    } else {
-      logger.info("📭 V1: No Pinecone context available for coach creator");
-    }
-
-    yield formatContextualEvent(startingUpdate, "session_review");
-    logger.info("💬 V1: Yielded starting update (Vesper):", startingUpdate);
-
-    logger.info("✨ V1: Using to-do list based conversational flow");
-
-    const conversationGenerator = handleTodoListConversation(
-      params.userResponse,
-      sessionData.session,
-      userHistoryContext,
-    );
-
-    let processedResponse: any = null;
-    let result = await conversationGenerator.next();
-
-    while (!result.done) {
-      yield result.value;
-      result = await conversationGenerator.next();
-    }
-
-    processedResponse = result.value;
-
-    if (processedResponse) {
-      const saveResult = await saveSessionAndTriggerCoachConfig(
-        params.userId,
-        params.sessionId,
-        sessionData.session,
-        processedResponse.isComplete,
-      );
-
-      yield formatCompleteEvent({
-        messageId: `response_${Date.now()}`,
-        type: "complete",
-        fullMessage: processedResponse.cleanedResponse,
-        aiResponse: processedResponse.cleanedResponse,
-        isComplete: processedResponse.isComplete,
-        sessionId: params.sessionId,
-        progressDetails: processedResponse.progressDetails,
-        nextQuestion: null,
-        coachConfigGenerating:
-          processedResponse.isComplete && !saveResult.coachConfigId,
-        coachConfigId: saveResult.coachConfigId,
-        onFinalQuestion: processedResponse.isOnFinalQuestion,
-      });
-    }
-  } catch (error) {
-    logger.error("❌ V1: Error in coach creator streaming:", error);
-    const errorEvent = formatValidationErrorEvent(
-      error instanceof Error ? error : new Error("Unknown error occurred"),
-    );
-    yield errorEvent;
-  }
-}
 
 // ============================================================================
 // V2: Agent-based handler  (DEFAULT)
@@ -456,6 +249,7 @@ async function* createCoachCreatorEventStreamV2(
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let iterationCount = 0;
+    let guardrailWarning = false;
 
     try {
       const agentGenerator = agent.converseStream(userResponse, imageS3Keys);
@@ -481,8 +275,17 @@ async function* createCoachCreatorEventStreamV2(
         iterationCount,
       });
     } catch (agentError) {
-      logger.error("❌ V2: Agent stream error:", agentError);
-      throw agentError;
+      if (agentError instanceof GuardrailInterventionError) {
+        logger.warn(
+          "🛡️ V2: Guardrail intervened (ASYNC) — emitting warning event",
+        );
+        guardrailWarning = true;
+        fullResponseText = agent.getFullResponseText();
+        yield formatGuardrailWarningEvent();
+      } else {
+        logger.error("❌ V2: Agent stream error:", agentError);
+        throw agentError;
+      }
     }
 
     // 10. Build messages to save in conversation history
@@ -515,6 +318,7 @@ async function* createCoachCreatorEventStreamV2(
           totalOutputTokens,
           iterationCount,
         },
+        ...(guardrailWarning ? { guardrailWarning: true } : {}),
       } as any,
     };
 
@@ -581,7 +385,7 @@ async function* createCoachCreatorEventStreamV2(
 }
 
 // ============================================================================
-// Internal streaming handler — routes V1 or V2
+// Internal streaming handler
 // ============================================================================
 
 const internalStreamingHandler: StreamingHandler = async (
@@ -592,21 +396,9 @@ const internalStreamingHandler: StreamingHandler = async (
   logger.info("🎬 Starting coach creator session streaming handler");
 
   try {
-    const useV1Fallback = await shouldUseV1FallbackHandler(event.user.userId);
-
-    if (useV1Fallback) {
-      logger.info("Routing to V1 procedural handler (fallback)", {
-        userId: event.user.userId,
-      });
-      const eventGenerator = createCoachCreatorEventStream(event, context);
-      const sseEventStream = Readable.from(eventGenerator);
-      await pipeline(sseEventStream, responseStream);
-    } else {
-      logger.info("Routing to V2 agent handler (default)");
-      const eventGenerator = createCoachCreatorEventStreamV2(event, context);
-      const sseEventStream = Readable.from(eventGenerator);
-      await pipeline(sseEventStream, responseStream);
-    }
+    const eventGenerator = createCoachCreatorEventStreamV2(event, context);
+    const sseEventStream = Readable.from(eventGenerator);
+    await pipeline(sseEventStream, responseStream);
 
     logger.info("✅ Streaming pipeline completed successfully");
 

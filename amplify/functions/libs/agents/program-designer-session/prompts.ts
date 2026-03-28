@@ -24,6 +24,10 @@ import {
   getTodoProgress,
   getTodoSummary,
 } from "../../program-designer/todo-list-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build system prompt for the program designer streaming agent.
@@ -246,6 +250,8 @@ NEVER skip step 1 when the user has shared program design information. Progress 
   explicitly flags a permanent constraint. Do not defer to a later turn.**
 - These are worth persisting across sessions regardless of whether this design completes
 - Don't save transient information (current program preferences, this session's choices)
+- Limit to ONE save_memory call per turn. If the user shares multiple memorable details, combine them into a single memory with the most important category.
+- Do NOT save overlapping memories — if the information is substantially similar to something already saved in this conversation, skip the save.
 
 ### Responding to explicit user requests with tools:
 When the user asks you to look something up or check something, use the relevant tool
@@ -352,7 +358,7 @@ If user says "Nothing else, let's go" → call complete_design with "no addition
   ) {
     dynamicSections.push(`## 🚨 CRITICAL TRAINING DIRECTIVE — ABSOLUTE PRIORITY
 
-${options.criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints. You MUST incorporate this into every recommendation and program decision.`);
   }

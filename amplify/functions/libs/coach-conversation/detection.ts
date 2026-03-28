@@ -21,6 +21,10 @@ import {
   parseJsonWithFallbacks,
   fixDoubleEncodedProperties,
 } from "../response-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Type for conversation complexity analysis result
@@ -274,7 +278,7 @@ CRITICAL: Use this temporal context when analyzing workout detection and tempora
       ? `
 
 🚨 CRITICAL TRAINING DIRECTIVE:
-${criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 IMPORTANT: This directive provides crucial context about the user's training priorities and constraints. Consider it when analyzing their message intent, especially for workout logging and goal-related discussions.
 

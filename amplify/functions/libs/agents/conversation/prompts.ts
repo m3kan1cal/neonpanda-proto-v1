@@ -22,6 +22,10 @@ import {
   type FormatCoachPersonalityOptions,
 } from "../../coach-config/personality-utils";
 import { getUserTimezoneOrDefault } from "../../analytics/date-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build system prompt for the streaming conversation agent
@@ -49,6 +53,7 @@ export function buildConversationAgentPrompt(
       totalWorkouts: number;
     } | null;
     coachCreatorSessionSummary?: string;
+    conversationSummaryContext?: string;
     emotionalContext?: string;
     livingProfileContext?: string;
     prospectiveContext?: string;
@@ -137,7 +142,8 @@ save_memory:
 - Save information the user wants persisted across conversations
 - Explicit trigger phrases ("remember that", "remember this", "don't forget", "keep in mind", "for future reference") are strong signals — the user is directly asking you to persist something, so save it
 - Also use for implicit sharing of lasting constraints, goals, or preferences (e.g., injury notes, training limitations, personal records they want tracked)
-- When in doubt about whether to save, save — it's low cost and improves future personalization
+- When in doubt about whether something is lasting, lean toward saving — but limit to ONE save_memory call per turn. If the user shares multiple memorable details in one message, combine them into a single memory with the most important category.
+- Do NOT save overlapping memories — if the information is substantially similar to something already discussed or saved in this conversation, skip the save.
 - Not for transient information ("I'm tired today") or mid-workout progress updates
 
 log_workout:
@@ -233,23 +239,40 @@ When the user mentions "today's workout" or "yesterday", calculate the date base
 
   // Section 2: Living Profile (conditional — coach's mental model of the user)
   if (options.livingProfileContext) {
-    dynamicSections.push(options.livingProfileContext);
+    const sanitizedLivingProfile = sanitizeUserContent(
+      options.livingProfileContext,
+      3000,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedLivingProfile, "living_profile"),
+    );
   }
 
-  // Section 3: Critical Training Directive (conditional)
+  // Section 3: Conversation History Summary (conditional — rolling summary of older context)
+  if (options.conversationSummaryContext) {
+    const sanitizedConversationSummary = sanitizeUserContent(
+      options.conversationSummaryContext,
+      3000,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedConversationSummary, "conversation_summary"),
+    );
+  }
+
+  // Section 4: Critical Training Directive (conditional)
   if (
     options.criticalTrainingDirective &&
     options.criticalTrainingDirective.enabled
   ) {
     dynamicSections.push(`## CRITICAL TRAINING DIRECTIVE
 
-${options.criticalTrainingDirective.directive}
+${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.directive, 2000), "critical_training_directive")}
 
 This directive takes priority over standard programming principles. Always consider it
 when making recommendations, but apply it contextually based on the situation.`);
   }
 
-  // Section 4: Active Program Summary (conditional)
+  // Section 5: Active Program Summary (conditional)
   if (options.activeProgram) {
     dynamicSections.push(`## ACTIVE TRAINING PROGRAM
 
@@ -262,14 +285,26 @@ Note: Use the get_todays_workout tool to see today's prescribed workout details,
 This context tells you the user has an active program, but you need to call the tool to get specifics.`);
   }
 
-  // Section 5: Emotional Context (conditional — dynamic, changes each session)
+  // Section 6: Emotional Context (conditional — dynamic, changes each session)
   if (options.emotionalContext) {
-    dynamicSections.push(options.emotionalContext);
+    const sanitizedEmotionalContext = sanitizeUserContent(
+      options.emotionalContext,
+      1000,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedEmotionalContext, "emotional_context"),
+    );
   }
 
-  // Section 6: Prospective Follow-Up Items (conditional — active commitments and events)
+  // Section 7: Prospective Follow-Up Items (conditional — active commitments and events)
   if (options.prospectiveContext) {
-    dynamicSections.push(options.prospectiveContext);
+    const sanitizedProspectiveContext = sanitizeUserContent(
+      options.prospectiveContext,
+      1500,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedProspectiveContext, "prospective_context"),
+    );
   }
 
   // Join sections with separators
@@ -349,9 +384,9 @@ export function selectModelForConversationAgent(
 
   // Sonnet 4.5 for complex conversations (long history means more nuance needed)
   // Haiku 4.5 for shorter/simpler conversations
-  // Threshold lowered from >30 to >20: by message 20+ the conversation has enough
-  // context that the smarter model meaningfully improves tool-use accuracy
-  if (existingMessageCount > 20 || hasImages) {
+  // Threshold at 40: balances Haiku's speed advantage for mid-length conversations
+  // against Sonnet's superior tool-use accuracy for complex, long conversations
+  if (existingMessageCount > 40 || hasImages) {
     return MODEL_IDS.PLANNER_MODEL_FULL; // Sonnet 4.5
   }
   return MODEL_IDS.EXECUTOR_MODEL_FULL; // Haiku 4.5

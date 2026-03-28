@@ -10,6 +10,10 @@ import { getCondensedSchema } from "../object-utils";
 import type { CoachConfig } from "../coach-creator/types";
 import type { UserProfile } from "../user/types";
 import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../security/prompt-sanitizer";
 
 /**
  * Build AI extraction prompt for logging a workout template
@@ -73,7 +77,7 @@ ${
   criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
     ? `
 CRITICAL TRAINING DIRECTIVE (User's specific instruction to coach):
-${criticalTrainingDirective.content}
+${wrapUserContent(sanitizeUserContent(criticalTrainingDirective.content, 2000), "critical_training_directive")}
 
 Consider this directive when interpreting performance and extracting data.
 `
