@@ -22,6 +22,10 @@ import {
   type FormatCoachPersonalityOptions,
 } from "../../coach-config/personality-utils";
 import { getUserTimezoneOrDefault } from "../../analytics/date-utils";
+import {
+  sanitizeUserContent,
+  wrapUserContent,
+} from "../../security/prompt-sanitizer";
 
 /**
  * Build system prompt for the streaming conversation agent
@@ -235,12 +239,24 @@ When the user mentions "today's workout" or "yesterday", calculate the date base
 
   // Section 2: Living Profile (conditional — coach's mental model of the user)
   if (options.livingProfileContext) {
-    dynamicSections.push(options.livingProfileContext);
+    const sanitizedLivingProfile = sanitizeUserContent(
+      options.livingProfileContext,
+      3000,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedLivingProfile, "living_profile"),
+    );
   }
 
   // Section 3: Conversation History Summary (conditional — rolling summary of older context)
   if (options.conversationSummaryContext) {
-    dynamicSections.push(options.conversationSummaryContext);
+    const sanitizedConversationSummary = sanitizeUserContent(
+      options.conversationSummaryContext,
+      3000,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedConversationSummary, "conversation_summary"),
+    );
   }
 
   // Section 4: Critical Training Directive (conditional)
@@ -271,12 +287,24 @@ This context tells you the user has an active program, but you need to call the 
 
   // Section 6: Emotional Context (conditional — dynamic, changes each session)
   if (options.emotionalContext) {
-    dynamicSections.push(options.emotionalContext);
+    const sanitizedEmotionalContext = sanitizeUserContent(
+      options.emotionalContext,
+      1000,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedEmotionalContext, "emotional_context"),
+    );
   }
 
   // Section 7: Prospective Follow-Up Items (conditional — active commitments and events)
   if (options.prospectiveContext) {
-    dynamicSections.push(options.prospectiveContext);
+    const sanitizedProspectiveContext = sanitizeUserContent(
+      options.prospectiveContext,
+      1500,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedProspectiveContext, "prospective_context"),
+    );
   }
 
   // Join sections with separators
