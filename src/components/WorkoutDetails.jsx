@@ -531,6 +531,52 @@ function WorkoutDetails() {
           />
         )}
 
+        {/* RPE and Intensity Spectrum Bars */}
+        {workoutMetrics &&
+          (workoutMetrics.rpe > 0 || workoutMetrics.intensity > 0) && (
+            <div className="space-y-3 mb-6">
+              {workoutMetrics.rpe > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-body text-xs text-synthwave-text-muted uppercase font-semibold">
+                      RPE (Perceived Exertion)
+                    </span>
+                    <span className="font-body text-xs text-synthwave-text-muted font-bold">
+                      {workoutMetrics.rpe}/10
+                    </span>
+                  </div>
+                  <div className="h-2 bg-synthwave-bg-primary/60 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple transition-all duration-500"
+                      style={{ width: `${(workoutMetrics.rpe / 10) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {workoutMetrics.intensity > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-body text-xs text-synthwave-text-muted uppercase font-semibold">
+                      Intensity
+                    </span>
+                    <span className="font-body text-xs text-synthwave-text-muted font-bold">
+                      {workoutMetrics.intensity}/10
+                    </span>
+                  </div>
+                  <div className="h-2 bg-synthwave-bg-primary/60 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple transition-all duration-500"
+                      style={{
+                        width: `${(workoutMetrics.intensity / 10) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
         {/* Main Content Area */}
         {workout ? (
           <WorkoutViewer

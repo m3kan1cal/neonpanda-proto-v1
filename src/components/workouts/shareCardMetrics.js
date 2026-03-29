@@ -1,15 +1,18 @@
 /**
  * shareCardMetrics.js
  *
- * Derives the best 4 hero metrics to display on the Instagram share card
- * based on the workout's discipline and available data.
+ * Derives hero metrics and structured exercise data for the Instagram share card.
  *
- * Returns: Array<{ label: string, value: string, unit: string }>
+ * Exports:
+ *   buildShareCardMetrics(workoutData) → Array<{ label, value, unit }>
+ *   buildShareCardExercises(workoutData) → Array<{ name, detail }>
+ *   buildShareCardRpeIntensity(workoutData) → { rpe, intensity } (0-10)
  */
 
-/**
- * Format duration from seconds to a human-readable string.
- */
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
 function formatDuration(seconds) {
   if (!seconds) return null;
   const totalMinutes = Math.round(seconds / 60);
@@ -23,7 +26,7 @@ function formatDuration(seconds) {
  * Safely extract a numeric weight value from either a plain number or an
  * object like { value: 205, unit: "lbs" }.
  */
-function resolveWeight(raw) {
+export function resolveWeight(raw) {
   if (raw == null) return { w: 0, unit: "lbs" };
   if (typeof raw === "number") return { w: raw, unit: "lbs" };
   if (typeof raw === "object")
@@ -35,16 +38,13 @@ function resolveWeight(raw) {
  * Safely extract a numeric reps value from either a plain number or an
  * object like { prescribed: 10, completed: 8 }.
  */
-function resolveReps(raw) {
+export function resolveReps(raw) {
   if (raw == null) return 0;
   if (typeof raw === "number") return raw;
   if (typeof raw === "object") return raw.completed ?? raw.prescribed ?? 0;
   return 0;
 }
 
-/**
- * Find the top weight lifted across all exercises for strength disciplines.
- */
 function extractTopWeight(exercises, setKey = "sets") {
   let topWeight = 0;
   let unit = "lbs";
@@ -60,9 +60,6 @@ function extractTopWeight(exercises, setKey = "sets") {
   return topWeight > 0 ? { value: String(topWeight), unit } : null;
 }
 
-/**
- * Sum total volume (weight × reps) across all sets for strength disciplines.
- */
 function extractTotalVolume(exercises, setKey = "sets") {
   let total = 0;
   let unit = "lbs";
@@ -82,8 +79,53 @@ function extractTotalVolume(exercises, setKey = "sets") {
 }
 
 /**
- * Returns an array of up to 4 metric objects for the share card.
- * Each object: { label: string, value: string, unit: string }
+ * Build a compact detail string for a strength exercise from its sets array.
+ * Examples: "4x8 @ 205 lbs", "3x5 @ 315 lbs", "3x10"
+ */
+function buildStrengthDetail(sets = [], setKey = null) {
+  const actualSets = setKey ? sets : sets;
+  if (!actualSets || actualSets.length === 0) return "";
+
+  const setCount = actualSets.length;
+
+  // Collect reps and weights
+  const repsArr = actualSets.map((s) => resolveReps(s.reps)).filter(Boolean);
+  const weightArr = actualSets
+    .map((s) => {
+      const { w } = resolveWeight(s.weight);
+      return w;
+    })
+    .filter(Boolean);
+
+  if (repsArr.length === 0) return `${setCount} sets`;
+
+  const allRepsSame = repsArr.every((r) => r === repsArr[0]);
+  const repsStr = allRepsSame
+    ? String(repsArr[0])
+    : `${Math.min(...repsArr)}-${Math.max(...repsArr)}`;
+
+  if (weightArr.length === 0) return `${setCount}x${repsStr}`;
+
+  const { unit } = resolveWeight(actualSets.find((s) => s.weight)?.weight);
+  const allWeightsSame = weightArr.every((w) => w === weightArr[0]);
+  const weightStr = allWeightsSame
+    ? String(weightArr[0])
+    : `${Math.min(...weightArr)}-${Math.max(...weightArr)}`;
+
+  return `${setCount}x${repsStr} @ ${weightStr} ${unit}`.trim();
+}
+
+function capitalizeWords(str) {
+  if (!str) return "";
+  return str.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns up to 4 hero metric objects for the share card.
  */
 export function buildShareCardMetrics(workoutData) {
   if (!workoutData) return [];
@@ -93,15 +135,13 @@ export function buildShareCardMetrics(workoutData) {
   const ds = workoutData.discipline_specific || {};
   const discipline = (workoutData.discipline || "").toLowerCase();
 
-  // --- Duration (universal) ---
+  // Duration (universal)
   const duration = formatDuration(
     workoutData.duration || workoutData.session_duration,
   );
-  if (duration) {
-    metrics.push({ label: "Duration", ...duration });
-  }
+  if (duration) metrics.push({ label: "Duration", ...duration });
 
-  // --- Discipline-specific metrics ---
+  // Discipline-specific
   if (discipline === "crossfit" || discipline === "functional_fitness") {
     const cf = ds.crossfit || {};
     const pd = cf.performance_data || {};
@@ -223,7 +263,7 @@ export function buildShareCardMetrics(workoutData) {
     }
   }
 
-  // --- Universal performance metrics (fill remaining slots) ---
+  // Universal fallbacks
   if (metrics.length < 4 && perf.intensity) {
     metrics.push({
       label: "Intensity",
@@ -257,66 +297,122 @@ export function buildShareCardMetrics(workoutData) {
 }
 
 /**
- * Extracts exercise names for the share card exercise list.
- * Returns up to 6 exercise name strings.
+ * Returns RPE and intensity values (0-10) for progress bar rendering.
+ */
+export function buildShareCardRpeIntensity(workoutData) {
+  const perf = workoutData?.performance_metrics || {};
+  return {
+    rpe: perf.perceived_exertion || 0,
+    intensity: perf.intensity || 0,
+  };
+}
+
+/**
+ * Returns up to 6 structured exercise objects for the share card.
+ * Each: { name: string, detail: string }
+ * The detail is a compact "4x8 @ 205 lbs" or "3.5 mi @ 8:30/mi" string.
  */
 export function buildShareCardExercises(workoutData) {
   if (!workoutData) return [];
 
   const ds = workoutData.discipline_specific || {};
   const discipline = (workoutData.discipline || "").toLowerCase();
-  const names = new Set();
+  const results = [];
+  const seen = new Set();
 
-  const addName = (name) => {
-    if (name && names.size < 6) names.add(name);
+  const add = (name, detail = "") => {
+    if (!name || seen.has(name)) return;
+    seen.add(name);
+    results.push({ name: capitalizeWords(name), detail });
   };
 
   if (discipline === "crossfit" || discipline === "functional_fitness") {
     for (const round of ds.crossfit?.rounds || []) {
       for (const ex of round.exercises || []) {
-        addName(ex.exercise_name);
+        if (!ex.exercise_name) continue;
+        const reps = resolveReps(ex.reps);
+        const { w, unit } = resolveWeight(ex.weight);
+        let detail = "";
+        if (reps && w) detail = `${reps} reps @ ${w} ${unit}`;
+        else if (reps) detail = `${reps} reps`;
+        else if (ex.distance) detail = `${ex.distance}m`;
+        else if (ex.calories) detail = `${ex.calories} cal`;
+        add(ex.exercise_name, detail);
       }
     }
   } else if (discipline === "bodybuilding") {
     for (const ex of ds.bodybuilding?.exercises || []) {
-      addName(ex.exercise_name);
+      add(ex.exercise_name, buildStrengthDetail(ex.sets));
     }
   } else if (discipline === "powerlifting") {
     const pl = ds.powerlifting || {};
     const exList =
       pl.exercises || pl.lifts || Object.values(pl).find(Array.isArray) || [];
     for (const ex of exList) {
-      addName(ex.exercise_name || ex.lift_name);
+      add(ex.exercise_name || ex.lift_name, buildStrengthDetail(ex.sets));
     }
   } else if (discipline === "olympic_weightlifting") {
     for (const lift of ds.olympic_weightlifting?.lifts || []) {
-      addName(lift.lift_name);
+      add(lift.lift_name, buildStrengthDetail(lift.sets));
     }
   } else if (discipline === "functional_bodybuilding") {
     for (const ex of ds.functional_bodybuilding?.exercises || []) {
-      addName(ex.exercise_name);
+      add(ex.exercise_name, buildStrengthDetail(ex.sets));
     }
   } else if (discipline === "hyrox") {
     for (const station of ds.hyrox?.stations || []) {
-      addName(station.station_name);
+      let detail = "";
+      if (station.reps) detail = `${station.reps} reps`;
+      else if (station.distance) detail = `${station.distance}m`;
+      if (station.weight) {
+        const { w, unit } = resolveWeight(station.weight);
+        if (w) detail += ` @ ${w} ${unit}`;
+      }
+      add(station.station_name, detail);
     }
   } else if (discipline === "hybrid") {
     for (const phase of ds.hybrid?.phases || []) {
       for (const ex of phase.exercises || []) {
-        addName(ex.exercise_name);
+        add(ex.exercise_name, buildStrengthDetail(ex.sets));
       }
     }
   } else if (discipline === "calisthenics") {
     for (const ex of ds.calisthenics?.exercises || []) {
-      addName(ex.exercise_name);
+      const sets = ex.sets || [];
+      const setCount = sets.length;
+      const reps = sets[0]?.reps ? resolveReps(sets[0].reps) : 0;
+      const detail = reps
+        ? `${setCount}x${reps}`
+        : setCount > 0
+          ? `${setCount} sets`
+          : "";
+      add(ex.exercise_name, detail);
     }
   } else if (discipline === "circuit_training") {
     for (const circuit of ds.circuit_training?.circuits || []) {
       for (const ex of circuit.exercises || []) {
-        addName(ex.exercise_name);
+        add(ex.exercise_name, buildStrengthDetail(ex.sets));
+      }
+    }
+  } else if (discipline === "running") {
+    const run = ds.running || {};
+    const segments = run.segments || [];
+    for (const seg of segments) {
+      const name = seg.segment_type
+        ? capitalizeWords(seg.segment_type)
+        : `Segment ${seg.segment_number}`;
+      const detail =
+        seg.distance && seg.pace
+          ? `${seg.distance} mi @ ${seg.pace}`
+          : seg.distance
+            ? `${seg.distance} mi`
+            : "";
+      if (!seen.has(name)) {
+        seen.add(name);
+        results.push({ name, detail });
       }
     }
   }
 
-  return Array.from(names);
+  return results;
 }

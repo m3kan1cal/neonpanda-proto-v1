@@ -2,8 +2,7 @@
  * WorkoutShareCard.jsx
  *
  * The 1080x1920 (9:16) branded share card captured by html2canvas.
- * Uses only inline styles and web-safe / Google Fonts that are already
- * loaded in the app, so html2canvas can render them reliably.
+ * Uses only inline styles and web-safe / Google Fonts already loaded in the app.
  *
  * Rendered off-screen (position: absolute, left: -9999px) by ShareWorkoutModal.
  * Exposed via React.forwardRef so the parent can pass a ref to html2canvas.
@@ -13,9 +12,9 @@ import React from "react";
 import {
   buildShareCardMetrics,
   buildShareCardExercises,
+  buildShareCardRpeIntensity,
 } from "./shareCardMetrics";
 
-// Colors matching the existing synthwave palette from index.css
 const COLORS = {
   bgPrimary: "#0d0a1a",
   bgSecondary: "#1a0d2e",
@@ -26,12 +25,14 @@ const COLORS = {
   purple: "#9f00ff",
   textPrimary: "#ffffff",
   textSecondary: "#b4b4b4",
-  textMuted: "#666666",
+  textMuted: "#555555",
 };
 
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
+const MAX_EXERCISES = 6;
 
+// Flat badge matching badgePatterns.workoutDetail
 function DisciplineBadge({ discipline }) {
   if (!discipline) return null;
   const label = discipline
@@ -41,14 +42,14 @@ function DisciplineBadge({ discipline }) {
     <span
       style={{
         display: "inline-block",
-        background: `linear-gradient(135deg, ${COLORS.pink}22, ${COLORS.cyan}22)`,
-        border: `1.5px solid ${COLORS.cyan}66`,
+        background: "rgba(13,10,26,0.5)",
+        border: `1px solid rgba(0,255,255,0.30)`,
         color: COLORS.cyan,
-        padding: "10px 28px",
-        borderRadius: "40px",
+        padding: "10px 24px",
+        borderRadius: "3px",
         fontFamily: "'Barlow', 'Inter', sans-serif",
-        fontWeight: 700,
-        fontSize: "26px",
+        fontWeight: 600,
+        fontSize: "24px",
         letterSpacing: "0.12em",
         textTransform: "uppercase",
       }}
@@ -58,27 +59,27 @@ function DisciplineBadge({ discipline }) {
   );
 }
 
+// Flat tile matching RecentPRsCard/TopExercisesCard container style
 function MetricCell({ label, value, unit }) {
   return (
     <div
       style={{
-        background: `linear-gradient(135deg, ${COLORS.bgCard}ee, ${COLORS.bgSecondary}dd)`,
-        border: `1px solid ${COLORS.pink}33`,
-        borderRadius: "20px",
-        padding: "40px 30px",
-        textAlign: "center",
+        background: "rgba(13,10,26,0.4)",
+        border: "1px solid rgba(0,255,255,0.15)",
+        borderRadius: "4px",
+        padding: "36px 28px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: "8px",
+        gap: "10px",
       }}
     >
       <div
         style={{
           fontFamily: "'Barlow', 'Inter', sans-serif",
           fontWeight: 900,
-          fontSize: "72px",
+          fontSize: "68px",
           lineHeight: 1,
           color: COLORS.textPrimary,
           letterSpacing: "-0.02em",
@@ -88,7 +89,7 @@ function MetricCell({ label, value, unit }) {
         {unit && (
           <span
             style={{
-              fontSize: "30px",
+              fontSize: "28px",
               fontWeight: 600,
               color: COLORS.textSecondary,
               marginLeft: "6px",
@@ -102,13 +103,72 @@ function MetricCell({ label, value, unit }) {
         style={{
           fontFamily: "'Inter', sans-serif",
           fontWeight: 500,
-          fontSize: "22px",
+          fontSize: "20px",
           color: COLORS.textSecondary,
           textTransform: "uppercase",
           letterSpacing: "0.1em",
         }}
       >
         {label}
+      </div>
+    </div>
+  );
+}
+
+// Gradient progress bar matching ManageWorkouts pattern
+function GradientBar({ label, value }) {
+  if (!value || value <= 0) return null;
+  const pct = Math.min((value / 10) * 100, 100);
+  return (
+    <div style={{ marginBottom: "24px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          marginBottom: "10px",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 500,
+            fontSize: "22px",
+            color: COLORS.textSecondary,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}
+        >
+          {label}
+        </span>
+        <span
+          style={{
+            fontFamily: "'Barlow', 'Inter', sans-serif",
+            fontWeight: 700,
+            fontSize: "26px",
+            color: COLORS.textPrimary,
+          }}
+        >
+          {value}
+          <span style={{ fontSize: "18px", color: COLORS.textMuted }}>/10</span>
+        </span>
+      </div>
+      <div
+        style={{
+          height: "12px",
+          background: "rgba(13,10,26,0.6)",
+          borderRadius: "6px",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${pct}%`,
+            borderRadius: "6px",
+            background: `linear-gradient(to right, ${COLORS.cyan}, ${COLORS.pink}, ${COLORS.purple})`,
+          }}
+        />
       </div>
     </div>
   );
@@ -123,16 +183,16 @@ function PrBadge({ achievements }) {
   return (
     <div
       style={{
-        background: `linear-gradient(135deg, ${COLORS.pink}33, ${COLORS.purple}33)`,
-        border: `1.5px solid ${COLORS.pink}88`,
-        borderRadius: "16px",
-        padding: "20px 36px",
+        background: `linear-gradient(135deg, ${COLORS.pink}22, ${COLORS.purple}22)`,
+        border: `1px solid ${COLORS.pink}55`,
+        borderRadius: "4px",
+        padding: "20px 32px",
         display: "flex",
         alignItems: "center",
         gap: "16px",
       }}
     >
-      <span style={{ fontSize: "36px" }}>🏆</span>
+      <span style={{ fontSize: "34px" }}>🏆</span>
       <div>
         <div
           style={{
@@ -167,8 +227,12 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
 ) {
   const workoutData = workout?.workoutData;
   const metrics = buildShareCardMetrics(workoutData);
-  const exercises = buildShareCardExercises(workoutData);
+  const allExercises = buildShareCardExercises(workoutData);
+  const { rpe, intensity } = buildShareCardRpeIntensity(workoutData);
   const prAchievements = workoutData?.pr_achievements || [];
+
+  const displayedExercises = allExercises.slice(0, MAX_EXERCISES);
+  const hiddenCount = allExercises.length - displayedExercises.length;
 
   const workoutName =
     workoutData?.workout_name || workout?.workoutName || "Workout Complete";
@@ -184,7 +248,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
       })
     : "";
 
-  const coachName = coachData?.name || (workout?.coachNames || [])[0] || null;
+  const showRpeBars = rpe > 0 || intensity > 0;
 
   return (
     <div
@@ -201,19 +265,6 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         boxSizing: "border-box",
       }}
     >
-      {/* Decorative neon grid lines (top) */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "320px",
-          background: `linear-gradient(180deg, ${COLORS.cyan}10 0%, transparent 100%)`,
-          borderBottom: `1px solid ${COLORS.cyan}20`,
-        }}
-      />
-
       {/* Top accent bar */}
       <div
         style={{
@@ -226,6 +277,19 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         }}
       />
 
+      {/* Top glow overlay */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "300px",
+          background: `linear-gradient(180deg, ${COLORS.cyan}0c 0%, transparent 100%)`,
+          borderBottom: `1px solid ${COLORS.cyan}18`,
+        }}
+      />
+
       {/* Decorative glow blobs */}
       <div
         style={{
@@ -235,7 +299,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           width: "600px",
           height: "600px",
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${COLORS.purple}30 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${COLORS.purple}28 0%, transparent 70%)`,
           pointerEvents: "none",
         }}
       />
@@ -247,12 +311,12 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           width: "500px",
           height: "500px",
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${COLORS.pink}20 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${COLORS.pink}18 0%, transparent 70%)`,
           pointerEvents: "none",
         }}
       />
 
-      {/* Content area */}
+      {/* Content area — flex column, full height, overflow hidden */}
       <div
         style={{
           position: "relative",
@@ -260,62 +324,31 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           display: "flex",
           flexDirection: "column",
           height: "100%",
-          padding: "80px 80px 60px",
+          padding: "80px 80px 56px",
           boxSizing: "border-box",
+          overflow: "hidden",
         }}
       >
-        {/* ── Header: NeonPanda wordmark ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-            marginBottom: "72px",
-          }}
-        >
-          {/* Panda icon mark */}
-          <div
-            style={{
-              width: "60px",
-              height: "60px",
-              borderRadius: "14px",
-              background: `linear-gradient(135deg, ${COLORS.pink}, ${COLORS.purple})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "34px",
-              flexShrink: 0,
-            }}
-          >
-            🐼
-          </div>
-          <div
-            style={{
-              fontFamily: "'Barlow', 'Inter', sans-serif",
-              fontWeight: 900,
-              fontSize: "38px",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              background: `linear-gradient(90deg, ${COLORS.textPrimary}, ${COLORS.textSecondary})`,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            NeonPanda
-          </div>
+        {/* ── Header: NeonPanda logo ── */}
+        <div style={{ marginBottom: "64px", flexShrink: 0 }}>
+          <img
+            src="/images/logo-dark-sm.webp"
+            alt="NeonPanda"
+            style={{ height: "64px", width: "auto" }}
+          />
         </div>
 
-        {/* ── Workout name ── */}
-        <div style={{ marginBottom: "28px" }}>
+        {/* ── Workout name (uppercase, header font, bold) ── */}
+        <div style={{ marginBottom: "24px", flexShrink: 0 }}>
           <div
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
-              fontWeight: 900,
-              fontSize: "88px",
-              lineHeight: 1.0,
+              fontWeight: 700,
+              fontSize: "86px",
+              lineHeight: 1.05,
               color: COLORS.textPrimary,
-              letterSpacing: "-0.02em",
+              textTransform: "uppercase",
+              letterSpacing: "0.01em",
               wordBreak: "break-word",
             }}
           >
@@ -323,14 +356,15 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           </div>
         </div>
 
-        {/* ── Discipline + Date row ── */}
+        {/* ── Discipline badge + Date row ── */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: "24px",
-            marginBottom: "64px",
+            marginBottom: "56px",
             flexWrap: "wrap",
+            flexShrink: 0,
           }}
         >
           <DisciplineBadge discipline={discipline} />
@@ -338,7 +372,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
             <span
               style={{
                 fontFamily: "'Inter', sans-serif",
-                fontSize: "24px",
+                fontSize: "22px",
                 color: COLORS.textMuted,
                 fontWeight: 400,
               }}
@@ -348,14 +382,15 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           )}
         </div>
 
-        {/* ── Metrics grid (2×2) ── */}
+        {/* ── Metrics grid (2×2 flat tiles) ── */}
         {metrics.length > 0 && (
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
-              gap: "24px",
-              marginBottom: "48px",
+              gap: "20px",
+              marginBottom: "40px",
+              flexShrink: 0,
             }}
           >
             {metrics.map((m, i) => (
@@ -369,22 +404,33 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           </div>
         )}
 
+        {/* ── RPE / Intensity gradient bars ── */}
+        {showRpeBars && (
+          <div style={{ marginBottom: "36px", flexShrink: 0 }}>
+            <GradientBar label="RPE" value={rpe} />
+            <GradientBar label="Intensity" value={intensity} />
+          </div>
+        )}
+
         {/* ── PR callout ── */}
         {prAchievements.length > 0 && (
-          <div style={{ marginBottom: "48px" }}>
+          <div style={{ marginBottom: "36px", flexShrink: 0 }}>
             <PrBadge achievements={prAchievements} />
           </div>
         )}
 
-        {/* ── Exercise list ── */}
-        {exercises.length > 0 && (
+        {/* ── Exercise list — fills remaining space, clips gracefully ── */}
+        {displayedExercises.length > 0 && (
           <div
             style={{
-              background: `${COLORS.bgCard}99`,
-              border: `1px solid ${COLORS.cyan}22`,
-              borderRadius: "20px",
+              flex: 1,
+              overflow: "hidden",
+              background: "rgba(13,10,26,0.30)",
+              border: "1px solid rgba(0,255,255,0.20)",
+              borderRadius: "4px",
               padding: "36px 44px",
-              marginBottom: "auto",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <div
@@ -395,82 +441,95 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                 color: COLORS.cyan,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                marginBottom: "24px",
+                marginBottom: "20px",
+                flexShrink: 0,
               }}
             >
               Movements
             </div>
+
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0px",
+                overflow: "hidden",
+                flex: 1,
+              }}
             >
-              {exercises.map((name, i) => (
+              {displayedExercises.map((ex, i) => (
                 <div
                   key={i}
                   style={{
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: "baseline",
                     gap: "20px",
+                    paddingTop: "14px",
+                    paddingBottom: "14px",
+                    borderBottom:
+                      i < displayedExercises.length - 1
+                        ? "1px solid rgba(0,255,255,0.08)"
+                        : "none",
                   }}
                 >
-                  <div
-                    style={{
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
-                      background: i % 2 === 0 ? COLORS.pink : COLORS.cyan,
-                      flexShrink: 0,
-                    }}
-                  />
                   <span
                     style={{
-                      fontFamily: "'Inter', sans-serif",
-                      fontSize: "26px",
-                      color: COLORS.textSecondary,
-                      fontWeight: 500,
+                      fontFamily: "'Barlow', 'Inter', sans-serif",
+                      fontWeight: 700,
+                      fontSize: "28px",
+                      color: COLORS.cyan,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      flexShrink: 0,
                     }}
                   >
-                    {name}
+                    {ex.name}
                   </span>
+                  {ex.detail && (
+                    <span
+                      style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: "24px",
+                        color: COLORS.textSecondary,
+                        fontWeight: 400,
+                      }}
+                    >
+                      {ex.detail}
+                    </span>
+                  )}
                 </div>
               ))}
+
+              {hiddenCount > 0 && (
+                <div
+                  style={{
+                    paddingTop: "14px",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "22px",
+                    color: COLORS.textMuted,
+                    fontStyle: "italic",
+                  }}
+                >
+                  +{hiddenCount} more
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
-
-        {/* ── Footer ── */}
+        {/* ── Minimal branding watermark ── */}
         <div
           style={{
-            borderTop: `1px solid ${COLORS.cyan}22`,
-            paddingTop: "36px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexShrink: 0,
+            textAlign: "right",
+            paddingTop: "20px",
           }}
         >
-          <div>
-            {coachName && (
-              <div
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "22px",
-                  color: COLORS.textMuted,
-                }}
-              >
-                Coached by{" "}
-                <span style={{ color: COLORS.textSecondary, fontWeight: 600 }}>
-                  {coachName}
-                </span>
-              </div>
-            )}
-          </div>
-          <div
+          <span
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
-              fontWeight: 800,
-              fontSize: "26px",
+              fontWeight: 700,
+              fontSize: "22px",
               letterSpacing: "0.04em",
               background: `linear-gradient(90deg, ${COLORS.pink}, ${COLORS.cyan})`,
               WebkitBackgroundClip: "text",
@@ -479,7 +538,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
             }}
           >
             neonpanda.ai
-          </div>
+          </span>
         </div>
       </div>
     </div>

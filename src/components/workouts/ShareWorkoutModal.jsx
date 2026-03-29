@@ -3,7 +3,7 @@
  *
  * Opens a modal showing a scaled preview of the Instagram story card.
  * Captures the full-res (1080x1920) hidden card with html2canvas, then
- * offers "Save Image" (download) and "Share" (Web Share API on mobile).
+ * offers "Share" (Web Share API on mobile) and "Save Image" (download).
  *
  * Usage:
  *   <ShareWorkoutModal workout={workout} coachData={coachData} onClose={() => setOpen(false)} />
@@ -12,22 +12,13 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import html2canvas from "html2canvas";
 import WorkoutShareCard from "./WorkoutShareCard";
-import { containerPatterns, buttonPatterns } from "../../utils/ui/uiPatterns";
+import {
+  containerPatterns,
+  buttonPatterns,
+  typographyPatterns,
+} from "../../utils/ui/uiPatterns";
+import { CloseIcon } from "../themes/SynthwaveComponents";
 import { logger } from "../../utils/logger";
-
-const PREVIEW_HEIGHT = 520;
-const PREVIEW_WIDTH = Math.round((PREVIEW_HEIGHT * 9) / 16);
-
-const COLORS = {
-  pink: "#ff0080",
-  cyan: "#00ffff",
-  purple: "#9f00ff",
-  bgPrimary: "#0d0a1a",
-  bgCard: "#1e1e2e",
-  textPrimary: "#ffffff",
-  textSecondary: "#b4b4b4",
-  textMuted: "#666666",
-};
 
 function DownloadIcon() {
   return (
@@ -60,24 +51,6 @@ function ShareIcon() {
         strokeLinejoin="round"
         strokeWidth={2}
         d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-      />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M6 18L18 6M6 6l12 12"
       />
     </svg>
   );
@@ -162,20 +135,24 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
     return () => clearTimeout(timer);
   }, [captureCard]);
 
-  // Revoke object URL on unmount to avoid memory leaks
+  // Revoke object URL on unmount
   useEffect(() => {
     return () => {
       if (capturedUrl) URL.revokeObjectURL(capturedUrl);
     };
   }, [capturedUrl]);
 
-  // Close on Escape
+  // Close on Escape; lock body scroll
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
   }, [onClose]);
 
   const handleDownload = () => {
@@ -235,91 +212,59 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
       {/* Hidden full-res card for html2canvas capture */}
       <WorkoutShareCard ref={cardRef} workout={workout} coachData={coachData} />
 
-      {/* Modal backdrop */}
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[10000] flex items-center justify-center"
-        style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
+        className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+      />
+
+      {/* Modal container */}
+      <div
+        className="fixed inset-0 z-[10001] p-4 flex items-center justify-center animate-fade-in"
+        onClick={onClose}
       >
-        {/* Modal panel */}
         <div
-          className="relative flex flex-col"
-          style={{
-            background: `linear-gradient(160deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgCard} 100%)`,
-            border: `1px solid rgba(0,255,255,0.15)`,
-            borderRadius: "20px",
-            boxShadow: `0 0 60px rgba(159,0,255,0.2), 0 24px 80px rgba(0,0,0,0.7)`,
-            width: "min(92vw, 480px)",
-            maxHeight: "96vh",
-            overflow: "hidden",
-          }}
+          className={`${containerPatterns.successModal} p-6 relative w-full max-w-lg max-h-[92vh] overflow-y-auto synthwave-scrollbar-cyan`}
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Top accent line */}
-          <div
-            style={{
-              height: "3px",
-              background: `linear-gradient(90deg, ${COLORS.pink}, ${COLORS.cyan}, ${COLORS.purple})`,
-              borderRadius: "20px 20px 0 0",
-            }}
-          />
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1 text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors cursor-pointer"
+            aria-label="Close share modal"
+          >
+            <CloseIcon />
+          </button>
 
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4">
-            <div>
-              <h2 className="font-header font-bold text-white uppercase tracking-wide text-base">
-                Share Workout
-              </h2>
-              <p
-                className="text-xs font-body mt-0.5"
-                style={{ color: COLORS.textSecondary }}
-              >
-                {workoutName}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg transition-colors duration-200"
-              style={{ color: COLORS.textSecondary }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = COLORS.textPrimary)
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = COLORS.textSecondary)
-              }
-              aria-label="Close share modal"
-            >
-              <CloseIcon />
-            </button>
+          <div className="pb-4 mb-4 border-b border-synthwave-neon-cyan/20 pr-8">
+            <h3 className={typographyPatterns.cardTitle}>Share Workout</h3>
+            <p className="font-body text-sm font-semibold text-synthwave-neon-cyan mt-1">
+              {workoutName}
+            </p>
           </div>
 
-          {/* Card preview area */}
-          <div
-            className="flex items-center justify-center px-6 pb-4"
-            style={{ minHeight: `${PREVIEW_HEIGHT}px` }}
-          >
+          {/* Card preview */}
+          <div className="flex justify-center mb-4">
             {isCapturing && (
-              <div className="flex flex-col items-center gap-4">
-                <div
-                  className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
-                  style={{
-                    borderColor: `${COLORS.cyan}66`,
-                    borderTopColor: COLORS.cyan,
-                  }}
-                />
-                <p
-                  className="text-sm font-body"
-                  style={{ color: COLORS.textSecondary }}
-                >
+              <div
+                className="flex flex-col items-center justify-center gap-4"
+                style={{
+                  width: "100%",
+                  maxWidth: "360px",
+                  aspectRatio: "9 / 16",
+                }}
+              >
+                <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin border-synthwave-neon-cyan" />
+                <p className="text-sm font-body text-synthwave-text-secondary">
                   Generating your card...
                 </p>
               </div>
             )}
 
-            {captureError && (
-              <div className="flex flex-col items-center gap-3 text-center px-4">
-                <p className="text-sm font-body" style={{ color: COLORS.pink }}>
+            {captureError && !isCapturing && (
+              <div className="flex flex-col items-center gap-3 text-center py-8">
+                <p className="text-sm font-body text-synthwave-neon-pink">
                   {captureError}
                 </p>
                 <button
@@ -334,12 +279,14 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
             {capturedUrl && !isCapturing && (
               <div
                 style={{
-                  width: `${PREVIEW_WIDTH}px`,
-                  height: `${PREVIEW_HEIGHT}px`,
-                  borderRadius: "12px",
+                  width: "100%",
+                  maxWidth: "360px",
+                  aspectRatio: "9 / 16",
+                  borderRadius: "10px",
                   overflow: "hidden",
-                  border: `1px solid rgba(0,255,255,0.2)`,
-                  boxShadow: `0 0 30px rgba(255,0,128,0.15), 0 8px 32px rgba(0,0,0,0.5)`,
+                  border: "1px solid rgba(0,255,255,0.2)",
+                  boxShadow:
+                    "0 0 30px rgba(255,0,128,0.12), 0 8px 32px rgba(0,0,0,0.5)",
                   flexShrink: 0,
                 }}
               >
@@ -359,38 +306,18 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
 
           {/* Instruction text */}
           {capturedUrl && !isCapturing && (
-            <p
-              className="text-center text-xs font-body pb-3 px-6"
-              style={{ color: COLORS.textMuted }}
-            >
+            <p className="text-center text-xs font-body text-synthwave-text-muted pb-3">
               Save the image and share it to your Instagram Story
             </p>
           )}
 
-          {/* Action buttons */}
-          <div
-            className="flex gap-3 px-6 pb-6"
-            style={{
-              borderTop: `1px solid rgba(0,255,255,0.08)`,
-              paddingTop: "20px",
-            }}
-          >
-            {/* Download */}
-            <button
-              onClick={handleDownload}
-              disabled={!capturedBlob || isCapturing}
-              className={`flex-1 ${buttonPatterns.primaryMedium} gap-2 disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              <DownloadIcon />
-              Save Image
-            </button>
-
-            {/* Native share (mobile) or Copy hint (desktop) */}
+          {/* Action buttons — Share first (primary), Save second (secondary) */}
+          <div className="flex gap-3 pt-4 border-t border-synthwave-neon-cyan/10">
             {canNativeShare ? (
               <button
                 onClick={handleNativeShare}
                 disabled={!capturedBlob || isCapturing || isSharing}
-                className={`flex-1 ${buttonPatterns.secondaryMedium} gap-2 disabled:opacity-40 disabled:cursor-not-allowed`}
+                className={`flex-1 ${buttonPatterns.primaryMedium} gap-2 disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 {isSharing ? (
                   <>
@@ -404,7 +331,18 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
                   </>
                 )}
               </button>
-            ) : (
+            ) : null}
+
+            <button
+              onClick={handleDownload}
+              disabled={!capturedBlob || isCapturing}
+              className={`flex-1 ${canNativeShare ? buttonPatterns.secondaryMedium : buttonPatterns.primaryMedium} gap-2 disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <DownloadIcon />
+              Save Image
+            </button>
+
+            {!canNativeShare && (
               <button
                 onClick={onClose}
                 className={`flex-1 ${buttonPatterns.secondaryMedium}`}
