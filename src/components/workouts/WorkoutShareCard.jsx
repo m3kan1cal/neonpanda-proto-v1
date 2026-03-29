@@ -30,7 +30,7 @@ const COLORS = {
 
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
-const MAX_EXERCISES = 6;
+const MAX_EXERCISES = 8;
 
 const LABEL_VALUE_STYLE = {
   label: {

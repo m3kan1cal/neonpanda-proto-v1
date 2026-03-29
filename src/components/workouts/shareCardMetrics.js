@@ -230,13 +230,55 @@ export function buildShareCardMetrics(workoutData) {
       });
     }
     if (run.average_pace) {
-      metrics.push({ label: "Avg Pace", value: run.average_pace, unit: "/mi" });
+      const paceUnit = `/${run.distance_unit || "mi"}`;
+      metrics.push({
+        label: "Avg Pace",
+        value: run.average_pace,
+        unit: paceUnit,
+      });
     }
     if (run.elevation_gain) {
       metrics.push({
         label: "Elevation",
         value: String(run.elevation_gain),
-        unit: "ft",
+        unit: run.elevation_unit || "ft",
+      });
+    }
+  } else if (discipline === "cycling") {
+    const cyc = ds.cycling || {};
+    if (cyc.total_distance) {
+      metrics.push({
+        label: "Distance",
+        value: String(cyc.total_distance),
+        unit: cyc.distance_unit || "mi",
+      });
+    }
+    if (cyc.total_time) {
+      const mins = Math.round(cyc.total_time / 60);
+      if (mins < 60) {
+        metrics.push({ label: "Time", value: String(mins), unit: "min" });
+      } else {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        metrics.push({
+          label: "Time",
+          value: m > 0 ? `${h}h ${m}m` : `${h}h`,
+          unit: "",
+        });
+      }
+    }
+    if (cyc.average_speed) {
+      metrics.push({
+        label: "Avg Speed",
+        value: String(cyc.average_speed),
+        unit: "mph",
+      });
+    }
+    if (cyc.elevation_gain) {
+      metrics.push({
+        label: "Elevation",
+        value: String(cyc.elevation_gain),
+        unit: cyc.elevation_unit || "ft",
       });
     }
   } else if (discipline === "bodybuilding") {
@@ -501,40 +543,96 @@ export function buildShareCardExercises(workoutData) {
       add(ex.exercise_name, detail);
     }
   } else if (discipline === "circuit_training") {
-    const circuits = ds.circuit_training?.circuits || [];
-    circuits.forEach((circuit, idx) => {
-      if (circuits.length > 1) {
+    const ct = ds.circuit_training || {};
+    const circuits = ct.circuits || [];
+    const roundCount =
+      ct.rounds_completed || ct.total_rounds || circuits.length;
+
+    if (circuits.length === 1) {
+      const circuit = circuits[0];
+      const exList = circuit.exercises || [];
+      if (roundCount > 1 || exList.length > 0) {
+        results.push({
+          name:
+            roundCount > 1
+              ? `${roundCount} Rounds`
+              : circuit.circuit_name || "Circuit",
+          detail: "",
+          isRoundHeader: true,
+        });
+      }
+      for (const ex of exList) {
+        if (!ex.exercise_name) continue;
+        const reps = resolveReps(ex.reps);
+        const { w, unit } = resolveWeight(ex.weight);
+        let detail = buildStrengthDetail(ex.sets);
+        if (!detail && reps)
+          detail = w ? `${reps} reps @ ${w} ${unit}` : `${reps} reps`;
+        if (!detail && ex.distance)
+          detail = `${ex.distance}${ex.distance_unit || "m"}`;
+        results.push({ name: capitalizeWords(ex.exercise_name), detail });
+      }
+    } else {
+      circuits.forEach((circuit, idx) => {
         results.push({
           name: circuit.circuit_name || `Circuit ${idx + 1}`,
           detail: "",
           isRoundHeader: true,
         });
-      }
-      for (const ex of circuit.exercises || []) {
-        if (!ex.exercise_name) continue;
-        results.push({
-          name: capitalizeWords(ex.exercise_name),
-          detail: buildStrengthDetail(ex.sets),
-        });
-      }
-    });
+        for (const ex of circuit.exercises || []) {
+          if (!ex.exercise_name) continue;
+          results.push({
+            name: capitalizeWords(ex.exercise_name),
+            detail: buildStrengthDetail(ex.sets),
+          });
+        }
+      });
+    }
   } else if (discipline === "running") {
     const run = ds.running || {};
+    const distUnit = run.distance_unit || "mi";
     const segments = run.segments || [];
-    for (const seg of segments) {
-      const name = seg.segment_type
-        ? capitalizeWords(seg.segment_type)
-        : `Segment ${seg.segment_number}`;
-      const detail =
-        seg.distance && seg.pace
-          ? `${seg.distance} mi @ ${seg.pace}`
-          : seg.distance
-            ? `${seg.distance} mi`
-            : "";
-      if (!seen.has(name)) {
-        seen.add(name);
+
+    if (segments.length > 0) {
+      for (const seg of segments) {
+        const name = seg.segment_type
+          ? capitalizeWords(seg.segment_type)
+          : `Segment ${seg.segment_number || results.length + 1}`;
+        const segDist = seg.distance || seg.segment_distance;
+        const segPace = seg.pace || seg.average_pace;
+        let detail = "";
+        if (segDist && segPace) detail = `${segDist} ${distUnit} @ ${segPace}`;
+        else if (segDist) detail = `${segDist} ${distUnit}`;
+        else if (segPace) detail = `Pace: ${segPace}`;
         results.push({ name, detail });
       }
+    } else if (run.total_distance) {
+      results.push({
+        name: capitalizeWords(run.run_type || "Run"),
+        detail: `${run.total_distance} ${distUnit}${run.average_pace ? ` @ ${run.average_pace}` : ""}`,
+      });
+    }
+  } else if (discipline === "cycling") {
+    const cyc = ds.cycling || {};
+    const distUnit = cyc.distance_unit || "mi";
+    const rideType = cyc.ride_type ? capitalizeWords(cyc.ride_type) : "Ride";
+
+    let detail = "";
+    if (cyc.total_distance) detail = `${cyc.total_distance} ${distUnit}`;
+    if (cyc.average_speed)
+      detail += detail
+        ? ` @ ${cyc.average_speed} mph`
+        : `${cyc.average_speed} mph`;
+    results.push({ name: rideType, detail });
+
+    if (cyc.elevation_gain) {
+      results.push({
+        name: "Elevation Gain",
+        detail: `${cyc.elevation_gain} ${cyc.elevation_unit || "ft"}`,
+      });
+    }
+    if (cyc.surface) {
+      results.push({ name: "Surface", detail: capitalizeWords(cyc.surface) });
     }
   }
 
