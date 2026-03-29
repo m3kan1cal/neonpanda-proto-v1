@@ -26,7 +26,7 @@ function formatDuration(seconds) {
  * Safely extract a numeric weight value from either a plain number or an
  * object like { value: 205, unit: "lbs" }.
  */
-export function resolveWeight(raw) {
+function resolveWeight(raw) {
   if (raw == null) return { w: 0, unit: "lbs" };
   if (typeof raw === "number") return { w: raw, unit: "lbs" };
   if (typeof raw === "object")
@@ -38,7 +38,7 @@ export function resolveWeight(raw) {
  * Safely extract a numeric reps value from either a plain number or an
  * object like { prescribed: 10, completed: 8 }.
  */
-export function resolveReps(raw) {
+function resolveReps(raw) {
   if (raw == null) return 0;
   if (typeof raw === "number") return raw;
   if (typeof raw === "object") return raw.completed ?? raw.prescribed ?? 0;
