@@ -358,14 +358,14 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           />
         </div>
 
-        {/* ── Workout name (uppercase, header font, bold) ── */}
+        {/* ── Workout name (uppercase, header font, bold, single line) ── */}
         <div style={{ marginBottom: "16px", flexShrink: 0 }}>
           <div
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
               fontWeight: 700,
               fontSize: "64px",
-              lineHeight: 1.05,
+              lineHeight: 1.2,
               color: COLORS.textPrimary,
               textTransform: "uppercase",
               letterSpacing: "0.01em",
@@ -458,7 +458,9 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               marginBottom: "32px",
               paddingLeft: "24px",
               borderLeft: `4px solid ${COLORS.cyan}`,
-              flexShrink: 0,
+              flexShrink: 1,
+              minHeight: 0,
+              overflow: "hidden",
             }}
           >
             <div
@@ -470,7 +472,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                 color: COLORS.textSecondary,
                 fontStyle: "italic",
                 display: "-webkit-box",
-                WebkitLineClamp: 3,
+                WebkitLineClamp: 5,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -525,11 +527,12 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           </div>
         )}
 
-        {/* ── Exercise list — fills remaining space, clips gracefully ── */}
+        {/* ── Exercise list — dynamic height, clips if card overflows ── */}
         {displayedExercises.length > 0 && (
           <div
             style={{
-              flex: 1,
+              flexShrink: 1,
+              minHeight: 0,
               overflow: "hidden",
               background: "rgba(13,10,26,0.30)",
               border: "1px solid rgba(0,255,255,0.20)",
@@ -546,7 +549,6 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                flex: 1,
               }}
             >
               {displayedExercises.map((ex, i) =>
