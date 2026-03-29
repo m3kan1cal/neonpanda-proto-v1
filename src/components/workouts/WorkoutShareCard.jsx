@@ -354,25 +354,20 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           />
         </div>
 
-        {/* ── Workout name (uppercase, single line with ellipsis) ── */}
-        <div style={{ marginBottom: "16px", paddingBottom: "6px" }}>
-          <div
-            style={{
-              fontFamily: "'Barlow', 'Inter', sans-serif",
-              fontWeight: 700,
-              fontSize: "64px",
-              lineHeight: 1.15,
-              color: COLORS.textPrimary,
-              textTransform: "uppercase",
-              letterSpacing: "0.01em",
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis",
-              overflowX: "hidden",
-              overflowY: "visible",
-            }}
-          >
-            {workoutName}
-          </div>
+        {/* ── Workout name ── */}
+        <div
+          style={{
+            fontFamily: "'Barlow', 'Inter', sans-serif",
+            fontWeight: 700,
+            fontSize: "64px",
+            lineHeight: 1.3,
+            color: COLORS.textPrimary,
+            textTransform: "uppercase",
+            letterSpacing: "0.01em",
+            marginBottom: "12px",
+          }}
+        >
+          {workoutName}
         </div>
 
         {/* ── Date — directly under workout name ── */}
