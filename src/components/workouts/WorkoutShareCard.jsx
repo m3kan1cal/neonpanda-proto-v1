@@ -350,7 +350,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         }}
       >
         {/* ── Header: NeonPanda logo ── */}
-        <div style={{ marginBottom: "20px", flexShrink: 0 }}>
+        <div style={{ marginBottom: "12px", flexShrink: 0 }}>
           <img
             src="/images/logo-dark-sm.webp"
             alt="NeonPanda"
@@ -359,17 +359,19 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         </div>
 
         {/* ── Workout name (uppercase, header font, bold) ── */}
-        <div style={{ marginBottom: "28px", flexShrink: 0 }}>
+        <div style={{ marginBottom: "16px", flexShrink: 0 }}>
           <div
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
               fontWeight: 700,
-              fontSize: "86px",
+              fontSize: "64px",
               lineHeight: 1.05,
               color: COLORS.textPrimary,
               textTransform: "uppercase",
               letterSpacing: "0.01em",
-              wordBreak: "break-word",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             {workoutName}
@@ -481,9 +483,20 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
 
         {/* ── RPE / Intensity gradient bars ── */}
         {showRpeBars && (
-          <div style={{ marginBottom: "18px", flexShrink: 0 }}>
-            <GradientBar label="RPE" value={rpe} />
-            <GradientBar label="Intensity" value={intensity} />
+          <div
+            style={{
+              display: "flex",
+              gap: "40px",
+              marginBottom: "8px",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <GradientBar label="RPE" value={rpe} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <GradientBar label="Intensity" value={intensity} />
+            </div>
           </div>
         )}
 
