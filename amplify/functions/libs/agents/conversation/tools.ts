@@ -488,7 +488,16 @@ Returns null/empty if:
 ];
 
 // ============================================================================
-// Export all tools as the full 11-tool conversation set
+// Import workout editor tools (used in workout_edit mode)
+// ============================================================================
+
+import {
+  loadWorkoutDetailsTool,
+  applyWorkoutEditsTool,
+} from "../workout-editor/tools";
+
+// ============================================================================
+// Export all tools as the full conversation set
 // ============================================================================
 
 export const conversationAgentTools: Tool<ConversationAgentContext>[] = [
@@ -505,3 +514,10 @@ export const conversationAgentTools: Tool<ConversationAgentContext>[] = [
   listExerciseNamesTool,
   queryCoachesTool,
 ];
+
+/**
+ * Extended tool set for workout_edit mode — base tools plus the two editing tools.
+ * The handler selects this set when editContext is present in the request.
+ */
+export const conversationAgentToolsWithWorkoutEdit: Tool<ConversationAgentContext>[] =
+  [...conversationAgentTools, loadWorkoutDetailsTool, applyWorkoutEditsTool];

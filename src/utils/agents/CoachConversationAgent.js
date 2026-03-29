@@ -507,7 +507,11 @@ export class CoachConversationAgent {
   /**
    * Sends a user message and processes the AI response with streaming
    */
-  async sendMessageStream(messageContent, imageS3Keys = []) {
+  async sendMessageStream(
+    messageContent,
+    imageS3Keys = [],
+    editContext = null,
+  ) {
     // Input validation - allow text OR images
     if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
       logger.warn("❌ sendMessageStream validation failed");
@@ -551,6 +555,7 @@ export class CoachConversationAgent {
           this.conversationId,
           messageContent.trim(),
           imageS3Keys,
+          editContext,
         );
 
         // Process the stream

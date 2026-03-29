@@ -15,6 +15,7 @@ import {
   typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
+import { CONVERSATION_MODES } from "../constants/conversationModes";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -209,7 +210,9 @@ function ManageCoachConversations() {
         }
         const [coachData, result] = await Promise.all([
           coachAgentRef.current.loadCoachDetails(userId, coachId),
-          getCoachConversations(userId, coachId, { includeFirstMessages: true }),
+          getCoachConversations(userId, coachId, {
+            includeFirstMessages: true,
+          }),
         ]);
 
         if (!coachData) {
@@ -505,6 +508,14 @@ function ManageCoachConversations() {
       key: "status",
       label: conversation.metadata?.isActive !== false ? "Active" : "Archived",
     });
+
+    // Mode badge for workout_edit conversations
+    if (conversation.mode === CONVERSATION_MODES.WORKOUT_EDIT) {
+      allBadges.push({
+        key: "mode-workout-edit",
+        label: "Workout Edit",
+      });
+    }
 
     // Tags (if available)
     if (conversation.metadata?.tags && conversation.metadata.tags.length > 0) {

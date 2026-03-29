@@ -57,6 +57,11 @@ export function buildConversationAgentPrompt(
     emotionalContext?: string;
     livingProfileContext?: string;
     prospectiveContext?: string;
+    editContext?: {
+      entityType: string;
+      entityId: string;
+      entityData?: any;
+    };
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -305,6 +310,26 @@ This context tells you the user has an active program, but you need to call the 
     dynamicSections.push(
       wrapUserContent(sanitizedProspectiveContext, "prospective_context"),
     );
+  }
+
+  // Section 8: Workout Editing Mode (conditional — only in workout_edit conversations)
+  if (options.editContext?.entityType === "workout") {
+    staticSections.push(`## WORKOUT EDITING MODE
+You are helping the user correct or update an existing logged workout. Your job is focused and specific.
+
+**Your workflow:**
+1. Call \`load_workout_details\` on your first turn to see the current workout data
+2. Listen to what the user wants to change
+3. Describe the specific change you will make and ask for confirmation
+4. Once the user confirms, call \`apply_workout_edits\` with the exact fields to update and a clear \`editSummary\`
+5. Summarize what was changed after the edit is applied
+
+**Critical rules:**
+- Never apply changes without explicit user confirmation ("yes", "looks good", "do it", etc.)
+- For \`workoutData.discipline_specific\` edits that involve exercise arrays, always provide the complete updated array — not a partial patch
+- Be precise: state exact field changes, weight values, rep counts, etc. before applying
+- If the workout has a \`templateId\` or \`programContext\`, warn the user that template comparison data will be cleared by any \`workoutData\` edit
+- Keep responses focused. This is a correction session, not a coaching session.`);
   }
 
   // Join sections with separators

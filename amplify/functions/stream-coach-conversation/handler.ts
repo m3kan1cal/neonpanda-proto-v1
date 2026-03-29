@@ -22,6 +22,7 @@ import {
   getCoachConfig,
   getUserProfile,
   getCoachConversationSummary,
+  getWorkout,
 } from "../../dynamodb/operations";
 import {
   CoachMessage,
@@ -48,7 +49,10 @@ import {
   buildConversationAgentPrompt,
   selectModelForConversationAgent,
 } from "../libs/agents/conversation/prompts";
-import { conversationAgentTools } from "../libs/agents/conversation/tools";
+import {
+  conversationAgentTools,
+  conversationAgentToolsWithWorkoutEdit,
+} from "../libs/agents/conversation/tools";
 import type {
   ConversationAgentContext,
   ConversationAgentResult,
@@ -151,18 +155,16 @@ async function* createCoachConversationEventStreamV2(
       return;
     }
 
-    const { userResponse, imageS3Keys } = validateStreamingRequestBody(
-      event.body,
-      userId,
-      {
+    const { userResponse, imageS3Keys, editContext } =
+      validateStreamingRequestBody(event.body, userId, {
         requireUserResponse: true,
         maxImages: 5,
-      },
-    );
+      });
 
     const params = {
       userResponse,
       imageS3Keys,
+      editContext,
     };
 
     logger.info("✅ V2: Params validated:", {
@@ -171,6 +173,8 @@ async function* createCoachConversationEventStreamV2(
       conversationId,
       messageLength: params.userResponse.length,
       hasImages: !!(params.imageS3Keys && params.imageS3Keys.length > 0),
+      hasEditContext: !!editContext,
+      editEntityType: editContext?.entityType,
     });
 
     const timings: Record<string, number> = {};
@@ -189,6 +193,7 @@ async function* createCoachConversationEventStreamV2(
       emotionalTrend,
       prospectiveMemoriesRaw,
       conversationSummary,
+      editWorkoutData,
     ] = await Promise.all([
       getUserProfile(userId),
       getCoachConversation(userId, coachId, conversationId),
@@ -200,6 +205,9 @@ async function* createCoachConversationEventStreamV2(
         () => [],
       ),
       getCoachConversationSummary(userId, conversationId).catch(() => null),
+      editContext?.entityType === "workout"
+        ? getWorkout(userId, editContext.entityId).catch(() => null)
+        : Promise.resolve(null),
     ]);
 
     mark("dataLoading", stepStart);
@@ -236,6 +244,7 @@ async function* createCoachConversationEventStreamV2(
       hasLivingProfile: !!userProfile?.livingProfile,
       activeProspectiveCount: activeProspectiveMemories.length,
       hasConversationSummary: !!conversationSummary,
+      hasEditWorkout: !!editWorkoutData,
     });
 
     const userTimezone = getUserTimezoneOrDefault(
@@ -318,6 +327,13 @@ async function* createCoachConversationEventStreamV2(
           }
         : null,
       ...(cappedImageS3Keys.length && { imageS3Keys: cappedImageS3Keys }),
+      ...(editContext && {
+        editContext: {
+          entityType: editContext.entityType,
+          entityId: editContext.entityId,
+          entityData: editWorkoutData,
+        },
+      }),
     };
 
     // 5. Build system prompt
@@ -335,6 +351,7 @@ async function* createCoachConversationEventStreamV2(
         emotionalContext: emotionalContext || undefined,
         livingProfileContext,
         prospectiveContext,
+        editContext: agentContext.editContext,
       },
     );
 
@@ -354,37 +371,49 @@ async function* createCoachConversationEventStreamV2(
 
     mark("historyCaching", stepStart);
 
-    // 7. Select model
-    const modelId = selectModelForConversationAgent(
-      existingConversation.messages.length,
-      !!(params.imageS3Keys && params.imageS3Keys.length > 0),
-    );
+    // 7. Select model — always use Sonnet in edit mode for structured output quality
+    const isEditMode = !!editContext;
+    const modelId = isEditMode
+      ? MODEL_IDS.PLANNER_MODEL_FULL
+      : selectModelForConversationAgent(
+          existingConversation.messages.length,
+          !!(params.imageS3Keys && params.imageS3Keys.length > 0),
+        );
 
     logger.info("✅ V2: Model selected:", {
       modelId:
         modelId === MODEL_IDS.PLANNER_MODEL_FULL
           ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
           : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
-      reason:
-        params.imageS3Keys && params.imageS3Keys.length > 0
+      reason: isEditMode
+        ? "workout_edit mode (structured output)"
+        : params.imageS3Keys && params.imageS3Keys.length > 0
           ? "multimodal (has images)"
           : existingConversation.messages.length > 40
             ? "long conversation (>40 messages)"
             : "simple conversation",
     });
 
-    // 8. Create agent
+    // 8. Create agent with edit-aware tools when applicable
+    const tools = isEditMode
+      ? conversationAgentToolsWithWorkoutEdit
+      : conversationAgentTools;
+
     const agent = new StreamingConversationAgent({
       staticPrompt,
       dynamicPrompt,
-      tools: conversationAgentTools,
+      tools,
       modelId,
       context: agentContext,
       existingMessages: cachedMessages,
     });
 
-    // 9. Yield metadata event (mode = chat, agent handles mode contextually)
-    yield formatMetadataEvent({ mode: CONVERSATION_MODES.CHAT });
+    // 9. Yield metadata event with appropriate mode
+    yield formatMetadataEvent({
+      mode: isEditMode
+        ? CONVERSATION_MODES.WORKOUT_EDIT
+        : CONVERSATION_MODES.CHAT,
+    });
 
     // 10. Stream agent response — yields SSE events directly
     logger.info("🤖 V2: Starting agent stream");

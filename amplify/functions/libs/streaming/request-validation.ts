@@ -3,12 +3,21 @@
  */
 
 /**
+ * Edit context for workout_edit mode conversations
+ */
+export interface EditContext {
+  entityType: "workout";
+  entityId: string;
+}
+
+/**
  * Parse and validate request body from streaming event
  */
 export function parseRequestBody(body: string | undefined): {
   userResponse: string;
   messageTimestamp: string;
   imageS3Keys?: string[];
+  editContext?: EditContext;
 } {
   if (!body) {
     throw new Error("Request body is required");
@@ -21,12 +30,14 @@ export function parseRequestBody(body: string | undefined): {
     throw new Error("Invalid JSON in request body");
   }
 
-  const { userResponse, messageTimestamp, imageS3Keys } = parsedBody;
+  const { userResponse, messageTimestamp, imageS3Keys, editContext } =
+    parsedBody;
 
   return {
     userResponse,
     messageTimestamp,
     imageS3Keys,
+    editContext,
   };
 }
 
@@ -36,7 +47,7 @@ export function parseRequestBody(body: string | undefined): {
 export function validateImageS3Keys(
   imageS3Keys: string[] | undefined,
   userId: string,
-  maxImages: number = 5
+  maxImages: number = 5,
 ): void {
   if (!imageS3Keys) {
     return;
@@ -62,7 +73,7 @@ export function validateImageS3Keys(
  * Validate message timestamp
  */
 export function validateMessageTimestamp(
-  messageTimestamp: string | undefined
+  messageTimestamp: string | undefined,
 ): void {
   if (!messageTimestamp) {
     throw new Error("Message timestamp is required");
@@ -74,7 +85,7 @@ export function validateMessageTimestamp(
  */
 export function validateUserResponse(
   userResponse: string | undefined,
-  imageS3Keys?: string[]
+  imageS3Keys?: string[],
 ): void {
   // Either text or images required
   if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
@@ -92,17 +103,18 @@ export function validateStreamingRequestBody(
   options: {
     requireUserResponse?: boolean;
     maxImages?: number;
-  } = {}
+  } = {},
 ): {
   userResponse: string;
   messageTimestamp: string;
   imageS3Keys?: string[];
+  editContext?: EditContext;
 } {
   const { requireUserResponse = true, maxImages = 5 } = options;
 
   // Parse body
   const parsed = parseRequestBody(body);
-  const { userResponse, messageTimestamp, imageS3Keys } = parsed;
+  const { userResponse, messageTimestamp, imageS3Keys, editContext } = parsed;
 
   // Validate user response (if required)
   if (requireUserResponse && !userResponse) {
@@ -118,10 +130,20 @@ export function validateStreamingRequestBody(
   // Validate timestamp
   validateMessageTimestamp(messageTimestamp);
 
+  // Validate editContext if present
+  if (editContext) {
+    if (!editContext.entityType || !editContext.entityId) {
+      throw new Error("editContext must have entityType and entityId");
+    }
+    if (editContext.entityType !== "workout") {
+      throw new Error("editContext.entityType must be 'workout'");
+    }
+  }
+
   return {
     userResponse,
     messageTimestamp,
     imageS3Keys,
+    editContext,
   };
 }
-
