@@ -11,6 +11,35 @@ import { logger } from "./logger";
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260329-beta",
+    date: "2026-03-29",
+    changes: {
+      added: [
+        "Share Workout card: generate and download or share a branded 1080×1920 (9:16) image of any completed workout, accessible from the workout details page and the workout card actions menu.",
+        "Share Workout card includes workout name, date, and key metrics (duration, volume, exercises, total sets) in a 2×2 tile grid tailored to each discipline.",
+        "Share Workout card displays an AI-generated workout summary as a highlighted quote block for at-a-glance context.",
+        "Share Workout card renders RPE and Intensity as side-by-side gradient progress bars with a color-coded fill.",
+        "Share Workout card includes a structured movements section showing exercises with sets, reps, and weight in whiteboard format; round and circuit headers are shown for CrossFit, Functional Fitness, Hyrox, and Circuit Training disciplines.",
+        "Share Workout card displays discipline and coach name as inline label–value text below the metric grid.",
+        "Share Workout modal provides a full-width preview of the generated card with Save Image and Share buttons; native Web Share API used on supported mobile browsers.",
+        "Running discipline share card shows distance segments with distance unit and pace per segment; falls back to total distance and average pace when no segment data is present.",
+        "Cycling discipline share card shows ride type, distance, average speed, elevation gain, and surface.",
+        "Circuit Training share card correctly displays exercises for single-circuit workouts, including round count as a header.",
+        "RPE and Intensity gradient bars added to the Personal Feedback section within Personal Insights on the workout details page.",
+        "Share workout shortcut added to the three-dot actions menu on each workout card in the Manage Workouts list.",
+      ],
+      changed: [
+        "Movements container now displays up to 8 exercises before truncating with a '+N more' indicator, up from 6.",
+        "Run distance and pace units now derive from the workout data rather than being hardcoded to miles.",
+        "Top Lift metric on the share card labels the exercise name rather than showing a generic heading.",
+      ],
+      fixed: [
+        "Share icon tooltip on the workout details page now renders centered below the button with the correct text.",
+        "RPE and Intensity value and '/10' labels rendered at identical font sizes in the share card gradient bars.",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260328-beta",
     date: "2026-03-28",
     changes: {
