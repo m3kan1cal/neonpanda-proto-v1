@@ -36,9 +36,10 @@ const MAX_EXERCISES = 6;
 // px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 text-sm font-body text-synthwave-text-secondary
 // No border-radius (workoutDetail has no "rounded" class), Inter body font, gray text
 const BADGE_STYLE = {
-  display: "inline-block",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
   verticalAlign: "middle",
-  lineHeight: 1,
   background: "rgba(13,10,26,0.5)",
   border: "1px solid rgba(0,255,255,0.30)",
   color: COLORS.textSecondary,
@@ -47,6 +48,7 @@ const BADGE_STYLE = {
   fontFamily: "'Inter', sans-serif",
   fontWeight: 400,
   fontSize: "22px",
+  lineHeight: 1,
   letterSpacing: "0.04em",
 };
 
@@ -70,7 +72,8 @@ function MetricCell({ label, value, unit }) {
       style={{
         background: "rgba(13,10,26,0.4)",
         border: "1px solid rgba(0,255,255,0.15)",
-        borderRadius: "4px",
+        borderRadius: "16px",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.5), 0 0 16px rgba(0,255,255,0.06)",
         padding: "24px 28px 36px",
         display: "flex",
         flexDirection: "column",
@@ -243,7 +246,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
     workoutData?.workout_name || workout?.workoutName || "Workout Complete";
 
   const discipline = workoutData?.discipline || "";
-  const coachName = coachData?.name || null;
+  const coachName = coachData?.name?.split(/\s+/)[0] || null;
 
   const completedAt = workout?.completedAt
     ? new Date(workout.completedAt).toLocaleDateString("en-US", {
@@ -418,7 +421,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
 
         {/* ── RPE / Intensity gradient bars ── */}
         {showRpeBars && (
-          <div style={{ marginBottom: "32px", flexShrink: 0 }}>
+          <div style={{ marginBottom: "18px", flexShrink: 0 }}>
             <GradientBar label="RPE" value={rpe} />
             <GradientBar label="Intensity" value={intensity} />
           </div>
@@ -457,7 +460,9 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               overflow: "hidden",
               background: "rgba(13,10,26,0.30)",
               border: "1px solid rgba(0,255,255,0.20)",
-              borderRadius: "4px",
+              borderRadius: "16px",
+              boxShadow:
+                "0 4px 24px rgba(0,0,0,0.5), 0 0 16px rgba(0,255,255,0.06)",
               padding: "28px 44px",
               display: "flex",
               flexDirection: "column",

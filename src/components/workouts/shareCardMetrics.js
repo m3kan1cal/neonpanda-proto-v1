@@ -119,6 +119,46 @@ function buildStrengthDetail(sets = [], setKey = null) {
   return `${setCount}x${repsStr} @ ${weightStr} ${unit}`.trim();
 }
 
+/**
+ * Count total sets across all exercises for the given discipline.
+ * Used as a more informative fallback metric than RPE/Intensity (which
+ * are already rendered as gradient bars on the share card).
+ */
+function extractTotalSets(workoutData) {
+  if (!workoutData) return null;
+  const ds = workoutData.discipline_specific || {};
+  const discipline = (workoutData.discipline || "").toLowerCase();
+  let sets = 0;
+
+  const countSets = (exercises) => {
+    for (const ex of exercises || []) {
+      sets += (ex.sets || []).length;
+    }
+  };
+
+  if (discipline === "bodybuilding") {
+    countSets(ds.bodybuilding?.exercises);
+  } else if (discipline === "powerlifting") {
+    const pl = ds.powerlifting || {};
+    const exList =
+      pl.exercises || pl.lifts || Object.values(pl).find(Array.isArray) || [];
+    countSets(exList);
+  } else if (discipline === "olympic_weightlifting") {
+    countSets(ds.olympic_weightlifting?.lifts || []);
+  } else if (discipline === "functional_bodybuilding") {
+    countSets(ds.functional_bodybuilding?.exercises);
+  } else if (discipline === "hybrid") {
+    for (const phase of ds.hybrid?.phases || []) countSets(phase.exercises);
+  } else if (discipline === "calisthenics") {
+    countSets(ds.calisthenics?.exercises);
+  } else if (discipline === "circuit_training") {
+    for (const circuit of ds.circuit_training?.circuits || [])
+      countSets(circuit.exercises);
+  }
+
+  return sets > 0 ? { value: String(sets), unit: "" } : null;
+}
+
 function capitalizeWords(str) {
   if (!str) return "";
   return str.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -282,20 +322,11 @@ export function buildShareCardMetrics(workoutData) {
     }
   }
 
-  // Universal fallbacks
-  if (metrics.length < 4 && perf.intensity) {
-    metrics.push({
-      label: "Intensity",
-      value: String(perf.intensity),
-      unit: "/10",
-    });
-  }
-  if (metrics.length < 4 && perf.perceived_exertion) {
-    metrics.push({
-      label: "RPE",
-      value: String(perf.perceived_exertion),
-      unit: "/10",
-    });
+  // Universal fallbacks — RPE and Intensity are excluded here because they
+  // are already rendered as gradient bars below the metrics grid.
+  if (metrics.length < 4) {
+    const totalSets = extractTotalSets(workoutData);
+    if (totalSets) metrics.push({ label: "Sets", ...totalSets });
   }
   if (metrics.length < 4 && perf.calories_burned) {
     metrics.push({
