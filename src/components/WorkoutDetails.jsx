@@ -18,6 +18,7 @@ import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import WorkoutViewer from "./WorkoutViewer";
+import ShareWorkoutModal from "./workouts/ShareWorkoutModal";
 import IconButton from "./shared/IconButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { CenteredErrorState, EmptyState } from "./shared/ErrorStates";
@@ -30,6 +31,22 @@ import {
   BarChartIcon,
   SparkleIcon,
 } from "./themes/SynthwaveComponents";
+
+const ShareCardIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+    />
+  </svg>
+);
 
 const JsonIcon = () => (
   <svg
@@ -88,6 +105,9 @@ function WorkoutDetails() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Share card modal state
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Global Command Palette state
   const { setIsCommandPaletteOpen } = useNavigationContext();
@@ -426,8 +446,18 @@ function WorkoutDetails() {
             )}
           </div>
 
-          {/* Right section: Command Palette Button */}
+          {/* Right section: Share + Command Palette */}
           <div className="flex items-center gap-3">
+            {workout && (
+              <IconButton
+                onClick={() => setShowShareModal(true)}
+                tooltip="Share workout"
+                aria-label="Share workout"
+                className="cursor-pointer"
+              >
+                <ShareCardIcon />
+              </IconButton>
+            )}
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
@@ -571,6 +601,15 @@ function WorkoutDetails() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Share workout modal */}
+      {showShareModal && workout && (
+        <ShareWorkoutModal
+          workout={workout}
+          coachData={coachData}
+          onClose={() => setShowShareModal(false)}
+        />
       )}
 
       {/* Tooltips */}

@@ -34,8 +34,24 @@ import {
   EllipsisVerticalIcon,
   EditIcon,
 } from "./themes/SynthwaveComponents";
+import ShareWorkoutModal from "./workouts/ShareWorkoutModal";
 
 // Icons
+const ShareCardIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+    />
+  </svg>
+);
 const ClockIconSmall = () => (
   <svg
     className="w-3 h-3"
@@ -72,6 +88,9 @@ function ManageWorkouts() {
 
   // Actions menu state
   const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Share modal state
+  const [shareWorkout, setShareWorkout] = useState(null);
 
   // Edit modal state
   const [editingWorkout, setEditingWorkout] = useState(null);
@@ -278,6 +297,23 @@ function ManageWorkouts() {
     }
   };
 
+  // Handle share click - load full workout data then open share modal
+  const handleShareClick = async (workout) => {
+    try {
+      if (workout.workoutData) {
+        setShareWorkout(workout);
+        return;
+      }
+      const fullWorkout = await workoutAgentRef.current?.getWorkout(
+        workout.workoutId,
+      );
+      setShareWorkout(fullWorkout || workout);
+    } catch (err) {
+      logger.error("Error loading workout for share:", err);
+      setShareWorkout(workout);
+    }
+  };
+
   // Handle save edit
   const handleSaveEdit = async () => {
     if (!editingWorkout || !workoutAgentRef.current || !userId) return;
@@ -287,7 +323,7 @@ function ManageWorkouts() {
       const updates = {
         workoutName: editName.trim(),
       };
-      
+
       // Only include completedAt if it was actually changed
       if (editCompletedAt !== "") {
         const originalDate = new Date(editingWorkout.completedAt);
@@ -296,12 +332,12 @@ function ManageWorkouts() {
         )
           .toISOString()
           .slice(0, 16);
-        
+
         if (editCompletedAt !== originalLocalDatetime) {
           updates.completedAt = new Date(editCompletedAt).toISOString();
         }
       }
-      
+
       await workoutAgentRef.current.updateWorkout(
         userId,
         editingWorkout.workoutId,
@@ -495,6 +531,19 @@ function ManageWorkouts() {
                 <EditIcon />
                 <span className="font-body font-medium text-sm">
                   Edit Workout
+                </span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShareClick(workout);
+                  setOpenMenuId(null);
+                }}
+                className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 cursor-pointer"
+              >
+                <ShareCardIcon />
+                <span className="font-body font-medium text-sm">
+                  Share Workout
                 </span>
               </button>
               <button
@@ -1280,6 +1329,15 @@ function ManageWorkouts() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Share Workout Modal */}
+      {shareWorkout && (
+        <ShareWorkoutModal
+          workout={shareWorkout}
+          coachData={coachData}
+          onClose={() => setShareWorkout(null)}
+        />
       )}
 
       {/* Tooltips */}

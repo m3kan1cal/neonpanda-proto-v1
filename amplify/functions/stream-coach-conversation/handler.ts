@@ -151,12 +151,19 @@ async function* createCoachConversationEventStreamV2(
       return;
     }
 
+    logger.debug("V2: Request body fields:", {
+      hasBody: !!event.body,
+      bodyLength: event.body?.length || 0,
+      isBase64Encoded: (event as any).isBase64Encoded,
+    });
+
     const { userResponse, imageS3Keys } = validateStreamingRequestBody(
       event.body,
       userId,
       {
-        requireUserResponse: true,
+        requireUserResponse: false,
         maxImages: 5,
+        isBase64Encoded: event.isBase64Encoded,
       },
     );
 
@@ -169,8 +176,11 @@ async function* createCoachConversationEventStreamV2(
       userId,
       coachId,
       conversationId,
-      messageLength: params.userResponse.length,
+      messageLength: params.userResponse?.length || 0,
       hasImages: !!(params.imageS3Keys && params.imageS3Keys.length > 0),
+      isImageOnly:
+        !params.userResponse &&
+        !!(params.imageS3Keys && params.imageS3Keys.length > 0),
     });
 
     const timings: Record<string, number> = {};
@@ -401,7 +411,7 @@ async function* createCoachConversationEventStreamV2(
 
     try {
       const agentGenerator = agent.converseStream(
-        params.userResponse,
+        params.userResponse || "",
         params.imageS3Keys,
       );
 
@@ -450,7 +460,7 @@ async function* createCoachConversationEventStreamV2(
     const newUserMessage: CoachMessage = {
       id: `msg_${Date.now()}_user`,
       role: "user",
-      content: params.userResponse,
+      content: params.userResponse || "",
       timestamp: new Date(),
       ...(params.imageS3Keys && params.imageS3Keys.length > 0
         ? {
@@ -520,7 +530,7 @@ async function* createCoachConversationEventStreamV2(
           userId,
           coachId,
           conversationId,
-          userMessage: params.userResponse,
+          userMessage: params.userResponse || "",
           aiResponse: newAiMessage.content,
           currentMessageCount: existingConversation.messages.length + 2,
         },
