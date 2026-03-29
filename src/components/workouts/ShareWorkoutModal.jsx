@@ -95,9 +95,10 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
     setCaptureError(null);
 
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        width: 1080,
-        height: 1920,
+      const el = cardRef.current;
+      const canvas = await html2canvas(el, {
+        width: el.scrollWidth,
+        height: el.scrollHeight,
         scale: 2,
         useCORS: true,
         allowTaint: false,

@@ -279,9 +279,8 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         left: "-9999px",
         top: 0,
         width: `${CARD_WIDTH}px`,
-        height: `${CARD_HEIGHT}px`,
+        minHeight: `${CARD_HEIGHT}px`,
         background: `linear-gradient(160deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 40%, ${COLORS.bgTertiary} 100%)`,
-        overflow: "hidden",
         fontFamily: "'Inter', sans-serif",
         boxSizing: "border-box",
       }}
@@ -355,13 +354,13 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         </div>
 
         {/* ── Workout name (uppercase, single line with ellipsis) ── */}
-        <div style={{ marginBottom: "16px", height: "88px" }}>
+        <div style={{ marginBottom: "16px" }}>
           <div
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
               fontWeight: 700,
               fontSize: "64px",
-              lineHeight: "88px",
+              lineHeight: 1.4,
               color: COLORS.textPrimary,
               textTransform: "uppercase",
               letterSpacing: "0.01em",
