@@ -37,10 +37,12 @@ const MAX_EXERCISES = 6;
 // No border-radius (workoutDetail has no "rounded" class), Inter body font, gray text
 const BADGE_STYLE = {
   display: "inline-block",
+  verticalAlign: "middle",
+  lineHeight: 1,
   background: "rgba(13,10,26,0.5)",
   border: "1px solid rgba(0,255,255,0.30)",
   color: COLORS.textSecondary,
-  padding: "8px 18px",
+  padding: "10px 18px",
   borderRadius: 0,
   fontFamily: "'Inter', sans-serif",
   fontWeight: 400,
@@ -69,12 +71,12 @@ function MetricCell({ label, value, unit }) {
         background: "rgba(13,10,26,0.4)",
         border: "1px solid rgba(0,255,255,0.15)",
         borderRadius: "4px",
-        padding: "36px 28px",
+        padding: "24px 28px 36px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: "18px",
+        gap: "12px",
       }}
     >
       <div
@@ -333,7 +335,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         }}
       >
         {/* ── Header: NeonPanda logo ── */}
-        <div style={{ marginBottom: "32px", flexShrink: 0 }}>
+        <div style={{ marginBottom: "20px", flexShrink: 0 }}>
           <img
             src="/images/logo-dark-sm.webp"
             alt="NeonPanda"
@@ -342,7 +344,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         </div>
 
         {/* ── Workout name (uppercase, header font, bold) ── */}
-        <div style={{ marginBottom: "16px", flexShrink: 0 }}>
+        <div style={{ marginBottom: "28px", flexShrink: 0 }}>
           <div
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
