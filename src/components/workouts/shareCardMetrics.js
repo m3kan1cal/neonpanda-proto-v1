@@ -20,6 +20,29 @@ function formatDuration(seconds) {
 }
 
 /**
+ * Safely extract a numeric weight value from either a plain number or an
+ * object like { value: 205, unit: "lbs" }.
+ */
+function resolveWeight(raw) {
+  if (raw == null) return { w: 0, unit: "lbs" };
+  if (typeof raw === "number") return { w: raw, unit: "lbs" };
+  if (typeof raw === "object")
+    return { w: raw.value ?? 0, unit: raw.unit || "lbs" };
+  return { w: 0, unit: "lbs" };
+}
+
+/**
+ * Safely extract a numeric reps value from either a plain number or an
+ * object like { prescribed: 10, completed: 8 }.
+ */
+function resolveReps(raw) {
+  if (raw == null) return 0;
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "object") return raw.completed ?? raw.prescribed ?? 0;
+  return 0;
+}
+
+/**
  * Find the top weight lifted across all exercises for strength disciplines.
  */
 function extractTopWeight(exercises, setKey = "sets") {
@@ -27,10 +50,10 @@ function extractTopWeight(exercises, setKey = "sets") {
   let unit = "lbs";
   for (const exercise of exercises || []) {
     for (const set of exercise[setKey] || []) {
-      const w = set.weight || set.weight?.value;
-      if (w && w > topWeight) {
+      const { w, unit: u } = resolveWeight(set.weight);
+      if (w > topWeight) {
         topWeight = w;
-        unit = set.weight_unit || set.weight?.unit || "lbs";
+        unit = set.weight_unit || u;
       }
     }
   }
@@ -45,11 +68,11 @@ function extractTotalVolume(exercises, setKey = "sets") {
   let unit = "lbs";
   for (const exercise of exercises || []) {
     for (const set of exercise[setKey] || []) {
-      const w = set.weight || set.weight?.value;
-      const r = set.reps || set.reps?.completed;
+      const { w, unit: u } = resolveWeight(set.weight);
+      const r = resolveReps(set.reps);
       if (w && r) {
         total += w * r;
-        unit = set.weight_unit || set.weight?.unit || "lbs";
+        unit = set.weight_unit || u;
       }
     }
   }

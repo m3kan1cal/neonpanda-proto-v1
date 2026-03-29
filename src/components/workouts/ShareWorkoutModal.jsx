@@ -26,6 +26,7 @@ const COLORS = {
   bgCard: "#1e1e2e",
   textPrimary: "#ffffff",
   textSecondary: "#b4b4b4",
+  textMuted: "#666666",
 };
 
 function DownloadIcon() {
@@ -109,7 +110,6 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
   const [capturedUrl, setCapturedUrl] = useState(null);
   const [captureError, setCaptureError] = useState(null);
   const [isSharing, setIsSharing] = useState(false);
-  const [showCopied, setShowCopied] = useState(false);
 
   const canNativeShare =
     typeof navigator !== "undefined" &&
