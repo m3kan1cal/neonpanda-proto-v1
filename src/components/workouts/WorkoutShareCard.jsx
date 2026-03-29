@@ -336,21 +336,17 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         }}
       />
 
-      {/* Content area — flex column, full height, overflow hidden */}
+      {/* Content area — normal block flow, no overflow clipping */}
       <div
         style={{
           position: "relative",
           zIndex: 1,
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
           padding: "80px 80px 56px",
           boxSizing: "border-box",
-          overflow: "hidden",
         }}
       >
         {/* ── Header: NeonPanda logo ── */}
-        <div style={{ marginBottom: "12px", flexShrink: 0 }}>
+        <div style={{ marginBottom: "12px" }}>
           <img
             src="/images/logo-dark-sm.webp"
             alt="NeonPanda"
@@ -358,14 +354,14 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           />
         </div>
 
-        {/* ── Workout name (uppercase, header font, bold, single line) ── */}
-        <div style={{ marginBottom: "16px", flexShrink: 0 }}>
+        {/* ── Workout name (uppercase, single line with ellipsis) ── */}
+        <div style={{ marginBottom: "16px", height: "88px" }}>
           <div
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
               fontWeight: 700,
               fontSize: "64px",
-              lineHeight: 1.2,
+              lineHeight: "88px",
               color: COLORS.textPrimary,
               textTransform: "uppercase",
               letterSpacing: "0.01em",
@@ -380,7 +376,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
 
         {/* ── Date — directly under workout name ── */}
         {completedAt && (
-          <div style={{ marginBottom: "44px", flexShrink: 0 }}>
+          <div style={{ marginBottom: "44px" }}>
             <span
               style={{
                 fontFamily: "'Inter', sans-serif",
@@ -402,7 +398,6 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               gridTemplateColumns: "1fr 1fr",
               gap: "20px",
               marginBottom: "28px",
-              flexShrink: 0,
             }}
           >
             {metrics.map((m, i) => (
@@ -424,7 +419,6 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               alignItems: "center",
               marginBottom: "32px",
               flexWrap: "wrap",
-              flexShrink: 0,
             }}
           >
             {discipline && (
@@ -458,9 +452,6 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               marginBottom: "32px",
               paddingLeft: "24px",
               borderLeft: `4px solid ${COLORS.cyan}`,
-              flexShrink: 1,
-              minHeight: 0,
-              overflow: "hidden",
             }}
           >
             <div
@@ -471,11 +462,6 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                 lineHeight: 1.5,
                 color: COLORS.textSecondary,
                 fontStyle: "italic",
-                display: "-webkit-box",
-                WebkitLineClamp: 5,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
               }}
             >
               "{summary}"
@@ -490,7 +476,6 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               display: "flex",
               gap: "40px",
               marginBottom: "8px",
-              flexShrink: 0,
             }}
           >
             <div style={{ flex: 1 }}>
@@ -504,7 +489,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
 
         {/* ── PR callout ── */}
         {prAchievements.length > 0 && (
-          <div style={{ marginBottom: "32px", flexShrink: 0 }}>
+          <div style={{ marginBottom: "32px" }}>
             <PrBadge achievements={prAchievements} />
           </div>
         )}
@@ -520,37 +505,25 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               textTransform: "uppercase",
               letterSpacing: "0.08em",
               marginBottom: "12px",
-              flexShrink: 0,
             }}
           >
             Movements
           </div>
         )}
 
-        {/* ── Exercise list — dynamic height, clips if card overflows ── */}
+        {/* ── Exercise list — normal block, sizes to content ── */}
         {displayedExercises.length > 0 && (
           <div
             style={{
-              flexShrink: 1,
-              minHeight: 0,
-              overflow: "hidden",
               background: "rgba(13,10,26,0.30)",
               border: "1px solid rgba(0,255,255,0.20)",
               borderRadius: "8px",
               boxShadow:
                 "0 4px 24px rgba(0,0,0,0.5), 0 0 16px rgba(0,255,255,0.06)",
               padding: "16px 44px 28px",
-              display: "flex",
-              flexDirection: "column",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-              }}
-            >
+            <div>
               {displayedExercises.map((ex, i) =>
                 ex.isRoundHeader ? (
                   <div
