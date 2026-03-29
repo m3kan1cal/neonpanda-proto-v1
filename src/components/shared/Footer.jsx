@@ -188,6 +188,14 @@ function Footer() {
               </li>
               <li>
                 <Link
+                  to="/docs"
+                  className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors"
+                >
+                  Docs
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/changelog"
                   className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors"
                 >
