@@ -102,6 +102,7 @@ async function* createCoachCreatorEventStreamV2(
       validateStreamingRequestBody(event.body, userId as string, {
         requireUserResponse: true,
         maxImages: 5,
+        isBase64Encoded: event.isBase64Encoded,
       });
 
     const hasImages = !!(imageS3Keys && imageS3Keys.length > 0);
