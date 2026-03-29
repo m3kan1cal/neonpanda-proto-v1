@@ -27,6 +27,7 @@ export const changelogEntries = [
         "Circuit Training share card correctly displays exercises for single-circuit workouts, including round count as a header.",
         "RPE and Intensity gradient bars added to the Personal Feedback section within Personal Insights on the workout details page.",
         "Share workout shortcut added to the three-dot actions menu on each workout card in the Manage Workouts list.",
+        'Docs link added to the authenticated desktop sidebar "More Resources" flyout and the mobile "Help & Info" menu, making the app documentation accessible from within the application.',
       ],
       changed: [
         "Movements container now displays up to 8 exercises before truncating with a '+N more' indicator, up from 6.",
@@ -36,6 +37,10 @@ export const changelogEntries = [
       fixed: [
         "Share icon tooltip on the workout details page now renders centered below the button with the correct text.",
         "RPE and Intensity value and '/10' labels rendered at identical font sizes in the share card gradient bars.",
+      ],
+      infrastructure: [
+        "Incident investigation script added (`scripts/fetch-incident-logs.js`): fetches CloudWatch Lambda log streams into a timestamped `incidents/` directory with a structured context file, supports auto-discovery of the most recent streams, and optionally invokes the Cursor Agent CLI for automated root cause and remediation analysis.",
+        "Cursor Agent skill added (`analyze-incident-logs`): structured playbook for the Cursor Agent to classify errors and warnings, profile Lambda performance signals (cold starts, timeouts, memory pressure), reason through root cause, and produce a tiered P0/P1/P2 remediation plan from fetched incident logs.",
       ],
     },
   },
