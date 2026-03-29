@@ -257,6 +257,9 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
   const discipline = workoutData?.discipline || "";
   const coachName = coachData?.name?.split(/\s+/)[0] || null;
 
+  const summaryRaw = workout?.summary || workoutData?.summary || "";
+  const summary = summaryRaw.replace(/\*\*/g, "").replace(/\*/g, "");
+
   const completedAt = workout?.completedAt
     ? new Date(workout.completedAt).toLocaleDateString("en-US", {
         weekday: "long",
@@ -443,6 +446,36 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                 </span>
               </>
             )}
+          </div>
+        )}
+
+        {/* ── AI Breakdown / Summary ── */}
+        {summary && (
+          <div
+            style={{
+              marginBottom: "32px",
+              paddingLeft: "24px",
+              borderLeft: `4px solid ${COLORS.cyan}`,
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 400,
+                fontSize: "24px",
+                lineHeight: 1.5,
+                color: COLORS.textSecondary,
+                fontStyle: "italic",
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              "{summary}"
+            </div>
           </div>
         )}
 
