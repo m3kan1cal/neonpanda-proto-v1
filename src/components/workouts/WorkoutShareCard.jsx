@@ -446,7 +446,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           <div
             style={{
               marginBottom: "32px",
-              padding: "4px 0 16px 24px",
+              padding: "4px 0 24px 24px",
               borderLeft: `4px solid ${COLORS.cyan}`,
             }}
           >
