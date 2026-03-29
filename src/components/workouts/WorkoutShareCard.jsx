@@ -122,7 +122,7 @@ function GradientBar({ label, value }) {
       <div
         style={{
           display: "flex",
-          alignItems: "baseline",
+          alignItems: "center",
           justifyContent: "space-between",
           marginBottom: "10px",
         }}
@@ -141,14 +141,33 @@ function GradientBar({ label, value }) {
         </span>
         <span
           style={{
-            fontFamily: "'Barlow', 'Inter', sans-serif",
-            fontWeight: 700,
-            fontSize: "22px",
-            color: COLORS.textPrimary,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "1px",
           }}
         >
-          {value}
-          <span style={{ fontSize: "22px", color: COLORS.textMuted }}>/10</span>
+          <span
+            style={{
+              fontFamily: "'Barlow', 'Inter', sans-serif",
+              fontWeight: 700,
+              fontSize: "22px",
+              lineHeight: 1,
+              color: COLORS.textPrimary,
+            }}
+          >
+            {value}
+          </span>
+          <span
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 400,
+              fontSize: "22px",
+              lineHeight: 1,
+              color: COLORS.textMuted,
+            }}
+          >
+            /10
+          </span>
         </span>
       </div>
       <div
