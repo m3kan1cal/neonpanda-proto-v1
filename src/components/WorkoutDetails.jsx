@@ -451,7 +451,7 @@ function WorkoutDetails() {
             {workout && (
               <IconButton
                 onClick={() => setShowShareModal(true)}
-                tooltip="Share workout to Instagram"
+                tooltip="Share workout"
                 aria-label="Share workout"
                 className="cursor-pointer"
               >

@@ -307,7 +307,7 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
           {/* Instruction text */}
           {capturedUrl && !isCapturing && (
             <p className="text-center text-xs font-body text-synthwave-text-muted pb-3">
-              Save the image and share it to your Instagram Story
+              Save the image and share it
             </p>
           )}
 

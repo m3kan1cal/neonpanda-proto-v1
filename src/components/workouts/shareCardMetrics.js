@@ -358,9 +358,12 @@ export function buildShareCardRpeIntensity(workoutData) {
 }
 
 /**
- * Returns up to 6 structured exercise objects for the share card.
- * Each: { name: string, detail: string }
- * The detail is a compact "4x8 @ 205 lbs" or "3.5 mi @ 8:30/mi" string.
+ * Returns structured exercise objects for the share card.
+ * Each: { name: string, detail: string, isRoundHeader?: boolean }
+ *
+ * For round-based disciplines (crossfit, functional_fitness, circuit_training,
+ * hyrox) the list includes round/station headers so the card can render a
+ * whiteboard-style workout layout.
  */
 export function buildShareCardExercises(workoutData) {
   if (!workoutData) return [];
@@ -377,8 +380,33 @@ export function buildShareCardExercises(workoutData) {
   };
 
   if (discipline === "crossfit" || discipline === "functional_fitness") {
-    for (const round of ds.crossfit?.rounds || []) {
-      for (const ex of round.exercises || []) {
+    const cf = ds.crossfit || ds.functional_fitness || {};
+    const rounds = cf.rounds || [];
+    const pd = cf.performance_data || {};
+
+    // Determine if every round has identical exercise names — if so, show
+    // the workout once with a "X Rounds" header instead of per-round headers.
+    const roundExNames = rounds.map((r) =>
+      (r.exercises || [])
+        .map((e) => e.exercise_name)
+        .filter(Boolean)
+        .join("|"),
+    );
+    const allRoundsSame =
+      roundExNames.length > 1 &&
+      roundExNames.every((n) => n === roundExNames[0]);
+
+    if (allRoundsSame) {
+      const roundCount = pd.rounds_completed || rounds.length;
+      const workoutType = pd.workout_type
+        ? capitalizeWords(pd.workout_type)
+        : "For Time";
+      results.push({
+        name: `${roundCount} Rounds — ${workoutType}`,
+        detail: "",
+        isRoundHeader: true,
+      });
+      for (const ex of rounds[0].exercises || []) {
         if (!ex.exercise_name) continue;
         const reps = resolveReps(ex.reps);
         const { w, unit } = resolveWeight(ex.weight);
@@ -387,8 +415,27 @@ export function buildShareCardExercises(workoutData) {
         else if (reps) detail = `${reps} reps`;
         else if (ex.distance) detail = `${ex.distance}m`;
         else if (ex.calories) detail = `${ex.calories} cal`;
-        add(ex.exercise_name, detail);
+        results.push({ name: capitalizeWords(ex.exercise_name), detail });
       }
+    } else {
+      rounds.forEach((round, idx) => {
+        results.push({
+          name: `Round ${idx + 1}`,
+          detail: "",
+          isRoundHeader: true,
+        });
+        for (const ex of round.exercises || []) {
+          if (!ex.exercise_name) continue;
+          const reps = resolveReps(ex.reps);
+          const { w, unit } = resolveWeight(ex.weight);
+          let detail = "";
+          if (reps && w) detail = `${reps} reps @ ${w} ${unit}`;
+          else if (reps) detail = `${reps} reps`;
+          else if (ex.distance) detail = `${ex.distance}m`;
+          else if (ex.calories) detail = `${ex.calories} cal`;
+          results.push({ name: capitalizeWords(ex.exercise_name), detail });
+        }
+      });
     }
   } else if (discipline === "bodybuilding") {
     for (const ex of ds.bodybuilding?.exercises || []) {
@@ -410,7 +457,15 @@ export function buildShareCardExercises(workoutData) {
       add(ex.exercise_name, buildStrengthDetail(ex.sets));
     }
   } else if (discipline === "hyrox") {
-    for (const station of ds.hyrox?.stations || []) {
+    const stations = ds.hyrox?.stations || [];
+    if (stations.length > 0) {
+      results.push({
+        name: `${stations.length} Stations`,
+        detail: "",
+        isRoundHeader: true,
+      });
+    }
+    for (const station of stations) {
       let detail = "";
       if (station.reps) detail = `${station.reps} reps`;
       else if (station.distance) detail = `${station.distance}m`;
@@ -439,11 +494,23 @@ export function buildShareCardExercises(workoutData) {
       add(ex.exercise_name, detail);
     }
   } else if (discipline === "circuit_training") {
-    for (const circuit of ds.circuit_training?.circuits || []) {
-      for (const ex of circuit.exercises || []) {
-        add(ex.exercise_name, buildStrengthDetail(ex.sets));
+    const circuits = ds.circuit_training?.circuits || [];
+    circuits.forEach((circuit, idx) => {
+      if (circuits.length > 1) {
+        results.push({
+          name: circuit.circuit_name || `Circuit ${idx + 1}`,
+          detail: "",
+          isRoundHeader: true,
+        });
       }
-    }
+      for (const ex of circuit.exercises || []) {
+        if (!ex.exercise_name) continue;
+        results.push({
+          name: capitalizeWords(ex.exercise_name),
+          detail: buildStrengthDetail(ex.sets),
+        });
+      }
+    });
   } else if (discipline === "running") {
     const run = ds.running || {};
     const segments = run.segments || [];

@@ -43,12 +43,14 @@ const BADGE_STYLE = {
   background: "rgba(13,10,26,0.5)",
   border: "1px solid rgba(0,255,255,0.30)",
   color: COLORS.textSecondary,
-  padding: "10px 18px",
+  padding: "6px 18px 10px",
   borderRadius: 0,
   fontFamily: "'Inter', sans-serif",
   fontWeight: 400,
   fontSize: "22px",
-  lineHeight: 1,
+  lineHeight: "22px",
+  height: "42px",
+  boxSizing: "border-box",
   letterSpacing: "0.04em",
 };
 
@@ -72,7 +74,7 @@ function MetricCell({ label, value, unit }) {
       style={{
         background: "rgba(13,10,26,0.4)",
         border: "1px solid rgba(0,255,255,0.15)",
-        borderRadius: "16px",
+        borderRadius: "8px",
         boxShadow: "0 4px 24px rgba(0,0,0,0.5), 0 0 16px rgba(0,255,255,0.06)",
         padding: "24px 28px 36px",
         display: "flex",
@@ -460,10 +462,10 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               overflow: "hidden",
               background: "rgba(13,10,26,0.30)",
               border: "1px solid rgba(0,255,255,0.20)",
-              borderRadius: "16px",
+              borderRadius: "8px",
               boxShadow:
                 "0 4px 24px rgba(0,0,0,0.5), 0 0 16px rgba(0,255,255,0.06)",
-              padding: "28px 44px",
+              padding: "16px 44px 28px",
               display: "flex",
               flexDirection: "column",
             }}
@@ -476,44 +478,62 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                 flex: 1,
               }}
             >
-              {displayedExercises.map((ex, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: "20px",
-                    paddingTop: "12px",
-                    paddingBottom: "12px",
-                  }}
-                >
-                  <span
+              {displayedExercises.map((ex, i) =>
+                ex.isRoundHeader ? (
+                  <div
+                    key={i}
                     style={{
-                      fontFamily: "'Barlow', 'Inter', sans-serif",
-                      fontWeight: 700,
-                      fontSize: "26px",
-                      color: COLORS.cyan,
+                      paddingTop: i === 0 ? "0px" : "16px",
+                      paddingBottom: "8px",
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 600,
+                      fontSize: "22px",
+                      color: COLORS.textSecondary,
                       textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                      flexShrink: 0,
+                      letterSpacing: "0.08em",
                     }}
                   >
                     {ex.name}
-                  </span>
-                  {ex.detail && (
+                  </div>
+                ) : (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: "20px",
+                      paddingTop: "12px",
+                      paddingBottom: "12px",
+                    }}
+                  >
                     <span
                       style={{
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: "'Barlow', 'Inter', sans-serif",
+                        fontWeight: 700,
                         fontSize: "26px",
-                        color: COLORS.textSecondary,
-                        fontWeight: 400,
+                        color: COLORS.cyan,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                        flexShrink: 0,
                       }}
                     >
-                      {ex.detail}
+                      {ex.name}
                     </span>
-                  )}
-                </div>
-              ))}
+                    {ex.detail && (
+                      <span
+                        style={{
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "26px",
+                          color: COLORS.textSecondary,
+                          fontWeight: 400,
+                        }}
+                      >
+                        {ex.detail}
+                      </span>
+                    )}
+                  </div>
+                ),
+              )}
 
               {hiddenCount > 0 && (
                 <div
