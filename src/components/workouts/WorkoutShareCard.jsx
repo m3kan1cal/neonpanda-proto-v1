@@ -32,40 +32,28 @@ const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
 const MAX_EXERCISES = 6;
 
-// Shared badge style matching badgePatterns.workoutDetail exactly:
-// px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 text-sm font-body text-synthwave-text-secondary
-// No border-radius (workoutDetail has no "rounded" class), Inter body font, gray text
-const BADGE_STYLE = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  verticalAlign: "middle",
-  background: "rgba(13,10,26,0.5)",
-  border: "1px solid rgba(0,255,255,0.30)",
-  color: COLORS.textSecondary,
-  padding: "6px 18px 10px",
-  borderRadius: 0,
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 400,
-  fontSize: "22px",
-  lineHeight: "22px",
-  height: "42px",
-  boxSizing: "border-box",
-  letterSpacing: "0.04em",
+const LABEL_VALUE_STYLE = {
+  label: {
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: 400,
+    fontSize: "22px",
+    color: COLORS.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+  },
+  value: {
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: 500,
+    fontSize: "22px",
+    color: COLORS.textSecondary,
+  },
+  separator: {
+    fontFamily: "'Inter', sans-serif",
+    fontSize: "22px",
+    color: COLORS.textMuted,
+    margin: "0 16px",
+  },
 };
-
-function DisciplineBadge({ discipline }) {
-  if (!discipline) return null;
-  const label = discipline
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-  return <span style={BADGE_STYLE}>{label}</span>;
-}
-
-function CoachBadge({ name }) {
-  if (!name) return null;
-  return <span style={BADGE_STYLE}>{name}</span>;
-}
 
 // Flat tile matching RecentPRsCard/TopExercisesCard container style
 function MetricCell({ label, value, unit }) {
@@ -404,20 +392,38 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           </div>
         )}
 
-        {/* ── Discipline + Coach badges — below the metrics grid ── */}
+        {/* ── Discipline + Coach labels — below the metrics grid ── */}
         {(discipline || coachName) && (
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "16px",
               marginBottom: "32px",
               flexWrap: "wrap",
               flexShrink: 0,
             }}
           >
-            <DisciplineBadge discipline={discipline} />
-            {coachName && <CoachBadge name={coachName} />}
+            {discipline && (
+              <>
+                <span style={LABEL_VALUE_STYLE.label}>Discipline:</span>
+                <span style={{ ...LABEL_VALUE_STYLE.value, marginLeft: "8px" }}>
+                  {discipline
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
+                </span>
+              </>
+            )}
+            {discipline && coachName && (
+              <span style={LABEL_VALUE_STYLE.separator}>·</span>
+            )}
+            {coachName && (
+              <>
+                <span style={LABEL_VALUE_STYLE.label}>Coach:</span>
+                <span style={{ ...LABEL_VALUE_STYLE.value, marginLeft: "8px" }}>
+                  {coachName}
+                </span>
+              </>
+            )}
           </div>
         )}
 
@@ -485,12 +491,12 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                     style={{
                       paddingTop: i === 0 ? "0px" : "16px",
                       paddingBottom: "8px",
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 600,
-                      fontSize: "22px",
-                      color: COLORS.textSecondary,
+                      fontFamily: "'Barlow', 'Inter', sans-serif",
+                      fontWeight: 700,
+                      fontSize: "26px",
+                      color: COLORS.cyan,
                       textTransform: "uppercase",
-                      letterSpacing: "0.08em",
+                      letterSpacing: "0.04em",
                     }}
                   >
                     {ex.name}

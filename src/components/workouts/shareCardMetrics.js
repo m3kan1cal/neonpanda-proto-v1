@@ -396,6 +396,21 @@ export function buildShareCardExercises(workoutData) {
       roundExNames.length > 1 &&
       roundExNames.every((n) => n === roundExNames[0]);
 
+    const buildCfDetail = (ex) => {
+      const reps = resolveReps(ex.reps);
+      const { w, unit } = resolveWeight(ex.weight);
+      if (ex.distance) {
+        const distUnit = ex.distance_unit || "m";
+        return w
+          ? `${ex.distance}${distUnit} @ ${w} ${unit}`
+          : `${ex.distance}${distUnit}`;
+      }
+      if (ex.calories) return `${ex.calories} cal`;
+      if (reps && w) return `${reps} reps @ ${w} ${unit}`;
+      if (reps) return `${reps} reps`;
+      return "";
+    };
+
     if (allRoundsSame) {
       const roundCount = pd.rounds_completed || rounds.length;
       const workoutType = pd.workout_type
@@ -408,14 +423,10 @@ export function buildShareCardExercises(workoutData) {
       });
       for (const ex of rounds[0].exercises || []) {
         if (!ex.exercise_name) continue;
-        const reps = resolveReps(ex.reps);
-        const { w, unit } = resolveWeight(ex.weight);
-        let detail = "";
-        if (reps && w) detail = `${reps} reps @ ${w} ${unit}`;
-        else if (reps) detail = `${reps} reps`;
-        else if (ex.distance) detail = `${ex.distance}m`;
-        else if (ex.calories) detail = `${ex.calories} cal`;
-        results.push({ name: capitalizeWords(ex.exercise_name), detail });
+        results.push({
+          name: capitalizeWords(ex.exercise_name),
+          detail: buildCfDetail(ex),
+        });
       }
     } else {
       rounds.forEach((round, idx) => {
@@ -426,14 +437,10 @@ export function buildShareCardExercises(workoutData) {
         });
         for (const ex of round.exercises || []) {
           if (!ex.exercise_name) continue;
-          const reps = resolveReps(ex.reps);
-          const { w, unit } = resolveWeight(ex.weight);
-          let detail = "";
-          if (reps && w) detail = `${reps} reps @ ${w} ${unit}`;
-          else if (reps) detail = `${reps} reps`;
-          else if (ex.distance) detail = `${ex.distance}m`;
-          else if (ex.calories) detail = `${ex.calories} cal`;
-          results.push({ name: capitalizeWords(ex.exercise_name), detail });
+          results.push({
+            name: capitalizeWords(ex.exercise_name),
+            detail: buildCfDetail(ex),
+          });
         }
       });
     }
