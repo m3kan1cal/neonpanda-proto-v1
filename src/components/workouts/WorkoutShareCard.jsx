@@ -32,14 +32,16 @@ const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
 const MAX_EXERCISES = 6;
 
-// Shared badge style matching badgePatterns.workoutDetail (gray text, body font, no bold/uppercase)
+// Shared badge style matching badgePatterns.workoutDetail exactly:
+// px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 text-sm font-body text-synthwave-text-secondary
+// No border-radius (workoutDetail has no "rounded" class), Inter body font, gray text
 const BADGE_STYLE = {
   display: "inline-block",
   background: "rgba(13,10,26,0.5)",
   border: "1px solid rgba(0,255,255,0.30)",
   color: COLORS.textSecondary,
   padding: "8px 18px",
-  borderRadius: "3px",
+  borderRadius: 0,
   fontFamily: "'Inter', sans-serif",
   fontWeight: 400,
   fontSize: "22px",
@@ -340,7 +342,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
         </div>
 
         {/* ── Workout name (uppercase, header font, bold) ── */}
-        <div style={{ marginBottom: "24px", flexShrink: 0 }}>
+        <div style={{ marginBottom: "16px", flexShrink: 0 }}>
           <div
             style={{
               fontFamily: "'Barlow', 'Inter', sans-serif",
@@ -357,20 +359,9 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
           </div>
         </div>
 
-        {/* ── Badges + Date row ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-            marginBottom: "48px",
-            flexWrap: "wrap",
-            flexShrink: 0,
-          }}
-        >
-          <DisciplineBadge discipline={discipline} />
-          {coachName && <CoachBadge name={coachName} />}
-          {completedAt && (
+        {/* ── Date — directly under workout name ── */}
+        {completedAt && (
+          <div style={{ marginBottom: "44px", flexShrink: 0 }}>
             <span
               style={{
                 fontFamily: "'Inter', sans-serif",
@@ -381,8 +372,8 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
             >
               {completedAt}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ── Metrics grid (2×2 flat tiles) ── */}
         {metrics.length > 0 && (
@@ -391,7 +382,7 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
               gap: "20px",
-              marginBottom: "40px",
+              marginBottom: "28px",
               flexShrink: 0,
             }}
           >
@@ -403,6 +394,23 @@ const WorkoutShareCard = React.forwardRef(function WorkoutShareCard(
                 unit={m.unit}
               />
             ))}
+          </div>
+        )}
+
+        {/* ── Discipline + Coach badges — below the metrics grid ── */}
+        {(discipline || coachName) && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              marginBottom: "32px",
+              flexWrap: "wrap",
+              flexShrink: 0,
+            }}
+          >
+            <DisciplineBadge discipline={discipline} />
+            {coachName && <CoachBadge name={coachName} />}
           </div>
         )}
 
