@@ -251,7 +251,7 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
                 className="flex flex-col items-center justify-center gap-4"
                 style={{
                   width: "100%",
-                  maxWidth: "360px",
+                  maxWidth: "100%",
                   aspectRatio: "9 / 16",
                 }}
               >
@@ -280,7 +280,7 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
               <div
                 style={{
                   width: "100%",
-                  maxWidth: "360px",
+                  maxWidth: "100%",
                   aspectRatio: "9 / 16",
                   borderRadius: "10px",
                   overflow: "hidden",
@@ -311,9 +311,18 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
             </p>
           )}
 
-          {/* Action buttons — Share first (primary), Save second (secondary) */}
+          {/* Action buttons — Save Image left, Share right */}
           <div className="flex gap-3 pt-4 border-t border-synthwave-neon-cyan/10">
-            {canNativeShare ? (
+            <button
+              onClick={handleDownload}
+              disabled={!capturedBlob || isCapturing}
+              className={`flex-1 ${canNativeShare ? buttonPatterns.secondaryMedium : buttonPatterns.primaryMedium} gap-2 disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <DownloadIcon />
+              Save Image
+            </button>
+
+            {canNativeShare && (
               <button
                 onClick={handleNativeShare}
                 disabled={!capturedBlob || isCapturing || isSharing}
@@ -330,24 +339,6 @@ function ShareWorkoutModal({ workout, coachData, onClose }) {
                     Share
                   </>
                 )}
-              </button>
-            ) : null}
-
-            <button
-              onClick={handleDownload}
-              disabled={!capturedBlob || isCapturing}
-              className={`flex-1 ${canNativeShare ? buttonPatterns.secondaryMedium : buttonPatterns.primaryMedium} gap-2 disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              <DownloadIcon />
-              Save Image
-            </button>
-
-            {!canNativeShare && (
-              <button
-                onClick={onClose}
-                className={`flex-1 ${buttonPatterns.secondaryMedium}`}
-              >
-                Done
               </button>
             )}
           </div>

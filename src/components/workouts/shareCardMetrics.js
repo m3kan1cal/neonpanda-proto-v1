@@ -48,16 +48,20 @@ export function resolveReps(raw) {
 function extractTopWeight(exercises, setKey = "sets") {
   let topWeight = 0;
   let unit = "lbs";
+  let topExerciseName = null;
   for (const exercise of exercises || []) {
     for (const set of exercise[setKey] || []) {
       const { w, unit: u } = resolveWeight(set.weight);
       if (w > topWeight) {
         topWeight = w;
         unit = set.weight_unit || u;
+        topExerciseName = exercise.exercise_name || exercise.lift_name || null;
       }
     }
   }
-  return topWeight > 0 ? { value: String(topWeight), unit } : null;
+  return topWeight > 0
+    ? { value: String(topWeight), unit, exerciseName: topExerciseName }
+    : null;
 }
 
 function extractTotalVolume(exercises, setKey = "sets") {
@@ -198,7 +202,12 @@ export function buildShareCardMetrics(workoutData) {
   } else if (discipline === "bodybuilding") {
     const bb = ds.bodybuilding || {};
     const topWeight = extractTopWeight(bb.exercises);
-    if (topWeight) metrics.push({ label: "Top Weight", ...topWeight });
+    if (topWeight)
+      metrics.push({
+        label: topWeight.exerciseName || "Top Weight",
+        value: topWeight.value,
+        unit: topWeight.unit,
+      });
     const volume = extractTotalVolume(bb.exercises);
     if (volume) metrics.push({ label: "Volume", ...volume });
     if ((bb.exercises || []).length) {
@@ -216,13 +225,23 @@ export function buildShareCardMetrics(workoutData) {
       Object.values(pl).filter(Array.isArray)[0] ||
       [];
     const topWeight = extractTopWeight(exercises);
-    if (topWeight) metrics.push({ label: "Top Lift", ...topWeight });
+    if (topWeight)
+      metrics.push({
+        label: topWeight.exerciseName || "Top Lift",
+        value: topWeight.value,
+        unit: topWeight.unit,
+      });
     const volume = extractTotalVolume(exercises);
     if (volume) metrics.push({ label: "Volume", ...volume });
   } else if (discipline === "olympic_weightlifting") {
     const oly = ds.olympic_weightlifting || {};
     const topWeight = extractTopWeight(oly.lifts || [], "sets");
-    if (topWeight) metrics.push({ label: "Top Lift", ...topWeight });
+    if (topWeight)
+      metrics.push({
+        label: topWeight.exerciseName || "Top Lift",
+        value: topWeight.value,
+        unit: topWeight.unit,
+      });
   } else if (discipline === "hyrox") {
     const hyrox = ds.hyrox || {};
     if (hyrox.total_time) {
