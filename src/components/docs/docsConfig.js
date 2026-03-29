@@ -37,17 +37,12 @@ export const DOCS_SECTIONS = [
   },
 ];
 
-export function getDocByPath(path) {
-  for (const section of DOCS_SECTIONS) {
-    const item = section.items.find((i) => i.path === path);
-    if (item) return { ...item, section: section.title };
-  }
-  return null;
-}
-
 export function getAdjacentDocs(currentPath) {
   const allItems = DOCS_SECTIONS.flatMap((s) => s.items);
   const index = allItems.findIndex((i) => i.path === currentPath);
+  if (index === -1) {
+    return { prev: null, next: null };
+  }
   return {
     prev: index > 0 ? allItems[index - 1] : null,
     next: index < allItems.length - 1 ? allItems[index + 1] : null,
