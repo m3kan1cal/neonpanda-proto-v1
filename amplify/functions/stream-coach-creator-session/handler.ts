@@ -109,7 +109,7 @@ async function* createCoachCreatorEventStreamV2(
     logger.info("✅ V2: Params validated:", {
       userId,
       sessionId,
-      messageLength: userResponse.length,
+      messageLength: userResponse?.length || 0,
       hasImages,
     });
 
@@ -252,7 +252,7 @@ async function* createCoachCreatorEventStreamV2(
     let guardrailWarning = false;
 
     try {
-      const agentGenerator = agent.converseStream(userResponse, imageS3Keys);
+      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys);
 
       let result = await agentGenerator.next();
       while (!result.done) {
@@ -292,7 +292,7 @@ async function* createCoachCreatorEventStreamV2(
     const newUserMessage = {
       id: `msg_${Date.now()}_user`,
       role: "user" as const,
-      content: userResponse,
+      content: userResponse!,
       timestamp: messageTimestamp ? new Date(messageTimestamp) : new Date(),
       ...(hasImages
         ? {

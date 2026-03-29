@@ -386,6 +386,80 @@ node scripts/copy-pinecone-namespace.js <source-namespace> <target-namespace>
 
 - `PINECONE_API_KEY` - Required
 
+## Incident Investigation Scripts
+
+### fetch-incident-logs.js
+
+Fetches CloudWatch log streams for a Lambda function into a timestamped `incidents/` directory,
+then prints the exact Cursor Agent prompt to trigger AI-assisted root cause and remediation
+analysis via the `analyze-incident-logs` skill.
+
+**Usage:**
+
+```bash
+export AWS_REGION="us-west-2"
+export AWS_PROFILE="midgard-sandbox"
+
+# Fetch most recent stream AND immediately invoke the Cursor Agent for analysis
+node scripts/fetch-incident-logs.js \
+  --log-group='/aws/lambda/amplify-neonpandaprotov1--streamcoachconversationl-YrHSi4Ltryf1' \
+  --auto-recent=1 \
+  --run-agent
+
+# Fetch a specific stream with a note (prints prompt for manual paste)
+node scripts/fetch-incident-logs.js \
+  --log-group='/aws/lambda/amplify-neonpandaprotov1--streamcoachconversationl-YrHSi4Ltryf1' \
+  --streams='2026/03/24/[$LATEST]f035c29d5606471a9ae42cbeeb884cf3' \
+  --note='User reported timeout during program generation'
+
+# Fetch the 3 most recent streams and auto-analyze
+node scripts/fetch-incident-logs.js \
+  --log-group='/aws/lambda/amplify-neonpandaprotov1--streamcoachconversationl-YrHSi4Ltryf1' \
+  --auto-recent=3 \
+  --run-agent
+```
+
+**Options:**
+
+- `--log-group=NAME` - CloudWatch log group name (required)
+- `--streams=STREAMS` - Comma-separated stream names (use this OR `--auto-recent`)
+- `--auto-recent=N` - Auto-discover N most recent streams (default: 1 if flag present)
+- `--region=REGION` - AWS region (default: us-west-2)
+- `--note=TEXT` - Short note to embed in incident-context.json (e.g. symptom from error alert)
+- `--run-agent` - Invoke the Cursor Agent CLI (`agent chat`) immediately after fetching
+- `--verbose` - Show detailed per-event progress
+
+**Prerequisites for `--run-agent`:** Install the Cursor Agent CLI:
+
+```bash
+curl https://cursor.com/install -fsSL | bash
+```
+
+**What it produces:**
+
+```
+incidents/
+  2026-03-29_140523_streamcoachconversation/
+    logs.csv               # All log events: timestamp, streamName, message
+    incident-context.json  # Metadata: log group, streams, event counts, time range, note
+```
+
+**After running**, the `analyze-incident-logs` skill guides the Agent to read the incident
+directory, classify errors and warnings, assess root cause, and produce a prioritized
+remediation plan.
+
+**Workflow (automated, with Cursor Agent CLI installed):**
+
+1. Receive error alert (Google Chat, email, etc.)
+2. Identify the Lambda function from the alert
+3. Run `fetch-incident-logs.js --auto-recent=1 --run-agent` — a single command fetches the logs and immediately invokes the Agent
+4. Review the remediation plan in the terminal or IDE; execute P0 and P1 items
+
+**Workflow (manual, without CLI):**
+
+1. Run the script without `--run-agent`
+2. Copy the printed prompt and paste it into the Cursor Agent chat in the IDE
+
 ## Common Patterns
 
 All scripts follow these patterns:

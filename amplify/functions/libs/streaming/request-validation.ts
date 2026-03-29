@@ -3,9 +3,13 @@
  */
 
 /**
- * Parse and validate request body from streaming event
+ * Parse and validate request body from streaming event.
+ * Handles base64-encoded bodies from Lambda Function URLs.
  */
-export function parseRequestBody(body: string | undefined): {
+export function parseRequestBody(
+  body: string | undefined,
+  isBase64Encoded?: boolean,
+): {
   userResponse: string;
   messageTimestamp: string;
   imageS3Keys?: string[];
@@ -14,9 +18,13 @@ export function parseRequestBody(body: string | undefined): {
     throw new Error("Request body is required");
   }
 
+  const decodedBody = isBase64Encoded
+    ? Buffer.from(body, "base64").toString("utf-8")
+    : body;
+
   let parsedBody;
   try {
-    parsedBody = JSON.parse(body);
+    parsedBody = JSON.parse(decodedBody);
   } catch (parseError) {
     throw new Error("Invalid JSON in request body");
   }
@@ -36,7 +44,7 @@ export function parseRequestBody(body: string | undefined): {
 export function validateImageS3Keys(
   imageS3Keys: string[] | undefined,
   userId: string,
-  maxImages: number = 5
+  maxImages: number = 5,
 ): void {
   if (!imageS3Keys) {
     return;
@@ -62,7 +70,7 @@ export function validateImageS3Keys(
  * Validate message timestamp
  */
 export function validateMessageTimestamp(
-  messageTimestamp: string | undefined
+  messageTimestamp: string | undefined,
 ): void {
   if (!messageTimestamp) {
     throw new Error("Message timestamp is required");
@@ -74,7 +82,7 @@ export function validateMessageTimestamp(
  */
 export function validateUserResponse(
   userResponse: string | undefined,
-  imageS3Keys?: string[]
+  imageS3Keys?: string[],
 ): void {
   // Either text or images required
   if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
@@ -92,16 +100,21 @@ export function validateStreamingRequestBody(
   options: {
     requireUserResponse?: boolean;
     maxImages?: number;
-  } = {}
+    isBase64Encoded?: boolean;
+  } = {},
 ): {
-  userResponse: string;
+  userResponse: string | undefined;
   messageTimestamp: string;
   imageS3Keys?: string[];
 } {
-  const { requireUserResponse = true, maxImages = 5 } = options;
+  const {
+    requireUserResponse = true,
+    maxImages = 5,
+    isBase64Encoded,
+  } = options;
 
   // Parse body
-  const parsed = parseRequestBody(body);
+  const parsed = parseRequestBody(body, isBase64Encoded);
   const { userResponse, messageTimestamp, imageS3Keys } = parsed;
 
   // Validate user response (if required)
@@ -124,4 +137,3 @@ export function validateStreamingRequestBody(
     imageS3Keys,
   };
 }
-
