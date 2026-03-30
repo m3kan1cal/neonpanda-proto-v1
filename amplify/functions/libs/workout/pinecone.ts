@@ -34,7 +34,10 @@ export const storeWorkoutSummaryInPinecone = async (
       discipline: workoutData.discipline,
       workoutName: workoutData.workout_name || "Custom Workout",
       workoutType: workoutData.workout_type,
-      completedAt: workout.completedAt.toISOString(),
+      completedAt:
+        workout.completedAt instanceof Date
+          ? workout.completedAt.toISOString()
+          : String(workout.completedAt),
       extractionConfidence: workout.extractionMetadata.confidence,
       dataCompleteness: workoutData.metadata?.data_completeness ?? 0, // Default to 0 if null
       coachId: workout.coachIds[0],
