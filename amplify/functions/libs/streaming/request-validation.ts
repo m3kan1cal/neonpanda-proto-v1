@@ -11,11 +11,15 @@ export interface EditContext {
 }
 
 /**
- * Parse and validate request body from streaming event
+ * Parse and validate request body from streaming event.
+ * Handles base64-encoded bodies from Lambda Function URLs.
  */
-export function parseRequestBody(body: string | undefined): {
-  userResponse: string;
-  messageTimestamp: string;
+export function parseRequestBody(
+  body: string | undefined,
+  isBase64Encoded?: boolean,
+): {
+  userResponse: string | undefined;
+  messageTimestamp: string | undefined;
   imageS3Keys?: string[];
   editContext?: EditContext;
 } {
@@ -23,9 +27,13 @@ export function parseRequestBody(body: string | undefined): {
     throw new Error("Request body is required");
   }
 
+  const decodedBody = isBase64Encoded
+    ? Buffer.from(body, "base64").toString("utf-8")
+    : body;
+
   let parsedBody;
   try {
-    parsedBody = JSON.parse(body);
+    parsedBody = JSON.parse(decodedBody);
   } catch (parseError) {
     throw new Error("Invalid JSON in request body");
   }
@@ -103,17 +111,22 @@ export function validateStreamingRequestBody(
   options: {
     requireUserResponse?: boolean;
     maxImages?: number;
+    isBase64Encoded?: boolean;
   } = {},
 ): {
-  userResponse: string;
+  userResponse: string | undefined;
   messageTimestamp: string;
   imageS3Keys?: string[];
   editContext?: EditContext;
 } {
-  const { requireUserResponse = true, maxImages = 5 } = options;
+  const {
+    requireUserResponse = true,
+    maxImages = 5,
+    isBase64Encoded,
+  } = options;
 
   // Parse body
-  const parsed = parseRequestBody(body);
+  const parsed = parseRequestBody(body, isBase64Encoded);
   const { userResponse, messageTimestamp, imageS3Keys, editContext } = parsed;
 
   // Validate user response (if required)
@@ -142,7 +155,7 @@ export function validateStreamingRequestBody(
 
   return {
     userResponse,
-    messageTimestamp,
+    messageTimestamp: messageTimestamp as string,
     imageS3Keys,
     editContext,
   };

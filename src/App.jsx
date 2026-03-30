@@ -24,6 +24,11 @@ import RetroTemplate from "./components/themes/RetroComponents";
 import BlogIndex from "./components/blog/BlogIndex";
 import BlogPostRouter from "./components/blog/BlogPostRouter";
 import SharedProgramPreview from "./components/shared-programs/SharedProgramPreview";
+import DocsLayout from "./components/docs/DocsLayout";
+import DocsHome from "./components/docs/DocsHome";
+import CreatingACoach from "./components/docs/CreatingACoach";
+import LoggingWorkouts from "./components/docs/LoggingWorkouts";
+import CoachConversationsDoc from "./components/docs/CoachConversations";
 
 // Heavy authenticated pages — lazy loaded so they don't bloat the initial bundle
 const CoachCreator = lazy(() => import("./components/CoachCreator"));
@@ -88,6 +93,7 @@ function AppContent() {
     "/auth", // Includes all auth child routes (signin, signup, etc.)
     "/welcome", // Post-checkout welcome page
     "/blog", // Blog index and all blog posts
+    "/docs", // Documentation pages
     "/shared", // Shared program previews (public access)
   ];
   const isPublicPage =
@@ -195,6 +201,14 @@ function AppContent() {
           <Route path="/template/synthwave" element={<Theme />} />
           <Route path="/template/retro" element={<RetroTemplate />} />
           <Route path="/contact" element={<ContactForm />} />
+
+          {/* Documentation routes */}
+          <Route path="/docs" element={<DocsLayout />}>
+            <Route index element={<DocsHome />} />
+            <Route path="creating-a-coach" element={<CreatingACoach />} />
+            <Route path="logging-workouts" element={<LoggingWorkouts />} />
+            <Route path="coach-conversations" element={<CoachConversationsDoc />} />
+          </Route>
 
           {/* Blog routes */}
           <Route path="/blog" element={<BlogIndex />} />

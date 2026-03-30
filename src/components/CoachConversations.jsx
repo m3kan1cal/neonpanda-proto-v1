@@ -773,7 +773,7 @@ function CoachConversations() {
     }, 50);
 
     try {
-      await sendMessageWithStreaming(agentRef.current, messageToSend, {
+      await sendMessageWithStreaming(agentRef.current, messageToSend, [], {
         enableStreaming: supportsStreaming(),
         onStreamingStart: () => {
           // Streaming started
