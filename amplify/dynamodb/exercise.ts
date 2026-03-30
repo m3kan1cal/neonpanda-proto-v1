@@ -178,7 +178,10 @@ export async function deleteExercisesByWorkoutId(
       const command = new QueryCommand({
         TableName: tableName,
         KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
-        FilterExpression: "attributes.workoutId = :workoutId",
+        FilterExpression: "#attributes.workoutId = :workoutId",
+        ExpressionAttributeNames: {
+          "#attributes": "attributes",
+        },
         ExpressionAttributeValues: {
           ":pk": pk,
           ":prefix": "exercise#",

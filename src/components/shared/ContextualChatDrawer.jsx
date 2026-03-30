@@ -345,6 +345,11 @@ function PanelContent({
           <span className="ml-1">Editing</span>
         </span>
 
+        {/* Beta badge */}
+        <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
+          Beta
+        </span>
+
         {/* Close button */}
         <button
           type="button"

@@ -515,6 +515,12 @@ function ManageCoachConversations() {
         key: "mode-workout-edit",
         label: "Workout Edit",
       });
+      allBadges.push({
+        key: "mode-workout-edit-beta",
+        label: "Beta",
+        className:
+          "px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple text-xs font-body font-bold uppercase tracking-wider",
+      });
     }
 
     // Tags (if available)

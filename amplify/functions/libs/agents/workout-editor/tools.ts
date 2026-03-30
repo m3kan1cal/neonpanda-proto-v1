@@ -183,15 +183,20 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
           context.userId,
           editContext.entityId,
         );
-        if (newSummary) {
+        const summaryForPinecone = newSummary ?? updatedWorkout.summary;
+        if (summaryForPinecone) {
           await storeWorkoutSummaryInPinecone(
             context.userId,
-            newSummary,
+            summaryForPinecone,
             updatedWorkout.workoutData,
             updatedWorkout,
           );
+          logger.info("✅ Pinecone vector updated");
+        } else {
+          logger.warn(
+            "⚠️ No summary available for Pinecone vector — old vector deleted but replacement skipped",
+          );
         }
-        logger.info("✅ Pinecone vector updated");
       } catch (err) {
         logger.error(
           "⚠️ Failed to update Pinecone vector (non-blocking):",
