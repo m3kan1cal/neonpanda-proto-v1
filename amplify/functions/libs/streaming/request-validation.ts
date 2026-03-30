@@ -133,7 +133,7 @@ export function validateStreamingRequestBody(
 
   return {
     userResponse,
-    messageTimestamp,
+    messageTimestamp: messageTimestamp as string,
     imageS3Keys,
   };
 }
