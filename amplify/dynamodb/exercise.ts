@@ -211,14 +211,22 @@ export async function deleteExercisesByWorkoutId(
       DeleteRequest: { Key: { pk: itemPk, sk } },
     }));
 
-    await withThroughputScaling(async () => {
+    const result = await withThroughputScaling(async () => {
       const command = new BatchWriteCommand({
         RequestItems: { [tableName]: deleteRequests },
       });
       return docClient.send(command);
     }, `Delete exercise batch for workout ${workoutId}`);
 
-    deleted += batch.length;
+    const unprocessedCount = result.UnprocessedItems?.[tableName]?.length ?? 0;
+    deleted += batch.length - unprocessedCount;
+
+    if (unprocessedCount > 0) {
+      logger.warn(
+        `⚠️ Batch delete partially succeeded: ${unprocessedCount} items unprocessed`,
+        { workoutId },
+      );
+    }
   }
 
   logger.info("✅ Deleted stale exercise records:", { workoutId, deleted });

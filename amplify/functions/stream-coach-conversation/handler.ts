@@ -509,7 +509,9 @@ async function* createCoachConversationEventStreamV2(
           modelId === MODEL_IDS.PLANNER_MODEL_FULL
             ? MODEL_IDS.PLANNER_MODEL_DISPLAY
             : MODEL_IDS.EXECUTOR_MODEL_DISPLAY,
-        mode: CONVERSATION_MODES.CHAT,
+        mode: isEditMode
+          ? CONVERSATION_MODES.WORKOUT_EDIT
+          : CONVERSATION_MODES.CHAT,
         tokens: totalInputTokens + totalOutputTokens,
         ...(guardrailWarning ? { guardrailWarning: true } : {}),
       } as any, // Use type assertion to allow agent-specific metadata

@@ -136,7 +136,7 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
         enrichedEdits.extractionMetadata = {
           ...(edits.extractionMetadata ?? {}),
           reviewedAt: new Date(),
-          templateComparison: undefined,
+          templateComparison: null,
         };
       } else {
         enrichedEdits.extractionMetadata = {
