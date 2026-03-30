@@ -375,7 +375,10 @@ async function* createCoachConversationEventStreamV2(
     mark("historyCaching", stepStart);
 
     // 7. Select model — always use Sonnet in edit mode for structured output quality
-    const isEditMode = !!editContext;
+    // Derive edit mode from the persisted conversation mode, not client-sent editContext,
+    // to prevent any conversation from being coerced into edit behavior by a rogue client.
+    const isEditMode =
+      existingConversation.mode === CONVERSATION_MODES.WORKOUT_EDIT;
     const modelId = isEditMode
       ? MODEL_IDS.PLANNER_MODEL_FULL
       : selectModelForConversationAgent(
