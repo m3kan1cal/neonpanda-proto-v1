@@ -315,6 +315,15 @@ async function* createCoachConversationEventStreamV2(
     const isEditMode =
       existingConversation.mode === CONVERSATION_MODES.WORKOUT_EDIT;
 
+    // Fail fast: a workout_edit conversation requires editContext in every request so
+    // tools have a valid entityId to operate on. Missing editContext would leave the AI
+    // with editing tools but no instructions or entity ID, causing every tool call to fail.
+    if (isEditMode && !editContext) {
+      throw new Error(
+        "workout_edit conversation requires editContext in the request body",
+      );
+    }
+
     const agentContext: ConversationAgentContext = {
       userId,
       coachId,

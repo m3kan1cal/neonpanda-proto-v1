@@ -60,7 +60,6 @@ export function buildConversationAgentPrompt(
     editContext?: {
       entityType: string;
       entityId: string;
-      entityData?: any;
     };
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
