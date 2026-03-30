@@ -154,7 +154,7 @@ async function* createCoachConversationEventStreamV2(
     logger.debug("V2: Request body fields:", {
       hasBody: !!event.body,
       bodyLength: event.body?.length || 0,
-      isBase64Encoded: (event as any).isBase64Encoded,
+      isBase64Encoded: event.isBase64Encoded,
     });
 
     const { userResponse, imageS3Keys } = validateStreamingRequestBody(

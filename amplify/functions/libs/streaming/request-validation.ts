@@ -10,8 +10,8 @@ export function parseRequestBody(
   body: string | undefined,
   isBase64Encoded?: boolean,
 ): {
-  userResponse: string;
-  messageTimestamp: string;
+  userResponse: string | undefined;
+  messageTimestamp: string | undefined;
   imageS3Keys?: string[];
 } {
   if (!body) {
