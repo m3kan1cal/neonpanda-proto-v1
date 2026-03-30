@@ -10,7 +10,14 @@
  * Currently wired for entityType="workout". Extensible to "program" and other entity types.
  */
 
-import React, { useState, useEffect, useRef, useCallback, useId } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useId,
+  useMemo,
+} from "react";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -70,7 +77,10 @@ export default function ContextualChatDrawer({
   const lastEditMessageIdRef = useRef(null);
 
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
-  const editContext = entityType && entityId ? { entityType, entityId } : null;
+  const editContext = useMemo(
+    () => (entityType && entityId ? { entityType, entityId } : null),
+    [entityType, entityId],
+  );
 
   // ──────────────────────────────────────────────────────────────────────────
   // Agent lifecycle — create a fresh conversation each time the drawer opens
