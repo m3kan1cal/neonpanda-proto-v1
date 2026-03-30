@@ -9,23 +9,38 @@
  * - Report all violations in a single pass (allErrors: true)
  * - Throw on failure so callers' existing retry logic can re-attempt
  *
+ * Data coercion (applied before validation):
+ * - useDefaults: backfills missing properties that declare a `default` in the schema
+ * - removeAdditional: strips properties not declared in the schema where
+ *   `additionalProperties: false` is set — tolerates non-deterministic LLM output
+ *   while still enforcing required fields, types, and enum constraints
+ *
  * strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
  */
 
 import Ajv, { ValidateFunction } from "ajv";
 
-const ajv = new Ajv({ allErrors: true, useDefaults: true });
+const ajv = new Ajv({
+  allErrors: true,
+  useDefaults: true,
+  removeAdditional: true,
+});
 
 const schemaCache = new Map<string, ValidateFunction>();
 
 /**
  * Validate a tool response against its JSON Schema. Throws on failure.
- * With `useDefaults: true`, AJV will backfill missing properties that declare
- * a `default` in the schema before validation runs — so required fields with
- * defaults degrade gracefully instead of failing the entire pipeline.
+ *
+ * Before validation, AJV automatically coerces the data:
+ * - Backfills missing properties that declare a `default` (useDefaults)
+ * - Strips undeclared properties where `additionalProperties: false` (removeAdditional)
+ *
+ * This means validation enforces structure (required, type, enum) while
+ * tolerating the extra fields LLMs non-deterministically add.
+ * The response object is mutated in place — callers receive clean data.
  *
  * @param toolName - The name of the tool (used as the cache key)
- * @param response - The parsed tool input returned by the model
+ * @param response - The parsed tool input returned by the model (mutated in place)
  * @param schema - The JSON Schema object to validate against (same schema sent to Bedrock)
  * @throws Error with a descriptive message listing all schema violations
  */
