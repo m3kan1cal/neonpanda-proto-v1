@@ -310,6 +310,11 @@ async function* createCoachConversationEventStreamV2(
       });
     }
 
+    // Derive edit mode from the persisted conversation mode, not client-sent editContext,
+    // to prevent any conversation from being coerced into edit behavior by a rogue client.
+    const isEditMode =
+      existingConversation.mode === CONVERSATION_MODES.WORKOUT_EDIT;
+
     const agentContext: ConversationAgentContext = {
       userId,
       coachId,
@@ -331,12 +336,13 @@ async function* createCoachConversationEventStreamV2(
           }
         : null,
       ...(cappedImageS3Keys.length && { imageS3Keys: cappedImageS3Keys }),
-      ...(editContext && {
-        editContext: {
-          entityType: editContext.entityType,
-          entityId: editContext.entityId,
-        },
-      }),
+      ...(isEditMode &&
+        editContext && {
+          editContext: {
+            entityType: editContext.entityType,
+            entityId: editContext.entityId,
+          },
+        }),
     };
 
     // 5. Build system prompt
@@ -354,7 +360,7 @@ async function* createCoachConversationEventStreamV2(
         emotionalContext: emotionalContext || undefined,
         livingProfileContext,
         prospectiveContext,
-        editContext: agentContext.editContext,
+        ...(isEditMode && { editContext: agentContext.editContext }),
       },
     );
 
@@ -375,10 +381,6 @@ async function* createCoachConversationEventStreamV2(
     mark("historyCaching", stepStart);
 
     // 7. Select model — always use Sonnet in edit mode for structured output quality
-    // Derive edit mode from the persisted conversation mode, not client-sent editContext,
-    // to prevent any conversation from being coerced into edit behavior by a rogue client.
-    const isEditMode =
-      existingConversation.mode === CONVERSATION_MODES.WORKOUT_EDIT;
     const modelId = isEditMode
       ? MODEL_IDS.PLANNER_MODEL_FULL
       : selectModelForConversationAgent(
