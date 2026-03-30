@@ -20,6 +20,7 @@ import {
   ProgramIconTiny,
   WeightPlateIconTiny,
   BlogIconTiny,
+  DocsIconTiny,
   ShareIconTiny,
 } from "../../components/themes/SynthwaveComponents";
 
@@ -255,6 +256,14 @@ export const navigationItems = {
       label: "Blog",
       icon: BlogIconTiny,
       route: "/blog",
+      alwaysVisible: true,
+      color: "cyan",
+    },
+    {
+      id: "docs",
+      label: "Docs",
+      icon: DocsIconTiny,
+      route: "/docs",
       alwaysVisible: true,
       color: "cyan",
     },

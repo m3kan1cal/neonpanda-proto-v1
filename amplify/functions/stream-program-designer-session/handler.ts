@@ -163,6 +163,7 @@ async function* createProgramDesignerEventStreamV2(
       validateStreamingRequestBody(event.body, userId as string, {
         requireUserResponse: true,
         maxImages: 5,
+        isBase64Encoded: event.isBase64Encoded,
       });
 
     const hasImages = !!(imageS3Keys && imageS3Keys.length > 0);
@@ -170,7 +171,7 @@ async function* createProgramDesignerEventStreamV2(
     logger.info("✅ V2: Params validated:", {
       userId,
       sessionId,
-      messageLength: userResponse.length,
+      messageLength: userResponse?.length || 0,
       hasImages,
     });
 
@@ -214,7 +215,7 @@ async function* createProgramDesignerEventStreamV2(
     });
 
     // 4. Pre-agent slash command check — same behavior as V1
-    const slashCommandResult = parseSlashCommand(userResponse);
+    const slashCommandResult = parseSlashCommand(userResponse!);
     const isProgramDesignSlashCommand =
       slashCommandResult.isSlashCommand &&
       isProgramDesignCommand(slashCommandResult.command);
@@ -339,7 +340,7 @@ async function* createProgramDesignerEventStreamV2(
     let guardrailWarning = false;
 
     try {
-      const agentGenerator = agent.converseStream(userResponse, imageS3Keys);
+      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys);
 
       let result = await agentGenerator.next();
       while (!result.done) {
@@ -379,7 +380,7 @@ async function* createProgramDesignerEventStreamV2(
     const newUserMessage: CoachMessage = {
       id: `msg_${Date.now()}_user`,
       role: "user",
-      content: userResponse,
+      content: userResponse!,
       timestamp: messageTimestamp ? new Date(messageTimestamp) : new Date(),
       ...(hasImages
         ? {

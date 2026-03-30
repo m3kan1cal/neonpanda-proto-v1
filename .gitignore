@@ -32,6 +32,10 @@ amplifyconfiguration*
 .env*
 
 test/fixtures/*
+docs/social-content/
 
 # AI Agent development=
 .claude/*
+
+# Incident logs
+incidents/

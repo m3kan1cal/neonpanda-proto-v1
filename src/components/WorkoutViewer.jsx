@@ -2526,36 +2526,61 @@ const WorkoutViewer = ({
                       Personal Feedback
                     </h4>
                     <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+                      {/* RPE and Intensity gradient bars */}
+                      {(workoutData.performance_metrics?.intensity ||
+                        workoutData.performance_metrics
+                          ?.perceived_exertion) && (
+                        <div className="space-y-3 mb-3">
+                          {workoutData.performance_metrics
+                            ?.perceived_exertion && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="font-body text-xs text-synthwave-text-muted uppercase font-semibold">
+                                  RPE (Perceived Exertion)
+                                </span>
+                                <span className="font-body text-xs text-synthwave-text-muted font-bold">
+                                  {
+                                    workoutData.performance_metrics
+                                      .perceived_exertion
+                                  }
+                                  /10
+                                </span>
+                              </div>
+                              <div className="h-2 bg-synthwave-bg-primary/60 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple transition-all duration-500"
+                                  style={{
+                                    width: `${(workoutData.performance_metrics.perceived_exertion / 10) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {workoutData.performance_metrics?.intensity && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="font-body text-xs text-synthwave-text-muted uppercase font-semibold">
+                                  Intensity
+                                </span>
+                                <span className="font-body text-xs text-synthwave-text-muted font-bold">
+                                  {workoutData.performance_metrics.intensity}/10
+                                </span>
+                              </div>
+                              <div className="h-2 bg-synthwave-bg-primary/60 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple transition-all duration-500"
+                                  style={{
+                                    width: `${(workoutData.performance_metrics.intensity / 10) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                        {/* Intensity */}
-                        {workoutData.performance_metrics?.intensity && (
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-secondary">
-                              Intensity:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium">
-                              {workoutData.performance_metrics.intensity}/10
-                            </span>
-                          </div>
-                        )}
-
-                        {/* RPE */}
-                        {workoutData.performance_metrics
-                          ?.perceived_exertion && (
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-secondary">
-                              RPE:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium">
-                              {
-                                workoutData.performance_metrics
-                                  .perceived_exertion
-                              }
-                              /10
-                            </span>
-                          </div>
-                        )}
-
                         {/* Pre-Mood */}
                         {workoutData.performance_metrics?.mood_pre && (
                           <div className="flex items-center gap-1.5 font-body text-sm">
