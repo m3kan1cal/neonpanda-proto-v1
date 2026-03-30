@@ -60,12 +60,14 @@ export default function ContextualChatDrawer({
   const [agentState, setAgentState] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
-  const [editApplied, setEditApplied] = useState(false);
 
   const agentRef = useRef(null);
-  const messageAreaRef = useRef(null);
-  const inputFocusRef = useRef(null);
+  const desktopMessageAreaRef = useRef(null);
+  const mobileMessageAreaRef = useRef(null);
+  const desktopInputFocusRef = useRef(null);
+  const mobileInputFocusRef = useRef(null);
   const closeTriggerRef = useRef(null);
+  const lastEditMessageIdRef = useRef(null);
 
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
   const editContext = entityType && entityId ? { entityType, entityId } : null;
@@ -80,7 +82,7 @@ export default function ContextualChatDrawer({
 
     async function initConversation() {
       setIsInitializing(true);
-      setEditApplied(false);
+      lastEditMessageIdRef.current = null;
 
       const agent = new CoachConversationAgent({
         userId,
@@ -130,11 +132,14 @@ export default function ContextualChatDrawer({
   }, [isOpen, userId, coachId, entityId]); // intentionally excludes entityLabel to avoid re-init on title change
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Auto-scroll message area to bottom on new messages
+  // Auto-scroll message area to bottom on new messages (target visible panel)
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (messageAreaRef.current && agentState?.messages) {
-      messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
+    if (!agentState?.messages) return;
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    const ref = isDesktop ? desktopMessageAreaRef : mobileMessageAreaRef;
+    if (ref.current) {
+      ref.current.scrollTop = ref.current.scrollHeight;
     }
   }, [
     agentState?.messages,
@@ -147,39 +152,41 @@ export default function ContextualChatDrawer({
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
-      // Focus the input after the panel has animated in
       const timer = setTimeout(() => {
-        inputFocusRef.current?.focus();
+        const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+        const ref = isDesktop ? desktopInputFocusRef : mobileInputFocusRef;
+        ref.current?.focus();
       }, 320);
       return () => clearTimeout(timer);
     } else {
-      // Return focus to the button that opened the drawer
       closeTriggerRef.current?.focus();
     }
   }, [isOpen]);
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Detect when apply_workout_edits tool was used and trigger parent refresh
+  // Detect when apply_workout_edits tool was used and trigger parent refresh.
+  // Tracks the last processed message ID so every new edit fires the callback.
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!agentState?.messages) return;
 
-    // Check the most recent assistant message for tool completion evidence
     const lastAssistant = [...agentState.messages]
       .reverse()
       .find((m) => m.type === "assistant" || m.role === "assistant");
 
+    const messageId = lastAssistant?.id || lastAssistant?.messageId;
+
     if (
       lastAssistant &&
-      !editApplied &&
+      messageId !== lastEditMessageIdRef.current &&
       lastAssistant.metadata?.agent?.toolsUsed?.includes("apply_workout_edits")
     ) {
-      setEditApplied(true);
+      lastEditMessageIdRef.current = messageId;
       if (typeof onEntityUpdated === "function") {
         onEntityUpdated();
       }
     }
-  }, [agentState?.messages, editApplied, onEntityUpdated]);
+  }, [agentState?.messages, onEntityUpdated]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Escape key to close
@@ -255,7 +262,7 @@ export default function ContextualChatDrawer({
           coachData={coachData}
           coachInitial={coachInitial}
           onClose={onClose}
-          messageAreaRef={messageAreaRef}
+          messageAreaRef={desktopMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
           streamingMessage={streamingMessage}
@@ -263,7 +270,7 @@ export default function ContextualChatDrawer({
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
           handleSend={handleSend}
-          inputFocusRef={inputFocusRef}
+          inputFocusRef={desktopInputFocusRef}
           userId={userId}
         />
       </div>
@@ -286,7 +293,7 @@ export default function ContextualChatDrawer({
           coachData={coachData}
           coachInitial={coachInitial}
           onClose={onClose}
-          messageAreaRef={messageAreaRef}
+          messageAreaRef={mobileMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
           streamingMessage={streamingMessage}
@@ -294,7 +301,7 @@ export default function ContextualChatDrawer({
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
           handleSend={handleSend}
-          inputFocusRef={inputFocusRef}
+          inputFocusRef={mobileInputFocusRef}
           userId={userId}
         />
       </div>
