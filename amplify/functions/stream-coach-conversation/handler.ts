@@ -22,7 +22,6 @@ import {
   getCoachConfig,
   getUserProfile,
   getCoachConversationSummary,
-  getWorkout,
 } from "../../dynamodb/operations";
 import {
   CoachMessage,
@@ -203,7 +202,6 @@ async function* createCoachConversationEventStreamV2(
       emotionalTrend,
       prospectiveMemoriesRaw,
       conversationSummary,
-      editWorkoutData,
     ] = await Promise.all([
       getUserProfile(userId),
       getCoachConversation(userId, coachId, conversationId),
@@ -215,9 +213,6 @@ async function* createCoachConversationEventStreamV2(
         () => [],
       ),
       getCoachConversationSummary(userId, conversationId).catch(() => null),
-      editContext?.entityType === "workout"
-        ? getWorkout(userId, editContext.entityId).catch(() => null)
-        : Promise.resolve(null),
     ]);
 
     mark("dataLoading", stepStart);
@@ -254,7 +249,6 @@ async function* createCoachConversationEventStreamV2(
       hasLivingProfile: !!userProfile?.livingProfile,
       activeProspectiveCount: activeProspectiveMemories.length,
       hasConversationSummary: !!conversationSummary,
-      hasEditWorkout: !!editWorkoutData,
     });
 
     const userTimezone = getUserTimezoneOrDefault(
@@ -341,7 +335,6 @@ async function* createCoachConversationEventStreamV2(
         editContext: {
           entityType: editContext.entityType,
           entityId: editContext.entityId,
-          entityData: editWorkoutData,
         },
       }),
     };

@@ -60,7 +60,6 @@ export interface ConversationAgentContext extends AgentContext {
   editContext?: {
     entityType: "workout"; // extensible to "program" later
     entityId: string;
-    entityData?: any; // loaded workout data (populated by handler before agent run)
   };
 }
 
