@@ -184,30 +184,37 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
 
         // 2. Update Pinecone vector (delete stale → store fresh)
         try {
-          await deleteWorkoutSummaryFromPinecone(
+          const deleteResult = await deleteWorkoutSummaryFromPinecone(
             context.userId,
             editContext.entityId,
           );
-          const summaryForPinecone = newSummary ?? updatedWorkout.summary;
-          if (summaryForPinecone) {
-            const storeResult = await storeWorkoutSummaryInPinecone(
-              context.userId,
-              summaryForPinecone,
-              updatedWorkout.workoutData,
-              updatedWorkout,
-            );
-            if ("error" in storeResult) {
-              logger.error(
-                "⚠️ Failed to store Pinecone vector after delete — vector permanently lost:",
-                storeResult.error,
-              );
-            } else {
-              logger.info("✅ Pinecone vector updated");
-            }
-          } else {
+          if (!deleteResult.success) {
             logger.warn(
-              "⚠️ No summary available for Pinecone vector — old vector deleted but replacement skipped",
+              "⚠️ Pinecone delete failed — skipping store to avoid duplicate vectors:",
+              deleteResult.error,
             );
+          } else {
+            const summaryForPinecone = newSummary ?? updatedWorkout.summary;
+            if (summaryForPinecone) {
+              const storeResult = await storeWorkoutSummaryInPinecone(
+                context.userId,
+                summaryForPinecone,
+                updatedWorkout.workoutData,
+                updatedWorkout,
+              );
+              if ("error" in storeResult) {
+                logger.error(
+                  "⚠️ Failed to store Pinecone vector after delete — vector permanently lost:",
+                  storeResult.error,
+                );
+              } else {
+                logger.info("✅ Pinecone vector updated");
+              }
+            } else {
+              logger.warn(
+                "⚠️ No summary available for Pinecone vector — old vector deleted but replacement skipped",
+              );
+            }
           }
         } catch (err) {
           logger.error(
