@@ -158,109 +158,115 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
         enrichedEdits,
       );
 
-      // Post-edit pipeline (best-effort, non-blocking where possible)
-      // 1. Regenerate summary
+      // Post-edit pipeline — only runs when workoutData was changed.
+      // Edits that touch only metadata fields (summary, notes, etc.) don't need
+      // summary regeneration, Pinecone refresh, or exercise/analysis rebuilds.
+      const workoutDataChanged = !!edits.workoutData;
       let newSummary: string | undefined;
-      try {
-        newSummary = await generateWorkoutSummary(
-          updatedWorkout.workoutData,
-          editSummary,
-        );
-        await updateWorkout(context.userId, editContext.entityId, {
-          summary: newSummary,
-        });
-        logger.info("✅ Workout summary regenerated");
-      } catch (err) {
-        logger.error(
-          "⚠️ Failed to regenerate workout summary (non-blocking):",
-          err,
-        );
-      }
 
-      // 2. Update Pinecone vector (delete stale → store fresh)
-      try {
-        await deleteWorkoutSummaryFromPinecone(
-          context.userId,
-          editContext.entityId,
-        );
-        const summaryForPinecone = newSummary ?? updatedWorkout.summary;
-        if (summaryForPinecone) {
-          const storeResult = await storeWorkoutSummaryInPinecone(
-            context.userId,
-            summaryForPinecone,
+      if (workoutDataChanged) {
+        // 1. Regenerate summary
+        try {
+          newSummary = await generateWorkoutSummary(
             updatedWorkout.workoutData,
-            updatedWorkout,
+            editSummary,
           );
-          if ("error" in storeResult) {
-            logger.error(
-              "⚠️ Failed to store Pinecone vector after delete — vector permanently lost:",
-              storeResult.error,
-            );
-          } else {
-            logger.info("✅ Pinecone vector updated");
-          }
-        } else {
-          logger.warn(
-            "⚠️ No summary available for Pinecone vector — old vector deleted but replacement skipped",
+          await updateWorkout(context.userId, editContext.entityId, {
+            summary: newSummary,
+          });
+          logger.info("✅ Workout summary regenerated");
+        } catch (err) {
+          logger.error(
+            "⚠️ Failed to regenerate workout summary (non-blocking):",
+            err,
           );
         }
-      } catch (err) {
-        logger.error(
-          "⚠️ Failed to update Pinecone vector (non-blocking):",
-          err,
-        );
-      }
 
-      // 3. Fire-and-forget: rebuild workout analysis (insights)
-      const buildWorkoutAnalysisFunction =
-        process.env.BUILD_WORKOUT_ANALYSIS_FUNCTION_NAME;
-      if (buildWorkoutAnalysisFunction) {
-        invokeAsyncLambda(
-          buildWorkoutAnalysisFunction,
-          {
-            userId: context.userId,
-            coachId: context.coachId,
-            workoutId: editContext.entityId,
-            workoutData: updatedWorkout.workoutData,
-            summary: newSummary ?? updatedWorkout.summary,
-            completedAt:
-              updatedWorkout.completedAt instanceof Date
-                ? updatedWorkout.completedAt.toISOString()
-                : updatedWorkout.completedAt,
-          },
-          "workout analysis (post-edit)",
-        ).catch((err) => {
+        // 2. Update Pinecone vector (delete stale → store fresh)
+        try {
+          await deleteWorkoutSummaryFromPinecone(
+            context.userId,
+            editContext.entityId,
+          );
+          const summaryForPinecone = newSummary ?? updatedWorkout.summary;
+          if (summaryForPinecone) {
+            const storeResult = await storeWorkoutSummaryInPinecone(
+              context.userId,
+              summaryForPinecone,
+              updatedWorkout.workoutData,
+              updatedWorkout,
+            );
+            if ("error" in storeResult) {
+              logger.error(
+                "⚠️ Failed to store Pinecone vector after delete — vector permanently lost:",
+                storeResult.error,
+              );
+            } else {
+              logger.info("✅ Pinecone vector updated");
+            }
+          } else {
+            logger.warn(
+              "⚠️ No summary available for Pinecone vector — old vector deleted but replacement skipped",
+            );
+          }
+        } catch (err) {
           logger.error(
-            "⚠️ Failed to invoke build-workout-analysis (non-blocking):",
+            "⚠️ Failed to update Pinecone vector (non-blocking):",
             err,
           );
-        });
-      }
+        }
 
-      // 4. Fire-and-forget: rebuild exercise catalog (cleanup stale records first)
-      const buildExerciseFunction = process.env.BUILD_EXERCISE_FUNCTION_NAME;
-      if (buildExerciseFunction) {
-        invokeAsyncLambda(
-          buildExerciseFunction,
-          {
-            userId: context.userId,
-            coachId: context.coachId,
-            workoutId: editContext.entityId,
-            workoutData: updatedWorkout.workoutData,
-            completedAt:
-              updatedWorkout.completedAt instanceof Date
-                ? updatedWorkout.completedAt.toISOString()
-                : updatedWorkout.completedAt,
-            isEdit: true,
-          },
-          "exercise catalog (post-edit)",
-        ).catch((err) => {
-          logger.error(
-            "⚠️ Failed to invoke build-exercise (non-blocking):",
-            err,
-          );
-        });
-      }
+        // 3. Fire-and-forget: rebuild workout analysis (insights)
+        const buildWorkoutAnalysisFunction =
+          process.env.BUILD_WORKOUT_ANALYSIS_FUNCTION_NAME;
+        if (buildWorkoutAnalysisFunction) {
+          invokeAsyncLambda(
+            buildWorkoutAnalysisFunction,
+            {
+              userId: context.userId,
+              coachId: context.coachId,
+              workoutId: editContext.entityId,
+              workoutData: updatedWorkout.workoutData,
+              summary: newSummary ?? updatedWorkout.summary,
+              completedAt:
+                updatedWorkout.completedAt instanceof Date
+                  ? updatedWorkout.completedAt.toISOString()
+                  : updatedWorkout.completedAt,
+            },
+            "workout analysis (post-edit)",
+          ).catch((err) => {
+            logger.error(
+              "⚠️ Failed to invoke build-workout-analysis (non-blocking):",
+              err,
+            );
+          });
+        }
+
+        // 4. Fire-and-forget: rebuild exercise catalog (cleanup stale records first)
+        const buildExerciseFunction = process.env.BUILD_EXERCISE_FUNCTION_NAME;
+        if (buildExerciseFunction) {
+          invokeAsyncLambda(
+            buildExerciseFunction,
+            {
+              userId: context.userId,
+              coachId: context.coachId,
+              workoutId: editContext.entityId,
+              workoutData: updatedWorkout.workoutData,
+              completedAt:
+                updatedWorkout.completedAt instanceof Date
+                  ? updatedWorkout.completedAt.toISOString()
+                  : updatedWorkout.completedAt,
+              isEdit: true,
+            },
+            "exercise catalog (post-edit)",
+          ).catch((err) => {
+            logger.error(
+              "⚠️ Failed to invoke build-exercise (non-blocking):",
+              err,
+            );
+          });
+        }
+      } // end workoutDataChanged pipeline
 
       logger.info("✅ Workout edits applied successfully:", {
         workoutId: editContext.entityId,
