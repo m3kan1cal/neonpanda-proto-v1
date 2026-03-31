@@ -58,14 +58,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, "mode must be a string");
   }
 
-  if (
-    mode !== undefined &&
-    mode !== CONVERSATION_MODES.CHAT &&
-    mode !== CONVERSATION_MODES.PROGRAM_DESIGN &&
-    mode !== CONVERSATION_MODES.WORKOUT_LOG &&
-    mode !== CONVERSATION_MODES.COACH_CREATOR &&
-    mode !== CONVERSATION_MODES.WORKOUT_EDIT
-  ) {
+  const validModes = Object.values(CONVERSATION_MODES) as string[];
+  if (mode !== undefined && !validModes.includes(mode)) {
     return createErrorResponse(400, "mode must be a valid conversation mode");
   }
 
