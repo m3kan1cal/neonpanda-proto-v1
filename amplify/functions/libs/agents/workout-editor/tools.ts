@@ -163,9 +163,13 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
       if (workoutDataChanged) {
         // 1. Regenerate summary
         try {
+          // Pass the existing summary as the originalMessage context so the
+          // regenerated summary preserves subjective elements from the original
+          // workout log (e.g. "felt strong", "back was tight"). editSummary
+          // describes the edit operation, not the workout experience.
           newSummary = await generateWorkoutSummary(
             updatedWorkout.workoutData,
-            editSummary,
+            updatedWorkout.summary || "",
           );
           await updateWorkout(context.userId, editContext.entityId, {
             summary: newSummary,
