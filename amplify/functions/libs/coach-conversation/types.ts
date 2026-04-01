@@ -49,7 +49,8 @@ export type ConversationMode =
   | "chat"
   | "program_design"
   | "workout_log"
-  | "coach_creator";
+  | "coach_creator"
+  | "workout_edit";
 
 /**
  * Conversation mode constants
@@ -64,6 +65,7 @@ export const CONVERSATION_MODES = {
   PROGRAM_DESIGN: "program_design" as const,
   WORKOUT_LOG: "workout_log" as const,
   COACH_CREATOR: "coach_creator" as const,
+  WORKOUT_EDIT: "workout_edit" as const,
 } satisfies Record<string, ConversationMode>;
 
 /**

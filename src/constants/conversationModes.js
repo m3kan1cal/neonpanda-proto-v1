@@ -14,9 +14,10 @@
  */
 
 export const CONVERSATION_MODES = {
-  CHAT: 'chat',
-  PROGRAM_DESIGN: 'program_design',
-  WORKOUT_LOG: 'workout_log',
+  CHAT: "chat",
+  PROGRAM_DESIGN: "program_design",
+  WORKOUT_LOG: "workout_log",
+  WORKOUT_EDIT: "workout_edit",
 };
 
 /**
@@ -26,10 +27,10 @@ export const CONVERSATION_MODES = {
  * Must match backend Program status in amplify/functions/libs/program/types.ts
  */
 export const PROGRAM_STATUS = {
-  ACTIVE: 'active',
-  PAUSED: 'paused',
-  COMPLETED: 'completed',
-  ARCHIVED: 'archived',
+  ACTIVE: "active",
+  PAUSED: "paused",
+  COMPLETED: "completed",
+  ARCHIVED: "archived",
 };
 
 /**
@@ -38,9 +39,9 @@ export const PROGRAM_STATUS = {
  * Defines the types of workout templates within a training program.
  */
 export const TEMPLATE_TYPES = {
-  PRIMARY: 'primary',
-  OPTIONAL: 'optional',
-  RECOVERY: 'recovery',
+  PRIMARY: "primary",
+  OPTIONAL: "optional",
+  RECOVERY: "recovery",
 };
 
 /**
@@ -50,7 +51,7 @@ export const TEMPLATE_TYPES = {
  * Must match backend MESSAGE_TYPES in amplify/functions/libs/coach-conversation/types.ts
  */
 export const MESSAGE_TYPES = {
-  TEXT: 'text',
-  TEXT_WITH_IMAGES: 'text_with_images',
-  VOICE: 'voice',
+  TEXT: "text",
+  TEXT_WITH_IMAGES: "text_with_images",
+  VOICE: "voice",
 };

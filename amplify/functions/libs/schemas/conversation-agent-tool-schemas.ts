@@ -274,3 +274,32 @@ export const LIST_EXERCISE_NAMES_SCHEMA = {
   },
   required: [],
 };
+
+// ============================================================================
+// Workout editing tool schemas (used in workout_edit conversation mode)
+// ============================================================================
+
+export const LOAD_WORKOUT_DETAILS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {},
+  required: [],
+};
+
+export const APPLY_WORKOUT_EDITS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    edits: {
+      type: "object",
+      description:
+        "Partial Workout object containing only the fields to update. For workoutData changes, provide the complete updated workoutData.discipline_specific object — do not send partial exercise arrays as they will replace the whole array.",
+    },
+    editSummary: {
+      type: "string",
+      description:
+        "Human-readable description of what was changed (e.g., 'Changed bench press weight from 135 to 185 lbs across all 3 sets'). This is used to regenerate the workout summary and shown to the user as confirmation.",
+    },
+  },
+  required: ["edits", "editSummary"],
+};

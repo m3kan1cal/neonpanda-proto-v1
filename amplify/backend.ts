@@ -814,6 +814,8 @@ grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildProgram.resources.lambda.functionArn,
   backend.buildConversationSummary.resources.lambda.functionArn,
   backend.processPostTurn.resources.lambda.functionArn,
+  backend.buildWorkoutAnalysis.resources.lambda.functionArn,
+  backend.buildExercise.resources.lambda.functionArn,
 ]);
 
 // Grant permission to processPostTurn to invoke buildConversationSummary
@@ -1169,6 +1171,14 @@ backend.streamCoachConversation.addEnvironment(
 backend.streamCoachConversation.addEnvironment(
   "PROCESS_POST_TURN_FUNCTION_NAME",
   backend.processPostTurn.resources.lambda.functionName,
+);
+backend.streamCoachConversation.addEnvironment(
+  "BUILD_WORKOUT_ANALYSIS_FUNCTION_NAME",
+  backend.buildWorkoutAnalysis.resources.lambda.functionName,
+);
+backend.streamCoachConversation.addEnvironment(
+  "BUILD_EXERCISE_FUNCTION_NAME",
+  backend.buildExercise.resources.lambda.functionName,
 );
 
 // USER_POOL_ID needed by withStreamingAuth for JWT signature verification via JWKS

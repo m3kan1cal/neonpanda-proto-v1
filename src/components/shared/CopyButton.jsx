@@ -44,7 +44,7 @@ function CopyButton({ text, resetDelayMs = 2000 }) {
   return (
     <button
       onClick={handleCopy}
-      className="self-start flex items-center gap-1 ml-1 text-synthwave-text-secondary/40 hover:text-synthwave-neon-cyan transition-colors duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+      className="self-start flex items-center gap-1 ml-1 text-synthwave-text-secondary/40 hover:text-synthwave-neon-cyan transition-colors duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 cursor-pointer"
       title={copied ? "Copied!" : "Copy to clipboard"}
     >
       {copied ? <CheckIcon /> : <CopyIcon />}

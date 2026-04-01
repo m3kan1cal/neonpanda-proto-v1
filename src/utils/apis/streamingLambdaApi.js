@@ -31,6 +31,7 @@ async function* streamLambdaRequest({
   method,
   userResponse,
   imageS3Keys = [],
+  editContext = null,
   logContext = {},
 }) {
   if (!isStreamingEnabled(endpointType)) {
@@ -49,6 +50,11 @@ async function* streamLambdaRequest({
   // Add imageS3Keys if present
   if (imageS3Keys && imageS3Keys.length > 0) {
     requestBody.imageS3Keys = imageS3Keys;
+  }
+
+  // Add editContext if present (workout_edit mode)
+  if (editContext) {
+    requestBody.editContext = editContext;
   }
 
   try {
@@ -168,6 +174,7 @@ async function* streamLambdaRequest({
  * @param {string} conversationId - The conversation ID
  * @param {string} userResponse - The user's message/response
  * @param {string[]} imageS3Keys - Optional array of S3 keys for images
+ * @param {Object} editContext - Optional edit context for workout_edit mode ({ entityType, entityId })
  * @returns {AsyncGenerator} - Stream of SSE events
  */
 export async function* streamCoachConversationLambda(
@@ -176,6 +183,7 @@ export async function* streamCoachConversationLambda(
   conversationId,
   userResponse,
   imageS3Keys = [],
+  editContext = null,
 ) {
   const path = `users/${userId}/coaches/${coachId}/conversations/${conversationId}/stream`;
 
@@ -185,6 +193,7 @@ export async function* streamCoachConversationLambda(
     method: "POST",
     userResponse,
     imageS3Keys,
+    editContext,
   });
 }
 

@@ -162,6 +162,7 @@ export const sendCoachConversationMessage = async (
  * @param {string} conversationId - The conversation ID
  * @param {string} userResponse - The user's message/response
  * @param {string[]} imageS3Keys - Optional array of S3 keys for images
+ * @param {Object} editContext - Optional edit context for workout_edit mode ({ entityType, entityId })
  * @returns {AsyncGenerator} - Stream of message chunks
  */
 export async function* streamCoachConversation(
@@ -170,6 +171,7 @@ export async function* streamCoachConversation(
   conversationId,
   userResponse,
   imageS3Keys = [],
+  editContext = null,
 ) {
   // Try Lambda Function URL first if enabled
   if (isStreamingEnabled("coachConversation")) {
@@ -183,6 +185,7 @@ export async function* streamCoachConversation(
         conversationId,
         userResponse,
         imageS3Keys,
+        editContext,
       );
       return; // Success - exit
     } catch (lambdaError) {
@@ -197,9 +200,7 @@ export async function* streamCoachConversation(
 
   // FALLBACK DISABLED FOR DEBUGGING - this code won't execute while debugging Lambda streaming
   // Fallback to API Gateway streaming
-  logger.info(
-    "🔄 Using API Gateway fallback for coach conversation streaming",
-  );
+  logger.info("🔄 Using API Gateway fallback for coach conversation streaming");
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message?stream=true`;
   const requestBody = {
     userResponse,

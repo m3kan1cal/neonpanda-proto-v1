@@ -18,6 +18,7 @@ import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import WorkoutViewer from "./WorkoutViewer";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import ShareWorkoutModal from "./workouts/ShareWorkoutModal";
 import IconButton from "./shared/IconButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -30,6 +31,7 @@ import {
   LightningIcon,
   BarChartIcon,
   SparkleIcon,
+  EditIcon,
 } from "./themes/SynthwaveComponents";
 
 const ShareCardIcon = () => (
@@ -105,6 +107,9 @@ function WorkoutDetails() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Edit drawer state
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
   // Share card modal state
   const [showShareModal, setShowShareModal] = useState(false);
@@ -446,17 +451,26 @@ function WorkoutDetails() {
             )}
           </div>
 
-          {/* Right section: Share + Command Palette */}
+          {/* Right section: Edit + Share + Command Palette */}
           <div className="flex items-center gap-3">
             {workout && (
-              <IconButton
-                onClick={() => setShowShareModal(true)}
-                tooltip="Share workout"
-                aria-label="Share workout"
-                className="cursor-pointer"
-              >
-                <ShareCardIcon />
-              </IconButton>
+              <>
+                <IconButton
+                  onClick={() => setIsEditDrawerOpen(true)}
+                  tooltip="Edit workout with AI coach"
+                  aria-label="Edit workout with AI coach"
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => setShowShareModal(true)}
+                  tooltip="Share workout"
+                  aria-label="Share workout"
+                  className="cursor-pointer"
+                >
+                  <ShareCardIcon />
+                </IconButton>
+              </>
             )}
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
@@ -602,6 +616,34 @@ function WorkoutDetails() {
           </div>
         </div>
       )}
+
+      {/* Edit workout drawer */}
+      <ContextualChatDrawer
+        isOpen={isEditDrawerOpen}
+        onClose={() => setIsEditDrawerOpen(false)}
+        entityType="workout"
+        entityId={workoutId}
+        entityLabel={
+          workout?.workoutData?.workout_name ||
+          workout?.workoutData?.discipline ||
+          "Workout"
+        }
+        userId={userId}
+        coachId={coachId}
+        coachData={coachData}
+        onEntityUpdated={async () => {
+          try {
+            const updated = await workoutAgentRef.current.getWorkout(workoutId);
+            setWorkoutAgentState((prev) => ({
+              ...prev,
+              currentWorkout: updated,
+            }));
+            success("Workout updated successfully");
+          } catch (err) {
+            logger.error("Failed to refresh workout after edit:", err);
+          }
+        }}
+      />
 
       {/* Share workout modal */}
       {showShareModal && workout && (

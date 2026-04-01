@@ -1,7 +1,7 @@
-import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { updateCoachConversation } from '../../dynamodb/operations';
-import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
-import { CONVERSATION_MODES } from '../libs/coach-conversation/types';
+import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
+import { updateCoachConversation } from "../../dynamodb/operations";
+import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
 import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -11,48 +11,65 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const conversationId = event.pathParameters?.conversationId;
 
   if (!coachId) {
-    return createErrorResponse(400, 'coachId is required');
+    return createErrorResponse(400, "coachId is required");
   }
 
   if (!conversationId) {
-    return createErrorResponse(400, 'conversationId is required');
+    return createErrorResponse(400, "conversationId is required");
   }
 
   if (!event.body) {
-    return createErrorResponse(400, 'Request body is required');
+    return createErrorResponse(400, "Request body is required");
   }
 
   const body = JSON.parse(event.body);
   const { title, tags, isActive, mode } = body;
 
   // Validate at least one field is provided
-  if (title === undefined && tags === undefined && isActive === undefined && mode === undefined) {
-    return createErrorResponse(400, 'At least one field (title, tags, isActive, or mode) must be provided');
+  if (
+    title === undefined &&
+    tags === undefined &&
+    isActive === undefined &&
+    mode === undefined
+  ) {
+    return createErrorResponse(
+      400,
+      "At least one field (title, tags, isActive, or mode) must be provided",
+    );
   }
 
   // Validate field types if provided
-  if (title !== undefined && typeof title !== 'string') {
-    return createErrorResponse(400, 'title must be a string');
+  if (title !== undefined && typeof title !== "string") {
+    return createErrorResponse(400, "title must be a string");
   }
 
-  if (tags !== undefined && (!Array.isArray(tags) || !tags.every(tag => typeof tag === 'string'))) {
-    return createErrorResponse(400, 'tags must be an array of strings');
+  if (
+    tags !== undefined &&
+    (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string"))
+  ) {
+    return createErrorResponse(400, "tags must be an array of strings");
   }
 
-  if (isActive !== undefined && typeof isActive !== 'boolean') {
-    return createErrorResponse(400, 'isActive must be a boolean');
+  if (isActive !== undefined && typeof isActive !== "boolean") {
+    return createErrorResponse(400, "isActive must be a boolean");
   }
 
-  if (mode !== undefined && typeof mode !== 'string') {
-    return createErrorResponse(400, 'mode must be a string');
+  if (mode !== undefined && typeof mode !== "string") {
+    return createErrorResponse(400, "mode must be a string");
   }
 
-  if (mode !== undefined && mode !== CONVERSATION_MODES.CHAT && mode !== CONVERSATION_MODES.PROGRAM_DESIGN) {
-    return createErrorResponse(400, 'mode must be either "chat" or "program_design"');
+  const validModes = Object.values(CONVERSATION_MODES) as string[];
+  if (mode !== undefined && !validModes.includes(mode)) {
+    return createErrorResponse(400, "mode must be a valid conversation mode");
   }
 
   // Prepare update data
-  const updateData: { title?: string; tags?: string[]; isActive?: boolean; mode?: string } = {};
+  const updateData: {
+    title?: string;
+    tags?: string[];
+    isActive?: boolean;
+    mode?: string;
+  } = {};
   if (title !== undefined) {
     updateData.title = title.trim();
   }
@@ -71,10 +88,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     userId,
     coachId,
     conversationId,
-    updateData
+    updateData,
   );
 
-  logger.info('Conversation metadata updated successfully:', {
+  logger.info("Conversation metadata updated successfully:", {
     conversationId,
     coachId,
     userId,
@@ -85,7 +102,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     {
       conversation: updatedConversation,
     },
-    'Conversation metadata updated successfully'
+    "Conversation metadata updated successfully",
   );
 };
 

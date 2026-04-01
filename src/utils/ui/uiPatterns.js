@@ -1213,6 +1213,55 @@ export const scrollbarPatterns = {
   pink: "custom-scrollbar-pink",
 };
 
+// Contextual Chat Drawer Patterns - AI copilot-style slide-over panel for entity editing
+// Desktop (lg+): right-side slide-over, ~420px wide, overlays content with backdrop
+// Mobile (<lg): full-screen takeover, slides up from bottom
+export const contextualDrawerPatterns = {
+  // Backdrop overlay — semi-transparent blur behind the panel
+  backdrop:
+    "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300",
+
+  // Desktop slide-over panel (right side, fixed 420px width)
+  panelDesktop:
+    "fixed top-0 right-0 h-full w-[420px] z-50 flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl border-l border-synthwave-neon-cyan/20 shadow-[-8px_0_32px_rgba(0,255,255,0.1)] transition-transform duration-300 ease-out",
+
+  // Mobile full-screen panel (inset 0, slides up from bottom)
+  panelMobile:
+    "fixed inset-0 z-50 flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out",
+
+  // Panel header — entity name, edit badge, close button
+  header:
+    "flex items-center gap-3 px-4 py-3 border-b border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/50 shrink-0",
+
+  // Header entity label
+  headerLabel:
+    "flex-1 min-w-0 font-body font-semibold text-sm text-synthwave-text-primary truncate",
+
+  // Header "Editing" badge
+  headerBadge:
+    "shrink-0 px-2 py-0.5 rounded-full bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan font-body text-xs font-medium",
+
+  // Scrollable message area
+  messageArea:
+    "flex-1 overflow-y-auto px-4 py-3 space-y-4 custom-scrollbar-cyan",
+
+  // Pinned input area at bottom
+  inputArea:
+    "shrink-0 border-t border-synthwave-neon-cyan/10 bg-synthwave-bg-card/80",
+
+  // AI message bubble (reuses containerPatterns.aiChatBubble style)
+  aiMessage:
+    "bg-synthwave-bg-card border border-synthwave-neon-cyan/15 rounded-lg px-3 py-2 text-sm text-synthwave-text-primary max-w-full",
+
+  // User message bubble
+  userMessage:
+    "bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 rounded-lg px-3 py-2 text-sm text-synthwave-text-primary max-w-full ml-auto",
+
+  // Close button (icon button style)
+  closeButton:
+    "shrink-0 w-8 h-8 flex items-center justify-center rounded-md text-synthwave-text-muted hover:text-synthwave-text-primary hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+};
+
 // Changelog List Patterns - Text-based information display in lists
 // Used for displaying version history, updates, and structured text content
 // These patterns follow modern UI/UX best practices for scannable, clickable list items

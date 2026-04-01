@@ -14,8 +14,9 @@ import { useVisibleCount } from "../../hooks/useVisibleCount";
  *   - Correct re-measurement on resize-to-wider (more badges may now fit)
  *
  * Props:
- *   badges              - array of { key: string, label: string }
- *   badgeClassName      - Tailwind classes applied to every badge span
+ *   badges              - array of { key: string, label: string, className?: string }
+ *                          Per-badge className overrides badgeClassName when provided.
+ *   badgeClassName      - Tailwind classes applied to every badge span (default)
  *   className           - optional extra classes for the outer container
  *   moreButtonClassName - optional classes for the "+N more" / "less" button
  */
@@ -42,7 +43,7 @@ const BadgeRow = ({
     return (
       <div className={`flex flex-wrap items-center gap-2 ${className}`}>
         {badges.map((badge) => (
-          <span key={badge.key} className={badgeClassName}>
+          <span key={badge.key} className={badge.className || badgeClassName}>
             {badge.label}
           </span>
         ))}
@@ -70,7 +71,10 @@ const BadgeRow = ({
         className="absolute top-0 left-0 right-0 flex flex-nowrap items-center gap-2 invisible pointer-events-none"
       >
         {badges.map((badge) => (
-          <span key={badge.key} className={`${badgeClassName} shrink-0`}>
+          <span
+            key={badge.key}
+            className={`${badge.className || badgeClassName} shrink-0`}
+          >
             {badge.label}
           </span>
         ))}
@@ -81,7 +85,10 @@ const BadgeRow = ({
         className={`flex flex-nowrap items-center gap-2 overflow-hidden ${className}`}
       >
         {badges.slice(0, visibleCount).map((badge) => (
-          <span key={badge.key} className={`${badgeClassName} shrink-0`}>
+          <span
+            key={badge.key}
+            className={`${badge.className || badgeClassName} shrink-0`}
+          >
             {badge.label}
           </span>
         ))}
