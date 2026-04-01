@@ -130,18 +130,14 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
         }
       }
 
-      // Add reviewedAt and clear stale templateComparison if workoutData changed
+      // Clear stale templateComparison when workoutData changes.
+      // reviewedAt is intentionally omitted here — updateWorkout owns that timestamp
+      // and sets it unconditionally after the deep merge.
       const enrichedEdits: Record<string, any> = { ...edits };
       if (edits.workoutData) {
         enrichedEdits.extractionMetadata = {
           ...(edits.extractionMetadata ?? {}),
-          reviewedAt: new Date(),
           templateComparison: null,
-        };
-      } else {
-        enrichedEdits.extractionMetadata = {
-          ...(edits.extractionMetadata ?? {}),
-          reviewedAt: new Date(),
         };
       }
 

@@ -319,9 +319,12 @@ async function* createCoachConversationEventStreamV2(
     // tools have a valid entityId to operate on. Missing editContext would leave the AI
     // with editing tools but no instructions or entity ID, causing every tool call to fail.
     if (isEditMode && !editContext) {
-      throw new Error(
-        "workout_edit conversation requires editContext in the request body",
+      yield formatValidationErrorEvent(
+        new Error(
+          "workout_edit conversation requires editContext in the request body",
+        ),
       );
+      return;
     }
 
     const agentContext: ConversationAgentContext = {
