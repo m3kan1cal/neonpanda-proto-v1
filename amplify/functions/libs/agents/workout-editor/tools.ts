@@ -283,7 +283,7 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
       return {
         applied: true,
         editSummary,
-        refreshTriggered: true,
+        refreshTriggered: workoutDataChanged,
         workoutId: editContext.entityId,
       };
     } catch (error) {
