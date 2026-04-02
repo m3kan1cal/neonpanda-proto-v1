@@ -171,6 +171,7 @@ export async function sendCoachConversationMessage(
   coachId: string,
   conversationId: string,
   messages: CoachMessage[],
+  editContextToStore?: { entityType: "workout"; entityId: string },
 ): Promise<ConversationSaveResult> {
   let existingItem;
 
@@ -252,6 +253,7 @@ export async function sendCoachConversationMessage(
       ...existingItem.attributes.metadata,
       lastActivity: new Date(),
       totalMessages: existingMessages.length + messages.length,
+      ...(editContextToStore && { editContext: editContextToStore }),
     },
   };
 

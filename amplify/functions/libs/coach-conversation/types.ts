@@ -69,6 +69,15 @@ export const CONVERSATION_MODES = {
 } satisfies Record<string, ConversationMode>;
 
 /**
+ * Edit context for workout_edit mode conversations
+ * Server-validated to prevent cross-entity edit confusion
+ */
+export interface ConversationEditContext {
+  entityType: "workout";
+  entityId: string;
+}
+
+/**
  * Individual message in a coach conversation
  */
 export interface CoachMessage {
@@ -112,6 +121,7 @@ export interface CoachConversation {
     totalMessages: number;
     isActive: boolean;
     tags?: string[];
+    editContext?: ConversationEditContext; // Server-validated edit context for workout_edit mode
   };
 
   // Multi-turn workout collection session (in progress)
@@ -141,6 +151,7 @@ export interface CoachConversationListItem {
     totalMessages: number;
     isActive: boolean;
     tags?: string[];
+    editContext?: ConversationEditContext; // Server-validated edit context for workout_edit mode
   };
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;

@@ -327,6 +327,39 @@ async function* createCoachConversationEventStreamV2(
       return;
     }
 
+    // Server-side validation: if this is the first message in an edit-mode conversation,
+    // store the editContext in metadata. On subsequent turns, validate that the client-sent
+    // entityId matches the stored value to prevent cross-workout edit confusion.
+    let validatedEditContext = editContext;
+    if (isEditMode && editContext) {
+      if (!existingConversation.metadata.editContext) {
+        // First turn: use client-sent editContext, will be stored in metadata during message save
+        validatedEditContext = editContext;
+        logger.info("📌 Edit context will be bound in conversation metadata:", {
+          conversationId,
+          entityId: editContext.entityId,
+        });
+      } else {
+        // Subsequent turn: validate that client-sent entityId matches stored value
+        if (
+          editContext.entityId !==
+          existingConversation.metadata.editContext.entityId
+        ) {
+          yield formatValidationErrorEvent(
+            new Error(
+              `Edit context entityId mismatch: client sent "${editContext.entityId}" but conversation is bound to "${existingConversation.metadata.editContext.entityId}"`,
+            ),
+          );
+          return;
+        }
+        validatedEditContext = existingConversation.metadata.editContext;
+        logger.info("✅ Edit context validated against stored value:", {
+          conversationId,
+          entityId: validatedEditContext.entityId,
+        });
+      }
+    }
+
     const agentContext: ConversationAgentContext = {
       userId,
       coachId,
@@ -349,10 +382,10 @@ async function* createCoachConversationEventStreamV2(
         : null,
       ...(cappedImageS3Keys.length && { imageS3Keys: cappedImageS3Keys }),
       ...(isEditMode &&
-        editContext && {
+        validatedEditContext && {
           editContext: {
-            entityType: editContext.entityType,
-            entityId: editContext.entityId,
+            entityType: validatedEditContext.entityType,
+            entityId: validatedEditContext.entityId,
           },
         }),
     };
@@ -535,12 +568,23 @@ async function* createCoachConversationEventStreamV2(
       iterationCount,
     };
 
-    // 12. Save to DynamoDB
+    // 12. Save to DynamoDB (including editContext binding on first turn if applicable)
+    const editContextToStore =
+      isEditMode &&
+      validatedEditContext &&
+      !existingConversation.metadata.editContext
+        ? {
+            entityType: validatedEditContext.entityType,
+            entityId: validatedEditContext.entityId,
+          }
+        : undefined;
+
     const saveResult = await sendCoachConversationMessage(
       userId,
       coachId,
       conversationId,
       [newUserMessage, newAiMessage],
+      editContextToStore,
     );
 
     logger.info("✅ V2: Messages saved to DynamoDB");

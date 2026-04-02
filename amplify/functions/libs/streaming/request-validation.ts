@@ -4,6 +4,7 @@
 
 /**
  * Edit context for workout_edit mode conversations
+ * Server-validated to prevent cross-entity edit confusion
  */
 export interface EditContext {
   entityType: "workout";
