@@ -22,7 +22,10 @@ import {
   deepSanitizeNullish,
   normalizeSchemaArrayFields,
 } from "./object-utils";
-import { parseJsonWithFallbacks } from "./response-utils";
+import {
+  parseJsonWithFallbacks,
+  fixDoubleEncodedProperties,
+} from "./response-utils";
 import { logger } from "./logger";
 import { validateToolResponse } from "./tool-validation";
 
@@ -867,7 +870,29 @@ export function extractToolUseResult(
       sampleStringifiedValue: inputAnalysis.sampleStringifiedValue,
       note: "These fields were returned as JSON strings instead of objects by Bedrock",
     });
+
+    // Emit CloudWatch EMF metric for monitoring double-encoding frequency
+    console.log(
+      JSON.stringify({
+        _aws: {
+          Timestamp: Date.now(),
+          CloudWatchMetrics: [
+            {
+              Namespace: "NeonPanda/BedrockToolUse",
+              Dimensions: [["ToolName"]],
+              Metrics: [{ Name: "DoubleEncodingDetected", Unit: "Count" }],
+            },
+          ],
+        },
+        ToolName: result.toolName,
+        DoubleEncodingDetected: 1,
+        AffectedFields: inputAnalysis.stringifiedFields.join(","),
+      }),
+    );
   }
+
+  // Fix double-encoded properties returned by Bedrock (strings that should be objects/arrays)
+  result.input = fixDoubleEncodedProperties(result.input);
 
   logger.info("✅ extractToolUseResult SUCCESS:", {
     toolName: result.toolName,

@@ -14,7 +14,9 @@
     "swagger:validate": "node scripts/generate-swagger.js --validate-only",
     "swagger:check": "node scripts/generate-swagger.js --check-routes",
     "social:export-templates": "node scripts/html-templates-to-png.mjs",
-    "social:pipeline": "node scripts/social-content-pipeline.mjs"
+    "social:pipeline": "node scripts/social-content-pipeline.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@aws-amplify/cli": "^14.3.0",
@@ -79,6 +81,7 @@
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.2"
   }
 }
