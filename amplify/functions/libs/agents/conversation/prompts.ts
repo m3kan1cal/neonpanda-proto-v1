@@ -313,7 +313,7 @@ This context tells you the user has an active program, but you need to call the 
 
   // Section 8: Workout Editing Mode (conditional — only in workout_edit conversations)
   if (options.editContext?.entityType === "workout") {
-    staticSections.push(`## WORKOUT EDITING MODE
+    dynamicSections.push(`## WORKOUT EDITING MODE
 You are helping the user correct or update an existing logged workout. Your job is focused and specific.
 
 **Your workflow:**

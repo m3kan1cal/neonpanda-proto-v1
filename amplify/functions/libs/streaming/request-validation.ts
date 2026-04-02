@@ -2,14 +2,7 @@
  * Request validation utilities for streaming handlers
  */
 
-/**
- * Edit context for workout_edit mode conversations
- * Server-validated to prevent cross-entity edit confusion
- */
-export interface EditContext {
-  entityType: "workout";
-  entityId: string;
-}
+import type { ConversationEditContext } from "../coach-conversation/types";
 
 /**
  * Parse and validate request body from streaming event.
@@ -22,7 +15,7 @@ export function parseRequestBody(
   userResponse: string | undefined;
   messageTimestamp: string | undefined;
   imageS3Keys?: string[];
-  editContext?: EditContext;
+  editContext?: ConversationEditContext;
 } {
   if (!body) {
     throw new Error("Request body is required");
@@ -118,7 +111,7 @@ export function validateStreamingRequestBody(
   userResponse: string | undefined;
   messageTimestamp: string;
   imageS3Keys?: string[];
-  editContext?: EditContext;
+  editContext?: ConversationEditContext;
 } {
   const {
     requireUserResponse = true,
