@@ -158,6 +158,7 @@ export interface DisciplineSpecific {
   crossfit?: CrossFitWorkout;
   powerlifting?: PowerliftingWorkout;
   running?: RunningWorkout;
+  cycling?: CyclingWorkout;
   bodybuilding?: BodybuildingWorkout;
   hyrox?: HyroxWorkout;
   olympic_weightlifting?: OlympicWeightliftingWorkout;
@@ -316,6 +317,127 @@ export interface RunningSegment {
   terrain: "flat" | "uphill" | "downhill" | "mixed";
   elevation_change?: number;
   notes?: string;
+}
+
+export interface CyclingWorkout {
+  ride_type:
+    | "road"
+    | "mountain"
+    | "gravel"
+    | "track"
+    | "criterium"
+    | "time_trial"
+    | "gran_fondo"
+    | "endurance"
+    | "tempo"
+    | "interval"
+    | "recovery"
+    | "race"
+    | "group_ride"
+    | "virtual"
+    | "indoor_trainer";
+  total_distance: number;
+  distance_unit: "miles" | "km";
+  total_time: number;
+  average_speed: string;
+  surface:
+    | "road"
+    | "gravel"
+    | "dirt"
+    | "cobblestone"
+    | "track"
+    | "indoor"
+    | "mixed";
+  average_power?: number | null;
+  normalized_power?: number | null;
+  max_power?: number | null;
+  ftp?: number | null;
+  intensity_factor?: number | null;
+  training_stress_score?: number | null;
+  average_cadence?: number | null;
+  average_heart_rate?: number | null;
+  max_heart_rate?: number | null;
+  elevation_gain?: number | null;
+  elevation_loss?: number | null;
+  elevation_unit?: "ft" | "m" | null;
+  power_zones_distribution?: {
+    zone1?: number | null;
+    zone2?: number | null;
+    zone3?: number | null;
+    zone4?: number | null;
+    zone5?: number | null;
+    zone6?: number | null;
+    zone7?: number | null;
+  } | null;
+  weather?: {
+    temperature?: number | null;
+    temperature_unit?: "F" | "C" | null;
+    conditions?:
+      | "sunny"
+      | "cloudy"
+      | "rainy"
+      | "snowy"
+      | "windy"
+      | "foggy"
+      | "clear"
+      | null;
+    wind_speed?: number | null;
+    humidity?: number | null;
+  };
+  equipment?: {
+    bike_type?: string | null;
+    bike_model?: string | null;
+    power_meter?: string | null;
+    indoor_trainer?: string | null;
+    wearable?: string | null;
+    other_gear?: string[] | null;
+  };
+  warmup?: {
+    distance?: number | null;
+    time?: number | null;
+    description?: string | null;
+  };
+  cooldown?: {
+    distance?: number | null;
+    time?: number | null;
+    description?: string | null;
+  };
+  segments?: CyclingSegment[];
+  route?: {
+    name?: string | null;
+    description?: string | null;
+    type?: "out_and_back" | "loop" | "point_to_point" | null;
+    strava_segment_id?: string | null;
+  };
+  fueling?: {
+    pre_ride?: string | null;
+    during_ride?: string[] | null;
+    hydration_oz?: number | null;
+  };
+}
+
+export interface CyclingSegment {
+  segment_number: number;
+  segment_type:
+    | "warmup"
+    | "working"
+    | "interval"
+    | "recovery"
+    | "cooldown"
+    | "main"
+    | "climb";
+  distance: number;
+  time: number;
+  average_speed: string;
+  average_power?: number | null;
+  normalized_power?: number | null;
+  cadence?: number | null;
+  heart_rate_avg?: number | null;
+  heart_rate_max?: number | null;
+  elevation_change?: number | null;
+  grade_percent?: number | null;
+  effort_level: "easy" | "moderate" | "hard" | "max";
+  notes?: string | null;
 }
 
 export interface BodybuildingWorkout {

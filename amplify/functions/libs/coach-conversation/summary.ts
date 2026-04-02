@@ -4,7 +4,10 @@ import {
   BuildCoachConversationSummaryEvent,
 } from "./types";
 import { CoachConfig } from "../coach-creator/types";
-import { parseJsonWithFallbacks } from "../response-utils";
+import {
+  parseJsonWithFallbacks,
+  fixDoubleEncodedProperties,
+} from "../response-utils";
 import { logger } from "../logger";
 import {
   sanitizeUserContent,
@@ -163,7 +166,7 @@ export function parseCoachConversationSummary(
       parsedData = parseJsonWithFallbacks(dataOrString);
     } else {
       logger.info("Processing tool result data (toolConfig mode)..");
-      parsedData = dataOrString;
+      parsedData = fixDoubleEncodedProperties(dataOrString);
     }
 
     let narrative: string;

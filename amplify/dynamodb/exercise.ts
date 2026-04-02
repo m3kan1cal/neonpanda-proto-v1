@@ -214,19 +214,33 @@ export async function deleteExercisesByWorkoutId(
       DeleteRequest: { Key: { pk: itemPk, sk } },
     }));
 
-    const result = await withThroughputScaling(async () => {
-      const command = new BatchWriteCommand({
-        RequestItems: { [tableName]: deleteRequests },
-      });
-      return docClient.send(command);
-    }, `Delete exercise batch for workout ${workoutId}`);
+    let remaining = deleteRequests;
+    let attempt = 0;
+    const maxAttempts = 4;
 
-    const unprocessedCount = result.UnprocessedItems?.[tableName]?.length ?? 0;
-    deleted += batch.length - unprocessedCount;
+    while (remaining.length > 0 && attempt < maxAttempts) {
+      if (attempt > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 100 * Math.pow(2, attempt)),
+        );
+      }
 
-    if (unprocessedCount > 0) {
+      const result = await withThroughputScaling(async () => {
+        const command = new BatchWriteCommand({
+          RequestItems: { [tableName]: remaining },
+        });
+        return docClient.send(command);
+      }, `Delete exercise batch for workout ${workoutId} (attempt ${attempt + 1})`);
+
+      const unprocessed = (result.UnprocessedItems?.[tableName] ?? []) as typeof remaining;
+      deleted += remaining.length - unprocessed.length;
+      remaining = unprocessed;
+      attempt++;
+    }
+
+    if (remaining.length > 0) {
       logger.warn(
-        `⚠️ Batch delete partially succeeded: ${unprocessedCount} items unprocessed`,
+        `⚠️ Batch delete gave up after ${maxAttempts} attempts: ${remaining.length} items unprocessed`,
         { workoutId },
       );
     }
