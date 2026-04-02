@@ -633,7 +633,16 @@ function ChatInput({
       }
 
       // Enter to send, Shift+Enter for newline
+      // On touch-primary devices (phones/tablets), the send button handles submission;
+      // Enter inserts a newline. pointer:coarse distinguishes phones/tablets from
+      // touchscreen laptops, which have a fine primary pointer and should keep Enter-to-send.
       if (e.key === "Enter" && !e.shiftKey) {
+        const isTouchPrimary =
+          typeof window !== "undefined" &&
+          window.matchMedia("(pointer: coarse)").matches;
+        if (isTouchPrimary) {
+          return false;
+        }
         e.preventDefault();
         handleSendMessage(e);
         return true;

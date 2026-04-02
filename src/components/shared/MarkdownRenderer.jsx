@@ -31,7 +31,7 @@ const MarkdownRendererComponent = ({ content, className = "" }) => {
   }
 
   return (
-    <div className={className}>
+    <div className={`break-words ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -120,7 +120,7 @@ const MarkdownRendererComponent = ({ content, className = "" }) => {
 
           // Paragraphs
           p: ({ children }) => (
-            <p className="leading-relaxed mb-3">{children}</p>
+            <p className="leading-relaxed mb-3 break-words">{children}</p>
           ),
 
           // Code blocks and inline code
