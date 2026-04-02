@@ -1,4 +1,27 @@
 import { logger } from "../logger";
+
+export const THINKING_PHRASES = [
+  "Noodling...",
+  "Cooking...",
+  "Marinating...",
+  "Brewing...",
+  "Vibing...",
+  "Synthesizing...",
+  "Ruminating...",
+  "Channeling...",
+  "Deep diving...",
+  "Cogitating...",
+  "Firing synapses...",
+  "Tuning in...",
+  "Connecting...",
+  "Crunching...",
+  "Pondering...",
+];
+
+export function getRandomThinkingPhrase() {
+  return THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)];
+}
+
 /**
  * Smaller, focused streaming helpers for agent classes
  * Each function handles a specific aspect of streaming without managing complex state

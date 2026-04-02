@@ -138,7 +138,7 @@ const MessageItem = memo(
       >
         {/* Message Content */}
         <div
-          className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full min-w-0 md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {/* Coach Setup Indicator Badge (all AI messages are part of the coach creation process) */}
           {message.type === "ai" && (
@@ -651,7 +651,7 @@ function CoachCreator() {
                       className={`flex flex-col mb-1 ${i % 2 === 0 ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`w-full md:max-w-[85%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full min-w-0 md:max-w-[85%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         {i % 2 === 0 ? (
                           /* User message: keep bubble container */

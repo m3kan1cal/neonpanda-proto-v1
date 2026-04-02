@@ -130,7 +130,7 @@ const MessageItem = memo(
       >
         {/* Message Content */}
         <div
-          className={`w-full md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full min-w-0 md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
           {message.type === "ai" &&
@@ -853,7 +853,7 @@ function ProgramDesigner() {
                       className={`flex flex-col mb-1 ${i % 2 === 1 ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`w-full md:max-w-[85%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full min-w-0 md:max-w-[85%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         {i % 2 === 1 ? (
                           /* User message: keep bubble container */

@@ -19,6 +19,7 @@ import {
   handleStreamingFallback,
   resetStreamingState,
   validateStreamingInput,
+  getRandomThinkingPhrase,
 } from "./streamingAgentHelper";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
 import { logger } from "../logger";
@@ -607,6 +608,7 @@ export class ProgramDesignerAgent {
         isTyping: true,
         streamingMessage: "",
         streamingMessageId: streamingMsg.messageId,
+        contextualUpdate: { content: getRandomThinkingPhrase(), stage: "initial" },
         error: null,
       });
 

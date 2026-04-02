@@ -633,7 +633,13 @@ function ChatInput({
       }
 
       // Enter to send, Shift+Enter for newline
+      // On touch devices, the send button handles submission; Enter inserts a newline
       if (e.key === "Enter" && !e.shiftKey) {
+        const isTouchDevice =
+          navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+        if (isTouchDevice) {
+          return false;
+        }
         e.preventDefault();
         handleSendMessage(e);
         return true;
