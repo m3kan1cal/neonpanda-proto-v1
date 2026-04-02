@@ -181,6 +181,7 @@ export function resetStreamingState(agent, additionalState = {}) {
     isTyping: false,
     streamingMessage: "",
     streamingMessageId: null,
+    contextualUpdate: null,
     ...additionalState,
   };
 
