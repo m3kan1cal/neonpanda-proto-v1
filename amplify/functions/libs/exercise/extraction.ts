@@ -636,9 +636,10 @@ function extractCyclingSegmentMetrics(
       weight: segment.average_power,
       weightUnit: "watts",
     }),
-    ...(segment.elevation_change != null && {
-      elevationGain: segment.elevation_change,
-    }),
+    ...(segment.elevation_change != null &&
+      segment.elevation_change > 0 && {
+        elevationGain: segment.elevation_change,
+      }),
   };
 
   return metrics;

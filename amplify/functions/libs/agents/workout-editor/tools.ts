@@ -33,6 +33,7 @@ import { logger } from "../../logger";
 const IMMUTABLE_FIELDS = new Set([
   "workoutId",
   "userId",
+  "createdAt",
   "coachIds",
   "coachNames",
   "conversationId",
