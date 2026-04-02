@@ -20,6 +20,7 @@ import type {
 import { extractExercisesFromWorkout } from "../libs/exercise/extraction";
 import { normalizeExerciseNamesBatch } from "../libs/exercise/normalization";
 import { saveExercises } from "../../dynamodb/operations";
+import { deleteExercisesByWorkoutId } from "../../dynamodb/exercise";
 import { generateExerciseId } from "../libs/id-utils";
 import { logger } from "../libs/logger";
 
@@ -64,6 +65,23 @@ export const handler = async (event: BuildExerciseEvent) => {
         if (isNaN(completedAtDate.getTime())) {
           logger.error("❌ Invalid completedAt date:", event.completedAt);
           return createErrorResponse(400, "Invalid completedAt date format");
+        }
+
+        // Step 0 (edit mode only): Delete stale exercise records before re-extraction
+        if (event.isEdit) {
+          logger.info("🗑️ Edit mode: deleting stale exercise records...");
+          try {
+            const { deleted } = await deleteExercisesByWorkoutId(
+              event.userId,
+              event.workoutId,
+            );
+            logger.info("✅ Stale exercise records deleted:", { deleted });
+          } catch (err) {
+            logger.error(
+              "⚠️ Failed to delete stale exercise records (non-blocking):",
+              err,
+            );
+          }
         }
 
         // Step 1: Extract exercises from workout data

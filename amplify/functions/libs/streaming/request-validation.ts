@@ -2,6 +2,8 @@
  * Request validation utilities for streaming handlers
  */
 
+import type { ConversationEditContext } from "../coach-conversation/types";
+
 /**
  * Parse and validate request body from streaming event.
  * Handles base64-encoded bodies from Lambda Function URLs.
@@ -13,6 +15,7 @@ export function parseRequestBody(
   userResponse: string | undefined;
   messageTimestamp: string | undefined;
   imageS3Keys?: string[];
+  editContext?: ConversationEditContext;
 } {
   if (!body) {
     throw new Error("Request body is required");
@@ -29,12 +32,14 @@ export function parseRequestBody(
     throw new Error("Invalid JSON in request body");
   }
 
-  const { userResponse, messageTimestamp, imageS3Keys } = parsedBody;
+  const { userResponse, messageTimestamp, imageS3Keys, editContext } =
+    parsedBody;
 
   return {
     userResponse,
     messageTimestamp,
     imageS3Keys,
+    editContext,
   };
 }
 
@@ -106,6 +111,7 @@ export function validateStreamingRequestBody(
   userResponse: string | undefined;
   messageTimestamp: string;
   imageS3Keys?: string[];
+  editContext?: ConversationEditContext;
 } {
   const {
     requireUserResponse = true,
@@ -115,7 +121,7 @@ export function validateStreamingRequestBody(
 
   // Parse body
   const parsed = parseRequestBody(body, isBase64Encoded);
-  const { userResponse, messageTimestamp, imageS3Keys } = parsed;
+  const { userResponse, messageTimestamp, imageS3Keys, editContext } = parsed;
 
   // Validate user response (if required)
   if (requireUserResponse && !userResponse) {
@@ -131,9 +137,20 @@ export function validateStreamingRequestBody(
   // Validate timestamp
   validateMessageTimestamp(messageTimestamp);
 
+  // Validate editContext if present
+  if (editContext) {
+    if (!editContext.entityType || !editContext.entityId) {
+      throw new Error("editContext must have entityType and entityId");
+    }
+    if (editContext.entityType !== "workout") {
+      throw new Error("editContext.entityType must be 'workout'");
+    }
+  }
+
   return {
     userResponse,
     messageTimestamp: messageTimestamp as string,
     imageS3Keys,
+    editContext,
   };
 }

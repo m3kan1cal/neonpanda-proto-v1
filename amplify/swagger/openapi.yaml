@@ -1372,10 +1372,30 @@ paths:
     post:
       tags: [Coach Conversations]
       summary: Create a new conversation
-      description: Starts a new conversation with a specific coach.
+      description: |
+        Starts a new conversation with a specific coach. Accepts an optional `mode` field to set
+        the conversation type. Valid modes: `chat`, `program_design`, `workout_log`, `coach_creator`,
+        `workout_edit`. Defaults to `chat`.
       parameters:
         - $ref: "#/components/parameters/UserIdParam"
         - $ref: "#/components/parameters/CoachIdParam"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Optional conversation title
+                mode:
+                  type: string
+                  enum: [chat, program_design, workout_log, coach_creator, workout_edit]
+                  description: Conversation mode (defaults to chat)
+                initialMessage:
+                  type: string
+                  description: Optional initial message to send after creation
       responses:
         "201":
           description: Conversation created
@@ -1505,6 +1525,60 @@ paths:
                       response:
                         type: string
                         description: The coach's response message
+
+  /users/{userId}/coaches/{coachId}/conversations/{conversationId}/stream:
+    post:
+      tags: [Coach Conversations]
+      summary: Stream a coach conversation message
+      description: |
+        Streams an AI coach response using Server-Sent Events (SSE). Supports all conversation
+        modes including `chat`, `program_design`, `workout_log`, `coach_creator`, and `workout_edit`.
+        When `editContext` is provided, the conversation uses `workout_edit` mode and loads the
+        specified entity for AI-assisted editing.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ConversationIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userResponse, messageTimestamp]
+              properties:
+                userResponse:
+                  type: string
+                  description: The user's message text
+                messageTimestamp:
+                  type: string
+                  format: date-time
+                  description: ISO 8601 timestamp of when the message was sent
+                imageS3Keys:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional S3 keys for images attached to the message (max 5)
+                editContext:
+                  type: object
+                  description: Optional edit context for workout_edit mode conversations
+                  required: [entityType, entityId]
+                  properties:
+                    entityType:
+                      type: string
+                      enum: [workout]
+                      description: The type of entity being edited
+                    entityId:
+                      type: string
+                      description: The ID of the entity being edited
+      responses:
+        "200":
+          description: Server-Sent Events stream with AI response chunks
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE stream with AI response chunks
 
   /users/{userId}/coaches/{coachId}/conversations/count:
     get:

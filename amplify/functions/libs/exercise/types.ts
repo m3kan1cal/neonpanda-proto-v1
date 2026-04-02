@@ -16,6 +16,7 @@ export type ExerciseDiscipline =
   | "powerlifting"
   | "bodybuilding"
   | "running"
+  | "cycling"
   | "hyrox"
   | "olympic_weightlifting"
   | "functional_bodybuilding"
@@ -153,6 +154,7 @@ export interface BuildExerciseEvent {
   workoutId: string;
   workoutData: UniversalWorkoutSchema;
   completedAt: string; // ISO date string
+  isEdit?: boolean; // When true, delete stale exercise records before extracting new ones
 }
 
 /**

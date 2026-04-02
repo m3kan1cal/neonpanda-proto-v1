@@ -158,6 +158,99 @@ export async function saveExercises(
 }
 
 /**
+ * Delete all exercise records for a specific workout.
+ * Called before re-extracting exercises on workout edit to prevent stale record accumulation.
+ * Queries by pk + sk prefix then filters by workoutId attribute, then batch-deletes.
+ */
+export async function deleteExercisesByWorkoutId(
+  userId: string,
+  workoutId: string,
+): Promise<{ deleted: number }> {
+  const tableName = getTableName();
+  const pk = `user#${userId}`;
+
+  // Query all exercises for this user (sk begins with "exercise#") and filter by workoutId
+  let exclusiveStartKey: Record<string, any> | undefined;
+  const keysToDelete: Array<{ pk: string; sk: string }> = [];
+
+  do {
+    const result: any = await withThroughputScaling(async () => {
+      const command = new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+        FilterExpression: "#attributes.workoutId = :workoutId",
+        ExpressionAttributeNames: {
+          "#attributes": "attributes",
+        },
+        ExpressionAttributeValues: {
+          ":pk": pk,
+          ":prefix": "exercise#",
+          ":workoutId": workoutId,
+        },
+        ExclusiveStartKey: exclusiveStartKey,
+      });
+      return docClient.send(command);
+    }, `Query exercises for workout ${workoutId}`);
+
+    for (const item of result.Items || []) {
+      keysToDelete.push({ pk: item.pk, sk: item.sk });
+    }
+
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+
+  if (keysToDelete.length === 0) {
+    logger.info("No exercise records found for workout:", { workoutId });
+    return { deleted: 0 };
+  }
+
+  // Batch-delete in groups of 25 (DynamoDB limit)
+  const batchSize = 25;
+  let deleted = 0;
+
+  for (let i = 0; i < keysToDelete.length; i += batchSize) {
+    const batch = keysToDelete.slice(i, i + batchSize);
+    const deleteRequests = batch.map(({ pk: itemPk, sk }) => ({
+      DeleteRequest: { Key: { pk: itemPk, sk } },
+    }));
+
+    let remaining = deleteRequests;
+    let attempt = 0;
+    const maxAttempts = 4;
+
+    while (remaining.length > 0 && attempt < maxAttempts) {
+      if (attempt > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 100 * Math.pow(2, attempt)),
+        );
+      }
+
+      const result = await withThroughputScaling(async () => {
+        const command = new BatchWriteCommand({
+          RequestItems: { [tableName]: remaining },
+        });
+        return docClient.send(command);
+      }, `Delete exercise batch for workout ${workoutId} (attempt ${attempt + 1})`);
+
+      const unprocessed = (result.UnprocessedItems?.[tableName] ?? []) as typeof remaining;
+      deleted += remaining.length - unprocessed.length;
+      remaining = unprocessed;
+      attempt++;
+    }
+
+    if (remaining.length > 0) {
+      logger.warn(
+        `⚠️ Batch delete gave up after ${maxAttempts} attempts: ${remaining.length} items unprocessed`,
+        { workoutId },
+      );
+    }
+  }
+
+  logger.info("✅ Deleted stale exercise records:", { workoutId, deleted });
+  return { deleted };
+}
+
+/**
  * Query exercises for a specific exercise name
  * Uses GSI-1 for efficient queries by exercise name sorted by date
  */

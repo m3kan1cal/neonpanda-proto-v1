@@ -56,6 +56,11 @@ export interface ConversationAgentContext extends AgentContext {
       workoutCount?: number;
     }>;
   } | null;
+  // Edit context — present when the conversation is in workout_edit mode
+  editContext?: {
+    entityType: "workout"; // extensible to "program" later
+    entityId: string;
+  };
 }
 
 // Re-export shared streaming types from core so existing imports continue to work

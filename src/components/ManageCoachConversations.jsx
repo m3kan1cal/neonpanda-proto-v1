@@ -15,6 +15,7 @@ import {
   typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
+import { CONVERSATION_MODES } from "../constants/conversationModes";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -209,7 +210,9 @@ function ManageCoachConversations() {
         }
         const [coachData, result] = await Promise.all([
           coachAgentRef.current.loadCoachDetails(userId, coachId),
-          getCoachConversations(userId, coachId, { includeFirstMessages: true }),
+          getCoachConversations(userId, coachId, {
+            includeFirstMessages: true,
+          }),
         ]);
 
         if (!coachData) {
@@ -505,6 +508,20 @@ function ManageCoachConversations() {
       key: "status",
       label: conversation.metadata?.isActive !== false ? "Active" : "Archived",
     });
+
+    // Mode badge for workout_edit conversations
+    if (conversation.mode === CONVERSATION_MODES.WORKOUT_EDIT) {
+      allBadges.push({
+        key: "mode-workout-edit",
+        label: "Workout Edit",
+      });
+      allBadges.push({
+        key: "mode-workout-edit-beta",
+        label: "Beta",
+        className:
+          "px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple text-xs font-body font-bold uppercase tracking-wider",
+      });
+    }
 
     // Tags (if available)
     if (conversation.metadata?.tags && conversation.metadata.tags.length > 0) {

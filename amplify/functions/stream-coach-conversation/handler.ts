@@ -48,7 +48,10 @@ import {
   buildConversationAgentPrompt,
   selectModelForConversationAgent,
 } from "../libs/agents/conversation/prompts";
-import { conversationAgentTools } from "../libs/agents/conversation/tools";
+import {
+  conversationAgentTools,
+  conversationAgentToolsWithWorkoutEdit,
+} from "../libs/agents/conversation/tools";
 import type {
   ConversationAgentContext,
   ConversationAgentResult,
@@ -157,19 +160,17 @@ async function* createCoachConversationEventStreamV2(
       isBase64Encoded: event.isBase64Encoded,
     });
 
-    const { userResponse, imageS3Keys } = validateStreamingRequestBody(
-      event.body,
-      userId,
-      {
+    const { userResponse, imageS3Keys, editContext } =
+      validateStreamingRequestBody(event.body, userId, {
         requireUserResponse: false,
         maxImages: 5,
         isBase64Encoded: event.isBase64Encoded,
-      },
-    );
+      });
 
     const params = {
       userResponse,
       imageS3Keys,
+      editContext,
     };
 
     logger.info("✅ V2: Params validated:", {
@@ -181,6 +182,8 @@ async function* createCoachConversationEventStreamV2(
       isImageOnly:
         !params.userResponse &&
         !!(params.imageS3Keys && params.imageS3Keys.length > 0),
+      hasEditContext: !!editContext,
+      editEntityType: editContext?.entityType,
     });
 
     const timings: Record<string, number> = {};
@@ -307,6 +310,56 @@ async function* createCoachConversationEventStreamV2(
       });
     }
 
+    // Derive edit mode from the persisted conversation mode, not client-sent editContext,
+    // to prevent any conversation from being coerced into edit behavior by a rogue client.
+    const isEditMode =
+      existingConversation.mode === CONVERSATION_MODES.WORKOUT_EDIT;
+
+    // Fail fast: a workout_edit conversation requires editContext in every request so
+    // tools have a valid entityId to operate on. Missing editContext would leave the AI
+    // with editing tools but no instructions or entity ID, causing every tool call to fail.
+    if (isEditMode && !editContext) {
+      yield formatValidationErrorEvent(
+        new Error(
+          "workout_edit conversation requires editContext in the request body",
+        ),
+      );
+      return;
+    }
+
+    // Server-side validation: if this is the first message in an edit-mode conversation,
+    // store the editContext in metadata. On subsequent turns, validate that the client-sent
+    // entityId matches the stored value to prevent cross-workout edit confusion.
+    let validatedEditContext = editContext;
+    if (isEditMode && editContext) {
+      if (!existingConversation.metadata.editContext) {
+        // First turn: use client-sent editContext, will be stored in metadata during message save
+        validatedEditContext = editContext;
+        logger.info("📌 Edit context will be bound in conversation metadata:", {
+          conversationId,
+          entityId: editContext.entityId,
+        });
+      } else {
+        // Subsequent turn: validate that client-sent entityId matches stored value
+        if (
+          editContext.entityId !==
+          existingConversation.metadata.editContext.entityId
+        ) {
+          yield formatValidationErrorEvent(
+            new Error(
+              `Edit context entityId mismatch: client sent "${editContext.entityId}" but conversation is bound to "${existingConversation.metadata.editContext.entityId}"`,
+            ),
+          );
+          return;
+        }
+        validatedEditContext = existingConversation.metadata.editContext;
+        logger.info("✅ Edit context validated against stored value:", {
+          conversationId,
+          entityId: validatedEditContext.entityId,
+        });
+      }
+    }
+
     const agentContext: ConversationAgentContext = {
       userId,
       coachId,
@@ -328,6 +381,13 @@ async function* createCoachConversationEventStreamV2(
           }
         : null,
       ...(cappedImageS3Keys.length && { imageS3Keys: cappedImageS3Keys }),
+      ...(isEditMode &&
+        validatedEditContext && {
+          editContext: {
+            entityType: validatedEditContext.entityType,
+            entityId: validatedEditContext.entityId,
+          },
+        }),
     };
 
     // 5. Build system prompt
@@ -345,6 +405,7 @@ async function* createCoachConversationEventStreamV2(
         emotionalContext: emotionalContext || undefined,
         livingProfileContext,
         prospectiveContext,
+        ...(isEditMode && { editContext: agentContext.editContext }),
       },
     );
 
@@ -364,37 +425,48 @@ async function* createCoachConversationEventStreamV2(
 
     mark("historyCaching", stepStart);
 
-    // 7. Select model
-    const modelId = selectModelForConversationAgent(
-      existingConversation.messages.length,
-      !!(params.imageS3Keys && params.imageS3Keys.length > 0),
-    );
+    // 7. Select model — always use Sonnet in edit mode for structured output quality
+    const modelId = isEditMode
+      ? MODEL_IDS.PLANNER_MODEL_FULL
+      : selectModelForConversationAgent(
+          existingConversation.messages.length,
+          !!(params.imageS3Keys && params.imageS3Keys.length > 0),
+        );
 
     logger.info("✅ V2: Model selected:", {
       modelId:
         modelId === MODEL_IDS.PLANNER_MODEL_FULL
           ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
           : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
-      reason:
-        params.imageS3Keys && params.imageS3Keys.length > 0
+      reason: isEditMode
+        ? "workout_edit mode (structured output)"
+        : params.imageS3Keys && params.imageS3Keys.length > 0
           ? "multimodal (has images)"
           : existingConversation.messages.length > 40
             ? "long conversation (>40 messages)"
             : "simple conversation",
     });
 
-    // 8. Create agent
+    // 8. Create agent with edit-aware tools when applicable
+    const tools = isEditMode
+      ? conversationAgentToolsWithWorkoutEdit
+      : conversationAgentTools;
+
     const agent = new StreamingConversationAgent({
       staticPrompt,
       dynamicPrompt,
-      tools: conversationAgentTools,
+      tools,
       modelId,
       context: agentContext,
       existingMessages: cachedMessages,
     });
 
-    // 9. Yield metadata event (mode = chat, agent handles mode contextually)
-    yield formatMetadataEvent({ mode: CONVERSATION_MODES.CHAT });
+    // 9. Yield metadata event with appropriate mode
+    yield formatMetadataEvent({
+      mode: isEditMode
+        ? CONVERSATION_MODES.WORKOUT_EDIT
+        : CONVERSATION_MODES.CHAT,
+    });
 
     // 10. Stream agent response — yields SSE events directly
     logger.info("🤖 V2: Starting agent stream");
@@ -480,7 +552,9 @@ async function* createCoachConversationEventStreamV2(
           modelId === MODEL_IDS.PLANNER_MODEL_FULL
             ? MODEL_IDS.PLANNER_MODEL_DISPLAY
             : MODEL_IDS.EXECUTOR_MODEL_DISPLAY,
-        mode: CONVERSATION_MODES.CHAT,
+        mode: isEditMode
+          ? CONVERSATION_MODES.WORKOUT_EDIT
+          : CONVERSATION_MODES.CHAT,
         tokens: totalInputTokens + totalOutputTokens,
         ...(guardrailWarning ? { guardrailWarning: true } : {}),
       } as any, // Use type assertion to allow agent-specific metadata
@@ -494,12 +568,23 @@ async function* createCoachConversationEventStreamV2(
       iterationCount,
     };
 
-    // 12. Save to DynamoDB
+    // 12. Save to DynamoDB (including editContext binding on first turn if applicable)
+    const editContextToStore =
+      isEditMode &&
+      validatedEditContext &&
+      !existingConversation.metadata.editContext
+        ? {
+            entityType: validatedEditContext.entityType,
+            entityId: validatedEditContext.entityId,
+          }
+        : undefined;
+
     const saveResult = await sendCoachConversationMessage(
       userId,
       coachId,
       conversationId,
       [newUserMessage, newAiMessage],
+      editContextToStore,
     );
 
     logger.info("✅ V2: Messages saved to DynamoDB");

@@ -14,6 +14,7 @@ import {
   handleStreamingFallback,
   resetStreamingState,
   validateStreamingInput,
+  getRandomThinkingPhrase,
 } from "./streamingAgentHelper";
 
 // Initial message constant (deprecated - backend now generates dynamic initial messages)
@@ -431,6 +432,7 @@ export class CoachCreatorAgent {
         isTyping: true, // Set immediately for visual feedback
         streamingMessage: "",
         streamingMessageId: streamingMsg.messageId,
+        contextualUpdate: { content: getRandomThinkingPhrase(), stage: "initial" },
         error: null,
       });
 
