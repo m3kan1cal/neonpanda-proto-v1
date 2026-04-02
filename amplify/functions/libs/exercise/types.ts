@@ -16,6 +16,7 @@ export type ExerciseDiscipline =
   | "powerlifting"
   | "bodybuilding"
   | "running"
+  | "cycling"
   | "hyrox"
   | "olympic_weightlifting"
   | "functional_bodybuilding"

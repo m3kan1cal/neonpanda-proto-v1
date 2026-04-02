@@ -25,6 +25,8 @@ import type {
   BodybuildingWorkout,
   BodybuildingExercise,
   RunningWorkout,
+  CyclingWorkout,
+  CyclingSegment,
   HyroxWorkout,
   OlympicWeightliftingWorkout,
   OlympicLift,
@@ -81,6 +83,9 @@ export function extractExercisesFromWorkout(
 
     case "running":
       return extractRunningExercises(disciplineSpecific.running, discipline);
+
+    case "cycling":
+      return extractCyclingExercises(disciplineSpecific.cycling, discipline);
 
     case "hyrox":
       return extractHyroxExercises(disciplineSpecific.hyrox, discipline);
@@ -551,6 +556,92 @@ function extractRunningExercises(
   }
 
   return { exercises, discipline, extractionMethod: "running_segments" };
+}
+
+/**
+ * Cycling exercise extraction
+ * Treats the overall ride as a primary exercise record and structured segments
+ * (interval, climb) as additional exercise records with power/speed metrics.
+ */
+function extractCyclingExercises(
+  cycling: CyclingWorkout | undefined,
+  discipline: ExerciseDiscipline,
+): ExerciseExtractionResult {
+  if (!cycling) {
+    return { exercises: [], discipline, extractionMethod: "cycling_empty" };
+  }
+
+  const exercises: ExtractedExercise[] = [];
+
+  const rideTypeName = formatCyclingRideType(cycling.ride_type);
+  const mainMetrics: ExerciseMetrics = {
+    distance: cycling.total_distance,
+    distanceUnit: cycling.distance_unit,
+    time: cycling.total_time,
+    ...(cycling.elevation_gain != null && {
+      elevationGain: cycling.elevation_gain,
+    }),
+    surface: cycling.surface,
+  };
+
+  exercises.push({
+    originalName: rideTypeName,
+    discipline,
+    metrics: mainMetrics,
+  });
+
+  if (cycling.segments) {
+    for (const segment of cycling.segments) {
+      if (
+        segment.segment_type === "warmup" ||
+        segment.segment_type === "cooldown"
+      ) {
+        continue;
+      }
+
+      const segmentMetrics = extractCyclingSegmentMetrics(
+        segment,
+        cycling.distance_unit,
+      );
+
+      exercises.push({
+        originalName: `${segment.segment_type}_segment`,
+        discipline,
+        metrics: segmentMetrics,
+        sourceSegment: segment.segment_number,
+        notes: segment.notes || undefined,
+      });
+    }
+  }
+
+  return { exercises, discipline, extractionMethod: "cycling_segments" };
+}
+
+function formatCyclingRideType(rideType: string): string {
+  return (
+    rideType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) +
+    " Ride"
+  );
+}
+
+function extractCyclingSegmentMetrics(
+  segment: CyclingSegment,
+  distanceUnit: "miles" | "km",
+): ExerciseMetrics {
+  const metrics: ExerciseMetrics = {
+    distance: segment.distance,
+    distanceUnit: distanceUnit,
+    time: segment.time,
+    ...(segment.average_power != null && {
+      weight: segment.average_power,
+      weightUnit: "watts",
+    }),
+    ...(segment.elevation_change != null && {
+      elevationGain: segment.elevation_change,
+    }),
+  };
+
+  return metrics;
 }
 
 /**
