@@ -80,13 +80,19 @@ describe("calculateProgramMetrics", () => {
 
 describe("checkTrainingFrequencyCompliance", () => {
   it("returns no pruning needed for empty workouts", () => {
-    expect(checkTrainingFrequencyCompliance([], 56, 3)).toEqual({ shouldPrune: false });
+    expect(checkTrainingFrequencyCompliance([], 56, 3)).toEqual({
+      shouldPrune: false,
+      isUnderGenerated: false,
+    });
   });
 
   it("returns no pruning when expectedTrainingDays < 3 (edge case guard)", () => {
     // 1 day program, 2 days/week → expectedTrainingDays = floor(1/7 * 2) = 0
     const workouts = [makeWorkout(1)];
-    expect(checkTrainingFrequencyCompliance(workouts, 1, 2)).toEqual({ shouldPrune: false });
+    expect(checkTrainingFrequencyCompliance(workouts, 1, 2)).toEqual({
+      shouldPrune: false,
+      isUnderGenerated: false,
+    });
   });
 
   it("returns shouldPrune=false when within 20% tolerance", () => {
@@ -95,6 +101,7 @@ describe("checkTrainingFrequencyCompliance", () => {
     const workouts = Array.from({ length: 26 }, (_, i) => makeWorkout(i + 1));
     const result = checkTrainingFrequencyCompliance(workouts, 56, 3);
     expect(result.shouldPrune).toBe(false);
+    expect(result.isUnderGenerated).toBe(false);
   });
 
   it("returns shouldPrune=true when significantly over expected training days", () => {
@@ -104,16 +111,31 @@ describe("checkTrainingFrequencyCompliance", () => {
     const result = checkTrainingFrequencyCompliance(workouts, 56, 3);
 
     expect(result.shouldPrune).toBe(true);
+    expect(result.isUnderGenerated).toBe(false);
     expect(result.pruningMetadata).toBeDefined();
     expect(result.pruningMetadata!.currentTrainingDays).toBe(40);
     expect(result.pruningMetadata!.expectedTrainingDays).toBe(24);
     expect(result.pruningMetadata!.targetTrainingDays).toBe(24);
   });
 
-  it("returns shouldPrune=false when under expected training days", () => {
-    // 56-day program, 5 days/week → expected = 40; actual = 20 (under)
+  it("returns shouldPrune=false and isUnderGenerated=true when under expected training days", () => {
+    // 56-day program, 5 days/week → expected = 40; actual = 20 (50% — well under 90% threshold)
     const workouts = Array.from({ length: 20 }, (_, i) => makeWorkout(i + 1));
-    expect(checkTrainingFrequencyCompliance(workouts, 56, 5)).toEqual({ shouldPrune: false });
+    const result = checkTrainingFrequencyCompliance(workouts, 56, 5);
+    expect(result.shouldPrune).toBe(false);
+    expect(result.isUnderGenerated).toBe(true);
+    expect(result.underGenerationMetadata).toBeDefined();
+    expect(result.underGenerationMetadata!.currentTrainingDays).toBe(20);
+    expect(result.underGenerationMetadata!.expectedTrainingDays).toBe(40);
+    expect(result.underGenerationMetadata!.deficit).toBe(20);
+  });
+
+  it("returns isUnderGenerated=false when slightly under but within 10% tolerance", () => {
+    // 56-day program, 3 days/week → expected = 24; actual = 22 (92% — within threshold)
+    const workouts = Array.from({ length: 22 }, (_, i) => makeWorkout(i + 1));
+    const result = checkTrainingFrequencyCompliance(workouts, 56, 3);
+    expect(result.shouldPrune).toBe(false);
+    expect(result.isUnderGenerated).toBe(false);
   });
 
   it("includes variance in pruningMetadata", () => {
@@ -129,16 +151,24 @@ describe("enforceAllBlocking", () => {
   // ─── No results yet ────────────────────────────────────────────────────────
 
   it("returns null when all results are null/undefined", () => {
-    expect(enforceAllBlocking("save_program_to_database", null, null)).toBeNull();
-    expect(enforceAllBlocking("save_program_to_database", undefined, undefined)).toBeNull();
+    expect(
+      enforceAllBlocking("save_program_to_database", null, null),
+    ).toBeNull();
+    expect(
+      enforceAllBlocking("save_program_to_database", undefined, undefined),
+    ).toBeNull();
   });
 
   // ─── Non-save tools pass through ─────────────────────────────────────────
 
   it("returns null for tools other than save_program_to_database", () => {
     const validation = { isValid: false };
-    expect(enforceAllBlocking("normalize_program_data", validation, null)).toBeNull();
-    expect(enforceAllBlocking("validate_program_structure", validation, null)).toBeNull();
+    expect(
+      enforceAllBlocking("normalize_program_data", validation, null),
+    ).toBeNull();
+    expect(
+      enforceAllBlocking("validate_program_structure", validation, null),
+    ).toBeNull();
   });
 
   // ─── Validation exception ─────────────────────────────────────────────────
