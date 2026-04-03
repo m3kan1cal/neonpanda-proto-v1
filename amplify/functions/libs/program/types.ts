@@ -135,6 +135,9 @@ export interface WorkoutTemplate {
   completedAt?: Date | null;
   linkedWorkoutId?: string | null; // References logged Workout.workoutId
   userFeedback?: WorkoutFeedback | null;
+
+  // === Computed / Runtime Fields ===
+  scheduledDate?: string; // YYYY-MM-DD; set by recalculateWorkoutDates and scheduling utilities
 }
 
 /**
