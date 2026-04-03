@@ -256,6 +256,84 @@ function filterRestDayViolations(
 }
 
 /**
+ * Compute the recommended workout day numbers for a phase.
+ *
+ * Distributes `trainingFrequency` workout days evenly across each full week
+ * of the phase, skipping any known rest day indices. Always returns exactly
+ * `expectedWorkouts` day numbers (or as many as fit if the phase is shorter
+ * than expected).
+ */
+function computeRecommendedWorkoutDays(
+  phase: { startDay: number; endDay: number },
+  trainingFrequency: number,
+  startDate?: string,
+  restDayIndices?: number[],
+): number[] {
+  const days: number[] = [];
+  const restIndices = restDayIndices ?? [];
+  const programStart = startDate ? new Date(startDate) : null;
+
+  for (
+    let weekStart = phase.startDay;
+    weekStart <= phase.endDay;
+    weekStart += 7
+  ) {
+    const weekEnd = Math.min(weekStart + 6, phase.endDay);
+    const availableDays: number[] = [];
+
+    for (let day = weekStart; day <= weekEnd; day++) {
+      if (programStart && restIndices.length > 0) {
+        const date = new Date(programStart);
+        date.setDate(programStart.getDate() + (day - 1));
+        const isoDow = date.getDay() === 0 ? 7 : date.getDay();
+        if (restIndices.includes(isoDow)) continue;
+      }
+      availableDays.push(day);
+    }
+
+    const daysInWeek = weekEnd - weekStart + 1;
+    const workoutsThisWeek =
+      daysInWeek < 7
+        ? Math.round((daysInWeek / 7) * trainingFrequency)
+        : trainingFrequency;
+    const count = Math.min(workoutsThisWeek, availableDays.length);
+
+    if (count <= 0) continue;
+
+    // Spread evenly across available days
+    const step = availableDays.length / count;
+    for (let i = 0; i < count; i++) {
+      days.push(availableDays[Math.floor(i * step)]);
+    }
+  }
+
+  return days;
+}
+
+/**
+ * Compute which workout day numbers are missing from a phase's generated output.
+ *
+ * Compares the recommended day numbers against the day numbers already
+ * present in `existingWorkouts` and returns the difference.
+ */
+function computeMissingWorkoutDays(
+  phase: { startDay: number; endDay: number },
+  existingWorkouts: WorkoutTemplate[],
+  trainingFrequency: number,
+  startDate?: string,
+  restDayIndices?: number[],
+): number[] {
+  const recommended = computeRecommendedWorkoutDays(
+    phase,
+    trainingFrequency,
+    startDate,
+    restDayIndices,
+  );
+  const existingDays = new Set(existingWorkouts.map((w) => w.dayNumber));
+  return recommended.filter((d) => !existingDays.has(d));
+}
+
+/**
  * Generate high-level phase structure (without workouts)
  * This determines how to break the program into logical phases
  *
@@ -834,12 +912,28 @@ ${(() => {
 
 **Validation:** Count workout days per week. If any week has fewer than ${context.trainingFrequency} workout days, you FAILED the constraint.
 
-### Workout Count & Distribution:
-- Target: ${expectedWorkouts} workout templates for this phase
+### Workout Count & Distribution (NON-NEGOTIABLE):
+- REQUIRED: Generate EXACTLY ${expectedWorkouts} workout templates for this phase
   (${Math.floor(phase.durationDays / 7)} weeks × ${context.trainingFrequency} workouts/week = ${expectedWorkouts})
-- One template per training day — each training day in the phase needs its own workout template
-- Distribute evenly: aim for ${context.trainingFrequency} workout days per week throughout the phase
-- Deload phases or phases with a specific recovery purpose may warrant slight variation
+- One template per training day — each training day MUST have its own workout template
+- Distribute evenly: EXACTLY ${context.trainingFrequency} workout days per week throughout the phase
+- Even taper/deload phases maintain the same training frequency — reduce INTENSITY, not FREQUENCY
+- SELF-CHECK: Before submitting, count your workout templates. If you have fewer than ${expectedWorkouts}, you MUST add more.
+
+${(() => {
+  const recommendedDays = computeRecommendedWorkoutDays(
+    phase,
+    context.trainingFrequency,
+    todoList.startDate?.value,
+    restDayInfo.indices.length > 0 ? restDayInfo.indices : undefined,
+  );
+  if (recommendedDays.length > 0) {
+    return `### RECOMMENDED WORKOUT DAY NUMBERS FOR THIS PHASE:
+Generate one workout template for each of these day numbers: [${recommendedDays.join(", ")}]
+You may adjust slightly for periodization purposes, but the total count MUST equal ${expectedWorkouts}.`;
+  }
+  return "";
+})()}
 
 ### Equipment Context:
 ${todoList.equipmentAccess?.value ? `Available Equipment: ${JSON.stringify(todoList.equipmentAccess.value)}` : "Use standard gym equipment"}
@@ -918,6 +1012,114 @@ ${phase.focusAreas.map((area) => `- ${area}`).join("\n")}`;
           .size,
         durationMs: duration,
       });
+
+      // Under-generation detection: if the AI produced significantly fewer
+      // workouts than expected, attempt a single retry for the missing days.
+      const actualCount = phaseWithWorkouts.workouts.length;
+      if (actualCount < expectedWorkouts * 0.9 && expectedWorkouts > 0) {
+        const missingDays = computeMissingWorkoutDays(
+          phase,
+          phaseWithWorkouts.workouts,
+          context.trainingFrequency,
+          todoList.startDate?.value,
+          restDayInfo.indices.length > 0 ? restDayInfo.indices : undefined,
+        );
+
+        logger.warn("⚠️ Phase under-generated, attempting single retry", {
+          phaseName: phase.name,
+          actual: actualCount,
+          expected: expectedWorkouts,
+          shortfall: expectedWorkouts - actualCount,
+          missingDayNumbers: missingDays,
+        });
+
+        if (missingDays.length > 0) {
+          try {
+            const existingDayNumbers = [
+              ...new Set(phaseWithWorkouts.workouts.map((w) => w.dayNumber)),
+            ].sort((a, b) => a - b);
+
+            const retryPrompt = `You previously generated ${actualCount} workouts for "${phase.name}" but ${expectedWorkouts} are required.
+
+Existing workouts cover days: [${existingDayNumbers.join(", ")}]
+Missing workouts needed for days: [${missingDays.join(", ")}]
+
+Generate ONLY the ${missingDays.length} missing workout templates for the day numbers listed above.
+Use the same structure, style, and progression as the existing workouts.
+Maintain the same coach voice and exercise selection patterns.`;
+
+            const retryResult = await callBedrockApi(
+              staticPrompt,
+              `phase_${phase.phaseId}_generation_retry`,
+              MODEL_IDS.PLANNER_MODEL_FULL,
+              {
+                temperature: TEMPERATURE_PRESETS.STRUCTURED,
+                enableThinking: true,
+                staticPrompt,
+                dynamicPrompt: `${dynamicPrompt}\n\n${retryPrompt}`,
+                tools: {
+                  name: "generate_program_phase",
+                  description:
+                    "Generate missing workout templates for a program phase",
+                  inputSchema: PHASE_SCHEMA,
+                },
+                expectedToolName: "generate_program_phase",
+                skipValidation: true,
+              },
+            );
+
+            if (
+              typeof retryResult === "object" &&
+              retryResult !== null &&
+              "input" in retryResult &&
+              typeof retryResult.input === "object" &&
+              retryResult.input !== null &&
+              "workouts" in retryResult.input
+            ) {
+              const fixedRetry = fixDoubleEncodedProperties(retryResult.input);
+              const retryWorkouts = (fixedRetry as any).workouts || [];
+
+              // Only merge workouts for days that are actually missing
+              const existingDaySet = new Set(
+                phaseWithWorkouts.workouts.map((w) => w.dayNumber),
+              );
+              const newWorkouts = retryWorkouts.filter(
+                (w: WorkoutTemplate) => !existingDaySet.has(w.dayNumber),
+              );
+
+              if (newWorkouts.length > 0) {
+                phaseWithWorkouts.workouts = [
+                  ...phaseWithWorkouts.workouts,
+                  ...newWorkouts,
+                ];
+                logger.info("✅ Retry merged additional workouts:", {
+                  phaseName: phase.name,
+                  retryGenerated: retryWorkouts.length,
+                  newDaysAdded: newWorkouts.length,
+                  totalAfterMerge: phaseWithWorkouts.workouts.length,
+                });
+              } else {
+                logger.warn(
+                  "⚠️ Retry produced workouts but none for missing days",
+                  {
+                    phaseName: phase.name,
+                    retryGenerated: retryWorkouts.length,
+                  },
+                );
+              }
+            }
+          } catch (retryError) {
+            logger.warn("⚠️ Retry failed, proceeding with original workouts:", {
+              phaseName: phase.name,
+              error:
+                retryError instanceof Error
+                  ? retryError.message
+                  : String(retryError),
+              originalWorkoutCount: actualCount,
+            });
+          }
+        }
+      }
 
       // Validate rest day compliance if rest days are specified
       if (

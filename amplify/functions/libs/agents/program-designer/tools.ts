@@ -168,6 +168,7 @@ export interface ProgramValidationResult {
   isValid: boolean;
   shouldNormalize: boolean;
   shouldPrune: boolean; // True if training days exceed frequency by >20%
+  isUnderGenerated: boolean; // True if training days are >10% below expected
   confidence: number;
   validationIssues: string[];
   pruningMetadata?: {
@@ -176,6 +177,12 @@ export interface ProgramValidationResult {
     expectedTrainingDays: number;
     variance: number;
     targetTrainingDays: number;
+  };
+  underGenerationMetadata?: {
+    // Only present if isUnderGenerated is true
+    currentTrainingDays: number;
+    expectedTrainingDays: number;
+    deficit: number;
   };
 }
 
@@ -865,11 +872,12 @@ Returns: isValid, shouldNormalize, confidence, validationIssues`,
       isValid,
       shouldNormalize,
       shouldPrune: false,
+      isUnderGenerated: false,
       confidence,
       validationIssues,
     };
 
-    // Validation: Check training day coverage and determine if pruning is needed
+    // Validation: Check training day coverage and determine if pruning/under-generation
     if (getToolResult) {
       const requirementsResult = getToolResult("requirements");
       if (requirementsResult && workoutTemplates.length > 0) {
@@ -886,6 +894,12 @@ Returns: isValid, shouldNormalize, confidence, validationIssues`,
           result.shouldPrune = true;
           result.pruningMetadata = frequencyCheck.pruningMetadata;
         }
+
+        if (frequencyCheck.isUnderGenerated) {
+          result.isUnderGenerated = true;
+          result.underGenerationMetadata =
+            frequencyCheck.underGenerationMetadata;
+        }
       }
     }
 
@@ -894,6 +908,7 @@ Returns: isValid, shouldNormalize, confidence, validationIssues`,
       confidence,
       shouldNormalize,
       shouldPrune: result.shouldPrune,
+      isUnderGenerated: result.isUnderGenerated,
       issueCount: validationIssues.length,
     });
 

@@ -18,6 +18,9 @@ applications:
             - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
         build:
           commands:
+            # Run unit tests
+            - npm test
+
             # Generate Swagger API documentation (reads amplify/swagger/openapi.yaml -> public/api-docs/index.html)
             - npm run swagger:generate
 
