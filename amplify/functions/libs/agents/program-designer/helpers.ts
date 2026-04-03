@@ -156,15 +156,21 @@ export function checkTrainingFrequencyCompliance(
   trainingFrequency: number,
 ): {
   shouldPrune: boolean;
+  isUnderGenerated: boolean;
   pruningMetadata?: {
     currentTrainingDays: number;
     expectedTrainingDays: number;
     variance: number;
     targetTrainingDays: number;
   };
+  underGenerationMetadata?: {
+    currentTrainingDays: number;
+    expectedTrainingDays: number;
+    deficit: number;
+  };
 } {
   if (workoutTemplates.length === 0) {
-    return { shouldPrune: false };
+    return { shouldPrune: false, isUnderGenerated: false };
   }
 
   // Calculate metrics using shared helper
@@ -177,14 +183,14 @@ export function checkTrainingFrequencyCompliance(
   // This can happen with very short programs or invalid training frequency
   if (expectedTrainingDays < 3) {
     logger.warn(
-      "⚠️ Expected training days is very low or zero, skipping pruning check:",
+      "⚠️ Expected training days is very low or zero, skipping compliance check:",
       {
         expectedTrainingDays,
         programDurationDays,
         trainingFrequency,
       },
     );
-    return { shouldPrune: false };
+    return { shouldPrune: false, isUnderGenerated: false };
   }
 
   const variance = expectedTrainingDays * 0.2; // 20% tolerance
@@ -200,19 +206,21 @@ export function checkTrainingFrequencyCompliance(
     exceedsThreshold: actualVariance > variance,
   });
 
+  let shouldPrune = false;
+  let pruningMetadata;
+
   // Check if we have MORE training days than expected AND it exceeds tolerance
   if (
     metrics.uniqueTrainingDays > expectedTrainingDays &&
     actualVariance > variance
   ) {
-    const pruningMetadata = {
+    pruningMetadata = {
       currentTrainingDays: metrics.uniqueTrainingDays,
       expectedTrainingDays,
       variance: actualVariance,
       targetTrainingDays: expectedTrainingDays,
     };
 
-    // Safe variance percent calculation (guard against division by zero)
     const variancePercent =
       expectedTrainingDays > 0
         ? `${Math.round((actualVariance / expectedTrainingDays) * 100)}%`
@@ -225,13 +233,36 @@ export function checkTrainingFrequencyCompliance(
       variancePercent,
     });
 
-    return {
-      shouldPrune: true,
-      pruningMetadata,
-    };
+    shouldPrune = true;
   }
 
-  return { shouldPrune: false };
+  // Check if we have FEWER training days than expected (>10% deficit)
+  let isUnderGenerated = false;
+  let underGenerationMetadata;
+
+  if (metrics.uniqueTrainingDays < expectedTrainingDays * 0.9) {
+    const deficit = expectedTrainingDays - metrics.uniqueTrainingDays;
+    underGenerationMetadata = {
+      currentTrainingDays: metrics.uniqueTrainingDays,
+      expectedTrainingDays,
+      deficit,
+    };
+    isUnderGenerated = true;
+
+    logger.warn("⚠️ Under-generation detected:", {
+      currentDays: metrics.uniqueTrainingDays,
+      expectedDays: expectedTrainingDays,
+      deficit,
+      deficitPercent: `${Math.round((deficit / expectedTrainingDays) * 100)}%`,
+    });
+  }
+
+  return {
+    shouldPrune,
+    isUnderGenerated,
+    pruningMetadata,
+    underGenerationMetadata,
+  };
 }
 
 /**
