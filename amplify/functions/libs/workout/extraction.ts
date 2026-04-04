@@ -1055,7 +1055,13 @@ export const calculateConfidence = (
 };
 
 /**
- * Calculate data completeness score based on how many optional fields are populated
+ * Calculate data completeness score based on how many optional fields are populated.
+ *
+ * Only fields that are realistically extractable from a user's workout message
+ * contribute to the denominator. Environmental factors, recovery metrics, and PR
+ * achievements are bonus-only: they increase the score when present but never
+ * penalize the score when absent.
+ *
  * @param workoutData - The workout data to analyze
  * @returns Completeness score from 0.0 to 1.0
  */
@@ -1118,28 +1124,17 @@ export const calculateCompleteness = (
   maxScore += 1;
   score += workoutData.subjective_feedback?.notes ? 1 : 0;
 
-  // Environmental factors (weight: 0.5 points each)
-  maxScore += 0.5;
-  score += workoutData.environmental_factors?.temperature ? 0.5 : 0;
-  maxScore += 0.5;
-  score += workoutData.environmental_factors?.humidity ? 0.5 : 0;
-
-  // Recovery metrics (weight: 0.5 points each)
-  maxScore += 0.5;
-  score += workoutData.recovery_metrics?.sleep_hours ? 0.5 : 0;
-  maxScore += 0.5;
-  score += workoutData.recovery_metrics?.hrv_morning ? 0.5 : 0;
-
-  // Coach notes (weight: 1 point)
-  maxScore += 1;
-  score += workoutData.coach_notes?.coaching_cues_given ? 1 : 0;
-
-  // PR achievements (weight: 1 point)
-  maxScore += 1;
-  score +=
-    workoutData.pr_achievements && workoutData.pr_achievements.length > 0
-      ? 1
-      : 0;
+  // Bonus-only fields: count toward score when present, but do not inflate maxScore.
+  // Users rarely include environmental conditions, recovery data, or PR flags in a
+  // workout message, so penalizing their absence produces artificially low completeness
+  // and triggers unnecessary normalization passes (~29s each).
+  if (workoutData.environmental_factors?.temperature) score += 0.5;
+  if (workoutData.environmental_factors?.humidity) score += 0.5;
+  if (workoutData.recovery_metrics?.sleep_hours) score += 0.5;
+  if (workoutData.recovery_metrics?.hrv_morning) score += 0.5;
+  if (workoutData.coach_notes?.coaching_cues_given) score += 1;
+  if (workoutData.pr_achievements && workoutData.pr_achievements.length > 0)
+    score += 1;
 
   // Calculate percentage and ensure it's between 0 and 1
   return Math.max(0, Math.min(1, score / maxScore));

@@ -267,7 +267,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
           enableThinking,
           tools: {
             name: "generate_workout",
-            description: `Generate structured workout data for ${discipline} using the Universal Workout Schema v2.0`,
+            description: `Generate structured workout data using the Universal Workout Schema v2.0. The discipline field MUST be set to "${discipline}" exactly. The discipline_specific object MUST contain a "${discipline}" key with the exercise data.`,
             inputSchema: targetedSchema,
           },
           expectedToolName: "generate_workout",
