@@ -417,6 +417,17 @@ export const normalizeSchemaArrayFields = (
         response[key] = [];
       } else {
         // Any other scalar or object — wrap in a one-element array
+        logger.warn(
+          `normalizeSchemaArrayFields: wrapped non-array value in array for field "${key}"`,
+          {
+            field: key,
+            valueType: typeof value,
+            valuePreview:
+              typeof value === "string"
+                ? value.substring(0, 200)
+                : String(value).substring(0, 200),
+          },
+        );
         response[key] = [value];
       }
     }
