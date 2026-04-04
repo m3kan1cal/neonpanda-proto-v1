@@ -353,17 +353,14 @@ const reservedConcurrencyConfig: Array<{
   { fn: backend.sendCoachConversationMessage, concurrency: 3 },
   { fn: backend.streamCoachCreatorSession, concurrency: 2 },
   { fn: backend.streamProgramDesign, concurrency: 2 },
-  { fn: backend.warmupPlatform, concurrency: 1 },
+  { fn: backend.warmupPlatform, concurrency: 2 },
   { fn: backend.buildProgram, concurrency: 2 },
   { fn: backend.buildWorkout, concurrency: 2 },
 ];
 
 for (const { fn, concurrency } of reservedConcurrencyConfig) {
   const cfnFunction = fn.resources.lambda.node.defaultChild as CfnFunction;
-  cfnFunction.addPropertyOverride(
-    "ReservedConcurrentExecutions",
-    concurrency,
-  );
+  cfnFunction.addPropertyOverride("ReservedConcurrentExecutions", concurrency);
 }
 
 console.info(
@@ -1570,18 +1567,23 @@ console.info(
 // Create EventBridge schedules for platform warmup:
 // - Container warmup: every 5 minutes (keeps critical Lambda functions warm)
 // - Grammar warmup: every 12 hours (pre-compiles Bedrock grammar caches)
-const { containerWarmupRule, grammarWarmupRule } =
-  createWarmupPlatformSchedule(
-    backend.warmupPlatform.stack,
-    backend.warmupPlatform.resources.lambda,
-  );
+const { containerWarmupRule, grammarWarmupRule } = createWarmupPlatformSchedule(
+  backend.warmupPlatform.stack,
+  backend.warmupPlatform.resources.lambda,
+);
 
 // Grant warmup function permission to invoke all target Lambda functions
 const warmupTargetFunctions = [
   { envVar: "WARMUP_TARGET_GET_COACH_CONFIGS", fn: backend.getCoachConfigs },
   { envVar: "WARMUP_TARGET_GET_COACH_CONFIG", fn: backend.getCoachConfig },
-  { envVar: "WARMUP_TARGET_GET_COACH_CONVERSATIONS", fn: backend.getCoachConversations },
-  { envVar: "WARMUP_TARGET_GET_COACH_CONVERSATION", fn: backend.getCoachConversation },
+  {
+    envVar: "WARMUP_TARGET_GET_COACH_CONVERSATIONS",
+    fn: backend.getCoachConversations,
+  },
+  {
+    envVar: "WARMUP_TARGET_GET_COACH_CONVERSATION",
+    fn: backend.getCoachConversation,
+  },
   { envVar: "WARMUP_TARGET_GET_WORKOUTS", fn: backend.getWorkouts },
   { envVar: "WARMUP_TARGET_GET_WORKOUT", fn: backend.getWorkout },
   { envVar: "WARMUP_TARGET_GET_PROGRAMS", fn: backend.getPrograms },
@@ -1589,10 +1591,22 @@ const warmupTargetFunctions = [
   { envVar: "WARMUP_TARGET_GET_USER_PROFILE", fn: backend.getUserProfile },
   { envVar: "WARMUP_TARGET_GET_WEEKLY_REPORTS", fn: backend.getWeeklyReports },
   { envVar: "WARMUP_TARGET_GENERATE_GREETING", fn: backend.generateGreeting },
-  { envVar: "WARMUP_TARGET_SEND_COACH_CONVERSATION_MESSAGE", fn: backend.sendCoachConversationMessage },
-  { envVar: "WARMUP_TARGET_STREAM_COACH_CONVERSATION", fn: backend.streamCoachConversation },
-  { envVar: "WARMUP_TARGET_STREAM_COACH_CREATOR_SESSION", fn: backend.streamCoachCreatorSession },
-  { envVar: "WARMUP_TARGET_STREAM_PROGRAM_DESIGNER_SESSION", fn: backend.streamProgramDesign },
+  {
+    envVar: "WARMUP_TARGET_SEND_COACH_CONVERSATION_MESSAGE",
+    fn: backend.sendCoachConversationMessage,
+  },
+  {
+    envVar: "WARMUP_TARGET_STREAM_COACH_CONVERSATION",
+    fn: backend.streamCoachConversation,
+  },
+  {
+    envVar: "WARMUP_TARGET_STREAM_COACH_CREATOR_SESSION",
+    fn: backend.streamCoachCreatorSession,
+  },
+  {
+    envVar: "WARMUP_TARGET_STREAM_PROGRAM_DESIGNER_SESSION",
+    fn: backend.streamProgramDesign,
+  },
 ];
 
 // Pass target function names as environment variables and grant invoke permissions
