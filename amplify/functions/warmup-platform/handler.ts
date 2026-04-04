@@ -680,7 +680,19 @@ async function warmSingleContainer(
       InvocationType: InvocationType.RequestResponse,
       Payload: JSON.stringify({ source: "warmup" }),
     });
-    await lambdaClient.send(command);
+    const response = await lambdaClient.send(command);
+
+    // Check for function-level errors: RequestResponse returns HTTP 200 even if
+    // the target function throws, with FunctionError field indicating the error.
+    if (response.FunctionError) {
+      return {
+        functionName,
+        status: "rejected",
+        durationMs: Date.now() - startMs,
+        error: `Lambda returned FunctionError: ${response.FunctionError}`,
+      };
+    }
+
     return {
       functionName,
       status: "fulfilled",
@@ -758,7 +770,13 @@ async function warmLambdaContainers(): Promise<ContainerWarmupSummary> {
     `[warmup-platform] Container warmup complete: ${succeeded}/${targets.length} succeeded in ${totalMs}ms`,
   );
 
-  return { total: targets.length, succeeded, failed, durationMs: totalMs, results };
+  return {
+    total: targets.length,
+    succeeded,
+    failed,
+    durationMs: totalMs,
+    results,
+  };
 }
 
 // ─── Handler ─────────────────────────────────────────────────────────────────
@@ -777,8 +795,7 @@ export const handler = async (
   console.info("[warmup-platform] Handler invoked", { event });
 
   // Determine warmup type from EventBridge event detail or direct invocation
-  const warmupType =
-    event?.detail?.warmupType || event?.warmupType || "both";
+  const warmupType = event?.detail?.warmupType || event?.warmupType || "both";
 
   const result: Record<string, unknown> = {};
 
