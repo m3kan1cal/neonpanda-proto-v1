@@ -59,6 +59,13 @@ export const withAuth = (
   return async (
     event: APIGatewayProxyEventV2WithJWTAuthorizer,
   ): Promise<APIGatewayProxyResultV2> => {
+    // Warmup ping detection — return immediately without auth validation.
+    // The warmup-platform Lambda invokes target functions with { source: "warmup" }
+    // every 5 minutes to keep execution environments alive and avoid cold starts.
+    if ((event as any)?.source === "warmup") {
+      return { statusCode: 200, body: JSON.stringify({ warmup: true }) };
+    }
+
     // DEBUG: Log the raw event structure
     logger.info("🔍 withAuth received event:", {
       hasEvent: !!event,
@@ -215,6 +222,17 @@ export function withStreamingAuth(
     responseStream: any,
     context: Context,
   ) => {
+    // Warmup ping detection — return immediately without auth or streaming setup.
+    // For streaming functions invoked directly (not via Function URL), the response
+    // stream may not be fully functional, but the container stays warm regardless.
+    if ((event as any)?.source === "warmup") {
+      if (responseStream?.write) {
+        responseStream.write("");
+        responseStream.end();
+      }
+      return;
+    }
+
     logger.info("🔍 withStreamingAuth received event:", {
       rawPath: event.rawPath,
       method: event.requestContext?.http?.method,

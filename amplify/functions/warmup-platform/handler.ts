@@ -1,12 +1,21 @@
 /**
  * Warmup Platform Lambda
  *
- * Pre-compiles Bedrock constrained-decoding grammars for all tool schemas used
- * with strict: true. This eliminates first-request grammar compilation latency
- * for real users.
+ * Two-phase warmup strategy:
  *
- * Runs on a 12-hour EventBridge schedule to keep grammars warm.
- * Can also be invoked manually after deployments to immediately warm new/changed schemas.
+ * 1. **Lambda Container Warming** (every 5 minutes):
+ *    Invokes critical user-facing Lambda functions with a lightweight warmup ping
+ *    to keep their execution environments alive and avoid cold starts.
+ *
+ * 2. **Bedrock Grammar Warmup** (every 12 hours):
+ *    Pre-compiles Bedrock constrained-decoding grammars for all tool schemas used
+ *    with strict: true. This eliminates first-request grammar compilation latency.
+ *
+ * The handler receives an EventBridge event with `detail.warmupType` to determine
+ * which phase to run:
+ * - `"containers"` → Lambda container warming only (5-min schedule)
+ * - `"grammars"` → Bedrock grammar warmup only (12-hour schedule)
+ * - No detail (manual invoke) → runs both phases
  *
  * Per AWS docs, grammar caches are scoped per account and last 24 hours from first access.
  * Only structural schema changes (not name/description changes) invalidate the cache.
@@ -20,6 +29,11 @@ import {
   BedrockApiOptions,
   JsonOutputOptions,
 } from "../libs/api-helpers";
+import {
+  LambdaClient,
+  InvokeCommand,
+  InvocationType,
+} from "@aws-sdk/client-lambda";
 import { withHeartbeat } from "../libs/heartbeat";
 import { WORKOUT_COMPLEXITY_SCHEMA } from "../libs/schemas/workout-complexity-schema";
 import { DISCIPLINE_DETECTION_SCHEMA } from "../libs/schemas/discipline-detection-schema";
@@ -610,18 +624,177 @@ async function warmBedrockGrammars(): Promise<GrammarWarmupSummary> {
   return summary;
 }
 
+// ─── Lambda Container Warming ────────────────────────────────────────────────
+//
+// Invokes critical user-facing Lambda functions with a lightweight warmup event.
+// Each target function detects `{ source: "warmup" }` and returns immediately,
+// but the invocation keeps the Lambda execution environment alive (avoiding cold starts).
+// ──────────────────────────────────────────────────────────────────────────────
+
+const lambdaClient = new LambdaClient({
+  region: process.env.AWS_REGION || "us-west-2",
+});
+
+/**
+ * Target functions to keep warm. These are the most user-facing, latency-sensitive
+ * Lambda functions. Function names are passed via environment variables from backend.ts.
+ */
+function getWarmupTargets(): string[] {
+  const envVars = [
+    "WARMUP_TARGET_GET_COACH_CONFIGS",
+    "WARMUP_TARGET_GET_COACH_CONFIG",
+    "WARMUP_TARGET_GET_COACH_CONVERSATIONS",
+    "WARMUP_TARGET_GET_COACH_CONVERSATION",
+    "WARMUP_TARGET_GET_WORKOUTS",
+    "WARMUP_TARGET_GET_WORKOUT",
+    "WARMUP_TARGET_GET_PROGRAMS",
+    "WARMUP_TARGET_GET_PROGRAM",
+    "WARMUP_TARGET_GET_USER_PROFILE",
+    "WARMUP_TARGET_GET_WEEKLY_REPORTS",
+    "WARMUP_TARGET_GENERATE_GREETING",
+    "WARMUP_TARGET_SEND_COACH_CONVERSATION_MESSAGE",
+    "WARMUP_TARGET_STREAM_COACH_CONVERSATION",
+    "WARMUP_TARGET_STREAM_COACH_CREATOR_SESSION",
+    "WARMUP_TARGET_STREAM_PROGRAM_DESIGNER_SESSION",
+  ];
+
+  return envVars
+    .map((envVar) => process.env[envVar])
+    .filter((name): name is string => !!name);
+}
+
+interface ContainerWarmupResult {
+  functionName: string;
+  status: "fulfilled" | "rejected";
+  durationMs: number;
+  error?: string;
+}
+
+async function warmSingleContainer(
+  functionName: string,
+): Promise<ContainerWarmupResult> {
+  const startMs = Date.now();
+  try {
+    const command = new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: InvocationType.RequestResponse,
+      Payload: JSON.stringify({ source: "warmup" }),
+    });
+    await lambdaClient.send(command);
+    return {
+      functionName,
+      status: "fulfilled",
+      durationMs: Date.now() - startMs,
+    };
+  } catch (error) {
+    // Even if the handler errors, the container is now warm.
+    // Streaming functions may error because they lack a proper response stream,
+    // but the execution environment (imports, module-level init) stays alive.
+    return {
+      functionName,
+      status: "rejected",
+      durationMs: Date.now() - startMs,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+interface ContainerWarmupSummary {
+  total: number;
+  succeeded: number;
+  failed: number;
+  durationMs: number;
+  results: ContainerWarmupResult[];
+}
+
+async function warmLambdaContainers(): Promise<ContainerWarmupSummary> {
+  const startMs = Date.now();
+  const targets = getWarmupTargets();
+
+  if (targets.length === 0) {
+    console.warn(
+      "[warmup-platform] No warmup target environment variables configured",
+    );
+    return { total: 0, succeeded: 0, failed: 0, durationMs: 0, results: [] };
+  }
+
+  console.info(
+    `[warmup-platform] Starting container warmup for ${targets.length} functions`,
+  );
+
+  const settledResults = await Promise.allSettled(
+    targets.map((name) => warmSingleContainer(name)),
+  );
+
+  const results: ContainerWarmupResult[] = settledResults.map((result) =>
+    result.status === "fulfilled"
+      ? result.value
+      : {
+          functionName: "unknown",
+          status: "rejected" as const,
+          durationMs: 0,
+          error:
+            result.reason instanceof Error
+              ? result.reason.message
+              : String(result.reason),
+        },
+  );
+
+  const succeeded = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected").length;
+  const totalMs = Date.now() - startMs;
+
+  if (failed > 0) {
+    const failedFunctions = results
+      .filter((r) => r.status === "rejected")
+      .map((r) => `${r.functionName}: ${r.error}`)
+      .join(", ");
+    console.warn(
+      `[warmup-platform] ${failed}/${targets.length} container warmups failed: ${failedFunctions}`,
+    );
+  }
+
+  console.info(
+    `[warmup-platform] Container warmup complete: ${succeeded}/${targets.length} succeeded in ${totalMs}ms`,
+  );
+
+  return { total: targets.length, succeeded, failed, durationMs: totalMs, results };
+}
+
+// ─── Handler ─────────────────────────────────────────────────────────────────
+
+interface WarmupEvent {
+  source?: string;
+  detail?: {
+    warmupType?: "containers" | "grammars";
+  };
+  warmupType?: "containers" | "grammars";
+}
+
 export const handler = async (
-  event: unknown,
+  event: WarmupEvent,
 ): Promise<Record<string, unknown>> => {
   console.info("[warmup-platform] Handler invoked", { event });
 
-  const grammarWarmup = await withHeartbeat(
-    "Bedrock Grammar Warmup",
-    () => warmBedrockGrammars(),
-    15000, // 15s heartbeat interval -- each parallel batch can take 10-30s
-  );
+  // Determine warmup type from EventBridge event detail or direct invocation
+  const warmupType =
+    event?.detail?.warmupType || event?.warmupType || "both";
 
-  return {
-    grammarWarmup,
-  };
+  const result: Record<string, unknown> = {};
+
+  // Phase 1: Lambda container warming (runs on "containers" or "both")
+  if (warmupType === "containers" || warmupType === "both") {
+    result.containerWarmup = await warmLambdaContainers();
+  }
+
+  // Phase 2: Bedrock grammar warmup (runs on "grammars" or "both")
+  if (warmupType === "grammars" || warmupType === "both") {
+    result.grammarWarmup = await withHeartbeat(
+      "Bedrock Grammar Warmup",
+      () => warmBedrockGrammars(),
+      15000, // 15s heartbeat interval -- each parallel batch can take 10-30s
+    );
+  }
+
+  return result;
 };
