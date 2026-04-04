@@ -1053,14 +1053,15 @@ function logCachePerformance(usage: any, context: string = "API call") {
       : "0.0";
 
   // Calculate cost savings (approximate)
+  // Bedrock Converse API: inputTokens already excludes cached tokens.
+  // Total logical input = inputTokens (uncached) + cacheReadTokens + cacheCreateTokens
   // Normal: $3/1M tokens, Cached read: $0.30/1M tokens (90% discount), Cache creation: $3.75/1M tokens (25% markup)
-  const normalCost = inputTokens * 0.000003; // $3 per 1M tokens
+  const totalInputTokens = inputTokens + cacheReadTokens + cacheCreateTokens;
+  const normalCost = totalInputTokens * 0.000003; // $3 per 1M tokens
   const cachedCost = cacheReadTokens * 0.0000003; // $0.30 per 1M tokens
   const creationCost = cacheCreateTokens * 0.00000375; // $3.75 per 1M tokens
-  const actualCost =
-    cachedCost +
-    creationCost +
-    (inputTokens - cacheReadTokens - cacheCreateTokens) * 0.000003;
+  const uncachedCost = inputTokens * 0.000003; // uncached portion at standard rate
+  const actualCost = cachedCost + creationCost + uncachedCost;
   const savings = normalCost - actualCost;
 
   logger.info("💰 CACHE PERFORMANCE:", {

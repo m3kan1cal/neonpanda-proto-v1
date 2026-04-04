@@ -453,9 +453,50 @@ export function fixDoubleEncodedProperties(
         path,
         problematicKeys,
         _debugDepth,
-      ); // Recursively check the parsed result
-    } catch (e) {
-      // If parsing fails, return as-is
+      );
+    } catch {
+      // parseJsonWithFallbacks failed — try newline-delimited JSON arrays
+      // Bedrock sometimes returns array fields as: ["item1"]\n["item2"]\n["item3"]
+      if (data.includes("\n")) {
+        try {
+          const lines = data
+            .split("\n")
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+          const merged: unknown[] = [];
+          for (const line of lines) {
+            const parsedLine = parseJsonWithFallbacks(line);
+            if (Array.isArray(parsedLine)) {
+              merged.push(...parsedLine);
+            } else {
+              merged.push(parsedLine);
+            }
+          }
+          if (merged.length > 0) {
+            problematicKeys.push(path);
+            logger.warn(
+              `🔧 ACTUAL FIX: Newline-delimited JSON merged at "${path}"`,
+              {
+                path,
+                lineCount: lines.length,
+                mergedLength: merged.length,
+                mergedPreview: JSON.stringify(merged).substring(0, 200),
+              },
+            );
+            return merged;
+          }
+        } catch {
+          // Newline split also failed — fall through to debug log
+        }
+      }
+      logger.debug(
+        `fixDoubleEncodedProperties: parse failed for string at "${path}"`,
+        {
+          path,
+          stringLength: data.length,
+          stringPreview: data.substring(0, 200),
+        },
+      );
       return data;
     }
   }
@@ -504,7 +545,8 @@ export function fixDoubleEncodedProperties(
 
   // If data is an array, recursively check all elements
   if (Array.isArray(data)) {
-    return data.map((item, index) =>
+    const originalProblematicCount = problematicKeys.length;
+    const mapped = data.map((item, index) =>
       fixDoubleEncodedProperties(
         item,
         `${path}[${index}]`,
@@ -512,6 +554,17 @@ export function fixDoubleEncodedProperties(
         _debugDepth + 1,
       ),
     );
+    // Flatten single-element arrays wrapping a sub-array only if an actual
+    // double-encoding fix was performed on the inner element (artifact of
+    // newline-delimited JSON repair merging multiple items into one slot).
+    if (
+      mapped.length === 1 &&
+      Array.isArray(mapped[0]) &&
+      problematicKeys.length > originalProblematicCount
+    ) {
+      return mapped[0];
+    }
+    return mapped;
   }
 
   return data;

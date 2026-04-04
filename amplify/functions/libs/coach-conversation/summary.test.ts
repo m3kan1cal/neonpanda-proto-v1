@@ -141,4 +141,37 @@ describe("parseCoachConversationSummary", () => {
     expect(result.structuredData.recent_progress).toHaveLength(2);
     expect(result.structuredData.training_preferences).toHaveLength(2);
   });
+
+  it("repairs newline-delimited JSON arrays wrapped in a single-element array", () => {
+    // Simulates the data shape after normalizeSchemaArrayFields wraps an
+    // unparsed newline-delimited string: ['["a"]\n["b"]'] instead of ["a","b"]
+    const toolResult = {
+      narrative: "Coaching narrative.",
+      current_goals: [
+        '["Reintegrate power cleans"]\n["Incorporate Pendlay rows"]\n["Build a bodybuilding block"]',
+      ],
+      recent_progress: ['["PR on deadlift"]\n["Completed phase 1"]'],
+      training_preferences: ["Heavy singles", "Conjugate method"],
+      schedule_constraints: ["Works 9-5"],
+      key_insights: ["Adapts well to autoregulation"],
+      important_context: ["Masters athlete, age 42"],
+      conversation_tags: ["powerlifting", "masters-crossfit"],
+    };
+
+    const result = parseCoachConversationSummary(
+      toolResult,
+      makeEvent(),
+      makeConversation(),
+    );
+
+    expect(result.structuredData.current_goals).toEqual([
+      "Reintegrate power cleans",
+      "Incorporate Pendlay rows",
+      "Build a bodybuilding block",
+    ]);
+    expect(result.structuredData.recent_progress).toEqual([
+      "PR on deadlift",
+      "Completed phase 1",
+    ]);
+  });
 });
