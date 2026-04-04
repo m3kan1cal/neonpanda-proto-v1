@@ -59,10 +59,10 @@ export const withAuth = (
   return async (
     event: APIGatewayProxyEventV2WithJWTAuthorizer,
   ): Promise<APIGatewayProxyResultV2> => {
-    // Warmup ping detection for internal invocations only.
-    // Only functions with allowInternalCalls=true should accept warmup pings,
-    // since warmup-platform directly invokes them with { source: "warmup" }.
-    if (options.allowInternalCalls && (event as any)?.source === "warmup") {
+    // Warmup ping detection for internal invocations.
+    // warmup-platform directly invokes all target functions with { source: "warmup" }
+    // to keep their execution environments warm (avoiding cold starts).
+    if ((event as any)?.source === "warmup") {
       return { statusCode: 200, body: JSON.stringify({ warmup: true }) };
     }
 
@@ -222,10 +222,10 @@ export function withStreamingAuth(
     responseStream: any,
     context: Context,
   ) => {
-    // Warmup ping detection for internal invocations only.
-    // Only functions with allowInternalCalls=true should accept warmup pings,
-    // since warmup-platform directly invokes them with { source: "warmup" }.
-    if (options.allowInternalCalls && (event as any)?.source === "warmup") {
+    // Warmup ping detection for internal invocations.
+    // warmup-platform directly invokes all target functions with { source: "warmup" }
+    // to keep their execution environments warm (avoiding cold starts).
+    if ((event as any)?.source === "warmup") {
       if (responseStream?.write) {
         responseStream.write("");
         responseStream.end();
