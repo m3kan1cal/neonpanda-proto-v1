@@ -439,7 +439,7 @@ export function fixDoubleEncodedProperties(
     (data.startsWith("{") || data.startsWith("["))
   ) {
     try {
-      const parsed = parseJsonWithFallbacks(data);
+      const parsed = JSON.parse(data);
       problematicKeys.push(path);
       logger.warn(`🔧 ACTUAL FIX: String→Object conversion at "${path}"`, {
         path,
@@ -545,6 +545,7 @@ export function fixDoubleEncodedProperties(
 
   // If data is an array, recursively check all elements
   if (Array.isArray(data)) {
+    const originalProblematicCount = problematicKeys.length;
     const mapped = data.map((item, index) =>
       fixDoubleEncodedProperties(
         item,
@@ -553,9 +554,14 @@ export function fixDoubleEncodedProperties(
         _debugDepth + 1,
       ),
     );
-    // Flatten single-element arrays wrapping a sub-array (artifact of
+    // Flatten single-element arrays wrapping a sub-array only if an actual
+    // double-encoding fix was performed on the inner element (artifact of
     // newline-delimited JSON repair merging multiple items into one slot).
-    if (mapped.length === 1 && Array.isArray(mapped[0])) {
+    if (
+      mapped.length === 1 &&
+      Array.isArray(mapped[0]) &&
+      problematicKeys.length > originalProblematicCount
+    ) {
       return mapped[0];
     }
     return mapped;
