@@ -174,9 +174,9 @@ const MessageItem = memo(
             </div>
           ) : (
             <div
-              className={getStreamingMessageClasses(message, agentState, "")}
+              className={getStreamingMessageClasses(message, agentState, "w-full min-w-0")}
             >
-              <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary">
+              <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
                 {renderMessageContent(message)}
               </div>
             </div>
