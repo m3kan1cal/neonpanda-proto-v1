@@ -198,6 +198,45 @@ export function parseCoachConversationSummary(
           structuredData[field] = parseXmlWrappedArray(structuredData[field]);
         }
       }
+      // Defense-in-depth: repair single-element arrays containing newline-delimited
+      // JSON that slipped through fixDoubleEncodedProperties + normalizeSchemaArrayFields.
+      // e.g. ['["goal1"]\n["goal2"]'] -> ["goal1", "goal2"]
+      for (const field of SUMMARY_ARRAY_FIELDS) {
+        const val = structuredData[field];
+        if (
+          Array.isArray(val) &&
+          val.length === 1 &&
+          typeof val[0] === "string" &&
+          val[0].includes("\n") &&
+          (val[0].trimStart().startsWith("[") ||
+            val[0].trimStart().startsWith("{"))
+        ) {
+          try {
+            const lines = val[0]
+              .split("\n")
+              .map((l: string) => l.trim())
+              .filter((l: string) => l.length > 0);
+            const merged: string[] = [];
+            for (const line of lines) {
+              const parsed = parseJsonWithFallbacks(line);
+              if (Array.isArray(parsed)) {
+                merged.push(...parsed);
+              } else {
+                merged.push(parsed);
+              }
+            }
+            if (merged.length > 0) {
+              logger.warn(
+                `Repaired newline-delimited JSON in summary field "${field}"`,
+                { originalLength: 1, repairedLength: merged.length },
+              );
+              structuredData[field] = merged;
+            }
+          } catch {
+            // Leave as-is if repair fails
+          }
+        }
+      }
     }
 
     logger.info("Parsed conversation data:", {
