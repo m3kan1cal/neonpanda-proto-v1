@@ -15,7 +15,9 @@ import {
   InvokeCommand,
   InvocationType,
 } from "@aws-sdk/client-lambda";
-import { Pinecone } from "@pinecone-database/pinecone";
+// Pinecone SDK is loaded lazily in getPineconeClient() to avoid cold start
+// overhead for the ~79 functions that import api-helpers but never use Pinecone.
+import type { Pinecone } from "@pinecone-database/pinecone";
 import { getEnhancedMethodologyContext } from "./pinecone-utils";
 import { putObject } from "./s3-utils";
 import {
@@ -891,7 +893,7 @@ export function extractToolUseResult(
     );
   }
 
-  // Fix double-encoded properties returned by Bedrock (strings that should be objects/arrays)
+  // Fix any remaining double-encoded properties (deep/nested cases)
   result.input = fixDoubleEncodedProperties(result.input);
 
   logger.info("✅ extractToolUseResult SUCCESS:", {
@@ -2627,15 +2629,29 @@ export const callBedrockApiMultimodalStream = async (
   }
 };
 
-// Pinecone client initialization helper
+// Pinecone client initialization helper — lazy-loaded and cached at module level.
+// The SDK is dynamically imported on first use so that the ~79 functions importing
+// api-helpers that never use Pinecone don't pay the cold start cost of loading it.
+// Once loaded, the client and index are reused across invocations within the same
+// Lambda execution environment, matching the singleton pattern used for AWS SDK clients.
+let cachedPineconeClient: Pinecone | null = null;
+let cachedPineconeIndex: ReturnType<Pinecone["index"]> | null = null;
+
 export const getPineconeClient = async () => {
-  const pc = new Pinecone({
-    apiKey: PINECONE_API_KEY,
-  });
+  if (!cachedPineconeClient) {
+    const { Pinecone: PineconeClass } =
+      await import("@pinecone-database/pinecone");
+    const client = new PineconeClass({
+      apiKey: PINECONE_API_KEY,
+    });
+    const index = client.index(PINECONE_INDEX_NAME);
+    cachedPineconeClient = client;
+    cachedPineconeIndex = index;
+  }
 
   return {
-    client: pc,
-    index: pc.index(PINECONE_INDEX_NAME),
+    client: cachedPineconeClient,
+    index: cachedPineconeIndex!,
   };
 };
 

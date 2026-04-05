@@ -426,6 +426,18 @@ const authenticatedStreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
+  // Warmup ping detection for internal invocations.
+  // warmup-platform directly invokes all target functions with { source: "warmup" }
+  // to keep their execution environments warm (avoiding cold starts).
+  if ((event as any)?.source === "warmup") {
+    logger.info("🔥 Warmup detected, closing stream");
+    if (responseStream?.write) {
+      responseStream.write("");
+      responseStream.end();
+    }
+    return;
+  }
+
   responseStream = awslambda.HttpResponseStream.from(responseStream, {
     statusCode: 200,
     headers: STREAMING_HEADERS,
