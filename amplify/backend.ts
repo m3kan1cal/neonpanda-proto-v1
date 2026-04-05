@@ -341,10 +341,17 @@ console.info(
 // ============================================================================
 // RESERVED CONCURRENCY — PROTECT CRITICAL FUNCTIONS
 // ============================================================================
-// Reserve concurrency for the most important user-facing functions to ensure
-// they always have execution slots available. Reserved concurrency is free
-// and guarantees slots from the account's 1000-concurrent-execution pool.
-// Total reserved: ~16 out of 1000 — minimal impact on pool availability.
+// Reserve concurrency for synchronous, user-facing functions to ensure they
+// always have execution slots available. Reserved concurrency is free and
+// guarantees slots from the account's 1000-concurrent-execution pool.
+// Total reserved: ~12 out of 1000 — minimal impact on pool availability.
+//
+// NOTE: Async functions (buildWorkout, buildProgram, warmupPlatform) are
+// intentionally excluded. ReservedConcurrentExecutions both guarantees AND
+// caps concurrency. Combined with retryAttempts: 0 on async Lambdas, a cap
+// causes throttled invocations to be permanently lost (no retries, no DLQ).
+// Async functions benefit from scaling naturally with demand via the default
+// unreserved concurrency pool.
 const reservedConcurrencyConfig: Array<{
   fn: typeof backend.streamCoachConversation;
   concurrency: number;
@@ -353,9 +360,6 @@ const reservedConcurrencyConfig: Array<{
   { fn: backend.sendCoachConversationMessage, concurrency: 3 },
   { fn: backend.streamCoachCreatorSession, concurrency: 2 },
   { fn: backend.streamProgramDesign, concurrency: 2 },
-  { fn: backend.warmupPlatform, concurrency: 2 },
-  { fn: backend.buildProgram, concurrency: 2 },
-  { fn: backend.buildWorkout, concurrency: 2 },
 ];
 
 for (const { fn, concurrency } of reservedConcurrencyConfig) {
