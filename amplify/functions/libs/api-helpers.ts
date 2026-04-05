@@ -2639,13 +2639,14 @@ let cachedPineconeIndex: ReturnType<Pinecone["index"]> | null = null;
 
 export const getPineconeClient = async () => {
   if (!cachedPineconeClient) {
-    const { Pinecone: PineconeClass } = await import(
-      "@pinecone-database/pinecone"
-    );
-    cachedPineconeClient = new PineconeClass({
+    const { Pinecone: PineconeClass } =
+      await import("@pinecone-database/pinecone");
+    const client = new PineconeClass({
       apiKey: PINECONE_API_KEY,
     });
-    cachedPineconeIndex = cachedPineconeClient.index(PINECONE_INDEX_NAME);
+    const index = client.index(PINECONE_INDEX_NAME);
+    cachedPineconeClient = client;
+    cachedPineconeIndex = index;
   }
 
   return {
