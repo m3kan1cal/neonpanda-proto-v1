@@ -912,7 +912,7 @@ export function extractToolUseResult(
             .filter((l: string) => l.length > 0);
           const merged: unknown[] = [];
           for (const line of lines) {
-            const parsedLine = JSON.parse(line);
+            const parsedLine = parseJsonWithFallbacks(line);
             if (Array.isArray(parsedLine)) {
               merged.push(...parsedLine);
             } else {
