@@ -7,6 +7,7 @@ import {
   InvokeMode,
   HttpMethod,
   CfnPermission,
+  CfnFunction,
 } from "aws-cdk-lib/aws-lambda";
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import {
@@ -229,6 +230,142 @@ const backend = defineBackend({
   generateGreeting,
   warmupPlatform,
 });
+
+// ============================================================================
+// ARM64 (GRAVITON2) — PERFORMANCE & COST OPTIMIZATION
+// ============================================================================
+// Switch all Lambda functions from x86_64 (default) to ARM64 (Graviton2).
+// Benefits: ~20% better price-performance, up to 34% lower cost per GB-second,
+// and comparable or faster cold start times for Node.js workloads.
+// All current dependencies are pure JavaScript or have ARM64 support.
+const allBackendFunctions = [
+  backend.postConfirmation,
+  backend.contactForm,
+  backend.createCoachCreatorSession,
+  backend.updateCoachCreatorSession,
+  backend.buildCoachConfig,
+  backend.getCoachConfigs,
+  backend.getCoachConfig,
+  backend.updateCoachConfig,
+  backend.deleteCoachConfig,
+  backend.getCoachConfigStatus,
+  backend.getCoachCreatorSession,
+  backend.getCoachCreatorSessions,
+  backend.deleteCoachCreatorSession,
+  backend.getCoachTemplates,
+  backend.getCoachTemplate,
+  backend.createCoachConfigFromTemplate,
+  backend.createCoachConfig,
+  backend.createCoachConversation,
+  backend.getCoachConversations,
+  backend.getCoachConversation,
+  backend.updateCoachConversation,
+  backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
+  backend.streamCoachCreatorSession,
+  backend.streamProgramDesign,
+  backend.createProgramDesignerSession,
+  backend.getProgramDesignerSession,
+  backend.getProgramDesignerSessions,
+  backend.deleteProgramDesignerSession,
+  backend.createWorkout,
+  backend.buildWorkout,
+  backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.processPostTurn,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
+  backend.getWorkouts,
+  backend.getWorkout,
+  backend.updateWorkout,
+  backend.deleteWorkout,
+  backend.getWorkoutsCount,
+  backend.getCoachConversationsCount,
+  backend.getCoachConfigsCount,
+  backend.buildWeeklyAnalytics,
+  backend.getWeeklyReports,
+  backend.getWeeklyReport,
+  backend.buildMonthlyAnalytics,
+  backend.getMonthlyReports,
+  backend.getMonthlyReport,
+  backend.getMemories,
+  backend.createMemory,
+  backend.deleteMemory,
+  backend.updateMemory,
+  backend.deleteCoachConversation,
+  backend.forwardLogsToSns,
+  backend.getUserProfile,
+  backend.updateUserProfile,
+  backend.checkUserAvailability,
+  backend.generateUploadUrls,
+  backend.generateDownloadUrls,
+  backend.syncLogSubscriptions,
+  backend.createProgram,
+  backend.buildProgram,
+  backend.getProgram,
+  backend.getPrograms,
+  backend.updateProgram,
+  backend.deleteProgram,
+  backend.logWorkoutTemplate,
+  backend.skipWorkoutTemplate,
+  backend.getWorkoutTemplate,
+  backend.notifyInactiveUsers,
+  backend.unsubscribeEmail,
+  backend.getSubscriptionStatus,
+  backend.createStripePortalSession,
+  backend.processStripeWebhook,
+  backend.buildExercise,
+  backend.buildWorkoutAnalysis,
+  backend.getExercises,
+  backend.getExerciseNames,
+  backend.getExercisesCount,
+  backend.createSharedProgram,
+  backend.getSharedProgram,
+  backend.getSharedPrograms,
+  backend.deleteSharedProgram,
+  backend.copySharedProgram,
+  backend.explainTerm,
+  backend.generateGreeting,
+  backend.warmupPlatform,
+];
+
+for (const fn of allBackendFunctions) {
+  const cfnFunction = fn.resources.lambda.node.defaultChild as CfnFunction;
+  cfnFunction.addPropertyOverride("Architectures", ["arm64"]);
+}
+
+console.info(
+  `✅ ARM64 (Graviton2) enabled for ${allBackendFunctions.length} Lambda functions`,
+);
+
+// ============================================================================
+// RESERVED CONCURRENCY — PROTECT CRITICAL FUNCTIONS
+// ============================================================================
+// Reserve concurrency for the most important user-facing functions to ensure
+// they always have execution slots available. Reserved concurrency is free
+// and guarantees slots from the account's 1000-concurrent-execution pool.
+// Total reserved: ~16 out of 1000 — minimal impact on pool availability.
+const reservedConcurrencyConfig: Array<{
+  fn: typeof backend.streamCoachConversation;
+  concurrency: number;
+}> = [
+  { fn: backend.streamCoachConversation, concurrency: 5 },
+  { fn: backend.sendCoachConversationMessage, concurrency: 3 },
+  { fn: backend.streamCoachCreatorSession, concurrency: 2 },
+  { fn: backend.streamProgramDesign, concurrency: 2 },
+  { fn: backend.warmupPlatform, concurrency: 2 },
+  { fn: backend.buildProgram, concurrency: 2 },
+  { fn: backend.buildWorkout, concurrency: 2 },
+];
+
+for (const { fn, concurrency } of reservedConcurrencyConfig) {
+  const cfnFunction = fn.resources.lambda.node.defaultChild as CfnFunction;
+  cfnFunction.addPropertyOverride("ReservedConcurrentExecutions", concurrency);
+}
+
+console.info(
+  `✅ Reserved concurrency configured for ${reservedConcurrencyConfig.length} critical functions`,
+);
 
 // Disable retries for stateful async generation functions
 // This prevents confusing double-runs on timeouts or errors.
@@ -1427,14 +1564,67 @@ console.info(
   "✅ User notification check scheduled (daily): inactivity + program adherence",
 );
 
-// Create EventBridge schedule for platform warmup (every 12 hours)
-const warmupPlatformSchedule = createWarmupPlatformSchedule(
+// Create EventBridge schedules for platform warmup:
+// - Container warmup: every 5 minutes (keeps critical Lambda functions warm)
+// - Grammar warmup: every 12 hours (pre-compiles Bedrock grammar caches)
+const { containerWarmupRule, grammarWarmupRule } = createWarmupPlatformSchedule(
   backend.warmupPlatform.stack,
   backend.warmupPlatform.resources.lambda,
 );
 
+// Grant warmup function permission to invoke all target Lambda functions
+const warmupTargetFunctions = [
+  { envVar: "WARMUP_TARGET_GET_COACH_CONFIGS", fn: backend.getCoachConfigs },
+  { envVar: "WARMUP_TARGET_GET_COACH_CONFIG", fn: backend.getCoachConfig },
+  {
+    envVar: "WARMUP_TARGET_GET_COACH_CONVERSATIONS",
+    fn: backend.getCoachConversations,
+  },
+  {
+    envVar: "WARMUP_TARGET_GET_COACH_CONVERSATION",
+    fn: backend.getCoachConversation,
+  },
+  { envVar: "WARMUP_TARGET_GET_WORKOUTS", fn: backend.getWorkouts },
+  { envVar: "WARMUP_TARGET_GET_WORKOUT", fn: backend.getWorkout },
+  { envVar: "WARMUP_TARGET_GET_PROGRAMS", fn: backend.getPrograms },
+  { envVar: "WARMUP_TARGET_GET_PROGRAM", fn: backend.getProgram },
+  { envVar: "WARMUP_TARGET_GET_USER_PROFILE", fn: backend.getUserProfile },
+  { envVar: "WARMUP_TARGET_GET_WEEKLY_REPORTS", fn: backend.getWeeklyReports },
+  { envVar: "WARMUP_TARGET_GENERATE_GREETING", fn: backend.generateGreeting },
+  {
+    envVar: "WARMUP_TARGET_SEND_COACH_CONVERSATION_MESSAGE",
+    fn: backend.sendCoachConversationMessage,
+  },
+  {
+    envVar: "WARMUP_TARGET_STREAM_COACH_CONVERSATION",
+    fn: backend.streamCoachConversation,
+  },
+  {
+    envVar: "WARMUP_TARGET_STREAM_COACH_CREATOR_SESSION",
+    fn: backend.streamCoachCreatorSession,
+  },
+  {
+    envVar: "WARMUP_TARGET_STREAM_PROGRAM_DESIGNER_SESSION",
+    fn: backend.streamProgramDesign,
+  },
+];
+
+// Pass target function names as environment variables and grant invoke permissions
+const warmupTargetArns = warmupTargetFunctions.map(({ envVar, fn }) => {
+  backend.warmupPlatform.addEnvironment(
+    envVar,
+    fn.resources.lambda.functionName,
+  );
+  return fn.resources.lambda.functionArn;
+});
+
+grantLambdaInvokePermissions(
+  backend.warmupPlatform.resources.lambda,
+  warmupTargetArns,
+);
+
 console.info(
-  "✅ Platform warmup scheduled (every 12 hours): pre-compiles Bedrock grammar caches",
+  `✅ Platform warmup scheduled: container warming (5 min), grammar caching (12 hours), targets: ${warmupTargetFunctions.length} functions`,
 );
 
 // Create EventBridge schedule for daily memory lifecycle (3am UTC)
