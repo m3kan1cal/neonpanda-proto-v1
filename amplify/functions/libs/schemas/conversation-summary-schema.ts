@@ -41,43 +41,43 @@ export const CONVERSATION_SUMMARY_SCHEMA = {
       type: "array",
       items: { type: "string" },
       description:
-        "Specific, actionable goals the user is working towards. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
+        'Specific, actionable goals the user is working towards. Return a single JSON array with all items, e.g. ["goal1", "goal2"]. Do NOT split across lines, return multiple arrays, or use XML tags.',
     },
     recent_progress: {
       type: "array",
       items: { type: "string" },
       description:
-        "Recent progress updates, achievements, and milestones. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
+        'Recent progress updates, achievements, and milestones. Return a single JSON array with all items, e.g. ["progress1", "progress2"]. Do NOT split across lines, return multiple arrays, or use XML tags.',
     },
     training_preferences: {
       type: "array",
       items: { type: "string" },
       description:
-        "Training preferences, methodology names, preferred approaches, and programming principles. Merge training style preferences (e.g., 'prefers compound movements'), methodology names (e.g., 'uses 5/3/1 programming'), and approach preferences (e.g., 'responds well to linear progression') into this single list for comprehensive semantic searchability. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
+        'Training preferences, methodology names, preferred approaches, and programming principles. Merge training style preferences (e.g., "prefers compound movements"), methodology names (e.g., "uses 5/3/1 programming"), and approach preferences (e.g., "responds well to linear progression") into this single list for comprehensive semantic searchability. Return a single JSON array with all items. Do NOT split across lines, return multiple arrays, or use XML tags.',
     },
     schedule_constraints: {
       type: "array",
       items: { type: "string" },
       description:
-        "Schedule limitations, time constraints, and availability patterns. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
+        'Schedule limitations, time constraints, and availability patterns. Return a single JSON array with all items, e.g. ["constraint1", "constraint2"]. Do NOT split across lines, return multiple arrays, or use XML tags.',
     },
     key_insights: {
       type: "array",
       items: { type: "string" },
       description:
-        "Important insights about the user's training, mindset, or behavior patterns. Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
+        'Important insights about the user\'s training, mindset, or behavior patterns. Return a single JSON array with all items, e.g. ["insight1", "insight2"]. Do NOT split across lines, return multiple arrays, or use XML tags.',
     },
     important_context: {
       type: "array",
       items: { type: "string" },
       description:
-        "Critical context items (personal circumstances, injuries, equipment, life events). Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
+        'Critical context items (personal circumstances, injuries, equipment, life events). Return a single JSON array with all items, e.g. ["context1", "context2"]. Do NOT split across lines, return multiple arrays, or use XML tags.',
     },
     conversation_tags: {
       type: "array",
       items: { type: "string" },
       description:
-        "2-5 descriptive tags (lowercase with hyphens) categorizing the conversation topics (e.g., 'strength-training', 'goal-setting', 'crossfit'). Return as a JSON array of plain strings — do NOT use XML <item> tags or any other markup.",
+        '2-5 descriptive tags (lowercase with hyphens) categorizing the conversation topics. Return a single JSON array, e.g. ["strength-training", "goal-setting"]. Do NOT split across lines, return multiple arrays, or use XML tags.',
     },
   },
 };

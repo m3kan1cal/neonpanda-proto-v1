@@ -893,7 +893,7 @@ export function extractToolUseResult(
     );
   }
 
-  // Fix double-encoded properties returned by Bedrock (strings that should be objects/arrays)
+  // Fix any remaining double-encoded properties (deep/nested cases)
   result.input = fixDoubleEncodedProperties(result.input);
 
   logger.info("✅ extractToolUseResult SUCCESS:", {
