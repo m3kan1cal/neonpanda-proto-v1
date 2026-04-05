@@ -75,4 +75,58 @@ describe("fixDoubleEncodedProperties", () => {
     const result = fixDoubleEncodedProperties(data);
     expect(result.config).toEqual({ key: "value", nested: true });
   });
+
+  it("repairs a full conversation summary shape with multiple newline-delimited fields", () => {
+    const data = {
+      narrative: "This coaching relationship is collaborative.",
+      current_goals:
+        '["Reintegrate power cleans"]\n["Incorporate Pendlay rows"]\n["Build posterior chain"]',
+      recent_progress:
+        '["Zercher squat PR: 215# x3"]\n["DB bench volume PR: 95# x8"]',
+      training_preferences:
+        '["Functional Chaos Training philosophy"]\n["Prefers compound movements"]\n["Safety bar squats"]',
+      schedule_constraints:
+        '["Trains 5 days per week"]\n["Sunday is rest day"]',
+      key_insights:
+        '["Exceptional movement literacy"]\n["Mature recovery instincts"]',
+      important_context:
+        '["Masters CrossFit competitor"]\n["Has home and commercial gym"]',
+      conversation_tags: ["functional-chaos", "masters-crossfit"],
+    };
+    const result = fixDoubleEncodedProperties(data);
+
+    expect(result.narrative).toBe(
+      "This coaching relationship is collaborative.",
+    );
+    expect(result.current_goals).toEqual([
+      "Reintegrate power cleans",
+      "Incorporate Pendlay rows",
+      "Build posterior chain",
+    ]);
+    expect(result.recent_progress).toEqual([
+      "Zercher squat PR: 215# x3",
+      "DB bench volume PR: 95# x8",
+    ]);
+    expect(result.training_preferences).toEqual([
+      "Functional Chaos Training philosophy",
+      "Prefers compound movements",
+      "Safety bar squats",
+    ]);
+    expect(result.schedule_constraints).toEqual([
+      "Trains 5 days per week",
+      "Sunday is rest day",
+    ]);
+    expect(result.key_insights).toEqual([
+      "Exceptional movement literacy",
+      "Mature recovery instincts",
+    ]);
+    expect(result.important_context).toEqual([
+      "Masters CrossFit competitor",
+      "Has home and commercial gym",
+    ]);
+    expect(result.conversation_tags).toEqual([
+      "functional-chaos",
+      "masters-crossfit",
+    ]);
+  });
 });

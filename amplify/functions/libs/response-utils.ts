@@ -421,11 +421,8 @@ export function fixDoubleEncodedProperties(
   problematicKeys: string[] = [],
   _debugDepth: number = 0,
 ): any {
-  const debugPrefix = "  ".repeat(_debugDepth);
-
-  // Debug: Log entry for root call only
-  if (path === "root") {
-    logger.info("🔍 fixDoubleEncodedProperties ENTRY:", {
+  if (path === "root" && _debugDepth === 0) {
+    logger.debug("fixDoubleEncodedProperties ENTRY:", {
       dataType: typeof data,
       isArray: Array.isArray(data),
       topLevelKeys:

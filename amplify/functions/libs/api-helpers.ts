@@ -891,9 +891,49 @@ export function extractToolUseResult(
         AffectedFields: inputAnalysis.stringifiedFields.join(","),
       }),
     );
+
+    // Front-load repair of stringified fields before the generic recursive fixer.
+    // Handles the common Bedrock pattern: array fields returned as newline-delimited
+    // JSON fragments like '["item1"]\n["item2"]' instead of a single array.
+    for (const field of inputAnalysis.stringifiedFields) {
+      const raw = result.input[field] as string;
+      try {
+        const parsed = JSON.parse(raw);
+        result.input[field] = parsed;
+        continue;
+      } catch {
+        // Not a single valid JSON value -- try newline-delimited merge
+      }
+      if (raw.includes("\n")) {
+        try {
+          const lines = raw
+            .split("\n")
+            .map((l: string) => l.trim())
+            .filter((l: string) => l.length > 0);
+          const merged: unknown[] = [];
+          for (const line of lines) {
+            const parsedLine = JSON.parse(line);
+            if (Array.isArray(parsedLine)) {
+              merged.push(...parsedLine);
+            } else {
+              merged.push(parsedLine);
+            }
+          }
+          if (merged.length > 0) {
+            result.input[field] = merged;
+            logger.info(
+              `Repaired newline-delimited JSON in tool field "${field}"`,
+              { lineCount: lines.length, mergedLength: merged.length },
+            );
+          }
+        } catch {
+          // Leave for fixDoubleEncodedProperties to handle
+        }
+      }
+    }
   }
 
-  // Fix double-encoded properties returned by Bedrock (strings that should be objects/arrays)
+  // Fix any remaining double-encoded properties (deep/nested cases)
   result.input = fixDoubleEncodedProperties(result.input);
 
   logger.info("✅ extractToolUseResult SUCCESS:", {
