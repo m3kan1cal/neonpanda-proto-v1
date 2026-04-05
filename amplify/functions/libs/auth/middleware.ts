@@ -222,17 +222,6 @@ export function withStreamingAuth(
     responseStream: any,
     context: Context,
   ) => {
-    // Warmup ping detection for internal invocations.
-    // warmup-platform directly invokes all target functions with { source: "warmup" }
-    // to keep their execution environments warm (avoiding cold starts).
-    if ((event as any)?.source === "warmup") {
-      if (responseStream?.write) {
-        responseStream.write("");
-        responseStream.end();
-      }
-      return;
-    }
-
     logger.info("🔍 withStreamingAuth received event:", {
       rawPath: event.rawPath,
       method: event.requestContext?.http?.method,
