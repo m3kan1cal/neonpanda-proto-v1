@@ -1,4 +1,4 @@
-import { defineBackend } from "@aws-amplify/backend";
+import { defineBackend, secret } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { postConfirmation } from "./functions/post-confirmation/resource";
 import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
@@ -124,7 +124,6 @@ import {
   createUserRegistrationTopic,
   createStripeAlertsTopic,
 } from "./sns/resource";
-import { config } from "./functions/libs/configs";
 import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { CfnGuardrail } from "aws-cdk-lib/aws-bedrock";
 import {
@@ -1031,7 +1030,7 @@ backend.forwardLogsToSns.addEnvironment(
 );
 backend.forwardLogsToSns.addEnvironment(
   "GOOGLE_CHAT_ERRORS_WEBHOOK_URL",
-  config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL,
+  secret("GOOGLE_CHAT_ERRORS_WEBHOOK_URL"),
 );
 
 // Grant permissions to sync Lambda
@@ -1143,7 +1142,7 @@ const allFunctions = [
 
 allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_TABLE_NAME", coreTable.table.tableName);
-  func.addEnvironment("PINECONE_API_KEY", config.PINECONE_API_KEY);
+  func.addEnvironment("PINECONE_API_KEY", secret("PINECONE_API_KEY"));
   func.addEnvironment("BRANCH_NAME", branchName);
 
   // DynamoDB throughput scaling configuration
@@ -1376,14 +1375,11 @@ backend.buildWorkout.addEnvironment(
 );
 
 // Stripe environment variables
-// NOTE: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, ELECTRICPANDA_PRICE_ID, EARLYPANDA_PRICE_ID
-// should be set in AWS Amplify Console or .env for local development
+// STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are managed as Amplify secrets.
+// ELECTRICPANDA_PRICE_ID and EARLYPANDA_PRICE_ID are non-sensitive price IDs set via env vars.
 [backend.createStripePortalSession, backend.processStripeWebhook].forEach(
   (func) => {
-    func.addEnvironment(
-      "STRIPE_SECRET_KEY",
-      process.env.STRIPE_SECRET_KEY || "",
-    );
+    func.addEnvironment("STRIPE_SECRET_KEY", secret("STRIPE_SECRET_KEY"));
     func.addEnvironment(
       "ELECTRICPANDA_PRICE_ID",
       process.env.ELECTRICPANDA_PRICE_ID || "",
@@ -1397,7 +1393,7 @@ backend.buildWorkout.addEnvironment(
 
 backend.processStripeWebhook.addEnvironment(
   "STRIPE_WEBHOOK_SECRET",
-  process.env.STRIPE_WEBHOOK_SECRET || "",
+  secret("STRIPE_WEBHOOK_SECRET"),
 );
 
 // Add SNS topic ARN to Stripe webhook function
