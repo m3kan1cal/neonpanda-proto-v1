@@ -202,9 +202,7 @@ const lambdaClient = new LambdaClient({
 
 // Pinecone configuration
 const PINECONE_INDEX_NAME = "coach-creator-proto-v1-dev";
-const PINECONE_API_KEY =
-  process.env.PINECONE_API_KEY ||
-  "pcsk_4tHp6N_MUauyYPRhqQjDZ9qyrWwe4nD7gRXuPz66SnbtkbAUQdUqkCfmcmzbAJfhYKSsyC";
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 
 // Debug: Log Pinecone configuration at module load
 logger.info("🔧 PINECONE_API_KEY validation:", {
