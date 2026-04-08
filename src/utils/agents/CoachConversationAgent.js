@@ -14,7 +14,6 @@ import CoachAgent from "./CoachAgent";
 import {
   processStreamingChunks,
   createStreamingMessage,
-  handleStreamingFallback,
   resetStreamingState,
   validateStreamingInput,
   getRandomThinkingPhrase,
@@ -519,6 +518,27 @@ export class CoachConversationAgent {
       return;
     }
 
+    // Fail fast: workout_edit conversations require editContext with entityType and entityId
+    const conversationMode =
+      this.state.conversation?.mode || CONVERSATION_MODES.CHAT;
+    if (
+      conversationMode === CONVERSATION_MODES.WORKOUT_EDIT &&
+      (!editContext || !editContext.entityType || !editContext.entityId)
+    ) {
+      const error = new Error(
+        "workout_edit conversation requires editContext with entityType and entityId",
+      );
+      logger.error(
+        "sendMessageStream: missing editContext for workout_edit mode",
+        {
+          conversationMode,
+          editContext,
+        },
+      );
+      this._cleanupStreamingError(error);
+      throw error;
+    }
+
     try {
       // Add user message
       const userMessage = {
@@ -531,10 +551,6 @@ export class CoachConversationAgent {
       };
       this._addMessage(userMessage);
 
-      // Create streaming message placeholder with conversation mode metadata
-      // Use the conversation mode directly (CHAT, PROGRAM_DESIGN, or WORKOUT_LOG)
-      const conversationMode =
-        this.state.conversation?.mode || CONVERSATION_MODES.CHAT;
       const streamingMsg = createStreamingMessage(this, {
         mode: conversationMode,
       });
@@ -545,12 +561,14 @@ export class CoachConversationAgent {
         isTyping: true,
         streamingMessage: "",
         streamingMessageId: streamingMsg.messageId,
-        contextualUpdate: { content: getRandomThinkingPhrase(), stage: "initial" },
+        contextualUpdate: {
+          content: getRandomThinkingPhrase(),
+          stage: "initial",
+        },
         error: null,
       });
 
       try {
-        // Get streaming response (API layer handles Lambda → API Gateway → non-streaming fallback)
         const messageStream = streamCoachConversation(
           this.userId,
           this.coachId,
@@ -701,21 +719,8 @@ export class CoachConversationAgent {
           },
         });
       } catch (streamError) {
-        // Handle streaming failure with fallback
         streamingMsg.remove();
-
-        return await handleStreamingFallback(
-          sendCoachConversationMessage,
-          [
-            this.userId,
-            this.coachId,
-            this.conversationId,
-            messageContent.trim(),
-            imageS3Keys,
-          ],
-          (result, isErrorFallback) => this._handleFallbackResult(result),
-          "conversation message",
-        );
+        throw streamError;
       }
     } catch (error) {
       logger.error("Error sending streaming message:", error);
