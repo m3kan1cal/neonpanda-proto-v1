@@ -170,9 +170,25 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         );
       }
 
-      const userEmail = checkUser.UserAttributes?.find(
-        (a) => a.Name === "email",
-      )?.Value;
+      let providerSubjectId: string | undefined;
+      if (identitiesStr) {
+        try {
+          const identities = JSON.parse(identitiesStr);
+          const providerIdentity = identities.find(
+            (id: any) => id.providerName === body.provider,
+          );
+          providerSubjectId = providerIdentity?.userId;
+        } catch {
+          /* ignore */
+        }
+      }
+
+      if (!providerSubjectId) {
+        return createErrorResponse(
+          400,
+          "Provider not found or unable to disconnect",
+        );
+      }
 
       await cognitoClient.send(
         new AdminDisableProviderForUserCommand({
@@ -180,7 +196,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           User: {
             ProviderName: body.provider,
             ProviderAttributeName: "Cognito_Subject",
-            ProviderAttributeValue: userEmail,
+            ProviderAttributeValue: providerSubjectId,
           },
         }),
       );
