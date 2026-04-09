@@ -61,6 +61,9 @@ export interface ConversationAgentContext extends AgentContext {
     entityType: "workout"; // extensible to "program" later
     entityId: string;
   };
+  // Mutable flag set by log_workout tool after first successful invocation
+  // within a single Lambda invocation to prevent duplicate async triggers.
+  workoutLoggedThisTurn?: boolean;
 }
 
 // Re-export shared streaming types from core so existing imports continue to work

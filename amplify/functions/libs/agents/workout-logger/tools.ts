@@ -64,7 +64,7 @@ import {
 import { parseJsonWithFallbacks } from "../../response-utils";
 import { composeWorkoutSchema } from "../../schemas/schema-composer";
 import { parseCompletedAt } from "../../analytics/date-utils";
-import { saveWorkout } from "../../../../dynamodb/operations";
+import { saveWorkout, queryWorkouts } from "../../../../dynamodb/operations";
 import { storeWorkoutSummaryInPinecone } from "../../workout/pinecone";
 import { linkWorkoutToTemplate } from "../../program/template-linking";
 import { storeExtractionDebugData } from "./helpers";
@@ -1262,6 +1262,46 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       workoutName: workoutData.workout_name,
       confidence,
     });
+
+    // Idempotency check: verify no workout already exists for
+    // this conversationId + completedAt date combination.
+    const completedAtDateOnly = completedAtDate.toISOString().split("T")[0];
+    try {
+      const existing = await queryWorkouts(context.userId, {
+        limit: 10,
+        sortBy: "completedAt",
+        sortOrder: "desc",
+      });
+      const duplicate = existing.find(
+        (w) =>
+          w.conversationId === context.conversationId &&
+          new Date(w.completedAt).toISOString().split("T")[0] ===
+            completedAtDateOnly,
+      );
+      if (duplicate) {
+        logger.warn(
+          "⚠️ save_workout_to_database skipped — duplicate workout exists",
+          {
+            conversationId: context.conversationId,
+            completedAt: completedAtDateOnly,
+            existingWorkoutId: duplicate.workoutId,
+            attemptedWorkoutId: workout.workoutId,
+          },
+        );
+        return {
+          workoutId: duplicate.workoutId,
+          success: true,
+          duplicate: true,
+          message:
+            "A workout for this session already exists — skipped duplicate save.",
+        } as any;
+      }
+    } catch (dedupError) {
+      logger.warn(
+        "⚠️ Idempotency check failed (proceeding with save):",
+        dedupError,
+      );
+    }
 
     // Save to DynamoDB
     await saveWorkout(workout);
