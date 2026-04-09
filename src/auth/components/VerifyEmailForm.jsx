@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useAuthForm } from '../hooks/useAuthForm';
-import { getErrorMessage, validateConfirmationCode } from '../utils/authHelpers';
-import AuthLayout from './AuthLayout';
-import AuthInput from './AuthInput';
-import AuthButton from './AuthButton';
-import AuthErrorMessage from './AuthErrorMessage';
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useAuthForm } from "../hooks/useAuthForm";
+import {
+  getErrorMessage,
+  validateConfirmationCode,
+} from "../utils/authHelpers";
+import AuthLayout from "./AuthLayout";
+import AuthInput from "./AuthInput";
+import AuthButton from "./AuthButton";
+import AuthErrorMessage from "./AuthErrorMessage";
 import { logger } from "../../utils/logger";
 
 const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
   const { confirmSignUp, resendSignUpCode } = useAuth();
-  const [globalError, setGlobalError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [globalError, setGlobalError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isResending, setIsResending] = useState(false);
 
   const {
@@ -21,22 +24,22 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
     setIsSubmitting,
     handleInputChange,
     validateForm,
-    setFieldError
+    setFieldError,
   } = useAuthForm({
-    confirmationCode: ''
+    confirmationCode: "",
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setGlobalError('');
-    setSuccessMessage('');
+    setGlobalError("");
+    setSuccessMessage("");
 
     // Validate form
     const validationRules = {
       confirmationCode: {
         required: true,
-        label: 'Confirmation Code'
-      }
+        label: "Confirmation Code",
+      },
     };
 
     if (!validateForm(validationRules)) {
@@ -46,16 +49,19 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
     // Additional validation
     const codeError = validateConfirmationCode(formData.confirmationCode);
     if (codeError) {
-      setFieldError('confirmationCode', codeError);
+      setFieldError("confirmationCode", codeError);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      logger.info('🔄 About to verify email for:', email);
-      const result = await confirmSignUp(email, formData.confirmationCode.trim());
-      logger.info('✅ Email verification result:', result);
+      logger.info("🔄 About to verify email for:", email);
+      const result = await confirmSignUp(
+        email,
+        formData.confirmationCode.trim(),
+      );
+      logger.info("✅ Email verification result:", result);
 
       // The AuthContext now handles race conditions with retry logic, so no need for delay here
 
@@ -63,18 +69,24 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
       // and updates auth state accordingly. We'll still call onVerificationSuccess
       // but the AuthRouter will handle redirecting appropriately based on auth state.
       onVerificationSuccess();
-
     } catch (error) {
-      logger.error('Confirmation error:', error);
+      logger.error("Confirmation error:", error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases
-      if (error.name === 'CodeMismatchException') {
-        setFieldError('confirmationCode', 'Invalid confirmation code. Please check and try again.');
-      } else if (error.name === 'ExpiredCodeException') {
-        setGlobalError('Confirmation code has expired. Please request a new one.');
-      } else if (error.name === 'UserAlreadyConfirmedException') {
-        setGlobalError('This account has already been confirmed. You can sign in now.');
+      if (error.name === "CodeMismatchException") {
+        setFieldError(
+          "confirmationCode",
+          "Invalid confirmation code. Please check and try again.",
+        );
+      } else if (error.name === "ExpiredCodeException") {
+        setGlobalError(
+          "Confirmation code has expired. Please request a new one.",
+        );
+      } else if (error.name === "UserAlreadyConfirmedException") {
+        setGlobalError(
+          "This account has already been confirmed. You can sign in now.",
+        );
       } else {
         setGlobalError(errorMessage);
       }
@@ -85,21 +97,25 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
 
   const handleResendCode = async () => {
     setIsResending(true);
-    setGlobalError('');
-    setSuccessMessage('');
+    setGlobalError("");
+    setSuccessMessage("");
 
     try {
       await resendSignUpCode(email);
-      setSuccessMessage('A new confirmation code has been sent to your email.');
+      setSuccessMessage("A new confirmation code has been sent to your email.");
     } catch (error) {
-      logger.error('Resend code error:', error);
+      logger.error("Resend code error:", error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases
-      if (error.name === 'UserAlreadyConfirmedException') {
-        setGlobalError('This account has already been confirmed. You can sign in now.');
-      } else if (error.name === 'LimitExceededException') {
-        setGlobalError('Too many requests. Please wait before requesting another code.');
+      if (error.name === "UserAlreadyConfirmedException") {
+        setGlobalError(
+          "This account has already been confirmed. You can sign in now.",
+        );
+      } else if (error.name === "LimitExceededException") {
+        setGlobalError(
+          "Too many requests. Please wait before requesting another code.",
+        );
       } else {
         setGlobalError(errorMessage);
       }
@@ -113,17 +129,22 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="font-body font-bold text-2xl text-white mb-4 uppercase">
+          <p className="font-body text-sm font-semibold uppercase tracking-widest text-synthwave-text-muted mb-3">
             Verify Email
-          </h1>
+          </p>
           <p className="font-body text-synthwave-text-secondary mb-2">
-            Check your email for a 6-digit confirmation code. We sent it to:{' '}
-            <span className="font-semibold text-synthwave-neon-cyan">{email}</span>
+            Check your email for a 6-digit confirmation code. We sent it to:{" "}
+            <span className="font-semibold text-synthwave-neon-cyan">
+              {email}
+            </span>
           </p>
         </div>
 
         {globalError && (
-          <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md" />
+          <AuthErrorMessage
+            error={globalError}
+            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md"
+          />
         )}
 
         {successMessage && (

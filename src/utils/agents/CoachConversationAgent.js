@@ -1,7 +1,6 @@
 import { nanoid } from "nanoid";
 import {
   createCoachConversation,
-  sendCoachConversationMessage,
   streamCoachConversation,
   updateCoachConversation,
   getCoachConversation,
@@ -14,7 +13,6 @@ import CoachAgent from "./CoachAgent";
 import {
   processStreamingChunks,
   createStreamingMessage,
-  handleStreamingFallback,
   resetStreamingState,
   validateStreamingInput,
   getRandomThinkingPhrase,
@@ -65,7 +63,6 @@ export class CoachConversationAgent {
     this.loadExistingConversation = this.loadExistingConversation.bind(this);
     this.loadCoachDetails = this.loadCoachDetails.bind(this);
     this.loadRecentConversations = this.loadRecentConversations.bind(this);
-    this.sendMessage = this.sendMessage.bind(this);
     this.sendMessageStream = this.sendMessageStream.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
@@ -229,6 +226,36 @@ export class CoachConversationAgent {
         isLoadingConversationCount: false,
       });
       return { totalCount: 0, totalMessages: 0 };
+    }
+  }
+
+  /**
+   * Finds the most recent workout_edit conversation for a given entityId.
+   * Used by ContextualChatDrawer to resume an existing edit session instead of creating a new one.
+   */
+  async findWorkoutEditConversation(userId, coachId, entityId) {
+    if (!userId || !coachId || !entityId) return null;
+
+    try {
+      const result = await getCoachConversations(userId, coachId);
+      const conversations = result.conversations || [];
+
+      const match = conversations
+        .filter(
+          (conv) =>
+            conv.mode === CONVERSATION_MODES.WORKOUT_EDIT &&
+            conv.metadata?.editContext?.entityId === entityId,
+        )
+        .sort((a, b) => {
+          const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
+          const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
+          return dateB - dateA;
+        })[0];
+
+      return match || null;
+    } catch (error) {
+      logger.error("Error finding workout edit conversation:", error);
+      return null;
     }
   }
 
@@ -400,112 +427,6 @@ export class CoachConversationAgent {
   }
 
   /**
-   * Sends a user message and processes the AI response
-   */
-  async sendMessage(messageContent, imageS3Keys = []) {
-    // Allow sending if there's text OR images
-    if (
-      (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0)) ||
-      this.state.isTyping ||
-      this.state.isLoadingItem ||
-      !this.userId ||
-      !this.coachId ||
-      !this.conversationId
-    ) {
-      logger.warn("❌ sendMessage validation failed");
-      return;
-    }
-
-    try {
-      // Add user message
-      const userMessage = {
-        id: this._generateMessageId(),
-        type: "user",
-        content: messageContent.trim(),
-        timestamp: new Date().toISOString(),
-        imageS3Keys:
-          imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
-      };
-
-      this._addMessage(userMessage);
-      this._updateState({ isTyping: true, error: null });
-
-      // Send to API
-      const result = await sendCoachConversationMessage(
-        this.userId,
-        this.coachId,
-        this.conversationId,
-        messageContent.trim(),
-        imageS3Keys,
-      );
-
-      // Extract AI response content from the message object
-      let aiResponseContent = "Thank you for your message."; // Default fallback
-
-      if (result.aiResponse && typeof result.aiResponse === "object") {
-        // API returns aiResponse as a message object with content property
-        aiResponseContent =
-          result.aiResponse.content || "Thank you for your message.";
-      } else if (typeof result.aiResponse === "string") {
-        // Fallback if API returns string directly
-        aiResponseContent = result.aiResponse;
-      }
-
-      // Ensure content is a string
-      if (typeof aiResponseContent !== "string") {
-        logger.warn(
-          "AI response content is not a string, converting:",
-          aiResponseContent,
-          typeof aiResponseContent,
-        );
-        aiResponseContent = String(
-          aiResponseContent || "Thank you for your message.",
-        );
-      }
-
-      const aiResponse = {
-        id: this._generateMessageId(),
-        type: "ai",
-        content: aiResponseContent,
-        timestamp: new Date().toISOString(),
-      };
-
-      this._addMessage(aiResponse);
-      this._updateState({
-        isTyping: false,
-        conversation: result.conversation || this.state.conversation,
-        conversationSize:
-          result.conversationSize || this.state.conversationSize || null,
-      });
-
-      return result;
-    } catch (error) {
-      logger.error("Error sending message:", error);
-
-      // Add error message
-      const errorResponse = {
-        id: this._generateMessageId(),
-        type: "ai",
-        content:
-          "I'm sorry, I encountered an error processing your message. Please try again.",
-        timestamp: new Date().toISOString(),
-      };
-
-      this._addMessage(errorResponse);
-      this._updateState({
-        isTyping: false,
-        error: "Failed to send message",
-        conversationSize: this.state.conversationSize || null,
-      });
-
-      if (typeof this.onError === "function") {
-        this.onError(error);
-      }
-      throw error;
-    }
-  }
-
-  /**
    * Sends a user message and processes the AI response with streaming
    */
   async sendMessageStream(
@@ -518,6 +439,15 @@ export class CoachConversationAgent {
       logger.warn("❌ sendMessageStream validation failed");
       return;
     }
+
+    // For workout_edit conversations, always resolve editContext from conversation metadata
+    // when the caller hasn't provided one explicitly. This ensures the context is preserved
+    // across turns even when called from pages that don't track editContext (e.g. CoachConversations).
+    const resolvedEditContext =
+      editContext ||
+      (this.state.conversation?.mode === CONVERSATION_MODES.WORKOUT_EDIT
+        ? this.state.conversation?.metadata?.editContext || null
+        : null);
 
     try {
       // Add user message
@@ -545,7 +475,10 @@ export class CoachConversationAgent {
         isTyping: true,
         streamingMessage: "",
         streamingMessageId: streamingMsg.messageId,
-        contextualUpdate: { content: getRandomThinkingPhrase(), stage: "initial" },
+        contextualUpdate: {
+          content: getRandomThinkingPhrase(),
+          stage: "initial",
+        },
         error: null,
       });
 
@@ -557,7 +490,7 @@ export class CoachConversationAgent {
           this.conversationId,
           messageContent.trim(),
           imageS3Keys,
-          editContext,
+          resolvedEditContext,
         );
 
         // Process the stream
@@ -701,21 +634,14 @@ export class CoachConversationAgent {
           },
         });
       } catch (streamError) {
-        // Handle streaming failure with fallback
         streamingMsg.remove();
-
-        return await handleStreamingFallback(
-          sendCoachConversationMessage,
-          [
-            this.userId,
-            this.coachId,
-            this.conversationId,
-            messageContent.trim(),
-            imageS3Keys,
-          ],
-          (result, isErrorFallback) => this._handleFallbackResult(result),
-          "conversation message",
-        );
+        logger.error("Streaming failed:", streamError);
+        this._updateState({
+          error: "Failed to send message. Please try again.",
+          isStreaming: false,
+          isTyping: false,
+        });
+        throw streamError;
       }
     } catch (error) {
       logger.error("Error sending streaming message:", error);

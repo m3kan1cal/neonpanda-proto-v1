@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { updatePassword } from "aws-amplify/auth";
 import {
@@ -26,6 +26,12 @@ import {
   getUserProfile,
   updateUserProfile,
 } from "../utils/apis/userProfileApi";
+import { checkUserAvailability } from "../utils/apis/userApi";
+import {
+  listIdentityProviders,
+  setPassword as setIdentityProviderPassword,
+  disconnectProvider,
+} from "../utils/apis/identityProviderApi";
 import {
   getSubscriptionStatus,
   createStripePortalSession,
@@ -49,6 +55,27 @@ import {
   ArrowRightIcon,
 } from "./themes/SynthwaveComponents";
 
+const GoogleIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="#4285F4"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+    />
+    <path
+      fill="#EA4335"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+    />
+  </svg>
+);
+
 // Collapsible section component
 const CollapsibleSection = ({
   title,
@@ -56,13 +83,20 @@ const CollapsibleSection = ({
   children,
   defaultOpen = false,
   className = "",
+  onToggle,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  const handleToggle = () => {
+    const next = !isOpen;
+    setIsOpen(next);
+    if (onToggle) onToggle(next);
+  };
 
   return (
     <div className={`${containerPatterns.collapsibleSection} ${className}`}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className={containerPatterns.collapsibleHeader}
       >
         <div className="flex items-center space-x-3">
@@ -109,6 +143,13 @@ function Settings() {
     username: "",
   });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState({
+    checking: false,
+    available: null,
+    message: "",
+  });
+  const usernameDebounceTimer = useRef(null);
+  const originalUsername = useRef("");
 
   // State for password change
   const [passwordData, setPasswordData] = useState({
@@ -118,6 +159,22 @@ function Settings() {
   });
   const [passwordErrors, setPasswordErrors] = useState({});
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+
+  // State for Sign-In Methods (identity providers)
+  const [providerData, setProviderData] = useState({
+    linkedProviders: [],
+    hasPassword: true,
+    isGoogleLinked: false,
+    email: "",
+  });
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [setPasswordData, setSetPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [setPasswordErrors, setSetPasswordErrors] = useState({});
 
   // State for preferences
   const [timezone, setTimezone] = useState("America/Los_Angeles");
@@ -221,6 +278,7 @@ function Settings() {
               profile.username || userAttributes.preferred_username || "",
           };
           setProfileData(newProfileData);
+          originalUsername.current = newProfileData.username;
 
           // Set timezone from profile preferences
           const userTimezone =
@@ -280,6 +338,25 @@ function Settings() {
     loadProfile();
   }, [userId, userAttributes]);
 
+  // Load identity provider data when section opens
+  const loadIdentityProviders = async () => {
+    if (!userId || isLoadingProviders) return;
+    setIsLoadingProviders(true);
+    try {
+      const data = await listIdentityProviders(userId);
+      setProviderData({
+        linkedProviders: data.linkedProviders || [],
+        hasPassword: data.hasPassword ?? true,
+        isGoogleLinked: data.isGoogleLinked ?? false,
+        email: data.email || profileData.email || "",
+      });
+    } catch (error) {
+      logger.error("Error loading identity providers:", error);
+    } finally {
+      setIsLoadingProviders(false);
+    }
+  };
+
   // Handle profile field changes
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -289,20 +366,106 @@ function Settings() {
     }));
   };
 
+  // Handle username field changes with debounced availability check
+  const handleUsernameChange = (e) => {
+    const value = e.target.value;
+    setProfileData((prev) => ({ ...prev, username: value }));
+
+    // Clear previous timer
+    if (usernameDebounceTimer.current)
+      clearTimeout(usernameDebounceTimer.current);
+
+    // Same as original — no check needed
+    if (value === originalUsername.current) {
+      setUsernameStatus({ checking: false, available: null, message: "" });
+      return;
+    }
+
+    // Basic client-side validation first
+    if (value.length < 3) {
+      setUsernameStatus({
+        checking: false,
+        available: false,
+        message: "Username must be at least 3 characters",
+      });
+      return;
+    }
+    if (value.length > 20) {
+      setUsernameStatus({
+        checking: false,
+        available: false,
+        message: "Username must be at most 20 characters",
+      });
+      return;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+      setUsernameStatus({
+        checking: false,
+        available: false,
+        message: "Letters, numbers, hyphens, and underscores only",
+      });
+      return;
+    }
+
+    setUsernameStatus({
+      checking: true,
+      available: null,
+      message: "Checking...",
+    });
+
+    usernameDebounceTimer.current = setTimeout(async () => {
+      try {
+        const result = await checkUserAvailability("username", value);
+        if (result?.available) {
+          setUsernameStatus({
+            checking: false,
+            available: true,
+            message: "Username is available",
+          });
+        } else {
+          setUsernameStatus({
+            checking: false,
+            available: false,
+            message: "Username is already taken",
+          });
+        }
+      } catch {
+        setUsernameStatus({ checking: false, available: null, message: "" });
+      }
+    }, 500);
+  };
+
   // Handle profile save
   const handleSaveProfile = async () => {
+    // Don't save if username check is still in progress or username is taken
+    if (usernameStatus.checking) {
+      showError("Waiting for username availability check...");
+      return;
+    }
+    const usernameChanged = profileData.username !== originalUsername.current;
+    if (usernameChanged && usernameStatus.available === false) {
+      showError(usernameStatus.message || "Username is not available");
+      return;
+    }
+
     setIsSavingProfile(true);
     try {
-      // Prepare updates (exclude email and userId as they're immutable)
+      // Prepare updates — include username only if it changed
       const updates = {
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         displayName: profileData.displayName,
         nickname: profileData.nickname,
-        // username is immutable (GSI key), so we don't send it
       };
+      if (usernameChanged && profileData.username) {
+        updates.username = profileData.username;
+      }
 
       await updateUserProfile(userId, updates);
+      if (usernameChanged) {
+        originalUsername.current = profileData.username;
+        setUsernameStatus({ checking: false, available: null, message: "" });
+      }
       showSuccess("Profile updated successfully");
     } catch (error) {
       logger.error("Error updating profile:", error);
@@ -424,6 +587,78 @@ function Settings() {
       confirmPassword: "",
     });
     setPasswordErrors({});
+  };
+
+  // Handle set-password form input changes (for Google-only users)
+  const handleSetPasswordChange = (e) => {
+    const { name, value } = e.target;
+    setSetPasswordData((prev) => ({ ...prev, [name]: value }));
+    setSetPasswordErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  // Handle set-password form submission (Google-only users setting a native password)
+  const handleSetPassword = async (e) => {
+    e.preventDefault();
+    setSetPasswordErrors({});
+
+    if (!setPasswordData.newPassword) {
+      setSetPasswordErrors((prev) => ({
+        ...prev,
+        newPassword: "Password is required",
+      }));
+      return;
+    }
+    if (setPasswordData.newPassword.length < 8) {
+      setSetPasswordErrors((prev) => ({
+        ...prev,
+        newPassword: "Password must be at least 8 characters",
+      }));
+      return;
+    }
+    if (setPasswordData.newPassword !== setPasswordData.confirmPassword) {
+      setSetPasswordErrors((prev) => ({
+        ...prev,
+        confirmPassword: "Passwords do not match",
+      }));
+      return;
+    }
+
+    setIsSettingPassword(true);
+    try {
+      await setIdentityProviderPassword(userId, setPasswordData.newPassword);
+      showSuccess(
+        "Password set successfully. You can now sign in with email and password.",
+      );
+      setSetPasswordData({ newPassword: "", confirmPassword: "" });
+      // Refresh provider data so the UI reflects the new password status
+      await loadIdentityProviders();
+    } catch (error) {
+      logger.error("Error setting password:", error);
+      showError(error.message || "Failed to set password. Please try again.");
+    } finally {
+      setIsSettingPassword(false);
+    }
+  };
+
+  // Handle Google account disconnection
+  const handleDisconnectGoogle = async () => {
+    if (!providerData.hasPassword) {
+      showError("Set a password before disconnecting Google.");
+      return;
+    }
+    setIsDisconnecting(true);
+    try {
+      await disconnectProvider(userId, "Google");
+      showSuccess("Google account disconnected successfully.");
+      await loadIdentityProviders();
+    } catch (error) {
+      logger.error("Error disconnecting Google:", error);
+      showError(
+        error.message || "Failed to disconnect Google. Please try again.",
+      );
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   // Handle email notification preference toggle
@@ -1017,18 +1252,35 @@ function Settings() {
                       name="username"
                       type="text"
                       value={profileData.username}
-                      disabled
+                      onChange={handleUsernameChange}
+                      disabled={isSavingProfile}
+                      maxLength={20}
                     />
-                    <div className="flex items-start space-x-2 -mt-4 mb-6">
+                    {/* Username availability indicator */}
+                    {profileData.username !== originalUsername.current && (
+                      <div
+                        className={`flex items-start space-x-2 -mt-4 mb-2 ${
+                          usernameStatus.available === true
+                            ? "text-synthwave-neon-cyan"
+                            : usernameStatus.available === false
+                              ? "text-synthwave-neon-pink"
+                              : "text-synthwave-text-muted"
+                        }`}
+                      >
+                        <p className={formPatterns.helperText}>
+                          {usernameStatus.message}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex items-start space-x-2 -mt-2 mb-6">
                       <div className="text-synthwave-neon-cyan mt-0.5 shrink-0">
                         <InfoIcon />
                       </div>
                       <p
                         className={`${formPatterns.helperText} text-synthwave-neon-cyan`}
                       >
-                        Username cannot be changed. Update your Display Name
-                        below to change how you appear to others on the
-                        platform.
+                        3–20 characters. Letters, numbers, hyphens, and
+                        underscores only.
                       </p>
                     </div>
                     <FormInput
@@ -1088,78 +1340,216 @@ function Settings() {
                 </div>
               </CollapsibleSection>
 
-              {/* Account Security Section */}
+              {/* Sign-In Methods Section */}
               <CollapsibleSection
-                title="Account Security"
+                title="Sign-In Methods"
                 icon={<SecurityIcon />}
                 defaultOpen={false}
+                onToggle={(isOpen) => {
+                  if (isOpen && !providerData.email) {
+                    loadIdentityProviders();
+                  }
+                }}
               >
-                <form onSubmit={handleSavePassword}>
-                  <AuthInput
-                    label="Current Password"
-                    name="currentPassword"
-                    type="password"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    error={passwordErrors.currentPassword}
-                    required
-                    disabled={isSavingPassword}
-                  />
-                  <AuthInput
-                    label="New Password"
-                    name="newPassword"
-                    type="password"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    error={passwordErrors.newPassword}
-                    required
-                    disabled={isSavingPassword}
-                  />
-                  <AuthInput
-                    label="Confirm New Password"
-                    name="confirmPassword"
-                    type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    error={passwordErrors.confirmPassword}
-                    required
-                    disabled={isSavingPassword}
-                  />
-
-                  {/* Password Requirements */}
-                  <div className="text-sm font-body text-synthwave-neon-cyan space-y-1 mb-4 mt-6">
-                    <p className="font-medium">Password must contain:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li>At least 8 characters</li>
-                      <li>One uppercase letter</li>
-                      <li>One lowercase letter</li>
-                      <li>One number</li>
-                      <li>One special character</li>
-                    </ul>
+                {isLoadingProviders ? (
+                  <div className="space-y-3 pb-4">
+                    <div className="h-16 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
+                    <div className="h-16 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
                   </div>
+                ) : (
+                  <div className="space-y-4 pb-4">
+                    {/* Email & Password provider row */}
+                    <div className="flex items-center justify-between p-4 rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-md bg-synthwave-neon-cyan/20 flex items-center justify-center">
+                          <span className="text-synthwave-neon-cyan text-sm font-medium">
+                            @
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-body font-medium text-white text-sm">
+                            Email &amp; Password
+                          </p>
+                          <p className="font-body text-xs text-synthwave-text-secondary">
+                            {providerData.email || profileData.email}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`${badgePatterns.workoutBadgeBase} ${providerData.hasPassword ? badgePatterns.workoutBadgeCyan : badgePatterns.workoutBadgeMuted}`}
+                      >
+                        {providerData.hasPassword ? "Active" : "No password"}
+                      </span>
+                    </div>
 
-                  <div className="flex space-x-4 pt-4 pb-4">
-                    <AuthButton
-                      type="button"
-                      variant="secondary"
-                      onClick={handleCancelPassword}
-                      disabled={isSavingPassword}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </AuthButton>
-                    <AuthButton
-                      type="submit"
-                      variant="primary"
-                      loading={isSavingPassword}
-                      disabled={isSavingPassword}
-                      className="flex-1"
-                    >
-                      Update Password
-                    </AuthButton>
+                    {/* Google provider row */}
+                    <div className="flex items-center justify-between p-4 rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-md bg-white flex items-center justify-center">
+                          <GoogleIcon />
+                        </div>
+                        <div>
+                          <p className="font-body font-medium text-white text-sm">
+                            Google
+                          </p>
+                          <p className="font-body text-xs text-synthwave-text-secondary">
+                            {providerData.isGoogleLinked
+                              ? "Connected"
+                              : "Not connected"}
+                          </p>
+                        </div>
+                      </div>
+                      {providerData.isGoogleLinked ? (
+                        <button
+                          type="button"
+                          onClick={handleDisconnectGoogle}
+                          disabled={
+                            !providerData.hasPassword || isDisconnecting
+                          }
+                          title={
+                            !providerData.hasPassword
+                              ? "Set a password before disconnecting Google"
+                              : ""
+                          }
+                          className={`${buttonPatterns.secondary} text-xs px-3 py-1.5`}
+                        >
+                          {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+                        </button>
+                      ) : (
+                        <p className="font-body text-xs text-synthwave-text-muted max-w-40 text-right">
+                          Sign in with Google using the same email to link your
+                          account
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Set Password form — shown only for Google-only users */}
+                    {!providerData.hasPassword && (
+                      <div className="mt-2 p-4 border border-synthwave-neon-cyan/20 rounded-md">
+                        <h4 className="font-body font-medium text-white text-sm mb-1">
+                          Set a Password
+                        </h4>
+                        <p className="font-body text-synthwave-text-secondary text-xs mb-4">
+                          Add a password to sign in with email alongside Google.
+                          Required before you can disconnect Google.
+                        </p>
+                        <form
+                          onSubmit={handleSetPassword}
+                          className="space-y-3"
+                        >
+                          <AuthInput
+                            label="New Password"
+                            name="newPassword"
+                            type="password"
+                            value={setPasswordData.newPassword}
+                            onChange={handleSetPasswordChange}
+                            placeholder="Choose a password"
+                            error={setPasswordErrors.newPassword}
+                            required
+                            disabled={isSettingPassword}
+                          />
+                          <AuthInput
+                            label="Confirm Password"
+                            name="confirmPassword"
+                            type="password"
+                            value={setPasswordData.confirmPassword}
+                            onChange={handleSetPasswordChange}
+                            placeholder="Confirm your password"
+                            error={setPasswordErrors.confirmPassword}
+                            required
+                            disabled={isSettingPassword}
+                          />
+                          <div className="pt-1">
+                            <AuthButton
+                              type="submit"
+                              variant="primary"
+                              loading={isSettingPassword}
+                              disabled={isSettingPassword}
+                            >
+                              Set Password
+                            </AuthButton>
+                          </div>
+                        </form>
+                      </div>
+                    )}
                   </div>
-                </form>
+                )}
               </CollapsibleSection>
+
+              {/* Account Security Section — hidden for Google-only users (no password to change) */}
+              {providerData.hasPassword && (
+                <CollapsibleSection
+                  title="Account Security"
+                  icon={<SecurityIcon />}
+                  defaultOpen={false}
+                >
+                  <form onSubmit={handleSavePassword}>
+                    <AuthInput
+                      label="Current Password"
+                      name="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      error={passwordErrors.currentPassword}
+                      required
+                      disabled={isSavingPassword}
+                    />
+                    <AuthInput
+                      label="New Password"
+                      name="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      error={passwordErrors.newPassword}
+                      required
+                      disabled={isSavingPassword}
+                    />
+                    <AuthInput
+                      label="Confirm New Password"
+                      name="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      error={passwordErrors.confirmPassword}
+                      required
+                      disabled={isSavingPassword}
+                    />
+
+                    {/* Password Requirements */}
+                    <div className="text-sm font-body text-synthwave-neon-cyan space-y-1 mb-4 mt-6">
+                      <p className="font-medium">Password must contain:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>At least 8 characters</li>
+                        <li>One uppercase letter</li>
+                        <li>One lowercase letter</li>
+                        <li>One number</li>
+                        <li>One special character</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex space-x-4 pt-4 pb-4">
+                      <AuthButton
+                        type="button"
+                        variant="secondary"
+                        onClick={handleCancelPassword}
+                        disabled={isSavingPassword}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </AuthButton>
+                      <AuthButton
+                        type="submit"
+                        variant="primary"
+                        loading={isSavingPassword}
+                        disabled={isSavingPassword}
+                        className="flex-1"
+                      >
+                        Update Password
+                      </AuthButton>
+                    </div>
+                  </form>
+                </CollapsibleSection>
+              )}
 
               {/* Preferences Section */}
               <CollapsibleSection

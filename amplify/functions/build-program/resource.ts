@@ -8,4 +8,5 @@ export const buildProgram = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900, // 15 minutes (same as build-program)
   memoryMB: 3072, // More memory than build-program (2048) for agent overhead and parallel phase generation
+  resourceGroupName: "jobs",
 });

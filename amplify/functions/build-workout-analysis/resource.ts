@@ -8,4 +8,5 @@ export const buildWorkoutAnalysis = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 60, // Lightweight single Bedrock call
   memoryMB: 512, // Minimal memory for AI processing
+  resourceGroupName: "jobs",
 });

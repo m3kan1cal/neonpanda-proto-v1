@@ -48,7 +48,6 @@ import {
   getStreamingMessageClasses,
   getTypingState,
   handleStreamingError,
-  supportsStreaming,
   ContextualUpdateIndicator,
 } from "../utils/ui/streamingUiHelper.jsx";
 import { BuildModeIconTiny } from "./themes/SynthwaveComponents";
@@ -130,7 +129,7 @@ const MessageItem = memo(
       >
         {/* Message Content */}
         <div
-          className={`w-full min-w-0 md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full min-w-0 ${message.type === "user" ? "md:max-w-[85%] items-end" : "items-start"} flex flex-col`}
         >
           {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
           {message.type === "ai" &&
@@ -174,7 +173,11 @@ const MessageItem = memo(
             </div>
           ) : (
             <div
-              className={getStreamingMessageClasses(message, agentState, "w-full min-w-0")}
+              className={getStreamingMessageClasses(
+                message,
+                agentState,
+                "w-full min-w-0",
+              )}
             >
               <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
                 {renderMessageContent(message)}
@@ -679,10 +682,7 @@ function ProgramDesigner() {
 
     try {
       await sendMessageWithStreaming(agentRef.current, messageToSend, [], {
-        enableStreaming: supportsStreaming(),
-        onStreamingStart: () => {
-          // Streaming started
-        },
+        onStreamingStart: () => {},
         onStreamingError: (error) => {
           handleStreamingError(error, { error: showError });
         },
@@ -714,7 +714,6 @@ function ProgramDesigner() {
         messageContent,
         imageS3Keys,
         {
-          enableStreaming: supportsStreaming(),
           onStreamingStart: () => {
             // Streaming started - instant scroll to show new message
             setTimeout(() => scrollToBottom(true), 50);
@@ -842,7 +841,7 @@ function ProgramDesigner() {
 
           {/* Main Content Area skeleton */}
           <div className="flex-1 flex justify-center">
-            <div className="w-full max-w-7xl">
+            <div className="w-full max-w-5xl">
               <div className="h-[500px] flex flex-col">
                 {/* Messages Area skeleton */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-3">
@@ -853,11 +852,11 @@ function ProgramDesigner() {
                       className={`flex flex-col mb-1 ${i % 2 === 1 ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`w-full min-w-0 md:max-w-[85%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full min-w-0 ${i % 2 === 1 ? "md:max-w-[85%] items-end" : "items-start"} flex flex-col`}
                       >
                         {i % 2 === 1 ? (
                           /* User message: keep bubble container */
-                          <div className="rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[100px]">
+                          <div className="rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse w-full min-h-[100px]">
                             <div className="space-y-1">
                               <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                               <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
@@ -866,7 +865,7 @@ function ProgramDesigner() {
                           </div>
                         ) : (
                           /* AI message: no bubble, text lines printed directly */
-                          <div className="space-y-2 py-1 min-w-[min(65vw,600px)] min-h-[130px]">
+                          <div className="space-y-2 py-1 w-full min-h-[130px]">
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
@@ -999,7 +998,7 @@ function ProgramDesigner() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
-          <div className="w-full max-w-7xl">
+          <div className="w-full max-w-5xl">
             {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
             <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input */}
@@ -1313,7 +1312,7 @@ function ProgramDesigner() {
           ref={completionBannerRef}
           className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-purple/30 shadow-lg shadow-synthwave-neon-purple/20 z-50"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 flex justify-center">
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 flex justify-center">
             <div
               className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}
             >

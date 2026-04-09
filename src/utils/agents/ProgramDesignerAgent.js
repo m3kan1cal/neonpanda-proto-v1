@@ -3,7 +3,6 @@ import {
   streamProgramDesign,
   getProgramDesignerSession,
   getProgramDesignerConversation,
-  sendProgramDesignerMessage,
   updateProgramDesignerConversation,
   deleteProgramDesignerConversation,
 } from "../apis/programDesignerApi";
@@ -16,7 +15,6 @@ import CoachAgent from "./CoachAgent";
 import {
   processStreamingChunks,
   createStreamingMessage,
-  handleStreamingFallback,
   resetStreamingState,
   validateStreamingInput,
   getRandomThinkingPhrase,
@@ -71,7 +69,6 @@ export class ProgramDesignerAgent {
     this.loadExistingConversation = this.loadExistingConversation.bind(this);
     this.loadCoachDetails = this.loadCoachDetails.bind(this);
     this.loadRecentConversations = this.loadRecentConversations.bind(this);
-    this.sendMessage = this.sendMessage.bind(this);
     this.sendMessageStream = this.sendMessageStream.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
@@ -467,112 +464,6 @@ export class ProgramDesignerAgent {
   }
 
   /**
-   * Sends a user message and processes the AI response
-   */
-  async sendMessage(messageContent, imageS3Keys = []) {
-    // Allow sending if there's text OR images
-    if (
-      (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0)) ||
-      this.state.isTyping ||
-      this.state.isLoadingItem ||
-      !this.userId ||
-      !this.coachId ||
-      !this.conversationId
-    ) {
-      logger.warn("❌ sendMessage validation failed");
-      return;
-    }
-
-    try {
-      // Add user message
-      const userMessage = {
-        id: this._generateMessageId(),
-        type: "user",
-        content: messageContent.trim(),
-        timestamp: new Date().toISOString(),
-        imageS3Keys:
-          imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
-      };
-
-      this._addMessage(userMessage);
-      this._updateState({ isTyping: true, error: null });
-
-      // Send to API
-      const result = await sendProgramDesignerMessage(
-        this.userId,
-        this.coachId,
-        this.conversationId,
-        messageContent.trim(),
-        imageS3Keys,
-      );
-
-      // Extract AI response content from the message object
-      let aiResponseContent = "Thank you for your message."; // Default fallback
-
-      if (result.aiResponse && typeof result.aiResponse === "object") {
-        // API returns aiResponse as a message object with content property
-        aiResponseContent =
-          result.aiResponse.content || "Thank you for your message.";
-      } else if (typeof result.aiResponse === "string") {
-        // Fallback if API returns string directly
-        aiResponseContent = result.aiResponse;
-      }
-
-      // Ensure content is a string
-      if (typeof aiResponseContent !== "string") {
-        logger.warn(
-          "AI response content is not a string, converting:",
-          aiResponseContent,
-          typeof aiResponseContent,
-        );
-        aiResponseContent = String(
-          aiResponseContent || "Thank you for your message.",
-        );
-      }
-
-      const aiResponse = {
-        id: this._generateMessageId(),
-        type: "ai",
-        content: aiResponseContent,
-        timestamp: new Date().toISOString(),
-      };
-
-      this._addMessage(aiResponse);
-      this._updateState({
-        isTyping: false,
-        conversation: result.conversation || this.state.conversation,
-        conversationSize:
-          result.conversationSize || this.state.conversationSize || null,
-      });
-
-      return result;
-    } catch (error) {
-      logger.error("Error sending message:", error);
-
-      // Add error message
-      const errorResponse = {
-        id: this._generateMessageId(),
-        type: "ai",
-        content:
-          "I'm sorry, I encountered an error processing your message. Please try again.",
-        timestamp: new Date().toISOString(),
-      };
-
-      this._addMessage(errorResponse);
-      this._updateState({
-        isTyping: false,
-        error: "Failed to send message",
-        conversationSize: this.state.conversationSize || null,
-      });
-
-      if (typeof this.onError === "function") {
-        this.onError(error);
-      }
-      throw error;
-    }
-  }
-
-  /**
    * Sends a user message and processes the AI response with streaming
    */
   async sendMessageStream(messageContent, imageS3Keys = []) {
@@ -608,7 +499,10 @@ export class ProgramDesignerAgent {
         isTyping: true,
         streamingMessage: "",
         streamingMessageId: streamingMsg.messageId,
-        contextualUpdate: { content: getRandomThinkingPhrase(), stage: "initial" },
+        contextualUpdate: {
+          content: getRandomThinkingPhrase(),
+          stage: "initial",
+        },
         error: null,
       });
 

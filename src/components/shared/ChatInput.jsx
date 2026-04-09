@@ -264,7 +264,7 @@ function ChatInput({
   if (showSkeleton) {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
           {/* Input area skeleton — mirrors chatInputWrapper + button row */}
           <div className="w-full rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
             {/* Editor area — TipTap content has min-height 60px, plus pt-3 + pb-2 padding = ~80px total */}
@@ -704,7 +704,7 @@ function ChatInput({
       className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
       data-chat-input-container
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
         {/* Image Preview Grid */}
         {selectedImages.length > 0 && (
           <div className="mb-2">

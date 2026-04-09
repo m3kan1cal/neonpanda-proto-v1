@@ -8,4 +8,5 @@ export const processMemoryLifecycle = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 300, // 5 minutes per user — handles all memory operations for one user
   memoryMB: 1024,
+  resourceGroupName: "scheduled",
 });

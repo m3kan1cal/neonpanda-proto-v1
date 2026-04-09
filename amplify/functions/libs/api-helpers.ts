@@ -140,9 +140,68 @@ export class GuardrailInterventionError extends Error {
 }
 
 // Create Bedrock Runtime client
+// standard retry mode uses exponential backoff with full jitter, which is more appropriate
+// than the legacy mode's minimal backoff for transient 503/429 errors from Bedrock.
 const bedrockClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-west-2",
+  retryMode: "standard",
+  maxAttempts: 5,
 });
+
+const TRANSIENT_BEDROCK_ERROR_NAMES = new Set([
+  "ServiceUnavailableException",
+  "ThrottlingException",
+  "RequestLimitExceeded",
+  "TooManyRequestsException",
+  "ProvisionedThroughputExceededException",
+]);
+
+const isTransientBedrockError = (error: any): boolean => {
+  return (
+    TRANSIENT_BEDROCK_ERROR_NAMES.has(error?.name) ||
+    error?.$metadata?.httpStatusCode === 503 ||
+    error?.$metadata?.httpStatusCode === 429
+  );
+};
+
+/**
+ * Application-level retry wrapper for Bedrock send() calls.
+ *
+ * The SDK-level retry (maxAttempts: 5) handles short-lived transient blips.
+ * This wrapper handles the case where the SDK exhausts all its retries and still
+ * receives a transient error (e.g., sustained 503 burst). It waits substantially
+ * longer between app-level attempts to allow Bedrock to recover.
+ *
+ * Total retry budget: up to 3 app-level attempts × SDK maxAttempts 5 = 15 Bedrock calls.
+ * App-level delays: ~2s, ~4s, ~8s (exponential with ±30% jitter).
+ */
+const withBedrockRetry = async <T>(
+  fn: () => Promise<T>,
+  label: string = "Bedrock call",
+  maxAppRetries: number = 3,
+  baseDelayMs: number = 2000,
+): Promise<T> => {
+  let lastError: any;
+  for (let attempt = 0; attempt <= maxAppRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const isTransient = isTransientBedrockError(error);
+      if (attempt < maxAppRetries && isTransient) {
+        const jitter = 1 + (Math.random() * 0.6 - 0.3); // ±30%
+        const delay = baseDelayMs * Math.pow(2, attempt) * jitter;
+        logger.warn(
+          `[withBedrockRetry] ${label} - transient error on app attempt ${attempt + 1}/${maxAppRetries + 1} (${error.name}), retrying in ${Math.round(delay)}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw lastError;
+};
 
 type GuardrailConfig = {
   guardrailIdentifier: string;
@@ -1177,7 +1236,10 @@ export const callBedrockApi = async (
     try {
       logger.info("Starting Bedrock API call..");
 
-      response = await bedrockClient.send(command);
+      response = await withBedrockRetry(
+        () => bedrockClient.send(command),
+        "callBedrockApi",
+      );
 
       clearInterval(heartbeatInterval);
       logger.info("bedrockClient.send() completed successfully");
@@ -1611,7 +1673,10 @@ export const callBedrockApiMultimodal = async (
 
     logger.info("Multimodal converse command created successfully..");
 
-    const response = await bedrockClient.send(command);
+    const response = await withBedrockRetry(
+      () => bedrockClient.send(command),
+      "callBedrockApiMultimodal",
+    );
 
     logger.info("Response received from Bedrock");
     logger.info("Response metadata:", response.$metadata);
@@ -1824,7 +1889,10 @@ export const callBedrockApiWithJsonOutput = async (
 
     let response;
     try {
-      response = await bedrockClient.send(command);
+      response = await withBedrockRetry(
+        () => bedrockClient.send(command),
+        "callBedrockApiWithJsonOutput",
+      );
       clearInterval(heartbeatInterval);
     } catch (sendError) {
       clearInterval(heartbeatInterval);
@@ -1943,7 +2011,10 @@ export const callBedrockApiMultimodalWithJsonOutput = async (
       }),
     });
 
-    const response = await bedrockClient.send(command);
+    const response = await withBedrockRetry(
+      () => bedrockClient.send(command),
+      "callBedrockApiMultimodalWithJsonOutput",
+    );
 
     if (response.usage) {
       logCachePerformance(response.usage, "Multimodal JSON Output API");

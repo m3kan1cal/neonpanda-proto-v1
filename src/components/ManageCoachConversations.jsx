@@ -793,14 +793,15 @@ function ManageCoachConversations() {
       );
     }
 
-    // Sort conversations by last activity in descending order
-    const sortedConversations = [
-      ...conversationAgentState.allConversations,
-    ].sort((a, b) => {
-      const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
-      const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
-      return dateB - dateA;
-    });
+    // Filter out workout_edit conversations (contextual editing sessions, not general conversations)
+    // and sort by last activity in descending order
+    const sortedConversations = [...conversationAgentState.allConversations]
+      .filter((conv) => conv.mode !== CONVERSATION_MODES.WORKOUT_EDIT)
+      .sort((a, b) => {
+        const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
+        const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
+        return dateB - dateA;
+      });
 
     // Create an array of all items (create card first, then conversations)
     const allItems = [
