@@ -685,11 +685,16 @@ const authenticatedStreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
-  // Warmup pings from warmup-platform arrive via Lambda Invoke API (not Function URL),
-  // so they must be intercepted *before* streaming response setup to avoid hanging.
-  if (event?.source === "warmup") {
-    logger.info("🔥 Warmup detected, returning immediately");
-    context.callbackWaitsForEmptyEventLoop = false;
+  // Warmup ping detection for internal invocations.
+  // warmup-platform directly invokes all target functions with { __warmup: true }
+  // to keep their execution environments warm (avoiding cold starts).
+  // Using a namespaced field prevents collision with AWS service event fields (e.g., EventBridge source).
+  if ((event as any)?.__warmup === true) {
+    logger.info("🔥 Warmup detected, closing stream");
+    if (responseStream?.write) {
+      responseStream.write("");
+      responseStream.end();
+    }
     return;
   }
 
@@ -700,16 +705,6 @@ const authenticatedStreamingHandler = async (
   });
 
   try {
-    // Warmup ping detection for internal invocations.
-    // warmup-platform directly invokes all target functions with { source: "warmup" }
-    // to keep their execution environments warm (avoiding cold starts).
-    // SECURITY: Check after setting up response stream to prevent unauthenticated access.
-    if ((event as any)?.source === "warmup") {
-      logger.info("🔥 Warmup detected, closing stream");
-      responseStream.end();
-      return;
-    }
-
     // Check if this is a health check or OPTIONS request (these don't have proper paths/auth)
     const method = event.requestContext?.http?.method;
     const path = event.rawPath || "";

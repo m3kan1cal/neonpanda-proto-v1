@@ -627,7 +627,7 @@ async function warmBedrockGrammars(): Promise<GrammarWarmupSummary> {
 // ─── Lambda Container Warming ────────────────────────────────────────────────
 //
 // Invokes critical user-facing Lambda functions with a lightweight warmup event.
-// Each target function detects `{ source: "warmup" }` and returns immediately,
+// Each target function detects `{ __warmup: true }` and returns immediately,
 // but the invocation keeps the Lambda execution environment alive (avoiding cold starts).
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -700,10 +700,8 @@ async function warmSingleContainer(
   try {
     const command = new InvokeCommand({
       FunctionName: functionName,
-      InvocationType: isStreaming
-        ? InvocationType.Event
-        : InvocationType.RequestResponse,
-      Payload: JSON.stringify({ source: "warmup" }),
+      InvocationType: InvocationType.RequestResponse,
+      Payload: JSON.stringify({ __warmup: true }),
     });
     const response = await lambdaClient.send(command);
 
