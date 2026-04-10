@@ -26,9 +26,9 @@ export const auth = defineAuth({
         },
       },
       callbackUrls: [
-        "http://localhost:5173/",
-        "https://dev.neonpanda.ai/",
-        "https://neonpanda.ai/",
+        "http://localhost:5173/auth",
+        "https://dev.neonpanda.ai/auth",
+        "https://neonpanda.ai/auth",
       ],
       logoutUrls: [
         "http://localhost:5173/",
