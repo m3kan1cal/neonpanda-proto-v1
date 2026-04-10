@@ -1160,6 +1160,7 @@ const allFunctions = [
   backend.checkUserAvailability,
   backend.manageIdentityProviders,
   backend.generateUploadUrls,
+  backend.generateDownloadUrls,
   backend.createProgram,
   backend.getProgram,
   backend.getPrograms,

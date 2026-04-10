@@ -11,11 +11,11 @@
  *    Pre-compiles Bedrock constrained-decoding grammars for all tool schemas used
  *    with strict: true. This eliminates first-request grammar compilation latency.
  *
- * The handler receives an EventBridge event with `detail.warmupType` to determine
+ * The handler receives an EventBridge event with `warmupType` to determine
  * which phase to run:
  * - `"containers"` → Lambda container warming only (5-min schedule)
  * - `"grammars"` → Bedrock grammar warmup only (12-hour schedule)
- * - No detail (manual invoke) → runs both phases
+ * - No warmupType (manual invoke) → runs both phases
  *
  * Per AWS docs, grammar caches are scoped per account and last 24 hours from first access.
  * Only structural schema changes (not name/description changes) invalidate the cache.
@@ -818,8 +818,8 @@ export const handler = async (
 ): Promise<Record<string, unknown>> => {
   console.info("[warmup-platform] Handler invoked", { event });
 
-  // Determine warmup type from EventBridge event detail or direct invocation
-  const warmupType = event?.detail?.warmupType || event?.warmupType || "both";
+  // Determine warmup type from EventBridge event or direct invocation
+  const warmupType = event?.warmupType || "both";
 
   const result: Record<string, unknown> = {};
 
