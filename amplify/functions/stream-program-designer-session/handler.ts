@@ -562,6 +562,16 @@ const authenticatedStreamingHandler = async (
   });
 
   try {
+    // Warmup ping detection for internal invocations.
+    // warmup-platform directly invokes all target functions with { source: "warmup" }
+    // to keep their execution environments warm (avoiding cold starts).
+    // SECURITY: Check after setting up response stream to prevent unauthenticated access.
+    if ((event as any)?.source === "warmup") {
+      logger.info("🔥 Warmup detected, closing stream");
+      responseStream.end();
+      return;
+    }
+
     // Check if this is a health check or OPTIONS request (these don't have proper paths/auth)
     const method = event.requestContext?.http?.method;
     const path = event.rawPath || "";

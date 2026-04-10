@@ -59,13 +59,6 @@ export const withAuth = (
   return async (
     event: APIGatewayProxyEventV2WithJWTAuthorizer,
   ): Promise<APIGatewayProxyResultV2> => {
-    // Warmup ping detection for internal invocations.
-    // warmup-platform directly invokes all target functions with { source: "warmup" }
-    // to keep their execution environments warm (avoiding cold starts).
-    if ((event as any)?.source === "warmup") {
-      return { statusCode: 200, body: JSON.stringify({ warmup: true }) };
-    }
-
     // DEBUG: Log the raw event structure
     logger.info("🔍 withAuth received event:", {
       hasEvent: !!event,

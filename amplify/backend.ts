@@ -771,8 +771,11 @@ const bedrockGuardrail = new CfnGuardrail(
 
 // Distribute guardrail ID to functions where user-controlled content flows into prompts
 // or where multi-turn agent loops allow model output to feed back as input.
-// Internal-only functions (summaries, analytics, memory lifecycle, etc.) are excluded —
-// their inputs are pre-sanitized system content and don't warrant the per-character guardrail cost.
+// Internal-only functions (analytics, etc.) are excluded — their inputs are pre-sanitized system content.
+// Jobs group functions (buildConversationSummary, buildLivingProfile, buildWorkout, etc.) are also
+// excluded as their primary inputs are pre-generated summaries and system-controlled data.
+// NOTE: processPostTurn receives user message content for complexity analysis and prospective memory
+// extraction, so it should receive guardrail protection.
 const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   // User-facing: direct user input flows into these prompts.
   // Streaming functions use ASYNC guardrail mode (content streams immediately,
@@ -784,6 +787,8 @@ const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.explainTerm,
+  // Jobs group: processes user message content for analysis
+  backend.processPostTurn,
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
