@@ -8,4 +8,5 @@ export const buildLivingProfile = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 300, // 5 minutes — Sonnet call + DynamoDB reads/writes
   memoryMB: 1024,
+  resourceGroupName: "jobs",
 });

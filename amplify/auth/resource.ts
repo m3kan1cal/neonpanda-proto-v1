@@ -1,5 +1,5 @@
-import { defineAuth } from '@aws-amplify/backend';
-import { postConfirmation } from '../functions/post-confirmation/resource';
+import { defineAuth, secret } from "@aws-amplify/backend";
+import { postConfirmation } from "../functions/post-confirmation/resource";
 
 /**
  * Define and configure your auth resource
@@ -10,27 +10,52 @@ export const auth = defineAuth({
     email: {
       verificationEmailStyle: "CODE",
       verificationEmailSubject: "Welcome to NeonPanda!",
-    }
+    },
+    externalProviders: {
+      google: {
+        clientId: secret("GOOGLE_CLIENT_ID"),
+        clientSecret: secret("GOOGLE_CLIENT_SECRET"),
+        scopes: ["email", "profile", "openid"],
+        attributeMapping: {
+          email: "email",
+          givenName: "given_name",
+          familyName: "family_name",
+          // Maps Google email to preferred_username as a temporary value;
+          // post-confirmation handler generates a real username from email prefix
+          preferredUsername: "email",
+        },
+      },
+      callbackUrls: [
+        "http://localhost:5173/",
+        "https://dev.neonpanda.ai/",
+        "https://neonpanda.ai/",
+      ],
+      logoutUrls: [
+        "http://localhost:5173/",
+        "https://dev.neonpanda.ai/",
+        "https://neonpanda.ai/",
+      ],
+    },
   },
   userAttributes: {
     email: { required: true, mutable: true },
     preferredUsername: { required: true, mutable: true },
-    'custom:user_id': {
-      dataType: 'String',
-      mutable: true
+    "custom:user_id": {
+      dataType: "String",
+      mutable: true,
     },
     givenName: { required: false, mutable: true },
-    familyName: { required: false, mutable: true }
+    familyName: { required: false, mutable: true },
   },
-  accountRecovery: 'EMAIL_ONLY',
+  accountRecovery: "EMAIL_ONLY",
   multifactor: {
-    mode: 'OPTIONAL',
+    mode: "OPTIONAL",
     totp: true,
-    sms: false  // Disable SMS to avoid costs, TOTP is free
+    sms: false,
   },
   triggers: {
-    postConfirmation
-  }
+    postConfirmation,
+  },
 });
 
 // Note: IAM permissions will be added via backend customization

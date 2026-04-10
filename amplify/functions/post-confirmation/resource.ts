@@ -1,5 +1,4 @@
-import 'dotenv/config';
-import { defineFunction } from '@aws-amplify/backend';
+import { defineFunction, secret } from '@aws-amplify/backend';
 import { NODEJS_RUNTIME } from '../libs/configs';
 
 export const postConfirmation = defineFunction({
@@ -12,7 +11,7 @@ export const postConfirmation = defineFunction({
   environment: {
     // Manual table name to avoid circular dependency (auth stack can't reference contactForm stack)
     DYNAMODB_BASE_TABLE_NAME: 'NeonPanda-ProtoApi-AllItems-V2',
-    PINECONE_API_KEY: process.env.PINECONE_API_KEY || '',
+    PINECONE_API_KEY: secret('PINECONE_API_KEY'),
     // Note: BRANCH_NAME will be set dynamically in backend.ts since we need the computed branchName
   }
 });

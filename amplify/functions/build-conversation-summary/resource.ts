@@ -8,4 +8,5 @@ export const buildConversationSummary = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 720, // 12 minutes for AI processing (allows for retry delays up to 600s + processing)
   memoryMB: 2048, // More memory for AI processing
+  resourceGroupName: "jobs",
 });

@@ -31,6 +31,7 @@ import {
   GET_TODAYS_WORKOUT_SCHEMA,
 } from "../../schemas/conversation-agent-tool-schemas";
 import { getProgram, updateProgram } from "../../../../dynamodb/program";
+import { queryWorkouts } from "../../../../dynamodb/workout";
 import { getObjectAsJson } from "../../s3-utils";
 import { saveProgramDetailsToS3 } from "../../program/s3-utils";
 import { convertUtcToUserDate } from "../../analytics/date-utils";
@@ -100,7 +101,11 @@ The workoutDescription should be a comprehensive summary of the FULL workout, in
 all exercises performed with sets, reps, weights, and any relevant notes. Aggregate
 information from the conversation — don't just pass the last message.
 
-If the workout matches a program template, include the templateContext for proper linking.`,
+If the workout matches a program template, include the templateContext for proper linking.
+
+IMPORTANT: Do NOT call this tool more than once for the same workout session, even across
+conversation turns. If you already logged a workout earlier in this conversation, do not
+call this again — tell the user it has been logged and suggest editing if changes are needed.`,
   inputSchema: LOG_WORKOUT_SCHEMA,
   async execute(input, context) {
     console.info("🏋️ Executing log_workout:", {
@@ -109,6 +114,20 @@ If the workout matches a program template, include the templateContext for prope
       hasTemplateContext: !!input.templateContext,
       userId: context.userId,
     });
+
+    // P0 guard 1: prevent duplicate log_workout within the same Lambda invocation
+    if (context.workoutLoggedThisTurn) {
+      console.warn("⚠️ log_workout skipped — already triggered this turn", {
+        conversationId: context.conversationId,
+        userId: context.userId,
+      });
+      return {
+        triggered: false,
+        alreadyLogged: true,
+        message:
+          "A workout was already logged in this conversation turn. If you need to make changes, the user can edit the workout after it appears.",
+      };
+    }
 
     try {
       const buildWorkoutFunction = process.env.BUILD_WORKOUT_FUNCTION_NAME;
@@ -162,6 +181,44 @@ If the workout matches a program template, include the templateContext for prope
         }
       }
 
+      // P0 guard 2: cross-turn dedup — check if a workout was already
+      // logged from this conversation with a matching completedAt date.
+      const resolvedDateOnly = resolvedDate.split("T")[0]; // YYYY-MM-DD
+      try {
+        const recentWorkouts = await queryWorkouts(context.userId, {
+          limit: 10,
+          sortBy: "completedAt",
+          sortOrder: "desc",
+        });
+        const duplicate = recentWorkouts.find(
+          (w) =>
+            w.conversationId === context.conversationId &&
+            new Date(w.completedAt).toISOString().split("T")[0] ===
+              resolvedDateOnly,
+        );
+        if (duplicate) {
+          console.warn(
+            "⚠️ log_workout skipped — duplicate detected for conversationId",
+            {
+              conversationId: context.conversationId,
+              completedAt: resolvedDateOnly,
+              existingWorkoutId: duplicate.workoutId,
+              userId: context.userId,
+            },
+          );
+          context.workoutLoggedThisTurn = true;
+          return {
+            triggered: false,
+            alreadyExists: true,
+            existingWorkoutId: duplicate.workoutId,
+            message:
+              "A workout for this session was already logged. If the user wants to make changes, they can edit the existing workout.",
+          };
+        }
+      } catch (dedupError) {
+        console.warn("⚠️ Dedup check failed (non-blocking):", dedupError);
+      }
+
       const payload = {
         userId: context.userId,
         coachId: context.coachId,
@@ -188,6 +245,9 @@ If the workout matches a program template, include the templateContext for prope
         payload,
         "conversation agent workout logging",
       );
+
+      // Mark context so subsequent log_workout calls in this turn are blocked
+      context.workoutLoggedThisTurn = true;
 
       console.info("✅ Workout creation triggered successfully", {
         imageS3Keys: context.imageS3Keys ?? [],

@@ -6,6 +6,7 @@ import AuthLayout from "./AuthLayout";
 import AuthInput from "./AuthInput";
 import AuthButton from "./AuthButton";
 import AuthErrorMessage from "./AuthErrorMessage";
+import SocialLoginButtons from "./SocialLoginButtons";
 import { logger } from "../../utils/logger";
 
 const LoginForm = ({
@@ -14,6 +15,7 @@ const LoginForm = ({
   onSwitchToVerification,
   showVerificationSuccess,
   showPasswordResetSuccess,
+  oauthErrorMessage,
 }) => {
   const { signIn, checkAuthState } = useAuth();
   const [globalError, setGlobalError] = useState("");
@@ -189,6 +191,13 @@ const LoginForm = ({
           </div>
         )}
 
+        {oauthErrorMessage && (
+          <AuthErrorMessage
+            error={oauthErrorMessage}
+            className="text-center p-3 bg-synthwave-neon-pink/10 rounded-md"
+          />
+        )}
+
         {globalError && (
           <AuthErrorMessage
             error={globalError}
@@ -214,6 +223,18 @@ const LoginForm = ({
             </AuthButton>
           </div>
         )}
+
+        {/* Google Sign-In */}
+        <SocialLoginButtons disabled={isSubmitting} mode="signin" />
+
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-synthwave-neon-cyan/25" />
+          <span className="font-body text-synthwave-text-muted uppercase tracking-wide text-xs shrink-0">
+            or sign in with email
+          </span>
+          <div className="flex-1 h-px bg-gradient-to-r from-synthwave-neon-cyan/25 to-transparent" />
+        </div>
 
         <AuthInput
           label="Email"
@@ -259,7 +280,9 @@ const LoginForm = ({
           </AuthButton>
         </div>
 
-        <div className="text-center pt-4 border-t border-synthwave-neon-pink/20">
+        <div className="text-center pt-1">
+          <div className="h-px bg-gradient-to-r from-transparent via-synthwave-neon-cyan/25 to-transparent mb-4" />
+
           <p className="font-body text-synthwave-text-secondary mb-3">
             Don't have an account?
           </p>

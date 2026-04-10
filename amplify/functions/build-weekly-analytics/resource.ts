@@ -1,11 +1,10 @@
 import "dotenv/config";
 import { defineFunction } from "@aws-amplify/backend";
-import { NODEJS_RUNTIME } from '../libs/configs';
+import { NODEJS_RUNTIME } from "../libs/configs";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Stack } from "aws-cdk-lib";
-
 
 export const buildWeeklyAnalytics = defineFunction({
   name: "build-weekly-analytics",
@@ -13,6 +12,7 @@ export const buildWeeklyAnalytics = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900, // 15 minutes for processing all users
   memoryMB: 1024, // Standard memory for batch processing
+  resourceGroupName: "scheduled",
 });
 
 /**
@@ -20,7 +20,7 @@ export const buildWeeklyAnalytics = defineFunction({
  */
 export function createWeeklyAnalyticsSchedule(
   stack: Stack,
-  lambdaFunction: lambda.IFunction
+  lambdaFunction: lambda.IFunction,
 ) {
   // Create EventBridge rule for weekly analytics (every Sunday at 9:00 AM UTC)
   const weeklyAnalyticsRule = new events.Rule(stack, "WeeklyAnalyticsRule", {

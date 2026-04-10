@@ -12,6 +12,7 @@ export const warmupPlatform = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 300, // 5 minutes -- enough for parallel Bedrock grammar compilations + container pings
   memoryMB: 2048, // Large memory for parallel execution
+  resourceGroupName: "scheduled",
 });
 
 /**

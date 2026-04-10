@@ -1,7 +1,6 @@
 import { authenticatedFetch, getApiUrl } from "./apiConfig";
 import { streamProgramDesignerSessionLambda } from "./streamingLambdaApi";
 import {
-  sendCoachConversationMessage,
   updateCoachConversation,
   getCoachConversation,
   deleteCoachConversation,
@@ -157,7 +156,6 @@ export const retryProgramBuild = async (userId, sessionId) => {
 // Re-export common conversation operations
 export {
   getCoachConversation as getProgramDesignerConversation,
-  sendCoachConversationMessage as sendProgramDesignerMessage,
   updateCoachConversation as updateProgramDesignerConversation,
   deleteCoachConversation as deleteProgramDesignerConversation,
 };

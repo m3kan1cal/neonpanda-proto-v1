@@ -189,6 +189,8 @@ export class SharedPolicies {
             "cognito-idp:AdminDeleteUser",
             "cognito-idp:AdminSetUserPassword",
             "cognito-idp:ListUsers",
+            "cognito-idp:AdminDisableProviderForUser",
+            "cognito-idp:AdminListUserAuthEvents",
           ],
           resources: ["*"],
         }),
@@ -292,6 +294,142 @@ export class SharedPolicies {
           break;
       }
     });
+  }
+}
+
+/**
+ * Per-stack-group managed policies for functions in separate nested stacks
+ * (e.g., 'jobs', 'scheduled'). Unlike SharedPolicies, this class takes no CDK
+ * construct references — all resource ARNs are wildcards or hardcoded strings,
+ * preventing cross-stack circular dependencies.
+ */
+export class StackGroupPolicies {
+  readonly dynamoDbReadWritePolicy: ManagedPolicy;
+  readonly bedrockAccessPolicy: ManagedPolicy;
+  readonly s3DebugAccessPolicy: ManagedPolicy;
+  readonly s3AnalyticsAccessPolicy: ManagedPolicy;
+  readonly s3AppsAccessPolicy: ManagedPolicy;
+
+  constructor(stack: Stack, groupName: string, branchName: string) {
+    this.dynamoDbReadWritePolicy = new ManagedPolicy(
+      stack,
+      "DynamoDbReadWritePolicy",
+      {
+        managedPolicyName: `NeonPanda-DynamoDB-ReadWrite-${groupName}-${branchName}`,
+        description: `Allows read/write access to DynamoDB (${groupName} stack group)`,
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:DeleteItem",
+              "dynamodb:Query",
+              "dynamodb:Scan",
+              "dynamodb:BatchGetItem",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: ["*"],
+          }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["dynamodb:DescribeTable", "dynamodb:UpdateTable"],
+            resources: ["*"],
+          }),
+        ],
+      },
+    );
+
+    this.bedrockAccessPolicy = new ManagedPolicy(stack, "BedrockAccessPolicy", {
+      managedPolicyName: `NeonPanda-Bedrock-Access-${groupName}-${branchName}`,
+      description: `Allows access to AWS Bedrock services (${groupName} stack group)`,
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            "bedrock:InvokeModel",
+            "bedrock:InvokeModelWithResponseStream",
+            "bedrock:ApplyGuardrail",
+          ],
+          resources: ["*"],
+        }),
+      ],
+    });
+
+    this.s3DebugAccessPolicy = new ManagedPolicy(stack, "S3DebugAccessPolicy", {
+      managedPolicyName: `NeonPanda-S3-Debug-${groupName}-${branchName}`,
+      description: `Allows access to S3 debug bucket (${groupName} stack group)`,
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
+          resources: [
+            "arn:aws:s3:::midgard-sandbox-logs",
+            "arn:aws:s3:::midgard-sandbox-logs/*",
+          ],
+        }),
+      ],
+    });
+
+    this.s3AnalyticsAccessPolicy = new ManagedPolicy(
+      stack,
+      "S3AnalyticsAccessPolicy",
+      {
+        managedPolicyName: `NeonPanda-S3-Analytics-${groupName}-${branchName}`,
+        description: `Allows access to S3 analytics bucket (${groupName} stack group)`,
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
+            resources: [
+              "arn:aws:s3:::midgard-sandbox-logs",
+              "arn:aws:s3:::midgard-sandbox-logs/*",
+            ],
+          }),
+        ],
+      },
+    );
+
+    this.s3AppsAccessPolicy = new ManagedPolicy(stack, "S3AppsAccessPolicy", {
+      managedPolicyName: `NeonPanda-S3-Apps-${groupName}-${branchName}`,
+      description: `Allows access to S3 apps bucket (${groupName} stack group)`,
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:DeleteObject",
+          ],
+          resources: [
+            "arn:aws:s3:::midgard-apps-*",
+            "arn:aws:s3:::midgard-apps-*/*",
+          ],
+        }),
+      ],
+    });
+  }
+
+  attachDynamoDbReadWrite(func: IFunction) {
+    func.role?.addManagedPolicy(this.dynamoDbReadWritePolicy);
+  }
+
+  attachBedrockAccess(func: IFunction) {
+    func.role?.addManagedPolicy(this.bedrockAccessPolicy);
+  }
+
+  attachS3DebugAccess(func: IFunction) {
+    func.role?.addManagedPolicy(this.s3DebugAccessPolicy);
+  }
+
+  attachS3AnalyticsAccess(func: IFunction) {
+    func.role?.addManagedPolicy(this.s3AnalyticsAccessPolicy);
+  }
+
+  attachS3AppsAccess(func: IFunction) {
+    func.role?.addManagedPolicy(this.s3AppsAccessPolicy);
   }
 }
 

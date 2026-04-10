@@ -1,7 +1,6 @@
 import { nanoid } from "nanoid";
 import {
   createCoachCreatorSession,
-  updateCoachCreatorSession,
   streamCoachCreatorSession,
   getCoachCreatorSession,
   getCoachCreatorSessions,
@@ -11,7 +10,6 @@ import { logger } from "../logger";
 import {
   processStreamingChunks,
   createStreamingMessage,
-  handleStreamingFallback,
   resetStreamingState,
   validateStreamingInput,
   getRandomThinkingPhrase,
@@ -69,7 +67,6 @@ export class CoachCreatorAgent {
     // Bind methods
     this.createSession = this.createSession.bind(this);
     this.loadExistingSession = this.loadExistingSession.bind(this);
-    this.sendMessage = this.sendMessage.bind(this);
     this.sendMessageStream = this.sendMessageStream.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.handleCompletion = this.handleCompletion.bind(this);
@@ -258,145 +255,6 @@ export class CoachCreatorAgent {
   }
 
   /**
-   * Sends a user message and processes the AI response
-   * @param {string} messageContent - The user's message
-   * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
-   */
-  async sendMessage(messageContent, imageS3Keys = []) {
-    if (
-      !messageContent.trim() ||
-      this.state.isLoadingItem ||
-      !this.userId ||
-      !this.sessionId
-    ) {
-      return;
-    }
-
-    try {
-      // Add user message
-      const userMessage = {
-        id: this._generateMessageId(),
-        type: "user",
-        content: messageContent.trim(),
-        timestamp: new Date().toISOString(),
-        imageS3Keys:
-          imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
-        messageType:
-          imageS3Keys && imageS3Keys.length > 0 ? "text_with_images" : "text",
-      };
-
-      this._addMessage(userMessage);
-      this._updateState({ isLoadingItem: true, isTyping: true, error: null });
-
-      // Send to API
-      const result = await updateCoachCreatorSession(
-        this.userId,
-        this.sessionId,
-        messageContent.trim(),
-        imageS3Keys,
-      );
-
-      // Prepare AI response
-      let aiResponseContent =
-        result.aiResponse || "Thank you for your response.";
-
-      // Add next question if available and session not complete
-      if (!result.isComplete && result.nextQuestion) {
-        aiResponseContent += `\n\n${result.nextQuestion}`;
-      }
-
-      const aiResponse = {
-        id: this._generateMessageId(),
-        type: "ai",
-        content: aiResponseContent,
-        timestamp: new Date().toISOString(),
-      };
-
-      this._addMessage(aiResponse);
-
-      // Update progress based on result
-      const updatedProgress = { ...this.state.progress };
-
-      // First update other progress fields from session data if available
-      if (result.sessionData && result.sessionData.userContext) {
-        const questionsCompleted = result.sessionData.userContext.responses
-          ? Object.keys(result.sessionData.userContext.responses).length
-          : 0;
-        const currentQuestion =
-          result.sessionData.userContext.currentQuestion || 1;
-        const sophisticationLevel =
-          result.sessionData.userContext.sophisticationLevel || "UNKNOWN";
-
-        // Estimate total questions based on sophistication level
-        let estimatedTotal = 11; // Default (updated to match new 11-question flow: 1-11)
-        if (sophisticationLevel === "BEGINNER") {
-          estimatedTotal = 10; // Question 11 skipped for beginners (questions 1-10)
-        } else if (sophisticationLevel === "INTERMEDIATE") {
-          estimatedTotal = 11; // All questions including competition goals (questions 1-11)
-        } else if (sophisticationLevel === "ADVANCED") {
-          estimatedTotal = 11;
-        } else if (sophisticationLevel === "UNKNOWN") {
-          estimatedTotal = Math.max(10, currentQuestion + 4); // Adjust estimate as we progress
-        }
-
-        updatedProgress.questionsCompleted = questionsCompleted;
-        updatedProgress.estimatedTotal = estimatedTotal;
-        updatedProgress.sophisticationLevel = sophisticationLevel;
-        updatedProgress.currentQuestion = currentQuestion;
-      }
-
-      // Use detailed progress from API response
-      if (result.progressDetails) {
-        updatedProgress.questionsCompleted =
-          result.progressDetails.questionsCompleted;
-        updatedProgress.estimatedTotal = result.progressDetails.totalQuestions;
-        updatedProgress.percentage = result.isComplete
-          ? 100
-          : result.progressDetails.percentage;
-        updatedProgress.sophisticationLevel =
-          result.progressDetails.sophisticationLevel;
-        updatedProgress.currentQuestion =
-          result.progressDetails.currentQuestion;
-      }
-
-      this._updateState({
-        isLoadingItem: false,
-        isTyping: false,
-        sessionData: result.sessionData || this.state.sessionData,
-        progress: updatedProgress,
-      });
-
-      // Handle completion
-      if (result.isComplete) {
-        this.handleCompletion();
-      }
-
-      return result;
-    } catch (error) {
-      logger.error("Error sending message:", error);
-
-      // Add error message
-      const errorResponse = {
-        id: this._generateMessageId(),
-        type: "ai",
-        content:
-          "I'm sorry, I encountered an error processing your response. Please try again.",
-        timestamp: new Date().toISOString(),
-      };
-
-      this._addMessage(errorResponse);
-      this._updateState({
-        isLoadingItem: false,
-        isTyping: false,
-        error: "Failed to send message",
-      });
-
-      this.onError(error);
-      throw error;
-    }
-  }
-
-  /**
    * Sends a user message and processes the AI response with streaming
    * @param {string} messageContent - The user's message
    * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
@@ -432,7 +290,10 @@ export class CoachCreatorAgent {
         isTyping: true, // Set immediately for visual feedback
         streamingMessage: "",
         streamingMessageId: streamingMsg.messageId,
-        contextualUpdate: { content: getRandomThinkingPhrase(), stage: "initial" },
+        contextualUpdate: {
+          content: getRandomThinkingPhrase(),
+          stage: "initial",
+        },
         error: null,
       });
 
@@ -526,15 +387,14 @@ export class CoachCreatorAgent {
           },
         });
       } catch (streamError) {
-        // Handle streaming failure with fallback
         streamingMsg.remove();
-
-        return await handleStreamingFallback(
-          updateCoachCreatorSession,
-          [this.userId, this.sessionId, messageContent.trim()],
-          (result) => this._handleFallbackResult(result),
-          "coach creator session",
-        );
+        logger.error("Streaming failed:", streamError);
+        this._updateState({
+          error: "Failed to send message. Please try again.",
+          isStreaming: false,
+          isTyping: false,
+        });
+        throw streamError;
       }
     } catch (error) {
       logger.error("Error sending streaming coach creator message:", error);

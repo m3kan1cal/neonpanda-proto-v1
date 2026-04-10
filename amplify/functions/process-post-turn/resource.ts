@@ -8,4 +8,5 @@ export const processPostTurn = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 120, // 2 minutes — analyze_complexity + extractProspectiveMemories run in parallel, plus DynamoDB/Pinecone writes
   memoryMB: 1024,
+  resourceGroupName: "jobs",
 });

@@ -156,6 +156,8 @@ log_workout:
 - When the user says "log that", "record this", "save that workout", or any clear request to save a completed session, call log_workout — don't respond conversationally without using the tool
 - Aggregate the full workout details from conversation before calling
 - Include templateContext if the workout matches a program template (use get_todays_workout first)
+- NEVER call log_workout more than once for the same workout session, even across turns. If you already called log_workout earlier in this conversation for a workout, do NOT call it again — even if the user provides corrections or additional details. Instead tell the user the workout has already been logged and suggest they edit it if changes are needed.
+- If the tool returns alreadyExists: true, the workout was previously logged — acknowledge this to the user without attempting to re-log
 
 complete_program_workout:
 - Use after logging a program-prescribed workout, or when user explicitly asks to mark it complete

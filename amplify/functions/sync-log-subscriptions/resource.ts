@@ -1,5 +1,5 @@
 import { defineFunction } from "@aws-amplify/backend";
-import { NODEJS_RUNTIME } from '../libs/configs';
+import { NODEJS_RUNTIME } from "../libs/configs";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -11,6 +11,7 @@ export const syncLogSubscriptions = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 300,
   memoryMB: 2048,
+  resourceGroupName: "scheduled",
 });
 
 /**
@@ -18,20 +19,26 @@ export const syncLogSubscriptions = defineFunction({
  */
 export function createSyncLogSubscriptionsSchedule(
   stack: Stack,
-  lambdaFunction: lambda.IFunction
+  lambdaFunction: lambda.IFunction,
 ) {
   // Create EventBridge rule for daily log subscription sync (daily at 2:00 AM UTC)
-  const syncLogSubscriptionsRule = new events.Rule(stack, "SyncLogSubscriptionsRule", {
-    description:
-      "Sync CloudWatch Log subscription filters daily at 2:00 AM UTC to ensure all Lambda functions forward errors to SNS",
-    schedule: events.Schedule.cron({
-      minute: "0",
-      hour: "2",
-    }),
-  });
+  const syncLogSubscriptionsRule = new events.Rule(
+    stack,
+    "SyncLogSubscriptionsRule",
+    {
+      description:
+        "Sync CloudWatch Log subscription filters daily at 2:00 AM UTC to ensure all Lambda functions forward errors to SNS",
+      schedule: events.Schedule.cron({
+        minute: "0",
+        hour: "2",
+      }),
+    },
+  );
 
   // Add the Lambda function as a target for the EventBridge rule
-  syncLogSubscriptionsRule.addTarget(new targets.LambdaFunction(lambdaFunction));
+  syncLogSubscriptionsRule.addTarget(
+    new targets.LambdaFunction(lambdaFunction),
+  );
 
   return syncLogSubscriptionsRule;
 }

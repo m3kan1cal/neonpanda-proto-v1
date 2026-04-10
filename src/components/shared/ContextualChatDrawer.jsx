@@ -108,19 +108,35 @@ export default function ContextualChatDrawer({
       agentRef.current = agent;
 
       try {
-        const conversationTitle = `Edit: ${entityLabel || entityType}`;
-        await agent.createConversation(
+        // Resume an existing workout_edit conversation for this entity if one exists
+        const existing = await agent.findWorkoutEditConversation(
           userId,
           coachId,
-          conversationTitle,
-          null,
-          CONVERSATION_MODES.WORKOUT_EDIT,
+          entityId,
         );
 
         if (cancelled) return;
 
-        // Auto-send the initial prompt so the AI loads context immediately
-        await agent.sendMessageStream(INITIAL_PROMPT, [], editContext);
+        if (existing) {
+          await agent.loadExistingConversation(
+            userId,
+            coachId,
+            existing.conversationId,
+          );
+        } else {
+          const conversationTitle = `Edit: ${entityLabel || entityType}`;
+          await agent.createConversation(
+            userId,
+            coachId,
+            conversationTitle,
+            null,
+            CONVERSATION_MODES.WORKOUT_EDIT,
+          );
+
+          if (cancelled) return;
+
+          await agent.sendMessageStream(INITIAL_PROMPT, [], editContext);
+        }
       } catch (err) {
         if (!cancelled) {
           logger.error(

@@ -479,7 +479,17 @@ components:
           type: string
         memoryType:
           type: string
-          enum: [preference, goal, constraint, instruction, context, prospective, episodic, behavioral]
+          enum:
+            [
+              preference,
+              goal,
+              constraint,
+              instruction,
+              context,
+              prospective,
+              episodic,
+              behavioral,
+            ]
         metadata:
           type: object
           properties:
@@ -512,7 +522,14 @@ components:
                   enum: [specific, approximate, recurring, relative]
                 followUpType:
                   type: string
-                  enum: [event_outcome, commitment_check, milestone, try_new_thing, general]
+                  enum:
+                    [
+                      event_outcome,
+                      commitment_check,
+                      milestone,
+                      try_new_thing,
+                      general,
+                    ]
                 followUpPrompt:
                   type: string
                 status:
@@ -1391,7 +1408,14 @@ paths:
                   description: Optional conversation title
                 mode:
                   type: string
-                  enum: [chat, program_design, workout_log, coach_creator, workout_edit]
+                  enum:
+                    [
+                      chat,
+                      program_design,
+                      workout_log,
+                      coach_creator,
+                      workout_edit,
+                    ]
                   description: Conversation mode (defaults to chat)
                 initialMessage:
                   type: string
@@ -2527,7 +2551,17 @@ paths:
                   description: Updated memory content
                 memoryType:
                   type: string
-                  enum: [preference, goal, constraint, instruction, context, prospective, episodic, behavioral]
+                  enum:
+                    [
+                      preference,
+                      goal,
+                      constraint,
+                      instruction,
+                      context,
+                      prospective,
+                      episodic,
+                      behavioral,
+                    ]
                 metadata:
                   type: object
                   properties:
@@ -2739,8 +2773,8 @@ paths:
       tags: [User Profile]
       summary: Update user profile
       description: |
-        Updates user profile fields. Immutable fields (email, username, userId)
-        cannot be modified and will return a 400 error if included.
+        Updates user profile fields. Email and userId are immutable and cannot be changed.
+        Username can be changed with availability validation (3-20 chars, alphanumeric/hyphen/underscore).
       parameters:
         - $ref: "#/components/parameters/UserIdParam"
       requestBody:
@@ -2793,6 +2827,71 @@ paths:
                         $ref: "#/components/schemas/UserProfile"
         "400":
           $ref: "#/components/responses/BadRequest"
+
+  /users/{userId}/identity-providers:
+    post:
+      tags: [User Profile]
+      summary: Manage identity providers
+      description: |
+        Manage sign-in methods for a user. Supports three actions:
+        - **list**: Returns linked providers, password status, and email.
+        - **set-password**: Sets a permanent native password for a user who signed
+          up via a federated provider (e.g. Google-only accounts).
+        - **disconnect**: Removes a federated provider from the user's account.
+          Requires the user to have an alternative sign-in method (a password).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [list, set-password, disconnect]
+                  description: The operation to perform
+                provider:
+                  type: string
+                  description: Required for disconnect action (e.g. "Google")
+                password:
+                  type: string
+                  description: Required for set-password action (min 8 chars)
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  linkedProviders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        providerName:
+                          type: string
+                        providerType:
+                          type: string
+                    description: Present for list action
+                  hasPassword:
+                    type: boolean
+                    description: Whether user has a native Cognito password
+                  isGoogleLinked:
+                    type: boolean
+                  email:
+                    type: string
+                  success:
+                    type: boolean
+                    description: Present for set-password and disconnect actions
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   # ===================================================================
   # SUBSCRIPTIONS & BILLING

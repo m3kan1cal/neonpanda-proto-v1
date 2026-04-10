@@ -51,6 +51,7 @@ export function createCoreApi(
   getUserProfileLambda: lambda.IFunction,
   updateUserProfileLambda: lambda.IFunction,
   checkUserAvailabilityLambda: lambda.IFunction,
+  manageIdentityProvidersLambda: lambda.IFunction,
   generateUploadUrlsLambda: lambda.IFunction,
   generateDownloadUrlsLambda: lambda.IFunction,
   createProgramDesignerSessionLambda: lambda.IFunction,
@@ -444,6 +445,12 @@ export function createCoreApi(
       checkUserAvailabilityLambda,
     );
 
+  const manageIdentityProvidersIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "ManageIdentityProvidersIntegration",
+      manageIdentityProvidersLambda,
+    );
+
   // Create Lambda integrations for training program functions
   const createProgramIntegration =
     new apigatewayv2_integrations.HttpLambdaIntegration(
@@ -622,6 +629,7 @@ export function createCoreApi(
     getUserProfile: getUserProfileIntegration,
     updateUserProfile: updateUserProfileIntegration,
     checkUserAvailability: checkUserAvailabilityIntegration,
+    manageIdentityProviders: manageIdentityProvidersIntegration,
     generateUploadUrls: generateUploadUrlsIntegration,
     generateDownloadUrls: generateDownloadUrlsIntegration,
     createProgramDesignerSession: createProgramDesignerSessionIntegration,
@@ -1113,6 +1121,14 @@ export function createCoreApi(
     path: "/users/{userId}/profile",
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateUserProfile,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Identity Provider Management Route (PROTECTED) - list/set-password/disconnect
+  httpApi.addRoutes({
+    path: "/users/{userId}/identity-providers",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.manageIdentityProviders,
     authorizer: userPoolAuthorizer,
   });
 

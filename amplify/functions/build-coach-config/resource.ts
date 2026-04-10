@@ -8,4 +8,5 @@ export const buildCoachConfig = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900,
   memoryMB: 2048,
+  resourceGroupName: "jobs",
 });

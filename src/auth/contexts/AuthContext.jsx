@@ -9,6 +9,7 @@ import {
   getCurrentUser,
   fetchUserAttributes,
   fetchAuthSession,
+  signInWithRedirect,
 } from "aws-amplify/auth";
 import { getUserProfile } from "../../utils/apis/userProfileApi";
 import { logger } from "../../utils/logger";
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
 
       const currentUser = await getCurrentUser();
-      const attributes = await fetchUserAttributes();
+      let attributes = await fetchUserAttributes();
 
       const userWithAttributes = {
         ...currentUser,
@@ -59,25 +60,74 @@ export const AuthProvider = ({ children }) => {
         attributes,
       };
 
-      // Check if custom user ID is missing and create one if needed
+      // Check if custom user ID is missing.
+      // Only retry for federated (Google) sign-ins — those have a genuine race condition
+      // with the post-confirmation trigger. Email/password sign-ins always have the
+      // attribute set immediately, so retrying wastes 1-6 seconds showing a spinner.
+      const isFederatedSignIn =
+        currentUser.signInDetails?.authFlowType === "FEDERATED" ||
+        currentUser.username?.startsWith("google_");
+
       if (!attributes?.["custom:user_id"]) {
-        const errorMessage =
-          "⚠️ Custom User ID is missing. This user may need manual setup.";
-        logger.warn(errorMessage);
-
-        if (throwOnMissingUserId) {
-          // Create a custom error that LoginForm can catch and display
-          const error = new Error(
-            "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.",
+        if (isFederatedSignIn) {
+          logger.warn(
+            "⚠️ Custom User ID not yet set — federated sign-in race condition. Retrying...",
           );
-          error.name = "IncompleteAccountSetupException";
-          error.userFriendlyMessage =
-            "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.";
-          throw error;
-        }
 
-        // TODO: Call an API endpoint to create the missing user profile and custom ID
-        // For now, we'll let the user continue but they may have limited functionality
+          let resolved = false;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            await new Promise((r) => setTimeout(r, 1000 * attempt));
+            try {
+              const retryAttributes = await fetchUserAttributes();
+              if (retryAttributes?.["custom:user_id"]) {
+                attributes = retryAttributes;
+                userWithAttributes.attributes = retryAttributes;
+                userWithAttributes.username =
+                  retryAttributes.preferred_username || currentUser.username;
+                resolved = true;
+                logger.info(
+                  `✅ custom:user_id resolved on retry attempt ${attempt}`,
+                );
+                break;
+              }
+            } catch (retryErr) {
+              logger.warn(
+                `Retry ${attempt} fetch attributes failed:`,
+                retryErr,
+              );
+            }
+          }
+
+          if (!resolved) {
+            logger.warn(
+              "⚠️ Custom User ID is missing after retries. This user may need manual setup.",
+            );
+
+            if (throwOnMissingUserId) {
+              const error = new Error(
+                "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.",
+              );
+              error.name = "IncompleteAccountSetupException";
+              error.userFriendlyMessage =
+                "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.";
+              throw error;
+            }
+          }
+        } else {
+          logger.warn(
+            "⚠️ Custom User ID is missing for email/password user. This user may need manual setup.",
+          );
+
+          if (throwOnMissingUserId) {
+            const error = new Error(
+              "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.",
+            );
+            error.name = "IncompleteAccountSetupException";
+            error.userFriendlyMessage =
+              "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.";
+            throw error;
+          }
+        }
       }
 
       // Batch state updates to prevent race condition
@@ -414,6 +464,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const handleSignInWithGoogle = async () => {
+    try {
+      setAuthError(null);
+      await signInWithRedirect({ provider: "Google" });
+      // Browser redirects to Cognito Hosted UI -> Google -> callbackUrl.
+      // On return, checkAuthState (called on mount) picks up the session.
+    } catch (error) {
+      logger.error("Google sign-in error:", error);
+      setAuthError(error.message);
+      throw error;
+    }
+  };
+
+  // Returns an array of external provider names linked to this account (e.g. ['Google'])
+  const getIdentityProviders = () => {
+    if (!user?.attributes?.identities) return [];
+    try {
+      const identities = JSON.parse(user.attributes.identities);
+      return identities.map((id) => id.providerName);
+    } catch {
+      return [];
+    }
+  };
+
   const getAuthHeaders = async (forceRefresh = false) => {
     try {
       const session = await fetchAuthSession({ forceRefresh });
@@ -426,11 +500,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const identityProviders = getIdentityProviders();
+  const isGoogleLinked = identityProviders.includes("Google");
+  // A user has password auth if: they have no external identities (email-only),
+  // or if they have a Cognito (native) identity alongside social ones.
+  const hasPasswordAuth =
+    identityProviders.length === 0 ||
+    identityProviders.includes("Cognito") ||
+    !user?.attributes?.identities;
+
   const value = {
     // State
     isAuthenticated,
     user,
-    userProfile, // Add profile to context
+    userProfile,
     loading,
     authError,
 
@@ -439,11 +522,17 @@ export const AuthProvider = ({ children }) => {
     confirmSignUp: handleConfirmSignUp,
     resendSignUpCode: handleResendSignUpCode,
     signIn: handleSignIn,
+    signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
     resetPassword: handleResetPassword,
     confirmResetPassword: handleConfirmResetPassword,
     checkAuthState,
     getAuthHeaders,
+
+    // Identity provider helpers
+    getIdentityProviders,
+    isGoogleLinked,
+    hasPasswordAuth,
 
     // Utilities
     clearError: () => setAuthError(null),
