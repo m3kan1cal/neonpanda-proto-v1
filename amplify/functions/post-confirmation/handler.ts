@@ -51,7 +51,7 @@ async function generateUniqueUsername(email: string): Promise<string> {
     .split("@")[0]
     .toLowerCase()
     .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .substring(0, 16);
+    .substring(0, 15);
 
   const existing = await getUserProfileByUsername(baseUsername);
   if (!existing) return baseUsername;
