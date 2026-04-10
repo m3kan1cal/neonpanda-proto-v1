@@ -172,7 +172,7 @@ const isTransientBedrockError = (error: any): boolean => {
  * receives a transient error (e.g., sustained 503 burst). It waits substantially
  * longer between app-level attempts to allow Bedrock to recover.
  *
- * Total retry budget: up to 3 app-level attempts × SDK maxAttempts 5 = 15 Bedrock calls.
+ * Total retry budget: up to 4 app-level attempts × SDK maxAttempts 5 = 20 Bedrock calls.
  * App-level delays: ~2s, ~4s, ~8s (exponential with ±30% jitter).
  */
 const withBedrockRetry = async <T>(

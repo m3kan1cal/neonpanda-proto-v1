@@ -116,6 +116,21 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         );
       }
 
+      // Server-side guard: only allow setting password for users with no existing password
+      const checkUser = await cognitoClient.send(
+        new AdminGetUserCommand({
+          UserPoolId: USER_POOL_ID,
+          Username: cognitoUsername,
+        }),
+      );
+
+      if (checkUser.UserStatus !== "EXTERNAL_PROVIDER") {
+        return createErrorResponse(
+          400,
+          "User already has a password. Use changePassword to update it.",
+        );
+      }
+
       await cognitoClient.send(
         new AdminSetUserPasswordCommand({
           UserPoolId: USER_POOL_ID,
