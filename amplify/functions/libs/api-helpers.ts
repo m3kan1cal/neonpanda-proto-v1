@@ -2708,6 +2708,9 @@ let cachedPineconeIndex: ReturnType<Pinecone["index"]> | null = null;
 
 export const getPineconeClient = async () => {
   if (!cachedPineconeClient) {
+    if (!PINECONE_API_KEY) {
+      throw new Error("PINECONE_API_KEY environment variable is not set");
+    }
     const { Pinecone: PineconeClass } =
       await import("@pinecone-database/pinecone");
     const client = new PineconeClass({
