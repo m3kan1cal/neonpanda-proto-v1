@@ -44,14 +44,15 @@ function detectFederatedUser(event: PostConfirmationTriggerEvent): boolean {
 /**
  * Generates a unique username derived from the user's email prefix.
  * Applies up to 5 collision retries with a short random suffix, then
- * falls back to a longer suffix to guarantee uniqueness.
+ * falls back to an 8-char suffix to guarantee uniqueness.
+ * Capped at 11 chars base to ensure max total length is 20 chars (11 + _ + 8).
  */
 async function generateUniqueUsername(email: string): Promise<string> {
   const baseUsername = email
     .split("@")[0]
     .toLowerCase()
     .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .substring(0, 15);
+    .substring(0, 11);
 
   const existing = await getUserProfileByUsername(baseUsername);
   if (!existing) return baseUsername;
@@ -67,8 +68,8 @@ async function generateUniqueUsername(email: string): Promise<string> {
   const finalCheck = await getUserProfileByUsername(finalCandidate);
   if (!finalCheck) return finalCandidate;
 
-  // Extremely unlikely fallback to longer suffix
-  return `${baseUsername}_${nanoid(12)}`;
+  // Fallback with full 8-char suffix to stay within 20-char limit
+  return `${baseUsername}_${nanoid(8)}`;
 }
 
 export const handler: PostConfirmationTriggerHandler = async (
