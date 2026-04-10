@@ -170,11 +170,11 @@ function Settings() {
   const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isSettingPassword, setIsSettingPassword] = useState(false);
-  const [setPasswordData, setSetPasswordData] = useState({
+  const [initialPasswordData, setInitialPasswordData] = useState({
     newPassword: "",
     confirmPassword: "",
   });
-  const [setPasswordErrors, setSetPasswordErrors] = useState({});
+  const [initialPasswordErrors, setInitialPasswordErrors] = useState({});
 
   // State for preferences
   const [timezone, setTimezone] = useState("America/Los_Angeles");
@@ -592,31 +592,33 @@ function Settings() {
   // Handle set-password form input changes (for Google-only users)
   const handleSetPasswordChange = (e) => {
     const { name, value } = e.target;
-    setSetPasswordData((prev) => ({ ...prev, [name]: value }));
-    setSetPasswordErrors((prev) => ({ ...prev, [name]: "" }));
+    setInitialPasswordData((prev) => ({ ...prev, [name]: value }));
+    setInitialPasswordErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   // Handle set-password form submission (Google-only users setting a native password)
   const handleSetPassword = async (e) => {
     e.preventDefault();
-    setSetPasswordErrors({});
+    setInitialPasswordErrors({});
 
-    if (!setPasswordData.newPassword) {
-      setSetPasswordErrors((prev) => ({
+    if (!initialPasswordData.newPassword) {
+      setInitialPasswordErrors((prev) => ({
         ...prev,
         newPassword: "Password is required",
       }));
       return;
     }
-    if (setPasswordData.newPassword.length < 8) {
-      setSetPasswordErrors((prev) => ({
+    if (initialPasswordData.newPassword.length < 8) {
+      setInitialPasswordErrors((prev) => ({
         ...prev,
         newPassword: "Password must be at least 8 characters",
       }));
       return;
     }
-    if (setPasswordData.newPassword !== setPasswordData.confirmPassword) {
-      setSetPasswordErrors((prev) => ({
+    if (
+      initialPasswordData.newPassword !== initialPasswordData.confirmPassword
+    ) {
+      setInitialPasswordErrors((prev) => ({
         ...prev,
         confirmPassword: "Passwords do not match",
       }));
@@ -625,11 +627,14 @@ function Settings() {
 
     setIsSettingPassword(true);
     try {
-      await setIdentityProviderPassword(userId, setPasswordData.newPassword);
+      await setIdentityProviderPassword(
+        userId,
+        initialPasswordData.newPassword,
+      );
       showSuccess(
         "Password set successfully. You can now sign in with email and password.",
       );
-      setSetPasswordData({ newPassword: "", confirmPassword: "" });
+      setInitialPasswordData({ newPassword: "", confirmPassword: "" });
       // Refresh provider data so the UI reflects the new password status
       await loadIdentityProviders();
     } catch (error) {
@@ -1441,10 +1446,10 @@ function Settings() {
                             label="New Password"
                             name="newPassword"
                             type="password"
-                            value={setPasswordData.newPassword}
+                            value={initialPasswordData.newPassword}
                             onChange={handleSetPasswordChange}
                             placeholder="Choose a password"
-                            error={setPasswordErrors.newPassword}
+                            error={initialPasswordErrors.newPassword}
                             required
                             disabled={isSettingPassword}
                           />
@@ -1452,10 +1457,10 @@ function Settings() {
                             label="Confirm Password"
                             name="confirmPassword"
                             type="password"
-                            value={setPasswordData.confirmPassword}
+                            value={initialPasswordData.confirmPassword}
                             onChange={handleSetPasswordChange}
                             placeholder="Confirm your password"
-                            error={setPasswordErrors.confirmPassword}
+                            error={initialPasswordErrors.confirmPassword}
                             required
                             disabled={isSettingPassword}
                           />
