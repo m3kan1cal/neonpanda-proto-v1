@@ -42,7 +42,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   // Validate username changes if provided
-  if (updates.username !== undefined) {
+  if (updates.username !== undefined && updates.username !== null) {
     const newUsername = updates.username.trim();
 
     if (newUsername.length < 3 || newUsername.length > 20) {

@@ -38,11 +38,7 @@ function detectFederatedUser(event: PostConfirmationTriggerEvent): boolean {
     }
   }
   // Federated usernames carry the provider prefix (e.g. "google_123456789")
-  return (
-    (event.userName?.toLowerCase().startsWith("google_") ||
-      event.userName?.toLowerCase().startsWith("Google_")) ??
-    false
-  );
+  return event.userName?.toLowerCase().startsWith("google_") ?? false;
 }
 
 /**
@@ -66,7 +62,13 @@ async function generateUniqueUsername(email: string): Promise<string> {
     if (!check) return candidate;
   }
 
-  return `${baseUsername}_${nanoid(8)}`;
+  // Final fallback: verify even the 8-char suffix doesn't collide
+  const finalCandidate = `${baseUsername}_${nanoid(8)}`;
+  const finalCheck = await getUserProfileByUsername(finalCandidate);
+  if (!finalCheck) return finalCandidate;
+
+  // Extremely unlikely fallback to longer suffix
+  return `${baseUsername}_${nanoid(12)}`;
 }
 
 export const handler: PostConfirmationTriggerHandler = async (
