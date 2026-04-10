@@ -74,10 +74,37 @@ npx ampx sandbox --profile midgard-sandbox secret set GOOGLE_CHAT_ERRORS_WEBHOOK
 
 ---
 
+## Google Cloud Console — Authorized Redirect URIs
+
+Google OAuth requires the Cognito hosted UI callback URL (not the app URL) in the
+**Authorized redirect URIs** list for your OAuth 2.0 client.
+
+Each Amplify branch has its own Cognito User Pool and domain.
+
+| Environment | User Pool ID          | Redirect URI to add in Google Console                                              |
+| ----------- | --------------------- | ---------------------------------------------------------------------------------- |
+| sandbox     | `us-west-2_sfQvtEAQo` | `https://bd019b77ccb1376fc79e.auth.us-west-2.amazoncognito.com/oauth2/idpresponse` |
+| develop     | `us-west-2_2dpTb6ahQ` | `https://976b8cbaf9d69167ce82.auth.us-west-2.amazoncognito.com/oauth2/idpresponse` |
+| main        | `us-west-2_EGoob42iU` | Add after main pipeline deploys — domain not yet provisioned                       |
+
+To look up the main domain once deployed:
+
+```bash
+AWS_PROFILE=midgard-sandbox AWS_REGION=us-west-2 \
+  aws cognito-idp describe-user-pool \
+  --user-pool-id us-west-2_EGoob42iU \
+  --query 'UserPool.Domain' --output text
+```
+
+**Note:** `callbackUrls` in `amplify/auth/resource.ts` (pointing to `localhost`, `dev.neonpanda.ai`, etc.)
+are separate — those are where Cognito redirects back to the app after auth. They do **not** go in Google Console.
+
+---
+
 ## Status
 
-| Environment | Secrets Deployed | Console Vars Cleaned Up |
-| ----------- | ---------------- | ----------------------- |
-| sandbox     | ✅               | ⬜                      |
-| develop     | ⬜               | ⬜                      |
-| main        | ⬜               | ⬜                      |
+| Environment | Secrets Deployed | Console Vars Cleaned Up | Google Redirect URI Added    |
+| ----------- | ---------------- | ----------------------- | ---------------------------- |
+| sandbox     | ✅               | ⬜                      | ⬜                           |
+| develop     | ⬜               | ⬜                      | ⬜                           |
+| main        | ⬜               | ⬜                      | ⬜ (domain not yet deployed) |
