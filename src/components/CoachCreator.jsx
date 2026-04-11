@@ -664,7 +664,7 @@ function CoachCreator() {
                           </div>
                         ) : (
                           /* AI message: no bubble, text lines printed directly */
-                          <div className="space-y-2 py-1 w-full min-h-[130px]">
+                          <div className="space-y-1 py-3 w-full min-h-[100px]">
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
