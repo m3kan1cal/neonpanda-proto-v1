@@ -27,10 +27,12 @@ let _guardrailResolved = false;
 
 async function resolveGuardrailId(): Promise<void> {
   if (_guardrailResolved || process.env.BEDROCK_GUARDRAIL_ID) return;
-  _guardrailResolved = true;
 
   const guardrailName = process.env.BEDROCK_GUARDRAIL_NAME;
-  if (!guardrailName) return;
+  if (!guardrailName) {
+    _guardrailResolved = true;
+    return;
+  }
 
   try {
     const client = new BedrockClient({});
@@ -42,12 +44,16 @@ async function resolveGuardrailId(): Promise<void> {
         name: guardrailName,
         id: match.id,
       });
+      _guardrailResolved = true;
     } else {
       logger.warn("Guardrail not found by name:", { name: guardrailName });
+      _guardrailResolved = true;
     }
   } catch (error) {
+    // Transient failure — leave _guardrailResolved false so the next
+    // invocation on this container retries the resolution.
     logger.warn(
-      "Failed to resolve guardrail ID — continuing without guardrail:",
+      "Failed to resolve guardrail ID — will retry next invocation:",
       error,
     );
   }

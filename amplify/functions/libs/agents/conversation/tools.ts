@@ -31,11 +31,14 @@ import {
   GET_TODAYS_WORKOUT_SCHEMA,
 } from "../../schemas/conversation-agent-tool-schemas";
 import { getProgram, updateProgram } from "../../../../dynamodb/program";
-import { queryWorkouts } from "../../../../dynamodb/workout";
 import { getObjectAsJson } from "../../s3-utils";
 import { saveProgramDetailsToS3 } from "../../program/s3-utils";
 import { convertUtcToUserDate } from "../../analytics/date-utils";
-import { parseSlashCommand, isWorkoutSlashCommand } from "../../workout";
+import {
+  parseSlashCommand,
+  isWorkoutSlashCommand,
+  checkDuplicateWorkout,
+} from "../../workout";
 
 /**
  * Produces a lightweight fingerprint from a workout description for same-turn
@@ -204,38 +207,28 @@ tell the user it has been logged and suggest editing if changes are needed.`,
       // P0 guard 2: cross-turn dedup — check if a workout was already
       // logged from this conversation with a matching completedAt date.
       const resolvedDateOnly = resolvedDate.split("T")[0]; // YYYY-MM-DD
-      try {
-        const recentWorkouts = await queryWorkouts(context.userId, {
-          limit: 10,
-          sortBy: "completedAt",
-          sortOrder: "desc",
-        });
-        const duplicate = recentWorkouts.find(
-          (w) =>
-            w.conversationId === context.conversationId &&
-            new Date(w.completedAt).toISOString().split("T")[0] ===
-              resolvedDateOnly,
-        );
-        if (duplicate) {
-          console.warn(
-            "⚠️ log_workout skipped — duplicate detected for conversationId",
-            {
-              conversationId: context.conversationId,
-              completedAt: resolvedDateOnly,
-              existingWorkoutId: duplicate.workoutId,
-              userId: context.userId,
-            },
-          );
-          return {
-            triggered: false,
-            alreadyExists: true,
+      const duplicate = await checkDuplicateWorkout(
+        context.userId,
+        context.conversationId,
+        resolvedDateOnly,
+      );
+      if (duplicate) {
+        console.warn(
+          "⚠️ log_workout skipped — duplicate detected for conversationId",
+          {
+            conversationId: context.conversationId,
+            completedAt: resolvedDateOnly,
             existingWorkoutId: duplicate.workoutId,
-            message:
-              "A workout for this session was already logged. If the user wants to make changes, they can edit the existing workout.",
-          };
-        }
-      } catch (dedupError) {
-        console.warn("⚠️ Dedup check failed (non-blocking):", dedupError);
+            userId: context.userId,
+          },
+        );
+        return {
+          triggered: false,
+          alreadyExists: true,
+          existingWorkoutId: duplicate.workoutId,
+          message:
+            "A workout for this session was already logged. If the user wants to make changes, they can edit the existing workout.",
+        };
       }
 
       const payload = {

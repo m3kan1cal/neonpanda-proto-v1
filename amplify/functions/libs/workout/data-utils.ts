@@ -4,6 +4,45 @@
  * Helper functions for extracting and transforming workout data structures.
  */
 
+import { queryWorkouts } from "../../../dynamodb/workout";
+
+/**
+ * Check if a duplicate workout already exists for a given conversation and date.
+ *
+ * Queries the 10 most recent workouts for the user, then checks if any match
+ * both the conversationId and the completedAt date (YYYY-MM-DD).
+ *
+ * Returns the duplicate workout if found, undefined otherwise.
+ * Swallows errors so callers can treat dedup as non-blocking.
+ */
+export async function checkDuplicateWorkout(
+  userId: string,
+  conversationId: string,
+  completedAtDate: string | Date,
+): Promise<any | undefined> {
+  const dateOnly =
+    completedAtDate instanceof Date
+      ? completedAtDate.toISOString().split("T")[0]
+      : completedAtDate.split("T")[0];
+
+  try {
+    const recentWorkouts = await queryWorkouts(userId, {
+      limit: 10,
+      sortBy: "completedAt",
+      sortOrder: "desc",
+    });
+
+    return recentWorkouts.find(
+      (w) =>
+        w.conversationId === conversationId &&
+        new Date(w.completedAt).toISOString().split("T")[0] === dateOnly,
+    );
+  } catch (error) {
+    console.warn("⚠️ Duplicate workout check failed (non-blocking):", error);
+    return undefined;
+  }
+}
+
 /**
  * Extract exercise names from discipline-specific workout data
  *
