@@ -1,7 +1,22 @@
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
+import { Agent } from "node:https";
 import { logger } from "./logger";
 
-const ssmClient = new SSMClient({});
+// Explicit keep-alive timeout prevents ECONNRESET noise in long-lived Lambda
+// containers (e.g., warmup pings every 5 min). Default SDK keep-alive holds
+// sockets open indefinitely; the remote endpoint closes them after ~60-120s,
+// causing stale-socket errors on the next reuse attempt.
+const ssmClient = new SSMClient({
+  requestHandler: new NodeHttpHandler({
+    httpsAgent: new Agent({
+      keepAlive: true,
+      keepAliveMsecs: 30_000,
+      timeout: 5_000,
+    }),
+    requestTimeout: 5_000,
+  }),
+});
 
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 
