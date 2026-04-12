@@ -1260,6 +1260,7 @@ jobsAndScheduledFunctions.forEach((func) => {
   backend.streamProgramDesign,
   backend.updateCoachCreatorSession,
   backend.createProgram,
+  backend.getProgram,
   backend.deleteProgram,
   backend.getWorkoutTemplate,
   backend.logWorkoutTemplate,

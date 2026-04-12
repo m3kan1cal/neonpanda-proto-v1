@@ -700,7 +700,9 @@ async function warmSingleContainer(
   try {
     const command = new InvokeCommand({
       FunctionName: functionName,
-      InvocationType: InvocationType.RequestResponse,
+      InvocationType: isStreaming
+        ? InvocationType.Event
+        : InvocationType.RequestResponse,
       Payload: JSON.stringify({ __warmup: true }),
     });
     const response = await lambdaClient.send(command);
