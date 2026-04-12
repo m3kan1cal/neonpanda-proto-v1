@@ -426,6 +426,14 @@ const authenticatedStreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
+  // Warmup pings from warmup-platform arrive via Lambda Invoke API (not Function URL),
+  // so they must be intercepted *before* streaming response setup to avoid hanging.
+  if (event?.source === "warmup") {
+    logger.info("🔥 Warmup detected, returning immediately");
+    context.callbackWaitsForEmptyEventLoop = false;
+    return;
+  }
+
   responseStream = awslambda.HttpResponseStream.from(responseStream, {
     statusCode: 200,
     headers: STREAMING_HEADERS,
@@ -495,20 +503,6 @@ if (
 }
 
 logger.info("✅ Using awslambda.streamifyResponse for streaming mode");
-const streamingHandler = awslambda.streamifyResponse(
-  authenticatedStreamingHandler,
-);
-
-// Warmup pings from warmup-platform arrive via Lambda Invoke API (not Function URL),
-// so they must be intercepted *before* streamifyResponse to avoid the streaming
-// protocol envelope keeping the invocation alive until timeout.
-const handler = async (event: any, responseStream: any, context: Context) => {
-  if (event?.source === "warmup") {
-    logger.info("🔥 Warmup detected, returning immediately");
-    context.callbackWaitsForEmptyEventLoop = false;
-    return;
-  }
-  return streamingHandler(event, responseStream, context);
-};
+const handler = awslambda.streamifyResponse(authenticatedStreamingHandler);
 
 export { handler };
