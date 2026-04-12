@@ -638,8 +638,23 @@ const lambdaClient = new LambdaClient({
 /**
  * Target functions to keep warm. These are the most user-facing, latency-sensitive
  * Lambda functions. Function names are passed via environment variables from backend.ts.
+ *
+ * Streaming targets use fire-and-forget (Event) invocation because their
+ * streamifyResponse wrapper cannot cleanly finalize via the Invoke API --
+ * RequestResponse would hang until timeout.
  */
-function getWarmupTargets(): string[] {
+const STREAMING_TARGET_ENV_VARS = new Set([
+  "WARMUP_TARGET_STREAM_COACH_CONVERSATION",
+  "WARMUP_TARGET_STREAM_COACH_CREATOR_SESSION",
+  "WARMUP_TARGET_STREAM_PROGRAM_DESIGNER_SESSION",
+]);
+
+interface WarmupTarget {
+  functionName: string;
+  isStreaming: boolean;
+}
+
+function getWarmupTargets(): WarmupTarget[] {
   const envVars = [
     "WARMUP_TARGET_GET_COACH_CONFIGS",
     "WARMUP_TARGET_GET_COACH_CONFIG",
@@ -659,8 +674,15 @@ function getWarmupTargets(): string[] {
   ];
 
   return envVars
-    .map((envVar) => process.env[envVar])
-    .filter((name): name is string => !!name);
+    .map((envVar) => {
+      const functionName = process.env[envVar];
+      if (!functionName) return null;
+      return {
+        functionName,
+        isStreaming: STREAMING_TARGET_ENV_VARS.has(envVar),
+      };
+    })
+    .filter((t): t is WarmupTarget => t !== null);
 }
 
 interface ContainerWarmupResult {
@@ -671,20 +693,24 @@ interface ContainerWarmupResult {
 }
 
 async function warmSingleContainer(
-  functionName: string,
+  target: WarmupTarget,
 ): Promise<ContainerWarmupResult> {
+  const { functionName, isStreaming } = target;
   const startMs = Date.now();
   try {
     const command = new InvokeCommand({
       FunctionName: functionName,
-      InvocationType: InvocationType.RequestResponse,
+      InvocationType: isStreaming
+        ? InvocationType.Event
+        : InvocationType.RequestResponse,
       Payload: JSON.stringify({ source: "warmup" }),
     });
     const response = await lambdaClient.send(command);
 
-    // Check for function-level errors: RequestResponse returns HTTP 200 even if
-    // the target function throws, with FunctionError field indicating the error.
-    if (response.FunctionError) {
+    // Event invocations return 202 Accepted without waiting for the function,
+    // so there is no FunctionError to check. RequestResponse returns 200 even
+    // if the target throws, with FunctionError indicating the error.
+    if (!isStreaming && response.FunctionError) {
       return {
         functionName,
         status: "rejected",
@@ -700,8 +726,6 @@ async function warmSingleContainer(
     };
   } catch (error) {
     // Even if the handler errors, the container is now warm.
-    // Streaming functions may error because they lack a proper response stream,
-    // but the execution environment (imports, module-level init) stays alive.
     return {
       functionName,
       status: "rejected",
@@ -735,7 +759,7 @@ async function warmLambdaContainers(): Promise<ContainerWarmupSummary> {
   );
 
   const settledResults = await Promise.allSettled(
-    targets.map((name) => warmSingleContainer(name)),
+    targets.map((target) => warmSingleContainer(target)),
   );
 
   const results: ContainerWarmupResult[] = settledResults.map((result) =>

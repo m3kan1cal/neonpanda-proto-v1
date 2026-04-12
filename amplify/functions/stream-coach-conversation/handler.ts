@@ -685,18 +685,6 @@ const authenticatedStreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
-  // Warmup ping detection for internal invocations.
-  // warmup-platform directly invokes all target functions with { source: "warmup" }
-  // to keep their execution environments warm (avoiding cold starts).
-  if ((event as any)?.source === "warmup") {
-    logger.info("🔥 Warmup detected, closing stream");
-    if (responseStream?.write) {
-      responseStream.write("");
-      responseStream.end();
-    }
-    return;
-  }
-
   // Set streaming headers (CORS headers are handled by Lambda Function URL CORS config)
   responseStream = awslambda.HttpResponseStream.from(responseStream, {
     statusCode: 200,
@@ -756,9 +744,6 @@ logger.info(
 );
 
 /* global awslambda */
-let handler: any;
-
-// Check if awslambda global is available and has streamifyResponse
 if (
   typeof awslambda === "undefined" ||
   typeof awslambda.streamifyResponse !== "function"
@@ -770,6 +755,20 @@ if (
 }
 
 logger.info("✅ Using awslambda.streamifyResponse for streaming mode");
-handler = awslambda.streamifyResponse(authenticatedStreamingHandler);
+const streamingHandler = awslambda.streamifyResponse(
+  authenticatedStreamingHandler,
+);
+
+// Warmup pings from warmup-platform arrive via Lambda Invoke API (not Function URL),
+// so they must be intercepted *before* streamifyResponse to avoid the streaming
+// protocol envelope keeping the invocation alive until timeout.
+const handler = async (event: any, responseStream: any, context: Context) => {
+  if (event?.source === "warmup") {
+    logger.info("🔥 Warmup detected, returning immediately");
+    context.callbackWaitsForEmptyEventLoop = false;
+    return;
+  }
+  return streamingHandler(event, responseStream, context);
+};
 
 export { handler };
