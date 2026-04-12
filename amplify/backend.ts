@@ -787,14 +787,21 @@ const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.explainTerm,
-  // Jobs group: processes user message content for analysis
-  backend.processPostTurn,
+  // NOTE: processPostTurn is handled separately below — it's in the jobs
+  // resourceGroupName stack, so passing the guardrail CDK token here would
+  // create a circular dependency (jobs→main + main→jobs).
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
   func.addEnvironment("BEDROCK_GUARDRAIL_ID", bedrockGuardrail.attrGuardrailId);
   func.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
 });
+
+// processPostTurn (jobs stack) receives the guardrail name as a plain string
+// instead of the CDK token ID, to avoid a cross-stack circular dependency.
+// The handler resolves the guardrail ID at runtime via ListGuardrails.
+backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_NAME", guardrailName);
+backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
 
 // Functions needing S3 DEBUG bucket access
 // NOTE: Jobs group debug functions (buildWorkout, buildCoachConfig, buildConversationSummary,

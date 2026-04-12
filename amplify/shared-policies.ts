@@ -351,6 +351,7 @@ export class StackGroupPolicies {
             "bedrock:InvokeModel",
             "bedrock:InvokeModelWithResponseStream",
             "bedrock:ApplyGuardrail",
+            "bedrock:ListGuardrails",
           ],
           resources: ["*"],
         }),

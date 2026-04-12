@@ -63,13 +63,18 @@ async function generateUniqueUsername(email: string): Promise<string> {
     if (!check) return candidate;
   }
 
-  // Final fallback: verify even the 8-char suffix doesn't collide
-  const finalCandidate = `${baseUsername}_${nanoid(8)}`;
-  const finalCheck = await getUserProfileByUsername(finalCandidate);
-  if (!finalCheck) return finalCandidate;
+  // Final fallback: try up to 3 nanoid(8) candidates before giving up
+  for (let j = 0; j < 3; j++) {
+    const finalCandidate = `${baseUsername}_${nanoid(8)}`;
+    const finalCheck = await getUserProfileByUsername(finalCandidate);
+    if (!finalCheck) return finalCandidate;
+  }
 
-  // Fallback with full 8-char suffix to stay within 20-char limit
-  return `${baseUsername}_${nanoid(8)}`;
+  // Astronomically unlikely to reach here (3 × nanoid(8) collisions after
+  // 5 × nanoid(4) collisions), but satisfy the uniqueness contract.
+  throw new Error(
+    `Unable to generate unique username for base: ${baseUsername}`,
+  );
 }
 
 export const handler: PostConfirmationTriggerHandler = async (
