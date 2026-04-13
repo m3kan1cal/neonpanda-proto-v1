@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useAuthForm } from '../hooks/useAuthForm';
-import { getErrorMessage, validatePassword, validateConfirmationCode } from '../utils/authHelpers';
-import AuthLayout from './AuthLayout';
-import AuthInput from './AuthInput';
-import AuthButton from './AuthButton';
-import AuthErrorMessage from './AuthErrorMessage';
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useAuthForm } from "../hooks/useAuthForm";
+import {
+  getErrorMessage,
+  validatePassword,
+  validateConfirmationCode,
+} from "../utils/authHelpers";
+import AuthLayout from "./AuthLayout";
+import AuthInput from "./AuthInput";
+import AuthButton from "./AuthButton";
+import AuthErrorMessage from "./AuthErrorMessage";
 import { logger } from "../../utils/logger";
 
 const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
   const { confirmResetPassword } = useAuth();
-  const [globalError, setGlobalError] = useState('');
+  const [globalError, setGlobalError] = useState("");
 
   const {
     formData,
@@ -19,34 +23,34 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
     setIsSubmitting,
     handleInputChange,
     validateForm,
-    setFieldError
+    setFieldError,
   } = useAuthForm({
-    confirmationCode: '',
-    newPassword: '',
-    confirmPassword: ''
+    confirmationCode: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setGlobalError('');
+    setGlobalError("");
 
     // Validate form
     const validationRules = {
       confirmationCode: {
         required: true,
-        label: 'Confirmation Code'
+        label: "Confirmation Code",
       },
       newPassword: {
         required: true,
         password: true,
-        label: 'New Password'
+        label: "New Password",
       },
       confirmPassword: {
         required: true,
         confirmPassword: true,
         originalPassword: formData.newPassword,
-        label: 'Confirm Password'
-      }
+        label: "Confirm Password",
+      },
     };
 
     if (!validateForm(validationRules)) {
@@ -56,11 +60,16 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
     // Additional validations
     const codeError = validateConfirmationCode(formData.confirmationCode);
     const passwordErrors = validatePassword(formData.newPassword);
-    const confirmPasswordError = formData.newPassword !== formData.confirmPassword ? 'Passwords do not match' : null;
+    const confirmPasswordError =
+      formData.newPassword !== formData.confirmPassword
+        ? "Passwords do not match"
+        : null;
 
-    if (codeError) setFieldError('confirmationCode', codeError);
-    if (passwordErrors.length > 0) setFieldError('newPassword', passwordErrors[0]);
-    if (confirmPasswordError) setFieldError('confirmPassword', confirmPasswordError);
+    if (codeError) setFieldError("confirmationCode", codeError);
+    if (passwordErrors.length > 0)
+      setFieldError("newPassword", passwordErrors[0]);
+    if (confirmPasswordError)
+      setFieldError("confirmPassword", confirmPasswordError);
 
     if (codeError || passwordErrors.length > 0 || confirmPasswordError) {
       return;
@@ -72,22 +81,29 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
       await confirmResetPassword(
         email,
         formData.confirmationCode.trim(),
-        formData.newPassword
+        formData.newPassword,
       );
 
       onResetSuccess();
-
     } catch (error) {
-      logger.error('Confirm reset password error:', error);
+      logger.error("Confirm reset password error:", error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases
-      if (error.name === 'CodeMismatchException') {
-        setFieldError('confirmationCode', 'Invalid confirmation code. Please check and try again.');
-      } else if (error.name === 'ExpiredCodeException') {
-        setGlobalError('Confirmation code has expired. Please request a new password reset.');
-      } else if (error.name === 'InvalidPasswordException') {
-        setFieldError('newPassword', 'Password does not meet security requirements');
+      if (error.name === "CodeMismatchException") {
+        setFieldError(
+          "confirmationCode",
+          "Invalid confirmation code. Please check and try again.",
+        );
+      } else if (error.name === "ExpiredCodeException") {
+        setGlobalError(
+          "Confirmation code has expired. Please request a new password reset.",
+        );
+      } else if (error.name === "InvalidPasswordException") {
+        setFieldError(
+          "newPassword",
+          "Password does not meet security requirements",
+        );
       } else {
         setGlobalError(errorMessage);
       }
@@ -101,9 +117,9 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header moved into form */}
         <div className="text-center mb-6">
-          <h1 className="font-body font-bold text-2xl text-white mb-4 uppercase">
+          <p className="font-body text-sm font-semibold uppercase tracking-widest text-synthwave-text-muted mb-3">
             Reset Password
-          </h1>
+          </p>
           <p className="font-body text-synthwave-text-secondary">
             Enter the confirmation code sent to:
           </p>
@@ -113,7 +129,10 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
         </div>
 
         {globalError && (
-          <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md" />
+          <AuthErrorMessage
+            error={globalError}
+            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md"
+          />
         )}
 
         <AuthInput
@@ -155,7 +174,9 @@ const ResetPasswordForm = ({ email, onResetSuccess, onSwitchToLogin }) => {
 
         {/* Password Requirements */}
         <div className="text-xs font-body text-synthwave-neon-cyan space-y-1">
-          <p className="font-medium text-synthwave-neon-cyan">Password must contain:</p>
+          <p className="font-medium text-synthwave-neon-cyan">
+            Password must contain:
+          </p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>At least 8 characters</li>
             <li>One uppercase letter</li>

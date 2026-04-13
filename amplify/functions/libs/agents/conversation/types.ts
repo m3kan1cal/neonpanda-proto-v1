@@ -61,6 +61,9 @@ export interface ConversationAgentContext extends AgentContext {
     entityType: "workout"; // extensible to "program" later
     entityId: string;
   };
+  // Set of content fingerprints for workouts already logged this turn.
+  // Prevents duplicate async triggers while allowing distinct workouts through.
+  workoutLoggedThisTurn?: Set<string>;
 }
 
 // Re-export shared streaming types from core so existing imports continue to work

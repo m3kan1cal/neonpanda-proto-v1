@@ -190,7 +190,7 @@ export const iconButtonPatterns = {
 
   // Bordered - Border with hover fill (Cyan)
   bordered:
-    "p-3 rounded-md border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
+    "cursor-pointer p-3 rounded-md border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
 
   // Solid Fill - Full background with shadow (Pink)
   solid:

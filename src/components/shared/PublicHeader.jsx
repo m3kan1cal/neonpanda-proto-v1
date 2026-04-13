@@ -178,7 +178,7 @@ const PublicHeader = () => {
           {!loading && !isAuthenticated && (
             <button
               onClick={() => navigate("/auth")}
-              className="hidden sm:inline-block px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30"
+              className="cursor-pointer hidden sm:inline-block px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30"
             >
               Sign In
             </button>

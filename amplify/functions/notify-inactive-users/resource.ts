@@ -12,6 +12,7 @@ export const notifyInactiveUsers = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900, // 15 minutes (for processing many users)
   memoryMB: 2048,
+  resourceGroupName: "scheduled",
 });
 
 /**

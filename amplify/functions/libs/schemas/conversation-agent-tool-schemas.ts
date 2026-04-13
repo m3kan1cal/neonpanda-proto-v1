@@ -2,8 +2,8 @@
  * Conversation Agent Tool Input Schemas
  *
  * JSON Schemas for the 11 conversation agent tools extracted from inline definitions
- * in agents/conversation/tools.ts. Centralizing these enables warmup-platform to
- * pre-compile their Bedrock constrained-decoding grammars.
+ * in agents/conversation/tools.ts. Centralizing these enables reuse across
+ * agent definitions and test fixtures.
  *
  * Field ordering follows reasoning-first pattern per Bedrock structured output best practices.
  */

@@ -64,3 +64,5 @@ export {
   type NormalizationResult,
   type NormalizationIssue,
 } from "./normalization";
+
+export { checkDuplicateWorkout, extractExerciseNames } from "./data-utils";

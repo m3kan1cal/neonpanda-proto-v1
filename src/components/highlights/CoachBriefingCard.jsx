@@ -176,6 +176,19 @@ function truncate(text, maxLen = 140) {
   return text.slice(0, maxLen).trimEnd() + "...";
 }
 
+function stripMarkdown(text) {
+  if (!text) return text;
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/_{2}(.*?)_{2}/g, "$1")
+    .replace(/_(.*?)_/g, "$1")
+    .replace(/#{1,6}\s+/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .trim();
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -367,22 +380,20 @@ export default function CoachBriefingCard({
     return (
       <>
         {insights?.top_priority?.insight && (
-          <MarkdownRenderer
-            content={truncate(insights.top_priority.insight, 100)}
-            className="font-body text-sm text-synthwave-text-secondary leading-relaxed mb-3"
-          />
+          <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
+            {truncate(stripMarkdown(insights.top_priority.insight), 100)}
+          </p>
         )}
         {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-synthwave-neon-cyan/20 via-synthwave-neon-cyan/10 to-transparent mb-3" />
+        <div className="h-px bg-gradient-to-r from-synthwave-neon-cyan/20 via-synthwave-neon-cyan/10 to-transparent" />
         {workout?.summary && (
           <div>
             <span className="font-header text-xs uppercase tracking-wider text-synthwave-text-muted">
               Session Recap
             </span>
-            <MarkdownRenderer
-              content={truncate(workout.summary, 100)}
-              className="font-body text-xs text-synthwave-text-muted mt-1"
-            />
+            <p className="font-body text-xs text-synthwave-text-muted mt-1">
+              {truncate(stripMarkdown(workout.summary), 100)}
+            </p>
           </div>
         )}
       </>

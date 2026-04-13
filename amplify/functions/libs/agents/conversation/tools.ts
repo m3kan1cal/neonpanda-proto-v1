@@ -34,7 +34,26 @@ import { getProgram, updateProgram } from "../../../../dynamodb/program";
 import { getObjectAsJson } from "../../s3-utils";
 import { saveProgramDetailsToS3 } from "../../program/s3-utils";
 import { convertUtcToUserDate } from "../../analytics/date-utils";
-import { parseSlashCommand, isWorkoutSlashCommand } from "../../workout";
+import {
+  parseSlashCommand,
+  isWorkoutSlashCommand,
+  checkDuplicateWorkout,
+} from "../../workout";
+
+/**
+ * Produces a lightweight fingerprint from a workout description for same-turn
+ * dedup. Two calls describing the same workout will share a fingerprint; two
+ * calls describing different workouts will not.
+ */
+function workoutDescriptionFingerprint(description: string): string {
+  const normalized = description.toLowerCase().replace(/\s+/g, " ").trim();
+  const prefix = normalized.slice(0, 200);
+  let hash = 0;
+  for (let i = 0; i < prefix.length; i++) {
+    hash = (hash * 31 + prefix.charCodeAt(i)) | 0;
+  }
+  return hash.toString(36);
+}
 
 // ============================================================================
 // Shared tools — instantiated for ConversationAgentContext
@@ -100,7 +119,12 @@ The workoutDescription should be a comprehensive summary of the FULL workout, in
 all exercises performed with sets, reps, weights, and any relevant notes. Aggregate
 information from the conversation — don't just pass the last message.
 
-If the workout matches a program template, include the templateContext for proper linking.`,
+If the workout matches a program template, include the templateContext for proper linking.
+
+You may call this tool multiple times in a single turn if the user describes multiple distinct
+workouts (e.g., "log my Thursday run and my Friday lifting session"). However, do NOT call it
+twice for the SAME workout session. If a workout was already logged earlier in this conversation,
+tell the user it has been logged and suggest editing if changes are needed.`,
   inputSchema: LOG_WORKOUT_SCHEMA,
   async execute(input, context) {
     console.info("🏋️ Executing log_workout:", {
@@ -109,6 +133,24 @@ If the workout matches a program template, include the templateContext for prope
       hasTemplateContext: !!input.templateContext,
       userId: context.userId,
     });
+
+    // P0 guard 1: prevent duplicate log_workout for the same workout within a
+    // single Lambda invocation. Uses a content fingerprint so distinct workouts
+    // (e.g. "Thursday run" vs "Friday lifting") are allowed through.
+    const fingerprint = workoutDescriptionFingerprint(input.workoutDescription);
+    if (context.workoutLoggedThisTurn?.has(fingerprint)) {
+      console.warn("⚠️ log_workout skipped — already triggered this turn", {
+        conversationId: context.conversationId,
+        userId: context.userId,
+        fingerprint,
+      });
+      return {
+        triggered: false,
+        alreadyLogged: true,
+        message:
+          "This workout was already logged in this conversation turn. If you need to make changes, the user can edit the workout after it appears.",
+      };
+    }
 
     try {
       const buildWorkoutFunction = process.env.BUILD_WORKOUT_FUNCTION_NAME;
@@ -162,6 +204,33 @@ If the workout matches a program template, include the templateContext for prope
         }
       }
 
+      // P0 guard 2: cross-turn dedup — check if a workout was already
+      // logged from this conversation with a matching completedAt date.
+      const resolvedDateOnly = resolvedDate.split("T")[0]; // YYYY-MM-DD
+      const duplicate = await checkDuplicateWorkout(
+        context.userId,
+        context.conversationId,
+        resolvedDateOnly,
+      );
+      if (duplicate) {
+        console.warn(
+          "⚠️ log_workout skipped — duplicate detected for conversationId",
+          {
+            conversationId: context.conversationId,
+            completedAt: resolvedDateOnly,
+            existingWorkoutId: duplicate.workoutId,
+            userId: context.userId,
+          },
+        );
+        return {
+          triggered: false,
+          alreadyExists: true,
+          existingWorkoutId: duplicate.workoutId,
+          message:
+            "A workout for this session was already logged. If the user wants to make changes, they can edit the existing workout.",
+        };
+      }
+
       const payload = {
         userId: context.userId,
         coachId: context.coachId,
@@ -188,6 +257,13 @@ If the workout matches a program template, include the templateContext for prope
         payload,
         "conversation agent workout logging",
       );
+
+      // Record fingerprint so a duplicate call for the same workout is blocked,
+      // but calls for distinct workouts are still allowed through.
+      if (!context.workoutLoggedThisTurn) {
+        context.workoutLoggedThisTurn = new Set<string>();
+      }
+      context.workoutLoggedThisTurn.add(fingerprint);
 
       console.info("✅ Workout creation triggered successfully", {
         imageS3Keys: context.imageS3Keys ?? [],

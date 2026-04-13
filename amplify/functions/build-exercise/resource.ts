@@ -8,4 +8,5 @@ export const buildExercise = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 120, // 2 minutes for extraction and normalization
   memoryMB: 1024, // 1GB for AI processing
+  resourceGroupName: "jobs",
 });

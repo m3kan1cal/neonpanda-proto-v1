@@ -12,6 +12,7 @@ export const dispatchMemoryLifecycle = defineFunction({
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900, // 15 minutes — dispatches per-user processors for all users
   memoryMB: 512,
+  resourceGroupName: "scheduled",
 });
 
 export function createMemoryLifecycleSchedule(

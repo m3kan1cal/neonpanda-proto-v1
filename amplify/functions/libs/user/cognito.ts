@@ -3,10 +3,15 @@
  * Helper functions for synchronizing user data with AWS Cognito
  */
 
-import { CognitoIdentityProviderClient, AdminUpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
+import {
+  CognitoIdentityProviderClient,
+  AdminUpdateUserAttributesCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
 import { logger } from "../logger";
 
-const cognitoClient = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
+const cognitoClient = new CognitoIdentityProviderClient({
+  region: process.env.AWS_REGION,
+});
 
 /**
  * Profile updates that can be synced to Cognito
@@ -15,6 +20,7 @@ export interface CognitoSyncableProfile {
   firstName?: string;
   lastName?: string;
   nickname?: string;
+  username?: string;
 }
 
 /**
@@ -27,7 +33,7 @@ export interface CognitoSyncableProfile {
  */
 export async function syncProfileToCognito(
   cognitoUsername: string,
-  profileUpdates: CognitoSyncableProfile
+  profileUpdates: CognitoSyncableProfile,
 ): Promise<{ success: boolean; syncedAttributes: string[]; error?: string }> {
   try {
     const cognitoAttributes = [];
@@ -35,22 +41,29 @@ export async function syncProfileToCognito(
     // Map profile fields to Cognito attribute names
     if (profileUpdates.firstName !== undefined) {
       cognitoAttributes.push({
-        Name: 'given_name',
-        Value: String(profileUpdates.firstName || '')
+        Name: "given_name",
+        Value: String(profileUpdates.firstName || ""),
       });
     }
 
     if (profileUpdates.lastName !== undefined) {
       cognitoAttributes.push({
-        Name: 'family_name',
-        Value: String(profileUpdates.lastName || '')
+        Name: "family_name",
+        Value: String(profileUpdates.lastName || ""),
       });
     }
 
     if (profileUpdates.nickname !== undefined) {
       cognitoAttributes.push({
-        Name: 'nickname',
-        Value: String(profileUpdates.nickname || '')
+        Name: "nickname",
+        Value: String(profileUpdates.nickname || ""),
+      });
+    }
+
+    if (profileUpdates.username !== undefined) {
+      cognitoAttributes.push({
+        Name: "preferred_username",
+        Value: String(profileUpdates.username || ""),
       });
     }
 
@@ -63,27 +76,26 @@ export async function syncProfileToCognito(
     const command = new AdminUpdateUserAttributesCommand({
       UserPoolId: process.env.USER_POOL_ID,
       Username: cognitoUsername,
-      UserAttributes: cognitoAttributes
+      UserAttributes: cognitoAttributes,
     });
 
     await cognitoClient.send(command);
 
-    const syncedAttributeNames = cognitoAttributes.map(a => a.Name);
-    logger.info('✅ Synced attributes to Cognito:', syncedAttributeNames);
+    const syncedAttributeNames = cognitoAttributes.map((a) => a.Name);
+    logger.info("✅ Synced attributes to Cognito:", syncedAttributeNames);
 
     return {
       success: true,
-      syncedAttributes: syncedAttributeNames
+      syncedAttributes: syncedAttributeNames,
     };
-
   } catch (error) {
     // Log but don't throw - Cognito sync is best effort
-    logger.error('⚠️ Failed to sync attributes to Cognito (non-fatal):', error);
+    logger.error("⚠️ Failed to sync attributes to Cognito (non-fatal):", error);
 
     return {
       success: false,
       syncedAttributes: [],
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -106,5 +118,5 @@ export function extractCognitoUsername(event: any): string {
     return String(event.user.username);
   }
 
-  throw new Error('Could not extract Cognito username from event');
+  throw new Error("Could not extract Cognito username from event");
 }

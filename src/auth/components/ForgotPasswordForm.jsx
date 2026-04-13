@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useAuthForm } from '../hooks/useAuthForm';
-import { getErrorMessage, validateEmail } from '../utils/authHelpers';
-import AuthLayout from './AuthLayout';
-import AuthInput from './AuthInput';
-import AuthButton from './AuthButton';
-import AuthErrorMessage from './AuthErrorMessage';
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useAuthForm } from "../hooks/useAuthForm";
+import { getErrorMessage, validateEmail } from "../utils/authHelpers";
+import AuthLayout from "./AuthLayout";
+import AuthInput from "./AuthInput";
+import AuthButton from "./AuthButton";
+import AuthErrorMessage from "./AuthErrorMessage";
 import { logger } from "../../utils/logger";
 
 const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
   const { resetPassword } = useAuth();
-  const [globalError, setGlobalError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [globalError, setGlobalError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [countdown, setCountdown] = useState(0);
 
   const {
@@ -21,23 +21,23 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
     setIsSubmitting,
     handleInputChange,
     validateForm,
-    setFieldError
+    setFieldError,
   } = useAuthForm({
-    email: ''
+    email: "",
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setGlobalError('');
-    setSuccessMessage('');
+    setGlobalError("");
+    setSuccessMessage("");
 
     // Validate form
     const validationRules = {
       email: {
         required: true,
         email: true,
-        label: 'Email'
-      }
+        label: "Email",
+      },
     };
 
     if (!validateForm(validationRules)) {
@@ -46,7 +46,7 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
 
     // Additional email validation
     if (!validateEmail(formData.email)) {
-      setFieldError('email', 'Please enter a valid email address');
+      setFieldError("email", "Please enter a valid email address");
       return;
     }
 
@@ -55,7 +55,9 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
     try {
       await resetPassword(formData.email.trim());
 
-      setSuccessMessage('Password reset code sent! Check your email for instructions.');
+      setSuccessMessage(
+        "Password reset code sent! Check your email for instructions.",
+      );
       setCountdown(4);
 
       // Start countdown timer
@@ -69,16 +71,21 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
           return prev - 1;
         });
       }, 1000);
-
     } catch (error) {
-      logger.error('Reset password error:', error);
+      logger.error("Reset password error:", error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases
-      if (error.name === 'UserNotFoundException') {
-        setFieldError('email', 'No account found with this email address');
-      } else if (error.name === 'LimitExceededException') {
-        setGlobalError('Too many requests. Please wait before trying again.');
+      if (error.name === "UserNotFoundException") {
+        setFieldError("email", "No account found with this email address");
+      } else if (error.name === "InvalidParameterException") {
+        // Cognito returns this when the user has no password (e.g. Google-only account)
+        setGlobalError(
+          "This account uses Google sign-in and does not have a password. " +
+            "Please sign in with Google instead, or set a password in Settings.",
+        );
+      } else if (error.name === "LimitExceededException") {
+        setGlobalError("Too many requests. Please wait before trying again.");
       } else {
         setGlobalError(errorMessage);
       }
@@ -92,16 +99,20 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="font-body font-bold text-2xl text-white mb-4 uppercase">
+          <p className="font-body text-sm font-semibold uppercase tracking-widest text-synthwave-text-muted mb-3">
             Forgot Password
-          </h1>
+          </p>
           <p className="font-body text-synthwave-text-secondary">
-            Enter the email address associated with your account and we'll send you a code to reset your password.
+            Enter the email address associated with your account and we'll send
+            you a code to reset your password.
           </p>
         </div>
 
         {globalError && (
-          <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md" />
+          <AuthErrorMessage
+            error={globalError}
+            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md"
+          />
         )}
 
         {successMessage && (
@@ -111,7 +122,7 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
             </p>
             {countdown > 0 && (
               <p className="font-body text-synthwave-neon-cyan text-sm mt-2 opacity-80">
-                Redirecting in {countdown} second{countdown !== 1 ? 's' : ''}...
+                Redirecting in {countdown} second{countdown !== 1 ? "s" : ""}...
               </p>
             )}
           </div>
@@ -140,7 +151,8 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
           </AuthButton>
         </div>
 
-        <div className="text-center pt-4 border-t border-synthwave-neon-pink/20">
+        <div className="text-center pt-1">
+          <div className="h-px bg-gradient-to-r from-transparent via-synthwave-neon-cyan/25 to-transparent mb-4" />
           <p className="font-body text-synthwave-text-secondary mb-3">
             Remember your password?
           </p>

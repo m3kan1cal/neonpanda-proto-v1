@@ -48,7 +48,6 @@ import {
   getStreamingMessageClasses,
   getTypingState,
   handleStreamingError,
-  supportsStreaming,
   ContextualUpdateIndicator,
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
@@ -144,7 +143,7 @@ const MessageItem = memo(
       >
         {/* Message Content */}
         <div
-          className={`w-full min-w-0 md:max-w-[85%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`w-full min-w-0 ${message.type === "user" ? "md:max-w-[85%] items-end" : "items-start"} flex flex-col`}
         >
           {/* Coaching Chat Indicator Badge (only for AI messages with explicit chat mode set by v2 handler) */}
           {message.type === "ai" &&
@@ -189,7 +188,11 @@ const MessageItem = memo(
             </div>
           ) : (
             <div
-              className={getStreamingMessageClasses(message, agentState, "w-full min-w-0")}
+              className={getStreamingMessageClasses(
+                message,
+                agentState,
+                "w-full min-w-0",
+              )}
             >
               <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
                 {renderMessageContent(message)}
@@ -774,10 +777,7 @@ function CoachConversations() {
 
     try {
       await sendMessageWithStreaming(agentRef.current, messageToSend, [], {
-        enableStreaming: supportsStreaming(),
-        onStreamingStart: () => {
-          // Streaming started
-        },
+        onStreamingStart: () => {},
         onStreamingError: (error) => {
           handleStreamingError(error, { error: showError });
         },
@@ -809,7 +809,6 @@ function CoachConversations() {
         messageContent,
         imageS3Keys,
         {
-          enableStreaming: supportsStreaming(),
           onStreamingStart: () => {
             // Streaming started - instant scroll to show new message
             setTimeout(() => scrollToBottom(true), 50);
@@ -1002,7 +1001,7 @@ function CoachConversations() {
 
           {/* Main Content Area skeleton */}
           <div className="flex-1 flex justify-center">
-            <div className="w-full max-w-7xl">
+            <div className="w-full max-w-5xl">
               <div className="h-[500px] flex flex-col">
                 {/* Messages Area skeleton */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-3">
@@ -1013,11 +1012,11 @@ function CoachConversations() {
                       className={`flex flex-col mb-1 ${i % 2 === 1 ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`w-full min-w-0 md:max-w-[85%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`w-full min-w-0 ${i % 2 === 1 ? "md:max-w-[85%] items-end" : "items-start"} flex flex-col`}
                       >
                         {i % 2 === 1 ? (
                           /* User message: keep bubble container */
-                          <div className="rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[100px]">
+                          <div className="rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse w-full min-h-[100px]">
                             <div className="space-y-1">
                               <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                               <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
@@ -1026,7 +1025,7 @@ function CoachConversations() {
                           </div>
                         ) : (
                           /* AI message: no bubble, text lines printed directly */
-                          <div className="space-y-2 py-1 min-w-[min(65vw,600px)] min-h-[130px]">
+                          <div className="space-y-1 py-3 w-full min-h-[100px]">
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
@@ -1159,7 +1158,7 @@ function CoachConversations() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
-          <div className="w-full max-w-7xl">
+          <div className="w-full max-w-5xl">
             {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
             <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input */}

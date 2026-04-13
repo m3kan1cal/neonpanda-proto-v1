@@ -1,4 +1,4 @@
-import { defineBackend } from "@aws-amplify/backend";
+import { defineBackend, secret } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { postConfirmation } from "./functions/post-confirmation/resource";
 import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
@@ -7,6 +7,7 @@ import {
   InvokeMode,
   HttpMethod,
   CfnPermission,
+  CfnFunction,
 } from "aws-cdk-lib/aws-lambda";
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import {
@@ -79,6 +80,7 @@ import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
 import { getUserProfile } from "./functions/get-user-profile/resource";
 import { updateUserProfile } from "./functions/update-user-profile/resource";
 import { checkUserAvailability } from "./functions/check-user-availability/resource";
+import { manageIdentityProviders } from "./functions/manage-identity-providers/resource";
 import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
 import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
 import { createProgram } from "./functions/create-program/resource";
@@ -110,10 +112,6 @@ import { deleteSharedProgram } from "./functions/delete-shared-program/resource"
 import { copySharedProgram } from "./functions/copy-shared-program/resource";
 import { explainTerm } from "./functions/explain-term/resource";
 import { generateGreeting } from "./functions/generate-greeting/resource";
-import {
-  warmupPlatform,
-  createWarmupPlatformSchedule,
-} from "./functions/warmup-platform/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -123,7 +121,6 @@ import {
   createUserRegistrationTopic,
   createStripeAlertsTopic,
 } from "./sns/resource";
-import { config } from "./functions/libs/configs";
 import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { CfnGuardrail } from "aws-cdk-lib/aws-bedrock";
 import {
@@ -132,6 +129,7 @@ import {
 } from "./functions/sync-log-subscriptions/resource";
 import {
   SharedPolicies,
+  StackGroupPolicies,
   grantLambdaInvokePermissions,
 } from "./shared-policies";
 
@@ -198,6 +196,7 @@ const backend = defineBackend({
   getUserProfile,
   updateUserProfile,
   checkUserAvailability,
+  manageIdentityProviders,
   generateUploadUrls,
   generateDownloadUrls,
   syncLogSubscriptions,
@@ -227,8 +226,147 @@ const backend = defineBackend({
   copySharedProgram,
   explainTerm,
   generateGreeting,
-  warmupPlatform,
 });
+
+// ============================================================================
+// ARM64 (GRAVITON2) — PERFORMANCE & COST OPTIMIZATION
+// ============================================================================
+// Switch all Lambda functions from x86_64 (default) to ARM64 (Graviton2).
+// Benefits: ~20% better price-performance, up to 34% lower cost per GB-second,
+// and comparable or faster cold start times for Node.js workloads.
+// All current dependencies are pure JavaScript or have ARM64 support.
+const allBackendFunctions = [
+  backend.postConfirmation,
+  backend.contactForm,
+  backend.createCoachCreatorSession,
+  backend.updateCoachCreatorSession,
+  backend.buildCoachConfig,
+  backend.getCoachConfigs,
+  backend.getCoachConfig,
+  backend.updateCoachConfig,
+  backend.deleteCoachConfig,
+  backend.getCoachConfigStatus,
+  backend.getCoachCreatorSession,
+  backend.getCoachCreatorSessions,
+  backend.deleteCoachCreatorSession,
+  backend.getCoachTemplates,
+  backend.getCoachTemplate,
+  backend.createCoachConfigFromTemplate,
+  backend.createCoachConfig,
+  backend.createCoachConversation,
+  backend.getCoachConversations,
+  backend.getCoachConversation,
+  backend.updateCoachConversation,
+  backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
+  backend.streamCoachCreatorSession,
+  backend.streamProgramDesign,
+  backend.createProgramDesignerSession,
+  backend.getProgramDesignerSession,
+  backend.getProgramDesignerSessions,
+  backend.deleteProgramDesignerSession,
+  backend.createWorkout,
+  backend.buildWorkout,
+  backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.processPostTurn,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
+  backend.getWorkouts,
+  backend.getWorkout,
+  backend.updateWorkout,
+  backend.deleteWorkout,
+  backend.getWorkoutsCount,
+  backend.getCoachConversationsCount,
+  backend.getCoachConfigsCount,
+  backend.buildWeeklyAnalytics,
+  backend.getWeeklyReports,
+  backend.getWeeklyReport,
+  backend.buildMonthlyAnalytics,
+  backend.getMonthlyReports,
+  backend.getMonthlyReport,
+  backend.getMemories,
+  backend.createMemory,
+  backend.deleteMemory,
+  backend.updateMemory,
+  backend.deleteCoachConversation,
+  backend.forwardLogsToSns,
+  backend.getUserProfile,
+  backend.updateUserProfile,
+  backend.checkUserAvailability,
+  backend.manageIdentityProviders,
+  backend.generateUploadUrls,
+  backend.generateDownloadUrls,
+  backend.syncLogSubscriptions,
+  backend.createProgram,
+  backend.buildProgram,
+  backend.getProgram,
+  backend.getPrograms,
+  backend.updateProgram,
+  backend.deleteProgram,
+  backend.logWorkoutTemplate,
+  backend.skipWorkoutTemplate,
+  backend.getWorkoutTemplate,
+  backend.notifyInactiveUsers,
+  backend.unsubscribeEmail,
+  backend.getSubscriptionStatus,
+  backend.createStripePortalSession,
+  backend.processStripeWebhook,
+  backend.buildExercise,
+  backend.buildWorkoutAnalysis,
+  backend.getExercises,
+  backend.getExerciseNames,
+  backend.getExercisesCount,
+  backend.createSharedProgram,
+  backend.getSharedProgram,
+  backend.getSharedPrograms,
+  backend.deleteSharedProgram,
+  backend.copySharedProgram,
+  backend.explainTerm,
+  backend.generateGreeting,
+];
+
+for (const fn of allBackendFunctions) {
+  const cfnFunction = fn.resources.lambda.node.defaultChild as CfnFunction;
+  cfnFunction.addPropertyOverride("Architectures", ["arm64"]);
+}
+
+console.info(
+  `✅ ARM64 (Graviton2) enabled for ${allBackendFunctions.length} Lambda functions`,
+);
+
+// ============================================================================
+// RESERVED CONCURRENCY — PROTECT CRITICAL FUNCTIONS
+// ============================================================================
+// Reserve concurrency for synchronous, user-facing functions to ensure they
+// always have execution slots available. Reserved concurrency is free and
+// guarantees slots from the account's 1000-concurrent-execution pool.
+// Total reserved: ~12 out of 1000 — minimal impact on pool availability.
+//
+// NOTE: Async functions (buildWorkout, buildProgram) are
+// intentionally excluded. ReservedConcurrentExecutions both guarantees AND
+// caps concurrency. Combined with retryAttempts: 0 on async Lambdas, a cap
+// causes throttled invocations to be permanently lost (no retries, no DLQ).
+// Async functions benefit from scaling naturally with demand via the default
+// unreserved concurrency pool.
+const reservedConcurrencyConfig: Array<{
+  fn: typeof backend.streamCoachConversation;
+  concurrency: number;
+}> = [
+  { fn: backend.streamCoachConversation, concurrency: 5 },
+  { fn: backend.sendCoachConversationMessage, concurrency: 3 },
+  { fn: backend.streamCoachCreatorSession, concurrency: 2 },
+  { fn: backend.streamProgramDesign, concurrency: 2 },
+];
+
+for (const { fn, concurrency } of reservedConcurrencyConfig) {
+  const cfnFunction = fn.resources.lambda.node.defaultChild as CfnFunction;
+  cfnFunction.addPropertyOverride("ReservedConcurrentExecutions", concurrency);
+}
+
+console.info(
+  `✅ Reserved concurrency configured for ${reservedConcurrencyConfig.length} critical functions`,
+);
 
 // Disable retries for stateful async generation functions
 // This prevents confusing double-runs on timeouts or errors.
@@ -315,6 +453,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getUserProfile.resources.lambda,
   backend.updateUserProfile.resources.lambda,
   backend.checkUserAvailability.resources.lambda,
+  backend.manageIdentityProviders.resources.lambda,
   backend.generateUploadUrls.resources.lambda,
   backend.generateDownloadUrls.resources.lambda,
   backend.createProgramDesignerSession.resources.lambda,
@@ -374,6 +513,14 @@ const branchName = branchInfo.isSandbox
   : branchInfo.branchName;
 
 // ============================================================================
+// COGNITO HOSTED UI DOMAIN
+// ============================================================================
+// Amplify automatically creates a Cognito domain when externalProviders (Google)
+// is configured in defineAuth(). No manual addDomain() call needed — adding one
+// causes a "duplicate domain" CloudFormation error since a User Pool can only
+// have one domain.
+
+// ============================================================================
 // CREATE SHARED IAM POLICIES
 // ============================================================================
 // This avoids the 20KB Lambda policy size limit by using managed policies
@@ -386,16 +533,29 @@ const sharedPolicies = new SharedPolicies(
   appsBucket.bucket.bucketArn,
 );
 
+// Per-group managed policies for functions in separate nested stacks.
+// These use wildcard/hardcoded ARNs to avoid cross-stack circular dependencies.
+const jobsPolicies = new StackGroupPolicies(
+  backend.buildWorkout.stack,
+  "jobs",
+  branchName,
+);
+const scheduledPolicies = new StackGroupPolicies(
+  backend.buildWeeklyAnalytics.stack,
+  "scheduled",
+  branchName,
+);
+
 // ============================================================================
 // PERMISSION GRANTS - Using Shared Managed Policies
 // ============================================================================
 
 // Functions needing DynamoDB READ/WRITE access
+// NOTE: Jobs/scheduled group functions use group-specific policies below
 [
   backend.contactForm,
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
-  backend.buildCoachConfig,
   backend.getCoachConfigs,
   backend.getCoachConfig,
   backend.updateCoachConfig,
@@ -418,35 +578,28 @@ const sharedPolicies = new SharedPolicies(
   backend.getProgramDesignerSessions,
   backend.deleteProgramDesignerSession,
   backend.deleteCoachConversation,
-  backend.buildWorkout,
-  backend.buildConversationSummary,
-  backend.buildLivingProfile,
-  backend.processPostTurn,
-  backend.dispatchMemoryLifecycle,
-  backend.processMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
   backend.deleteWorkout,
-  backend.buildWeeklyAnalytics,
-  backend.buildMonthlyAnalytics,
   backend.createMemory,
   backend.deleteMemory,
   backend.updateMemory,
   backend.updateUserProfile,
   backend.createProgram,
-  backend.buildProgram,
   backend.updateProgram,
   backend.deleteProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
-  backend.buildExercise,
-  backend.buildWorkoutAnalysis, // Needs READ for queryWorkouts(), WRITE for updateWorkout() with insights
   backend.createSharedProgram,
   backend.getSharedProgram, // Needs WRITE for incrementSharedProgramViews()
   backend.deleteSharedProgram,
   backend.copySharedProgram,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
+  // NOTE: Jobs group (buildCoachConfig, buildWorkout, buildProgram, buildExercise, buildWorkoutAnalysis,
+  //        buildConversationSummary, buildLivingProfile, processPostTurn) use jobsPolicies
+  // NOTE: Scheduled group (buildWeeklyAnalytics, buildMonthlyAnalytics, dispatchMemoryLifecycle,
+  //        processMemoryLifecycle, notifyInactiveUsers) use scheduledPolicies
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
 });
@@ -491,36 +644,25 @@ const sharedPolicies = new SharedPolicies(
 });
 
 // Functions needing DynamoDB READ/WRITE for user profile updates (but only read for everything else)
-// NOTE: notifyInactiveUsers needs write access to update preferences.lastSent.coachCheckIns
 // NOTE: unsubscribeEmail needs write access to update email preferences
-[backend.notifyInactiveUsers, backend.unsubscribeEmail].forEach((func) => {
+// NOTE: notifyInactiveUsers moved to scheduledPolicies
+[backend.unsubscribeEmail].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
 });
 
 // Functions needing BEDROCK access
+// NOTE: Jobs/scheduled group functions use group-specific policies below
 [
-  backend.createCoachCreatorSession, // Added: Needs Bedrock for generating initial AI message
+  backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.streamCoachCreatorSession,
-  backend.buildCoachConfig,
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamProgramDesign,
-  backend.buildWorkout, // Agent-based workout extraction with Bedrock
-  backend.buildProgram, // Agent-based program generation with Bedrock
-  backend.buildConversationSummary,
-  backend.buildLivingProfile,
-  backend.processPostTurn, // Needs Bedrock for analyze_complexity (Nova 2 Lite) + prospective memory extraction
-  backend.buildWeeklyAnalytics,
-  backend.buildMonthlyAnalytics,
-  backend.processMemoryLifecycle, // Needs Bedrock for memory compression (Nova 2 Lite)
   backend.createMemory,
-  backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
-  backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
-  backend.buildWorkoutAnalysis, // Needs Bedrock for post-workout AI insights (Haiku 4.5)
-  backend.explainTerm, // Added: Needs Bedrock for term explanations (Haiku 4.5)
-  backend.generateGreeting, // Added: Needs Bedrock for AI-generated dashboard greetings (Nova 2 Lite)
-  backend.warmupPlatform, // Pre-compiles Bedrock grammar caches every 12 hours
+  backend.logWorkoutTemplate,
+  backend.explainTerm,
+  backend.generateGreeting,
 ].forEach((func) => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
 });
@@ -623,8 +765,11 @@ const bedrockGuardrail = new CfnGuardrail(
 
 // Distribute guardrail ID to functions where user-controlled content flows into prompts
 // or where multi-turn agent loops allow model output to feed back as input.
-// Internal-only functions (summaries, analytics, memory lifecycle, etc.) are excluded —
-// their inputs are pre-sanitized system content and don't warrant the per-character guardrail cost.
+// Internal-only functions (analytics, etc.) are excluded — their inputs are pre-sanitized system content.
+// Jobs group functions (buildConversationSummary, buildLivingProfile, buildWorkout, etc.) are also
+// excluded as their primary inputs are pre-generated summaries and system-controlled data.
+// NOTE: processPostTurn receives user message content for complexity analysis and prospective memory
+// extraction, so it should receive guardrail protection.
 const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   // User-facing: direct user input flows into these prompts.
   // Streaming functions use ASYNC guardrail mode (content streams immediately,
@@ -636,6 +781,9 @@ const BEDROCK_FUNCTIONS_WITH_GUARDRAIL = [
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.explainTerm,
+  // NOTE: processPostTurn is handled separately below — it's in the jobs
+  // resourceGroupName stack, so passing the guardrail CDK token here would
+  // create a circular dependency (jobs→main + main→jobs).
 ];
 
 BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
@@ -643,31 +791,30 @@ BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
   func.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
 });
 
+// processPostTurn (jobs stack) receives the guardrail name as a plain string
+// instead of the CDK token ID, to avoid a cross-stack circular dependency.
+// The handler resolves the guardrail ID at runtime via ListGuardrails.
+backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_NAME", guardrailName);
+backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
+
 // Functions needing S3 DEBUG bucket access
+// NOTE: Jobs group debug functions (buildWorkout, buildCoachConfig, buildConversationSummary,
+//        buildLivingProfile, buildProgram) use jobsPolicies
 [
-  backend.buildWorkout, // Agent-based workout extraction with debug logging
-  backend.buildCoachConfig,
-  backend.buildConversationSummary,
-  backend.buildLivingProfile,
-  backend.buildProgram, // Agent-based program generation with debug logging
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.streamProgramDesign,
-  backend.logWorkoutTemplate, // Added: Stores scaling analysis debug info
+  backend.logWorkoutTemplate,
 ].forEach((func) => {
   sharedPolicies.attachS3DebugAccess(func.resources.lambda);
 });
 
 // Functions needing S3 ANALYTICS bucket access
-sharedPolicies.attachS3AnalyticsAccess(
-  backend.buildWeeklyAnalytics.resources.lambda,
-);
-sharedPolicies.attachS3AnalyticsAccess(
-  backend.buildMonthlyAnalytics.resources.lambda,
-);
+// NOTE: buildWeeklyAnalytics and buildMonthlyAnalytics moved to scheduledPolicies
 
 // Functions needing S3 APPS bucket access (for image storage and training programs)
+// NOTE: buildProgram and buildWorkout moved to jobsPolicies
 [
   backend.generateUploadUrls,
   backend.generateDownloadUrls,
@@ -677,9 +824,8 @@ sharedPolicies.attachS3AnalyticsAccess(
   backend.streamProgramDesign,
   backend.updateCoachCreatorSession,
   backend.createProgram,
-  backend.buildProgram, // Stores program details in S3
-  backend.buildWorkout, // Agent-based: also needs template.linkedWorkoutId update
   backend.getProgram,
+  backend.deleteProgram, // Needs access to S3 to hard-delete program details
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
@@ -695,9 +841,70 @@ sharedPolicies.attachS3AnalyticsAccess(
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
   backend.updateUserProfile,
   backend.checkUserAvailability,
+  backend.manageIdentityProviders,
 ].forEach((func) => {
   sharedPolicies.attachCognitoAdmin(func.resources.lambda);
 });
+
+// ============================================================================
+// PERMISSION GRANTS - Jobs Stack Group (async AI builders)
+// ============================================================================
+
+[
+  backend.buildCoachConfig,
+  backend.buildWorkout,
+  backend.buildProgram,
+  backend.buildExercise,
+  backend.buildWorkoutAnalysis,
+  backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.processPostTurn,
+].forEach((func) => {
+  jobsPolicies.attachDynamoDbReadWrite(func.resources.lambda);
+  jobsPolicies.attachBedrockAccess(func.resources.lambda);
+});
+
+[
+  backend.buildWorkout,
+  backend.buildCoachConfig,
+  backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.buildProgram,
+].forEach((func) => {
+  jobsPolicies.attachS3DebugAccess(func.resources.lambda);
+});
+
+jobsPolicies.attachS3AppsAccess(backend.buildProgram.resources.lambda);
+jobsPolicies.attachS3AppsAccess(backend.buildWorkout.resources.lambda);
+
+// ============================================================================
+// PERMISSION GRANTS - Scheduled Stack Group (cron/event-driven functions)
+// ============================================================================
+
+[
+  backend.buildWeeklyAnalytics,
+  backend.buildMonthlyAnalytics,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
+  backend.notifyInactiveUsers,
+].forEach((func) => {
+  scheduledPolicies.attachDynamoDbReadWrite(func.resources.lambda);
+});
+
+[
+  backend.buildWeeklyAnalytics,
+  backend.buildMonthlyAnalytics,
+  backend.processMemoryLifecycle,
+].forEach((func) => {
+  scheduledPolicies.attachBedrockAccess(func.resources.lambda);
+});
+
+scheduledPolicies.attachS3AnalyticsAccess(
+  backend.buildWeeklyAnalytics.resources.lambda,
+);
+scheduledPolicies.attachS3AnalyticsAccess(
+  backend.buildMonthlyAnalytics.resources.lambda,
+);
 
 // ============================================================================
 // SPECIAL CASE: postConfirmation (Auth Trigger)
@@ -890,7 +1097,7 @@ backend.forwardLogsToSns.addEnvironment(
 );
 backend.forwardLogsToSns.addEnvironment(
   "GOOGLE_CHAT_ERRORS_WEBHOOK_URL",
-  config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL,
+  secret("GOOGLE_CHAT_ERRORS_WEBHOOK_URL"),
 );
 
 // Grant permissions to sync Lambda
@@ -910,13 +1117,13 @@ backend.syncLogSubscriptions.resources.lambda.addToRolePolicy(
 // ENVIRONMENT VARIABLES
 // ============================================================================
 
-// Add environment variables to all functions
-// EXCLUDED: postConfirmation (circular dependency), forwardLogsToSns (utility function, doesn't need app resources), syncLogSubscriptions (utility function)
+// Add environment variables to all functions in the main function stack
+// EXCLUDED: postConfirmation (auth stack), forwardLogsToSns/syncLogSubscriptions (utility),
+//           jobs/scheduled group functions (use hardcoded base names to avoid cross-stack refs)
 const allFunctions = [
   backend.contactForm,
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
-  backend.buildCoachConfig,
   backend.getCoachConfigs,
   backend.getCoachConfig,
   backend.updateCoachConfig,
@@ -934,12 +1141,6 @@ const allFunctions = [
   backend.streamCoachCreatorSession,
   backend.streamProgramDesign,
   backend.createWorkout,
-  backend.buildWorkout,
-  backend.buildConversationSummary,
-  backend.buildLivingProfile,
-  backend.processPostTurn,
-  backend.dispatchMemoryLifecycle,
-  backend.processMemoryLifecycle,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
@@ -947,8 +1148,6 @@ const allFunctions = [
   backend.getWorkoutsCount,
   backend.getCoachConversationsCount,
   backend.getCoachConfigsCount,
-  backend.buildWeeklyAnalytics,
-  backend.buildMonthlyAnalytics,
   backend.getWeeklyReports,
   backend.getWeeklyReport,
   backend.getMonthlyReports,
@@ -965,9 +1164,10 @@ const allFunctions = [
   backend.getUserProfile,
   backend.updateUserProfile,
   backend.checkUserAvailability,
+  backend.manageIdentityProviders,
   backend.generateUploadUrls,
+  backend.generateDownloadUrls,
   backend.createProgram,
-  backend.buildProgram,
   backend.getProgram,
   backend.getPrograms,
   backend.updateProgram,
@@ -979,13 +1179,10 @@ const allFunctions = [
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
-  backend.notifyInactiveUsers,
   backend.unsubscribeEmail,
   backend.getSubscriptionStatus,
   backend.createStripePortalSession,
   backend.processStripeWebhook,
-  backend.buildExercise,
-  backend.buildWorkoutAnalysis,
   backend.getExercises,
   backend.getExerciseNames,
   backend.getExercisesCount,
@@ -996,13 +1193,11 @@ const allFunctions = [
   backend.copySharedProgram,
   backend.explainTerm,
   backend.generateGreeting,
-  backend.warmupPlatform,
-  // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 
 allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_TABLE_NAME", coreTable.table.tableName);
-  func.addEnvironment("PINECONE_API_KEY", config.PINECONE_API_KEY);
+  func.addEnvironment("PINECONE_API_KEY", secret("PINECONE_API_KEY"));
   func.addEnvironment("BRANCH_NAME", branchName);
 
   // DynamoDB throughput scaling configuration
@@ -1016,7 +1211,46 @@ allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
 });
 
-// Add apps bucket name to functions that need it
+// Environment variables for jobs/scheduled group functions.
+// Uses hardcoded base table name + branchName to avoid cross-stack CDK token refs.
+// Runtime code resolves the full table name via getTableName() fallback.
+const jobsAndScheduledFunctions = [
+  backend.buildCoachConfig,
+  backend.buildWorkout,
+  backend.buildProgram,
+  backend.buildExercise,
+  backend.buildWorkoutAnalysis,
+  backend.buildConversationSummary,
+  backend.buildLivingProfile,
+  backend.processPostTurn,
+  backend.buildWeeklyAnalytics,
+  backend.buildMonthlyAnalytics,
+  backend.dispatchMemoryLifecycle,
+  backend.processMemoryLifecycle,
+  backend.notifyInactiveUsers,
+];
+
+jobsAndScheduledFunctions.forEach((func) => {
+  func.addEnvironment(
+    "DYNAMODB_BASE_TABLE_NAME",
+    "NeonPanda-ProtoApi-AllItems-V2",
+  );
+  func.addEnvironment("BRANCH_NAME", branchName);
+  func.addEnvironment("PINECONE_API_KEY", secret("PINECONE_API_KEY"));
+
+  // DynamoDB throughput scaling configuration
+  func.addEnvironment("DYNAMODB_BASE_READ_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_BASE_WRITE_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_MAX_READ_CAPACITY", "100");
+  func.addEnvironment("DYNAMODB_MAX_WRITE_CAPACITY", "50");
+  func.addEnvironment("DYNAMODB_SCALE_UP_FACTOR", "2.0");
+  func.addEnvironment("DYNAMODB_MAX_RETRIES", "5");
+  func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
+  func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
+});
+
+// Add apps bucket name to functions that need it (main function stack)
+// NOTE: buildProgram and buildWorkout moved to jobs group with hardcoded bucket name
 [
   backend.generateUploadUrls,
   backend.generateDownloadUrls,
@@ -1026,9 +1260,8 @@ allFunctions.forEach((func) => {
   backend.streamProgramDesign,
   backend.updateCoachCreatorSession,
   backend.createProgram,
-  backend.buildProgram, // Needs access to S3 for program template storage
-  backend.buildWorkout, // Agent-based: also needs S3 for template updates
-  backend.deleteProgram, // Needs access to S3 to hard-delete workout templates
+  backend.getProgram,
+  backend.deleteProgram,
   backend.getWorkoutTemplate,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
@@ -1038,6 +1271,16 @@ allFunctions.forEach((func) => {
 ].forEach((func) => {
   func.addEnvironment("APPS_BUCKET_NAME", appsBucket.bucketName);
 });
+
+// Hardcoded apps bucket name for jobs group (avoids cross-stack CDK token ref)
+const appsBucketName = branchInfo.isSandbox
+  ? `midgard-apps-sandbox-${branchInfo.stackId}`
+  : branchInfo.branchName === "main"
+    ? "midgard-apps-main"
+    : `midgard-apps-${branchInfo.branchName}`;
+
+backend.buildProgram.addEnvironment("APPS_BUCKET_NAME", appsBucketName);
+backend.buildWorkout.addEnvironment("APPS_BUCKET_NAME", appsBucketName);
 
 // Add environment variables to sync Lambda
 // Log group naming patterns differ between sandbox and branch deployments:
@@ -1111,6 +1354,12 @@ backend.postConfirmation.addEnvironment("BRANCH_NAME", branchName);
 
 // Add USER_POOL_ID to checkUserAvailability function
 backend.checkUserAvailability.addEnvironment(
+  "USER_POOL_ID",
+  backend.auth.resources.userPool.userPoolId,
+);
+
+// Add USER_POOL_ID to manageIdentityProviders function
+backend.manageIdentityProviders.addEnvironment(
   "USER_POOL_ID",
   backend.auth.resources.userPool.userPoolId,
 );
@@ -1235,14 +1484,11 @@ backend.buildWorkout.addEnvironment(
 );
 
 // Stripe environment variables
-// NOTE: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, ELECTRICPANDA_PRICE_ID, EARLYPANDA_PRICE_ID
-// should be set in AWS Amplify Console or .env for local development
+// STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are managed as Amplify secrets.
+// ELECTRICPANDA_PRICE_ID and EARLYPANDA_PRICE_ID are non-sensitive price IDs set via env vars.
 [backend.createStripePortalSession, backend.processStripeWebhook].forEach(
   (func) => {
-    func.addEnvironment(
-      "STRIPE_SECRET_KEY",
-      process.env.STRIPE_SECRET_KEY || "",
-    );
+    func.addEnvironment("STRIPE_SECRET_KEY", secret("STRIPE_SECRET_KEY"));
     func.addEnvironment(
       "ELECTRICPANDA_PRICE_ID",
       process.env.ELECTRICPANDA_PRICE_ID || "",
@@ -1256,7 +1502,7 @@ backend.buildWorkout.addEnvironment(
 
 backend.processStripeWebhook.addEnvironment(
   "STRIPE_WEBHOOK_SECRET",
-  process.env.STRIPE_WEBHOOK_SECRET || "",
+  secret("STRIPE_WEBHOOK_SECRET"),
 );
 
 // Add SNS topic ARN to Stripe webhook function
@@ -1425,16 +1671,6 @@ const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
 
 console.info(
   "✅ User notification check scheduled (daily): inactivity + program adherence",
-);
-
-// Create EventBridge schedule for platform warmup (every 12 hours)
-const warmupPlatformSchedule = createWarmupPlatformSchedule(
-  backend.warmupPlatform.stack,
-  backend.warmupPlatform.resources.lambda,
-);
-
-console.info(
-  "✅ Platform warmup scheduled (every 12 hours): pre-compiles Bedrock grammar caches",
 );
 
 // Create EventBridge schedule for daily memory lifecycle (3am UTC)

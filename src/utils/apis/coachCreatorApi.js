@@ -1,6 +1,5 @@
-import { getApiUrl, authenticatedFetch, isStreamingEnabled } from './apiConfig';
-import { handleStreamingApiRequest } from './streamingApiHelper';
-import { streamCoachCreatorSessionLambda } from './streamingLambdaApi';
+import { getApiUrl, authenticatedFetch, isStreamingEnabled } from "./apiConfig";
+import { streamCoachCreatorSessionLambda } from "./streamingLambdaApi";
 import { logger } from "../logger";
 
 /**
@@ -13,9 +12,9 @@ import { logger } from "../logger";
  * @returns {Promise<Object>} - The API response with sessionId and initialMessage
  */
 export const createCoachCreatorSession = async (userId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions`;
+  const url = `${getApiUrl("")}/users/${userId}/coach-creator-sessions`;
   const response = await authenticatedFetch(url, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({}),
   });
 
@@ -36,11 +35,16 @@ export const createCoachCreatorSession = async (userId) => {
  * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
  * @returns {Promise<Object>} - The API response with aiResponse, isComplete, etc.
  */
-export const updateCoachCreatorSession = async (userId, sessionId, userResponse, imageS3Keys = []) => {
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`;
+export const updateCoachCreatorSession = async (
+  userId,
+  sessionId,
+  userResponse,
+  imageS3Keys = [],
+) => {
+  const url = `${getApiUrl("")}/users/${userId}/coach-creator-sessions/${sessionId}`;
   const requestBody = {
     userResponse,
-    messageTimestamp: new Date().toISOString() // Add timestamp for consistency
+    messageTimestamp: new Date().toISOString(), // Add timestamp for consistency
   };
 
   if (imageS3Keys && imageS3Keys.length > 0) {
@@ -48,7 +52,7 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse,
   }
 
   const response = await authenticatedFetch(url, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(requestBody),
   });
 
@@ -70,39 +74,23 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse,
  * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
  * @returns {AsyncGenerator} - Stream of response chunks
  */
-export async function* streamCoachCreatorSession(userId, sessionId, userResponse, imageS3Keys = []) {
-  // Try Lambda Function URL first if enabled
-  if (isStreamingEnabled('coachCreatorSession')) {
-    try {
-      yield* streamCoachCreatorSessionLambda(userId, sessionId, userResponse, imageS3Keys);
-      return; // Success - exit
-    } catch (lambdaError) {
-      logger.warn('⚠️ Lambda Function URL streaming failed, falling back to API Gateway:', lambdaError);
-      // Continue to API Gateway fallback
-    }
+export async function* streamCoachCreatorSession(
+  userId,
+  sessionId,
+  userResponse,
+  imageS3Keys = [],
+) {
+  if (!isStreamingEnabled("coachCreatorSession")) {
+    throw new Error("Streaming is not enabled for coach creator sessions");
   }
 
-  // Fallback to API Gateway streaming (existing code)
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}?stream=true`;
-  const requestBody = {
+  logger.info("🚀 Streaming coach creator session via Lambda Function URL");
+  yield* streamCoachCreatorSessionLambda(
+    userId,
+    sessionId,
     userResponse,
-    messageTimestamp: new Date().toISOString()
-  };
-
-  if (imageS3Keys && imageS3Keys.length > 0) {
-    requestBody.imageS3Keys = imageS3Keys;
-  }
-
-  yield* handleStreamingApiRequest(url, requestBody, {
-    method: 'PUT',
-    fallbackFunction: updateCoachCreatorSession,
-    fallbackParams: [userId, sessionId, userResponse, imageS3Keys],
-    operationName: 'coach creator session update',
-    errorMessages: {
-      notFound: 'Session not found or expired',
-      serviceUnavailable: 'Service temporarily unavailable - request took too long'
-    }
-  });
+    imageS3Keys,
+  );
 }
 
 /**
@@ -112,14 +100,14 @@ export async function* streamCoachCreatorSession(userId, sessionId, userResponse
  * @returns {Promise<Object>} - The session data with conversation history
  */
 export const getCoachCreatorSession = async (userId, sessionId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`;
+  const url = `${getApiUrl("")}/users/${userId}/coach-creator-sessions/${sessionId}`;
   const response = await authenticatedFetch(url, {
-    method: 'GET',
+    method: "GET",
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Session not found or expired');
+      throw new Error("Session not found or expired");
     }
     throw new Error(`API Error: ${response.status}`);
   }
@@ -138,27 +126,29 @@ export const getCoachCreatorSession = async (userId, sessionId) => {
  * @returns {Promise<Object>} - Array of session summaries
  */
 export const getCoachCreatorSessions = async (userId, options = {}) => {
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions`;
+  const url = `${getApiUrl("")}/users/${userId}/coach-creator-sessions`;
 
   // Build query parameters
   const queryParams = new URLSearchParams();
   if (options.isComplete !== undefined) {
-    queryParams.set('isComplete', options.isComplete.toString());
+    queryParams.set("isComplete", options.isComplete.toString());
   }
   if (options.limit) {
-    queryParams.set('limit', options.limit.toString());
+    queryParams.set("limit", options.limit.toString());
   }
   if (options.sortBy) {
-    queryParams.set('sortBy', options.sortBy);
+    queryParams.set("sortBy", options.sortBy);
   }
   if (options.sortOrder) {
-    queryParams.set('sortOrder', options.sortOrder);
+    queryParams.set("sortOrder", options.sortOrder);
   }
 
-  const fullUrl = queryParams.toString() ? `${url}?${queryParams.toString()}` : url;
+  const fullUrl = queryParams.toString()
+    ? `${url}?${queryParams.toString()}`
+    : url;
 
   const response = await authenticatedFetch(fullUrl, {
-    method: 'GET',
+    method: "GET",
   });
 
   if (!response.ok) {
@@ -176,14 +166,14 @@ export const getCoachCreatorSessions = async (userId, options = {}) => {
  * @returns {Promise<Object>} - The API response confirming deletion
  */
 export const deleteCoachCreatorSession = async (userId, sessionId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`;
+  const url = `${getApiUrl("")}/users/${userId}/coach-creator-sessions/${sessionId}`;
   const response = await authenticatedFetch(url, {
-    method: 'DELETE',
+    method: "DELETE",
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Coach creator session not found');
+      throw new Error("Coach creator session not found");
     }
     throw new Error(`API Error: ${response.status}`);
   }
@@ -200,14 +190,14 @@ export const deleteCoachCreatorSession = async (userId, sessionId) => {
  * @returns {Promise<Object>} - The status response with status, message, and optional error
  */
 export const getCoachConfigStatus = async (userId, sessionId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}/config-status`;
+  const url = `${getApiUrl("")}/users/${userId}/coach-creator-sessions/${sessionId}/config-status`;
   const response = await authenticatedFetch(url, {
-    method: 'GET',
+    method: "GET",
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
     throw new Error(`API Error: ${response.status}`);
   }
@@ -215,4 +205,3 @@ export const getCoachConfigStatus = async (userId, sessionId) => {
   const result = await response.json();
   return result;
 };
-

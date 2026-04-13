@@ -4,7 +4,6 @@ import {
   isStreamingEnabled,
   requireValidUserId,
 } from "./apiConfig";
-import { handleStreamingApiRequest } from "./streamingApiHelper";
 import { streamCoachConversationLambda } from "./streamingLambdaApi";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
 import { logger } from "../logger";
@@ -173,62 +172,19 @@ export async function* streamCoachConversation(
   imageS3Keys = [],
   editContext = null,
 ) {
-  // Try Lambda Function URL first if enabled
-  if (isStreamingEnabled("coachConversation")) {
-    try {
-      logger.info(
-        "🚀 Attempting Lambda Function URL streaming for coach conversation",
-      );
-      yield* streamCoachConversationLambda(
-        userId,
-        coachId,
-        conversationId,
-        userResponse,
-        imageS3Keys,
-        editContext,
-      );
-      return; // Success - exit
-    } catch (lambdaError) {
-      logger.error(
-        "❌ Lambda Function URL streaming failed (fallback DISABLED for debugging):",
-        lambdaError,
-      );
-      // TEMPORARY: Disable fallback to isolate Lambda streaming issues
-      throw new Error(`Lambda streaming failed: ${lambdaError.message}`);
-    }
+  if (!isStreamingEnabled("coachConversation")) {
+    throw new Error("Streaming is not enabled for coach conversations");
   }
 
-  // FALLBACK DISABLED FOR DEBUGGING - this code won't execute while debugging Lambda streaming
-  // Fallback to API Gateway streaming
-  logger.info("🔄 Using API Gateway fallback for coach conversation streaming");
-  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message?stream=true`;
-  const requestBody = {
+  logger.info("🚀 Streaming coach conversation via Lambda Function URL");
+  yield* streamCoachConversationLambda(
+    userId,
+    coachId,
+    conversationId,
     userResponse,
-    messageTimestamp: new Date().toISOString(),
-  };
-
-  // Add imageS3Keys if present
-  if (imageS3Keys && imageS3Keys.length > 0) {
-    requestBody.imageS3Keys = imageS3Keys;
-  }
-
-  yield* handleStreamingApiRequest(url, requestBody, {
-    method: "POST",
-    fallbackFunction: sendCoachConversationMessage,
-    fallbackParams: [
-      userId,
-      coachId,
-      conversationId,
-      userResponse,
-      imageS3Keys,
-    ],
-    operationName: "coach conversation message",
-    errorMessages: {
-      notFound: "Conversation not found",
-      serviceUnavailable:
-        "Service temporarily unavailable - request took too long",
-    },
-  });
+    imageS3Keys,
+    editContext,
+  );
 }
 
 /**

@@ -16,9 +16,7 @@ This document defines the architectural strategy for Bedrock structured output e
 
 **Used for**: Small, agentic tool schemas (classify, detect, select, validate) where schema sizes are well within the 24 optional parameter limit.
 
-**Pre-warmed in**: `warmup-platform/handler.ts` (`WARMUP_SCHEMAS` registry, ~32 entries)
-
-**Auto-enabled via**: `buildToolConfig()` in `api-helpers.ts` — any single-tool call to a Claude model with `strictSchema` not explicitly set to `false` automatically gets `strict: true`.
+**Enforcement**: Schema compliance enforced client-side via ajv validation in `extractToolUseResult()`. Server-side strict mode was removed for broader model compatibility.
 
 ---
 
@@ -29,8 +27,6 @@ This document defines the architectural strategy for Bedrock structured output e
 **Cache**: Same 24-hour grammar cache, same compilation engine as Tier 1.
 
 **Used for**: Moderate-sized data extraction schemas that fit within Bedrock's grammar limits.
-
-**Pre-warmed in**: `warmup-platform/handler.ts` (`JSON_OUTPUT_WARMUP_SCHEMAS` registry, 2 entries)
 
 **Called via**: `callBedrockApiWithJsonOutput` / `callBedrockApiMultimodalWithJsonOutput` in `api-helpers.ts`
 
@@ -60,7 +56,7 @@ Both Tier 1 (strict tool use) and Tier 2 (JSON output format) share the **same c
 | Cache duration              | 24 hours per account                                             |
 | Cache invalidation trigger  | Structural schema changes only                                   |
 
-These limits were confirmed empirically in warmup testing. Both `normalize_workout` (230 optional params) and `extract_workout_info` (grammar compilation timeout) failed under Tier 2 with identical errors to Tier 1.
+These limits were confirmed empirically. Both `normalize_workout` (230 optional params) and `extract_workout_info` (grammar compilation timeout) failed under Tier 2 with identical errors to Tier 1.
 
 **Critical finding — structural timeout:** The 24 optional parameter limit is necessary but **not sufficient**. Schemas with many optional _objects_ at the top level (each containing nested enum fields) cause combinatorial grammar explosion even when the total param count is under 24. For `N` optional top-level objects the compiler evaluates `2^N` presence/absence combinations × internal enum cardinality. At N=22, that is ~4 million paths before accounting for nested structure — enough to time out a 3-minute Lambda. This affects `extract_coach_creator_info` (22 objects), `extract_workout_info` (~22 objects), and `extract_program_info` (~24 objects) identically.
 
@@ -107,7 +103,7 @@ These limits were confirmed empirically in warmup testing. Both `normalize_worko
 | `extract_workout_data`            | `workout-logger-tool-schemas.ts`      | Haiku        | workout data extraction           |
 | `validate_workout_completeness`   | `workout-logger-tool-schemas.ts`      | Haiku        | workout completeness validation   |
 | `select_days_to_remove`           | `program-designer-tool-schemas.ts`    | Sonnet       | day removal selection             |
-| `fixed_prompt_output`             | inline in warmup-platform/handler.ts  | Haiku        | prompt fixing                     |
+| `fixed_prompt_output`             | `coach-creator-tool-schemas.ts`       | Haiku        | prompt fixing                     |
 
 ### Tier 2 — JSON Schema Output Format (pre-warmed, 2 schemas)
 
@@ -197,7 +193,7 @@ Bedrock calls (normalization, extraction, tool use) always reference the lean `{
 
 If any of the following conditions change, the exempted schemas should be re-evaluated:
 
-1. **Bedrock fixes structural complexity handling** — `extract_workout_info`, `extract_program_info`, and `extract_coach_creator_info` all time out due to optional-object grammar explosion, not param count. If the compiler handles this more efficiently, all three could be re-enabled by simply re-adding them to the warmup registry.
+1. **Bedrock fixes structural complexity handling** — `extract_workout_info`, `extract_program_info`, and `extract_coach_creator_info` all time out due to optional-object grammar explosion, not param count. If the compiler handles this more efficiently, all three could potentially use Tier 2.
 2. **Bedrock resolves grammar size inconsistency** — `generate_coach_config` compiled successfully then regressed. If Bedrock stabilises the grammar size limit, this schema can be moved back to Tier 2.
 3. **Workout schema is refactored** to reduce optional fields — if `WORKOUT_SCHEMA` is simplified, `normalize_workout` (currently ~80 optional params after discipline composition) could eventually become Tier 2 eligible.
 4. **Schema flattening** — replacing `{value: string, confidence: enum}` objects with flat scalar pairs (e.g., `primaryGoalsValue` + `primaryGoalsConfidence`) would eliminate the optional-object grammar explosion for the 3 extraction schemas, potentially allowing them to compile. This is a non-trivial refactor touching TypeScript types, extraction logic, and to-do list utilities.
@@ -211,5 +207,4 @@ To check current optional param count on any schema, count the properties that a
 
 - AWS Bedrock Structured Outputs docs: https://docs.aws.amazon.com/bedrock/latest/userguide/structured-output.html
 - AWS blog post: https://aws.amazon.com/blogs/machine-learning/structured-outputs-on-amazon-bedrock-schema-compliant-ai-responses/
-- Warmup implementation: `amplify/functions/warmup-platform/handler.ts`
 - API helpers: `amplify/functions/libs/api-helpers.ts` (`callBedrockApiWithJsonOutput`, `callBedrockApi`)

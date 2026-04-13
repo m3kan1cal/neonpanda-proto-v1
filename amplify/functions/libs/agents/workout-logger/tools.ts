@@ -37,6 +37,7 @@ import {
   classifyWorkoutCharacteristics,
   generateWorkoutSummary,
   applyPerformanceMetricDefaults,
+  checkDuplicateWorkout,
   type UniversalWorkoutSchema,
   type WorkoutCharacteristics,
 } from "../../workout";
@@ -1262,6 +1263,33 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       workoutName: workoutData.workout_name,
       confidence,
     });
+
+    // Idempotency check: verify no workout already exists for
+    // this conversationId + completedAt date combination.
+    const completedAtDateOnly = completedAtDate.toISOString().split("T")[0];
+    const duplicate = await checkDuplicateWorkout(
+      context.userId,
+      context.conversationId,
+      completedAtDate,
+    );
+    if (duplicate) {
+      logger.warn(
+        "⚠️ save_workout_to_database skipped — duplicate workout exists",
+        {
+          conversationId: context.conversationId,
+          completedAt: completedAtDateOnly,
+          existingWorkoutId: duplicate.workoutId,
+          attemptedWorkoutId: workout.workoutId,
+        },
+      );
+      return {
+        workoutId: duplicate.workoutId,
+        success: true,
+        duplicate: true,
+        message:
+          "A workout for this session already exists — skipped duplicate save.",
+      } as any;
+    }
 
     // Save to DynamoDB
     await saveWorkout(workout);

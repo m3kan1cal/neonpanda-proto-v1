@@ -685,6 +685,27 @@ const authenticatedStreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
+  // Guard: reject non-streaming invocations (e.g., manual console Invoke).
+  // streamifyResponse expects the runtime to provide an HttpResponseStream with
+  // setContentType, but non-streaming dispatch paths provide a plain object.
+  if (typeof responseStream?.setContentType !== "function") {
+    logger.error(
+      "Non-streaming invocation detected for streaming handler. " +
+        "This function must be invoked via Function URL with RESPONSE_STREAM mode.",
+      { rawPath: event.rawPath, method: event.requestContext?.http?.method },
+    );
+    if (responseStream?.write) {
+      responseStream.write(
+        JSON.stringify({
+          statusCode: 500,
+          body: "This endpoint requires streaming invocation via Function URL",
+        }),
+      );
+      responseStream.end();
+    }
+    return;
+  }
+
   // Set streaming headers (CORS headers are handled by Lambda Function URL CORS config)
   responseStream = awslambda.HttpResponseStream.from(responseStream, {
     statusCode: 200,
@@ -744,9 +765,6 @@ logger.info(
 );
 
 /* global awslambda */
-let handler: any;
-
-// Check if awslambda global is available and has streamifyResponse
 if (
   typeof awslambda === "undefined" ||
   typeof awslambda.streamifyResponse !== "function"
@@ -758,6 +776,6 @@ if (
 }
 
 logger.info("✅ Using awslambda.streamifyResponse for streaming mode");
-handler = awslambda.streamifyResponse(authenticatedStreamingHandler);
-
-export { handler };
+export const handler = awslambda.streamifyResponse(
+  authenticatedStreamingHandler,
+);

@@ -15,7 +15,9 @@ import {
   InvokeCommand,
   InvocationType,
 } from "@aws-sdk/client-lambda";
-import { Pinecone } from "@pinecone-database/pinecone";
+// Pinecone SDK is loaded lazily in getPineconeClient() to avoid cold start
+// overhead for the ~79 functions that import api-helpers but never use Pinecone.
+import type { Pinecone } from "@pinecone-database/pinecone";
 import { getEnhancedMethodologyContext } from "./pinecone-utils";
 import { putObject } from "./s3-utils";
 import {
@@ -138,9 +140,68 @@ export class GuardrailInterventionError extends Error {
 }
 
 // Create Bedrock Runtime client
+// standard retry mode uses exponential backoff with full jitter, which is more appropriate
+// than the legacy mode's minimal backoff for transient 503/429 errors from Bedrock.
 const bedrockClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-west-2",
+  retryMode: "standard",
+  maxAttempts: 5,
 });
+
+const TRANSIENT_BEDROCK_ERROR_NAMES = new Set([
+  "ServiceUnavailableException",
+  "ThrottlingException",
+  "RequestLimitExceeded",
+  "TooManyRequestsException",
+  "ProvisionedThroughputExceededException",
+]);
+
+const isTransientBedrockError = (error: any): boolean => {
+  return (
+    TRANSIENT_BEDROCK_ERROR_NAMES.has(error?.name) ||
+    error?.$metadata?.httpStatusCode === 503 ||
+    error?.$metadata?.httpStatusCode === 429
+  );
+};
+
+/**
+ * Application-level retry wrapper for Bedrock send() calls.
+ *
+ * The SDK-level retry (maxAttempts: 5) handles short-lived transient blips.
+ * This wrapper handles the case where the SDK exhausts all its retries and still
+ * receives a transient error (e.g., sustained 503 burst). It waits substantially
+ * longer between app-level attempts to allow Bedrock to recover.
+ *
+ * Total retry budget: up to 4 app-level attempts × SDK maxAttempts 5 = 20 Bedrock calls.
+ * App-level delays: ~2s, ~4s, ~8s (exponential with ±30% jitter).
+ */
+const withBedrockRetry = async <T>(
+  fn: () => Promise<T>,
+  label: string = "Bedrock call",
+  maxAppRetries: number = 3,
+  baseDelayMs: number = 2000,
+): Promise<T> => {
+  let lastError: any;
+  for (let attempt = 0; attempt <= maxAppRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const isTransient = isTransientBedrockError(error);
+      if (attempt < maxAppRetries && isTransient) {
+        const jitter = 1 + (Math.random() * 0.6 - 0.3); // ±30%
+        const delay = baseDelayMs * Math.pow(2, attempt) * jitter;
+        logger.warn(
+          `[withBedrockRetry] ${label} - transient error on app attempt ${attempt + 1}/${maxAppRetries + 1} (${error.name}), retrying in ${Math.round(delay)}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw lastError;
+};
 
 type GuardrailConfig = {
   guardrailIdentifier: string;
@@ -200,9 +261,7 @@ const lambdaClient = new LambdaClient({
 
 // Pinecone configuration
 const PINECONE_INDEX_NAME = "coach-creator-proto-v1-dev";
-const PINECONE_API_KEY =
-  process.env.PINECONE_API_KEY ||
-  "pcsk_4tHp6N_MUauyYPRhqQjDZ9qyrWwe4nD7gRXuPz66SnbtkbAUQdUqkCfmcmzbAJfhYKSsyC";
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 
 // Debug: Log Pinecone configuration at module load
 logger.info("🔧 PINECONE_API_KEY validation:", {
@@ -891,7 +950,7 @@ export function extractToolUseResult(
     );
   }
 
-  // Fix double-encoded properties returned by Bedrock (strings that should be objects/arrays)
+  // Fix any remaining double-encoded properties (deep/nested cases)
   result.input = fixDoubleEncodedProperties(result.input);
 
   logger.info("✅ extractToolUseResult SUCCESS:", {
@@ -1175,7 +1234,10 @@ export const callBedrockApi = async (
     try {
       logger.info("Starting Bedrock API call..");
 
-      response = await bedrockClient.send(command);
+      response = await withBedrockRetry(
+        () => bedrockClient.send(command),
+        "callBedrockApi",
+      );
 
       clearInterval(heartbeatInterval);
       logger.info("bedrockClient.send() completed successfully");
@@ -1609,7 +1671,10 @@ export const callBedrockApiMultimodal = async (
 
     logger.info("Multimodal converse command created successfully..");
 
-    const response = await bedrockClient.send(command);
+    const response = await withBedrockRetry(
+      () => bedrockClient.send(command),
+      "callBedrockApiMultimodal",
+    );
 
     logger.info("Response received from Bedrock");
     logger.info("Response metadata:", response.$metadata);
@@ -1822,7 +1887,10 @@ export const callBedrockApiWithJsonOutput = async (
 
     let response;
     try {
-      response = await bedrockClient.send(command);
+      response = await withBedrockRetry(
+        () => bedrockClient.send(command),
+        "callBedrockApiWithJsonOutput",
+      );
       clearInterval(heartbeatInterval);
     } catch (sendError) {
       clearInterval(heartbeatInterval);
@@ -1941,7 +2009,10 @@ export const callBedrockApiMultimodalWithJsonOutput = async (
       }),
     });
 
-    const response = await bedrockClient.send(command);
+    const response = await withBedrockRetry(
+      () => bedrockClient.send(command),
+      "callBedrockApiMultimodalWithJsonOutput",
+    );
 
     if (response.usage) {
       logCachePerformance(response.usage, "Multimodal JSON Output API");
@@ -2627,15 +2698,36 @@ export const callBedrockApiMultimodalStream = async (
   }
 };
 
-// Pinecone client initialization helper
+// Pinecone client initialization helper — lazy-loaded and cached at module level.
+// The SDK is dynamically imported on first use so that the ~79 functions importing
+// api-helpers that never use Pinecone don't pay the cold start cost of loading it.
+// Once loaded, the client and index are reused across invocations within the same
+// Lambda execution environment, matching the singleton pattern used for AWS SDK clients.
+let cachedPineconeClient: Pinecone | null = null;
+let cachedPineconeIndex: ReturnType<Pinecone["index"]> | null = null;
+
 export const getPineconeClient = async () => {
-  const pc = new Pinecone({
-    apiKey: PINECONE_API_KEY,
-  });
+  if (!cachedPineconeClient) {
+    if (!PINECONE_API_KEY) {
+      throw new Error(
+        "PINECONE_API_KEY environment variable is not set. " +
+          "Ensure the function is listed in the allFunctions array in backend.ts " +
+          "to receive environment variable configuration.",
+      );
+    }
+    const { Pinecone: PineconeClass } =
+      await import("@pinecone-database/pinecone");
+    const client = new PineconeClass({
+      apiKey: PINECONE_API_KEY,
+    });
+    const index = client.index(PINECONE_INDEX_NAME);
+    cachedPineconeClient = client;
+    cachedPineconeIndex = index;
+  }
 
   return {
-    client: pc,
-    index: pc.index(PINECONE_INDEX_NAME),
+    client: cachedPineconeClient,
+    index: cachedPineconeIndex!,
   };
 };
 

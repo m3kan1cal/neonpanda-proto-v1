@@ -6,14 +6,14 @@ import { avatarPatterns, streamingPatterns } from "./uiPatterns";
 import { logger } from "../logger";
 
 /**
- * Handles message sending with streaming first, fallback to non-streaming
- * @param {Object} agent - The agent instance (CoachConversationAgent or CoachCreatorAgent)
+ * Sends a message via the streaming agent
+ * @param {Object} agent - The agent instance (CoachConversationAgent, CoachCreatorAgent, or ProgramDesignerAgent)
  * @param {string} messageContent - The message to send
  * @param {string[]} imageS3Keys - Optional array of S3 keys for images
  * @param {Object} options - Configuration options
  * @param {Function} options.onStreamingStart - Called when streaming starts
  * @param {Function} options.onStreamingError - Called if streaming fails
- * @param {boolean} options.enableStreaming - Whether to use streaming (default: true)
+ * @param {Object} options.editContext - Optional edit context for workout_edit mode
  * @returns {Promise} - Result from sending the message
  */
 export async function sendMessageWithStreaming(
@@ -25,10 +25,9 @@ export async function sendMessageWithStreaming(
   const {
     onStreamingStart = () => {},
     onStreamingError = () => {},
-    enableStreaming = true,
+    editContext = null,
   } = options;
 
-  // Allow sending if there's text OR images
   if (
     !agent ||
     (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0))
@@ -36,26 +35,18 @@ export async function sendMessageWithStreaming(
     return;
   }
 
-  // Try streaming first if enabled
-  if (enableStreaming && agent.sendMessageStream) {
-    try {
-      onStreamingStart();
-      return await agent.sendMessageStream(messageContent, imageS3Keys);
-    } catch (streamingError) {
-      logger.warn(
-        "⚠️ Streaming failed, falling back to non-streaming:",
-        streamingError,
-      );
-      onStreamingError(streamingError);
-
-      // DON'T call sendMessage here - it would create duplicate messages!
-      // The streaming method should handle its own fallback internally
-      throw streamingError; // Re-throw to let the caller handle the error
-    }
+  try {
+    onStreamingStart();
+    return await agent.sendMessageStream(
+      messageContent,
+      imageS3Keys,
+      editContext,
+    );
+  } catch (streamingError) {
+    logger.warn("Streaming failed:", streamingError);
+    onStreamingError(streamingError);
+    throw streamingError;
   }
-
-  // Use non-streaming directly
-  return await agent.sendMessage(messageContent, imageS3Keys);
 }
 
 /**

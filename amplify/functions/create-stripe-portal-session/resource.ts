@@ -7,5 +7,5 @@ export const createStripePortalSession = defineFunction({
   entry: "./handler.ts",
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 30,
-  memoryMB: 512,
+  memoryMB: 1024, // Increased from 512: user-facing, faster cold starts with more CPU
 });

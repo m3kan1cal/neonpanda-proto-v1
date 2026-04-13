@@ -6,122 +6,132 @@ Please respond in a professional, measured tone without excessive enthusiasm or 
 
 ## Stack
 
-- **Backend**: AWS Amplify Gen 2, Lambda (TypeScript), API Gateway v2, DynamoDB, S3, Bedrock (Claude Sonnet 4.5)
-- **Frontend**: React 18, Vite, Tailwind CSS, Agent-based state management
-- **AI**: Pinecone for semantic search, Claude for coaching and generation
+- **Backend**: AWS Amplify Gen 2, Lambda (TypeScript), API Gateway v2, DynamoDB, S3, Bedrock, Stripe
+- **Frontend**: React 19, Vite 7, Tailwind CSS v4, JavaScript/JSX (not TypeScript)
+- **AI**: Tiered Bedrock models (Sonnet for planning, Haiku for execution/contextual, Nova for utility), Pinecone for semantic search and reranking
 
 ## Code Style
 
-- Use TypeScript for all backend code
+- Use TypeScript for all backend code; frontend is JavaScript/JSX
 - Use camelCase for all identifiers except constants (e.g., `convertUtcToUserDate` not `convertUTCToUserDate`, `itemWithGsi` not `itemWithGSI`)
 - Use full descriptive names, avoid abbreviations (e.g., `queryPrograms()` not `queryTPs()`)
-- Use full entity names consistently (e.g., `Program`, `ProgramPhase`, `isProgramActive()` not `Program`, `ProgramPhase`, `isProgramActive()`)
-- Entity IDs follow pattern: `${entityType}_${userId}_${timestamp}_${shortId}` (user-scoped, not coach-scoped)
+- Use full entity names consistently (e.g., `Program`, `ProgramPhase`, `isProgramActive()`)
+- Entity IDs follow pattern: `${entityType}_${userId}_${timestamp}_${shortId}` via `generateEntityId()` in `libs/id-utils.ts`
 - Use constants for string literals (e.g., `CONVERSATION_MODES.PROGRAM_DESIGN` not `'build'`, `MESSAGE_TYPES.TEXT_WITH_IMAGES` not `'text_with_images'`)
 
 ## Architecture
 
 ### DynamoDB
 
-- Single-table design with partition key `pk: user#userId` and sort key `sk: entity_type#entityId`
+- Single-table design with `pk: user#userId`, `sk: entity_type#entityId`, three GSIs (`gsi1`, `gsi2`, `gsi3`)
 - Always use `withThroughputScaling()` wrapper for all operations
 - Always use `ConditionExpression: "attribute_exists(pk)"` for updates/deletes
-- Use `deepMerge()` utility for partial updates
+- Use `deepMerge()` from `libs/object-utils.ts` for partial updates
+- All operations barrel-exported from `amplify/dynamodb/operations.ts`
 
 ### S3
 
 - Use centralized utilities from `libs/s3-utils.ts` (never create new S3 client instances)
-- Key structure: `programs/{userId}/{programId}/details.json`, `workouts/{userId}/{workoutId}.json`
+- Key patterns: `programs/{userId}/{programId}_${timestamp}.json`, `sharedPrograms/{creatorUserId}/{sharedProgramId}_${timestamp}.json`, `user-uploads/{userId}/...`
+- Workouts are DynamoDB-first (no S3 key pattern)
 
 ### AI & Bedrock
 
-- Use `callBedrockApi()` helper from `libs/api-helpers.ts`
+- Tiered model strategy defined in `MODEL_IDS` within `libs/api-helpers.ts`: planner (Sonnet), executor/contextual (Haiku), utility (Nova)
+- Use `callBedrockApi()` / `callBedrockApiStream()` helpers from `libs/api-helpers.ts`
 - Always use `parseJsonWithFallbacks()` for AI-generated JSON (never `JSON.parse()` directly)
-- Always normalize AI-generated complex data (workouts, training programs) using AI normalization utilities
-- Use `buildCoachPersonalityPrompt()` from `libs/coach-config/personality-utils.ts` for consistent personality integration
+- Always normalize AI-generated complex data (workouts, programs) using domain normalization utilities
+- Use `buildCoachPersonalityPrompt()` from `libs/coach-config/personality-utils.ts` for consistent personality
+- Use `sanitizeUserContent()` / `wrapUserContent()` from `libs/security/prompt-sanitizer.ts` for prompt injection safety
+- Bedrock Guardrails applied via Converse API (lazy-loaded guardrail ID/version)
+
+### Backend Agents
+
+The AI coaching system uses a ReAct-style agent architecture in `amplify/functions/libs/agents/`:
+
+- **`core/agent.ts`**: Non-streaming `Agent` class with tool loop via `callBedrockApiForAgent`
+- **`core/streaming-agent.ts`**: `StreamingConversationAgent<TContext>` — main streaming agent with SSE output
+- **Domain agents**: `conversation/` (main coach chat), `coach-creator/`, `program-designer/`, `workout-logger/`, `workout-editor/`
+- Each agent has `agent.ts`, `tools.ts`, `prompts.ts`, and `helpers.ts`
+- Conversation agent uses Haiku by default, upgrades to Sonnet for long threads (>40 messages) or image input
+- Agents invoke async Lambdas for heavy work (e.g., `build-workout`, `build-program`)
 
 ### Lambda Functions
 
-- Async handlers (invoked via `invokeAsyncLambda`): `build-workout`, `build-program`, `build-conversation-summary`
-- Sync handlers (API Gateway): `stream-coach-conversation`, CRUD operations
+- **Streaming (Function URLs)**: `stream-coach-conversation`, `stream-coach-creator-session`, `stream-program-designer-session` — response-stream mode with SSE
+- **Async (invoked via `invokeAsyncLambda`)**: `build-workout`, `build-program`, `build-coach-config`, `build-exercise`, `build-workout-analysis`, `build-conversation-summary`, `build-living-profile`, `process-post-turn`, `dispatch-memory-lifecycle`, `process-memory-lifecycle`
+- **Scheduled (EventBridge)**: `build-weekly-analytics`, `build-monthly-analytics`, `notify-inactive-users`, `sync-log-subscriptions`
+- **Sync (API Gateway)**: CRUD operations for all entities
 - Use typed event interfaces for async lambdas
 - Use `createOkResponse()` and `createErrorResponse()` helpers
 
+### Post-Turn Pipeline
+
+After each streaming conversation turn, `process-post-turn` orchestrates follow-up work: conversation summary generation, living profile updates, memory lifecycle dispatching. This keeps the streaming response fast while deferring heavy processing.
+
 ### Frontend
 
-- Use Agent pattern for state management (in `src/utils/agents/`)
-- Use `uiPatterns.js` for consistent styling
-- Store mode in message metadata for historical accuracy
-- **Async in useEffect**: Always pass `AbortSignal` to fetch calls to properly cancel requests on unmount (React Strict Mode). See `docs/strategy/REACT_PATTERNS.md` for the full pattern.
-- Reference implementation: `src/components/shared-programs/ShareProgramModal.jsx`
+- JavaScript/JSX (not TypeScript); ESLint configured for `*.{js,jsx}`
+- Tailwind CSS v4 — theme defined in `src/index.css` via `@theme` block (no separate `tailwind.config.js`)
+- Agent pattern for state management in `src/utils/agents/` — plain JS classes holding `this.state`, updated via `_updateState`, React subscribes via `onStateChange` callback
+- UI design system in `src/utils/ui/uiPatterns.js` — Tailwind class string constants for buttons, forms, containers, etc.
+- API layer in `src/utils/apis/` — `authenticatedFetch` wraps `fetch` with Cognito auth headers, domain modules per entity
+- React Router v7 (`react-router-dom`) with `BrowserRouter` in `src/App.jsx`
+- **Async in useEffect**: Always pass `AbortSignal` to fetch calls to cancel on unmount (React StrictMode). See `docs/strategy/REACT_PATTERNS.md`.
 
 ## Critical Patterns
 
 ### Timezone Handling
 
-- Always use `getUserTimezoneOrDefault()` (defaults to `America/Los_Angeles`)
+- Always use `getUserTimezoneOrDefault()` from `libs/analytics/date-utils.ts` (defaults to `America/Los_Angeles`)
 - Never use server UTC time for user-facing dates
 
 ### Pinecone Integration
 
-- Store AI-generated summaries for all major entities (workouts, training programs, memories)
-- Use pattern: generate summary → store in Pinecone with rich metadata
+- Store AI-generated summaries for all major entities (workouts, programs, memories)
+- Pattern: generate summary → store in Pinecone with rich metadata
+- Reranking via `pinecone-rerank-v0` for result quality
 
-### Streaming Contextual Updates
+### Memory & Living Profile
 
-- Use AI-generated contextual updates (Nova Micro) via `generateContextualUpdate()` for ephemeral UX feedback
-- Brief, coach-like progress updates (e.g., "Firing up the program generator...")
-- AI naturally responds in conversation history - no structured message appending
-- Add new update types to `libs/coach-conversation/contextual-updates.ts`
+- Memory CRUD under `amplify/functions/memory/`; lifecycle processing via `dispatch-memory-lifecycle` → `process-memory-lifecycle`
+- Living profile built asynchronously from conversation summaries via `build-living-profile`
+- Both feed into coach conversation context for personalized responses
 
 ### File Organization
 
 - Domain logic in `amplify/functions/libs/[entity]/` (types, extraction, normalization, summary, pinecone)
-- All DynamoDB operations in `amplify/dynamodb/operations.ts`
-- Centralized utilities in `amplify/functions/libs/` (api-helpers, s3-utils, date-utils, response-utils)
+- Backend agents in `amplify/functions/libs/agents/[agent-name]/` (agent, tools, prompts, helpers)
+- DynamoDB operations barrel in `amplify/dynamodb/operations.ts`
+- Centralized utilities in `amplify/functions/libs/` (api-helpers, s3-utils, date-utils, response-utils, id-utils, object-utils)
+- Frontend APIs in `src/utils/apis/`, agents in `src/utils/agents/`, UI patterns in `src/utils/ui/`
+
+### Testing
+
+- Vitest for all tests (`npm test` / `npm run test:watch`)
+- Test files co-located with source as `*.test.ts` (primarily backend/libs coverage)
 
 ## API Documentation (Swagger/OpenAPI)
 
-### Overview
+All endpoints documented in `amplify/swagger/openapi.yaml` (OpenAPI 3.0), served at `/api-docs` via generated Swagger UI.
 
-All API endpoints are documented in an OpenAPI 3.0 spec at `amplify/swagger/openapi.yaml`. A Swagger UI page is generated from this spec and served at `/api-docs` when deployed.
+When adding or modifying endpoints:
 
-### When adding or modifying API endpoints
+1. Update handler in `amplify/functions/<function-name>/handler.ts`
+2. Update route in `amplify/api/resource.ts` if needed
+3. Update `amplify/swagger/openapi.yaml` — add path, schemas, parameters; mark public endpoints with `security: []`
+4. Run `npm run swagger:check` to verify routes match, then `npm run swagger:generate` to rebuild UI
 
-1. Update the handler code in `amplify/functions/<function-name>/handler.ts`
-2. Update the route in `amplify/api/resource.ts` if needed
-3. Update the OpenAPI spec in `amplify/swagger/openapi.yaml` to match:
-   - Add the new path under the `paths:` section
-   - Include request body schemas, response schemas, query/path parameters
-   - Mark public endpoints with `security: []`
-   - Use existing `$ref` components from `components/schemas/` and `components/parameters/` where possible
-4. Run `npm run swagger:check` to verify all routes in `resource.ts` are documented in the spec
-5. Run `npm run swagger:generate` to regenerate the Swagger UI HTML
-
-### Spec structure
-
-- `amplify/swagger/openapi.yaml` - Source of truth for API documentation
-- `scripts/generate-swagger.js` - Generates self-contained Swagger UI HTML from the YAML spec
-- `public/api-docs/index.html` - Generated output (do not edit directly; regenerated on each build)
-
-### NPM scripts
-
-- `npm run swagger:generate` - Generate Swagger UI HTML from the spec
-- `npm run swagger:validate` - Validate spec structure only
-- `npm run swagger:check` - Cross-reference spec paths against `amplify/api/resource.ts`
-
-### Build pipeline
-
-The `amplify.yml` pipeline runs `npm run swagger:generate` before `npm run build` on every deployment, so docs are always current.
+The `amplify.yml` pipeline runs `swagger:generate` before `build` on every deployment.
 
 ## Key Reference Files
 
-- `amplify/swagger/openapi.yaml` - OpenAPI 3.0 spec (API documentation source of truth)
-- `amplify/functions/libs/api-helpers.ts` - Bedrock, Pinecone patterns
-- `amplify/dynamodb/operations.ts` - DynamoDB operations
-- `amplify/functions/build-workout/handler.ts` - Async Lambda pattern
+- `amplify/functions/libs/api-helpers.ts` - Bedrock helpers, model IDs, Pinecone client
+- `amplify/functions/libs/agents/core/streaming-agent.ts` - Streaming agent base class
 - `amplify/functions/stream-coach-conversation/handler.ts` - Streaming Lambda URL pattern
-- `amplify/functions/libs/coach-config/personality-utils.ts` - Coach personality
-- `src/utils/ui/uiPatterns.js` - UI styling patterns
+- `amplify/dynamodb/operations.ts` - DynamoDB operations barrel
+- `amplify/functions/libs/coach-config/personality-utils.ts` - Coach personality prompts
+- `amplify/functions/libs/security/prompt-sanitizer.ts` - Prompt injection safety
+- `src/utils/ui/uiPatterns.js` - UI design system (Tailwind class constants)
+- `src/utils/apis/apiConfig.js` - Frontend API configuration and auth
 - `docs/strategy/REACT_PATTERNS.md` - React patterns (AbortController, loading states)
-- `src/components/shared-programs/ShareProgramModal.jsx` - AbortController reference implementation

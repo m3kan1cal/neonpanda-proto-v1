@@ -2,8 +2,8 @@
  * Workout Logger Agent Tool Input Schemas
  *
  * JSON Schemas for the 6 workout logger agent tools extracted from inline definitions
- * in agents/workout-logger/tools.ts. Centralizing these enables warmup-platform to
- * pre-compile their Bedrock constrained-decoding grammars.
+ * in agents/workout-logger/tools.ts. Centralizing these enables reuse across
+ * agent definitions and test fixtures.
  */
 
 export const DETECT_DISCIPLINE_SCHEMA = {
