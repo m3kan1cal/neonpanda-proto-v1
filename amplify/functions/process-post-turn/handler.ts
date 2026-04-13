@@ -37,7 +37,9 @@ async function resolveGuardrailId(): Promise<void> {
   try {
     const client = new BedrockClient({});
     const response = await client.send(new ListGuardrailsCommand({}));
-    const match = response.guardrails?.find((g) => g.name === guardrailName);
+    const match = response.guardrails?.find(
+      (g: { name?: string; id?: string }) => g.name === guardrailName,
+    );
     if (match?.id) {
       process.env.BEDROCK_GUARDRAIL_ID = match.id;
       logger.info("Resolved guardrail ID from name:", {
