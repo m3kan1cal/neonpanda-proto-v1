@@ -831,6 +831,7 @@ backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
   backend.updateCoachCreatorSession,
   backend.createProgram,
   backend.getProgram,
+  backend.deleteProgram, // Needs access to S3 to hard-delete program details
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
