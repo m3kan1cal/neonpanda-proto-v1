@@ -4,9 +4,9 @@ import { Agent } from "node:https";
 import { logger } from "./logger";
 
 // Explicit keep-alive timeout prevents ECONNRESET noise in long-lived Lambda
-// containers (e.g., warmup pings every 5 min). Default SDK keep-alive holds
-// sockets open indefinitely; the remote endpoint closes them after ~60-120s,
-// causing stale-socket errors on the next reuse attempt.
+// containers. Default SDK keep-alive holds sockets open indefinitely; the
+// remote endpoint closes them after ~60-120s, causing stale-socket errors on
+// the next reuse attempt.
 const ssmClient = new SSMClient({
   requestHandler: new NodeHttpHandler({
     httpsAgent: new Agent({

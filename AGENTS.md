@@ -60,7 +60,7 @@ The AI coaching system uses a ReAct-style agent architecture in `amplify/functio
 
 - **Streaming (Function URLs)**: `stream-coach-conversation`, `stream-coach-creator-session`, `stream-program-designer-session` — response-stream mode with SSE
 - **Async (invoked via `invokeAsyncLambda`)**: `build-workout`, `build-program`, `build-coach-config`, `build-exercise`, `build-workout-analysis`, `build-conversation-summary`, `build-living-profile`, `process-post-turn`, `dispatch-memory-lifecycle`, `process-memory-lifecycle`
-- **Scheduled (EventBridge)**: `build-weekly-analytics`, `build-monthly-analytics`, `notify-inactive-users`, `warmup-platform`, `sync-log-subscriptions`
+- **Scheduled (EventBridge)**: `build-weekly-analytics`, `build-monthly-analytics`, `notify-inactive-users`, `sync-log-subscriptions`
 - **Sync (API Gateway)**: CRUD operations for all entities
 - Use typed event interfaces for async lambdas
 - Use `createOkResponse()` and `createErrorResponse()` helpers

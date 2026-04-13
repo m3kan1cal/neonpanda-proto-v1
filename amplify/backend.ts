@@ -112,10 +112,6 @@ import { deleteSharedProgram } from "./functions/delete-shared-program/resource"
 import { copySharedProgram } from "./functions/copy-shared-program/resource";
 import { explainTerm } from "./functions/explain-term/resource";
 import { generateGreeting } from "./functions/generate-greeting/resource";
-import {
-  warmupPlatform,
-  createWarmupPlatformSchedule,
-} from "./functions/warmup-platform/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -230,7 +226,6 @@ const backend = defineBackend({
   copySharedProgram,
   explainTerm,
   generateGreeting,
-  warmupPlatform,
 });
 
 // ============================================================================
@@ -329,7 +324,6 @@ const allBackendFunctions = [
   backend.copySharedProgram,
   backend.explainTerm,
   backend.generateGreeting,
-  backend.warmupPlatform,
 ];
 
 for (const fn of allBackendFunctions) {
@@ -349,7 +343,7 @@ console.info(
 // guarantees slots from the account's 1000-concurrent-execution pool.
 // Total reserved: ~12 out of 1000 — minimal impact on pool availability.
 //
-// NOTE: Async functions (buildWorkout, buildProgram, warmupPlatform) are
+// NOTE: Async functions (buildWorkout, buildProgram) are
 // intentionally excluded. ReservedConcurrentExecutions both guarantees AND
 // caps concurrency. Combined with retryAttempts: 0 on async Lambdas, a cap
 // causes throttled invocations to be permanently lost (no retries, no DLQ).
@@ -901,7 +895,6 @@ jobsPolicies.attachS3AppsAccess(backend.buildWorkout.resources.lambda);
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
   backend.processMemoryLifecycle,
-  backend.warmupPlatform,
 ].forEach((func) => {
   scheduledPolicies.attachBedrockAccess(func.resources.lambda);
 });
@@ -1235,7 +1228,6 @@ const jobsAndScheduledFunctions = [
   backend.dispatchMemoryLifecycle,
   backend.processMemoryLifecycle,
   backend.notifyInactiveUsers,
-  backend.warmupPlatform,
 ];
 
 jobsAndScheduledFunctions.forEach((func) => {
@@ -1679,69 +1671,6 @@ const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
 
 console.info(
   "✅ User notification check scheduled (daily): inactivity + program adherence",
-);
-
-// Create EventBridge schedules for platform warmup:
-// - Container warmup: every 5 minutes (keeps critical Lambda functions warm)
-// - Grammar warmup: every 12 hours (pre-compiles Bedrock grammar caches)
-const { containerWarmupRule, grammarWarmupRule } = createWarmupPlatformSchedule(
-  backend.warmupPlatform.stack,
-  backend.warmupPlatform.resources.lambda,
-);
-
-// Grant warmup function permission to invoke all target Lambda functions
-const warmupTargetFunctions = [
-  { envVar: "WARMUP_TARGET_GET_COACH_CONFIGS", fn: backend.getCoachConfigs },
-  { envVar: "WARMUP_TARGET_GET_COACH_CONFIG", fn: backend.getCoachConfig },
-  {
-    envVar: "WARMUP_TARGET_GET_COACH_CONVERSATIONS",
-    fn: backend.getCoachConversations,
-  },
-  {
-    envVar: "WARMUP_TARGET_GET_COACH_CONVERSATION",
-    fn: backend.getCoachConversation,
-  },
-  { envVar: "WARMUP_TARGET_GET_WORKOUTS", fn: backend.getWorkouts },
-  { envVar: "WARMUP_TARGET_GET_WORKOUT", fn: backend.getWorkout },
-  { envVar: "WARMUP_TARGET_GET_PROGRAMS", fn: backend.getPrograms },
-  { envVar: "WARMUP_TARGET_GET_PROGRAM", fn: backend.getProgram },
-  { envVar: "WARMUP_TARGET_GET_USER_PROFILE", fn: backend.getUserProfile },
-  { envVar: "WARMUP_TARGET_GET_WEEKLY_REPORTS", fn: backend.getWeeklyReports },
-  { envVar: "WARMUP_TARGET_GENERATE_GREETING", fn: backend.generateGreeting },
-  {
-    envVar: "WARMUP_TARGET_SEND_COACH_CONVERSATION_MESSAGE",
-    fn: backend.sendCoachConversationMessage,
-  },
-  {
-    envVar: "WARMUP_TARGET_STREAM_COACH_CONVERSATION",
-    fn: backend.streamCoachConversation,
-  },
-  {
-    envVar: "WARMUP_TARGET_STREAM_COACH_CREATOR_SESSION",
-    fn: backend.streamCoachCreatorSession,
-  },
-  {
-    envVar: "WARMUP_TARGET_STREAM_PROGRAM_DESIGNER_SESSION",
-    fn: backend.streamProgramDesign,
-  },
-];
-
-// Pass target function names as environment variables and grant invoke permissions
-const warmupTargetArns = warmupTargetFunctions.map(({ envVar, fn }) => {
-  backend.warmupPlatform.addEnvironment(
-    envVar,
-    fn.resources.lambda.functionName,
-  );
-  return fn.resources.lambda.functionArn;
-});
-
-grantLambdaInvokePermissions(
-  backend.warmupPlatform.resources.lambda,
-  warmupTargetArns,
-);
-
-console.info(
-  `✅ Platform warmup scheduled: container warming (5 min), grammar caching (12 hours), targets: ${warmupTargetFunctions.length} functions`,
 );
 
 // Create EventBridge schedule for daily memory lifecycle (3am UTC)

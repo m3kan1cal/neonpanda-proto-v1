@@ -233,12 +233,11 @@ Legend: **Yes** = strong candidate, **Maybe** = needs testing, **No** = should s
 
 ### Lambda Handlers
 
-| File                                                      | Function / Purpose                                                             | Tools                               | Schema Size | Current Tier         | UTILITY?                      |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------- | ----------- | -------------------- | ----------------------------- |
-| `amplify/functions/build-conversation-summary/handler.ts` | `buildConversationSummary` — rich narrative summary for long-term memory       | 1 (`generate_conversation_summary`) | Moderate    | default (Sonnet)     | **No** — quality-sensitive    |
-| `amplify/functions/generate-greeting/handler.ts`          | `generateGreeting` — short personalized greeting text                          | 0                                   | n/a         | CONTEXTUAL, CREATIVE | **Maybe** — persona-dependent |
-| `amplify/functions/explain-term/handler.ts`               | `explainTerm` — educational explanation of exercise or equipment term          | 0                                   | n/a         | EXECUTOR             | **Maybe** — quality matters   |
-| `amplify/functions/warmup-platform/handler.ts`            | Schema warmup calls (both `callBedrockApi` and `callBedrockApiWithJsonOutput`) | 1 per entry                         | Varies      | Varies               | N/A — warmup only             |
+| File                                                      | Function / Purpose                                                       | Tools                               | Schema Size | Current Tier         | UTILITY?                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------- | ----------- | -------------------- | ----------------------------- |
+| `amplify/functions/build-conversation-summary/handler.ts` | `buildConversationSummary` — rich narrative summary for long-term memory | 1 (`generate_conversation_summary`) | Moderate    | default (Sonnet)     | **No** — quality-sensitive    |
+| `amplify/functions/generate-greeting/handler.ts`          | `generateGreeting` — short personalized greeting text                    | 0                                   | n/a         | CONTEXTUAL, CREATIVE | **Maybe** — persona-dependent |
+| `amplify/functions/explain-term/handler.ts`               | `explainTerm` — educational explanation of exercise or equipment term    | 0                                   | n/a         | EXECUTOR             | **Maybe** — quality matters   |
 
 ---
 

@@ -426,14 +426,22 @@ const authenticatedStreamingHandler = async (
   responseStream: any,
   context: Context,
 ) => {
-  // Warmup ping detection for internal invocations.
-  // warmup-platform directly invokes all target functions with { __warmup: true }
-  // to keep their execution environments warm (avoiding cold starts).
-  // Using a namespaced field prevents collision with AWS service event fields (e.g., EventBridge source).
-  if ((event as any)?.__warmup === true) {
-    logger.info("🔥 Warmup detected, closing stream");
+  // Guard: reject non-streaming invocations (e.g., manual console Invoke).
+  // streamifyResponse expects the runtime to provide an HttpResponseStream with
+  // setContentType, but non-streaming dispatch paths provide a plain object.
+  if (typeof responseStream?.setContentType !== "function") {
+    logger.error(
+      "Non-streaming invocation detected for streaming handler. " +
+        "This function must be invoked via Function URL with RESPONSE_STREAM mode.",
+      { rawPath: event.rawPath, method: event.requestContext?.http?.method },
+    );
     if (responseStream?.write) {
-      responseStream.write("");
+      responseStream.write(
+        JSON.stringify({
+          statusCode: 500,
+          body: "This endpoint requires streaming invocation via Function URL",
+        }),
+      );
       responseStream.end();
     }
     return;

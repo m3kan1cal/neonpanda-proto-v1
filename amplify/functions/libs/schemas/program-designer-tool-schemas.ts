@@ -2,8 +2,8 @@
  * Program Designer Agent Tool Input Schemas
  *
  * JSON Schemas for the program designer agent tools extracted from inline definitions
- * in agents/program-designer/tools.ts. Centralizing these enables warmup-platform to
- * pre-compile their Bedrock constrained-decoding grammars.
+ * in agents/program-designer/tools.ts. Centralizing these enables reuse across
+ * agent definitions and test fixtures.
  */
 
 export const LOAD_PROGRAM_REQUIREMENTS_SCHEMA = {
