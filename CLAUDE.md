@@ -149,9 +149,12 @@ ReAct-style agents in `amplify/functions/libs/agents/`:
 | Type | Pattern | Examples |
 |------|---------|---------|
 | Streaming (Function URLs) | SSE response-stream mode | `stream-coach-conversation`, `stream-coach-creator-session`, `stream-program-designer-session` |
-| Async (fire-and-forget) | Invoked via `invokeAsyncLambda` | `build-workout`, `build-program`, `build-coach-config`, `process-post-turn` |
+| Async (fire-and-forget) | Invoked via `invokeAsyncLambda` | `build-workout`, `build-program`, `build-coach-config`, `build-exercise`, `build-workout-analysis`, `build-conversation-summary`, `build-living-profile`, `process-post-turn`, `dispatch-memory-lifecycle`, `process-memory-lifecycle` |
 | Scheduled (EventBridge) | Cron/rate triggers | `build-weekly-analytics`, `build-monthly-analytics`, `notify-inactive-users` |
 | Sync (API Gateway) | Standard request/response | All CRUD operations |
+
+- Use typed event interfaces for async Lambda invocations
+- Use `createOkResponse()` and `createErrorResponse()` helpers from `libs/response-utils.ts` for all Lambda responses
 
 ### Post-Turn Pipeline
 
@@ -178,12 +181,20 @@ Always use `getUserTimezoneOrDefault()` from `libs/analytics/date-utils.ts` (def
 - Reranking via `pinecone-rerank-v0` for result quality
 - Per-user namespaces
 
+### Memory & Living Profile
+
+- Memory CRUD under `amplify/functions/memory/`; lifecycle processing via `dispatch-memory-lifecycle` -> `process-memory-lifecycle`
+- Living profile built asynchronously from conversation summaries via `build-living-profile`
+- Both feed into coach conversation context for personalized responses
+
 ### Adding/Modifying API Endpoints
 
 1. Create or update handler in `amplify/functions/<function-name>/handler.ts`
 2. Update route in `amplify/api/resource.ts` if needed
 3. Update `amplify/swagger/openapi.yaml` — add path, schemas, parameters; mark public endpoints with `security: []`
 4. Run `npm run swagger:check` to verify routes match, then `npm run swagger:generate`
+
+The `amplify.yml` pipeline runs `swagger:generate` before `build` on every deployment.
 
 ### Adding a New Lambda Function
 
