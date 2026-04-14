@@ -102,9 +102,9 @@ neonpanda-proto-v1/
 ## Code Style
 
 - **Backend**: TypeScript (strict mode). **Frontend**: JavaScript/JSX (not TypeScript).
-- **Naming**: camelCase for all identifiers except constants. Full descriptive names, no abbreviations (`queryPrograms()` not `queryTPs()`).
+- **Naming**: camelCase for all identifiers except constants (e.g., `convertUtcToUserDate` not `convertUTCToUserDate`, `itemWithGsi` not `itemWithGSI`). Full descriptive names, no abbreviations (`queryPrograms()` not `queryTPs()`). Use full entity names consistently (`Program`, `ProgramPhase`, `isProgramActive()`).
 - **Entity IDs**: `${entityType}_${userId}_${timestamp}_${shortId}` via `generateEntityId()` in `libs/id-utils.ts`.
-- **String literals**: Use constants (`CONVERSATION_MODES.PROGRAM_DESIGN` not `'build'`).
+- **String literals**: Use constants (`CONVERSATION_MODES.PROGRAM_DESIGN` not `'build'`, `MESSAGE_TYPES.TEXT_WITH_IMAGES` not `'text_with_images'`).
 - **Formatting**: Prettier — semicolons, trailing commas, double quotes, 80 char width, 2-space indent, LF line endings.
 - **Tone**: Professional, measured. No excessive enthusiasm or exclamation points.
 
