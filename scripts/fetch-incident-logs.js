@@ -318,13 +318,13 @@ async function invokeClaudeCode(prompt, { apply = false, model = null } = {}) {
   console.info(`Prompt: ${prompt}\n`);
 
   // claude -p <prompt> [--dangerously-skip-permissions | --allowedTools ...]
-  // Read-only: restrict to Read/Glob/Grep/Bash so Claude can read files without
+  // Read-only: restrict to Read/Glob/Grep so Claude can read files without
   // permission prompts but cannot write. Apply: bypass all permissions.
   const cliArgs = ["-p", prompt];
   if (apply) {
     cliArgs.push("--dangerously-skip-permissions");
   } else {
-    cliArgs.push("--allowedTools", "Read,Glob,Grep,Bash");
+    cliArgs.push("--allowedTools", "Read,Glob,Grep");
   }
   if (model) cliArgs.push("--model", model);
 
