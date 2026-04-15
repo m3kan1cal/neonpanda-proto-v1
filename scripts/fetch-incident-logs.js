@@ -4,18 +4,18 @@
  * Fetch Incident Logs Script
  *
  * Fetches CloudWatch log streams for a Lambda function and saves them to a
- * timestamped incidents/ directory. Optionally invokes the Cursor Agent CLI
- * (agent chat) directly to trigger the analyze-incident-logs skill for root
- * cause and remediation analysis without leaving the terminal.
+ * timestamped incidents/ directory. Optionally invokes the Claude Code CLI
+ * to trigger the analyze-incident-logs skill for root cause and remediation
+ * analysis without leaving the terminal.
  *
  * Enhancements over fetch-log-streams.js:
  * - Auto-discovers the N most recent log streams for a log group
  * - Creates incidents/{timestamp}-{function-name}/ directory automatically
  * - Writes incident-context.json alongside logs.csv
- * - Optionally invokes Cursor Agent CLI (--run-agent) for fully automated analysis
+ * - Optionally invokes Claude Code CLI (--run-agent) for fully automated analysis
  *
  * Prerequisites for --run-agent:
- *   curl https://cursor.com/install -fsSL | bash   (installs the `agent` CLI)
+ *   npm install -g @anthropic-ai/claude-code   (installs the `claude` CLI)
  *
  * Usage:
  *   node scripts/fetch-incident-logs.js --log-group=<name> [--streams=<s1,s2>|--auto-recent=N]
@@ -26,9 +26,9 @@
  *   --auto-recent=N         Auto-discover N most recent streams (default: 1)
  *   --region=REGION         AWS region (default: us-west-2)
  *   --note=TEXT             Optional note to embed in incident-context.json
- *   --run-agent             Invoke the Cursor Agent CLI after fetching (requires `agent` CLI)
- *   --apply                 Run in full agent mode (can edit files). Default is --plan (read-only).
- *   --model=NAME            LLM to use (e.g. claude-sonnet-4-5, gpt-4o). Run `agent models` to list.
+ *   --run-agent             Invoke the Claude Code CLI after fetching (requires `claude` CLI)
+ *   --apply                 Run with --dangerously-skip-permissions (can edit files). Default is read-only.
+ *   --model=NAME            Claude model alias or full ID (e.g. sonnet, opus, claude-sonnet-4-6).
  *   --verbose               Show detailed progress
  *   --help, -h              Show this help message
  *
@@ -52,7 +52,7 @@
  *     --auto-recent=1 \
  *     --run-agent --apply
  *
- *   # Fetch only, print prompt for manual paste into Cursor IDE
+ *   # Fetch only, print prompt for manual paste into Claude Code
  *   node scripts/fetch-incident-logs.js \
  *     --log-group='/aws/lambda/amplify-neonpandaprotov1--streamcoachconversationl-YrHSi4Ltryf1' \
  *     --streams='2026/03/24/[$LATEST]f035c29d5606471a9ae42cbeeb884cf3' \
@@ -141,9 +141,9 @@ Options:
   --auto-recent=N      Auto-discover N most recent streams (default: 1)
   --region=REGION      AWS region (default: ${DEFAULT_REGION})
   --note=TEXT          Short note to include in incident context
-  --run-agent          Invoke Cursor Agent CLI after fetching (requires 'agent' CLI)
-  --apply              Run in full agent mode — edits files (default is plan mode, read-only)
-  --model=NAME         LLM to use (e.g. claude-sonnet-4-5). Run 'agent models' to list options.
+  --run-agent          Invoke Claude Code CLI after fetching (requires 'claude' CLI)
+  --apply              Run with --dangerously-skip-permissions — edits files (default is read-only)
+  --model=NAME         Claude model alias or full ID (e.g. sonnet, opus, claude-sonnet-4-6)
   --verbose            Show detailed progress
   --help, -h           Show this message
 
@@ -164,13 +164,13 @@ Examples:
   node scripts/fetch-incident-logs.js \\
     --log-group='/aws/lambda/...' --auto-recent=1 --run-agent --apply
 
-  # Fetch only, print prompt for manual paste into Cursor IDE
+  # Fetch only, print prompt for manual paste into Claude Code
   node scripts/fetch-incident-logs.js \\
     --log-group='/aws/lambda/...' \\
     --streams='2026/03/24/[$LATEST]abc123' --note='User reported 504'
 
-Install Cursor Agent CLI (prerequisite for --run-agent):
-  curl https://cursor.com/install -fsSL | bash
+Install Claude Code CLI (prerequisite for --run-agent):
+  npm install -g @anthropic-ai/claude-code
   `);
 }
 
@@ -299,31 +299,37 @@ function buildIncidentDirName(logGroup) {
   return `${timestamp}_${shortName}`;
 }
 
-// ─── Cursor Agent CLI ─────────────────────────────────────────────────────────
+// ─── Claude Code CLI ──────────────────────────────────────────────────────────
 
 /**
- * Invoke the Cursor Agent CLI with the analysis prompt.
+ * Invoke the Claude Code CLI with the analysis prompt.
  *
- * Defaults to --plan (read-only, produces a reviewable plan without editing files).
- * Pass apply=true to run in full agent mode with write/shell access.
+ * Defaults to --permission-mode plan (read-only, produces a reviewable plan
+ * without editing files). Pass apply=true to run in bypassPermissions mode
+ * with full write/shell access.
  *
- * Requires the `agent` CLI: curl https://cursor.com/install -fsSL | bash
+ * Requires the `claude` CLI: npm install -g @anthropic-ai/claude-code
  */
-async function invokeAgentCli(prompt, { apply = false, model = null } = {}) {
-  const modeLabel = apply ? "agent (will edit files)" : "plan (read-only)";
-  console.info("─── Invoking Cursor Agent CLI ──────────────────────────────");
+async function invokeClaudeCode(prompt, { apply = false, model = null } = {}) {
+  const modeLabel = apply ? "apply (will edit files)" : "read-only analysis";
+  console.info("─── Invoking Claude Code ───────────────────────────────────");
   console.info(`Mode:   ${modeLabel}`);
   if (model) console.info(`Model:  ${model}`);
   console.info(`Prompt: ${prompt}\n`);
 
-  // agent <prompt> [--plan] [--model=NAME]
-  // Note: no "chat" subcommand — the prompt is a positional argument
-  const cliArgs = [prompt];
-  if (!apply) cliArgs.push("--plan");
-  if (model) cliArgs.push(`--model=${model}`);
+  // claude -p <prompt> [--dangerously-skip-permissions | --allowedTools ...]
+  // Read-only: restrict to Read/Glob/Grep/Bash so Claude can read files without
+  // permission prompts but cannot write. Apply: bypass all permissions.
+  const cliArgs = ["-p", prompt];
+  if (apply) {
+    cliArgs.push("--dangerously-skip-permissions");
+  } else {
+    cliArgs.push("--allowedTools", "Read,Glob,Grep,Bash");
+  }
+  if (model) cliArgs.push("--model", model);
 
   return new Promise((resolve) => {
-    const child = spawn("agent", cliArgs, {
+    const child = spawn("claude", cliArgs, {
       stdio: "inherit",
       shell: false,
     });
@@ -331,20 +337,20 @@ async function invokeAgentCli(prompt, { apply = false, model = null } = {}) {
     child.on("error", (err) => {
       if (err.code === "ENOENT") {
         console.error(
-          "\nError: Cursor Agent CLI not found. Install it with:\n" +
-            "  curl https://cursor.com/install -fsSL | bash\n" +
-            "\nAlternatively, paste this prompt into the Cursor Agent chat in the IDE:\n" +
+          "\nError: Claude Code CLI not found. Install it with:\n" +
+            "  npm install -g @anthropic-ai/claude-code\n" +
+            "\nAlternatively, paste this prompt into Claude Code:\n" +
             `  ${prompt}\n`,
         );
       } else {
-        console.error(`\nError invoking agent CLI: ${err.message}`);
+        console.error(`\nError invoking Claude Code: ${err.message}`);
       }
       resolve(); // Non-fatal — logs are already saved regardless
     });
 
     child.on("close", (code) => {
       if (code !== 0) {
-        console.warn(`\nAgent CLI exited with code ${code}`);
+        console.warn(`\nClaude Code exited with code ${code}`);
       }
       resolve();
     });
@@ -474,16 +480,16 @@ async function main() {
   console.info(`  Context:      ${contextFile}`);
   console.info("═══════════════════════════════════════════════════════════\n");
 
-  const agentPrompt = `Analyze the incident logs in ${incidentDirPath} and produce a remediation plan.`;
+  const agentPrompt = `/analyze-incident-logs Analyze the incident logs in ${incidentDirPath} and produce a structured remediation plan.`;
 
   if (options.runAgent) {
-    await invokeAgentCli(agentPrompt, {
+    await invokeClaudeCode(agentPrompt, {
       apply: options.apply,
       model: options.model,
     });
   } else {
     console.info(
-      "─── Cursor Agent Prompt ────────────────────────────────────",
+      "─── Claude Code Prompt ─────────────────────────────────────",
     );
     console.info("");
     console.info(agentPrompt);
@@ -492,7 +498,7 @@ async function main() {
       "────────────────────────────────────────────────────────────",
     );
     console.info(
-      "\nPaste the prompt above into the Cursor Agent chat, or re-run with --run-agent to invoke automatically.\n",
+      "\nPaste the prompt above into Claude Code, or re-run with --run-agent to invoke automatically.\n",
     );
   }
 }
