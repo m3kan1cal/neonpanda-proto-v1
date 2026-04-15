@@ -37,7 +37,7 @@ const BEHAVIORAL_PATTERN_SCHEMA = {
           existingMemoryId: {
             type: "string",
             description:
-              "If this pattern updates an existing one, provide the existing pattern's ID. Leave empty for genuinely new patterns.",
+              "If this pattern updates an existing one, provide the existing pattern's short alias ID exactly as shown in the EXISTING PATTERNS list. Leave empty for genuinely new patterns.",
           },
           pattern: {
             type: "string",
@@ -106,9 +106,21 @@ export async function detectBehavioralPatterns(
   conversationSummaries: string[],
   existingPatterns: UserMemory[],
 ): Promise<BehavioralDetectionResult> {
+  // Build short alias map to reduce AI hallucination surface.
+  // The AI sees only the final short-ID segment (e.g., "4qnfafhmg") rather
+  // than full 50+ char IDs, which are easy for models to mis-recall.
+  // We remap back to full IDs after parsing.
+  const shortToFull = new Map<string, string>();
+  const fullToShort = new Map<string, string>();
+  for (const p of existingPatterns) {
+    const short = p.memoryId.split("_").at(-1) ?? p.memoryId;
+    shortToFull.set(short, p.memoryId);
+    fullToShort.set(p.memoryId, short);
+  }
+
   const existingPatternsText =
     existingPatterns.length > 0
-      ? `\n\nEXISTING PATTERNS — If a detected pattern is semantically the same as an existing one, set existingMemoryId to that pattern's ID. Only omit existingMemoryId for genuinely new patterns not covered below:\n${existingPatterns.map((p) => `- [${p.memoryId}] ${p.content}`).join("\n")}`
+      ? `\n\nEXISTING PATTERNS — If a detected pattern is semantically the same as an existing one, set existingMemoryId to that pattern's short alias ID exactly as shown. Only omit existingMemoryId for genuinely new patterns not covered below:\n${existingPatterns.map((p) => `- [${fullToShort.get(p.memoryId) ?? p.memoryId}] ${p.content}`).join("\n")}`
       : "";
 
   const systemPrompt = `You are analyzing a series of coaching conversation summaries to detect implicit behavioral patterns — things the user does consistently but hasn't explicitly stated.
@@ -156,6 +168,17 @@ Use the detect_behavioral_patterns tool to identify behavioral patterns.`;
 
     const fixedInput = fixDoubleEncodedProperties(response.input);
     const result = fixedInput as BehavioralDetectionResult;
+
+    // Remap short alias IDs back to full memoryIds before validation.
+    if (shortToFull.size > 0) {
+      result.patterns = result.patterns.map((pattern) => {
+        if (pattern.existingMemoryId) {
+          const full = shortToFull.get(pattern.existingMemoryId);
+          return full ? { ...pattern, existingMemoryId: full } : pattern;
+        }
+        return pattern;
+      });
+    }
 
     const existingIds = new Set(existingPatterns.map((p) => p.memoryId));
 
