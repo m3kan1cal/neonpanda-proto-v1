@@ -174,4 +174,44 @@ describe("parseCoachConversationSummary", () => {
       "Completed phase 1",
     ]);
   });
+
+  it("preserves single-element arrays produced by string wrapping (incident pattern)", () => {
+    // Simulates what the pipeline delivers when Haiku returns a comma-separated
+    // string for an array field and normalizeSchemaArrayFields wraps it.
+    // The parser must not collapse or mutate this shape further.
+    const toolResult = {
+      narrative: "The athlete discussed their training goals.",
+      current_goals: [
+        "Execute Week 1 training plan \u2705 COMPLETED, Reintegrate power cleans, Incorporate Pendlay rows",
+      ],
+      recent_progress: [
+        "Four PRs in Week 1 (April 7-12): Power clean 175#, Back squat 285#, Front squat 235#, Deadlift 365#",
+      ],
+      training_preferences: ["Prefers compound movements", "Uses 5/3/1"],
+      schedule_constraints: ["Travels on weekends"],
+      key_insights: ["Responds well to periodization"],
+      important_context: ["Previous shoulder injury"],
+      conversation_tags: ["strength-training", "goal-setting"],
+    };
+
+    const result = parseCoachConversationSummary(
+      toolResult,
+      makeEvent(),
+      makeConversation(),
+    );
+
+    // Single-element arrays from string wrapping are valid — preserve them as-is
+    expect(result.structuredData.current_goals).toHaveLength(1);
+    expect(result.structuredData.current_goals[0]).toContain(
+      "Execute Week 1 training plan",
+    );
+    expect(result.structuredData.recent_progress).toHaveLength(1);
+    expect(result.structuredData.recent_progress[0]).toContain("Four PRs");
+    // Fields that were already proper arrays are unaffected
+    expect(result.structuredData.training_preferences).toHaveLength(2);
+    expect(result.structuredData.conversation_tags).toEqual([
+      "strength-training",
+      "goal-setting",
+    ]);
+  });
 });
