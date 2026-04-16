@@ -169,8 +169,10 @@ export class CoachConversationAgent {
     try {
       const result = await getCoachConversations(userId, coachId);
 
-      // Sort by last activity (most recent first) and apply limit
+      // Filter out workout_edit conversations (contextual editing sessions accessed only via WorkoutDetails),
+      // sort by last activity (most recent first), and apply limit
       const sortedConversations = (result.conversations || [])
+        .filter((conv) => conv.mode !== CONVERSATION_MODES.WORKOUT_EDIT)
         .sort((a, b) => {
           const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
           const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
