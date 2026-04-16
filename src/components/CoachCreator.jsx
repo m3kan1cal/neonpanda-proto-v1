@@ -476,7 +476,7 @@ function CoachCreator() {
   }, [agentState.isComplete]);
 
   // Handle message submission
-  const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
+  const handleMessageSubmit = async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
     if (!agentRef.current) return;
 
     try {
@@ -490,6 +490,7 @@ function CoachCreator() {
             handleStreamingError(error, { error: showError });
           },
         },
+        documentS3Keys,
       );
     } catch (error) {
       logger.error("Error sending message:", error);

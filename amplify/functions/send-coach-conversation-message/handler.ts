@@ -69,7 +69,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   );
 
   const body = JSON.parse(event.body);
-  const { userResponse, messageTimestamp, imageS3Keys } = body;
+  const { userResponse, messageTimestamp, imageS3Keys, documentS3Keys } = body;
 
   logger.info("📥 Request body parsed:", {
     hasUserResponse: !!userResponse,
@@ -77,18 +77,27 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     hasMessageTimestamp: !!messageTimestamp,
     hasImages: !!imageS3Keys,
     imageCount: imageS3Keys?.length || 0,
+    hasDocuments: !!documentS3Keys,
+    documentCount: documentS3Keys?.length || 0,
     bodyKeys: Object.keys(body),
   });
 
-  // Validation: Either text or images required
-  if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
-    logger.error("❌ Validation failed: Either text or images required");
-    return createErrorResponse(400, "Either text or images required");
+  // Validation: Either text, images, or documents required
+  const hasImages = imageS3Keys && imageS3Keys.length > 0;
+  const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+  if (!userResponse && !hasImages && !hasDocuments) {
+    logger.error("❌ Validation failed: Either text, images, or documents required");
+    return createErrorResponse(400, "Either text, images, or documents required");
   }
 
   if (imageS3Keys && imageS3Keys.length > 5) {
     logger.error("❌ Validation failed: Maximum 5 images per message");
     return createErrorResponse(400, "Maximum 5 images per message");
+  }
+
+  if (documentS3Keys && documentS3Keys.length > 3) {
+    logger.error("❌ Validation failed: Maximum 3 documents per message");
+    return createErrorResponse(400, "Maximum 3 documents per message");
   }
 
   // Verify S3 keys belong to this user
@@ -100,6 +109,24 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           userId,
         });
         return createErrorResponse(403, "Invalid image key");
+      }
+    }
+  }
+
+  if (documentS3Keys) {
+    const supportedDocExtensions = ['pdf', 'csv', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'html'];
+    for (const key of documentS3Keys) {
+      if (!key.startsWith(`user-uploads/${userId}/`)) {
+        logger.error("❌ Validation failed: Invalid document key:", {
+          key,
+          userId,
+        });
+        return createErrorResponse(403, "Invalid document key");
+      }
+      const ext = key.split('.').pop()?.toLowerCase();
+      if (!ext || !supportedDocExtensions.includes(ext)) {
+        logger.error("❌ Validation failed: Unsupported document type:", { key, ext });
+        return createErrorResponse(400, `Unsupported document type: ${ext}`);
       }
     }
   }
@@ -153,12 +180,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     content: userResponse || "",
     timestamp: new Date(),
     messageType:
-      imageS3Keys && imageS3Keys.length > 0
-        ? MESSAGE_TYPES.TEXT_WITH_IMAGES
+      hasImages || hasDocuments
+        ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
         : MESSAGE_TYPES.TEXT,
-    ...(imageS3Keys && imageS3Keys.length > 0
-      ? { imageS3Keys: imageS3Keys }
-      : {}),
+    ...(hasImages ? { imageS3Keys } : {}),
+    ...(hasDocuments ? { documentS3Keys } : {}),
   };
 
   // Calculate conversation context from existing messages
@@ -268,7 +294,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       existingMessages,
       conversationContext,
       userProfile,
-      imageS3Keys, // NEW: Pass imageS3Keys
+      imageS3Keys,
+      documentS3Keys,
     );
   }
 
@@ -290,6 +317,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       userProfile,
       imageS3Keys, // Pass imageS3Keys
       false, // Use Haiku for speed (no router analysis in legacy path)
+      undefined, // conversationMode
+      documentS3Keys, // Pass documentS3Keys
     );
   } catch (error) {
     logger.error("❌ Error in AI response generation, using fallback:", error);
@@ -441,10 +470,14 @@ async function handleStreamingResponse(
   existingMessages: any[],
   conversationContext: any,
   userProfile: any,
-  imageS3Keys?: string[], // NEW: Add imageS3Keys parameter
+  imageS3Keys?: string[],
+  documentS3Keys?: string[],
 ) {
   try {
     logger.info("🔄 Starting streaming response generation");
+
+    const hasImages = imageS3Keys && imageS3Keys.length > 0;
+    const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
 
     // Create user message first
     const newUserMessage: CoachMessage = {
@@ -453,12 +486,11 @@ async function handleStreamingResponse(
       content: userResponse || "",
       timestamp: new Date(messageTimestamp),
       messageType:
-        imageS3Keys && imageS3Keys.length > 0
-          ? MESSAGE_TYPES.TEXT_WITH_IMAGES
+        hasImages || hasDocuments
+          ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
           : MESSAGE_TYPES.TEXT,
-      ...(imageS3Keys && imageS3Keys.length > 0
-        ? { imageS3Keys: imageS3Keys }
-        : {}),
+      ...(hasImages ? { imageS3Keys } : {}),
+      ...(hasDocuments ? { documentS3Keys } : {}),
     };
 
     // Start streaming AI response
@@ -474,7 +506,10 @@ async function handleStreamingResponse(
       coachId,
       conversationId,
       userProfile,
-      imageS3Keys, // NEW: Pass imageS3Keys
+      imageS3Keys, // Pass imageS3Keys
+      undefined, // requiresDeepReasoning
+      undefined, // conversationMode
+      documentS3Keys, // Pass documentS3Keys
     );
 
     // Return streaming response

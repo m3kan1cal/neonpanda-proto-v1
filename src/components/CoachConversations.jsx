@@ -41,6 +41,7 @@ import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { useToast } from "../contexts/ToastContext";
 import { CONVERSATION_MODES } from "../constants/conversationModes";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
+import DocumentAttachment from "./shared/DocumentAttachment";
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -792,12 +793,14 @@ function CoachConversations() {
   };
 
   // Message submission handler for ChatInput component
-  const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
+  const handleMessageSubmit = async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
     // Prevent double execution from React StrictMode or duplicate events
     if (isSendingMessage.current || !agentRef.current) return;
 
-    // Validate input - require either text or images
-    if (!messageContent?.trim() && (!imageS3Keys || imageS3Keys.length === 0)) {
+    // Validate input - require either text, images, or documents
+    const hasImages = imageS3Keys && imageS3Keys.length > 0;
+    const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+    if (!messageContent?.trim() && !hasImages && !hasDocuments) {
       return;
     }
 
@@ -817,6 +820,7 @@ function CoachConversations() {
             handleStreamingError(error, { error: showError });
           },
         },
+        documentS3Keys,
       );
 
       // Scroll after message is sent to ensure we're at the bottom
@@ -923,6 +927,19 @@ function CoachConversations() {
                 s3Key={s3Key}
                 userId={userId}
                 index={index}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Render document attachments if present */}
+        {message.documentS3Keys && message.documentS3Keys.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {message.documentS3Keys.map((s3Key, index) => (
+              <DocumentAttachment
+                key={index}
+                s3Key={s3Key}
+                userId={userId}
               />
             ))}
           </div>
@@ -1438,7 +1455,7 @@ function CoachConversations() {
                           ></div>
                         </div>
                       </div>
-                      <div className="flex items-start gap-2 px-2 mt-2">
+                      <div className="flex items-start gap-2 mt-2">
                         <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
                           {coachConversationAgentState.coach?.name?.charAt(0) ||
                             "C"}

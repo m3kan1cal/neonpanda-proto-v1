@@ -15,6 +15,7 @@ export function parseRequestBody(
   userResponse: string | undefined;
   messageTimestamp: string | undefined;
   imageS3Keys?: string[];
+  documentS3Keys?: string[];
   editContext?: ConversationEditContext;
 } {
   if (!body) {
@@ -32,13 +33,14 @@ export function parseRequestBody(
     throw new Error("Invalid JSON in request body");
   }
 
-  const { userResponse, messageTimestamp, imageS3Keys, editContext } =
+  const { userResponse, messageTimestamp, imageS3Keys, documentS3Keys, editContext } =
     parsedBody;
 
   return {
     userResponse,
     messageTimestamp,
     imageS3Keys,
+    documentS3Keys,
     editContext,
   };
 }
@@ -83,15 +85,51 @@ export function validateMessageTimestamp(
 }
 
 /**
+ * Validate document S3 keys
+ */
+const SUPPORTED_DOCUMENT_EXTENSIONS = ['pdf', 'csv', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'html'];
+
+export function validateDocumentS3Keys(
+  documentS3Keys: string[] | undefined,
+  userId: string,
+  maxDocuments: number = 3,
+): void {
+  if (!documentS3Keys) {
+    return;
+  }
+
+  if (!Array.isArray(documentS3Keys)) {
+    throw new Error("documentS3Keys must be an array");
+  }
+
+  if (documentS3Keys.length > maxDocuments) {
+    throw new Error(`Maximum ${maxDocuments} documents per message`);
+  }
+
+  for (const key of documentS3Keys) {
+    if (!key.startsWith(`user-uploads/${userId}/`)) {
+      throw new Error(`Invalid document key: ${key}`);
+    }
+    const ext = key.split('.').pop()?.toLowerCase();
+    if (!ext || !SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
+      throw new Error(`Unsupported document type: ${ext}`);
+    }
+  }
+}
+
+/**
  * Validate user response (optional for some use cases)
  */
 export function validateUserResponse(
   userResponse: string | undefined,
   imageS3Keys?: string[],
+  documentS3Keys?: string[],
 ): void {
-  // Either text or images required
-  if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
-    throw new Error("Either text or images required");
+  // Either text, images, or documents required
+  const hasImages = imageS3Keys && imageS3Keys.length > 0;
+  const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+  if (!userResponse && !hasImages && !hasDocuments) {
+    throw new Error("Either text, images, or documents required");
   }
 }
 
@@ -105,34 +143,40 @@ export function validateStreamingRequestBody(
   options: {
     requireUserResponse?: boolean;
     maxImages?: number;
+    maxDocuments?: number;
     isBase64Encoded?: boolean;
   } = {},
 ): {
   userResponse: string | undefined;
   messageTimestamp: string;
   imageS3Keys?: string[];
+  documentS3Keys?: string[];
   editContext?: ConversationEditContext;
 } {
   const {
     requireUserResponse = true,
     maxImages = 5,
+    maxDocuments = 3,
     isBase64Encoded,
   } = options;
 
   // Parse body
   const parsed = parseRequestBody(body, isBase64Encoded);
-  const { userResponse, messageTimestamp, imageS3Keys, editContext } = parsed;
+  const { userResponse, messageTimestamp, imageS3Keys, documentS3Keys, editContext } = parsed;
 
   // Validate user response (if required)
   if (requireUserResponse && !userResponse) {
     throw new Error("userResponse is required");
   } else if (!requireUserResponse) {
-    // If not strictly required, check that we have either text or images
-    validateUserResponse(userResponse, imageS3Keys);
+    // If not strictly required, check that we have either text, images, or documents
+    validateUserResponse(userResponse, imageS3Keys, documentS3Keys);
   }
 
   // Validate images
   validateImageS3Keys(imageS3Keys, userId, maxImages);
+
+  // Validate documents
+  validateDocumentS3Keys(documentS3Keys, userId, maxDocuments);
 
   // Validate timestamp
   validateMessageTimestamp(messageTimestamp);
@@ -151,6 +195,7 @@ export function validateStreamingRequestBody(
     userResponse,
     messageTimestamp: messageTimestamp as string,
     imageS3Keys,
+    documentS3Keys,
     editContext,
   };
 }

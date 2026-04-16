@@ -160,16 +160,18 @@ async function* createCoachConversationEventStreamV2(
       isBase64Encoded: event.isBase64Encoded,
     });
 
-    const { userResponse, imageS3Keys, editContext } =
+    const { userResponse, imageS3Keys, documentS3Keys, editContext } =
       validateStreamingRequestBody(event.body, userId, {
         requireUserResponse: false,
         maxImages: 5,
+        maxDocuments: 3,
         isBase64Encoded: event.isBase64Encoded,
       });
 
     const params = {
       userResponse,
       imageS3Keys,
+      documentS3Keys,
       editContext,
     };
 
@@ -485,6 +487,7 @@ async function* createCoachConversationEventStreamV2(
       const agentGenerator = agent.converseStream(
         params.userResponse || "",
         params.imageS3Keys,
+        params.documentS3Keys,
       );
 
       // Consume the generator and capture the return value

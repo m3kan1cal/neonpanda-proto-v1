@@ -204,10 +204,13 @@ export function validateStreamingInput(
   agent,
   messageContent,
   imageS3Keys = [],
+  documentS3Keys = [],
 ) {
-  // Allow sending if there's text OR images
+  // Allow sending if there's text, images, or documents
   const hasContent =
-    messageContent.trim() || (imageS3Keys && imageS3Keys.length > 0);
+    messageContent.trim() ||
+    (imageS3Keys && imageS3Keys.length > 0) ||
+    (documentS3Keys && documentS3Keys.length > 0);
 
   return !!(
     hasContent &&

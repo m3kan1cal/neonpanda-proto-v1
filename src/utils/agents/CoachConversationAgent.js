@@ -433,9 +433,10 @@ export class CoachConversationAgent {
     messageContent,
     imageS3Keys = [],
     editContext = null,
+    documentS3Keys = [],
   ) {
     // Input validation - allow text OR images
-    if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
+    if (!validateStreamingInput(this, messageContent, imageS3Keys, documentS3Keys)) {
       logger.warn("❌ sendMessageStream validation failed");
       return;
     }
@@ -458,6 +459,8 @@ export class CoachConversationAgent {
         timestamp: new Date().toISOString(),
         imageS3Keys:
           imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
+        documentS3Keys:
+          documentS3Keys && documentS3Keys.length > 0 ? documentS3Keys : undefined,
       };
       this._addMessage(userMessage);
 
@@ -491,6 +494,7 @@ export class CoachConversationAgent {
           messageContent.trim(),
           imageS3Keys,
           resolvedEditContext,
+          documentS3Keys,
         );
 
         // Process the stream

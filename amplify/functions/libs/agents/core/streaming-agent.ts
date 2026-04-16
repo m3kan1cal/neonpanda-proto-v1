@@ -126,22 +126,28 @@ export class StreamingConversationAgent<
   async *converseStream(
     userMessage: string,
     imageS3Keys?: string[],
+    documentS3Keys?: string[],
   ): AsyncGenerator<string, ConversationAgentResult, unknown> {
+    const hasImages = !!(imageS3Keys && imageS3Keys.length > 0);
+    const hasDocuments = !!(documentS3Keys && documentS3Keys.length > 0);
     console.info("🤖 StreamingConversationAgent.converseStream started:", {
       messageLength: userMessage.length,
-      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+      hasImages,
       imageCount: imageS3Keys?.length || 0,
+      hasDocuments,
+      documentCount: documentS3Keys?.length || 0,
     });
 
     // Step 1: Build user content (text or multimodal)
     let userContent: any;
 
-    if (imageS3Keys && imageS3Keys.length > 0) {
+    if (hasImages || hasDocuments) {
       const tempMessage = {
         role: "user" as const,
         content: userMessage,
-        messageType: "text_with_images" as const,
-        imageS3Keys,
+        messageType: "text_with_attachments" as const,
+        ...(hasImages ? { imageS3Keys } : {}),
+        ...(hasDocuments ? { documentS3Keys } : {}),
       };
       const multimodalMessages = await buildMultimodalContent([tempMessage]);
       userContent = multimodalMessages[0].content;

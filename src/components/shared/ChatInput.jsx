@@ -23,6 +23,7 @@ import {
   TrashIcon,
 } from "../themes/SynthwaveComponents";
 import { useImageUpload } from "../../hooks/useImageUpload";
+import { useFileUpload } from "../../hooks/useFileUpload";
 import { logger } from "../../utils/logger";
 import TiptapEditor from "./TiptapEditor";
 
@@ -65,6 +66,24 @@ const ProgressRing = ({
     </svg>
   );
 };
+
+// Return/enter key icon for keyboard shortcut hint
+const ReturnKeyIcon = () => (
+  <svg
+    className="inline w-3 h-3"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 10l-5 5 5 5M20 4v7a4 4 0 01-4 4H4"
+    />
+  </svg>
+);
 
 // Question mark icon for tips (standardized size)
 const QuestionIcon = () => (
@@ -251,6 +270,9 @@ function ChatInput({
   onPhotoAttachment = null,
   onFileAttachment = null,
 
+  // Quick prompts functionality
+  enableQuickPrompts = true,
+
   // Refs for parent component access
   textareaRef = null,
 
@@ -259,6 +281,13 @@ function ChatInput({
 
   // Conversation size indicator (inline with status)
   conversationSize = null,
+
+  // Optional override for the input wrapper border/style (used by narrow contexts like drawers)
+  inputWrapperClassName = "",
+
+  // Optional editor height overrides (used by narrow contexts like drawers)
+  editorMinHeight = "60px",
+  editorMaxHeight = "150px",
 }) {
   // Early return for skeleton loading state
   if (showSkeleton) {
@@ -314,7 +343,7 @@ function ChatInput({
   // Image upload hook
   const {
     selectedImages,
-    isUploading,
+    isUploading: isUploadingImages,
     uploadProgress,
     uploadingImageIds,
     error: imageError,
@@ -324,6 +353,21 @@ function ChatInput({
     clearImages,
     setError: setImageError,
   } = useImageUpload();
+
+  // File/document upload hook
+  const {
+    selectedFiles,
+    isUploading: isUploadingFiles,
+    error: fileError,
+    selectFiles,
+    uploadFiles,
+    removeFile,
+    clearFiles,
+    setError: setFileError,
+  } = useFileUpload();
+
+  const isUploading = isUploadingImages || isUploadingFiles;
+  const fileInputRef = useRef(null);
 
   // Tiptap editor ref
   const editorRef = useRef(null);
@@ -403,6 +447,21 @@ function ChatInput({
     // Reset file input
     if (photoInputRef.current) {
       photoInputRef.current.value = "";
+    }
+  };
+
+  // Handle file/document selection from file input
+  const handleFileSelect = async (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      try {
+        await selectFiles(files, userId);
+      } catch (err) {
+        logger.error("Error selecting files:", err);
+      }
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -542,10 +601,12 @@ function ChatInput({
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    // Allow sending if there's text OR images
+    // Allow sending if there's text, images, or files
     if (
       isSendingMessage.current ||
-      (!inputMessage.trim() && selectedImages.length === 0)
+      (!inputMessage.trim() &&
+        selectedImages.length === 0 &&
+        selectedFiles.length === 0)
     )
       return;
 
@@ -555,13 +616,18 @@ function ChatInput({
     try {
       // Collect already-uploaded s3Keys (upload happened immediately on select/paste)
       let imageS3Keys = [];
+      let documentS3Keys = [];
       if (selectedImages.length > 0) {
         imageS3Keys = await uploadImages();
       }
+      if (selectedFiles.length > 0) {
+        documentS3Keys = await uploadFiles();
+      }
 
-      // Clear input and images BEFORE sending
+      // Clear input, images, and files BEFORE sending
       setInputMessage("");
       clearImages();
+      clearFiles();
 
       // Clear editor and refocus
       setTimeout(() => {
@@ -571,11 +637,11 @@ function ChatInput({
         }
       }, 50);
 
-      // Send message with images
-      await onSubmit(messageToSend, imageS3Keys);
+      // Send message with images and documents
+      await onSubmit(messageToSend, imageS3Keys, documentS3Keys);
     } catch (error) {
       logger.error("Error sending message:", error);
-      // Don't clear images on error so user can retry
+      // Don't clear attachments on error so user can retry
     } finally {
       // Reset flag after message is sent (success or failure)
       isSendingMessage.current = false;
@@ -743,18 +809,55 @@ function ChatInput({
           </div>
         )}
 
+        {/* File/Document Preview Strip */}
+        {selectedFiles.length > 0 && (
+          <div className="mb-2">
+            <div className="flex flex-wrap gap-2">
+              {selectedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 bg-synthwave-bg-primary/60 border border-synthwave-neon-purple/30 rounded-md px-3 py-1.5 text-xs font-body"
+                >
+                  <PaperclipIcon className="w-3.5 h-3.5 text-synthwave-neon-purple shrink-0" />
+                  <span className="text-synthwave-text-secondary truncate max-w-[140px]">
+                    {file.name}
+                  </span>
+                  <span className="text-synthwave-text-muted shrink-0">
+                    {file.size < 1024
+                      ? `${file.size}B`
+                      : file.size < 1024 * 1024
+                        ? `${(file.size / 1024).toFixed(0)}KB`
+                        : `${(file.size / (1024 * 1024)).toFixed(1)}MB`}
+                  </span>
+                  {file.uploadStatus === "uploading" && (
+                    <div className="w-3.5 h-3.5 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin shrink-0"></div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeFile(file.id)}
+                    className="text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors cursor-pointer shrink-0"
+                    disabled={file.uploadStatus === "uploading"}
+                  >
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Error Display */}
-        {imageError && (
+        {(imageError || fileError) && (
           <div className="mb-3">
             <div
               className={`${containerPatterns.inlineError} flex items-start justify-between`}
             >
               <span className="text-sm font-body text-red-400">
-                {imageError}
+                {imageError || fileError}
               </span>
               <button
                 type="button"
-                onClick={() => setImageError(null)}
+                onClick={() => { setImageError(null); setFileError(null); }}
                 className="text-red-400 hover:text-red-300 cursor-pointer"
               >
                 <XIcon className="w-4 h-4" />
@@ -782,7 +885,7 @@ function ChatInput({
 
         {/* Input area */}
         <form onSubmit={handleSendMessage} className="flex items-end">
-          {/* Hidden file input */}
+          {/* Hidden photo input */}
           <input
             ref={photoInputRef}
             type="file"
@@ -790,6 +893,15 @@ function ChatInput({
             multiple
             style={{ display: "none" }}
             onChange={handlePhotoSelect}
+          />
+          {/* Hidden document file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.csv,.txt,.md,.doc,.docx,.xls,.xlsx,.html"
+            multiple
+            style={{ display: "none" }}
+            onChange={handleFileSelect}
           />
           {/* Text input */}
           <div className="flex-1 relative">
@@ -858,7 +970,7 @@ function ChatInput({
             )}
 
             {/* Input container: editor area + button row share the same border/bg */}
-            <div className={inputPatterns.chatInputWrapper}>
+            <div className={`${inputPatterns.chatInputWrapper} ${inputWrapperClassName}`}>
               <TiptapEditor
                 ref={editorRef}
                 content={inputMessage}
@@ -872,8 +984,8 @@ function ChatInput({
                 disabled={isTyping}
                 mode="rich"
                 className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
-                minHeight="60px"
-                maxHeight="150px"
+                minHeight={editorMinHeight}
+                maxHeight={editorMaxHeight}
                 scrollOnWrapper={true}
                 onPaste={handlePaste}
               />
@@ -905,8 +1017,8 @@ function ChatInput({
                       className={`absolute bottom-full mb-2 left-0 w-56 z-50 ${containerPatterns.cardMediumOpaque}`}
                     >
                       <div className="py-2">
-                        {/* Quick Prompts Menu Item - always show */}
-                        <div className="relative">
+                        {/* Quick Prompts Menu Item */}
+                        {enableQuickPrompts && <div className="relative">
                           <button
                             type="button"
                             onClick={() =>
@@ -1012,10 +1124,10 @@ function ChatInput({
                               </div>
                             </div>
                           )}
-                        </div>
+                        </div>}
 
-                        {/* Divider - only show if there are attachment options */}
-                        {(enablePhotoAttachment || enableFileAttachment) && (
+                        {/* Divider - only show if quick prompts and attachment options are both present */}
+                        {enableQuickPrompts && (enablePhotoAttachment || enableFileAttachment) && (
                           <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
                         )}
 
@@ -1044,6 +1156,8 @@ function ChatInput({
                               setShowQuickActionsPopup(false);
                               if (onFileAttachment) {
                                 onFileAttachment();
+                              } else {
+                                fileInputRef.current?.click();
                               }
                             }}
                             className="flex items-center space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-purple-400 hover:bg-purple-400/10 transition-all duration-300 w-full text-left cursor-pointer"
@@ -1310,7 +1424,7 @@ function ChatInput({
                   </div>
 
                   {/* Send/Voice button */}
-                  {inputMessage.trim() || selectedImages.length > 0 ? (
+                  {inputMessage.trim() || selectedImages.length > 0 || selectedFiles.length > 0 ? (
                     <button
                       type="submit"
                       disabled={isTyping || isUploading}
@@ -1368,14 +1482,14 @@ function ChatInput({
           {/* Left: AI disclaimer - aligned with text input left edge */}
           <div className="flex items-center">
             <span className="text-synthwave-text-muted/80">
-              AI can make mistakes • Always verify important information
+              AI can make mistakes
             </span>
           </div>
           {/* Right: Keyboard shortcuts - always visible */}
           <div className="flex items-center">
             {/* Desktop: Show keyboard shortcuts */}
-            <span className="hidden md:inline">
-              Press Enter to send • Shift+Enter for new line
+            <span className="hidden md:inline flex items-center gap-1">
+              <ReturnKeyIcon /> to send · ⇧<ReturnKeyIcon /> for new line
             </span>
           </div>
         </div>

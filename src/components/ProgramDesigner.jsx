@@ -697,12 +697,14 @@ function ProgramDesigner() {
   };
 
   // Message submission handler for ChatInput component
-  const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
+  const handleMessageSubmit = async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
     // Prevent double execution from React StrictMode or duplicate events
     if (isSendingMessage.current || !agentRef.current) return;
 
-    // Validate input - require either text or images
-    if (!messageContent?.trim() && (!imageS3Keys || imageS3Keys.length === 0)) {
+    // Validate input - require either text, images, or documents
+    const hasImages = imageS3Keys && imageS3Keys.length > 0;
+    const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+    if (!messageContent?.trim() && !hasImages && !hasDocuments) {
       return;
     }
 
@@ -722,6 +724,7 @@ function ProgramDesigner() {
             handleStreamingError(error, { error: showError });
           },
         },
+        documentS3Keys,
       );
 
       // Scroll after message is sent to ensure we're at the bottom

@@ -743,6 +743,13 @@ export const avatarPatterns = {
   aiSmall:
     "w-8 h-8 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-header font-bold text-sm shadow-sm shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
 
+  // Compact avatars (24px) - drawer-only, do not use on other pages
+  aiXSmall:
+    "w-6 h-6 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-header font-bold text-xs shadow-sm shadow-synthwave-neon-cyan/20 ring-1 ring-synthwave-neon-cyan/30",
+
+  userXSmall:
+    "w-6 h-6 bg-gradient-to-br from-synthwave-neon-pink via-synthwave-neon-purple to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-header font-bold text-xs shadow-sm shadow-synthwave-neon-pink/20 ring-1 ring-synthwave-neon-pink/30",
+
   coachLarge:
     "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-header font-bold text-lg shadow-sm shadow-synthwave-neon-cyan/30 ring-2 ring-synthwave-neon-cyan/30",
 
@@ -1036,6 +1043,21 @@ export const navigationPatterns = {
       "fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden animate-fade-in",
   },
 
+  // Entity Chat FAB — floating panda-head chat button on entity detail pages (WorkoutDetails, etc.)
+  // Stacks above the mobile QuickActionsFAB using CSS custom property for responsive bottom offset:
+  //   mobile:  calc(152px + safe-area) = 80px nav + 56px FAB + 16px gap + safe-area
+  //   desktop: calc(32px  + safe-area) = just above viewport edge (no QuickActionsFAB on desktop)
+  entityChatFab: {
+    container: "fixed right-8 z-[45] md:[--entity-fab-bottom:32px]",
+    containerStyle: {
+      bottom: "calc(var(--entity-fab-bottom, 152px) + env(safe-area-inset-bottom))",
+    },
+    button:
+      "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink/40 transition-all duration-300 hover:border-synthwave-neon-pink/70 hover:shadow-[0_0_20px_rgba(255,0,128,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
+    buttonActive:
+      "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink shadow-[0_0_20px_rgba(255,0,128,0.4)] scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
+  },
+
   // Quick Prompts Submenu - Context-aware prompt suggestions
   quickPrompts: {
     // Submenu container - mobile: fixed centered, desktop: absolute to right
@@ -1217,13 +1239,13 @@ export const scrollbarPatterns = {
 // Desktop (lg+): right-side slide-over, ~420px wide, overlays content with backdrop
 // Mobile (<lg): full-screen takeover, slides up from bottom
 export const contextualDrawerPatterns = {
-  // Backdrop overlay — semi-transparent blur behind the panel
+  // Backdrop overlay — semi-transparent overlay behind the panel (no blur so content remains visible)
   backdrop:
-    "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300",
+    "fixed inset-0 z-40 bg-black/20 transition-opacity duration-300",
 
   // Desktop slide-over panel (right side, fixed 420px width)
   panelDesktop:
-    "fixed top-0 right-0 h-full w-[420px] z-50 flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl border-l border-synthwave-neon-cyan/20 shadow-[-8px_0_32px_rgba(0,255,255,0.1)] transition-transform duration-300 ease-out",
+    "fixed top-0 right-0 h-full w-[420px] z-50 flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
 
   // Mobile full-screen panel (inset 0, slides up from bottom)
   panelMobile:
@@ -1231,31 +1253,27 @@ export const contextualDrawerPatterns = {
 
   // Panel header — entity name, edit badge, close button
   header:
-    "flex items-center gap-3 px-4 py-3 border-b border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/50 shrink-0",
+    "flex items-center gap-3 px-3 py-3 border-b border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/50 shrink-0",
 
   // Header entity label
   headerLabel:
-    "flex-1 min-w-0 font-body font-semibold text-sm text-synthwave-text-primary truncate",
-
-  // Header "Editing" badge
-  headerBadge:
-    "shrink-0 px-2 py-0.5 rounded-full bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan font-body text-xs font-medium",
+    "flex-1 min-w-0 font-header font-bold text-white text-sm uppercase truncate",
 
   // Scrollable message area
   messageArea:
-    "flex-1 overflow-y-auto px-4 py-3 space-y-4 custom-scrollbar-cyan",
+    "flex-1 overflow-y-auto px-6 pt-3 pb-64 space-y-4 custom-scrollbar-cyan",
 
   // Pinned input area at bottom
   inputArea:
-    "shrink-0 border-t border-synthwave-neon-cyan/10 bg-synthwave-bg-card/80",
+    "shrink-0 border-t border-synthwave-neon-cyan/10 bg-synthwave-bg-card/80 text-sm",
 
-  // AI message bubble (reuses containerPatterns.aiChatBubble style)
+  // AI message — plain text style matching CoachConversations (no bubble)
   aiMessage:
-    "bg-synthwave-bg-card border border-synthwave-neon-cyan/15 rounded-lg px-3 py-2 text-sm text-synthwave-text-primary max-w-full",
+    "font-ai text-xs leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
 
-  // User message bubble
+  // User message bubble — matches CoachConversations userMessageBubble style, condensed for drawer width
   userMessage:
-    "bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 rounded-lg px-3 py-2 text-sm text-synthwave-text-primary max-w-full ml-auto",
+    "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white rounded-md rounded-br-none shadow-sm shadow-synthwave-neon-pink/30 px-3 py-2 max-w-[85%] ml-auto font-body text-xs leading-relaxed",
 
   // Close button (icon button style)
   closeButton:
@@ -1469,10 +1487,11 @@ export const streamingPatterns = {
     dotsContainer: "flex space-x-1",
     dot: "w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot",
     text: "font-body text-base italic animate-contextual-pulse text-synthwave-text-secondary/70",
+    textCompact: "font-body text-xs italic animate-contextual-pulse text-synthwave-text-secondary/70",
   },
 
   // Avatar row below contextual update or typing indicator
-  avatarRow: "flex items-start gap-2 px-2 mt-2",
+  avatarRow: "flex items-start gap-2 mt-2",
 };
 
 // Skeleton Loading Patterns - Centralized border-radius and appearance for all skeleton elements

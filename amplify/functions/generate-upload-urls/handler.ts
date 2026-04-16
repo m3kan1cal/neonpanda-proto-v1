@@ -7,6 +7,35 @@ import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { generatePresignedPutUrl, getBucketName } from '../libs/s3-utils';
 import { logger } from "../libs/logger";
 
+// Supported image extensions
+const SUPPORTED_IMAGE_EXTENSIONS = ['jpg', 'png', 'webp', 'gif', 'heic', 'heif'];
+
+// Supported document extensions (matches Bedrock Converse API document block formats)
+const SUPPORTED_DOCUMENT_EXTENSIONS = ['pdf', 'csv', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'html'];
+
+const SUPPORTED_EXTENSIONS = [...SUPPORTED_IMAGE_EXTENSIONS, ...SUPPORTED_DOCUMENT_EXTENSIONS];
+
+// Map extensions to MIME content types for presigned URL generation
+const CONTENT_TYPE_MAP: Record<string, string> = {
+  // Images
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  // Documents
+  pdf: 'application/pdf',
+  csv: 'text/csv',
+  txt: 'text/plain',
+  md: 'text/markdown',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  html: 'text/html',
+};
+
 const baseHandler: AuthenticatedHandler = async (event) => {
   logger.info('🖼️ Starting presigned URL generation', {
     pathUserId: event.pathParameters?.userId,
@@ -55,7 +84,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Normalize extension
     let extension = fileType.toLowerCase();
     if (extension === 'jpeg') extension = 'jpg';
-    if (!['jpg', 'png', 'webp', 'gif', 'heic', 'heif'].includes(extension)) {
+    if (!SUPPORTED_EXTENSIONS.includes(extension)) {
       return createErrorResponse(400, `Unsupported file type: ${fileType}`);
     }
 
@@ -63,8 +92,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const s3Key = `user-uploads/${userId}/${nanoid()}.${extension}`;
 
     // Create presigned URL (expires in 5 minutes)
+    const contentType = CONTENT_TYPE_MAP[extension] || 'application/octet-stream';
     const uploadUrl = await generatePresignedPutUrl(s3Key, {
-      contentType: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+      contentType,
       expiresIn: 300,
     });
 

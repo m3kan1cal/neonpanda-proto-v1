@@ -76,7 +76,7 @@ const AuthRouter = () => {
         navigate("/coaches");
       }
     }
-  }, [isAuthenticated, user, navigate, currentView]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleSwitchToLogin = () => {
     setCurrentView(AUTH_VIEWS.LOGIN);
@@ -125,8 +125,9 @@ const AuthRouter = () => {
   };
 
   // Show loading screen while auth state is resolving on initial page load,
-  // or while processing an OAuth callback redirect (code+state params in URL).
-  if (loading || isOAuthCallback) {
+  // while processing an OAuth callback redirect (code+state params in URL),
+  // or while authenticated but navigation hasn't completed yet (prevents form flash).
+  if (loading || isOAuthCallback || (isAuthenticated && user)) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-synthwave-bg-primary">
         <div className="text-center space-y-4">

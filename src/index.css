@@ -241,6 +241,11 @@
   font-family: var(--font-body);
 }
 
+/* Contextual drawer — compact placeholder text (one step smaller than default) */
+.contextual-drawer-input .tiptap-content p.is-editor-empty:first-child::before {
+  font-size: 0.8rem;
+}
+
 /* Tiptap content area reset */
 .tiptap-content {
   word-wrap: break-word;
