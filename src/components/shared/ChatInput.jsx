@@ -288,6 +288,9 @@ function ChatInput({
   // Optional editor height overrides (used by narrow contexts like drawers)
   editorMinHeight = "60px",
   editorMaxHeight = "150px",
+
+  // Compact mode — tighter padding and smaller send button for narrow contexts (e.g. drawer)
+  compact = false,
 }) {
   // Early return for skeleton loading state
   if (showSkeleton) {
@@ -770,9 +773,15 @@ function ChatInput({
       className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
       data-chat-input-container
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
-        {/* Image Preview Grid */}
-        {selectedImages.length > 0 && (
+      <div
+        className={
+          compact
+            ? "px-3 py-2"
+            : "max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6"
+        }
+      >
+        {/* Attachment Preview Grid — images and documents share one row */}
+        {(selectedImages.length > 0 || selectedFiles.length > 0) && (
           <div className="mb-2">
             <div className={imagePreviewPatterns.grid}>
               {selectedImages.map((image) => (
@@ -805,43 +814,67 @@ function ChatInput({
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        )}
 
-        {/* File/Document Preview Strip */}
-        {selectedFiles.length > 0 && (
-          <div className="mb-2">
-            <div className="flex flex-wrap gap-2">
-              {selectedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center gap-2 bg-synthwave-bg-primary/60 border border-synthwave-neon-purple/30 rounded-md px-3 py-1.5 text-xs font-body"
-                >
-                  <PaperclipIcon className="w-3.5 h-3.5 text-synthwave-neon-purple shrink-0" />
-                  <span className="text-synthwave-text-secondary truncate max-w-[140px]">
-                    {file.name}
-                  </span>
-                  <span className="text-synthwave-text-muted shrink-0">
-                    {file.size < 1024
-                      ? `${file.size}B`
-                      : file.size < 1024 * 1024
-                        ? `${(file.size / 1024).toFixed(0)}KB`
-                        : `${(file.size / (1024 * 1024)).toFixed(1)}MB`}
-                  </span>
-                  {file.uploadStatus === "uploading" && (
-                    <div className="w-3.5 h-3.5 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin shrink-0"></div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeFile(file.id)}
-                    className="text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors cursor-pointer shrink-0"
-                    disabled={file.uploadStatus === "uploading"}
+              {selectedFiles.map((file) => {
+                const ext =
+                  file.name.split(".").pop()?.toUpperCase() || "FILE";
+                const sizeLabel =
+                  file.size < 1024
+                    ? `${file.size}B`
+                    : file.size < 1024 * 1024
+                      ? `${(file.size / 1024).toFixed(0)}KB`
+                      : `${(file.size / (1024 * 1024)).toFixed(1)}MB`;
+                return (
+                  <div
+                    key={file.id}
+                    className="relative shrink-0 w-16 h-16 rounded-md overflow-visible border border-synthwave-neon-purple/30 bg-synthwave-bg-primary"
                   >
-                    <XIcon className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+                    <div className="absolute inset-0 overflow-hidden rounded-md flex items-center justify-center">
+                      {/* Upload spinner overlay */}
+                      {file.uploadStatus === "uploading" && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                          <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
+
+                      {/* Document icon */}
+                      <svg
+                        className="w-6 h-6 text-synthwave-text-secondary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+
+                      {/* File type badge — top left */}
+                      <span className="absolute top-1 left-1 px-1 py-0.5 rounded bg-synthwave-neon-purple/20 text-synthwave-neon-purple text-[9px] font-semibold uppercase tracking-wide">
+                        {ext}
+                      </span>
+
+                      {/* Size label — bottom overlay */}
+                      <div className={imagePreviewPatterns.sizeLabel}>
+                        {sizeLabel}
+                      </div>
+                    </div>
+
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={() => removeFile(file.id)}
+                      className={imagePreviewPatterns.removeButton}
+                      disabled={file.uploadStatus === "uploading"}
+                    >
+                      <XIcon className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1428,12 +1461,16 @@ function ChatInput({
                     <button
                       type="submit"
                       disabled={isTyping || isUploading}
-                      className={buttonPatterns.sendInline}
+                      className={
+                        compact
+                          ? buttonPatterns.sendInlineCompact
+                          : buttonPatterns.sendInline
+                      }
                     >
                       {isTyping || isUploading ? (
-                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       ) : (
-                        <SendIcon className="w-3.5 h-3.5" />
+                        <SendIcon className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
                       )}
                     </button>
                   ) : enableRecording ? (
@@ -1457,9 +1494,9 @@ function ChatInput({
                     <button
                       type="submit"
                       disabled
-                      className="w-7 h-7 rounded-full bg-synthwave-bg-primary/30 text-synthwave-text-muted flex items-center justify-center opacity-50 cursor-not-allowed"
+                      className={`${compact ? "w-6 h-6" : "w-7 h-7"} rounded-full bg-synthwave-bg-primary/30 text-synthwave-text-muted flex items-center justify-center opacity-50 cursor-not-allowed`}
                     >
-                      <SendIcon className="w-3.5 h-3.5" />
+                      <SendIcon className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
                     </button>
                   )}
                 </div>
@@ -1488,7 +1525,7 @@ function ChatInput({
           {/* Right: Keyboard shortcuts - always visible */}
           <div className="flex items-center">
             {/* Desktop: Show keyboard shortcuts */}
-            <span className="hidden md:inline flex items-center gap-1">
+            <span className="hidden md:inline-flex items-center gap-1">
               <ReturnKeyIcon /> to send · ⇧<ReturnKeyIcon /> for new line
             </span>
           </div>

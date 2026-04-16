@@ -22,7 +22,7 @@ import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
-import DocumentAttachment from "./DocumentAttachment";
+import DocumentThumbnail from "./DocumentThumbnail";
 import { ContextualUpdateIndicator } from "../../utils/ui/streamingUiHelper.jsx";
 import {
   contextualDrawerPatterns,
@@ -249,7 +249,11 @@ export default function ContextualChatDrawer({
   // ──────────────────────────────────────────────────────────────────────────
   const handleSend = useCallback(
     async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
-      if (!agentRef.current || !messageContent.trim()) return;
+      if (!agentRef.current) return;
+
+      const hasImages = imageS3Keys && imageS3Keys.length > 0;
+      const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+      if (!messageContent?.trim() && !hasImages && !hasDocuments) return;
       setInputMessage("");
 
       try {
@@ -490,6 +494,7 @@ function PanelContent({
             textareaRef={inputFocusRef}
             editorMinHeight="44px"
             editorMaxHeight="120px"
+            compact={true}
           />
         </div>
       </div>
@@ -578,28 +583,30 @@ function MessageBubble({ message, coachInitial, userInitial, userId }) {
   if (isUser) {
     return (
       <div className="flex flex-col items-end">
-        {hasImages && (
-          <div className="flex flex-wrap gap-1.5 mb-1.5 justify-end">
-            {message.imageS3Keys.map((s3Key, index) => (
-              <ImageWithPresignedUrl
-                key={index}
-                s3Key={s3Key}
-                userId={userId}
-                index={index}
-                thumbnailSize="w-16 h-16"
-                variant="maroon"
-              />
-            ))}
-          </div>
-        )}
-        {hasDocuments && (
-          <div className="flex flex-wrap gap-1.5 mb-1.5 justify-end">
-            {message.documentS3Keys.map((s3Key, index) => (
-              <DocumentAttachment key={index} s3Key={s3Key} userId={userId} />
-            ))}
-          </div>
-        )}
         <div className={contextualDrawerPatterns.userMessage}>
+          {(hasImages || hasDocuments) && (
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {message.imageS3Keys?.map((s3Key, index) => (
+                <ImageWithPresignedUrl
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  index={index}
+                  thumbnailSize="w-16 h-16"
+                  variant="maroon"
+                />
+              ))}
+              {message.documentS3Keys?.map((s3Key, index) => (
+                <DocumentThumbnail
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  thumbnailSize="w-16 h-16"
+                  variant="purple"
+                />
+              ))}
+            </div>
+          )}
           <p className="whitespace-pre-wrap break-words">{content}</p>
         </div>
         <div className="flex items-center gap-2 mt-1.5 justify-end">
