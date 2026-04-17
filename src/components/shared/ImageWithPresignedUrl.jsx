@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { getPresignedImageUrl } from "../../utils/s3Helper";
 import { logger } from "../../utils/logger";
 
@@ -53,19 +54,22 @@ const ImageWithPresignedUrl = ({
   useEffect(() => {
     const handleEscKey = (event) => {
       if (event.key === "Escape") {
+        // Capture phase + stopImmediatePropagation so ancestor drawers
+        // listening on document don't also close when escaping the lightbox
+        event.stopImmediatePropagation();
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscKey);
+      document.addEventListener("keydown", handleEscKey, true);
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscKey);
+      document.removeEventListener("keydown", handleEscKey, true);
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
@@ -100,8 +104,8 @@ const ImageWithPresignedUrl = ({
         )}
       </div>
 
-      {/* Lightbox — same markup as LandingPage.jsx; z-[60] sits above the z-50 chat input bar */}
-      {isOpen && (
+      {/* Lightbox — portal to document.body so CSS transform on ContextualChatDrawer doesn't break fixed positioning */}
+      {isOpen && createPortal(
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6"
           onClick={() => setIsOpen(false)}
@@ -137,7 +141,8 @@ const ImageWithPresignedUrl = ({
               </svg>
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

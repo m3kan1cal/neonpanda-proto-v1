@@ -4,7 +4,7 @@
  * Provides utilities for filtering, processing, and analyzing conversation messages.
  */
 
-import { CoachMessage, CONVERSATION_MODES } from "./types";
+import { CoachMessage, CONVERSATION_MODES, MESSAGE_TYPES } from "./types";
 import { logger } from "../logger";
 
 /**
@@ -68,4 +68,40 @@ export function extractLatestBuildModeSection(
   });
 
   return buildSectionMessages;
+}
+
+/**
+ * Build a user CoachMessage with consistent handling of image and document
+ * attachments. Centralizes the messageType decision:
+ *   - no attachments: messageType omitted
+ *   - images only: TEXT_WITH_IMAGES
+ *   - any documents (with or without images): TEXT_WITH_ATTACHMENTS
+ *
+ * Used by all streaming and helper flows that save a user turn to a
+ * coachConversation. Does NOT apply to send-coach-conversation-message or
+ * response-orchestrator, which follow a different messageType convention.
+ */
+export function buildUserMessage(
+  content: string,
+  imageS3Keys?: string[],
+  documentS3Keys?: string[],
+): CoachMessage {
+  const hasImages = !!(imageS3Keys && imageS3Keys.length > 0);
+  const hasDocuments = !!(documentS3Keys && documentS3Keys.length > 0);
+
+  return {
+    id: `msg_${Date.now()}_user`,
+    role: "user",
+    content,
+    timestamp: new Date(),
+    ...(hasImages ? { imageS3Keys } : {}),
+    ...(hasDocuments ? { documentS3Keys } : {}),
+    ...(hasImages || hasDocuments
+      ? {
+          messageType: hasDocuments
+            ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
+            : MESSAGE_TYPES.TEXT_WITH_IMAGES,
+        }
+      : {}),
+  };
 }
