@@ -35,7 +35,7 @@ test/fixtures/*
 docs/social-content/
 
 # AI Agent development=
-.claude/*
+# .claude/*
 
 # Incident logs
 incidents/
