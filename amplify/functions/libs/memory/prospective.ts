@@ -36,7 +36,12 @@ const PLATFORM_SUPPORT_PATTERNS: RegExp[] = [
   /\bneon panda\b/i,
   /\breach out to (?:the )?(?:team|support|devs?|developers?)\b/i,
   /\bcontact (?:support|the team|customer service|customer support)\b/i,
-  /\btalk to (?:mark|support|the team)\b/i,
+  /\btalk to (?:support|the team)\b/i,
+  /\b(?:chat|email|message|text|dm|ping)\s+(?:support|the team|customer service)\b/i,
+  /\b(?:submit|open|raise|create)\s+(?:a\s+)?(?:ticket|bug report|support ticket|support request)\b/i,
+  /\b(?:follow up|check in)\s+with\s+(?:support|the team|neonpanda)\b/i,
+  /\b(?:cancel|delete|close)\s+(?:my\s+)?(?:account|subscription|membership)\b/i,
+  /\b(?:reset|forgot|recover)\s+(?:my\s+)?password\b/i,
   /\b(?:app|platform|system|site|website) (?:bug|issue|problem|error|outage|glitch)\b/i,
   /\b(?:logging|deletion|account|billing|login|signup|signin|sign-in|sign-up) (?:bug|issue|problem|error)\b/i,
   /\breport (?:a |the )?bug\b/i,
@@ -111,7 +116,7 @@ WHAT NOT TO EXTRACT:
 - Past events or completed workouts
 - Vague aspirations without any timeframe ("I want to get stronger" — no date/timeframe)
 - Things already being tracked as active program goals
-- Platform or app support items: bug reports, account issues, logging/deletion problems, feature requests, commitments to "reach out to NeonPanda", "contact support", "talk to the team", or any task directed at the NeonPanda platform or its developers. These are infrastructure concerns, not training actions — do not extract them as follow-ups.
+- Platform or app support items: bug reports, feature requests, account issues (billing, payment, subscription, password reset, account deletion), logging/deletion problems, or any commitment directed at the NeonPanda platform or its developers — including "reach out to NeonPanda", "contact/chat/email/message support", "talk to/follow up with the team", "submit/open a ticket", or "cancel my account". These are infrastructure concerns, not training actions — do not extract them as follow-ups.
 
 DATE RESOLUTION:
 - Convert relative dates to ISO format using CURRENT DATE as anchor
