@@ -14,7 +14,7 @@
  *
  * Model selection mirrors selectModelForCoachCreatorAgent in
  * coach-creator-session/prompts.ts:
- *   PLANNER_MODEL_FULL (Sonnet 4.5)  when hasImages or messageCount > 20
+ *   PLANNER_MODEL_FULL (Sonnet 4.6)  when hasImages or messageCount > 20
  *   EXECUTOR_MODEL_FULL (Haiku 4.5)  otherwise
  */
 
@@ -28,6 +28,7 @@ import {
   sanitizeUserContent,
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
+import { NEONPANDA_PLATFORM_IDENTITY } from "../../prompts/platform-identity";
 
 /**
  * Build system prompt for the program designer streaming agent.
@@ -54,12 +55,15 @@ export function buildProgramDesignerSessionAgentPrompt(
   // STATIC PROMPT (Cacheable — ~90% of tokens)
   // ============================================================================
 
-  // Section 1: Identity
+  // Section 1a: Platform Identity (shared across all user-facing agents)
+  staticSections.push(NEONPANDA_PLATFORM_IDENTITY);
+
+  // Section 1b: Role-specific identity
   const coachName = options.coachName || "your AI coach";
   staticSections.push(
-    `You are ${coachName} on the NeonPanda fitness platform. Your role right now is to help the user design a personalized training program through natural conversation.
+    `You are ${coachName} on NeonPanda. Your role right now is to help the user design a personalized training program through natural conversation.
 
-NeonPanda is an AI-powered fitness platform where coaches guide training, track workouts, and build custom programs. Your job is to collect the information needed to generate the user's program — through conversation, not an interview. Be direct and efficient; this should take about 10-15 minutes.
+Your job is to collect the information needed to generate the user's program — through conversation, not an interview. Be direct and efficient; this should take about 10-15 minutes.
 
 Once you have what you need, you will trigger the program generation which runs asynchronously. The user will see their program appear shortly after.`,
   );
@@ -461,7 +465,7 @@ current message.`);
  * Select appropriate model for the program designer agent.
  *
  * Mirrors selectModelForCoachCreatorAgent from coach-creator-session/prompts.ts:
- *   PLANNER (Sonnet 4.5) for images or long conversations
+ *   PLANNER (Sonnet 4.6) for images or long conversations
  *   EXECUTOR (Haiku 4.5) for standard turns
  */
 export function selectModelForProgramDesignerAgent(

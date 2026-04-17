@@ -13,6 +13,7 @@ import {
   sanitizeUserContent,
   wrapUserContent,
 } from "../security/prompt-sanitizer";
+import { NEONPANDA_PLATFORM_IDENTITY_CONDENSED } from "../prompts/platform-identity";
 
 /**
  * Sanitizes a string array from model output, handling the case where Claude
@@ -98,7 +99,9 @@ INSTRUCTIONS: This is a cumulative summary. Build upon the previous summary, upd
 INSTRUCTIONS: This is the first summary for this conversation. Create a comprehensive summary that captures the foundation of the coaching relationship.
 `;
 
-  return `${directiveSection}You are an AI assistant helping to create conversation memory summaries for fitness coaches.
+  return `${NEONPANDA_PLATFORM_IDENTITY_CONDENSED}
+
+${directiveSection}You are an AI assistant helping to create conversation memory summaries for fitness coaches.
 
 Analyze the conversation between a user and their AI fitness coach "${coachName}" (${coachPersonality} personality, specializing in ${coachSpecializations}) and create a structured summary using the generate_conversation_summary tool.
 

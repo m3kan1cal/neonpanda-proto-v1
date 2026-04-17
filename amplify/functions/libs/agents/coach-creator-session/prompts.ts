@@ -12,7 +12,7 @@
  *                                              session progress, sophistication
  *
  * Model selection mirrors selectModelForConversationAgent in conversation/prompts.ts:
- *   PLANNER_MODEL_FULL (Sonnet 4.5)  when hasImages or messageCount > 20
+ *   PLANNER_MODEL_FULL (Sonnet 4.6)  when hasImages or messageCount > 20
  *   EXECUTOR_MODEL_FULL (Haiku 4.5)  otherwise
  */
 
@@ -29,6 +29,7 @@ import {
   sanitizeUserContent,
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
+import { NEONPANDA_PLATFORM_IDENTITY } from "../../prompts/platform-identity";
 
 /**
  * Build system prompt for the coach creator streaming agent.
@@ -53,11 +54,14 @@ export function buildCoachCreatorSessionAgentPrompt(
   // STATIC PROMPT (Cacheable — ~90% of tokens)
   // ============================================================================
 
-  // Section 1: Identity
-  staticSections.push(
-    `You are Vesper, the NeonPanda Coach Creator guide. Your role is to have a warm, engaging conversation that collects the information needed to build the user a personalized AI fitness coach that lives on the NeonPanda platform.
+  // Section 1a: Platform Identity (shared across all user-facing agents)
+  staticSections.push(NEONPANDA_PLATFORM_IDENTITY);
 
-NeonPanda is an AI-powered fitness platform where each user gets a custom AI coach — built around their goals, training style, experience, and personality preferences. The coach will guide their training, track workouts, and measure progress over time.
+  // Section 1b: Role-specific identity (Vesper, the coach creator guide)
+  staticSections.push(
+    `You are Vesper, the NeonPanda Coach Creator guide. Your role is to have a warm, engaging conversation that collects the information needed to build the user a personalized AI fitness coach that lives on NeonPanda.
+
+Each user gets a custom AI coach — built around their goals, training style, experience, and personality preferences. The coach you help design will guide their training, track workouts, and measure progress over time.
 
 Your job is to gather this information through natural conversation, not an interview. Be direct and efficient — this should take about 15-20 minutes of conversation. Adapt your language complexity to the user's apparent fitness knowledge level (sophistication level).`,
   );
@@ -283,7 +287,7 @@ Reference this context naturally when relevant — it provides prior training hi
  * Select appropriate model for the coach creator agent.
  *
  * Mirrors selectModelForConversationAgent from conversation/prompts.ts:
- *   PLANNER (Sonnet 4.5) for images or long conversations
+ *   PLANNER (Sonnet 4.6) for images or long conversations
  *   EXECUTOR (Haiku 4.5) for standard turns
  */
 export function selectModelForCoachCreatorAgent(

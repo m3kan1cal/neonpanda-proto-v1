@@ -23,6 +23,61 @@ import { logger } from "../logger";
 import { fixDoubleEncodedProperties } from "../response-utils";
 
 /**
+ * Patterns that indicate a prospective item is about platform/app support
+ * rather than training. Items matching any of these should never become
+ * coach follow-ups — they cause the coach to defer training decisions to
+ * platform developers instead of doing its job.
+ *
+ * Case-insensitive, applied to the combined text of content, followUpPrompt,
+ * relativeTimeframe, and originalContext.
+ */
+const PLATFORM_SUPPORT_PATTERNS: RegExp[] = [
+  /\bneonpanda\b/i,
+  /\bneon panda\b/i,
+  /\breach out to (?:the )?(?:team|support|devs?|developers?)\b/i,
+  /\bcontact (?:support|the team|customer service|customer support)\b/i,
+  /\btalk to (?:mark|support|the team)\b/i,
+  /\b(?:app|platform|system|site|website) (?:bug|issue|problem|error|outage|glitch)\b/i,
+  /\b(?:logging|deletion|account|billing|login|signup|signin|sign-in|sign-up) (?:bug|issue|problem|error)\b/i,
+  /\breport (?:a |the )?bug\b/i,
+  /\bfile (?:a |the )?(?:bug|ticket|support ticket)\b/i,
+];
+
+/**
+ * Drop any item whose textual fields match a platform-support pattern.
+ * Belt-and-suspenders against extraction that ignores the prompt rule.
+ */
+export function filterPlatformSupportItems(
+  items: ProspectiveExtractionResult["items"],
+): ProspectiveExtractionResult["items"] {
+  return items.filter((item) => {
+    const combinedText = [
+      item.content,
+      item.followUpPrompt,
+      item.relativeTimeframe,
+      item.originalContext,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const matchedPattern = PLATFORM_SUPPORT_PATTERNS.find((pattern) =>
+      pattern.test(combinedText),
+    );
+
+    if (matchedPattern) {
+      logger.info("Prospective memory filtered: platform-support item", {
+        reason: "platform-support item filtered",
+        matchedPattern: matchedPattern.source,
+        content: item.content?.slice(0, 200),
+        followUpPrompt: item.followUpPrompt?.slice(0, 200),
+      });
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
  * Extract prospective memory elements from a user message + AI response pair.
  * Runs as a fire-and-forget async call after each conversation turn.
  *
@@ -56,6 +111,7 @@ WHAT NOT TO EXTRACT:
 - Past events or completed workouts
 - Vague aspirations without any timeframe ("I want to get stronger" — no date/timeframe)
 - Things already being tracked as active program goals
+- Platform or app support items: bug reports, account issues, logging/deletion problems, feature requests, commitments to "reach out to NeonPanda", "contact support", "talk to the team", or any task directed at the NeonPanda platform or its developers. These are infrastructure concerns, not training actions — do not extract them as follow-ups.
 
 DATE RESOLUTION:
 - Convert relative dates to ISO format using CURRENT DATE as anchor
@@ -104,12 +160,26 @@ Use the extract_prospective_memories tool to identify any forward-looking events
     const fixedInput = fixDoubleEncodedProperties(response.input);
     const result = fixedInput as ProspectiveExtractionResult;
 
+    // Belt-and-suspenders safeguard: drop any extracted item that looks like
+    // a platform/app support task rather than a training follow-up, even if
+    // the extraction prompt's "WHAT NOT TO EXTRACT" guidance was ignored.
+    // Misclassified items like "follow up about the NeonPanda logging bug"
+    // get the coach to defer to platform developers instead of coaching.
+    const filteredItems = filterPlatformSupportItems(result.items ?? []);
+
     logger.info("Prospective memory extraction completed:", {
       hasElements: result.hasProspectiveElements,
-      itemCount: result.items?.length || 0,
+      itemCount: filteredItems.length,
+      rawItemCount: result.items?.length || 0,
+      droppedItemCount: (result.items?.length || 0) - filteredItems.length,
     });
 
-    return result;
+    return {
+      ...result,
+      items: filteredItems,
+      hasProspectiveElements:
+        result.hasProspectiveElements && filteredItems.length > 0,
+    };
   } catch (error) {
     logger.error("Error extracting prospective memories:", error);
     return {

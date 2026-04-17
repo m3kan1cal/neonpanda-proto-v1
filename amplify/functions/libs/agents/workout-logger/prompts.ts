@@ -11,6 +11,7 @@ import {
   sanitizeUserContent,
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
+import { NEONPANDA_PLATFORM_IDENTITY_CONDENSED } from "../../prompts/platform-identity";
 
 /**
  * Build the complete system prompt for the WorkoutLogger agent
@@ -19,6 +20,9 @@ export function buildWorkoutLoggerPrompt(
   context: WorkoutLoggerContext,
 ): string {
   const sections: string[] = [];
+
+  // 0. Platform identity grounding (shared across all agents)
+  sections.push(NEONPANDA_PLATFORM_IDENTITY_CONDENSED);
 
   // 1. Core identity and mission
   sections.push(`# YOU ARE A WORKOUT EXTRACTION SPECIALIST
