@@ -1179,6 +1179,7 @@ function ManageWorkouts() {
             </div>
           )}
           {!workoutAgentState.isLoadingAllItems &&
+            !workoutAgentState.error &&
             workoutAgentState.allWorkouts.length === 0 && (
               <div className="mb-8">
                 <EmptyStateCard
