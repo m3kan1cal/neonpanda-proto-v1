@@ -708,8 +708,6 @@ function ManagePrograms() {
       setEditProgramName("");
       setEditProgramDescription("");
       toast.success("Program updated successfully");
-      setSaveGlowing(true);
-      setTimeout(() => setSaveGlowing(false), 1200);
     } catch (err) {
       logger.error("Error updating program:", err);
       toast.error(err.message || "Failed to update program");

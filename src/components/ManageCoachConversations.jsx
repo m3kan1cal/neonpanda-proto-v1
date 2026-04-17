@@ -1202,18 +1202,6 @@ function ManageCoachConversations() {
 
           {/* Conversation List */}
           <div className="mb-8">{renderConversationList()}</div>
-          {!conversationAgentState.isLoadingAllItems &&
-            conversationAgentState.allConversations.length === 0 && (
-              <div className="mb-8">
-                <EmptyStateCard
-                  icon="💬"
-                  title="No Conversations Yet"
-                  description="Start a conversation with your coach to get personalized guidance and support."
-                  actionLabel="New Conversation"
-                  onAction={handleCreateConversation}
-                />
-              </div>
-            )}
           <AppFooter />
         </div>
       </div>
