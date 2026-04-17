@@ -1282,7 +1282,7 @@ function TrainingGroundsV2() {
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             <h1
-              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
               data-tooltip-id="training-grounds-info"
               data-tooltip-content="Your central hub to track progress, access resources, chat with your coach, and manage your complete fitness journey."
             >

@@ -642,7 +642,7 @@ export const containerPatterns = {
 export const toastPatterns = {
   // Modern 2025 gradient toast notifications with glassmorphism
   success:
-    "rounded-md bg-gradient-to-br from-green-500/20 via-synthwave-neon-cyan/10 to-green-400/20 border border-green-500/40 px-4 py-3 backdrop-blur-sm shadow-sm shadow-green-500/20 text-green-400",
+    "rounded-md bg-gradient-to-br from-green-500/20 via-synthwave-neon-cyan/10 to-green-400/20 border border-green-500/40 px-4 py-3 backdrop-blur-sm shadow-sm shadow-green-500/20 shadow-[0_0_12px_rgba(0,255,255,0.25)] text-green-400",
 
   error:
     "rounded-md bg-gradient-to-br from-red-500/20 via-synthwave-neon-pink/10 to-red-400/20 border border-red-500/40 px-4 py-3 backdrop-blur-sm shadow-sm shadow-red-500/20 text-red-400",

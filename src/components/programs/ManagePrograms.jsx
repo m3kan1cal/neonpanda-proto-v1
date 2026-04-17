@@ -216,6 +216,7 @@ function ManagePrograms() {
   const [editProgramName, setEditProgramName] = useState("");
   const [editProgramDescription, setEditProgramDescription] = useState("");
   const [isSavingProgram, setIsSavingProgram] = useState(false);
+  const [saveGlowing, setSaveGlowing] = useState(false);
 
   // In-progress sessions state
   const [inProgressSessions, setInProgressSessions] = useState([]);
@@ -707,6 +708,8 @@ function ManagePrograms() {
       setEditProgramName("");
       setEditProgramDescription("");
       toast.success("Program updated successfully");
+      setSaveGlowing(true);
+      setTimeout(() => setSaveGlowing(false), 1200);
     } catch (err) {
       logger.error("Error updating program:", err);
       toast.error(err.message || "Failed to update program");
@@ -1377,7 +1380,7 @@ function ManagePrograms() {
             {/* Page Title with Hover Tooltip */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="programs-info"
                 data-tooltip-content="Manage all your training programs. View progress, pause, resume, or complete programs across all your coaches."
               >
@@ -2056,7 +2059,7 @@ function ManagePrograms() {
               <button
                 onClick={handleSaveEditProgram}
                 disabled={isSavingProgram || !editProgramName.trim()}
-                className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
+                className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2 ${saveGlowing ? "glow-flash" : ""}`}
               >
                 {isSavingProgram ? (
                   <>

@@ -734,7 +734,7 @@ function CoachCreator() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
               data-tooltip-id="coach-creator-info"
               data-tooltip-content="Create your personalized AI coach through an interactive conversation. Vesper will guide you through the process."
             >

@@ -953,7 +953,7 @@ function ManageMemories() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="manage-memories-info"
                 data-tooltip-content="Review and manage your stored memories and preferences. Track important information your coaches remember about your goals and fitness journey."
               >
