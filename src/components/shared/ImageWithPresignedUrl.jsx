@@ -54,19 +54,22 @@ const ImageWithPresignedUrl = ({
   useEffect(() => {
     const handleEscKey = (event) => {
       if (event.key === "Escape") {
+        // Capture phase + stopImmediatePropagation so ancestor drawers
+        // listening on document don't also close when escaping the lightbox
+        event.stopImmediatePropagation();
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscKey);
+      document.addEventListener("keydown", handleEscKey, true);
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscKey);
+      document.removeEventListener("keydown", handleEscKey, true);
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
