@@ -920,7 +920,7 @@ function ChatInput({
         )}
 
         {/* Input area */}
-        <form onSubmit={handleSendMessage} className="flex items-end">
+        <form onSubmit={handleSendMessage} className={`flex items-end ${sendGlowing ? "glow-flash" : ""}`}>
           {/* Hidden photo input */}
           <input
             ref={photoInputRef}
@@ -1464,7 +1464,7 @@ function ChatInput({
                     <button
                       type="submit"
                       disabled={isTyping || isUploading}
-                      className={`${compact ? buttonPatterns.sendInlineCompact : buttonPatterns.sendInline} ${sendGlowing ? "glow-flash" : ""}`}
+                      className={`${compact ? buttonPatterns.sendInlineCompact : buttonPatterns.sendInline}`}
                     >
                       {isTyping || isUploading ? (
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

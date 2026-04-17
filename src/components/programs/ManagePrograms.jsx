@@ -216,7 +216,6 @@ function ManagePrograms() {
   const [editProgramName, setEditProgramName] = useState("");
   const [editProgramDescription, setEditProgramDescription] = useState("");
   const [isSavingProgram, setIsSavingProgram] = useState(false);
-  const [saveGlowing, setSaveGlowing] = useState(false);
 
   // In-progress sessions state
   const [inProgressSessions, setInProgressSessions] = useState([]);
@@ -2057,7 +2056,7 @@ function ManagePrograms() {
               <button
                 onClick={handleSaveEditProgram}
                 disabled={isSavingProgram || !editProgramName.trim()}
-                className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2 ${saveGlowing ? "glow-flash" : ""}`}
+                className={`${buttonPatterns.primaryMedium} disabled:opacity-50 disabled:cursor-not-allowed space-x-2`}
               >
                 {isSavingProgram ? (
                   <>
