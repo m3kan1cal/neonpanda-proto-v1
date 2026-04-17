@@ -40,7 +40,7 @@ const PLATFORM_SUPPORT_PATTERNS: RegExp[] = [
   /\b(?:chat|email|message|text|dm|ping)\s+(?:support|the team|customer service)\b/i,
   /\b(?:submit|open|raise|create)\s+(?:a\s+)?(?:ticket|bug report|support ticket|support request)\b/i,
   /\b(?:follow up|check in)\s+with\s+(?:support|the team|neonpanda)\b/i,
-  /\b(?:cancel|delete|close)\s+(?:my\s+)?(?:account|subscription|membership)\b/i,
+  /\b(?:cancel|delete|close)\s+(?:my\s+)?(?:account|subscription)\b/i,
   /\b(?:reset|forgot|recover)\s+(?:my\s+)?password\b/i,
   /\b(?:app|platform|system|site|website) (?:bug|issue|problem|error|outage|glitch)\b/i,
   /\b(?:logging|deletion|account|billing|login|signup|signin|sign-in|sign-up) (?:bug|issue|problem|error)\b/i,
