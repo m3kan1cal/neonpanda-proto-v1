@@ -538,9 +538,17 @@ async function* createCoachConversationEventStreamV2(
       content: params.userResponse || "",
       timestamp: new Date(),
       ...(params.imageS3Keys && params.imageS3Keys.length > 0
+        ? { imageS3Keys: params.imageS3Keys }
+        : {}),
+      ...(params.documentS3Keys && params.documentS3Keys.length > 0
+        ? { documentS3Keys: params.documentS3Keys }
+        : {}),
+      ...((params.imageS3Keys?.length || params.documentS3Keys?.length)
         ? {
-            imageS3Keys: params.imageS3Keys,
-            messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
+            messageType:
+              params.documentS3Keys && params.documentS3Keys.length > 0
+                ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
+                : MESSAGE_TYPES.TEXT_WITH_IMAGES,
           }
         : {}),
     };

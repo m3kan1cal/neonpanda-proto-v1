@@ -152,11 +152,10 @@
    Custom utility classes
    ===================================================================== */
 @utility text-gradient-neon {
-  background: linear-gradient(45deg, #ff0080 0%, #00ffff 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
+  text-shadow:
+    0 0 8px rgba(255, 0, 128, 0.4),
+    0 0 18px rgba(255, 0, 128, 0.2);
 }
 
 @utility text-gradient-purple {
