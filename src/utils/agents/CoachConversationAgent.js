@@ -383,6 +383,7 @@ export class CoachConversationAgent {
             content: messageContent,
             timestamp: message.timestamp || new Date().toISOString(),
             imageS3Keys: message.imageS3Keys || undefined,
+            documentS3Keys: message.documentS3Keys || undefined,
             messageType: message.messageType || undefined,
             metadata: message.metadata || undefined, // Preserve metadata (includes mode for Build mode styling)
           });
