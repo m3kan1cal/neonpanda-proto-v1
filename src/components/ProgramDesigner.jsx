@@ -975,7 +975,7 @@ function ProgramDesigner() {
             {/* Page Title with Hover Tooltip */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="program-designer-info"
                 data-tooltip-content="Design a structured training program with your AI coach through guided conversation"
               >

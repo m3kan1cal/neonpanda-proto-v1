@@ -1377,7 +1377,7 @@ function ManagePrograms() {
             {/* Page Title with Hover Tooltip */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="programs-info"
                 data-tooltip-content="Manage all your training programs. View progress, pause, resume, or complete programs across all your coaches."
               >

@@ -183,6 +183,10 @@
   scrollbar-width: none;
 }
 
+@utility glow-flash {
+  animation: pulse-glow 0.6s ease-out 2;
+}
+
 /* Pseudo-element scrollbar styles (can't be @utility) */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;

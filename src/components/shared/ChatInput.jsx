@@ -341,6 +341,7 @@ function ChatInput({
   const [showQuickPromptsSubmenu, setShowQuickPromptsSubmenu] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const isSendingMessage = useRef(false);
+  const [sendGlowing, setSendGlowing] = useState(false);
   const photoInputRef = useRef(null);
 
   // Image upload hook
@@ -642,6 +643,8 @@ function ChatInput({
 
       // Send message with images and documents
       await onSubmit(messageToSend, imageS3Keys, documentS3Keys);
+      setSendGlowing(true);
+      setTimeout(() => setSendGlowing(false), 1200);
     } catch (error) {
       logger.error("Error sending message:", error);
       // Don't clear attachments on error so user can retry
@@ -917,7 +920,7 @@ function ChatInput({
         )}
 
         {/* Input area */}
-        <form onSubmit={handleSendMessage} className="flex items-end">
+        <form onSubmit={handleSendMessage} className={`flex items-end ${sendGlowing ? "glow-flash" : ""}`}>
           {/* Hidden photo input */}
           <input
             ref={photoInputRef}
@@ -1461,11 +1464,7 @@ function ChatInput({
                     <button
                       type="submit"
                       disabled={isTyping || isUploading}
-                      className={
-                        compact
-                          ? buttonPatterns.sendInlineCompact
-                          : buttonPatterns.sendInline
-                      }
+                      className={`${compact ? buttonPatterns.sendInlineCompact : buttonPatterns.sendInline}`}
                     >
                       {isTyping || isUploading ? (
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

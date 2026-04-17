@@ -13,6 +13,7 @@ import {
 import { Tooltip } from "react-tooltip";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import EmptyStateCard from "./shared/EmptyStateCard";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { InlineEditField } from "./shared/InlineEditField";
 import AppFooter from "./shared/AppFooter";
@@ -735,7 +736,7 @@ function Coaches() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title with Hover Tooltip */}
             <h1
-              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
               data-tooltip-id="coaches-info"
               data-tooltip-content="Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective over time."
             >
@@ -1605,11 +1606,11 @@ function Coaches() {
             agentState.templates &&
             agentState.templates.length === 0 &&
             !agentState.templatesError && (
-              <div className="text-center text-synthwave-text-secondary">
-                <p className="font-body text-lg">
-                  No templates available at this time.
-                </p>
-              </div>
+              <EmptyStateCard
+                icon="🤖"
+                title="No Templates Yet"
+                description="Coach templates will appear here once Vesper has prepared some for you."
+              />
             )}
           <AppFooter />
         </div>
