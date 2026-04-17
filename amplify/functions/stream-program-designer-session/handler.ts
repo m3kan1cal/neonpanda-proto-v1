@@ -159,7 +159,7 @@ async function* createProgramDesignerEventStreamV2(
       return;
     }
 
-    const { userResponse, messageTimestamp, imageS3Keys } =
+    const { userResponse, messageTimestamp, imageS3Keys, documentS3Keys } =
       validateStreamingRequestBody(event.body, userId as string, {
         requireUserResponse: true,
         maxImages: 5,
@@ -167,6 +167,7 @@ async function* createProgramDesignerEventStreamV2(
       });
 
     const hasImages = !!(imageS3Keys && imageS3Keys.length > 0);
+    const hasDocuments = !!(documentS3Keys && documentS3Keys.length > 0);
 
     logger.info("✅ V2: Params validated:", {
       userId,
@@ -340,7 +341,7 @@ async function* createProgramDesignerEventStreamV2(
     let guardrailWarning = false;
 
     try {
-      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys);
+      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys, documentS3Keys);
 
       let result = await agentGenerator.next();
       while (!result.done) {
@@ -382,10 +383,13 @@ async function* createProgramDesignerEventStreamV2(
       role: "user",
       content: userResponse!,
       timestamp: messageTimestamp ? new Date(messageTimestamp) : new Date(),
-      ...(hasImages
+      ...(hasImages || hasDocuments
         ? {
-            imageS3Keys,
-            messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
+            messageType: hasDocuments
+              ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
+              : MESSAGE_TYPES.TEXT_WITH_IMAGES,
+            ...(hasImages ? { imageS3Keys } : {}),
+            ...(hasDocuments ? { documentS3Keys } : {}),
           }
         : {}),
     };

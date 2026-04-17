@@ -532,15 +532,24 @@ async function* createCoachConversationEventStreamV2(
     }
 
     // 11. Build and save messages
+    const hasImages = !!(
+      params.imageS3Keys && params.imageS3Keys.length > 0
+    );
+    const hasDocuments = !!(
+      params.documentS3Keys && params.documentS3Keys.length > 0
+    );
     const newUserMessage: CoachMessage = {
       id: `msg_${Date.now()}_user`,
       role: "user",
       content: params.userResponse || "",
       timestamp: new Date(),
-      ...(params.imageS3Keys && params.imageS3Keys.length > 0
+      ...(hasImages || hasDocuments
         ? {
-            imageS3Keys: params.imageS3Keys,
-            messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
+            messageType: hasDocuments
+              ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
+              : MESSAGE_TYPES.TEXT_WITH_IMAGES,
+            ...(hasImages ? { imageS3Keys: params.imageS3Keys } : {}),
+            ...(hasDocuments ? { documentS3Keys: params.documentS3Keys } : {}),
           }
         : {}),
     };
