@@ -1138,7 +1138,7 @@ General thoughts: `;
                   key={template.templateId}
                   className={`${containerPatterns.cardMedium} animate-fadeIn ${
                     isCompleted || isSkipped ? "opacity-75" : ""
-                  }`}
+                  } ${glowingTemplateId === template.templateId ? "glow-flash" : ""}`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Workout Header - Clickable for collapse/expand */}
@@ -1760,7 +1760,7 @@ General thoughts: `;
                               disabled={
                                 processingWorkoutId === template.templateId
                               }
-                              className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${glowingTemplateId === template.templateId ? "glow-flash" : ""}`}
+                              className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                               {processingWorkoutId === template.templateId ? (
                                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>

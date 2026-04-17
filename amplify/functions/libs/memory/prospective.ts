@@ -37,7 +37,7 @@ const PLATFORM_SUPPORT_PATTERNS: RegExp[] = [
   /\breach out to (?:the )?(?:team|support|devs?|developers?)\b/i,
   /\bcontact (?:support|the team|customer service|customer support)\b/i,
   /\btalk to (?:support|the team)\b/i,
-  /\b(?:email|message|text|dm|ping)\s+(?:support|the team|customer service)\b/i,
+  /\b(?:email|message|text|dm|ping|chat)\s+(?:support|the team|customer service)\b/i,
   /\b(?:submit|open|raise|create)\s+(?:a\s+)?(?:ticket|bug report|support ticket|support request)\b/i,
   /\b(?:follow up|check in|chat)\s+with\s+(?:support|the team|customer service|neonpanda)\b/i,
   /\b(?:cancel|delete|close)\s+(?:my\s+)?account\b/i,
