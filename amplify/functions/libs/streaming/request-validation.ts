@@ -3,6 +3,7 @@
  */
 
 import type { ConversationEditContext } from "../coach-conversation/types";
+import { SUPPORTED_DOCUMENT_EXTENSIONS } from '../document-types';
 
 /**
  * Parse and validate request body from streaming event.
@@ -87,7 +88,6 @@ export function validateMessageTimestamp(
 /**
  * Validate document S3 keys
  */
-const SUPPORTED_DOCUMENT_EXTENSIONS = ['pdf', 'csv', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'html'];
 
 export function validateDocumentS3Keys(
   documentS3Keys: string[] | undefined,

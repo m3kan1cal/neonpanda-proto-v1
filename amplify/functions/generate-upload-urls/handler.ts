@@ -6,12 +6,10 @@ import {
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { generatePresignedPutUrl, getBucketName } from '../libs/s3-utils';
 import { logger } from "../libs/logger";
+import { SUPPORTED_DOCUMENT_EXTENSIONS } from '../libs/document-types';
 
 // Supported image extensions
 const SUPPORTED_IMAGE_EXTENSIONS = ['jpg', 'png', 'webp', 'gif', 'heic', 'heif'];
-
-// Supported document extensions (matches Bedrock Converse API document block formats)
-const SUPPORTED_DOCUMENT_EXTENSIONS = ['pdf', 'csv', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'html'];
 
 const SUPPORTED_EXTENSIONS = [...SUPPORTED_IMAGE_EXTENSIONS, ...SUPPORTED_DOCUMENT_EXTENSIONS];
 

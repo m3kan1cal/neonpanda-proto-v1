@@ -10,6 +10,7 @@ import {
   getUserProfile,
 } from "../../dynamodb/operations";
 import { CoachMessage, MESSAGE_TYPES } from "../libs/coach-conversation/types";
+import { SUPPORTED_DOCUMENT_EXTENSIONS } from "../libs/document-types";
 import { detectAndProcessConversationSummary } from "../libs/coach-conversation/detection";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
@@ -114,7 +115,6 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   if (documentS3Keys) {
-    const supportedDocExtensions = ['pdf', 'csv', 'txt', 'md', 'doc', 'docx', 'xls', 'xlsx', 'html'];
     for (const key of documentS3Keys) {
       if (!key.startsWith(`user-uploads/${userId}/`)) {
         logger.error("❌ Validation failed: Invalid document key:", {
@@ -124,7 +124,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         return createErrorResponse(403, "Invalid document key");
       }
       const ext = key.split('.').pop()?.toLowerCase();
-      if (!ext || !supportedDocExtensions.includes(ext)) {
+      if (!ext || !SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
         logger.error("❌ Validation failed: Unsupported document type:", { key, ext });
         return createErrorResponse(400, `Unsupported document type: ${ext}`);
       }
