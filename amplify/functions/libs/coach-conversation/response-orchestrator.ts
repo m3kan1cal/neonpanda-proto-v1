@@ -33,7 +33,7 @@ const ENABLE_S3_DEBUG_LOGGING = true; // Always log system prompts to S3 for deb
 /**
  * Smart model selection based on router analysis
  * Uses Haiku 4.5 for standard conversations (faster + cheaper)
- * Uses Sonnet 4.5 for complex reasoning (better quality)
+ * Uses Sonnet 4.6 for complex reasoning (better quality)
  *
  * @param requiresDeepReasoning - From smart router analysis
  * @returns Model ID to use for this conversation
@@ -521,12 +521,15 @@ export async function generateAIResponseStream(
         ];
         const converseMessages = await buildMultimodalContent(allMessages);
 
-        logger.info("📎 Using multimodal Converse Stream API with attachments", {
-          messageCount: converseMessages.length,
-          imagesCount: imageS3Keys?.length || 0,
-          documentsCount: documentS3Keys?.length || 0,
-          model: selectedModel,
-        });
+        logger.info(
+          "📎 Using multimodal Converse Stream API with attachments",
+          {
+            messageCount: converseMessages.length,
+            imagesCount: imageS3Keys?.length || 0,
+            documentsCount: documentS3Keys?.length || 0,
+            model: selectedModel,
+          },
+        );
 
         // Use centralized multimodal streaming helper from api-helpers
         // NEW: Pass static/dynamic prompts for caching optimization

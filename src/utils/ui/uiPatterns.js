@@ -107,6 +107,10 @@ export const buttonPatterns = {
   // Inline circular send button - positioned inside chat input next to emoji button
   sendInline:
     "w-7 h-7 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-md shadow-synthwave-neon-purple/30 hover:shadow-lg hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer",
+
+  // Compact variant for narrow contexts (e.g. contextual chat drawer)
+  sendInlineCompact:
+    "w-6 h-6 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-sm shadow-synthwave-neon-purple/30 hover:shadow-md hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer",
 };
 
 // Badge Patterns - Reusable badge/tag components (matches ManageMemories.jsx styling)

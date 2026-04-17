@@ -84,7 +84,7 @@ export class StreamingConversationAgent<
    * @param config.staticPrompt      - Large, cacheable portion of system prompt
    * @param config.dynamicPrompt     - Small, per-request portion of system prompt
    * @param config.tools             - Tools available for this role
-   * @param config.modelId           - Bedrock model ID (Haiku 4.5 or Sonnet 4.5)
+   * @param config.modelId           - Bedrock model ID (Haiku 4.5 or Sonnet 4.6)
    * @param config.context           - Shared context passed to all tool execute() calls
    * @param config.existingMessages  - Pre-built Bedrock-format messages (with cache points)
    */
@@ -160,6 +160,17 @@ export class StreamingConversationAgent<
       role: "user",
       content: userContent,
     });
+
+    // Yield contextual feedback for document/image processing
+    if (hasDocuments || hasImages) {
+      const message =
+        hasDocuments && hasImages
+          ? "Analyzing your attachments..."
+          : hasDocuments
+            ? "Analyzing your document..."
+            : "Analyzing your image...";
+      yield formatContextualEvent(message);
+    }
 
     // Step 3: ReAct loop
     let shouldContinue = true;

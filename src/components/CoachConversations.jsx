@@ -41,7 +41,7 @@ import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { useToast } from "../contexts/ToastContext";
 import { CONVERSATION_MODES } from "../constants/conversationModes";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
-import DocumentAttachment from "./shared/DocumentAttachment";
+import DocumentThumbnail from "./shared/DocumentThumbnail";
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -918,10 +918,11 @@ function CoachConversations() {
 
     return (
       <>
-        {/* Render images if present */}
-        {message.imageS3Keys && message.imageS3Keys.length > 0 && (
+        {/* Render attachments — images and documents share one row */}
+        {((message.imageS3Keys && message.imageS3Keys.length > 0) ||
+          (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
           <div className="flex flex-wrap gap-2 mb-2">
-            {message.imageS3Keys.map((s3Key, index) => (
+            {message.imageS3Keys?.map((s3Key, index) => (
               <ImageWithPresignedUrl
                 key={index}
                 s3Key={s3Key}
@@ -929,14 +930,8 @@ function CoachConversations() {
                 index={index}
               />
             ))}
-          </div>
-        )}
-
-        {/* Render document attachments if present */}
-        {message.documentS3Keys && message.documentS3Keys.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {message.documentS3Keys.map((s3Key, index) => (
-              <DocumentAttachment
+            {message.documentS3Keys?.map((s3Key, index) => (
+              <DocumentThumbnail
                 key={index}
                 s3Key={s3Key}
                 userId={userId}

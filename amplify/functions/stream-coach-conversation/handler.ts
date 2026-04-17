@@ -438,7 +438,7 @@ async function* createCoachConversationEventStreamV2(
     logger.info("✅ V2: Model selected:", {
       modelId:
         modelId === MODEL_IDS.PLANNER_MODEL_FULL
-          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
+          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.6)"
           : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
       reason: isEditMode
         ? "workout_edit mode (structured output)"
@@ -562,6 +562,17 @@ async function* createCoachConversationEventStreamV2(
         ...(guardrailWarning ? { guardrailWarning: true } : {}),
       } as any, // Use type assertion to allow agent-specific metadata
     };
+
+    // Log truncated message previews for operational searchability
+    // (search CloudWatch for a phrase a user reports to find the log stream)
+    logger.info("[USER_MSG]", {
+      conversationId,
+      preview: (params.userResponse || "").slice(0, 200),
+    });
+    logger.info("[AI_MSG]", {
+      conversationId,
+      preview: fullResponseText.slice(0, 200),
+    });
 
     // Add agent-specific metadata separately
     (newAiMessage.metadata as any).agent = {

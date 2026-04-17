@@ -146,9 +146,11 @@ export async function buildMultimodalContent(
 
       for (const { s3Key, imageBytes } of fetchResults) {
         if (imageBytes) {
+          const format = getImageFormat(s3Key);
+          logger.info(`🖼️ Image content block: { s3Key: "${s3Key}", format: "${format}", sizeBytes: ${imageBytes.length}, sizeKB: ${(imageBytes.length / 1024).toFixed(1)} }`);
           contentBlocks.push({
             image: {
-              format: getImageFormat(s3Key),
+              format,
               source: {
                 bytes: imageBytes,
               },
@@ -171,10 +173,13 @@ export async function buildMultimodalContent(
 
       for (const { s3Key, docBytes } of fetchResults) {
         if (docBytes) {
+          const format = getDocumentFormat(s3Key);
+          const name = getDocumentName(s3Key);
+          logger.info(`📄 Document content block: { s3Key: "${s3Key}", format: "${format}", name: "${name}", sizeBytes: ${docBytes.length}, sizeKB: ${(docBytes.length / 1024).toFixed(1)} }`);
           contentBlocks.push({
             document: {
-              format: getDocumentFormat(s3Key),
-              name: getDocumentName(s3Key),
+              format,
+              name,
               source: {
                 bytes: docBytes,
               },

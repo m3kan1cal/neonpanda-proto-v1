@@ -1,12 +1,14 @@
 import { useState, useRef } from "react";
+import { PDFDocument } from "pdf-lib";
 import { generateUploadUrls, putFileToPresignedUrl } from "../utils/s3Helper";
 
 const SUPPORTED_EXTENSIONS = [
   "pdf", "csv", "txt", "md", "doc", "docx", "xls", "xlsx", "html",
 ];
 
-const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4.5MB (Bedrock document limit)
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_FILES = 3;
+const MAX_PDF_PAGES = 10;
 
 function getFileExtension(file) {
   const name = file.name || "";
@@ -14,7 +16,7 @@ function getFileExtension(file) {
   return ext;
 }
 
-function validateFile(file) {
+async function validateFile(file) {
   const ext = getFileExtension(file);
   if (!SUPPORTED_EXTENSIONS.includes(ext)) {
     throw new Error(
@@ -23,8 +25,27 @@ function validateFile(file) {
   }
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(
-      `File too large: ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum: 4.5MB`,
+      `File too large: ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum: ${(MAX_FILE_SIZE / (1024 * 1024)).toFixed(0)}MB`,
     );
+  }
+  if (ext === "pdf") {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer, {
+        ignoreEncryption: true,
+      });
+      const pageCount = pdfDoc.getPageCount();
+      if (pageCount > MAX_PDF_PAGES) {
+        throw new Error(
+          `PDF has ${pageCount} pages. Maximum: ${MAX_PDF_PAGES} pages`,
+        );
+      }
+    } catch (err) {
+      if (err.message.includes("pages")) throw err;
+      throw new Error(
+        "Unable to read PDF. The file may be corrupted.",
+      );
+    }
   }
 }
 
@@ -112,7 +133,9 @@ export function useFileUpload() {
         );
       }
 
-      fileArray.forEach((file) => validateFile(file));
+      for (const file of fileArray) {
+        await validateFile(file);
+      }
 
       const newFiles = fileArray.map((file, index) => ({
         id: `file-${Date.now()}-${index}`,
