@@ -25,7 +25,6 @@ import {
 } from "../../dynamodb/operations";
 import {
   CoachMessage,
-  MESSAGE_TYPES,
   CONVERSATION_MODES,
 } from "../libs/coach-conversation/types";
 import { queryPrograms } from "../../dynamodb/program";
@@ -41,6 +40,7 @@ import {
   formatProspectiveMemoriesForPrompt,
 } from "../libs/memory/prospective";
 import { formatConversationSummaryForPrompt } from "../libs/coach-conversation/summary";
+import { buildUserMessage } from "../libs/coach-conversation/message-utils";
 import { buildMessagesWithCaching } from "../libs/agents/shared/message-caching";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
@@ -532,27 +532,11 @@ async function* createCoachConversationEventStreamV2(
     }
 
     // 11. Build and save messages
-    const hasImages = !!(
-      params.imageS3Keys && params.imageS3Keys.length > 0
+    const newUserMessage: CoachMessage = buildUserMessage(
+      params.userResponse || "",
+      params.imageS3Keys,
+      params.documentS3Keys,
     );
-    const hasDocuments = !!(
-      params.documentS3Keys && params.documentS3Keys.length > 0
-    );
-    const newUserMessage: CoachMessage = {
-      id: `msg_${Date.now()}_user`,
-      role: "user",
-      content: params.userResponse || "",
-      timestamp: new Date(),
-      ...(hasImages || hasDocuments
-        ? {
-            messageType: hasDocuments
-              ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
-              : MESSAGE_TYPES.TEXT_WITH_IMAGES,
-            ...(hasImages ? { imageS3Keys: params.imageS3Keys } : {}),
-            ...(hasDocuments ? { documentS3Keys: params.documentS3Keys } : {}),
-          }
-        : {}),
-    };
 
     const newAiMessage: CoachMessage = {
       id: `msg_${Date.now()}_assistant`,

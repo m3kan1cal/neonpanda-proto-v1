@@ -7,10 +7,10 @@
 
 import {
   CoachMessage,
-  MESSAGE_TYPES,
   CoachConversation,
   CONVERSATION_MODES,
 } from "../coach-conversation/types";
+import { buildUserMessage } from "../coach-conversation/message-utils";
 import { MODEL_IDS, invokeAsyncLambda } from "../api-helpers";
 import {
   sendCoachConversationMessage,
@@ -128,26 +128,11 @@ export async function* startWorkoutCollection(
         CONVERSATION_MODES.WORKOUT_LOG;
 
       // Create messages
-      const newUserMessage: CoachMessage = {
-        id: `msg_${Date.now()}_user`,
-        role: "user",
-        content: params.userResponse,
-        timestamp: new Date(),
-        ...(params.imageS3Keys && params.imageS3Keys.length > 0
-          ? { imageS3Keys: params.imageS3Keys }
-          : {}),
-        ...(params.documentS3Keys && params.documentS3Keys.length > 0
-          ? { documentS3Keys: params.documentS3Keys }
-          : {}),
-        ...((params.imageS3Keys?.length || params.documentS3Keys?.length)
-          ? {
-              messageType:
-                params.documentS3Keys && params.documentS3Keys.length > 0
-                  ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
-                  : MESSAGE_TYPES.TEXT_WITH_IMAGES,
-            }
-          : {}),
-      };
+      const newUserMessage: CoachMessage = buildUserMessage(
+        params.userResponse,
+        params.imageS3Keys,
+        params.documentS3Keys,
+      );
 
       const newAiMessage: CoachMessage = {
         id: `msg_${Date.now()}_assistant`,
@@ -315,26 +300,11 @@ export async function* handleWorkoutCreatorFlow(
       workoutSession.turnCount = fullWorkoutSession.turnCount; // Persist turn count
 
       // Create messages
-      const newUserMessage: CoachMessage = {
-        id: `msg_${Date.now()}_user`,
-        role: "user",
-        content: params.userResponse,
-        timestamp: new Date(),
-        ...(params.imageS3Keys && params.imageS3Keys.length > 0
-          ? { imageS3Keys: params.imageS3Keys }
-          : {}),
-        ...(params.documentS3Keys && params.documentS3Keys.length > 0
-          ? { documentS3Keys: params.documentS3Keys }
-          : {}),
-        ...((params.imageS3Keys?.length || params.documentS3Keys?.length)
-          ? {
-              messageType:
-                params.documentS3Keys && params.documentS3Keys.length > 0
-                  ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
-                  : MESSAGE_TYPES.TEXT_WITH_IMAGES,
-            }
-          : {}),
-      };
+      const newUserMessage: CoachMessage = buildUserMessage(
+        params.userResponse,
+        params.imageS3Keys,
+        params.documentS3Keys,
+      );
 
       // Check if session was cancelled (topic change detected)
       if (processedResponse.sessionCancelled) {

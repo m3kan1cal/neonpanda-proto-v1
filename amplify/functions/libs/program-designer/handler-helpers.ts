@@ -7,9 +7,9 @@
 
 import {
   CoachMessage,
-  MESSAGE_TYPES,
   CONVERSATION_MODES,
 } from "../coach-conversation/types";
+import { buildUserMessage } from "../coach-conversation/message-utils";
 import { MODEL_IDS } from "../api-helpers";
 import {
   getProgramDesignerSession,
@@ -194,26 +194,11 @@ export async function* startProgramDesignCollection(
       CONVERSATION_MODES.PROGRAM_DESIGN;
 
     // Create user and AI messages for conversation history (matches workout creator pattern)
-    const newUserMessage: CoachMessage = {
-      id: `msg_${Date.now()}_user`,
-      role: "user",
-      content: params.userResponse,
-      timestamp: new Date(),
-      ...(params.imageS3Keys && params.imageS3Keys.length > 0
-        ? { imageS3Keys: params.imageS3Keys }
-        : {}),
-      ...(params.documentS3Keys && params.documentS3Keys.length > 0
-        ? { documentS3Keys: params.documentS3Keys }
-        : {}),
-      ...((params.imageS3Keys?.length || params.documentS3Keys?.length)
-        ? {
-            messageType:
-              params.documentS3Keys && params.documentS3Keys.length > 0
-                ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
-                : MESSAGE_TYPES.TEXT_WITH_IMAGES,
-          }
-        : {}),
-    };
+    const newUserMessage: CoachMessage = buildUserMessage(
+      params.userResponse,
+      params.imageS3Keys,
+      params.documentS3Keys,
+    );
 
     const newAiMessage: CoachMessage = {
       id: `msg_${Date.now()}_assistant`,
