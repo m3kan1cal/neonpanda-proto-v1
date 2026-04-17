@@ -21,6 +21,8 @@ import React, {
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
+import DocumentThumbnail from "./DocumentThumbnail";
 import { ContextualUpdateIndicator } from "../../utils/ui/streamingUiHelper.jsx";
 import {
   contextualDrawerPatterns,
@@ -29,7 +31,7 @@ import {
   typographyPatterns,
 } from "../../utils/ui/uiPatterns";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
-import { CloseIcon, EditIcon } from "../themes/SynthwaveComponents";
+import { CloseIcon } from "../themes/SynthwaveComponents";
 import { useToast } from "../../contexts/ToastContext";
 import { logger } from "../../utils/logger";
 
@@ -60,6 +62,7 @@ export default function ContextualChatDrawer({
   coachId,
   coachData,
   onEntityUpdated,
+  userInitial = "U",
 }) {
   const { showToast } = useToast();
   const headingId = useId();
@@ -67,6 +70,9 @@ export default function ContextualChatDrawer({
   const [agentState, setAgentState] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(
+    () => localStorage.getItem("neonpanda-chat-drawer-expanded") === "true",
+  );
 
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
@@ -75,6 +81,7 @@ export default function ContextualChatDrawer({
   const mobileInputFocusRef = useRef(null);
   const closeTriggerRef = useRef(null);
   const lastEditMessageIdRef = useRef(null);
+  const loadedEntityIdRef = useRef(null);
 
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
   const editContext = useMemo(
@@ -89,6 +96,21 @@ export default function ContextualChatDrawer({
     if (!isOpen || !userId || !coachId || !entityId) return;
 
     let cancelled = false;
+
+    // Skip re-init if we already loaded this entity (drawer was just closed and reopened).
+    // Rebind onStateChange so the agent's updates aren't dropped by the previous effect's
+    // stale `cancelled` flag, and resync the UI to the agent's current state.
+    if (agentRef.current && loadedEntityIdRef.current === entityId) {
+      agentRef.current.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      if (agentRef.current.state) {
+        setAgentState({ ...agentRef.current.state });
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
 
     async function initConversation() {
       setIsInitializing(true);
@@ -145,9 +167,13 @@ export default function ContextualChatDrawer({
           );
           showToast("Failed to open edit session. Please try again.", "error");
         }
+        return;
       } finally {
         if (!cancelled) setIsInitializing(false);
       }
+
+      // Mark this entity as loaded so re-opening the drawer skips re-init
+      if (!cancelled) loadedEntityIdRef.current = entityId;
     }
 
     initConversation();
@@ -234,8 +260,12 @@ export default function ContextualChatDrawer({
   // Message send handler
   // ──────────────────────────────────────────────────────────────────────────
   const handleSend = useCallback(
-    async (messageContent, imageS3Keys = []) => {
-      if (!agentRef.current || !messageContent.trim()) return;
+    async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
+      if (!agentRef.current) return;
+
+      const hasImages = imageS3Keys && imageS3Keys.length > 0;
+      const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+      if (!messageContent?.trim() && !hasImages && !hasDocuments) return;
       setInputMessage("");
 
       try {
@@ -243,6 +273,7 @@ export default function ContextualChatDrawer({
           messageContent.trim(),
           imageS3Keys,
           editContext,
+          documentS3Keys,
         );
       } catch (err) {
         logger.error("ContextualChatDrawer: sendMessageStream failed:", err);
@@ -250,6 +281,14 @@ export default function ContextualChatDrawer({
     },
     [editContext],
   );
+
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded((prev) => {
+      const next = !prev;
+      localStorage.setItem("neonpanda-chat-drawer-expanded", String(next));
+      return next;
+    });
+  }, []);
 
   const isStreaming =
     agentState?.isStreaming || agentState?.isTyping || isInitializing;
@@ -280,6 +319,7 @@ export default function ContextualChatDrawer({
           // Slide-in animation
           isOpen ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
+        style={{ width: isExpanded ? "620px" : "420px" }}
       >
         <PanelContent
           headingId={headingId}
@@ -287,17 +327,20 @@ export default function ContextualChatDrawer({
           entityType={entityType}
           coachData={coachData}
           coachInitial={coachInitial}
+          userInitial={userInitial}
           onClose={onClose}
           messageAreaRef={desktopMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
-          streamingMessage={streamingMessage}
           isStreaming={isStreaming}
+          isInitializing={isInitializing}
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
           handleSend={handleSend}
           inputFocusRef={desktopInputFocusRef}
           userId={userId}
+          isExpanded={isExpanded}
+          onToggleExpand={handleToggleExpand}
         />
       </div>
 
@@ -318,17 +361,20 @@ export default function ContextualChatDrawer({
           entityType={entityType}
           coachData={coachData}
           coachInitial={coachInitial}
+          userInitial={userInitial}
           onClose={onClose}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
-          streamingMessage={streamingMessage}
           isStreaming={isStreaming}
+          isInitializing={isInitializing}
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
           handleSend={handleSend}
           inputFocusRef={mobileInputFocusRef}
           userId={userId}
+          isExpanded={isExpanded}
+          onToggleExpand={handleToggleExpand}
         />
       </div>
     </>
@@ -344,26 +390,37 @@ function PanelContent({
   entityType,
   coachData,
   coachInitial,
+  userInitial,
   onClose,
   messageAreaRef,
   messages,
   contextualUpdate,
-  streamingMessage,
   isStreaming,
+  isInitializing,
   inputMessage,
   setInputMessage,
   handleSend,
   inputFocusRef,
   userId,
+  isExpanded,
+  onToggleExpand,
 }) {
   return (
     <>
       {/* Header */}
       <div className={contextualDrawerPatterns.header}>
-        {/* Coach avatar */}
-        <div className={`${avatarPatterns.coachSmall} shrink-0`}>
-          {coachInitial}
-        </div>
+        {/* Expand/collapse button — desktop only (mobile is always full-screen) */}
+        <button
+          type="button"
+          className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
+          onClick={onToggleExpand}
+          aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
+        >
+          <DrawerResizeIcon isExpanded={isExpanded} />
+        </button>
+
+        {/* Section header dot */}
+        <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0" />
 
         {/* Entity label */}
         <div className="flex-1 min-w-0">
@@ -371,12 +428,6 @@ function PanelContent({
             {entityLabel || `Editing ${entityType}`}
           </div>
         </div>
-
-        {/* "Editing" badge */}
-        <span className={contextualDrawerPatterns.headerBadge}>
-          <EditIcon />
-          <span className="ml-1">Editing</span>
-        </span>
 
         {/* Beta badge */}
         <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
@@ -401,7 +452,11 @@ function PanelContent({
         aria-live="polite"
         aria-label="Conversation messages"
       >
-        {messages.length === 0 && !isStreaming && (
+        {/* Skeleton during initialization before any messages arrive */}
+        {isInitializing && messages.length === 0 && <DrawerSkeleton />}
+
+        {/* Empty state — only if truly stuck (no init, no streaming, no messages) */}
+        {messages.length === 0 && !isStreaming && !isInitializing && (
           <div className="flex items-center justify-center h-full">
             <p className={`${typographyPatterns.bodySmall} text-center`}>
               Starting edit session…
@@ -414,20 +469,10 @@ function PanelContent({
             key={message.id || message.messageId}
             message={message}
             coachInitial={coachInitial}
+            userInitial={userInitial}
+            userId={userId}
           />
         ))}
-
-        {/* Live streaming response */}
-        {streamingMessage && (
-          <div className="flex gap-2">
-            <div className={`${avatarPatterns.coachSmall} shrink-0 mt-0.5`}>
-              {coachInitial}
-            </div>
-            <div className={contextualDrawerPatterns.aiMessage}>
-              <MarkdownRenderer content={streamingMessage} />
-            </div>
-          </div>
-        )}
 
         {/* Contextual update indicator (tool-use feedback) */}
         {contextualUpdate && (
@@ -441,55 +486,169 @@ function PanelContent({
 
       {/* Pinned input area */}
       <div className={contextualDrawerPatterns.inputArea}>
-        <ChatInput
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          onSubmit={handleSend}
-          isTyping={isStreaming}
-          placeholder="Describe what you'd like to correct…"
-          userId={userId}
-          coachName={coachData?.name || "Coach"}
-          context="coaching"
-          enableRecording={false}
-          enablePhotoAttachment={false}
-          enableFileAttachment={false}
-          showTipsButton={false}
-          showDeleteButton={false}
-          enableSlashCommands={false}
-          textareaRef={inputFocusRef}
-        />
+        <div className="contextual-drawer-input">
+          <ChatInput
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            onSubmit={handleSend}
+            isTyping={isStreaming}
+            placeholder="Describe what you'd like to correct…"
+            userId={userId}
+            coachName={coachData?.name || "Coach"}
+            context="coaching"
+            enableRecording={false}
+            enablePhotoAttachment={true}
+            enableFileAttachment={true}
+            enableQuickPrompts={false}
+            showTipsButton={false}
+            showDeleteButton={false}
+            enableSlashCommands={false}
+            textareaRef={inputFocusRef}
+            editorMinHeight="44px"
+            editorMaxHeight="120px"
+            compact={true}
+          />
+        </div>
       </div>
     </>
   );
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Expand/collapse icon — double right chevrons (>>) when narrow, double left (<<) when wide
+// ──────────────────────────────────────────────────────────────────────────────
+function DrawerResizeIcon({ isExpanded }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {isExpanded ? (
+        // Collapse: >> (two right-facing chevrons)
+        <path d="M3 4L6 7L3 10M7 4L10 7L7 10" />
+      ) : (
+        // Expand: << (two left-facing chevrons)
+        <path d="M7 4L4 7L7 10M11 4L8 7L11 10" />
+      )}
+    </svg>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Skeleton shown while the conversation initializes (before first messages arrive)
+// ──────────────────────────────────────────────────────────────────────────────
+function DrawerSkeleton() {
+  return (
+    <div className="space-y-6 pt-2">
+      {/* User message skeleton — right-aligned pill */}
+      <div className="flex flex-col items-end">
+        <div className="h-8 w-[70%] rounded-md rounded-br-none bg-synthwave-text-muted/20 animate-pulse" />
+        <div className="mt-1.5 w-6 h-6 rounded-full bg-synthwave-text-muted/20 animate-pulse" />
+      </div>
+
+      {/* AI message skeleton — left-aligned text lines */}
+      <div className="flex flex-col items-start">
+        <div className="space-y-1.5 w-full">
+          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-full" />
+          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-4/5" />
+          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-3/5" />
+        </div>
+        <div className="mt-2 w-6 h-6 rounded-full bg-synthwave-text-muted/20 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Timestamp formatter — same format as CoachConversations, scaled for the drawer
+// ──────────────────────────────────────────────────────────────────────────────
+function formatDrawerTime(timestamp) {
+  if (!timestamp) return "";
+  return new Date(timestamp).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Individual message bubble
 // ──────────────────────────────────────────────────────────────────────────────
-function MessageBubble({ message, coachInitial }) {
+function MessageBubble({ message, coachInitial, userInitial, userId }) {
   const isUser = message.type === "user" || message.role === "user";
   const content =
     message.content || message.displayContent || message.streamingContent || "";
+  const hasImages = message.imageS3Keys && message.imageS3Keys.length > 0;
+  const hasDocuments =
+    message.documentS3Keys && message.documentS3Keys.length > 0;
 
-  if (!content) return null;
+  if (!content && !hasImages && !hasDocuments) return null;
 
   if (isUser) {
     return (
-      <div className="flex justify-end">
+      <div className="flex flex-col items-end">
         <div className={contextualDrawerPatterns.userMessage}>
-          <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
+          {(hasImages || hasDocuments) && (
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {message.imageS3Keys?.map((s3Key, index) => (
+                <ImageWithPresignedUrl
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  index={index}
+                  thumbnailSize="w-16 h-16"
+                  variant="maroon"
+                />
+              ))}
+              {message.documentS3Keys?.map((s3Key, index) => (
+                <DocumentThumbnail
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  thumbnailSize="w-16 h-16"
+                  variant="purple"
+                />
+              ))}
+            </div>
+          )}
+          <p className="whitespace-pre-wrap break-words">{content}</p>
+        </div>
+        <div className="flex items-center gap-2 mt-1.5 justify-end">
+          {message.timestamp && (
+            <span className="text-[10px] text-synthwave-text-muted font-body">
+              {formatDrawerTime(message.timestamp)}
+            </span>
+          )}
+          <div className={`${avatarPatterns.userXSmall} shrink-0`}>
+            {userInitial}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex gap-2">
-      <div className={`${avatarPatterns.coachSmall} shrink-0 mt-0.5`}>
-        {coachInitial}
-      </div>
+    <div className="flex flex-col">
       <div className={contextualDrawerPatterns.aiMessage}>
         <MarkdownRenderer content={content} />
+      </div>
+      <div className="flex items-center gap-2 mt-1">
+        <div className={`${avatarPatterns.aiXSmall} shrink-0`}>
+          {coachInitial}
+        </div>
+        {message.timestamp && (
+          <span className="text-[10px] text-synthwave-text-muted font-body">
+            {formatDrawerTime(message.timestamp)}
+          </span>
+        )}
       </div>
     </div>
   );

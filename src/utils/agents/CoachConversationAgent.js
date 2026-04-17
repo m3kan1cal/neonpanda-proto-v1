@@ -169,8 +169,10 @@ export class CoachConversationAgent {
     try {
       const result = await getCoachConversations(userId, coachId);
 
-      // Sort by last activity (most recent first) and apply limit
+      // Filter out workout_edit conversations (contextual editing sessions accessed only via WorkoutDetails),
+      // sort by last activity (most recent first), and apply limit
       const sortedConversations = (result.conversations || [])
+        .filter((conv) => conv.mode !== CONVERSATION_MODES.WORKOUT_EDIT)
         .sort((a, b) => {
           const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
           const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
@@ -381,6 +383,7 @@ export class CoachConversationAgent {
             content: messageContent,
             timestamp: message.timestamp || new Date().toISOString(),
             imageS3Keys: message.imageS3Keys || undefined,
+            documentS3Keys: message.documentS3Keys || undefined,
             messageType: message.messageType || undefined,
             metadata: message.metadata || undefined, // Preserve metadata (includes mode for Build mode styling)
           });
@@ -433,9 +436,10 @@ export class CoachConversationAgent {
     messageContent,
     imageS3Keys = [],
     editContext = null,
+    documentS3Keys = [],
   ) {
     // Input validation - allow text OR images
-    if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
+    if (!validateStreamingInput(this, messageContent, imageS3Keys, documentS3Keys)) {
       logger.warn("❌ sendMessageStream validation failed");
       return;
     }
@@ -458,6 +462,8 @@ export class CoachConversationAgent {
         timestamp: new Date().toISOString(),
         imageS3Keys:
           imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
+        documentS3Keys:
+          documentS3Keys && documentS3Keys.length > 0 ? documentS3Keys : undefined,
       };
       this._addMessage(userMessage);
 
@@ -491,6 +497,7 @@ export class CoachConversationAgent {
           messageContent.trim(),
           imageS3Keys,
           resolvedEditContext,
+          documentS3Keys,
         );
 
         // Process the stream

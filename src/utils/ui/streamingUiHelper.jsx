@@ -21,6 +21,7 @@ export async function sendMessageWithStreaming(
   messageContent,
   imageS3Keys = [],
   options = {},
+  documentS3Keys = [],
 ) {
   const {
     onStreamingStart = () => {},
@@ -30,7 +31,9 @@ export async function sendMessageWithStreaming(
 
   if (
     !agent ||
-    (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0))
+    (!messageContent.trim() &&
+      (!imageS3Keys || imageS3Keys.length === 0) &&
+      (!documentS3Keys || documentS3Keys.length === 0))
   ) {
     return;
   }
@@ -41,6 +44,7 @@ export async function sendMessageWithStreaming(
       messageContent,
       imageS3Keys,
       editContext,
+      documentS3Keys,
     );
   } catch (streamingError) {
     logger.warn("Streaming failed:", streamingError);
@@ -124,6 +128,10 @@ export function ContextualUpdateIndicator({
   const borderAccentClass = compact
     ? streamingPatterns.contextualUpdate.borderAccentCompact
     : streamingPatterns.contextualUpdate.borderAccent;
+  const textClass = compact
+    ? streamingPatterns.contextualUpdate.textCompact
+    : streamingPatterns.contextualUpdate.text;
+  const avatarClass = compact ? avatarPatterns.aiXSmall : avatarPatterns.aiSmall;
 
   return (
     <div className={streamingPatterns.contextualUpdate.container}>
@@ -143,14 +151,14 @@ export function ContextualUpdateIndicator({
               style={{ animationDelay: "0.4s" }}
             />
           </div>
-          <span className={streamingPatterns.contextualUpdate.text}>
+          <span className={textClass}>
             {content}
           </span>
         </div>
       </div>
       {showAvatar && (
         <div className={streamingPatterns.avatarRow}>
-          <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
+          <div className={`shrink-0 ${avatarClass}`}>
             {avatarLabel}
           </div>
         </div>

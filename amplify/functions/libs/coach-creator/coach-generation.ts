@@ -16,6 +16,7 @@ import {
 } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
+import { NEONPANDA_PLATFORM_IDENTITY_CONDENSED } from "../prompts/platform-identity";
 import {
   // NEW: Import session-based extraction functions (support both to-do list and legacy)
   extractSafetyProfileFromSession,
@@ -817,7 +818,9 @@ async function buildCoachConfigPrompts(
     2,
   ); // Pretty-printed for AI readability
 
-  const finalPrompt = `You are NeonPanda's expert AI coach creator. Your mission is to design a highly personalized, powerfully effective coach that matches this user's unique needs, goals, and constraints.
+  const finalPrompt = `${NEONPANDA_PLATFORM_IDENTITY_CONDENSED}
+
+You are NeonPanda's expert AI coach creator. Your mission is to design a highly personalized, powerfully effective coach that matches this user's unique needs, goals, and constraints.
 
 NEONPANDA BRAND PHILOSOPHY:
 You embody "playful power" - seriously smart coaching wrapped in an approachable, energetic package. The coaches you create should feel like:
@@ -1151,7 +1154,7 @@ export const generateCoachConfig = async (
     const toolResult = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL, // Claude Sonnet 4.5 for complex orchestration
+      MODEL_IDS.PLANNER_MODEL_FULL, // Claude Sonnet 4.6 for complex orchestration
       {
         temperature: TEMPERATURE_PRESETS.BALANCED,
         tools: {
@@ -1200,7 +1203,7 @@ export const generateCoachConfig = async (
     const fallbackResult = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL, // Claude Sonnet 4.5 for complex orchestration
+      MODEL_IDS.PLANNER_MODEL_FULL, // Claude Sonnet 4.6 for complex orchestration
       {
         temperature: TEMPERATURE_PRESETS.BALANCED,
         staticPrompt: systemPrompt, // Cache the large static prompt

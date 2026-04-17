@@ -171,6 +171,7 @@ export async function* streamCoachConversation(
   userResponse,
   imageS3Keys = [],
   editContext = null,
+  documentS3Keys = [],
 ) {
   if (!isStreamingEnabled("coachConversation")) {
     throw new Error("Streaming is not enabled for coach conversations");
@@ -184,6 +185,7 @@ export async function* streamCoachConversation(
     userResponse,
     imageS3Keys,
     editContext,
+    documentS3Keys,
   );
 }
 

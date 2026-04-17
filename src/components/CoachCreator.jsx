@@ -36,6 +36,7 @@ import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
+import DocumentThumbnail from "./shared/DocumentThumbnail";
 import { logger } from "../utils/logger";
 import { useChatScroll } from "../hooks/useChatScroll";
 import {
@@ -476,7 +477,7 @@ function CoachCreator() {
   }, [agentState.isComplete]);
 
   // Handle message submission
-  const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
+  const handleMessageSubmit = async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
     if (!agentRef.current) return;
 
     try {
@@ -490,6 +491,7 @@ function CoachCreator() {
             handleStreamingError(error, { error: showError });
           },
         },
+        documentS3Keys,
       );
     } catch (error) {
       logger.error("Error sending message:", error);
@@ -515,15 +517,23 @@ function CoachCreator() {
 
     return (
       <>
-        {/* Render images if present */}
-        {message.imageS3Keys && message.imageS3Keys.length > 0 && (
+        {/* Render attachments — images and documents share one row */}
+        {((message.imageS3Keys && message.imageS3Keys.length > 0) ||
+          (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
           <div className="flex flex-wrap gap-2 mb-2">
-            {message.imageS3Keys.map((s3Key, index) => (
+            {message.imageS3Keys?.map((s3Key, index) => (
               <ImageWithPresignedUrl
                 key={index}
                 s3Key={s3Key}
                 userId={userId}
                 index={index}
+              />
+            ))}
+            {message.documentS3Keys?.map((s3Key, index) => (
+              <DocumentThumbnail
+                key={index}
+                s3Key={s3Key}
+                userId={userId}
               />
             ))}
           </div>

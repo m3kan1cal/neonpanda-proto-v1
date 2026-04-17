@@ -33,7 +33,7 @@ const ENABLE_S3_DEBUG_LOGGING = true; // Always log system prompts to S3 for deb
 /**
  * Smart model selection based on router analysis
  * Uses Haiku 4.5 for standard conversations (faster + cheaper)
- * Uses Sonnet 4.5 for complex reasoning (better quality)
+ * Uses Sonnet 4.6 for complex reasoning (better quality)
  *
  * @param requiresDeepReasoning - From smart router analysis
  * @returns Model ID to use for this conversation
@@ -79,6 +79,7 @@ export async function generateAIResponse(
   imageS3Keys?: string[], // Image attachments
   requiresDeepReasoning?: boolean, // NEW: Smart model selection flag
   conversationMode?: ConversationMode, // NEW: Conversation mode for specialized prompts
+  documentS3Keys?: string[], // Document attachments
 ): Promise<ResponseGenerationResult> {
   let aiResponseContent: string;
   let promptMetadata: any = null;
@@ -184,6 +185,8 @@ export async function generateAIResponse(
             // Context flags
             hasImages: imageS3Keys && imageS3Keys.length > 0,
             imageCount: imageS3Keys?.length || 0,
+            hasDocuments: documentS3Keys && documentS3Keys.length > 0,
+            documentCount: documentS3Keys?.length || 0,
             hasWorkoutContext: context.recentWorkouts.length > 0,
             recentWorkoutsCount: context.recentWorkouts.length,
             workoutDetected: workoutResult.isWorkoutLogging,
@@ -228,18 +231,21 @@ export async function generateAIResponse(
         requiresDeepReasoning || false,
       );
 
-      // Check if this is a multimodal request (has images)
+      // Check if this is a multimodal request (has attachments)
       const hasImages = imageS3Keys && imageS3Keys.length > 0;
+      const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+      const hasAttachments = hasImages || hasDocuments;
 
-      if (hasImages) {
-        // Build conversation with images using Converse API format
+      if (hasAttachments) {
+        // Build conversation with attachments using Converse API format
         const currentUserMessage: CoachMessage = {
           id: `msg_${Date.now()}_user`,
           role: "user",
           content: userMessage || "",
           timestamp: new Date(),
-          messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
-          imageS3Keys: imageS3Keys,
+          messageType: MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS,
+          ...(hasImages ? { imageS3Keys } : {}),
+          ...(hasDocuments ? { documentS3Keys } : {}),
         };
 
         const allMessages: CoachMessage[] = [
@@ -248,9 +254,10 @@ export async function generateAIResponse(
         ];
         const converseMessages = await buildMultimodalContent(allMessages);
 
-        logger.info("🖼️ Using multimodal Converse API with images", {
+        logger.info("📎 Using multimodal Converse API with attachments", {
           messageCount: converseMessages.length,
-          imagesCount: imageS3Keys.length,
+          imagesCount: imageS3Keys?.length || 0,
+          documentsCount: documentS3Keys?.length || 0,
           model: selectedModel,
         });
 
@@ -341,6 +348,7 @@ export async function generateAIResponseStream(
   imageS3Keys?: string[], // Image attachments
   requiresDeepReasoning?: boolean, // NEW: Smart model selection flag
   conversationMode?: ConversationMode, // NEW: Conversation mode for specialized prompts
+  documentS3Keys?: string[], // Document attachments
 ): Promise<ResponseGenerationStreamResult> {
   let promptMetadata: any = null;
 
@@ -445,6 +453,8 @@ export async function generateAIResponseStream(
             // Context flags
             hasImages: imageS3Keys && imageS3Keys.length > 0,
             imageCount: imageS3Keys?.length || 0,
+            hasDocuments: documentS3Keys && documentS3Keys.length > 0,
+            documentCount: documentS3Keys?.length || 0,
             hasWorkoutContext: context.recentWorkouts.length > 0,
             recentWorkoutsCount: context.recentWorkouts.length,
             workoutDetected: workoutResult.isWorkoutLogging,
@@ -488,18 +498,21 @@ export async function generateAIResponseStream(
         requiresDeepReasoning || false,
       );
 
-      // Check if this is a multimodal request (has images)
+      // Check if this is a multimodal request (has attachments)
       const hasImages = imageS3Keys && imageS3Keys.length > 0;
+      const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+      const hasAttachments = hasImages || hasDocuments;
 
-      if (hasImages) {
-        // Build conversation with images using Converse API format
+      if (hasAttachments) {
+        // Build conversation with attachments using Converse API format
         const currentUserMessage: CoachMessage = {
           id: `msg_${Date.now()}_user`,
           role: "user",
           content: userMessage || "",
           timestamp: new Date(),
-          messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
-          imageS3Keys: imageS3Keys,
+          messageType: MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS,
+          ...(hasImages ? { imageS3Keys } : {}),
+          ...(hasDocuments ? { documentS3Keys } : {}),
         };
 
         const allMessages: CoachMessage[] = [
@@ -508,11 +521,15 @@ export async function generateAIResponseStream(
         ];
         const converseMessages = await buildMultimodalContent(allMessages);
 
-        logger.info("🖼️ Using multimodal Converse Stream API with images", {
-          messageCount: converseMessages.length,
-          imagesCount: imageS3Keys.length,
-          model: selectedModel,
-        });
+        logger.info(
+          "📎 Using multimodal Converse Stream API with attachments",
+          {
+            messageCount: converseMessages.length,
+            imagesCount: imageS3Keys?.length || 0,
+            documentsCount: documentS3Keys?.length || 0,
+            model: selectedModel,
+          },
+        );
 
         // Use centralized multimodal streaming helper from api-helpers
         // NEW: Pass static/dynamic prompts for caching optimization

@@ -221,7 +221,7 @@ async function* createCoachCreatorEventStreamV2(
     logger.info("✅ V2: Model selected:", {
       modelId:
         modelId === MODEL_IDS.PLANNER_MODEL_FULL
-          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
+          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.6)"
           : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
       reason:
         session.conversationHistory.length > 20
