@@ -95,10 +95,22 @@ export default function ContextualChatDrawer({
   useEffect(() => {
     if (!isOpen || !userId || !coachId || !entityId) return;
 
-    // Skip re-init if we already loaded this entity (drawer was just closed and reopened)
-    if (agentRef.current && loadedEntityIdRef.current === entityId) return;
-
     let cancelled = false;
+
+    // Skip re-init if we already loaded this entity (drawer was just closed and reopened).
+    // Rebind onStateChange so the agent's updates aren't dropped by the previous effect's
+    // stale `cancelled` flag, and resync the UI to the agent's current state.
+    if (agentRef.current && loadedEntityIdRef.current === entityId) {
+      agentRef.current.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      if (agentRef.current.state) {
+        setAgentState({ ...agentRef.current.state });
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
 
     async function initConversation() {
       setIsInitializing(true);
