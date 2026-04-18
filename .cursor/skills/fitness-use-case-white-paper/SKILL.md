@@ -6,7 +6,9 @@ description: >-
   valid JSON as a whole), aligned with NeonPanda brand voice. Cursor project
   skill; sibling workflow for Claude Code lives under .claude/skills/. Use when
   the user asks for a case study, use-case white paper, customer success story,
-  or narrative synthesis from comprehensive user history exports.
+  or narrative synthesis from comprehensive user history exports. Frames the
+  featured user with agency and dignity so they feel proud to share with friends
+  and networks.
 ---
 
 # Fitness use-case white paper (NeonPanda)
@@ -38,6 +40,16 @@ Use this skill when synthesizing **real user journeys** into a **public-facing**
 2. For entity shapes and where data lives, skim [docs/strategy/DB_DESIGN.md](docs/strategy/DB_DESIGN.md) so you map raw items (profiles, conversations, workouts, feedback) to narrative sections without inventing fields.
 
 **Voice calibration (summary):** warm, conversational, confidently knowledgeable, playfully motivating, honest. Prefer plain language. Use technical precision only when the reader benefits. Avoid hype adjectives that outrun the evidence.
+
+## Share-worthy, subject-centered tone
+
+The doc is for **prospects**, but it must also read well for the **person whose story this is**. Write so they would **feel proud** and **excited to share** the piece with friends or their network—without sacrificing credibility.
+
+- **Agency and credit**: Center **their** effort and choices—follow-through, honesty in check-ins, willingness to adjust—using what the records actually show. Frame NeonPanda and the coach as a **partner** that supported **their** work, not a story where they were passive or “rescued” unless the data clearly supports that dynamic.
+- **Dignity**: No condescension, pity, or mockable detail. Do not exaggerate lows for drama or reduce them to a one-dimensional “before.” They should sound like a real person peers would **respect**.
+- **Earned pride**: Call out specific, evidence-backed wins and turning points (including small ones) so the tone feels **authentically celebratory**, not hollow praise.
+- **Share test**: Ask whether they’d happily tag someone or drop the link in a group chat because the summary makes them look **capable and genuine**—not because it oversells.
+- **Boundaries**: Warmth is not license to **inflate** outcomes. Pride must rest on **real** patterns in the data.
 
 ## Evidence discipline
 
@@ -136,6 +148,7 @@ Raw dump handling (how records were separated), date range, gaps, consent status
 ## Final quality bar
 
 - Would a skeptical **fitness enthusiast** still find this **credible and worth their time**?
+- Would the **featured user** feel **good about themselves** reading it—**fair, dignified, and worth sharing** with friends or their network?
 - Does every strong claim have a **visible evidentiary path**?
 - Does it sound like **NeonPanda** (per branding doc) rather than generic SaaS marketing?
 - Are privacy and consent statements accurate for what the user confirmed for this run?
