@@ -19,6 +19,8 @@ import {
   formatWorkoutCount,
 } from "../utils/dateUtils";
 import AppFooter from "./shared/AppFooter";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
 import {
   NeonBorder,
   NewBadge,
@@ -131,7 +133,11 @@ function TrainingGroundsV2() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { userProfile } = useAuth();
+  const { userProfile, user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
   const { success: showSuccess, error: showError } = useToast();
 
   // Derive unit system from user profile preferences (default: imperial)
@@ -210,6 +216,7 @@ function TrainingGroundsV2() {
   // Component-local UI state
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
 
   // Pagination state (Show More / Show Less)
   const [showAllPrograms, setShowAllPrograms] = useState(false);
@@ -1661,6 +1668,26 @@ function TrainingGroundsV2() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            isOpen={isInlineChatDrawerOpen}
+            onClose={() => setIsInlineChatDrawerOpen(false)}
+            entityLabel="Training Grounds"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+          />
+        </>
+      )}
     </div>
   );
 }
