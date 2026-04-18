@@ -143,9 +143,12 @@ function TrainingGroundsV2() {
   // Derive unit system from user profile preferences (default: imperial)
   const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
-  // Global Command Palette state
-  const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
-    useNavigationContext();
+  // Global Command Palette + inline coach drawer (mobile shell visibility)
+  const {
+    setIsCommandPaletteOpen,
+    onCommandPaletteToggle,
+    setIsInlineCoachDrawerOpen,
+  } = useNavigationContext();
 
   const coachAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
@@ -217,6 +220,11 @@ function TrainingGroundsV2() {
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
   const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   // Pagination state (Show More / Show Less)
   const [showAllPrograms, setShowAllPrograms] = useState(false);

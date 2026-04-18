@@ -54,6 +54,8 @@ export const NavigationProvider = ({ children }) => {
   });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [commandPaletteCommand, setCommandPaletteCommand] = useState("");
+  /** True while Training Grounds inline coach drawer is open (mobile immersive shell). */
+  const [isInlineCoachDrawerOpen, setIsInlineCoachDrawerOpen] = useState(false);
 
   // Derived state
   const hasCoachContext = !!(userId && coachId && isAuthenticated);
@@ -328,6 +330,9 @@ export const NavigationProvider = ({ children }) => {
     commandPaletteCommand,
     setCommandPaletteCommand,
     onCommandPaletteToggle,
+
+    isInlineCoachDrawerOpen,
+    setIsInlineCoachDrawerOpen,
 
     // Current location
     currentPath: location.pathname,
