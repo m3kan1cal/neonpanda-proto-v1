@@ -39,3 +39,10 @@ docs/social-content/
 
 # Incident logs
 incidents/
+
+# Personal maintainer scratchpads (local only)
+SCRIPTS_MLF.md
+NOTES_MLF.md
+
+# Local DynamoDB exports (may contain PII)
+exports/

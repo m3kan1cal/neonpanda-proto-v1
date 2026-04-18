@@ -262,6 +262,120 @@ export class CoachConversationAgent {
   }
 
   /**
+   * Finds the most recent chat-mode conversation whose metadata.tags includes `tag`.
+   */
+  async findChatConversationByTag(userId, coachId, tag) {
+    if (!userId || !coachId || !tag) return null;
+
+    try {
+      const result = await getCoachConversations(userId, coachId);
+      const conversations = result.conversations || [];
+
+      const match = conversations
+        .filter(
+          (conv) =>
+            conv.mode === CONVERSATION_MODES.CHAT &&
+            Array.isArray(conv.metadata?.tags) &&
+            conv.metadata.tags.includes(tag),
+        )
+        .sort((a, b) => {
+          const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
+          const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
+          return dateB - dateA;
+        })[0];
+
+      return match || null;
+    } catch (error) {
+      logger.error("Error finding chat conversation by tag:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Returns metadata.tags for a conversation (fresh read from API).
+   */
+  async fetchConversationTags(userId, coachId, conversationId) {
+    const data = await getCoachConversation(userId, coachId, conversationId);
+    const conv = data.conversation || data;
+    return Array.isArray(conv.metadata?.tags) ? conv.metadata.tags : [];
+  }
+
+  /**
+   * PATCH tags remotely; only merges into local agent state if this conversation is loaded.
+   */
+  async _patchConversationTags(userId, coachId, conversationId, nextTags) {
+    await updateCoachConversation(userId, coachId, conversationId, {
+      tags: nextTags,
+    });
+    if (this.state.conversation?.conversationId === conversationId) {
+      this._updateState({
+        conversation: {
+          ...this.state.conversation,
+          metadata: {
+            ...this.state.conversation.metadata,
+            tags: nextTags,
+          },
+        },
+      });
+    }
+  }
+
+  /**
+   * Removes one tag without dropping other tags (PUT replaces the whole array).
+   */
+  async removeTagFromConversation(userId, coachId, conversationId, tag) {
+    const tags = await this.fetchConversationTags(
+      userId,
+      coachId,
+      conversationId,
+    );
+    const next = tags.filter((t) => t !== tag);
+    await this._patchConversationTags(userId, coachId, conversationId, next);
+  }
+
+  /**
+   * Appends a tag if missing.
+   */
+  async addTagToConversation(userId, coachId, conversationId, tag) {
+    const tags = await this.fetchConversationTags(
+      userId,
+      coachId,
+      conversationId,
+    );
+    if (tags.includes(tag)) return;
+    await this._patchConversationTags(userId, coachId, conversationId, [
+      ...tags,
+      tag,
+    ]);
+  }
+
+  /**
+   * Moves inline home tag from an old conversation to a new one (Training Grounds FAB).
+   * Adds to new conversation first to ensure tag is never lost.
+   */
+  async migrateInlineHomeTag(
+    userId,
+    coachId,
+    oldConversationId,
+    newConversationId,
+    tag,
+  ) {
+    await this.addTagToConversation(userId, coachId, newConversationId, tag);
+    if (oldConversationId && oldConversationId !== newConversationId) {
+      try {
+        await this.removeTagFromConversation(
+          userId,
+          coachId,
+          oldConversationId,
+          tag,
+        );
+      } catch (e) {
+        logger.error("migrateInlineHomeTag: failed to strip tag from old:", e);
+      }
+    }
+  }
+
+  /**
    * Creates a new coach conversation
    */
   async createConversation(
@@ -439,7 +553,9 @@ export class CoachConversationAgent {
     documentS3Keys = [],
   ) {
     // Input validation - allow text OR images
-    if (!validateStreamingInput(this, messageContent, imageS3Keys, documentS3Keys)) {
+    if (
+      !validateStreamingInput(this, messageContent, imageS3Keys, documentS3Keys)
+    ) {
       logger.warn("❌ sendMessageStream validation failed");
       return;
     }
@@ -463,7 +579,9 @@ export class CoachConversationAgent {
         imageS3Keys:
           imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
         documentS3Keys:
-          documentS3Keys && documentS3Keys.length > 0 ? documentS3Keys : undefined,
+          documentS3Keys && documentS3Keys.length > 0
+            ? documentS3Keys
+            : undefined,
       };
       this._addMessage(userMessage);
 

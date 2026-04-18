@@ -18,20 +18,37 @@ import React, {
   useId,
   useMemo,
 } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
+import {
+  getCoachConversation,
+  getCoachConversations,
+} from "../../utils/apis/coachConversationApi";
 import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
 import DocumentThumbnail from "./DocumentThumbnail";
 import { ContextualUpdateIndicator } from "../../utils/ui/streamingUiHelper.jsx";
+import { Tooltip } from "react-tooltip";
 import {
   contextualDrawerPatterns,
   avatarPatterns,
-  badgePatterns,
   typographyPatterns,
+  iconButtonPatterns,
+  tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
+import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
-import { CloseIcon } from "../themes/SynthwaveComponents";
+import {
+  INLINE_TRAINING_GROUNDS_TAG,
+  getTrainingGroundsInlineSessionKey,
+  TRAINING_GROUNDS_INLINE_PICKER_LIMIT,
+} from "../../constants/contextualChat";
+import {
+  CloseIcon,
+  PlusIcon,
+  ChatIconSmall,
+} from "../themes/SynthwaveComponents";
 import { useToast } from "../../contexts/ToastContext";
 import { logger } from "../../utils/logger";
 
@@ -39,13 +56,180 @@ import { logger } from "../../utils/logger";
 const INITIAL_PROMPT =
   "Please load my workout details so we can get started. I have some corrections to make.";
 
+/** @typedef {"workoutEdit" | "trainingGroundsInlineChat"} ContextualChatDrawerVariant */
+
+function OpenFullPageIcon({ className = "w-4 h-4" }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Conversation picker — ExerciseSelector-style trigger and panel, compact for the drawer.
+ */
+function TrainingGroundsConversationPicker({
+  options,
+  value,
+  onSelect,
+  disabled,
+  isLoading,
+  labelledBy,
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wrapperRef = useRef(null);
+  const listboxId = useId();
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [menuOpen]);
+
+  const selected = useMemo(
+    () => options.find((o) => o.conversationId === value),
+    [options, value],
+  );
+
+  const displayLabel = (() => {
+    if (selected?.title?.trim()) return selected.title.trim();
+    if (value) return `${value.slice(0, 14)}…`;
+    if (isLoading) return "Loading…";
+    return "Select conversation…";
+  })();
+
+  const toggleDisabled = disabled || isLoading || !onSelect;
+
+  return (
+    <div ref={wrapperRef} className="relative w-full min-w-0">
+      <div
+        role="combobox"
+        aria-expanded={menuOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={labelledBy}
+        aria-controls={listboxId}
+        className={`relative flex items-center w-full rounded-md transition-all duration-300 cursor-pointer min-h-9 ${
+          toggleDisabled
+            ? "opacity-50 cursor-not-allowed border border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/20"
+            : menuOpen
+              ? "border border-synthwave-neon-cyan bg-synthwave-bg-primary/50"
+              : "border border-synthwave-neon-cyan/20 bg-synthwave-bg-primary/30 hover:border-synthwave-neon-cyan/40"
+        }`}
+        onClick={() => {
+          if (toggleDisabled) return;
+          setMenuOpen((o) => !o);
+        }}
+      >
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
+          <span className="inline-flex w-3.5 h-3.5 items-center justify-center [&_svg]:!w-3.5 [&_svg]:!h-3.5">
+            <ChatIconSmall />
+          </span>
+        </div>
+        <div className="flex-1 pl-8 pr-9 py-2 min-h-9 flex items-center">
+          <span className="font-body text-xs text-white truncate w-full">
+            {displayLabel}
+          </span>
+        </div>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg
+            className={`w-3.5 h-3.5 text-synthwave-text-muted shrink-0 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </div>
+
+      {menuOpen && !toggleDisabled && (
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan"
+        >
+          {options.length === 0 ? (
+            <div className="px-3 py-3 text-center font-body text-xs text-synthwave-text-muted">
+              No conversations yet.
+            </div>
+          ) : (
+            options.map((c) => {
+              const isSelected = c.conversationId === value;
+              const rowLabel =
+                c.title?.trim() ||
+                (c.conversationId
+                  ? `${c.conversationId.slice(0, 14)}…`
+                  : "Chat");
+              return (
+                <button
+                  key={c.conversationId}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onSelect(c.conversationId);
+                    setMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 font-body text-xs transition-colors duration-150 cursor-pointer ${
+                    isSelected
+                      ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink"
+                      : "text-white hover:bg-synthwave-neon-cyan/10"
+                  }`}
+                >
+                  <span className="truncate block">{rowLabel}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * ContextualChatDrawer
  *
  * @param {boolean} isOpen - Controls visibility
  * @param {Function} onClose - Called when the drawer is closed
+ * @param {ContextualChatDrawerVariant} [variant="workoutEdit"]
  * @param {string} entityType - "workout" (extensible to "program", etc.)
- * @param {string} entityId - The entity ID being edited
+ * @param {string} entityId - The entity ID being edited (workout variant)
  * @param {string} entityLabel - Display name for the entity (e.g., workout title)
  * @param {string} userId - The authenticated user's ID
  * @param {string} coachId - The coach ID for the conversation
@@ -55,6 +239,7 @@ const INITIAL_PROMPT =
 export default function ContextualChatDrawer({
   isOpen,
   onClose,
+  variant = "workoutEdit",
   entityType,
   entityId,
   entityLabel,
@@ -64,6 +249,7 @@ export default function ContextualChatDrawer({
   onEntityUpdated,
   userInitial = "U",
 }) {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const headingId = useId();
 
@@ -83,23 +269,71 @@ export default function ContextualChatDrawer({
   const lastEditMessageIdRef = useRef(null);
   const loadedEntityIdRef = useRef(null);
 
+  const [trainingPickerOptions, setTrainingPickerOptions] = useState([]);
+  const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
+
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
   const editContext = useMemo(
-    () => (entityType && entityId ? { entityType, entityId } : null),
-    [entityType, entityId],
+    () =>
+      variant === "workoutEdit" && entityType && entityId
+        ? { entityType, entityId }
+        : null,
+    [variant, entityType, entityId],
   );
 
+  const refreshTrainingPicker = useCallback(async () => {
+    if (!userId || !coachId || variant !== "trainingGroundsInlineChat") return;
+    setIsLoadingTrainingPicker(true);
+    try {
+      const { conversations = [] } = await getCoachConversations(
+        userId,
+        coachId,
+      );
+      const chats = conversations.filter(
+        (c) => c.mode === CONVERSATION_MODES.CHAT,
+      );
+      chats.sort((a, b) => {
+        const dateA = new Date(
+          a.metadata?.lastActivity || a.updatedAt || a.createdAt || 0,
+        );
+        const dateB = new Date(
+          b.metadata?.lastActivity || b.updatedAt || b.createdAt || 0,
+        );
+        return dateB - dateA;
+      });
+      setTrainingPickerOptions(
+        chats.slice(0, TRAINING_GROUNDS_INLINE_PICKER_LIMIT),
+      );
+    } catch (err) {
+      logger.error("ContextualChatDrawer: training picker load failed:", err);
+    } finally {
+      setIsLoadingTrainingPicker(false);
+    }
+  }, [userId, coachId, variant]);
+
   // ──────────────────────────────────────────────────────────────────────────
-  // Agent lifecycle — create a fresh conversation each time the drawer opens
+  // Training Grounds: conversation picker list
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (
+      !isOpen ||
+      variant !== "trainingGroundsInlineChat" ||
+      !userId ||
+      !coachId
+    )
+      return;
+    refreshTrainingPicker();
+  }, [isOpen, userId, coachId, variant, refreshTrainingPicker]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Agent lifecycle — workout edit variant
+  // ──────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (variant !== "workoutEdit") return;
     if (!isOpen || !userId || !coachId || !entityId) return;
 
     let cancelled = false;
 
-    // Skip re-init if we already loaded this entity (drawer was just closed and reopened).
-    // Rebind onStateChange so the agent's updates aren't dropped by the previous effect's
-    // stale `cancelled` flag, and resync the UI to the agent's current state.
     if (agentRef.current && loadedEntityIdRef.current === entityId) {
       agentRef.current.onStateChange = (state) => {
         if (!cancelled) setAgentState({ ...state });
@@ -130,7 +364,6 @@ export default function ContextualChatDrawer({
       agentRef.current = agent;
 
       try {
-        // Resume an existing workout_edit conversation for this entity if one exists
         const existing = await agent.findWorkoutEditConversation(
           userId,
           coachId,
@@ -172,7 +405,6 @@ export default function ContextualChatDrawer({
         if (!cancelled) setIsInitializing(false);
       }
 
-      // Mark this entity as loaded so re-opening the drawer skips re-init
       if (!cancelled) loadedEntityIdRef.current = entityId;
     }
 
@@ -181,7 +413,211 @@ export default function ContextualChatDrawer({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, userId, coachId, entityId]); // intentionally excludes entityLabel to avoid re-init on title change
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- entityLabel/editContext churn should not reset workout edit session
+  }, [isOpen, userId, coachId, entityId, variant, showToast]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Agent lifecycle — Training Grounds inline chat variant
+  // ──────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (variant !== "trainingGroundsInlineChat") return;
+    if (!isOpen || !userId || !coachId) return;
+
+    let cancelled = false;
+    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+
+    async function resolveTrainingTargetId(agent) {
+      let sessionId = null;
+      try {
+        sessionId = sessionStorage.getItem(sessionKey);
+      } catch {
+        /* ignore */
+      }
+
+      if (sessionId) {
+        try {
+          const data = await getCoachConversation(userId, coachId, sessionId);
+          const conv = data.conversation || data;
+          if (conv.mode === CONVERSATION_MODES.CHAT) return sessionId;
+          try {
+            sessionStorage.removeItem(sessionKey);
+          } catch {
+            /* ignore */
+          }
+        } catch {
+          try {
+            sessionStorage.removeItem(sessionKey);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+
+      const home = await agent.findChatConversationByTag(
+        userId,
+        coachId,
+        INLINE_TRAINING_GROUNDS_TAG,
+      );
+      if (home) return home.conversationId;
+      return "__create__";
+    }
+
+    async function initTrainingConversation() {
+      setIsInitializing(true);
+      lastEditMessageIdRef.current = null;
+
+      const agent =
+        agentRef.current ||
+        new CoachConversationAgent({
+          userId,
+          coachId,
+        });
+      agentRef.current = agent;
+      // Must rebind whenever this effect runs: a reused agent still holds the
+      // previous effect's onStateChange closure (with cancelled === true).
+      agent.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      agent.onError = (err) => {
+        logger.error("ContextualChatDrawer agent error:", err);
+      };
+
+      try {
+        const target = await resolveTrainingTargetId(agent);
+        if (cancelled) return;
+
+        if (target !== "__create__") {
+          if (agent.conversationId === target && agent.state?.conversation) {
+            if (agent.state) setAgentState({ ...agent.state });
+          } else {
+            await agent.loadExistingConversation(userId, coachId, target);
+          }
+        } else {
+          await agent.createConversation(
+            userId,
+            coachId,
+            "Training Grounds",
+            null,
+            CONVERSATION_MODES.CHAT,
+          );
+          if (cancelled) return;
+          await agent.addTagToConversation(
+            userId,
+            coachId,
+            agent.conversationId,
+            INLINE_TRAINING_GROUNDS_TAG,
+          );
+        }
+        if (!cancelled) {
+          try {
+            const id = agent.conversationId;
+            if (id) sessionStorage.setItem(sessionKey, id);
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          logger.error(
+            "ContextualChatDrawer: failed to initialize training chat:",
+            err,
+          );
+          showToast("Failed to open chat. Please try again.", "error");
+        }
+      } finally {
+        if (!cancelled) setIsInitializing(false);
+      }
+    }
+
+    initTrainingConversation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, userId, coachId, variant, showToast]);
+
+  const handleTrainingPickerChange = useCallback(
+    async (conversationId) => {
+      const agent = agentRef.current;
+      if (!agent || !conversationId || !userId || !coachId) return;
+      const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+      setIsInitializing(true);
+      try {
+        await agent.loadExistingConversation(userId, coachId, conversationId);
+        try {
+          sessionStorage.setItem(sessionKey, conversationId);
+        } catch {
+          /* ignore */
+        }
+        await refreshTrainingPicker();
+      } catch (err) {
+        logger.error("ContextualChatDrawer: picker load failed:", err);
+        showToast("Could not open that conversation.", "error");
+        try {
+          sessionStorage.removeItem(sessionKey);
+        } catch {
+          /* ignore */
+        }
+      } finally {
+        setIsInitializing(false);
+      }
+    },
+    [userId, coachId, showToast, refreshTrainingPicker],
+  );
+
+  const handleTrainingNewConversation = useCallback(async () => {
+    const agent = agentRef.current;
+    if (!agent || !userId || !coachId) return;
+    if (agent.state?.isStreaming || agent.state?.isTyping) return;
+
+    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+    setIsInitializing(true);
+    try {
+      const oldTagged = await agent.findChatConversationByTag(
+        userId,
+        coachId,
+        INLINE_TRAINING_GROUNDS_TAG,
+      );
+      await agent.createConversation(
+        userId,
+        coachId,
+        "Training Grounds",
+        null,
+        CONVERSATION_MODES.CHAT,
+      );
+      const newId = agent.conversationId;
+      await agent.migrateInlineHomeTag(
+        userId,
+        coachId,
+        oldTagged?.conversationId || null,
+        newId,
+        INLINE_TRAINING_GROUNDS_TAG,
+      );
+      try {
+        sessionStorage.setItem(sessionKey, newId);
+      } catch {
+        /* ignore */
+      }
+      await refreshTrainingPicker();
+    } catch (err) {
+      logger.error(
+        "ContextualChatDrawer: new training conversation failed:",
+        err,
+      );
+      showToast("Could not start a new conversation.", "error");
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [userId, coachId, showToast, refreshTrainingPicker]);
+
+  const handleOpenFullPageChat = useCallback(() => {
+    const id = agentRef.current?.conversationId;
+    if (!userId || !coachId || !id) return;
+    navigate(
+      `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}&conversationId=${encodeURIComponent(id)}`,
+    );
+    onClose();
+  }, [userId, coachId, navigate, onClose]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Auto-scroll message area to bottom on new messages (target visible panel)
@@ -190,13 +626,23 @@ export default function ContextualChatDrawer({
     if (!agentState?.messages) return;
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
     const ref = isDesktop ? desktopMessageAreaRef : mobileMessageAreaRef;
-    if (ref.current) {
-      ref.current.scrollTop = ref.current.scrollHeight;
-    }
+    const el = ref.current;
+    if (!el) return;
+
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
+    const t = window.setTimeout(scrollToBottom, 80);
+    return () => window.clearTimeout(t);
   }, [
     agentState?.messages,
     agentState?.streamingMessage,
     agentState?.contextualUpdate,
+    agentState?.conversation?.conversationId,
+    isInitializing,
   ]);
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -220,6 +666,7 @@ export default function ContextualChatDrawer({
   // Tracks the last processed message ID so every new edit fires the callback.
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (variant !== "workoutEdit") return;
     if (!agentState?.messages) return;
 
     const lastAssistant = [...agentState.messages]
@@ -238,7 +685,7 @@ export default function ContextualChatDrawer({
         onEntityUpdated();
       }
     }
-  }, [agentState?.messages, onEntityUpdated]);
+  }, [variant, agentState?.messages, onEntityUpdated]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Escape key to close
@@ -292,11 +739,50 @@ export default function ContextualChatDrawer({
 
   const isStreaming =
     agentState?.isStreaming || agentState?.isTyping || isInitializing;
+  const streamBusy = !!(agentState?.isStreaming || agentState?.isTyping);
   const messages = agentState?.messages || [];
   const contextualUpdate = agentState?.contextualUpdate;
-  const streamingMessage = agentState?.streamingMessage;
+
+  const currentConversationId = agentState?.conversation?.conversationId || "";
+  const trainingPickerEffective = useMemo(() => {
+    if (variant !== "trainingGroundsInlineChat") return [];
+    const ids = new Set(
+      trainingPickerOptions.map((o) => o.conversationId).filter(Boolean),
+    );
+    const out = [...trainingPickerOptions];
+    if (currentConversationId && !ids.has(currentConversationId)) {
+      out.unshift({
+        conversationId: currentConversationId,
+        title: agentState?.conversation?.title || "Current conversation",
+      });
+    }
+    return out;
+  }, [
+    variant,
+    trainingPickerOptions,
+    currentConversationId,
+    agentState?.conversation?.title,
+  ]);
+
+  const dialogAriaLabel =
+    variant === "trainingGroundsInlineChat"
+      ? `Chat with ${entityLabel || "coach"}`
+      : `Edit ${entityLabel || entityType} with AI coach`;
 
   if (!isOpen) return null;
+
+  const panelExtras = {
+    variant,
+    trainingPickerOptions: trainingPickerEffective,
+    isLoadingTrainingPicker,
+    currentConversationId,
+    onTrainingPickerChange: handleTrainingPickerChange,
+    onTrainingNewConversation: handleTrainingNewConversation,
+    onOpenFullPageChat: handleOpenFullPageChat,
+    userId,
+    coachId,
+    streamBusy,
+  };
 
   return (
     <>
@@ -312,7 +798,7 @@ export default function ContextualChatDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
-        aria-label={`Edit ${entityLabel || entityType} with AI coach`}
+        aria-label={dialogAriaLabel}
         className={[
           // Desktop: right slide-over
           `hidden lg:flex ${contextualDrawerPatterns.panelDesktop}`,
@@ -341,6 +827,7 @@ export default function ContextualChatDrawer({
           userId={userId}
           isExpanded={isExpanded}
           onToggleExpand={handleToggleExpand}
+          {...panelExtras}
         />
       </div>
 
@@ -349,7 +836,7 @@ export default function ContextualChatDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${headingId}-mobile`}
-        aria-label={`Edit ${entityLabel || entityType} with AI coach`}
+        aria-label={dialogAriaLabel}
         className={[
           `flex lg:hidden ${contextualDrawerPatterns.panelMobile}`,
           isOpen ? "translate-y-0" : "translate-y-full",
@@ -375,6 +862,7 @@ export default function ContextualChatDrawer({
           userId={userId}
           isExpanded={isExpanded}
           onToggleExpand={handleToggleExpand}
+          {...panelExtras}
         />
       </div>
     </>
@@ -404,7 +892,34 @@ function PanelContent({
   userId,
   isExpanded,
   onToggleExpand,
+  variant = "workoutEdit",
+  trainingPickerOptions = [],
+  isLoadingTrainingPicker = false,
+  currentConversationId = "",
+  onTrainingPickerChange,
+  onTrainingNewConversation,
+  onOpenFullPageChat,
+  coachId,
+  streamBusy = false,
 }) {
+  const trainingSelectId = useId();
+  const tipNewChatId = useId();
+  const tipOpenFullId = useId();
+  const tipViewAllId = useId();
+  const isTraining = variant === "trainingGroundsInlineChat";
+  const viewAllUrl =
+    userId && coachId
+      ? `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
+      : "#";
+
+  const inputPlaceholder = isTraining
+    ? "Message your coach…"
+    : "Describe what you'd like to correct…";
+  const emptySessionMessage = "Starting edit session…";
+
+  const showMessageList = !(isTraining && isInitializing);
+  const suppressTrainingOverlay = isTraining && isInitializing;
+
   return (
     <>
       {/* Header */}
@@ -425,7 +940,8 @@ function PanelContent({
         {/* Entity label */}
         <div className="flex-1 min-w-0">
           <div id={headingId} className={contextualDrawerPatterns.headerLabel}>
-            {entityLabel || `Editing ${entityType}`}
+            {entityLabel ||
+              (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
           </div>
         </div>
 
@@ -439,11 +955,88 @@ function PanelContent({
           type="button"
           className={contextualDrawerPatterns.closeButton}
           onClick={onClose}
-          aria-label="Close edit session"
+          aria-label={isTraining ? "Close chat" : "Close edit session"}
         >
           <CloseIcon />
         </button>
       </div>
+
+      {isTraining && (
+        <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/40">
+          <span id={trainingSelectId} className="sr-only">
+            Conversation
+          </span>
+          <div className="flex-1 min-w-0">
+            <TrainingGroundsConversationPicker
+              options={trainingPickerOptions}
+              value={currentConversationId}
+              onSelect={onTrainingPickerChange}
+              disabled={
+                isLoadingTrainingPicker ||
+                isInitializing ||
+                !onTrainingPickerChange
+              }
+              isLoading={isLoadingTrainingPicker}
+              labelledBy={trainingSelectId}
+            />
+          </div>
+          <div className="flex shrink-0 gap-1 items-center">
+            <button
+              type="button"
+              onClick={() => onTrainingNewConversation?.()}
+              disabled={
+                streamBusy || isInitializing || !onTrainingNewConversation
+              }
+              data-tooltip-id={tipNewChatId}
+              data-tooltip-content="New chat"
+              data-tooltip-place="bottom"
+              aria-label="New chat"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <PlusIcon />
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenFullPageChat?.()}
+              disabled={!currentConversationId || !onOpenFullPageChat}
+              data-tooltip-id={tipOpenFullId}
+              data-tooltip-content="Open in full page"
+              data-tooltip-place="bottom"
+              aria-label="Open in full page"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-cyan hover:!text-synthwave-neon-cyan hover:!bg-synthwave-neon-cyan/10 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <OpenFullPageIcon />
+            </button>
+            <Link
+              to={viewAllUrl}
+              data-tooltip-id={tipViewAllId}
+              data-tooltip-content="View all"
+              data-tooltip-place="bottom"
+              aria-label="View all conversations"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-purple hover:!text-synthwave-neon-purple hover:!bg-synthwave-neon-purple/10 inline-flex items-center justify-center cursor-pointer`}
+            >
+              <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
+                <ChatIconSmall />
+              </span>
+            </Link>
+          </div>
+          <Tooltip
+            id={tipNewChatId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipNewChatId}"]`}
+          />
+          <Tooltip
+            id={tipOpenFullId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipOpenFullId}"]`}
+          />
+          <Tooltip
+            id={tipViewAllId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipViewAllId}"]`}
+          />
+        </div>
+      )}
 
       {/* Message area */}
       <div
@@ -452,30 +1045,46 @@ function PanelContent({
         aria-live="polite"
         aria-label="Conversation messages"
       >
-        {/* Skeleton during initialization before any messages arrive */}
-        {isInitializing && messages.length === 0 && <DrawerSkeleton />}
-
-        {/* Empty state — only if truly stuck (no init, no streaming, no messages) */}
-        {messages.length === 0 && !isStreaming && !isInitializing && (
-          <div className="flex items-center justify-center h-full">
-            <p className={`${typographyPatterns.bodySmall} text-center`}>
-              Starting edit session…
-            </p>
-          </div>
+        {/* Skeleton: training whenever loading; workout edit on first load with no messages yet */}
+        {isInitializing && (isTraining || messages.length === 0) && (
+          <DrawerSkeleton />
         )}
 
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id || message.messageId}
-            message={message}
-            coachInitial={coachInitial}
-            userInitial={userInitial}
-            userId={userId}
-          />
-        ))}
+        {/* Empty state — workout edit */}
+        {!isTraining &&
+          messages.length === 0 &&
+          !isStreaming &&
+          !isInitializing && (
+            <div className="flex items-center justify-center h-full">
+              <p className={`${typographyPatterns.bodySmall} text-center px-4`}>
+                {emptySessionMessage}
+              </p>
+            </div>
+          )}
+
+        {/* Empty state — training drawer: curated tips */}
+        {isTraining &&
+          messages.length === 0 &&
+          !isStreaming &&
+          !isInitializing && (
+            <div className="flex flex-1 min-h-0 items-stretch justify-center w-full">
+              <CoachConversationEmptyTips variant="drawer" />
+            </div>
+          )}
+
+        {showMessageList &&
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id || message.messageId}
+              message={message}
+              coachInitial={coachInitial}
+              userInitial={userInitial}
+              userId={userId}
+            />
+          ))}
 
         {/* Contextual update indicator (tool-use feedback) */}
-        {contextualUpdate && (
+        {contextualUpdate && !suppressTrainingOverlay && (
           <ContextualUpdateIndicator
             content={contextualUpdate.content}
             avatarLabel={coachInitial}
@@ -492,7 +1101,7 @@ function PanelContent({
             setInputMessage={setInputMessage}
             onSubmit={handleSend}
             isTyping={isStreaming}
-            placeholder="Describe what you'd like to correct…"
+            placeholder={inputPlaceholder}
             userId={userId}
             coachName={coachData?.name || "Coach"}
             context="coaching"

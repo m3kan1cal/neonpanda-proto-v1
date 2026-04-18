@@ -550,8 +550,7 @@ function ManageExercises() {
                           {capitalizeFirst(
                             session.originalName || session.exerciseName,
                           )}
-                          {(formatMetrics(session.metrics) || "No metrics") &&
-                            ` - ${formatMetrics(session.metrics) || "No metrics"}`}
+                          {` - ${formatMetrics(session.metrics) || "No metrics"}`}
                         </span>
                       </div>
                       <svg
@@ -914,7 +913,9 @@ function ManageExercises() {
               <div className="mb-8">
                 <EmptyStateCard
                   icon={searchQuery ? "🔍" : "💪"}
-                  title={searchQuery ? "No Matching Exercises" : "No Exercises Yet"}
+                  title={
+                    searchQuery ? "No Matching Exercises" : "No Exercises Yet"
+                  }
                   description={
                     searchQuery
                       ? `No exercises match "${searchQuery}". Try a different search term.`
