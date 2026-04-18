@@ -626,13 +626,23 @@ export default function ContextualChatDrawer({
     if (!agentState?.messages) return;
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
     const ref = isDesktop ? desktopMessageAreaRef : mobileMessageAreaRef;
-    if (ref.current) {
-      ref.current.scrollTop = ref.current.scrollHeight;
-    }
+    const el = ref.current;
+    if (!el) return;
+
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
+    const t = window.setTimeout(scrollToBottom, 80);
+    return () => window.clearTimeout(t);
   }, [
     agentState?.messages,
     agentState?.streamingMessage,
     agentState?.contextualUpdate,
+    agentState?.conversation?.conversationId,
+    isInitializing,
   ]);
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -952,23 +962,25 @@ function PanelContent({
       </div>
 
       {isTraining && (
-        <div className="flex flex-col gap-2 px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/40">
+        <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/40">
           <span id={trainingSelectId} className="sr-only">
             Conversation
           </span>
-          <TrainingGroundsConversationPicker
-            options={trainingPickerOptions}
-            value={currentConversationId}
-            onSelect={onTrainingPickerChange}
-            disabled={
-              isLoadingTrainingPicker ||
-              isInitializing ||
-              !onTrainingPickerChange
-            }
-            isLoading={isLoadingTrainingPicker}
-            labelledBy={trainingSelectId}
-          />
-          <div className="flex flex-wrap gap-1 items-center justify-end">
+          <div className="flex-1 min-w-0">
+            <TrainingGroundsConversationPicker
+              options={trainingPickerOptions}
+              value={currentConversationId}
+              onSelect={onTrainingPickerChange}
+              disabled={
+                isLoadingTrainingPicker ||
+                isInitializing ||
+                !onTrainingPickerChange
+              }
+              isLoading={isLoadingTrainingPicker}
+              labelledBy={trainingSelectId}
+            />
+          </div>
+          <div className="flex shrink-0 gap-1 items-center">
             <button
               type="button"
               onClick={() => onTrainingNewConversation?.()}
@@ -979,7 +991,7 @@ function PanelContent({
               data-tooltip-content="New chat"
               data-tooltip-place="bottom"
               aria-label="New chat"
-              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed`}
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               <PlusIcon />
             </button>
@@ -991,7 +1003,7 @@ function PanelContent({
               data-tooltip-content="Open in full page"
               data-tooltip-place="bottom"
               aria-label="Open in full page"
-              className={`${iconButtonPatterns.bordered} !p-1.5 !min-h-0 !min-w-0 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed`}
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-cyan hover:!text-synthwave-neon-cyan hover:!bg-synthwave-neon-cyan/10 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               <OpenFullPageIcon />
             </button>
@@ -1001,7 +1013,7 @@ function PanelContent({
               data-tooltip-content="View all"
               data-tooltip-place="bottom"
               aria-label="View all conversations"
-              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 text-synthwave-neon-purple hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 inline-flex items-center justify-center`}
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-purple hover:!text-synthwave-neon-purple hover:!bg-synthwave-neon-purple/10 inline-flex items-center justify-center cursor-pointer`}
             >
               <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
                 <ChatIconSmall />

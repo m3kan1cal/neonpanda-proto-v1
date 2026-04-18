@@ -654,13 +654,16 @@ export const toastPatterns = {
 };
 
 // Base tooltip style object for reuse
+// Outer wrapper only — react-tooltip v5 adds inner `.styles-module_content` padding (8×16 by default).
+// Global override in index.css tightens inner padding; keep outer padding at 0 to avoid double spacing.
 const baseTooltipStyle = {
   backgroundColor: "#000000",
   color: "#ffffff",
-  borderRadius: "8px",
-  fontSize: "14px",
+  borderRadius: "6px",
+  fontSize: "12px",
+  lineHeight: 1.35,
   fontFamily: "var(--font-body)",
-  padding: "8px 12px",
+  padding: "0",
   zIndex: 99999,
 };
 
@@ -1054,7 +1057,8 @@ export const navigationPatterns = {
   entityChatFab: {
     container: "fixed right-8 z-[45] md:[--entity-fab-bottom:32px]",
     containerStyle: {
-      bottom: "calc(var(--entity-fab-bottom, 152px) + env(safe-area-inset-bottom))",
+      bottom:
+        "calc(var(--entity-fab-bottom, 152px) + env(safe-area-inset-bottom))",
     },
     button:
       "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink/40 transition-all duration-300 hover:border-synthwave-neon-pink/70 hover:shadow-[0_0_20px_rgba(255,0,128,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
@@ -1244,8 +1248,7 @@ export const scrollbarPatterns = {
 // Mobile (<lg): full-screen takeover, slides up from bottom
 export const contextualDrawerPatterns = {
   // Backdrop overlay — semi-transparent overlay behind the panel (no blur so content remains visible)
-  backdrop:
-    "fixed inset-0 z-40 bg-black/20 transition-opacity duration-300",
+  backdrop: "fixed inset-0 z-40 bg-black/20 transition-opacity duration-300",
 
   // Desktop slide-over panel (right side, fixed 420px width)
   panelDesktop:
@@ -1491,7 +1494,8 @@ export const streamingPatterns = {
     dotsContainer: "flex space-x-1",
     dot: "w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot",
     text: "font-body text-base italic animate-contextual-pulse text-synthwave-text-secondary/70",
-    textCompact: "font-body text-xs italic animate-contextual-pulse text-synthwave-text-secondary/70",
+    textCompact:
+      "font-body text-xs italic animate-contextual-pulse text-synthwave-text-secondary/70",
   },
 
   // Avatar row below contextual update or typing indicator
