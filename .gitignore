@@ -39,3 +39,6 @@ docs/social-content/
 
 # Incident logs
 incidents/
+
+# Local DynamoDB exports (may contain PII)
+exports/
