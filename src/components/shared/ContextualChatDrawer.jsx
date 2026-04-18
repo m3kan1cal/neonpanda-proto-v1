@@ -267,6 +267,11 @@ export default function ContextualChatDrawer({
           const data = await getCoachConversation(userId, coachId, sessionId);
           const conv = data.conversation || data;
           if (conv.mode === CONVERSATION_MODES.CHAT) return sessionId;
+          try {
+            sessionStorage.removeItem(sessionKey);
+          } catch {
+            /* ignore */
+          }
         } catch {
           try {
             sessionStorage.removeItem(sessionKey);
@@ -330,6 +335,14 @@ export default function ContextualChatDrawer({
             agent.conversationId,
             INLINE_TRAINING_GROUNDS_TAG,
           );
+        }
+        if (!cancelled) {
+          try {
+            const id = agent.conversationId;
+            if (id) sessionStorage.setItem(sessionKey, id);
+          } catch {
+            /* ignore */
+          }
         }
       } catch (err) {
         if (!cancelled) {
