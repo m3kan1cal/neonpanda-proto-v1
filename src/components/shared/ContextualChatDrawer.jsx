@@ -96,7 +96,6 @@ export default function ContextualChatDrawer({
   const closeTriggerRef = useRef(null);
   const lastEditMessageIdRef = useRef(null);
   const loadedEntityIdRef = useRef(null);
-  const trainingLoadedRef = useRef(null);
 
   const [trainingPickerOptions, setTrainingPickerOptions] = useState([]);
   const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
@@ -245,14 +244,6 @@ export default function ContextualChatDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- entityLabel/editContext churn should not reset workout edit session
   }, [isOpen, userId, coachId, entityId, variant, showToast]);
 
-  // Clear training load marker when drawer closes so the next open re-reads sessionStorage.
-  useEffect(() => {
-    if (variant !== "trainingGroundsInlineChat") return;
-    if (!isOpen) {
-      trainingLoadedRef.current = null;
-    }
-  }, [isOpen, variant]);
-
   // ──────────────────────────────────────────────────────────────────────────
   // Agent lifecycle — Training Grounds inline chat variant
   // ──────────────────────────────────────────────────────────────────────────
@@ -303,14 +294,16 @@ export default function ContextualChatDrawer({
         new CoachConversationAgent({
           userId,
           coachId,
-          onStateChange: (state) => {
-            if (!cancelled) setAgentState({ ...state });
-          },
-          onError: (err) => {
-            logger.error("ContextualChatDrawer agent error:", err);
-          },
         });
       agentRef.current = agent;
+      // Must rebind whenever this effect runs: a reused agent still holds the
+      // previous effect's onStateChange closure (with cancelled === true).
+      agent.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      agent.onError = (err) => {
+        logger.error("ContextualChatDrawer agent error:", err);
+      };
 
       try {
         const target = await resolveTrainingTargetId(agent);
@@ -318,9 +311,6 @@ export default function ContextualChatDrawer({
 
         if (target !== "__create__") {
           if (agent.conversationId === target && agent.state?.conversation) {
-            agent.onStateChange = (state) => {
-              if (!cancelled) setAgentState({ ...state });
-            };
             if (agent.state) setAgentState({ ...agent.state });
           } else {
             await agent.loadExistingConversation(userId, coachId, target);
@@ -352,14 +342,6 @@ export default function ContextualChatDrawer({
       } finally {
         if (!cancelled) setIsInitializing(false);
       }
-
-      if (!cancelled && agentRef.current?.conversationId) {
-        trainingLoadedRef.current = {
-          userId,
-          coachId,
-          conversationId: agentRef.current.conversationId,
-        };
-      }
     }
 
     initTrainingConversation();
@@ -382,7 +364,6 @@ export default function ContextualChatDrawer({
         } catch {
           /* ignore */
         }
-        trainingLoadedRef.current = { userId, coachId, conversationId };
         await refreshTrainingPicker();
       } catch (err) {
         logger.error("ContextualChatDrawer: picker load failed:", err);
@@ -432,7 +413,6 @@ export default function ContextualChatDrawer({
       } catch {
         /* ignore */
       }
-      trainingLoadedRef.current = { userId, coachId, conversationId: newId };
       await refreshTrainingPicker();
     } catch (err) {
       logger.error(
