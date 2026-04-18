@@ -351,6 +351,7 @@ export class CoachConversationAgent {
 
   /**
    * Moves inline home tag from an old conversation to a new one (Training Grounds FAB).
+   * Adds to new conversation first to ensure tag is never lost.
    */
   async migrateInlineHomeTag(
     userId,
@@ -359,6 +360,7 @@ export class CoachConversationAgent {
     newConversationId,
     tag,
   ) {
+    await this.addTagToConversation(userId, coachId, newConversationId, tag);
     if (oldConversationId && oldConversationId !== newConversationId) {
       try {
         await this.removeTagFromConversation(
@@ -369,10 +371,8 @@ export class CoachConversationAgent {
         );
       } catch (e) {
         logger.error("migrateInlineHomeTag: failed to strip tag from old:", e);
-        throw e;
       }
     }
-    await this.addTagToConversation(userId, coachId, newConversationId, tag);
   }
 
   /**
