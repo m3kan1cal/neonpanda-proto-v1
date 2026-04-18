@@ -1,0 +1,20 @@
+{
+  "version": "stub",
+  "custom": {
+    "api": {
+      "stub": {
+        "endpoint": "https://localhost",
+        "customEndpoint": null
+      }
+    },
+    "storage": {
+      "appsBucket": {
+        "bucketName": "stub-apps-bucket",
+        "region": "us-west-2"
+      }
+    }
+  },
+  "auth": {
+    "aws_region": "us-west-2"
+  }
+}

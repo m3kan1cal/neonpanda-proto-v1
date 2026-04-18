@@ -222,6 +222,33 @@ const QUICK_PROMPTS = {
   ],
 };
 
+/** Skeleton placeholder when ChatInput is loading (must be a separate component so hooks stay unconditional). */
+function ChatInputSkeleton() {
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
+        <div className="w-full rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
+          <div className="px-4 pt-3 pb-2 min-h-[80px]">
+            <div className="h-4 bg-synthwave-text-muted/15 rounded animate-pulse w-1/3"></div>
+          </div>
+          <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
+            <div className="w-7 h-7 bg-synthwave-text-muted/15 rounded-md animate-pulse"></div>
+            <div className="flex items-center gap-1">
+              <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
+              <div className="w-7 h-7 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+              <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-2 mt-3">
+          <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-48"></div>
+          <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-64"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Shared Chat Input Component
  * Used by CoachConversations and CoachCreator for consistent chat UX
@@ -292,42 +319,6 @@ function ChatInput({
   // Compact mode — tighter padding and smaller send button for narrow contexts (e.g. drawer)
   compact = false,
 }) {
-  // Early return for skeleton loading state
-  if (showSkeleton) {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
-          {/* Input area skeleton — mirrors chatInputWrapper + button row */}
-          <div className="w-full rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
-            {/* Editor area — TipTap content has min-height 60px, plus pt-3 + pb-2 padding = ~80px total */}
-            <div className="px-4 pt-3 pb-2 min-h-[80px]">
-              <div className="h-4 bg-synthwave-text-muted/15 rounded animate-pulse w-1/3"></div>
-            </div>
-
-            {/* Button row — mirrors pl-3 pr-2 py-1.5 border-t layout */}
-            <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
-              {/* Left: actions (plus) button */}
-              <div className="w-7 h-7 bg-synthwave-text-muted/15 rounded-md animate-pulse"></div>
-
-              {/* Right: progress ring + emoji + send */}
-              <div className="flex items-center gap-1">
-                <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
-                <div className="w-7 h-7 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* AI disclaimer and keyboard shortcuts skeleton */}
-          <div className="flex items-center justify-between gap-2 mt-3">
-            <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-48"></div>
-            <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-64"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Get context-appropriate prompts
   const currentPrompts = QUICK_PROMPTS[context] || QUICK_PROMPTS.default;
 
@@ -768,6 +759,10 @@ function ChatInput({
     conversationSize,
   ]);
 
+  if (showSkeleton) {
+    return <ChatInputSkeleton />;
+  }
+
   return (
     <div
       className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
@@ -775,9 +770,7 @@ function ChatInput({
     >
       <div
         className={
-          compact
-            ? "px-3 py-2"
-            : "max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6"
+          compact ? "px-3 py-2" : "max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6"
         }
       >
         {/* Attachment Preview Grid — images and documents share one row */}
@@ -816,8 +809,7 @@ function ChatInput({
               ))}
 
               {selectedFiles.map((file) => {
-                const ext =
-                  file.name.split(".").pop()?.toUpperCase() || "FILE";
+                const ext = file.name.split(".").pop()?.toUpperCase() || "FILE";
                 const sizeLabel =
                   file.size < 1024
                     ? `${file.size}B`
@@ -890,7 +882,10 @@ function ChatInput({
               </span>
               <button
                 type="button"
-                onClick={() => { setImageError(null); setFileError(null); }}
+                onClick={() => {
+                  setImageError(null);
+                  setFileError(null);
+                }}
                 className="text-red-400 hover:text-red-300 cursor-pointer"
               >
                 <XIcon className="w-4 h-4" />
@@ -1003,7 +998,9 @@ function ChatInput({
             )}
 
             {/* Input container: editor area + button row share the same border/bg */}
-            <div className={`${inputPatterns.chatInputWrapper} ${inputWrapperClassName}`}>
+            <div
+              className={`${inputPatterns.chatInputWrapper} ${inputWrapperClassName}`}
+            >
               <TiptapEditor
                 ref={editorRef}
                 content={inputMessage}
@@ -1051,25 +1048,41 @@ function ChatInput({
                     >
                       <div className="py-2">
                         {/* Quick Prompts Menu Item */}
-                        {enableQuickPrompts && <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setShowQuickPromptsSubmenu(
-                                !showQuickPromptsSubmenu,
-                              )
-                            }
-                            onMouseEnter={() =>
-                              window.innerWidth >= 768 &&
-                              setShowQuickPromptsSubmenu(true)
-                            }
-                            onMouseLeave={() =>
-                              window.innerWidth >= 768 &&
-                              setShowQuickPromptsSubmenu(false)
-                            }
-                            className="flex items-center justify-between space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left cursor-pointer"
-                          >
-                            <div className="flex items-center space-x-3">
+                        {enableQuickPrompts && (
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowQuickPromptsSubmenu(
+                                  !showQuickPromptsSubmenu,
+                                )
+                              }
+                              onMouseEnter={() =>
+                                window.innerWidth >= 768 &&
+                                setShowQuickPromptsSubmenu(true)
+                              }
+                              onMouseLeave={() =>
+                                window.innerWidth >= 768 &&
+                                setShowQuickPromptsSubmenu(false)
+                              }
+                              className="flex items-center justify-between space-x-3 px-4 py-2 font-body font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left cursor-pointer"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                  />
+                                </svg>
+                                <span>Quick Prompts</span>
+                              </div>
                               <svg
                                 className="w-4 h-4"
                                 fill="none"
@@ -1080,89 +1093,78 @@ function ChatInput({
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth={2}
-                                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                  d="M9 5l7 7-7 7"
                                 />
                               </svg>
-                              <span>Quick Prompts</span>
-                            </div>
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </button>
+                            </button>
 
-                          {/* Quick Prompts Submenu */}
-                          {showQuickPromptsSubmenu && (
-                            <div
-                              className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
-                              data-quick-prompts-submenu
-                              onMouseEnter={() =>
-                                window.innerWidth >= 768 &&
-                                setShowQuickPromptsSubmenu(true)
-                              }
-                              onMouseLeave={() =>
-                                window.innerWidth >= 768 &&
-                                setShowQuickPromptsSubmenu(false)
-                              }
-                            >
-                              <div className="py-2">
-                                {currentPrompts.map(
-                                  (category, categoryIndex) => (
-                                    <div
-                                      key={categoryIndex}
-                                      className="mb-3 last:mb-0"
-                                    >
-                                      {/* Category Header */}
+                            {/* Quick Prompts Submenu */}
+                            {showQuickPromptsSubmenu && (
+                              <div
+                                className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
+                                data-quick-prompts-submenu
+                                onMouseEnter={() =>
+                                  window.innerWidth >= 768 &&
+                                  setShowQuickPromptsSubmenu(true)
+                                }
+                                onMouseLeave={() =>
+                                  window.innerWidth >= 768 &&
+                                  setShowQuickPromptsSubmenu(false)
+                                }
+                              >
+                                <div className="py-2">
+                                  {currentPrompts.map(
+                                    (category, categoryIndex) => (
                                       <div
-                                        className={
-                                          navigationPatterns.quickPrompts
-                                            .categoryHeader
-                                        }
+                                        key={categoryIndex}
+                                        className="mb-3 last:mb-0"
                                       >
-                                        <span>{category.category}</span>
-                                      </div>
+                                        {/* Category Header */}
+                                        <div
+                                          className={
+                                            navigationPatterns.quickPrompts
+                                              .categoryHeader
+                                          }
+                                        >
+                                          <span>{category.category}</span>
+                                        </div>
 
-                                      {/* Category Prompts */}
-                                      <div className="space-y-0">
-                                        {category.prompts.map(
-                                          (prompt, promptIndex) => (
-                                            <button
-                                              key={promptIndex}
-                                              type="button"
-                                              onClick={() =>
-                                                handleQuickPromptSelect(prompt)
-                                              }
-                                              className={
-                                                navigationPatterns.quickPrompts
-                                                  .promptButton
-                                              }
-                                            >
-                                              {prompt}
-                                            </button>
-                                          ),
-                                        )}
+                                        {/* Category Prompts */}
+                                        <div className="space-y-0">
+                                          {category.prompts.map(
+                                            (prompt, promptIndex) => (
+                                              <button
+                                                key={promptIndex}
+                                                type="button"
+                                                onClick={() =>
+                                                  handleQuickPromptSelect(
+                                                    prompt,
+                                                  )
+                                                }
+                                                className={
+                                                  navigationPatterns
+                                                    .quickPrompts.promptButton
+                                                }
+                                              >
+                                                {prompt}
+                                              </button>
+                                            ),
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  ),
-                                )}
+                                    ),
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>}
+                            )}
+                          </div>
+                        )}
 
                         {/* Divider - only show if quick prompts and attachment options are both present */}
-                        {enableQuickPrompts && (enablePhotoAttachment || enableFileAttachment) && (
-                          <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
-                        )}
+                        {enableQuickPrompts &&
+                          (enablePhotoAttachment || enableFileAttachment) && (
+                            <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                          )}
 
                         {enablePhotoAttachment && (
                           <button
@@ -1457,7 +1459,9 @@ function ChatInput({
                   </div>
 
                   {/* Send/Voice button */}
-                  {inputMessage.trim() || selectedImages.length > 0 || selectedFiles.length > 0 ? (
+                  {inputMessage.trim() ||
+                  selectedImages.length > 0 ||
+                  selectedFiles.length > 0 ? (
                     <button
                       type="submit"
                       disabled={isTyping || isUploading}
@@ -1466,7 +1470,9 @@ function ChatInput({
                       {isTyping || isUploading ? (
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       ) : (
-                        <SendIcon className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
+                        <SendIcon
+                          className={compact ? "w-3 h-3" : "w-3.5 h-3.5"}
+                        />
                       )}
                     </button>
                   ) : enableRecording ? (
@@ -1492,7 +1498,9 @@ function ChatInput({
                       disabled
                       className={`${compact ? "w-6 h-6" : "w-7 h-7"} rounded-full bg-synthwave-bg-primary/30 text-synthwave-text-muted flex items-center justify-center opacity-50 cursor-not-allowed`}
                     >
-                      <SendIcon className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
+                      <SendIcon
+                        className={compact ? "w-3 h-3" : "w-3.5 h-3.5"}
+                      />
                     </button>
                   )}
                 </div>
