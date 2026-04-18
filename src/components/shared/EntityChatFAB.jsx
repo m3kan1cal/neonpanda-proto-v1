@@ -38,8 +38,6 @@ const EntityChatFAB = ({
       <Tooltip
         id={tooltipId}
         {...tooltipPatterns.standardLeft}
-        offset={4}
-        style={{ ...tooltipPatterns.standardLeft.style, transform: "translateX(-4px)" }}
         anchorSelect={`[data-tooltip-id="${tooltipId}"]`}
       />
     </>

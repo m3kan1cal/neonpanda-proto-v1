@@ -29,18 +29,26 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
 import DocumentThumbnail from "./DocumentThumbnail";
 import { ContextualUpdateIndicator } from "../../utils/ui/streamingUiHelper.jsx";
+import { Tooltip } from "react-tooltip";
 import {
   contextualDrawerPatterns,
   avatarPatterns,
   typographyPatterns,
+  iconButtonPatterns,
+  tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
+import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
 import {
   INLINE_TRAINING_GROUNDS_TAG,
   getTrainingGroundsInlineSessionKey,
   TRAINING_GROUNDS_INLINE_PICKER_LIMIT,
 } from "../../constants/contextualChat";
-import { CloseIcon } from "../themes/SynthwaveComponents";
+import {
+  CloseIcon,
+  PlusIcon,
+  ChatIconSmall,
+} from "../themes/SynthwaveComponents";
 import { useToast } from "../../contexts/ToastContext";
 import { logger } from "../../utils/logger";
 
@@ -49,6 +57,170 @@ const INITIAL_PROMPT =
   "Please load my workout details so we can get started. I have some corrections to make.";
 
 /** @typedef {"workoutEdit" | "trainingGroundsInlineChat"} ContextualChatDrawerVariant */
+
+function OpenFullPageIcon({ className = "w-4 h-4" }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Conversation picker — ExerciseSelector-style trigger and panel, compact for the drawer.
+ */
+function TrainingGroundsConversationPicker({
+  options,
+  value,
+  onSelect,
+  disabled,
+  isLoading,
+  labelledBy,
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wrapperRef = useRef(null);
+  const listboxId = useId();
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [menuOpen]);
+
+  const selected = useMemo(
+    () => options.find((o) => o.conversationId === value),
+    [options, value],
+  );
+
+  const displayLabel = (() => {
+    if (selected?.title?.trim()) return selected.title.trim();
+    if (value) return `${value.slice(0, 14)}…`;
+    if (isLoading) return "Loading…";
+    return "Select conversation…";
+  })();
+
+  const toggleDisabled = disabled || isLoading || !onSelect;
+
+  return (
+    <div ref={wrapperRef} className="relative w-full min-w-0">
+      <div
+        role="combobox"
+        aria-expanded={menuOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={labelledBy}
+        aria-controls={listboxId}
+        className={`relative flex items-center w-full rounded-md transition-all duration-300 cursor-pointer min-h-9 ${
+          toggleDisabled
+            ? "opacity-50 cursor-not-allowed border border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/20"
+            : menuOpen
+              ? "border border-synthwave-neon-cyan bg-synthwave-bg-primary/50"
+              : "border border-synthwave-neon-cyan/20 bg-synthwave-bg-primary/30 hover:border-synthwave-neon-cyan/40"
+        }`}
+        onClick={() => {
+          if (toggleDisabled) return;
+          setMenuOpen((o) => !o);
+        }}
+      >
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
+          <span className="inline-flex w-3.5 h-3.5 items-center justify-center [&_svg]:!w-3.5 [&_svg]:!h-3.5">
+            <ChatIconSmall />
+          </span>
+        </div>
+        <div className="flex-1 pl-8 pr-9 py-2 min-h-9 flex items-center">
+          <span className="font-body text-xs text-white truncate w-full">
+            {displayLabel}
+          </span>
+        </div>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg
+            className={`w-3.5 h-3.5 text-synthwave-text-muted shrink-0 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </div>
+
+      {menuOpen && !toggleDisabled && (
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan"
+        >
+          {options.length === 0 ? (
+            <div className="px-3 py-3 text-center font-body text-xs text-synthwave-text-muted">
+              No conversations yet.
+            </div>
+          ) : (
+            options.map((c) => {
+              const isSelected = c.conversationId === value;
+              const rowLabel =
+                c.title?.trim() ||
+                (c.conversationId
+                  ? `${c.conversationId.slice(0, 14)}…`
+                  : "Chat");
+              return (
+                <button
+                  key={c.conversationId}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onSelect(c.conversationId);
+                    setMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 font-body text-xs transition-colors duration-150 cursor-pointer ${
+                    isSelected
+                      ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink"
+                      : "text-white hover:bg-synthwave-neon-cyan/10"
+                  }`}
+                >
+                  <span className="truncate block">{rowLabel}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * ContextualChatDrawer
@@ -721,6 +893,9 @@ function PanelContent({
   streamBusy = false,
 }) {
   const trainingSelectId = useId();
+  const tipNewChatId = useId();
+  const tipOpenFullId = useId();
+  const tipViewAllId = useId();
   const isTraining = variant === "trainingGroundsInlineChat";
   const viewAllUrl =
     userId && coachId
@@ -730,9 +905,10 @@ function PanelContent({
   const inputPlaceholder = isTraining
     ? "Message your coach…"
     : "Describe what you'd like to correct…";
-  const emptySessionMessage = isTraining
-    ? "Send a message to start."
-    : "Starting edit session…";
+  const emptySessionMessage = "Starting edit session…";
+
+  const showMessageList = !(isTraining && isInitializing);
+  const suppressTrainingOverlay = isTraining && isInitializing;
 
   return (
     <>
@@ -777,61 +953,76 @@ function PanelContent({
 
       {isTraining && (
         <div className="flex flex-col gap-2 px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/40">
-          <label
-            htmlFor={trainingSelectId}
-            className={`${typographyPatterns.bodySmall} text-synthwave-text-muted sr-only`}
-          >
+          <span id={trainingSelectId} className="sr-only">
             Conversation
-          </label>
-          <select
-            id={trainingSelectId}
-            className="w-full min-w-0 rounded-md border border-synthwave-neon-cyan/25 bg-synthwave-bg-secondary px-2 py-1.5 font-body text-xs text-synthwave-text-primary focus:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50"
+          </span>
+          <TrainingGroundsConversationPicker
+            options={trainingPickerOptions}
             value={currentConversationId}
-            onChange={(e) => onTrainingPickerChange?.(e.target.value)}
+            onSelect={onTrainingPickerChange}
             disabled={
               isLoadingTrainingPicker ||
               isInitializing ||
               !onTrainingPickerChange
             }
-          >
-            {trainingPickerOptions.length === 0 && !currentConversationId ? (
-              <option value="">Loading…</option>
-            ) : null}
-            {trainingPickerOptions.map((c) => (
-              <option key={c.conversationId} value={c.conversationId}>
-                {c.title?.trim() ||
-                  (c.conversationId
-                    ? `${c.conversationId.slice(0, 14)}…`
-                    : "Chat")}
-              </option>
-            ))}
-          </select>
-          <div className="flex flex-wrap gap-2 items-center">
+            isLoading={isLoadingTrainingPicker}
+            labelledBy={trainingSelectId}
+          />
+          <div className="flex flex-wrap gap-1 items-center justify-end">
             <button
               type="button"
               onClick={() => onTrainingNewConversation?.()}
               disabled={
                 streamBusy || isInitializing || !onTrainingNewConversation
               }
-              className="px-2 py-1 rounded-md border border-synthwave-neon-pink/35 text-synthwave-neon-pink text-[10px] font-semibold uppercase tracking-wide hover:bg-synthwave-neon-pink/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              data-tooltip-id={tipNewChatId}
+              data-tooltip-content="New chat"
+              data-tooltip-place="bottom"
+              aria-label="New chat"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed`}
             >
-              New conversation
+              <PlusIcon />
             </button>
             <button
               type="button"
               onClick={() => onOpenFullPageChat?.()}
               disabled={!currentConversationId || !onOpenFullPageChat}
-              className="px-2 py-1 rounded-md border border-synthwave-neon-cyan/35 text-synthwave-neon-cyan text-[10px] font-semibold uppercase tracking-wide hover:bg-synthwave-neon-cyan/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              data-tooltip-id={tipOpenFullId}
+              data-tooltip-content="Open in full page"
+              data-tooltip-place="bottom"
+              aria-label="Open in full page"
+              className={`${iconButtonPatterns.bordered} !p-1.5 !min-h-0 !min-w-0 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed`}
             >
-              Open full page
+              <OpenFullPageIcon />
             </button>
             <Link
               to={viewAllUrl}
-              className="text-[10px] font-semibold uppercase tracking-wide text-synthwave-neon-purple hover:underline ml-auto"
+              data-tooltip-id={tipViewAllId}
+              data-tooltip-content="View all"
+              data-tooltip-place="bottom"
+              aria-label="View all conversations"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 text-synthwave-neon-purple hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 inline-flex items-center justify-center`}
             >
-              View all
+              <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
+                <ChatIconSmall />
+              </span>
             </Link>
           </div>
+          <Tooltip
+            id={tipNewChatId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipNewChatId}"]`}
+          />
+          <Tooltip
+            id={tipOpenFullId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipOpenFullId}"]`}
+          />
+          <Tooltip
+            id={tipViewAllId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipViewAllId}"]`}
+          />
         </div>
       )}
 
@@ -842,30 +1033,46 @@ function PanelContent({
         aria-live="polite"
         aria-label="Conversation messages"
       >
-        {/* Skeleton during initialization before any messages arrive */}
-        {isInitializing && messages.length === 0 && <DrawerSkeleton />}
-
-        {/* Empty state — only if truly stuck (no init, no streaming, no messages) */}
-        {messages.length === 0 && !isStreaming && !isInitializing && (
-          <div className="flex items-center justify-center h-full">
-            <p className={`${typographyPatterns.bodySmall} text-center px-4`}>
-              {emptySessionMessage}
-            </p>
-          </div>
+        {/* Skeleton: training whenever loading; workout edit on first load with no messages yet */}
+        {isInitializing && (isTraining || messages.length === 0) && (
+          <DrawerSkeleton />
         )}
 
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id || message.messageId}
-            message={message}
-            coachInitial={coachInitial}
-            userInitial={userInitial}
-            userId={userId}
-          />
-        ))}
+        {/* Empty state — workout edit */}
+        {!isTraining &&
+          messages.length === 0 &&
+          !isStreaming &&
+          !isInitializing && (
+            <div className="flex items-center justify-center h-full">
+              <p className={`${typographyPatterns.bodySmall} text-center px-4`}>
+                {emptySessionMessage}
+              </p>
+            </div>
+          )}
+
+        {/* Empty state — training drawer: curated tips */}
+        {isTraining &&
+          messages.length === 0 &&
+          !isStreaming &&
+          !isInitializing && (
+            <div className="flex flex-1 min-h-0 items-stretch justify-center w-full">
+              <CoachConversationEmptyTips variant="drawer" />
+            </div>
+          )}
+
+        {showMessageList &&
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id || message.messageId}
+              message={message}
+              coachInitial={coachInitial}
+              userInitial={userInitial}
+              userId={userId}
+            />
+          ))}
 
         {/* Contextual update indicator (tool-use feedback) */}
-        {contextualUpdate && (
+        {contextualUpdate && !suppressTrainingOverlay && (
           <ContextualUpdateIndicator
             content={contextualUpdate.content}
             avatarLabel={coachInitial}
