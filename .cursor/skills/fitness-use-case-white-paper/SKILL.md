@@ -3,16 +3,23 @@ name: fitness-use-case-white-paper
 description: >-
   Produces marketing-ready but evidence-grounded fitness customer use-case white
   papers from a raw text dump of JSON-shaped DynamoDB items (file may not be
-  valid JSON as a whole), aligned with NeonPanda brand voice. Project-only skill.
-  Use when the user asks for a case study, use-case white paper, customer success
-  story, or narrative synthesis from comprehensive user history exports.
+  valid JSON as a whole), aligned with NeonPanda brand voice. Cursor project
+  skill; sibling workflow for Claude Code lives under .claude/skills/. Use when
+  the user asks for a case study, use-case white paper, customer success story,
+  or narrative synthesis from comprehensive user history exports.
 ---
 
 # Fitness use-case white paper (NeonPanda)
 
 ## Scope (project only)
 
-Use this skill **only in this repository**. Linked docs ([docs/strategy/BRANDING_STRATEGY.md](docs/strategy/BRANDING_STRATEGY.md), [docs/strategy/DB_DESIGN.md](docs/strategy/DB_DESIGN.md)) are repo paths. Do not assume a global copy of this skill exists outside NeonPanda. A parallel **Cursor** project skill lives at `.cursor/skills/fitness-use-case-white-paper/`; keep both copies aligned when editing this workflow.
+Use this skill **only in this repository**. Linked docs ([docs/strategy/BRANDING_STRATEGY.md](docs/strategy/BRANDING_STRATEGY.md), [docs/strategy/DB_DESIGN.md](docs/strategy/DB_DESIGN.md)) are repo paths. Do not assume a global copy of this skill exists outside NeonPanda.
+
+## Cursor usage notes
+
+- **Install path:** `.cursor/skills/fitness-use-case-white-paper/` (project-level). When changing this workflow, update the parallel copy at `.claude/skills/fitness-use-case-white-paper/` so both agents stay aligned.
+- **Ingesting the dump:** If the user provides a **workspace file path**, read it with the Read tool. For very large files, read in sequential chunks (offset/limit) and reconstruct items across reads. If they **paste** fragments or records in chat, use that instead and note the incomplete-coverage risk under **Method & limitations**.
+- **Where to save output:** If they want a durable artifact, write markdown under something like `docs/marketing/use-cases/` (create directories if needed) unless they specify another path. If they only want draft copy, the chat reply may be enough—ask once if unclear.
 
 ## When to apply
 
