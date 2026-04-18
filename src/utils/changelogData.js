@@ -1,4 +1,3 @@
-import { logger } from "./logger";
 /**
  * Changelog Data - Centralized version history for NeonPanda platform
  *
@@ -10,6 +9,45 @@ import { logger } from "./logger";
  */
 
 export const changelogEntries = [
+  {
+    version: "Release v1.0.20260418-beta",
+    date: "2026-04-18",
+    changes: {
+      added: [
+        "Training Grounds: floating coach chat FAB opens a contextual slide-over drawer with full chat composer (photos, file attachments), conversation picker, and links to the full coach conversations page.",
+        "Training Grounds drawer: custom conversation combobox styled like the Training Pulse exercise selector (compact trigger, scrollable list, keyboard-friendly close behavior).",
+        "Training Grounds drawer: curated empty-state tip cards (photos, ask-anything, slash example, natural language) sharing the same visual language as the full-page coach chat empty state via shared `CoachConversationEmptyTips`.",
+        "Training Grounds drawer: compact icon actions for new chat, open current conversation in full page, and view all conversations, each with tooltips.",
+        "Public use-case white papers as static HTML under `public/white-papers/` (returning-athlete and first-meet-prep narratives) for marketing and shareable stories.",
+        "Agent skills for fitness use-case white papers: parallel Cursor (`.cursor/skills/`) and Claude Code (`.claude/skills/`) workflows to turn Dynamo/user journey data into subject-centered, consent-aware drafts.",
+        "`export-user-dynamodb.ts` script to export a user's DynamoDB records to plain-text files for analysis (profile flag, optional shared programs, exports gitignored).",
+        "Document attachments: `documentS3Keys` persisted on conversation messages across streaming handlers and preserved when loading existing threads; shared `SUPPORTED_DOCUMENT_EXTENSIONS` in `document-types.ts`.",
+        "Synthwave UI polish pass: gradient headers, empty states, and send/glow feedback patterns on chat-adjacent surfaces.",
+      ],
+      changed: [
+        "Global tooltip density: `react-tooltip` v5 inner content padding overridden in `index.css` (balanced padding, 8px×14px) with outer `baseTooltipStyle` padding set to 0 in `uiPatterns` to avoid double-padding; tooltip type slightly smaller for consistency.",
+        "Entity chat FAB tooltip configuration aligned with shared `tooltipPatterns` (no redundant inline offset/style).",
+        "Training Grounds drawer toolbar: conversation picker and icon actions on one row; all actions use the same `iconButtonPatterns.minimal` treatment with role-appropriate color accents.",
+        "Message area scrolls to bottom after switching conversations or when initialization completes (rAF + delayed pass for layout).",
+        "Tiptap editor dependencies bumped to ^3.22.4 with lockfile refresh.",
+        "User message construction centralized behind `buildUserMessage` helper for streaming paths.",
+        "Prospective-memory platform-support filter hardened (account-only cancel wording; chat-verb preposition; membership wording removed to reduce false positives).",
+        "Lightbox: Escape key handling scoped so it closes only the lightbox without interfering with other dialogs.",
+        "npm dependency upgrade batch merged (Vite 8, Stripe 22, lint/tooling adjustments per branch).",
+      ],
+      fixed: [
+        "Training Grounds inline chat: sessionStorage resume key, inline-home conversation tag migration when starting a new chat, and agent `onStateChange` rebound when the drawer reopens (fixes stale UI and wrong thread).",
+        "Contextual chat drawer: stale closure dropping updates on reopen; training variant loading skeleton hides prior messages during conversation switches.",
+        "Manage Workouts: empty state guarded when the list errors instead of flashing the wrong CTA.",
+        "ChatInput / View Workouts: glow and animation state targeting unmounted buttons fixed; duplicate empty-state CTA removed.",
+        "TypeScript: `SUPPORTED_DOCUMENT_EXTENSIONS` membership check corrected for `includes()`.",
+        "Repository hygiene: stray `SCRIPTS_MLF` artifact removed from tree.",
+      ],
+      infrastructure: [
+        "White-paper skill docs updated for subject-centered tone and share-worthy story guidance (Cursor + Claude copies kept aligned).",
+      ],
+    },
+  },
   {
     version: "Release v1.0.20260329-beta",
     date: "2026-03-29",

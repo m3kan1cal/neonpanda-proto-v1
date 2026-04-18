@@ -120,7 +120,7 @@
 
 /* react-tooltip v5 — inner content default is 8px 16px; we override for balanced padding (not stacked with outer). */
 [class*="react-tooltip"] [class*="styles-module_content"] {
-  padding: 6px 12px !important;
+  padding: 8px 14px !important;
   line-height: 1.4;
 }
 
