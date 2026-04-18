@@ -1201,32 +1201,27 @@ General thoughts: `;
                             <span>{template.estimatedDuration} min</span>
                           </div>
                         )}
-                        {(template.timeCap || true) && (
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-muted">
-                              Time Cap:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium">
-                              {template.timeCap
-                                ? `${template.timeCap} min`
-                                : "None"}
-                            </span>
-                          </div>
-                        )}
-                        {(template.restAfter ||
-                          template.restAfter === 0 ||
-                          true) && (
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-muted">
-                              Rest After:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium">
-                              {template.restAfter
-                                ? `${template.restAfter} min`
-                                : "0 min"}
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1.5 font-body text-sm">
+                          <span className="text-synthwave-text-muted">
+                            Time Cap:
+                          </span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {template.timeCap
+                              ? `${template.timeCap} min`
+                              : "None"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 font-body text-sm">
+                          <span className="text-synthwave-text-muted">
+                            Rest After:
+                          </span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {template.restAfter != null &&
+                            template.restAfter !== ""
+                              ? `${template.restAfter} min`
+                              : "0 min"}
+                          </span>
+                        </div>
                         {template.type && (
                           <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-muted">

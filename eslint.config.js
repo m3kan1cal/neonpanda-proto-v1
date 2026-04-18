@@ -24,6 +24,19 @@ export default [
       ...js.configs.recommended.rules,
       // Import react-hooks recommended rules
       ...reactHooks.configs.recommended.rules,
+      // React Compiler-style rules: warn-only until the codebase is migrated incrementally
+      "react-hooks/refs": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/globals": "warn",
+      "react-hooks/error-boundaries": "warn",
+      "react-hooks/gating": "warn",
+      "react-hooks/config": "warn",
+      "react-hooks/set-state-in-render": "warn",
+      "react-hooks/use-memo": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
       // Downgrade exhaustive-deps to warning (too noisy), but keep rules-of-hooks as error (prevents crashes)
       "react-hooks/exhaustive-deps": "warn",
       // Downgrade less critical rules to warnings for gradual cleanup
