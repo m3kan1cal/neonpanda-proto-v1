@@ -1050,15 +1050,12 @@ export const navigationPatterns = {
       "fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden animate-fade-in",
   },
 
-  // Entity Chat FAB — floating panda-head chat button on entity detail pages (WorkoutDetails, etc.)
-  // Stacks above the mobile QuickActionsFAB using CSS custom property for responsive bottom offset:
-  //   mobile:  calc(152px + safe-area) = 80px nav + 56px FAB + 16px gap + safe-area
-  //   desktop: calc(32px  + safe-area) = just above viewport edge (no QuickActionsFAB on desktop)
+  // Entity Chat FAB — Training Grounds / WorkoutDetails; mobile bottom matches Quick FAB slot when Quick FAB hidden.
   entityChatFab: {
-    container: "fixed right-8 z-[45] md:[--entity-fab-bottom:32px]",
+    container: "fixed right-8 z-50 md:[--entity-fab-bottom:32px]",
     containerStyle: {
       bottom:
-        "calc(var(--entity-fab-bottom, 152px) + env(safe-area-inset-bottom))",
+        "calc(var(--entity-fab-bottom, 80px) + env(safe-area-inset-bottom))",
     },
     button:
       "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink/40 transition-all duration-300 hover:border-synthwave-neon-pink/70 hover:shadow-[0_0_20px_rgba(255,0,128,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
@@ -1247,16 +1244,13 @@ export const scrollbarPatterns = {
 // Desktop (lg+): right-side slide-over, ~420px wide, overlays content with backdrop
 // Mobile (<lg): full-screen takeover, slides up from bottom
 export const contextualDrawerPatterns = {
-  // Backdrop overlay — semi-transparent overlay behind the panel (no blur so content remains visible)
-  backdrop: "fixed inset-0 z-40 bg-black/20 transition-opacity duration-300",
+  backdrop: "fixed inset-0 z-[60] bg-black/20 transition-opacity duration-300",
 
-  // Desktop slide-over panel (right side, fixed 420px width)
   panelDesktop:
-    "fixed top-0 right-0 h-full w-[420px] z-50 flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
+    "fixed top-0 right-0 h-full w-[420px] z-[70] flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
 
-  // Mobile full-screen panel (inset 0, slides up from bottom)
   panelMobile:
-    "fixed inset-0 z-50 flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out",
+    "fixed inset-0 z-[70] flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out",
 
   // Panel header — entity name, edit badge, close button
   header:

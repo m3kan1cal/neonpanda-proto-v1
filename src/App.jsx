@@ -85,6 +85,7 @@ function AppContent() {
     setIsCommandPaletteOpen,
     commandPaletteCommand,
     setCommandPaletteCommand,
+    isInlineCoachDrawerOpen,
   } = useNavigationContext();
 
   // Determine if current route is a public/marketing page (including auth pages)
@@ -119,6 +120,12 @@ function AppContent() {
     location.pathname.includes("/coach-conversations") ||
     location.pathname.includes("/coach-creator") ||
     location.pathname.includes("/program-designer");
+
+  const hideMobileImmersiveChrome = isChatPage || isInlineCoachDrawerOpen;
+
+  const hideQuickFabOnEntityCoachMobile =
+    location.pathname === "/training-grounds" ||
+    location.pathname === "/training-grounds/workouts";
 
   // Workout agent for command palette
   const workoutAgentRef = useRef(null);
@@ -157,6 +164,12 @@ function AppContent() {
       // Cmd/Ctrl + K to open command palette
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
+        const isMobileShell =
+          typeof window !== "undefined" &&
+          window.matchMedia("(max-width: 767px)").matches;
+        if (isMobileShell && isInlineCoachDrawerOpen) {
+          return;
+        }
         setCommandPaletteCommand("");
         setIsCommandPaletteOpen(true);
       }
@@ -166,7 +179,11 @@ function AppContent() {
     return () => {
       document.removeEventListener("keydown", handleKeyboardShortcuts);
     };
-  }, [setIsCommandPaletteOpen, setCommandPaletteCommand]);
+  }, [
+    setIsCommandPaletteOpen,
+    setCommandPaletteCommand,
+    isInlineCoachDrawerOpen,
+  ]);
 
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col bg-synthwave-gradient">
@@ -446,12 +463,12 @@ function AppContent() {
       {/* App Navigation Components - Only for app pages, not public pages */}
       {!isPublicPage && (
         <>
-          {/* Mobile Navigation (Phase 2) - Only visible on < 768px, hidden on chat pages */}
-          {!isChatPage && <BottomNav />}
-          <MoreMenu />
+          {!hideMobileImmersiveChrome && <BottomNav />}
+          {!hideMobileImmersiveChrome && <MoreMenu />}
 
-          {/* Quick Actions FAB (Phase 4) - Only visible on mobile with coach context, hidden on chat pages */}
-          {!isChatPage && <QuickActionsFAB />}
+          {!hideMobileImmersiveChrome && !hideQuickFabOnEntityCoachMobile && (
+            <QuickActionsFAB />
+          )}
         </>
       )}
     </div>
