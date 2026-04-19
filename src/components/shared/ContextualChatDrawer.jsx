@@ -48,6 +48,7 @@ import {
   CloseIcon,
   PlusIcon,
   ChatIconSmall,
+  ChevronLeftIcon,
 } from "../themes/SynthwaveComponents";
 import { useToast } from "../../contexts/ToastContext";
 import { logger } from "../../utils/logger";
@@ -273,6 +274,26 @@ export default function ContextualChatDrawer({
   const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
 
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
+
+  /** Keeps the latest onClose without re-subscribing history effects when parents pass inline arrows. */
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  const requestClose = useCallback(() => {
+    if (
+      variant === "trainingGroundsInlineChat" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1023px)").matches &&
+      window.history.state?.npeInlineCoachChat
+    ) {
+      window.history.back();
+    } else {
+      onCloseRef.current();
+    }
+  }, [variant]);
+
   const editContext = useMemo(
     () =>
       variant === "workoutEdit" && entityType && entityId
@@ -324,6 +345,34 @@ export default function ContextualChatDrawer({
       return;
     refreshTrainingPicker();
   }, [isOpen, userId, coachId, variant, refreshTrainingPicker]);
+
+  // Mobile Training Grounds: history entry so Android back closes the drawer first.
+  // Do not depend on `onClose` identity (use onCloseRef) or each parent re-render re-pushes state.
+  const mobileHistoryActiveRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen || variant !== "trainingGroundsInlineChat") return;
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+
+    window.history.pushState({ npeInlineCoachChat: true }, "");
+    mobileHistoryActiveRef.current = true;
+
+    const onPop = () => {
+      mobileHistoryActiveRef.current = false;
+      onCloseRef.current();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      if (
+        mobileHistoryActiveRef.current &&
+        window.history.state?.npeInlineCoachChat
+      ) {
+        mobileHistoryActiveRef.current = false;
+        window.history.back();
+      }
+    };
+  }, [isOpen, variant]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Agent lifecycle — workout edit variant
@@ -613,11 +662,24 @@ export default function ContextualChatDrawer({
   const handleOpenFullPageChat = useCallback(() => {
     const id = agentRef.current?.conversationId;
     if (!userId || !coachId || !id) return;
-    navigate(
-      `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}&conversationId=${encodeURIComponent(id)}`,
-    );
-    onClose();
-  }, [userId, coachId, navigate, onClose]);
+    const url = `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}&conversationId=${encodeURIComponent(id)}`;
+    const mobileWithSyntheticHistory =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1023px)").matches &&
+      window.history.state?.npeInlineCoachChat;
+
+    if (mobileWithSyntheticHistory) {
+      const afterPop = () => {
+        window.removeEventListener("popstate", afterPop);
+        navigate(url);
+      };
+      window.addEventListener("popstate", afterPop);
+      window.history.back();
+    } else {
+      navigate(url);
+      onCloseRef.current();
+    }
+  }, [userId, coachId, navigate]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Auto-scroll message area to bottom on new messages (target visible panel)
@@ -695,13 +757,13 @@ export default function ContextualChatDrawer({
 
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
-        onClose();
+        requestClose();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, requestClose]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Message send handler
@@ -815,6 +877,8 @@ export default function ContextualChatDrawer({
           coachInitial={coachInitial}
           userInitial={userInitial}
           onClose={onClose}
+          requestClose={requestClose}
+          mobileTrainingSheetChrome={false}
           messageAreaRef={desktopMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
@@ -850,6 +914,8 @@ export default function ContextualChatDrawer({
           coachInitial={coachInitial}
           userInitial={userInitial}
           onClose={onClose}
+          requestClose={requestClose}
+          mobileTrainingSheetChrome={variant === "trainingGroundsInlineChat"}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
@@ -870,6 +936,41 @@ export default function ContextualChatDrawer({
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Mobile sheet drag handle — swipe down to close when the message list is at top
+// ──────────────────────────────────────────────────────────────────────────────
+function MobileTrainingDragHandle({ messageAreaRef, requestClose }) {
+  const touchStartY = useRef(null);
+
+  const onTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const onTouchEnd = (e) => {
+    if (touchStartY.current == null) return;
+    const endY = e.changedTouches[0].clientY;
+    const delta = endY - touchStartY.current;
+    touchStartY.current = null;
+    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
+    if (delta > 72 && scrollTop <= 0) {
+      requestClose();
+    }
+  };
+
+  return (
+    <div
+      className="flex justify-center pt-2 pb-1 shrink-0 touch-pan-x"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      <div
+        className="w-10 h-1.5 rounded-full bg-synthwave-text-muted/40"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Inner panel content (shared between desktop/mobile renders)
 // ──────────────────────────────────────────────────────────────────────────────
 function PanelContent({
@@ -880,6 +981,8 @@ function PanelContent({
   coachInitial,
   userInitial,
   onClose,
+  requestClose,
+  mobileTrainingSheetChrome = false,
   messageAreaRef,
   messages,
   contextualUpdate,
@@ -907,6 +1010,7 @@ function PanelContent({
   const tipOpenFullId = useId();
   const tipViewAllId = useId();
   const isTraining = variant === "trainingGroundsInlineChat";
+  const exit = requestClose ?? onClose;
   const viewAllUrl =
     userId && coachId
       ? `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
@@ -922,43 +1026,89 @@ function PanelContent({
 
   return (
     <>
+      {mobileTrainingSheetChrome && (
+        <MobileTrainingDragHandle
+          messageAreaRef={messageAreaRef}
+          requestClose={exit}
+        />
+      )}
+
       {/* Header */}
       <div className={contextualDrawerPatterns.header}>
-        {/* Expand/collapse button — desktop only (mobile is always full-screen) */}
-        <button
-          type="button"
-          className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
-          onClick={onToggleExpand}
-          aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
-        >
-          <DrawerResizeIcon isExpanded={isExpanded} />
-        </button>
+        {mobileTrainingSheetChrome ? (
+          <>
+            <button
+              type="button"
+              className={`${contextualDrawerPatterns.closeButton} shrink-0 -ml-1`}
+              onClick={exit}
+              aria-label="Back"
+            >
+              <span className="inline-flex w-5 h-5 items-center justify-center [&_svg]:!w-5 [&_svg]:!h-5">
+                <ChevronLeftIcon />
+              </span>
+            </button>
+            <div className="flex-1 min-w-0">
+              <div
+                id={headingId}
+                className={contextualDrawerPatterns.headerLabel}
+              >
+                {entityLabel ||
+                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+              </div>
+            </div>
+            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
+              Beta
+            </span>
+            <button
+              type="button"
+              onClick={exit}
+              className="shrink-0 px-2 py-1.5 rounded-md font-body font-semibold text-sm text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer"
+            >
+              Done
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Expand/collapse button — desktop only (mobile is always full-screen) */}
+            <button
+              type="button"
+              className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
+              onClick={onToggleExpand}
+              aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
+            >
+              <DrawerResizeIcon isExpanded={isExpanded} />
+            </button>
 
-        {/* Section header dot */}
-        <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0" />
+            {/* Section header dot */}
+            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0" />
 
-        {/* Entity label */}
-        <div className="flex-1 min-w-0">
-          <div id={headingId} className={contextualDrawerPatterns.headerLabel}>
-            {entityLabel ||
-              (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
-          </div>
-        </div>
+            {/* Entity label */}
+            <div className="flex-1 min-w-0">
+              <div
+                id={headingId}
+                className={contextualDrawerPatterns.headerLabel}
+              >
+                {entityLabel ||
+                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+              </div>
+            </div>
 
-        {/* Beta badge */}
-        <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
-          Beta
-        </span>
+            {/* Beta badge */}
+            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
+              Beta
+            </span>
 
-        {/* Close button */}
-        <button
-          type="button"
-          className={contextualDrawerPatterns.closeButton}
-          onClick={onClose}
-          aria-label={isTraining ? "Close chat" : "Close edit session"}
-        >
-          <CloseIcon />
-        </button>
+            {/* Close button */}
+            <button
+              type="button"
+              className={contextualDrawerPatterns.closeButton}
+              onClick={onClose}
+              aria-label={isTraining ? "Close chat" : "Close edit session"}
+            >
+              <CloseIcon />
+            </button>
+          </>
+        )}
       </div>
 
       {isTraining && (
