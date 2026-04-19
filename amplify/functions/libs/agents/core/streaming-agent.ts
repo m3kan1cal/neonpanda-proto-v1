@@ -34,6 +34,7 @@ import type {
   Tool,
   BaseStreamingAgentContext,
   ConversationAgentResult,
+  StreamAgentEvent,
 } from "./types";
 
 const MAX_ITERATIONS = 15; // Safety limit for ReAct loop
@@ -284,166 +285,23 @@ export class StreamingConversationAgent<
         return streamPending;
       };
 
-      let streamDone = false;
-      while (!streamDone) {
-        if (firstTokenSeen) {
-          const { value: event, done } = await streamIterator.next();
-          streamPending = null;
-          if (done) {
-            streamDone = true;
-            break;
-          }
-          if (event.type === "text_delta") {
-            if (needsSeparator) {
-              fullResponseText += "\n\n";
-              this._fullResponseText += "\n\n";
-              yield formatChunkEvent("\n\n");
-              needsSeparator = false;
-            }
-            fullResponseText += event.text;
-            this._fullResponseText += event.text;
-            yield formatChunkEvent(event.text);
-          } else if (event.type === "tool_use_start") {
-            currentToolUseId = event.toolUseId;
-            currentToolName = event.toolName;
-            toolInputFragments.set(event.toolUseId, []);
-            console.info(
-              `🔧 Tool use started: ${event.toolName} (${event.toolUseId})`,
-            );
-          } else if (event.type === "tool_use_delta") {
-            const fragments = toolInputFragments.get(event.toolUseId) || [];
-            fragments.push(event.inputFragment);
-            toolInputFragments.set(event.toolUseId, fragments);
-          } else if (event.type === "tool_use_stop") {
-            const fragments = toolInputFragments.get(event.toolUseId) || [];
-            const completeInput = fragments.join("");
-
-            if (!completeInput.trim()) {
-              const toolName =
-                currentToolUseId === event.toolUseId
-                  ? currentToolName
-                  : "unknown";
-              console.info(
-                `Tool ${toolName} called with empty input (using defaults)`,
-              );
-              toolUseBlocks.push({
-                toolUseId: event.toolUseId,
-                toolName: toolName || "unknown",
-                toolInput: {},
-              });
-            } else {
-              try {
-                const parsedInput = JSON.parse(completeInput);
-                const toolName =
-                  currentToolUseId === event.toolUseId
-                    ? currentToolName
-                    : "unknown";
-                toolUseBlocks.push({
-                  toolUseId: event.toolUseId,
-                  toolName: toolName || "unknown",
-                  toolInput: parsedInput,
-                });
-                console.info(
-                  `✅ Tool use complete: ${toolName} (${event.toolUseId})`,
-                );
-              } catch (parseError) {
-                console.error("Failed to parse tool input:", parseError);
-                console.error("Raw input:", completeInput);
-                const toolName =
-                  currentToolUseId === event.toolUseId
-                    ? currentToolName
-                    : "unknown";
-                toolUseBlocks.push({
-                  toolUseId: event.toolUseId,
-                  toolName: toolName || "unknown",
-                  toolInput: { __parseError: true, rawInput: completeInput },
-                });
-              }
-            }
-          } else if (event.type === "message_complete") {
-            assistantContent = event.assistantContent;
-            stopReason = event.stopReason;
-            iterationUsage = event.usage;
-
-            this.totalInputTokens += iterationUsage.inputTokens;
-            this.totalOutputTokens += iterationUsage.outputTokens;
-
-            console.info(`📊 Iteration ${iterationCount} complete:`, {
-              stopReason,
-              textLength: fullResponseText.length,
-              toolsUsed: toolUseBlocks.length,
-              inputTokens: iterationUsage.inputTokens,
-              outputTokens: iterationUsage.outputTokens,
-            });
-          }
-          continue;
-        }
-
-        const tickDelay = nextTickDelayMs();
-        const race = await Promise.race([
-          nextStreamEvent().then((r) => ({ kind: "stream" as const, r })),
-          sleepMs(tickDelay).then(() => ({ kind: "tick" as const })),
-        ]);
-
-        if (race.kind === "tick") {
-          if (Date.now() < toolHoldUntil) {
-            continue;
-          }
-          const histLine =
-            flags &&
-            getHistoryAwareStaticLine({
-              historyHasUserImages: flags.historyHasUserImages,
-              historyHasUserDocuments: flags.historyHasUserDocuments,
-              currentHasImages: hasImages,
-              currentHasDocuments: hasDocuments,
-              lastLine: lastContextLine,
-            });
-          if (llmPulseBudget > 0 && flags) {
-            const line = await maybeStreamingCoachPulse({
-              role: flags.contextualUserRole,
-              userSnippet: userMessage,
-              streamingPhase: "react_iteration",
-              iterationIndex: iterationCount,
-              hasCurrentImages: hasImages,
-              hasCurrentDocuments: hasDocuments,
-              historyHasUserImages: flags.historyHasUserImages,
-              historyHasUserDocuments: flags.historyHasUserDocuments,
-              coachConfig: flags.coachConfig,
-              coachName: flags.coachName,
-              coachPersonality: flags.coachPersonality,
-            });
-            if (line?.trim()) {
-              llmPulseBudget -= 1;
-              const trimmed = line.trim();
-              lastContextLine = trimmed;
-              yield formatContextualEvent(trimmed, "streaming_llm");
-              continue;
-            }
-          }
-          const staticLine =
-            histLine || getBetweenIterationLine(lastContextLine);
-          lastContextLine = staticLine;
-          yield formatContextualEvent(staticLine, "streaming_tick");
-          continue;
-        }
-
-        streamPending = null;
-        const { value: event, done } = race.r;
-        if (done) {
-          streamDone = true;
-          break;
-        }
-
+      const agent = this;
+      const dispatchStreamEvent = function* (
+        event: StreamAgentEvent,
+        opts: { markFirstTextToken: boolean },
+      ): Generator<string, void, unknown> {
         if (event.type === "text_delta") {
-          firstTokenSeen = true;
+          if (opts.markFirstTextToken) {
+            firstTokenSeen = true;
+          }
           if (needsSeparator) {
             fullResponseText += "\n\n";
-            this._fullResponseText += "\n\n";
+            agent._fullResponseText += "\n\n";
             yield formatChunkEvent("\n\n");
             needsSeparator = false;
           }
           fullResponseText += event.text;
-          this._fullResponseText += event.text;
+          agent._fullResponseText += event.text;
           yield formatChunkEvent(event.text);
         } else if (event.type === "tool_use_start") {
           currentToolUseId = event.toolUseId;
@@ -507,8 +365,8 @@ export class StreamingConversationAgent<
           stopReason = event.stopReason;
           iterationUsage = event.usage;
 
-          this.totalInputTokens += iterationUsage.inputTokens;
-          this.totalOutputTokens += iterationUsage.outputTokens;
+          agent.totalInputTokens += iterationUsage.inputTokens;
+          agent.totalOutputTokens += iterationUsage.outputTokens;
 
           console.info(`📊 Iteration ${iterationCount} complete:`, {
             stopReason,
@@ -518,6 +376,100 @@ export class StreamingConversationAgent<
             outputTokens: iterationUsage.outputTokens,
           });
         }
+      };
+
+      let streamDone = false;
+      while (!streamDone) {
+        if (firstTokenSeen) {
+          const { value: event, done } = await streamIterator.next();
+          streamPending = null;
+          if (done) {
+            streamDone = true;
+            break;
+          }
+          yield* dispatchStreamEvent(event, { markFirstTextToken: false });
+          continue;
+        }
+
+        const tickDelay = nextTickDelayMs();
+        const race = await Promise.race([
+          nextStreamEvent().then((r) => ({ kind: "stream" as const, r })),
+          sleepMs(tickDelay).then(() => ({ kind: "tick" as const })),
+        ]);
+
+        if (race.kind === "tick") {
+          if (Date.now() < toolHoldUntil) {
+            continue;
+          }
+          const histLine =
+            flags &&
+            getHistoryAwareStaticLine({
+              historyHasUserImages: flags.historyHasUserImages,
+              historyHasUserDocuments: flags.historyHasUserDocuments,
+              currentHasImages: hasImages,
+              currentHasDocuments: hasDocuments,
+              lastLine: lastContextLine,
+            });
+          if (llmPulseBudget > 0 && flags) {
+            const pulsePromise = maybeStreamingCoachPulse({
+              role: flags.contextualUserRole,
+              userSnippet: userMessage,
+              streamingPhase: "react_iteration",
+              iterationIndex: iterationCount,
+              hasCurrentImages: hasImages,
+              hasCurrentDocuments: hasDocuments,
+              historyHasUserImages: flags.historyHasUserImages,
+              historyHasUserDocuments: flags.historyHasUserDocuments,
+              coachConfig: flags.coachConfig,
+              coachName: flags.coachName,
+              coachPersonality: flags.coachPersonality,
+            });
+            const pulseOrStream = await Promise.race([
+              pulsePromise.then((line) => ({ kind: "pulse" as const, line })),
+              nextStreamEvent().then((r) => ({ kind: "stream" as const, r })),
+            ]);
+
+            if (pulseOrStream.kind === "stream") {
+              void pulsePromise.catch((err) =>
+                console.warn(
+                  "maybeStreamingCoachPulse abandoned (stream preempted)",
+                  err,
+                ),
+              );
+              streamPending = null;
+              const { value: event, done: streamIterDone } = pulseOrStream.r;
+              if (streamIterDone) {
+                streamDone = true;
+                break;
+              }
+              yield* dispatchStreamEvent(event, { markFirstTextToken: true });
+              continue;
+            }
+
+            const line = pulseOrStream.line;
+            if (line?.trim()) {
+              llmPulseBudget -= 1;
+              const trimmed = line.trim();
+              lastContextLine = trimmed;
+              yield formatContextualEvent(trimmed, "streaming_llm");
+              continue;
+            }
+          }
+          const staticLine =
+            histLine || getBetweenIterationLine(lastContextLine);
+          lastContextLine = staticLine;
+          yield formatContextualEvent(staticLine, "streaming_tick");
+          continue;
+        }
+
+        streamPending = null;
+        const { value: event, done } = race.r;
+        if (done) {
+          streamDone = true;
+          break;
+        }
+
+        yield* dispatchStreamEvent(event, { markFirstTextToken: true });
       }
 
       // Append assistant message to conversation history
