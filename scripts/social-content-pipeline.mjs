@@ -11,9 +11,15 @@
  * Templates: docs/social-content/templates/post and story (with placeholders).
  *
  * Usage:
- *   node scripts/social-content-pipeline.mjs --week=1
- *   node scripts/social-content-pipeline.mjs --week=1 --skip-bedrock   # use existing copy/week1.json
- *   node scripts/social-content-pipeline.mjs --week=1 --skip-render    # no PNG step
+ *   node scripts/social-content-pipeline.mjs --week=3
+ *   node scripts/social-content-pipeline.mjs --week=3 --skip-bedrock   # use existing copy/week3.json
+ *   node scripts/social-content-pipeline.mjs --week=3 --skip-render    # no PNG step
+ *
+ * Note: --week is purely an output-naming knob now (copy/week<N>.json and
+ * filled/images are overwritten in place each run). The actual campaign
+ * theme for the run comes from docs/social-content/SOCIAL_PROMPT.md. Update
+ * the "This Week's Campaign Theme" section of that prompt before each run
+ * and bump --week so you don't clobber earlier copy.
  */
 
 import { readFile, writeFile, readdir, mkdir } from "fs/promises";

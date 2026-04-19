@@ -1,0 +1,101 @@
+# Release on every push to `main` (including PR merges).
+#
+# Validation (after first merge to main with this workflow):
+# - package.json / package-lock.json version matches the new tag (without leading v), e.g. 1.0.20260419-beta.
+# - The follow-up "bump" commit message contains [skip release]; a second workflow run exits immediately
+#   without creating another release.
+# - GitHub shows a new prerelease with tag v1.0.YYYYMMDD-beta on the bump commit.
+# - A second feature merge the same UTC day should produce v1.0.YYYYMMDD-beta.1 (next free serial).
+#
+# Optional: include [skip release] in a merge commit message to skip releasing that push.
+# Requires branch rules to allow github-actions[bot] to push to main (or use a PAT).
+#
+# We run `npm version` without `npm ci` so the job does not fail when package-lock is
+# slightly behind package.json; `npm version` only updates the root version fields.
+
+name: Release on main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    if: ${{ !contains(github.event.head_commit.message, '[skip release]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version, push, create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          DATE=$(date -u +%Y%m%d)
+          i=0
+          while true; do
+            if [ "$i" -eq 0 ]; then
+              GIT_TAG="v1.0.${DATE}-beta"
+            else
+              GIT_TAG="v1.0.${DATE}-beta.${i}"
+            fi
+            if git rev-parse "$GIT_TAG" >/dev/null 2>&1; then
+              i=$((i + 1))
+              continue
+            fi
+            break
+          done
+
+          NPM_VERSION="${GIT_TAG#v}"
+
+          PREVIOUS_TAG="$(git tag -l 'v1.0.*' | sort -V | tail -n1 || true)"
+
+          echo "Next tag: ${GIT_TAG} (npm: ${NPM_VERSION})"
+          echo "Previous tag for notes: ${PREVIOUS_TAG:-<none>}"
+
+          npm version "${NPM_VERSION}" --no-git-tag-version
+
+          git add package.json package-lock.json
+          git commit -m "chore(release): bump version to ${NPM_VERSION} [skip release]"
+          git push origin HEAD:main
+
+          TARGET_SHA="$(git rev-parse HEAD)"
+
+          if [ -n "${PREVIOUS_TAG}" ]; then
+            gh release create "${GIT_TAG}" \
+              --title "${GIT_TAG}" \
+              --generate-notes \
+              --notes-start-tag "${PREVIOUS_TAG}" \
+              --target "${TARGET_SHA}" \
+              --prerelease
+          else
+            gh release create "${GIT_TAG}" \
+              --title "${GIT_TAG}" \
+              --generate-notes \
+              --target "${TARGET_SHA}" \
+              --prerelease
+          fi
