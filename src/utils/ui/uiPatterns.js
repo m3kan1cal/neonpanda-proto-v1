@@ -1249,11 +1249,9 @@ export const contextualDrawerPatterns = {
   // Backdrop overlay — desktop; z above mobile bottom nav (50) but below panel (70)
   backdrop: "fixed inset-0 z-[60] bg-black/20 transition-opacity duration-300",
 
-  // Desktop slide-over panel (right side, fixed 420px width)
   panelDesktop:
     "fixed top-0 right-0 h-full w-[420px] z-[70] flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
 
-  // Mobile full-screen panel (inset 0, slides up from bottom)
   panelMobile:
     "fixed inset-0 z-[70] flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out",
 
