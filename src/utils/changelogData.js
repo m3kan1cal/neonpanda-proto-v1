@@ -10,6 +10,22 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260419-beta",
+    date: "2026-04-19",
+    changes: {
+      added: [
+        "Richer contextual streaming updates across coach surfaces: progress pulses and status events are now emitted from more steps of the agent flow, so long-running responses feel alive instead of silent on mobile and desktop.",
+      ],
+      changed: [
+        "Contextual updates now reserve a dedicated LLM pulse budget per invocation, preventing a single long turn from starving subsequent ones of status messages.",
+        "April 2026 platform update HTML (`public/updates/platform-update-apr-2026.html`) published with refreshed typography (Inter, Barlow, IBM Plex Mono) and the panda-head logomark shared with the white papers.",
+      ],
+      fixed: [
+        "Duplicate streaming events deduplicated and pulse/stream race conditions resolved, eliminating flicker and repeated status pills during coach conversations.",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260418-beta",
     date: "2026-04-18",
     changes: {
