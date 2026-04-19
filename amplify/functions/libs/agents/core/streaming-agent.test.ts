@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { StreamAgentEvent, Tool, BaseStreamingAgentContext } from "./types";
+import type {
+  StreamAgentEvent,
+  Tool,
+  BaseStreamingAgentContext,
+} from "./types";
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
@@ -9,6 +13,10 @@ vi.mock("../../api-helpers", () => ({
 
 vi.mock("../../streaming/multimodal-helpers", () => ({
   buildMultimodalContent: vi.fn(),
+}));
+
+vi.mock("../../streaming/streaming-contextual-llm", () => ({
+  maybeStreamingCoachPulse: vi.fn().mockResolvedValue(null),
 }));
 
 // Import AFTER mocks are set up
@@ -174,7 +182,9 @@ describe("StreamingConversationAgent.converseStream", () => {
     const tool = makeMockTool("search_tool");
     vi.mocked(callBedrockApiStreamForAgent)
       .mockReturnValueOnce(
-        makeStream(makeToolUseStream("use-1", "search_tool", { keyword: "squats" })),
+        makeStream(
+          makeToolUseStream("use-1", "search_tool", { keyword: "squats" }),
+        ),
       )
       .mockReturnValueOnce(makeStream(makeEndTurnStream("Found it")));
 
@@ -208,7 +218,11 @@ describe("StreamingConversationAgent.converseStream", () => {
   it("handles malformed JSON tool input gracefully", async () => {
     const badInputEvents: MockStreamEvent[] = [
       { type: "tool_use_start", toolUseId: "use-bad", toolName: "my_tool" },
-      { type: "tool_use_delta", toolUseId: "use-bad", inputFragment: "{bad json!!!" },
+      {
+        type: "tool_use_delta",
+        toolUseId: "use-bad",
+        inputFragment: "{bad json!!!",
+      },
       { type: "tool_use_stop", toolUseId: "use-bad" },
       {
         type: "message_complete",
@@ -280,7 +294,9 @@ describe("StreamingConversationAgent.converseStream", () => {
       },
     ];
 
-    vi.mocked(callBedrockApiStreamForAgent).mockReturnValue(makeStream(maxTokensStream));
+    vi.mocked(callBedrockApiStreamForAgent).mockReturnValue(
+      makeStream(maxTokensStream),
+    );
 
     const agent = makeAgent();
     const { result } = await collectStream(agent, "long question");

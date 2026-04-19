@@ -20,6 +20,16 @@ import {
   formatContextualEvent,
 } from "../../streaming/formatters";
 import { buildMultimodalContent } from "../../streaming/multimodal-helpers";
+import {
+  ATTACHMENT_BURST_GAP_MS,
+  getAttachmentBurstMessages,
+  getBetweenIterationLine,
+  getHistoryAwareStaticLine,
+  nextTickDelayMs,
+  TOOL_CONTEXTUAL_HOLD_MS,
+  type StreamingAttachmentKind,
+} from "../../streaming/streaming-contextual-static";
+import { maybeStreamingCoachPulse } from "../../streaming/streaming-contextual-llm";
 import type {
   Tool,
   BaseStreamingAgentContext,
@@ -27,6 +37,27 @@ import type {
 } from "./types";
 
 const MAX_ITERATIONS = 15; // Safety limit for ReAct loop
+const MAX_LLM_CONTEXTUAL_PULSES = 2;
+
+function sleepMs(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function attachmentKindFromFlags(
+  hasImages: boolean,
+  hasDocuments: boolean,
+): StreamingAttachmentKind | null {
+  if (hasImages && hasDocuments) {
+    return "mixed";
+  }
+  if (hasImages) {
+    return "image";
+  }
+  if (hasDocuments) {
+    return "document";
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Inline helpers (copied from conversation/helpers.ts to avoid core → role
@@ -161,15 +192,37 @@ export class StreamingConversationAgent<
       content: userContent,
     });
 
-    // Yield contextual feedback for document/image processing
-    if (hasDocuments || hasImages) {
-      const message =
-        hasDocuments && hasImages
-          ? "Analyzing your attachments..."
-          : hasDocuments
-            ? "Analyzing your document..."
-            : "Analyzing your image...";
-      yield formatContextualEvent(message);
+    const flags = this.config.context.contextualFlags;
+    const attachmentKind = attachmentKindFromFlags(hasImages, hasDocuments);
+    let llmPulseBudget = MAX_LLM_CONTEXTUAL_PULSES;
+
+    if (attachmentKind) {
+      const burst = getAttachmentBurstMessages(attachmentKind, 3);
+      for (let b = 0; b < burst.length; b++) {
+        yield formatContextualEvent(burst[b], "attachment_burst");
+        if (b < burst.length - 1) {
+          await sleepMs(ATTACHMENT_BURST_GAP_MS);
+        }
+      }
+      if (flags && llmPulseBudget > 0) {
+        const line = await maybeStreamingCoachPulse({
+          role: flags.contextualUserRole,
+          userSnippet: userMessage,
+          streamingPhase: "after_attachments",
+          iterationIndex: 1,
+          hasCurrentImages: hasImages,
+          hasCurrentDocuments: hasDocuments,
+          historyHasUserImages: flags.historyHasUserImages,
+          historyHasUserDocuments: flags.historyHasUserDocuments,
+          coachConfig: flags.coachConfig,
+          coachName: flags.coachName,
+          coachPersonality: flags.coachPersonality,
+        });
+        if (line?.trim()) {
+          llmPulseBudget -= 1;
+          yield formatContextualEvent(line.trim(), "streaming_llm");
+        }
+      }
     }
 
     // Step 3: ReAct loop
@@ -177,26 +230,17 @@ export class StreamingConversationAgent<
     let iterationCount = 0;
     let fullResponseText = "";
     this._fullResponseText = "";
-
-    const iterationMessages = [
-      "Processing your request...",
-      "Working on that...",
-      "Putting it together...",
-      "Almost there...",
-      "Pulling it all together...",
-    ];
+    let toolHoldUntil = 0;
+    let lastContextLine = "";
 
     while (shouldContinue && iterationCount < MAX_ITERATIONS) {
       iterationCount++;
       console.info(`🔄 Streaming agent iteration ${iterationCount}`);
 
-      // Bridge gap between tool execution and next AI text response
       if (iterationCount > 1) {
-        const message =
-          iterationMessages[
-            Math.floor(Math.random() * iterationMessages.length)
-          ];
-        yield formatContextualEvent(message);
+        const betweenLine = getBetweenIterationLine(lastContextLine);
+        lastContextLine = betweenLine;
+        yield formatContextualEvent(betweenLine, "between_iterations");
       }
 
       // Accumulate tool use blocks from the stream
@@ -213,7 +257,6 @@ export class StreamingConversationAgent<
       let stopReason = "";
       let iterationUsage = { inputTokens: 0, outputTokens: 0 };
 
-      // Call Bedrock with streaming + tool support
       const streamEvents = callBedrockApiStreamForAgent(
         this.config.staticPrompt + "\n\n" + this.config.dynamicPrompt,
         this.conversationHistory,
@@ -230,9 +273,169 @@ export class StreamingConversationAgent<
       );
 
       let needsSeparator = iterationCount > 1 && fullResponseText.length > 0;
+      let firstTokenSeen = false;
+      const streamIterator = streamEvents[Symbol.asyncIterator]();
+      let streamPending: Promise<IteratorResult<any, void>> | null = null;
 
-      for await (const event of streamEvents) {
+      const nextStreamEvent = (): Promise<IteratorResult<any, void>> => {
+        if (!streamPending) {
+          streamPending = streamIterator.next();
+        }
+        return streamPending;
+      };
+
+      let streamDone = false;
+      while (!streamDone) {
+        if (firstTokenSeen) {
+          const { value: event, done } = await streamIterator.next();
+          streamPending = null;
+          if (done) {
+            streamDone = true;
+            break;
+          }
+          if (event.type === "text_delta") {
+            if (needsSeparator) {
+              fullResponseText += "\n\n";
+              this._fullResponseText += "\n\n";
+              yield formatChunkEvent("\n\n");
+              needsSeparator = false;
+            }
+            fullResponseText += event.text;
+            this._fullResponseText += event.text;
+            yield formatChunkEvent(event.text);
+          } else if (event.type === "tool_use_start") {
+            currentToolUseId = event.toolUseId;
+            currentToolName = event.toolName;
+            toolInputFragments.set(event.toolUseId, []);
+            console.info(
+              `🔧 Tool use started: ${event.toolName} (${event.toolUseId})`,
+            );
+          } else if (event.type === "tool_use_delta") {
+            const fragments = toolInputFragments.get(event.toolUseId) || [];
+            fragments.push(event.inputFragment);
+            toolInputFragments.set(event.toolUseId, fragments);
+          } else if (event.type === "tool_use_stop") {
+            const fragments = toolInputFragments.get(event.toolUseId) || [];
+            const completeInput = fragments.join("");
+
+            if (!completeInput.trim()) {
+              const toolName =
+                currentToolUseId === event.toolUseId
+                  ? currentToolName
+                  : "unknown";
+              console.info(
+                `Tool ${toolName} called with empty input (using defaults)`,
+              );
+              toolUseBlocks.push({
+                toolUseId: event.toolUseId,
+                toolName: toolName || "unknown",
+                toolInput: {},
+              });
+            } else {
+              try {
+                const parsedInput = JSON.parse(completeInput);
+                const toolName =
+                  currentToolUseId === event.toolUseId
+                    ? currentToolName
+                    : "unknown";
+                toolUseBlocks.push({
+                  toolUseId: event.toolUseId,
+                  toolName: toolName || "unknown",
+                  toolInput: parsedInput,
+                });
+                console.info(
+                  `✅ Tool use complete: ${toolName} (${event.toolUseId})`,
+                );
+              } catch (parseError) {
+                console.error("Failed to parse tool input:", parseError);
+                console.error("Raw input:", completeInput);
+                const toolName =
+                  currentToolUseId === event.toolUseId
+                    ? currentToolName
+                    : "unknown";
+                toolUseBlocks.push({
+                  toolUseId: event.toolUseId,
+                  toolName: toolName || "unknown",
+                  toolInput: { __parseError: true, rawInput: completeInput },
+                });
+              }
+            }
+          } else if (event.type === "message_complete") {
+            assistantContent = event.assistantContent;
+            stopReason = event.stopReason;
+            iterationUsage = event.usage;
+
+            this.totalInputTokens += iterationUsage.inputTokens;
+            this.totalOutputTokens += iterationUsage.outputTokens;
+
+            console.info(`📊 Iteration ${iterationCount} complete:`, {
+              stopReason,
+              textLength: fullResponseText.length,
+              toolsUsed: toolUseBlocks.length,
+              inputTokens: iterationUsage.inputTokens,
+              outputTokens: iterationUsage.outputTokens,
+            });
+          }
+          continue;
+        }
+
+        const tickDelay = nextTickDelayMs();
+        const race = await Promise.race([
+          nextStreamEvent().then((r) => ({ kind: "stream" as const, r })),
+          sleepMs(tickDelay).then(() => ({ kind: "tick" as const })),
+        ]);
+
+        if (race.kind === "tick") {
+          if (Date.now() < toolHoldUntil) {
+            continue;
+          }
+          const histLine =
+            flags &&
+            getHistoryAwareStaticLine({
+              historyHasUserImages: flags.historyHasUserImages,
+              historyHasUserDocuments: flags.historyHasUserDocuments,
+              currentHasImages: hasImages,
+              currentHasDocuments: hasDocuments,
+              lastLine: lastContextLine,
+            });
+          if (llmPulseBudget > 0 && flags) {
+            const line = await maybeStreamingCoachPulse({
+              role: flags.contextualUserRole,
+              userSnippet: userMessage,
+              streamingPhase: "react_iteration",
+              iterationIndex: iterationCount,
+              hasCurrentImages: hasImages,
+              hasCurrentDocuments: hasDocuments,
+              historyHasUserImages: flags.historyHasUserImages,
+              historyHasUserDocuments: flags.historyHasUserDocuments,
+              coachConfig: flags.coachConfig,
+              coachName: flags.coachName,
+              coachPersonality: flags.coachPersonality,
+            });
+            if (line?.trim()) {
+              llmPulseBudget -= 1;
+              const trimmed = line.trim();
+              lastContextLine = trimmed;
+              yield formatContextualEvent(trimmed, "streaming_llm");
+              continue;
+            }
+          }
+          const staticLine =
+            histLine || getBetweenIterationLine(lastContextLine);
+          lastContextLine = staticLine;
+          yield formatContextualEvent(staticLine, "streaming_tick");
+          continue;
+        }
+
+        streamPending = null;
+        const { value: event, done } = race.r;
+        if (done) {
+          streamDone = true;
+          break;
+        }
+
         if (event.type === "text_delta") {
+          firstTokenSeen = true;
           if (needsSeparator) {
             fullResponseText += "\n\n";
             this._fullResponseText += "\n\n";
@@ -383,7 +586,8 @@ export class StreamingConversationAgent<
                   )
                 ]
               : toolWithContext.contextualMessage;
-            yield formatContextualEvent(message);
+            yield formatContextualEvent(message, "tool_context");
+            toolHoldUntil = Date.now() + TOOL_CONTEXTUAL_HOLD_MS;
           }
 
           const toolStartTime = Date.now();

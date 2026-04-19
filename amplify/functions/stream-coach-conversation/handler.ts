@@ -42,6 +42,7 @@ import {
 import { formatConversationSummaryForPrompt } from "../libs/coach-conversation/summary";
 import { buildUserMessage } from "../libs/coach-conversation/message-utils";
 import { buildMessagesWithCaching } from "../libs/agents/shared/message-caching";
+import { getHistoryAttachmentFlags } from "../libs/streaming/streaming-contextual-flags";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
 import {
@@ -362,6 +363,9 @@ async function* createCoachConversationEventStreamV2(
       }
     }
 
+    const { historyHasUserImages, historyHasUserDocuments } =
+      getHistoryAttachmentFlags(existingConversation.messages);
+
     const agentContext: ConversationAgentContext = {
       userId,
       coachId,
@@ -369,6 +373,12 @@ async function* createCoachConversationEventStreamV2(
       coachConfig,
       userTimezone,
       criticalTrainingDirective: criticalDirective,
+      contextualFlags: {
+        historyHasUserImages,
+        historyHasUserDocuments,
+        contextualUserRole: "coach",
+        coachConfig,
+      },
       activeProgram: activeProgram
         ? {
             programId: activeProgram.programId,
