@@ -221,6 +221,10 @@ function TrainingGroundsV2() {
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
   const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
 
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+
   useEffect(() => {
     setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
     return () => setIsInlineCoachDrawerOpen(false);
@@ -1687,7 +1691,7 @@ function TrainingGroundsV2() {
           <ContextualChatDrawer
             variant="trainingGroundsInlineChat"
             isOpen={isInlineChatDrawerOpen}
-            onClose={() => setIsInlineChatDrawerOpen(false)}
+            onClose={closeInlineCoachDrawer}
             entityLabel="Training Grounds"
             userId={userId}
             coachId={coachId}

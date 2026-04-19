@@ -275,6 +275,12 @@ export default function ContextualChatDrawer({
 
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
 
+  /** Keeps the latest onClose without re-subscribing history effects when parents pass inline arrows. */
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   const requestClose = useCallback(() => {
     if (
       variant === "trainingGroundsInlineChat" &&
@@ -284,9 +290,9 @@ export default function ContextualChatDrawer({
     ) {
       window.history.back();
     } else {
-      onClose();
+      onCloseRef.current();
     }
-  }, [variant, onClose]);
+  }, [variant]);
 
   const editContext = useMemo(
     () =>
@@ -340,21 +346,33 @@ export default function ContextualChatDrawer({
     refreshTrainingPicker();
   }, [isOpen, userId, coachId, variant, refreshTrainingPicker]);
 
-  // Mobile Training Grounds: history entry so Android back closes the drawer first
+  // Mobile Training Grounds: history entry so Android back closes the drawer first.
+  // Do not depend on `onClose` identity (use onCloseRef) or each parent re-render re-pushes state.
+  const mobileHistoryActiveRef = useRef(false);
   useEffect(() => {
     if (!isOpen || variant !== "trainingGroundsInlineChat") return;
     if (typeof window === "undefined") return;
     if (window.matchMedia("(min-width: 1024px)").matches) return;
 
     window.history.pushState({ npeInlineCoachChat: true }, "");
+    mobileHistoryActiveRef.current = true;
+
     const onPop = () => {
-      onClose();
+      mobileHistoryActiveRef.current = false;
+      onCloseRef.current();
     };
     window.addEventListener("popstate", onPop);
     return () => {
       window.removeEventListener("popstate", onPop);
+      if (
+        mobileHistoryActiveRef.current &&
+        window.history.state?.npeInlineCoachChat
+      ) {
+        mobileHistoryActiveRef.current = false;
+        window.history.back();
+      }
     };
-  }, [isOpen, variant, onClose]);
+  }, [isOpen, variant]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Agent lifecycle — workout edit variant
@@ -644,11 +662,24 @@ export default function ContextualChatDrawer({
   const handleOpenFullPageChat = useCallback(() => {
     const id = agentRef.current?.conversationId;
     if (!userId || !coachId || !id) return;
-    navigate(
-      `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}&conversationId=${encodeURIComponent(id)}`,
-    );
-    onClose();
-  }, [userId, coachId, navigate, onClose]);
+    const url = `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}&conversationId=${encodeURIComponent(id)}`;
+    const mobileWithSyntheticHistory =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1023px)").matches &&
+      window.history.state?.npeInlineCoachChat;
+
+    if (mobileWithSyntheticHistory) {
+      const afterPop = () => {
+        window.removeEventListener("popstate", afterPop);
+        navigate(url);
+      };
+      window.addEventListener("popstate", afterPop);
+      window.history.back();
+    } else {
+      navigate(url);
+      onCloseRef.current();
+    }
+  }, [userId, coachId, navigate]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Auto-scroll message area to bottom on new messages (target visible panel)
