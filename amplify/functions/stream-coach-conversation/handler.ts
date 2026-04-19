@@ -182,13 +182,9 @@ async function* createCoachConversationEventStreamV2(
       clientContext,
     };
 
-    const programForClientContextPromise =
-      clientContext?.surface === "program_dashboard"
-        ? getProgram(userId, coachId, clientContext.programId).catch((err) => {
-            logger.warn("V2: program load for clientContext failed:", err);
-            return null;
-          })
-        : Promise.resolve(null);
+    let sessionProgramContextToStore:
+      | { programId: string; programName: string }
+      | undefined;
 
     logger.info("✅ V2: Params validated:", {
       userId,
@@ -221,7 +217,6 @@ async function* createCoachConversationEventStreamV2(
       emotionalTrend,
       prospectiveMemoriesRaw,
       conversationSummary,
-      programForClientContext,
     ] = await Promise.all([
       getUserProfile(userId),
       getCoachConversation(userId, coachId, conversationId),
@@ -233,8 +228,33 @@ async function* createCoachConversationEventStreamV2(
         () => [],
       ),
       getCoachConversationSummary(userId, conversationId).catch(() => null),
-      programForClientContextPromise,
     ]);
+
+    // Load program for program_dashboard context, using cached context if available
+    let programForClientContext = null;
+    if (clientContext?.surface === "program_dashboard") {
+      const cachedContext = (existingConversation.metadata as any)
+        ?.sessionProgramContext;
+      if (cachedContext) {
+        logger.info("✅ V2: Using cached sessionProgramContext from metadata");
+        programForClientContext = cachedContext;
+      } else {
+        programForClientContext = await getProgram(
+          userId,
+          coachId,
+          clientContext.programId,
+        ).catch((err) => {
+          logger.warn("V2: program load for clientContext failed:", err);
+          return null;
+        });
+        if (programForClientContext) {
+          sessionProgramContextToStore = {
+            programId: programForClientContext.programId,
+            programName: programForClientContext.name || "Program",
+          };
+        }
+      }
+    }
 
     mark("dataLoading", stepStart);
 
@@ -648,6 +668,7 @@ async function* createCoachConversationEventStreamV2(
       conversationId,
       [newUserMessage, newAiMessage],
       editContextToStore,
+      sessionProgramContextToStore,
     );
 
     logger.info("✅ V2: Messages saved to DynamoDB");
