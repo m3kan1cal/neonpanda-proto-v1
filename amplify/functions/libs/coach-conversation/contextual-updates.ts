@@ -161,6 +161,29 @@ Generate a brief, supportive update about hitting a snag with program generation
 Examples: Hit a bump, let's refine this.. or Let's dial in those details.. or We'll get this dialed in..`;
         break;
 
+      case "streaming_pulse": {
+        const phase = context.streamingPhase || "thinking";
+        const iter = context.iterationIndex ?? 1;
+        const hasCurImg = context.hasCurrentImages ? "yes" : "no";
+        const hasCurDoc = context.hasCurrentDocuments ? "yes" : "no";
+        const histImg = context.historyHasUserImages ? "yes" : "no";
+        const histDoc = context.historyHasUserDocuments ? "yes" : "no";
+        userPrompt = `The athlete's latest message (may be empty if they only sent attachments): "${userResponse}"
+
+Streaming context (do not quote these labels in your answer):
+- phase: ${phase} (after_attachments = multimodal just loaded; react_iteration = between model steps)
+- model_iteration: ${iter}
+- current_turn_has_images: ${hasCurImg}
+- current_turn_has_documents: ${hasCurDoc}
+- earlier_messages_in_thread_had_images: ${histImg}
+- earlier_messages_in_thread_had_documents: ${histDoc}
+
+Write ONE short progress line (max one sentence) in your coach voice: warm, clear, encouraging. No sarcasm or snark. No emojis.
+If they sent images or files this turn, lean into gently processing those attachments. If only earlier turns had visuals or documents, you may mention you're keeping that context in mind — do NOT claim you are re-reading old binary files.
+Avoid the words: checking, looking, reviewing. Prefer vivid coach verbs: scouting, shaping, steadying, threading, gathering, tuning.`;
+        break;
+      }
+
       default:
         userPrompt = `User message: "${userResponse}"
 
@@ -203,6 +226,7 @@ Generate a brief processing update. One sentence, calm tone.`;
       training_program_generation_start: `Firing up the program generator..`,
       training_program_generation_complete: `Program generation rolling..`,
       training_program_generation_error: `Let's dial in those details..`,
+      streaming_pulse: `Steadying my thoughts on your message..`,
     };
 
     return fallbacks[updateType] || `Flexing my coach muscles..`;

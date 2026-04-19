@@ -24,6 +24,17 @@ export interface AgentContext {
 export interface BaseStreamingAgentContext extends AgentContext {
   userId: string;
   userTimezone: string;
+  /**
+   * Optional flags for richer streaming contextual UX (SSE). Set by stream handlers.
+   */
+  contextualFlags?: {
+    historyHasUserImages: boolean;
+    historyHasUserDocuments: boolean;
+    contextualUserRole: "coach" | "program_designer" | "coach_creator";
+    coachConfig?: any;
+    coachName?: string;
+    coachPersonality?: string;
+  };
 }
 
 /**
