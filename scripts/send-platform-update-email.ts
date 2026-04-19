@@ -10,7 +10,7 @@
  * Strategy:
  * - Query all active users via GSI-3 (entityType = "user", isActive = true)
  * - Filter out users with no email or featureAnnouncements opted out
- * - Load HTML template from public/updates/platform-update-mar-2026.html
+ * - Load HTML template from public/updates/platform-update-apr-2026.html
  * - Personalize footer with per-user unsubscribe/settings links
  * - Send via SES with rate limiting
  *
@@ -36,6 +36,7 @@ import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
+import { convert as htmlToText } from "html-to-text";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 
@@ -45,7 +46,7 @@ const DEFAULT_REGION = "us-west-2";
 const DEFAULT_BATCH_SIZE = 50;
 const DEFAULT_DELAY_MS = 100;
 const FROM_EMAIL = "NeonPanda <no-reply@neonpanda.ai>";
-const EMAIL_SUBJECT = "The Biggest Update in NeonPanda History";
+const EMAIL_SUBJECT = "NeonPanda · April 2026 Platform Update";
 const APP_URL = "https://neonpanda.ai";
 const API_URL = "https://api-prod.neonpanda.ai";
 const HTML_TEMPLATE_PATH = join(
@@ -53,7 +54,7 @@ const HTML_TEMPLATE_PATH = join(
   "..",
   "public",
   "updates",
-  "platform-update-mar-2026.html",
+  "platform-update-apr-2026.html",
 );
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -210,49 +211,36 @@ function personalizeHtml(
 
 // ─── Plain Text Version ──────────────────────────────────────────────────────
 
-function buildPlainText(email: string, userId: string): string {
-  return `
-The Biggest Update in NeonPanda History — March 2026
-
-This isn't a minor release. Over the past two months, we shipped 141 updates across the entire platform. Here's the highlights:
-
-TRAINING PULSE — Visual Analytics Dashboard
-See your progress like never before. Volume trend charts, strength curves with PR markers, body balance radar, recovery load tracking, weekly comparisons, and more. Find it at Training Grounds > Training Pulse.
-
-SHARED PROGRAMS
-Share your training programs with anyone. Generate a link, anyone can preview it, and they can copy it into their account with one click.
-
-YOUR COACH NOW KNOWS EVERYTHING
-We rebuilt the AI coaching engine with full cross-context awareness. Your coach can now search past conversations, query your memories, browse your programs, pull exercise history, log multiple workouts at once, check today's prescribed workout, and more — 11 tools total.
-
-SMARTER WORKOUT LOGGING
-Powered by 10+ tools that work together so the system can make real decisions about what to extract, how to validate, and when to save. Multi-workout support (many workouts in a single message) and program linking included.
-
-COACH CREATOR & PROGRAM DESIGNER — REBUILT
-Both migrated to conversation agent architecture. Agentic memory means no more repeating yourself. Training directives give your coaches deeper understanding.
-
-EXPANDED TRAINING KNOWLEDGE
-5 new methodologies: GPP, Hybrid Athlete, Renaissance Periodization, RPE/Autoregulation, Zone-2 Aerobic Base. 38+ total methodologies. 10 supported training disciplines.
-
-FRESH NEW LOOK
-Purple gradient theme, floating desktop sidebar, cleaner chat UI, refined cards, updated fonts.
-
-QUALITY OF LIFE
-Edit modals for everything, fullscreen workout notes, training intelligence, streak tracking, top exercises, personal records, public changelog.
-
-UNDER THE HOOD
-70+ bug fixes, performance improvements, data integrity upgrades.
-
-Open NeonPanda: ${APP_URL}
-Full Changelog: ${APP_URL}/changelog
-
-– The NeonPanda Team
-
-NeonPanda – Where electric intelligence meets approachable excellence.
-Visit NeonPanda: ${APP_URL}
-Update Preferences: ${buildSettingsLink(userId)}
-Unsubscribe: ${buildUnsubscribeLink(email)}
-`.trim();
+/**
+ * Derive the plain-text email body directly from the personalized HTML so the
+ * two bodies never drift. Uses html-to-text with options tuned for our
+ * platform-update template (wide wrap, show link URLs, preserve list bullets,
+ * strip decorative images/logo, and skip the header/logo block entirely).
+ */
+function buildPlainText(personalizedHtml: string): string {
+  return htmlToText(personalizedHtml, {
+    wordwrap: 100,
+    selectors: [
+      // Drop the dark header logo block; branding carries via the signature/footer.
+      { selector: ".logo-header", format: "skip" },
+      // Drop all images (logo, decorative) — no alt text in output.
+      { selector: "img", format: "skip" },
+      // Render links as "text [url]" so URLs are actually reachable in plain text.
+      {
+        selector: "a",
+        options: { hideLinkHrefIfSameAsText: true, ignoreHref: false },
+      },
+      // Slightly tighter spacing around headings for readability.
+      { selector: "h1", options: { uppercase: false } },
+      { selector: "h2", options: { uppercase: true } },
+      { selector: "h3", options: { uppercase: false } },
+      { selector: "h4", options: { uppercase: false } },
+      // Use "- " bullets for unordered lists.
+      { selector: "ul", options: { itemPrefix: "- " } },
+      // Render hr as a blank-line divider rather than a row of dashes.
+      { selector: "hr", format: "skip" },
+    ],
+  }).trim();
 }
 
 // ─── DynamoDB Query ──────────────────────────────────────────────────────────
@@ -475,7 +463,7 @@ async function main() {
     const name = attrs.displayName || attrs.firstName || "User";
 
     const personalizedHtml = personalizeHtml(htmlTemplate, email, userId);
-    const plainText = buildPlainText(email, userId);
+    const plainText = buildPlainText(personalizedHtml);
 
     const result = await sendEmail(
       sesClient,
