@@ -20,13 +20,46 @@ import {
   formatContextualEvent,
 } from "../../streaming/formatters";
 import { buildMultimodalContent } from "../../streaming/multimodal-helpers";
+import {
+  ATTACHMENT_BURST_GAP_MS,
+  getAttachmentBurstMessages,
+  getBetweenIterationLine,
+  getHistoryAwareStaticLine,
+  nextTickDelayMs,
+  TOOL_CONTEXTUAL_HOLD_MS,
+  type StreamingAttachmentKind,
+} from "../../streaming/streaming-contextual-static";
+import { maybeStreamingCoachPulse } from "../../streaming/streaming-contextual-llm";
 import type {
   Tool,
   BaseStreamingAgentContext,
   ConversationAgentResult,
+  StreamAgentEvent,
 } from "./types";
 
 const MAX_ITERATIONS = 15; // Safety limit for ReAct loop
+/** Caps {@link maybeStreamingCoachPulse} invocations per {@link StreamingConversationAgent.converseStream} (including abandoned races). */
+const MAX_LLM_CONTEXTUAL_PULSES = 2;
+
+function sleepMs(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function attachmentKindFromFlags(
+  hasImages: boolean,
+  hasDocuments: boolean,
+): StreamingAttachmentKind | null {
+  if (hasImages && hasDocuments) {
+    return "mixed";
+  }
+  if (hasImages) {
+    return "image";
+  }
+  if (hasDocuments) {
+    return "document";
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Inline helpers (copied from conversation/helpers.ts to avoid core → role
@@ -161,15 +194,37 @@ export class StreamingConversationAgent<
       content: userContent,
     });
 
-    // Yield contextual feedback for document/image processing
-    if (hasDocuments || hasImages) {
-      const message =
-        hasDocuments && hasImages
-          ? "Analyzing your attachments..."
-          : hasDocuments
-            ? "Analyzing your document..."
-            : "Analyzing your image...";
-      yield formatContextualEvent(message);
+    const flags = this.config.context.contextualFlags;
+    const attachmentKind = attachmentKindFromFlags(hasImages, hasDocuments);
+    let llmPulseBudget = MAX_LLM_CONTEXTUAL_PULSES;
+
+    if (attachmentKind) {
+      const burst = getAttachmentBurstMessages(attachmentKind, 3);
+      for (let b = 0; b < burst.length; b++) {
+        yield formatContextualEvent(burst[b], "attachment_burst");
+        if (b < burst.length - 1) {
+          await sleepMs(ATTACHMENT_BURST_GAP_MS);
+        }
+      }
+      if (flags && llmPulseBudget > 0) {
+        llmPulseBudget -= 1;
+        const line = await maybeStreamingCoachPulse({
+          role: flags.contextualUserRole,
+          userSnippet: userMessage,
+          streamingPhase: "after_attachments",
+          iterationIndex: 1,
+          hasCurrentImages: hasImages,
+          hasCurrentDocuments: hasDocuments,
+          historyHasUserImages: flags.historyHasUserImages,
+          historyHasUserDocuments: flags.historyHasUserDocuments,
+          coachConfig: flags.coachConfig,
+          coachName: flags.coachName,
+          coachPersonality: flags.coachPersonality,
+        });
+        if (line?.trim()) {
+          yield formatContextualEvent(line.trim(), "streaming_llm");
+        }
+      }
     }
 
     // Step 3: ReAct loop
@@ -177,26 +232,17 @@ export class StreamingConversationAgent<
     let iterationCount = 0;
     let fullResponseText = "";
     this._fullResponseText = "";
-
-    const iterationMessages = [
-      "Processing your request...",
-      "Working on that...",
-      "Putting it together...",
-      "Almost there...",
-      "Pulling it all together...",
-    ];
+    let toolHoldUntil = 0;
+    let lastContextLine = "";
 
     while (shouldContinue && iterationCount < MAX_ITERATIONS) {
       iterationCount++;
       console.info(`🔄 Streaming agent iteration ${iterationCount}`);
 
-      // Bridge gap between tool execution and next AI text response
       if (iterationCount > 1) {
-        const message =
-          iterationMessages[
-            Math.floor(Math.random() * iterationMessages.length)
-          ];
-        yield formatContextualEvent(message);
+        const betweenLine = getBetweenIterationLine(lastContextLine);
+        lastContextLine = betweenLine;
+        yield formatContextualEvent(betweenLine, "between_iterations");
       }
 
       // Accumulate tool use blocks from the stream
@@ -213,7 +259,6 @@ export class StreamingConversationAgent<
       let stopReason = "";
       let iterationUsage = { inputTokens: 0, outputTokens: 0 };
 
-      // Call Bedrock with streaming + tool support
       const streamEvents = callBedrockApiStreamForAgent(
         this.config.staticPrompt + "\n\n" + this.config.dynamicPrompt,
         this.conversationHistory,
@@ -230,17 +275,34 @@ export class StreamingConversationAgent<
       );
 
       let needsSeparator = iterationCount > 1 && fullResponseText.length > 0;
+      let firstTokenSeen = false;
+      const streamIterator = streamEvents[Symbol.asyncIterator]();
+      let streamPending: Promise<IteratorResult<any, void>> | null = null;
 
-      for await (const event of streamEvents) {
+      const nextStreamEvent = (): Promise<IteratorResult<any, void>> => {
+        if (!streamPending) {
+          streamPending = streamIterator.next();
+        }
+        return streamPending;
+      };
+
+      const agent = this;
+      const dispatchStreamEvent = function* (
+        event: StreamAgentEvent,
+        opts: { markFirstTextToken: boolean },
+      ): Generator<string, void, unknown> {
         if (event.type === "text_delta") {
+          if (opts.markFirstTextToken) {
+            firstTokenSeen = true;
+          }
           if (needsSeparator) {
             fullResponseText += "\n\n";
-            this._fullResponseText += "\n\n";
+            agent._fullResponseText += "\n\n";
             yield formatChunkEvent("\n\n");
             needsSeparator = false;
           }
           fullResponseText += event.text;
-          this._fullResponseText += event.text;
+          agent._fullResponseText += event.text;
           yield formatChunkEvent(event.text);
         } else if (event.type === "tool_use_start") {
           currentToolUseId = event.toolUseId;
@@ -304,8 +366,8 @@ export class StreamingConversationAgent<
           stopReason = event.stopReason;
           iterationUsage = event.usage;
 
-          this.totalInputTokens += iterationUsage.inputTokens;
-          this.totalOutputTokens += iterationUsage.outputTokens;
+          agent.totalInputTokens += iterationUsage.inputTokens;
+          agent.totalOutputTokens += iterationUsage.outputTokens;
 
           console.info(`📊 Iteration ${iterationCount} complete:`, {
             stopReason,
@@ -315,6 +377,100 @@ export class StreamingConversationAgent<
             outputTokens: iterationUsage.outputTokens,
           });
         }
+      };
+
+      let streamDone = false;
+      while (!streamDone) {
+        if (firstTokenSeen) {
+          const { value: event, done } = await streamIterator.next();
+          streamPending = null;
+          if (done) {
+            streamDone = true;
+            break;
+          }
+          yield* dispatchStreamEvent(event, { markFirstTextToken: false });
+          continue;
+        }
+
+        const tickDelay = nextTickDelayMs();
+        const race = await Promise.race([
+          nextStreamEvent().then((r) => ({ kind: "stream" as const, r })),
+          sleepMs(tickDelay).then(() => ({ kind: "tick" as const })),
+        ]);
+
+        if (race.kind === "tick") {
+          if (Date.now() < toolHoldUntil) {
+            continue;
+          }
+          const histLine =
+            flags &&
+            getHistoryAwareStaticLine({
+              historyHasUserImages: flags.historyHasUserImages,
+              historyHasUserDocuments: flags.historyHasUserDocuments,
+              currentHasImages: hasImages,
+              currentHasDocuments: hasDocuments,
+              lastLine: lastContextLine,
+            });
+          if (llmPulseBudget > 0 && flags) {
+            llmPulseBudget -= 1;
+            const pulsePromise = maybeStreamingCoachPulse({
+              role: flags.contextualUserRole,
+              userSnippet: userMessage,
+              streamingPhase: "react_iteration",
+              iterationIndex: iterationCount,
+              hasCurrentImages: hasImages,
+              hasCurrentDocuments: hasDocuments,
+              historyHasUserImages: flags.historyHasUserImages,
+              historyHasUserDocuments: flags.historyHasUserDocuments,
+              coachConfig: flags.coachConfig,
+              coachName: flags.coachName,
+              coachPersonality: flags.coachPersonality,
+            });
+            const pulseOrStream = await Promise.race([
+              pulsePromise.then((line) => ({ kind: "pulse" as const, line })),
+              nextStreamEvent().then((r) => ({ kind: "stream" as const, r })),
+            ]);
+
+            if (pulseOrStream.kind === "stream") {
+              void pulsePromise.catch((err) =>
+                console.warn(
+                  "maybeStreamingCoachPulse abandoned (stream preempted)",
+                  err,
+                ),
+              );
+              streamPending = null;
+              const { value: event, done: streamIterDone } = pulseOrStream.r;
+              if (streamIterDone) {
+                streamDone = true;
+                break;
+              }
+              yield* dispatchStreamEvent(event, { markFirstTextToken: true });
+              continue;
+            }
+
+            const line = pulseOrStream.line;
+            if (line?.trim()) {
+              const trimmed = line.trim();
+              lastContextLine = trimmed;
+              yield formatContextualEvent(trimmed, "streaming_llm");
+              continue;
+            }
+          }
+          const staticLine =
+            histLine || getBetweenIterationLine(lastContextLine);
+          lastContextLine = staticLine;
+          yield formatContextualEvent(staticLine, "streaming_tick");
+          continue;
+        }
+
+        streamPending = null;
+        const { value: event, done } = race.r;
+        if (done) {
+          streamDone = true;
+          break;
+        }
+
+        yield* dispatchStreamEvent(event, { markFirstTextToken: true });
       }
 
       // Append assistant message to conversation history
@@ -383,7 +539,8 @@ export class StreamingConversationAgent<
                   )
                 ]
               : toolWithContext.contextualMessage;
-            yield formatContextualEvent(message);
+            yield formatContextualEvent(message, "tool_context");
+            toolHoldUntil = Date.now() + TOOL_CONTEXTUAL_HOLD_MS;
           }
 
           const toolStartTime = Date.now();

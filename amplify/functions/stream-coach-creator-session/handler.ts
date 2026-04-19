@@ -56,6 +56,7 @@ import {
   formatGuardrailWarningEvent,
   validateStreamingRequestBody,
 } from "../libs/streaming";
+import { getHistoryAttachmentFlags } from "../libs/streaming/streaming-contextual-flags";
 
 // Route pattern for coach creator sessions
 const COACH_CREATOR_SESSION_ROUTE =
@@ -184,6 +185,9 @@ async function* createCoachCreatorEventStreamV2(
     const criticalTrainingDirective = (userProfile as any)
       ?.criticalTrainingDirective;
 
+    const { historyHasUserImages, historyHasUserDocuments } =
+      getHistoryAttachmentFlags(session.conversationHistory || []);
+
     const agentContext: CoachCreatorSessionAgentContext = {
       userId: userId as string,
       sessionId: sessionId as string,
@@ -191,6 +195,11 @@ async function* createCoachCreatorEventStreamV2(
       session, // Mutable — tools mutate session.todoList and session.isComplete
       pineconeContext,
       criticalTrainingDirective,
+      contextualFlags: {
+        historyHasUserImages,
+        historyHasUserDocuments,
+        contextualUserRole: "coach_creator",
+      },
     };
 
     // 5. Build system prompts
@@ -255,7 +264,11 @@ async function* createCoachCreatorEventStreamV2(
     let guardrailWarning = false;
 
     try {
-      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys, documentS3Keys);
+      const agentGenerator = agent.converseStream(
+        userResponse!,
+        imageS3Keys,
+        documentS3Keys,
+      );
 
       let result = await agentGenerator.next();
       while (!result.done) {

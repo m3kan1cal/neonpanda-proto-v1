@@ -52,6 +52,11 @@ export * from "./multimodal-helpers";
 // Memory helpers
 export * from "./memory-helpers";
 
+// Streaming contextual UX (SSE)
+export * from "./streaming-contextual-static";
+export * from "./streaming-contextual-flags";
+export { maybeStreamingCoachPulse } from "./streaming-contextual-llm";
+
 // Note: Authentication middleware moved to ../auth/middleware.ts
 
 // Convenience re-exports for common patterns

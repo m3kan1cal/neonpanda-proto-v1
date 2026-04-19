@@ -103,6 +103,19 @@ export async function buildMessagesWithCaching(
 
   const messageCount = effectiveMessages.length;
 
+  const approxHistoryChars = effectiveMessages.reduce((sum, msg) => {
+    const c = typeof msg.content === "string" ? msg.content.length : 0;
+    return sum + c;
+  }, 0);
+  logger.info("streaming_context_metrics", {
+    logLabel,
+    totalMessagesInStore: messages.length,
+    effectiveMessageCount: messageCount,
+    trimmedCount,
+    approxHistoryChars,
+    maxContextMessages: MAX_CONTEXT_MESSAGES,
+  });
+
   if (messageCount < MIN_CACHE_THRESHOLD) {
     logger.info(
       `📝 Short conversation (${messageCount} messages) - no history caching`,

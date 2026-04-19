@@ -2,18 +2,23 @@
 name: monthly-platform-update-html
 description: >-
   Produces a single self-contained HTML monthly platform update for NeonPanda that
-  reads well in the browser and can be embedded or sent as email, matching the
-  structure and visual system of public/updates/platform-update-*.html and the
-  voice in docs/strategy/BRANDING_STRATEGY.md. Project-only skill. Use when the
-  user asks for a platform update, monthly product newsletter, changelog digest for
-  users, release roundup HTML, or “what we shipped this month” for web + email.
+  reads well in the browser and can be embedded or sent as email. Structure and
+  section patterns follow public/updates/platform-update-*.html; typography matches
+  the site (Inter, Barlow, IBM Plex Mono). Voice from docs/strategy/BRANDING_STRATEGY.md.
+  Project-only skill. Use for platform updates, release roundups, or changelog digests
+  for web + email.
 ---
 
 # Monthly platform update HTML (NeonPanda)
 
 ## Scope (project only)
 
-Use this skill **only in this repository**. Canonical reference HTML: [public/updates/platform-update-mar-2026.html](public/updates/platform-update-mar-2026.html). Brand voice: [docs/strategy/BRANDING_STRATEGY.md](docs/strategy/BRANDING_STRATEGY.md). A parallel **Cursor** project skill lives at `.cursor/skills/monthly-platform-update-html/`; **keep both copies aligned** when editing this workflow.
+Use this skill **only in this repository**.
+
+- **Structure / IA reference:** Use the latest [public/updates/platform-update-\*.html](public/updates/) (e.g. [public/updates/platform-update-mar-2026.html](public/updates/platform-update-mar-2026.html)) for **section patterns**, spacing concepts, badges, `.callout-hero`, presentation **tables** for 2-up cards, CTAs, footer shape — **not** as the authority on **fonts** or **logo** (older files may predate current brand).
+- **Typography & visual system:** Match the **rest of the site and themes**: **Inter** (body), **Barlow** (headings / display titles), **IBM Plex Mono** (mono accents, labels, or small UI-style text where appropriate). Load via **Google Fonts** in `<head>`.
+- **Brand voice (source of truth):** [docs/strategy/BRANDING_STRATEGY.md](docs/strategy/BRANDING_STRATEGY.md). If a reference HTML file uses peak hype or off-brand phrasing, **the brand doc wins**.
+- A parallel **Cursor** project skill lives at `.cursor/skills/monthly-platform-update-html/`; **keep both copies aligned** when editing this workflow.
 
 ## When to apply
 
@@ -27,12 +32,29 @@ Use when generating a **user-facing monthly (or period) platform update** as **o
 
 Ask **before** drafting. Do not invent shipped work or roadmap teasers.
 
-1. **Coverage window.** Default: roughly the **last ~four weeks** of shipped work (rolling). **Mid-month sends are normal**—the window does **not** need to align with calendar month boundaries. If the user specifies a different range, use that.
+1. **Coverage window.** Default: roughly the **last ~four weeks** of shipped work (rolling). **Mid-month sends are normal**—the window does **not** need to align with calendar month boundaries. If the user specifies a different range (e.g. mid-March through latest `main`), use that.
 2. **Evidence — source of truth: GitHub.** Build the “what shipped” sections from **GitHub**: merged PRs, release tags/notes, compare views, deployment or release summaries the user links to, or **this repo’s** merge history as surfaced in Git. Translate engineering work into **user benefits**; do **not** paste raw commit lists or SHAs in the email. Supplement only when needed: user paste/summary, or `https://neonpanda.ai/changelog` for **wording alignment**—still reconcile against GitHub so facts match what actually merged.
 3. **What’s next (roadmap teasers).** **Default: include** a “What’s coming next” section. **Before writing it, ask the maintainer** what is actually planned/teasable; **do not invent** roadmap bullets. If they defer, use a short honest stub (e.g. “More soon—we’ll share as it firms up”) or omit bullets only if they explicitly say to drop the section for this edition.
 4. **Audience emphasis** (optional). Default: **mixed** (enthusiasts + coaches). Options: athletes-first, coaches-first, enterprise/partners (still warm; avoid procurement-speak).
-5. **White papers / content drops** (optional). URLs to new **use-case white papers** or other published stories (use **absolute** `https://neonpanda.ai/...` links in the HTML—see Links).
+5. **White papers / content drops** (optional). Use **absolute** `https://neonpanda.ai/...` for any linked story. **Maintainer may restrict links:** e.g. only **one** white paper gets an `href` this send; **others may be named in prose** (“more stories coming”) **without** links until approved. Do not invent URLs.
 6. **Email footer behavior.** Default: keep **`{{UNSUBSCRIBE_LINK}}`** as a literal placeholder in the HTML for the sending pipeline to replace. If the user wants a static corporate footer only, omit or adjust per their instructions.
+
+## Optional: Changelog (`changelogData.js`)
+
+When the user wants the in-app changelog to match the release:
+
+- Prepend a **new** object to `changelogEntries` in [src/utils/changelogData.js](src/utils/changelogData.js) (newest first), same shape as existing entries.
+- Use the project’s version pattern (e.g. `Release v1.0.YYYYMMDD-beta`) and **user-facing** bullets; **no** SHAs. Reconcile bullets with **merged** GitHub work.
+
+## Optional: Git workflow (ship via `develop`)
+
+When the user asks for a branch/PR flow:
+
+1. `git fetch origin`; checkout **`develop`** and sync with **`origin/develop`**.
+2. Create a **feature branch** (e.g. `feat/platform-update-{mmm}-{yyyy}`); make changes **only** there.
+3. After review: commit, `git push -u origin <branch>`, open a **pull request with base `develop`** (not necessarily `main`).
+
+Evidence for **copy** may still be summarized from **`main`** / production merges; integration target is whatever branch the user specifies.
 
 ## Output location and naming
 
@@ -44,24 +66,21 @@ Ask **before** drafting. Do not invent shipped work or roadmap teasers.
 - **Examples:** `platform-update-mar-2026.html`, `platform-update-apr-2026.html`
 - If a file for that month **already exists**, **do not overwrite** without explicit user confirmation—offer to append a suffix (e.g. `-rev2`) or merge sections.
 
-## Structural template (match the reference page)
+## Structural template (patterns from reference HTML + site typography)
 
-Treat [public/updates/platform-update-mar-2026.html](public/updates/platform-update-mar-2026.html) as the **layout and CSS source of truth**:
+Use a recent [public/updates/platform-update-\*.html](public/updates/) for **layout ideas** (`.email-wrapper`, `.container` ~600px card, `.logo-header`, `.callout-hero`, badges, `.feature-box`, `.highlight`, `.visual-box`, section dividers, CTA row, signature, footer). **Do not** copy **DM Sans** or outdated logo choices from older references unless the user asks.
 
-- **`<head>`:** viewport meta, `<title>`, DM Sans from Google Fonts, **embedded `<style>`** block (copy/adapt classes from the reference—do not introduce a new design system unless asked).
-- **Outer layout:** `.email-wrapper` → `.container` for a ~600px card feel, light gray page background, white card, rounded corners (web); logo strip `.logo-header` with `https://neonpanda.ai/images/logo-dark-sm.webp`.
-- **Open with impact:** optional `.callout-hero` for the **strongest user-facing story** of the period (or “what matters most” framing)—**specific counts or claims only if sourced**.
-- **Title block:** `<h1>Platform Update — {Month} {YYYY}</h1>` (adjust headline if user wants a campaign title, but keep the month clear) + `.subtitle` one-liner.
+- **`<head>`:** `viewport` meta, `<title>`, **Google Fonts** link for **Inter**, **Barlow**, and **IBM Plex Mono** (weights aligned with the app, e.g. Inter 400–700, Barlow 500–800, IBM Plex Mono 400–600), **embedded `<style>`** with `font-family` stacks: body **Inter**, headings **Barlow**, monospace accents **IBM Plex Mono**.
+- **Header logo (default):** `https://neonpanda.ai/images/logo-dark-sm-head.webp` (panda head — matches white papers / current brand). **Alternate:** `https://neonpanda.ai/images/logo-dark-sm.webp` if the user wants the wordmark strip.
+- **Outer layout:** `.email-wrapper` → `.container` for a ~600px card feel, light gray page background, white card, rounded corners (web); dark/gradient `.logo-header` bar consistent with brand.
+- **Open with impact:** optional `.callout-hero` for the **strongest user-facing story** of the period—**specific counts or claims only if sourced**.
+- **Title block:** `<h1>Platform Update — {Month} {YYYY}</h1>` + `.subtitle` one-liner.
 - **Body:** short intro paragraph(s) that thank/acknowledge users and tie work to **their** training reality.
-- **Sections:** each major theme gets:
-  - Optional **badge**: `.section-badge`, `.section-badge-pink`, or `.section-badge-green` with labels like `NEW`, `REBUILT`, `UPGRADED`, `EXPANDED` (use honestly).
-  - **Headings and icons (UX):** Default to **plain** `<h2>` / `<h3>` for clarity and email robustness. Optionally add **at most one** `.callout-hero` or top-section title with `.heading-with-icon` **and** a **small inline SVG** (same pattern as the reference) if it noticeably aids scannability—**do not** sprinkle icons across every section (noise in email, fragile in clients).
-  - Mix **paragraphs**, **bullets**, `.feature-box`, `.highlight`, `.visual-box`, `.callout`, and **two-column `<table role="presentation">`** for “feature cards” (tables degrade better in some email clients than CSS grid).
-  - `<hr class="section-divider">` between major sections.
-- **What’s coming next:** **Include by default** once the maintainer has supplied teasers (see Required inputs). Frame as **planned / directional**, not promised. If they have not answered yet, **ask** before finalizing; never fabricate specific upcoming features.
-- **CTAs:** centered row with `.cta` (cyan) and `.cta cta-secondary` (magenta)—typically **Open NeonPanda** + **View Full Changelog** linking to `https://neonpanda.ai` and `https://neonpanda.ai/changelog`.
-- **Signature:** `.signature` closing in first person plural, warm and proud, **aligned with brand** (community, partnership, not vanity).
-- **Footer:** `.footer` with brand line, links, and **`{{UNSUBSCRIBE_LINK}}`** for email sends unless user specifies otherwise.
+- **Sections:** optional **badge** (`.section-badge`, `.section-badge-pink`, `.section-badge-green`); plain `<h2>` / `<h3>` for email robustness; at most one **icon-heavy** hero if it helps scannability; mix paragraphs, bullets, colored boxes, and **`<table role="presentation">`** for 2-up feature cards (**prefer tables** when email is primary).
+- **What’s coming next:** include once maintainer supplies teasers; otherwise stub; never fabricate roadmap items.
+- **CTAs:** **Open NeonPanda** (`https://neonpanda.ai`) + **View Full Changelog** (`https://neonpanda.ai/changelog`).
+- **Signature:** `.signature`, first person plural, warm, aligned with brand.
+- **Footer:** `.footer` with brand line, links, **`{{UNSUBSCRIBE_LINK}}`** unless user specifies otherwise.
 
 ## Voice and tone (read before drafting)
 
@@ -73,17 +92,18 @@ Read [docs/strategy/BRANDING_STRATEGY.md](docs/strategy/BRANDING_STRATEGY.md) an
 - **Playful power:** serious product depth can coexist with light, human phrasing—avoid “initiate your workout protocol” energy.
 - **Electric energy:** enthusiasm is on-brand; **generic hype** and **unverified superlatives** are not.
 - **Superlatives:** Avoid **absolute peaks** (“biggest ever,” “largest in history,” “nothing comes close”). **OK:** measured language like **“big update,” “substantial update,” “a lot in this one,”** or specific sourced counts—grounded excitement, not chest-beating.
-- Tagline may appear in footer: _Where electric intelligence meets approachable excellence._ (match reference usage.)
+- Tagline may appear in footer: _Where electric intelligence meets approachable excellence._
 
 ## Links
 
-- Use **absolute `https://` URLs for every link** in the body, footer, and CTAs (e.g. `https://neonpanda.ai/...`, `https://neonpanda.ai/changelog`, white papers at `https://neonpanda.ai/...`). Do not rely on relative paths in the HTML so the same file works in email and on the static site without rewriting.
+- Use **absolute `https://` URLs** for every link in the body, footer, and CTAs. No relative paths.
+- **White papers:** only link URLs the maintainer approved for this send; tease others in text without `href` when requested.
 
 ## Web + email compatibility
 
 - **Single file:** all CSS in `<style>`; no build step required.
-- **Images:** absolute `https://` URLs (same as reference logo).
-- **Layout:** use **presentation tables** for multi-column “cards” in the body when mirroring the reference; they **behave better in email** than pure CSS grid. The reference uses both—**prefer tables for 2-up feature summaries** when the primary delivery is email.
+- **Images:** absolute `https://` URLs.
+- **Layout:** **presentation tables** for multi-column cards when mirroring the reference; prefer tables for 2-up summaries when email is primary.
 - **Avoid** relying on `:hover` for critical meaning (fine for web enhancement).
 - If the user names a **specific ESP** (Customer.io, SES, etc.), follow their **HTML fragment** rules in addition to this template.
 
@@ -99,12 +119,14 @@ Read [docs/strategy/BRANDING_STRATEGY.md](docs/strategy/BRANDING_STRATEGY.md) an
 
 ```
 Task progress:
-- [ ] Confirm ~4-week coverage window, filename anchor month, GitHub evidence links/range, audience, white-paper URLs, footer/unsubscribe behavior
+- [ ] Confirm coverage window, filename anchor month, GitHub evidence range, audience, white-paper link policy (which URLs get hrefs), footer/unsubscribe behavior
 - [ ] Ask maintainer for **What’s next** bullets (or approved stub); do not invent roadmap items
-- [ ] Read BRANDING_STRATEGY.md (or skim if recently loaded) and re-open reference HTML for structure
+- [ ] Read BRANDING_STRATEGY.md; open reference HTML for **structure** only; set **Inter / Barlow / IBM Plex Mono** + header logo choice
 - [ ] Outline 3–7 user-meaningful sections from **GitHub-backed** evidence (merge thin items; drop internal-only noise)
 - [ ] Draft copy in brand voice; avoid “biggest ever”-style peaks; mark any TBD facts clearly if sources incomplete
-- [ ] Build self-contained HTML; preserve CSS patterns from reference; prefer table 2-up for email-sensitive grids; **all links absolute https://**
+- [ ] Build self-contained HTML; prefer table 2-up for email-sensitive grids; **all links absolute https://**
+- [ ] If requested: prepend matching entry to changelogData.js
+- [ ] If requested: feature branch off develop, PR to develop
 - [ ] Set <title>, hero, CTAs, signature, footer; filename platform-update-{mmm}-{yyyy}.html under public/updates/
 - [ ] Quick pass: no fabricated features or roadmap; placeholders only where user asked; links resolve
 ```
@@ -116,7 +138,7 @@ Task progress:
 - Is every **specific claim** tied to **GitHub-backed** evidence (and changelog only as secondary copy)?
 - Are **roadmap teasers** either maintainer-supplied or honestly stubbed—**never invented**?
 - Does copy avoid **“biggest ever”**-style peaks while still feeling energetic?
-- Does the HTML **match the house style** of the reference update page, with **absolute** links?
+- Does typography use **Inter + Barlow + IBM Plex Mono** (site-consistent), not stale reference fonts?
 - Would the team be comfortable **emailing** this without embarrassing factual errors?
 
 If any answer is no, revise before handing off.

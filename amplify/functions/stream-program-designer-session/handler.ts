@@ -65,6 +65,7 @@ import {
   formatGuardrailWarningEvent,
   validateStreamingRequestBody,
 } from "../libs/streaming";
+import { getHistoryAttachmentFlags } from "../libs/streaming/streaming-contextual-flags";
 
 // Use centralized route pattern constant - matches CoachCreator session-based pattern
 const PROGRAM_DESIGNER_SESSION_ROUTE =
@@ -256,6 +257,9 @@ async function* createProgramDesignerEventStreamV2(
     const criticalTrainingDirective = (userProfile as any)
       ?.criticalTrainingDirective;
 
+    const { historyHasUserImages, historyHasUserDocuments } =
+      getHistoryAttachmentFlags(programSession.conversationHistory || []);
+
     const agentContext: ProgramDesignerSessionAgentContext = {
       userId: userId as string,
       sessionId: sessionId as string,
@@ -266,6 +270,14 @@ async function* createProgramDesignerEventStreamV2(
       session: programSession, // Mutable — tools mutate session.todoList and session.isComplete
       pineconeContext,
       criticalTrainingDirective,
+      contextualFlags: {
+        historyHasUserImages,
+        historyHasUserDocuments,
+        contextualUserRole: "program_designer",
+        coachConfig,
+        coachName: programSession.coachName || coachConfig?.name || undefined,
+        coachPersonality,
+      },
     };
 
     // 6. Build system prompts
@@ -341,7 +353,11 @@ async function* createProgramDesignerEventStreamV2(
     let guardrailWarning = false;
 
     try {
-      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys, documentS3Keys);
+      const agentGenerator = agent.converseStream(
+        userResponse!,
+        imageS3Keys,
+        documentS3Keys,
+      );
 
       let result = await agentGenerator.next();
       while (!result.done) {
