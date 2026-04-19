@@ -35,6 +35,7 @@ import {
 } from "../libs/agents/coach-creator-session/prompts";
 import { buildCoachCreatorMessagesWithCaching } from "../libs/agents/coach-creator-session/helpers";
 import type { ConversationAgentResult } from "../libs/agents/core/types";
+import { MESSAGE_TYPES } from "../libs/coach-conversation/types";
 
 // Import auth middleware (consolidated)
 import {
@@ -98,7 +99,7 @@ async function* createCoachCreatorEventStreamV2(
       return;
     }
 
-    const { userResponse, messageTimestamp, imageS3Keys } =
+    const { userResponse, messageTimestamp, imageS3Keys, documentS3Keys } =
       validateStreamingRequestBody(event.body, userId as string, {
         requireUserResponse: true,
         maxImages: 5,
@@ -106,6 +107,7 @@ async function* createCoachCreatorEventStreamV2(
       });
 
     const hasImages = !!(imageS3Keys && imageS3Keys.length > 0);
+    const hasDocuments = !!(documentS3Keys && documentS3Keys.length > 0);
 
     logger.info("✅ V2: Params validated:", {
       userId,
@@ -221,7 +223,7 @@ async function* createCoachCreatorEventStreamV2(
     logger.info("✅ V2: Model selected:", {
       modelId:
         modelId === MODEL_IDS.PLANNER_MODEL_FULL
-          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
+          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.6)"
           : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
       reason:
         session.conversationHistory.length > 20
@@ -253,7 +255,7 @@ async function* createCoachCreatorEventStreamV2(
     let guardrailWarning = false;
 
     try {
-      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys);
+      const agentGenerator = agent.converseStream(userResponse!, imageS3Keys, documentS3Keys);
 
       let result = await agentGenerator.next();
       while (!result.done) {
@@ -295,10 +297,13 @@ async function* createCoachCreatorEventStreamV2(
       role: "user" as const,
       content: userResponse!,
       timestamp: messageTimestamp ? new Date(messageTimestamp) : new Date(),
-      ...(hasImages
+      ...(hasImages || hasDocuments
         ? {
-            imageS3Keys,
-            messageType: "text_with_images" as const,
+            messageType: hasDocuments
+              ? MESSAGE_TYPES.TEXT_WITH_ATTACHMENTS
+              : MESSAGE_TYPES.TEXT_WITH_IMAGES,
+            ...(hasImages ? { imageS3Keys } : {}),
+            ...(hasDocuments ? { documentS3Keys } : {}),
           }
         : {}),
     };

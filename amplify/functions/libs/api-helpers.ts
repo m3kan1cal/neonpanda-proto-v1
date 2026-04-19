@@ -1516,7 +1516,28 @@ export const callBedrockApiStream = async (
 
     logger.info("Converse stream command created successfully..");
 
-    const response = await bedrockClient.send(command);
+    const STREAM_OPEN_TIMEOUT_MS = 60_000;
+    const streamController = new AbortController();
+    const streamTimeoutId = setTimeout(
+      () => streamController.abort(),
+      STREAM_OPEN_TIMEOUT_MS,
+    );
+
+    let response;
+    try {
+      response = await bedrockClient.send(command, {
+        abortSignal: streamController.signal,
+      });
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        throw new Error(
+          `Bedrock streaming API call timed out after ${STREAM_OPEN_TIMEOUT_MS / 1000}s waiting for the first response event. Model: ${modelId}`,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(streamTimeoutId);
+    }
 
     if (!response.stream) {
       throw new Error("No stream received from Bedrock");
@@ -2262,7 +2283,45 @@ export const callBedrockApiStreamForAgent = async function* (
     // strict mode removed — broader model compatibility; schema enforced via additionalProperties, required, and enum constraints
     const toolConfig = buildToolConfigForAgent(tools, useCaching);
 
+    // Diagnostic: summarize content block types across all messages for debugging
+    // multimodal issues (e.g. document + image combinations)
+    const contentBlockSummary = { text: 0, image: 0, document: 0, toolUse: 0, toolResult: 0, cachePoint: 0, other: 0, totalPayloadBytes: 0 };
+    for (const msg of messages) {
+      if (Array.isArray(msg.content)) {
+        for (const block of msg.content) {
+          if (block.text) contentBlockSummary.text++;
+          else if (block.image) {
+            contentBlockSummary.image++;
+            contentBlockSummary.totalPayloadBytes += block.image?.source?.bytes?.length || 0;
+          }
+          else if (block.document) {
+            contentBlockSummary.document++;
+            contentBlockSummary.totalPayloadBytes += block.document?.source?.bytes?.length || 0;
+          }
+          else if (block.toolUse) contentBlockSummary.toolUse++;
+          else if (block.toolResult) contentBlockSummary.toolResult++;
+          else if (block.cachePoint) contentBlockSummary.cachePoint++;
+          else contentBlockSummary.other++;
+        }
+      }
+    }
+    logger.info("🔍 STREAMING AGENT PAYLOAD DIAGNOSTIC:", {
+      ...contentBlockSummary,
+      totalPayloadKB: (contentBlockSummary.totalPayloadBytes / 1024).toFixed(1),
+      totalPayloadMB: (contentBlockSummary.totalPayloadBytes / (1024 * 1024)).toFixed(2),
+      hasMultimodalMix: contentBlockSummary.image > 0 && contentBlockSummary.document > 0,
+    });
+
     const guardrailConfig = getGuardrailConfigForStreaming();
+    logger.info("🛡️ Guardrail config:", {
+      enabled: !!guardrailConfig,
+      ...(guardrailConfig ? {
+        guardrailId: guardrailConfig.guardrailIdentifier,
+        guardrailVersion: guardrailConfig.guardrailVersion,
+        streamMode: guardrailConfig.streamProcessingMode,
+      } : {}),
+    });
+
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
@@ -2284,7 +2343,43 @@ export const callBedrockApiStreamForAgent = async function* (
       }),
     });
 
-    const response = await bedrockClient.send(command);
+    // Safety net: abort if Bedrock doesn't start streaming within the timeout.
+    // Once response.stream is live the timeout is cleared and the generator
+    // processes events normally.  Without this, an unresponsive Bedrock call
+    // silently consumes the entire Lambda timeout.
+    // Timeout scales with payload size: large documents need more processing time.
+    const totalPayloadMB =
+      contentBlockSummary.totalPayloadBytes / (1024 * 1024);
+    const STREAM_OPEN_TIMEOUT_MS = Math.min(
+      180_000,
+      Math.max(60_000, 60_000 + Math.round(totalPayloadMB * 30_000)),
+    );
+    logger.info(
+      `⏱️ Stream open timeout: ${STREAM_OPEN_TIMEOUT_MS / 1000}s (payload: ${totalPayloadMB.toFixed(2)} MB)`,
+    );
+    const streamController = new AbortController();
+    const streamTimeoutId = setTimeout(
+      () => streamController.abort(),
+      STREAM_OPEN_TIMEOUT_MS,
+    );
+
+    let response;
+    try {
+      response = await bedrockClient.send(command, {
+        abortSignal: streamController.signal,
+      });
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        throw new Error(
+          `Bedrock streaming API call timed out after ${STREAM_OPEN_TIMEOUT_MS / 1000}s waiting for the first response event. ` +
+            `This may indicate a large document payload requiring more processing time. ` +
+            `Messages: ${messages.length}, Model: ${modelId}`,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(streamTimeoutId);
+    }
 
     if (!response.stream) {
       throw new Error("No stream received from Bedrock");
@@ -2589,7 +2684,50 @@ export const callBedrockApiMultimodalStream = async (
 
     logger.info("Multimodal converse stream command created successfully..");
 
-    const response = await bedrockClient.send(command);
+    // Dynamic timeout: scale with payload size for large documents/images
+    let totalPayloadBytes = 0;
+    for (const msg of messages) {
+      if (Array.isArray(msg.content)) {
+        for (const block of msg.content) {
+          if (block.image)
+            totalPayloadBytes +=
+              block.image?.source?.bytes?.length || 0;
+          else if (block.document)
+            totalPayloadBytes +=
+              block.document?.source?.bytes?.length || 0;
+        }
+      }
+    }
+    const totalPayloadMB = totalPayloadBytes / (1024 * 1024);
+    const STREAM_OPEN_TIMEOUT_MS = Math.min(
+      180_000,
+      Math.max(60_000, 60_000 + Math.round(totalPayloadMB * 30_000)),
+    );
+    logger.info(
+      `⏱️ Multimodal stream open timeout: ${STREAM_OPEN_TIMEOUT_MS / 1000}s (payload: ${totalPayloadMB.toFixed(2)} MB)`,
+    );
+    const streamController = new AbortController();
+    const streamTimeoutId = setTimeout(
+      () => streamController.abort(),
+      STREAM_OPEN_TIMEOUT_MS,
+    );
+
+    let response;
+    try {
+      response = await bedrockClient.send(command, {
+        abortSignal: streamController.signal,
+      });
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        throw new Error(
+          `Bedrock multimodal streaming API call timed out after ${STREAM_OPEN_TIMEOUT_MS / 1000}s waiting for the first response event. ` +
+            `Payload: ${totalPayloadMB.toFixed(2)} MB, Model: ${modelId}`,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(streamTimeoutId);
+    }
 
     if (!response.stream) {
       throw new Error("No stream received from Bedrock");

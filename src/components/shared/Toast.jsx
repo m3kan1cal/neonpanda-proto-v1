@@ -61,11 +61,13 @@ const Toast = ({ toast, onRemove }) => {
 
   return (
     <div
-      className={`
-        transform transition-all duration-300 ease-out mb-3
-        ${isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
-        ${isLeaving ? 'translate-x-full opacity-0' : ''}
-      `}
+      className={`mb-3 ${
+        isLeaving
+          ? "translate-x-full opacity-0 transition-all duration-300 ease-in"
+          : isVisible
+            ? "animate-fade-in-up"
+            : "opacity-0"
+      }`}
     >
       <div className={getToastStyles(toast.type)}>
         {/* Neon glow effect */}

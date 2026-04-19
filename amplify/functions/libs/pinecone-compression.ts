@@ -2,7 +2,7 @@
  * Pinecone Compression Utilities
  *
  * This module provides AI-powered compression for Pinecone metadata that exceeds size limits.
- * Instead of truncating content, we use Claude Sonnet 4.5 to intelligently summarize
+ * Instead of truncating content, we use Claude Sonnet 4.6 to intelligently summarize
  * while preserving semantic meaning and searchability.
  */
 
@@ -196,7 +196,7 @@ export function deterministicCompressSummary(
 /**
  * Compress content while preserving semantic meaning and searchability
  *
- * Uses AI (Claude Sonnet 4.5) to intelligently compress content.
+ * Uses AI (Claude Sonnet 4.6) to intelligently compress content.
  * Implements retry logic with exponential backoff for throttling errors.
  *
  * @param content - The original content that needs compression
@@ -248,7 +248,7 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
       const compressedContent = (await callBedrockApi(
         compressionPrompt,
         "", // No user content, it's in the prompt
-        MODEL_IDS.PLANNER_MODEL_FULL, // Sonnet 4.5
+        MODEL_IDS.PLANNER_MODEL_FULL, // Sonnet 4.6
         {
           temperature: TEMPERATURE_PRESETS.BALANCED,
         },

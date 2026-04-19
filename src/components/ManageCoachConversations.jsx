@@ -18,6 +18,7 @@ import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import { CONVERSATION_MODES } from "../constants/conversationModes";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import EmptyStateCard from "./shared/EmptyStateCard";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { createCoachConversation } from "../utils/apis/coachConversationApi";
 import QuickStats from "./shared/QuickStats";
@@ -1081,7 +1082,7 @@ function ManageCoachConversations() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="conversations-info"
                 data-tooltip-content="Review, organize, and manage all your conversations with your coach. Access detailed conversation history and track your coaching progress."
               >

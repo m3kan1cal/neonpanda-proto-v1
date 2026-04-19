@@ -20,6 +20,7 @@ import { LivingProfile } from "./types";
 import { UserMemory } from "../memory/types";
 import { logger } from "../logger";
 import { fixDoubleEncodedProperties } from "../response-utils";
+import { NEONPANDA_PLATFORM_IDENTITY_CONDENSED } from "../prompts/platform-identity";
 
 /**
  * Generate or update a Living Profile from conversation data.
@@ -47,7 +48,9 @@ export async function generateLivingProfile(params: {
 
   const isUpdate = !!existingProfile;
 
-  const systemPrompt = `You are an AI assistant that builds and maintains a structured "mental model" of a fitness coaching client — their Living Profile.
+  const systemPrompt = `${NEONPANDA_PLATFORM_IDENTITY_CONDENSED}
+
+You are an AI assistant that builds and maintains a structured "mental model" of a fitness coaching client — their Living Profile.
 
 TASK: ${isUpdate ? "UPDATE the existing profile with new information from the latest conversation." : "CREATE an initial profile from the available data."}
 

@@ -1,4 +1,3 @@
-import { logger } from "./logger";
 /**
  * Changelog Data - Centralized version history for NeonPanda platform
  *
@@ -10,6 +9,45 @@ import { logger } from "./logger";
  */
 
 export const changelogEntries = [
+  {
+    version: "Release v1.0.20260418-beta",
+    date: "2026-04-18",
+    changes: {
+      added: [
+        "Training Grounds: floating coach chat FAB opens a contextual slide-over drawer with full chat composer (photos, file attachments), conversation picker, and links to the full coach conversations page.",
+        "Training Grounds drawer: custom conversation combobox styled like the Training Pulse exercise selector (compact trigger, scrollable list, keyboard-friendly close behavior).",
+        "Training Grounds drawer: curated empty-state tip cards (photos, ask-anything, slash example, natural language) sharing the same visual language as the full-page coach chat empty state via shared `CoachConversationEmptyTips`.",
+        "Training Grounds drawer: compact icon actions for new chat, open current conversation in full page, and view all conversations, each with tooltips.",
+        "Public use-case white papers as static HTML under `public/white-papers/` (returning-athlete and first-meet-prep narratives) for marketing and shareable stories.",
+        "Agent skills for fitness use-case white papers: parallel Cursor (`.cursor/skills/`) and Claude Code (`.claude/skills/`) workflows to turn Dynamo/user journey data into subject-centered, consent-aware drafts.",
+        "`export-user-dynamodb.ts` script to export a user's DynamoDB records to plain-text files for analysis (profile flag, optional shared programs, exports gitignored).",
+        "Document attachments: `documentS3Keys` persisted on conversation messages across streaming handlers and preserved when loading existing threads; shared `SUPPORTED_DOCUMENT_EXTENSIONS` in `document-types.ts`.",
+        "Synthwave UI polish pass: gradient headers, empty states, and send/glow feedback patterns on chat-adjacent surfaces.",
+      ],
+      changed: [
+        "Global tooltip density: `react-tooltip` v5 inner content padding overridden in `index.css` (balanced padding, 8px×14px) with outer `baseTooltipStyle` padding set to 0 in `uiPatterns` to avoid double-padding; tooltip type slightly smaller for consistency.",
+        "Entity chat FAB tooltip configuration aligned with shared `tooltipPatterns` (no redundant inline offset/style).",
+        "Training Grounds drawer toolbar: conversation picker and icon actions on one row; all actions use the same `iconButtonPatterns.minimal` treatment with role-appropriate color accents.",
+        "Message area scrolls to bottom after switching conversations or when initialization completes (rAF + delayed pass for layout).",
+        "Tiptap editor dependencies bumped to ^3.22.4 with lockfile refresh.",
+        "User message construction centralized behind `buildUserMessage` helper for streaming paths.",
+        "Prospective-memory platform-support filter hardened (account-only cancel wording; chat-verb preposition; membership wording removed to reduce false positives).",
+        "Lightbox: Escape key handling scoped so it closes only the lightbox without interfering with other dialogs.",
+        "npm dependency upgrade batch merged (Vite 8, Stripe 22, lint/tooling adjustments per branch).",
+      ],
+      fixed: [
+        "Training Grounds inline chat: sessionStorage resume key, inline-home conversation tag migration when starting a new chat, and agent `onStateChange` rebound when the drawer reopens (fixes stale UI and wrong thread).",
+        "Contextual chat drawer: stale closure dropping updates on reopen; training variant loading skeleton hides prior messages during conversation switches.",
+        "Manage Workouts: empty state guarded when the list errors instead of flashing the wrong CTA.",
+        "ChatInput / View Workouts: glow and animation state targeting unmounted buttons fixed; duplicate empty-state CTA removed.",
+        "TypeScript: `SUPPORTED_DOCUMENT_EXTENSIONS` membership check corrected for `includes()`.",
+        "Repository hygiene: stray `SCRIPTS_MLF` artifact removed from tree.",
+      ],
+      infrastructure: [
+        "White-paper skill docs updated for subject-centered tone and share-worthy story guidance (Cursor + Claude copies kept aligned).",
+      ],
+    },
+  },
   {
     version: "Release v1.0.20260329-beta",
     date: "2026-03-29",
@@ -348,7 +386,7 @@ export const changelogEntries = [
         "Coach can now query your active training programs from chat, giving accurate, real-time program status without requiring a separate screen visit",
         "Coach can now look up your exercise history for any movement — frequency, volume, recent sets and reps, personal records — while mid-conversation to give context-aware programming advice",
         "Rich text formatting in chat input: bold and italic text supported via Markdown shortcuts or toolbar in coach conversations; all other text inputs (workout logs, notes, descriptions) use a clean plain-text editor with consistent rendering",
-        "AI-powered Pinecone metadata compression using Claude Sonnet 4.5 to intelligently summarize context that exceeds Pinecone's 40KB storage limit, preserving semantic meaning and searchability instead of truncating content",
+        "AI-powered Pinecone metadata compression using Claude Sonnet 4.6 to intelligently summarize context that exceeds Pinecone's 40KB storage limit, preserving semantic meaning and searchability instead of truncating content",
         "Schema composition pattern for program storage: lean AI generation schemas and full DynamoDB storage schemas are now composed separately, ensuring AI output constraints are not conflated with server-side storage validation",
         "expectedWorkoutCount field in program phase structure: AI now plans and communicates a workout target per phase during phase structure generation, improving downstream workout generation accuracy",
         "workoutCount field on program phases: the number of generated workout templates is tracked directly on each phase for accurate program analysis and validation",
@@ -904,7 +942,7 @@ export const changelogEntries = [
       changed: [
         "Program duration validation refactored to use centralized canParseDuration() from duration-parser.ts replacing inline validation logic",
         "Program duration parsing consolidated from 3 duplicate implementations (program-generator.ts, tools.ts, inline) into single parseProgramDuration() utility",
-        "Duration extraction prompt simplified from 10-row table to concise one-line instruction with examples relying on Sonnet 4.5/Nova 2 Pro intelligence",
+        "Duration extraction prompt simplified from 10-row table to concise one-line instruction with examples relying on Sonnet 4.6/Nova 2 Pro intelligence",
         "Vague term validation logic updated to require time unit pairing ('couple weeks' ✅, 'couple' alone ❌) triggering AI normalization for incomplete inputs",
         "Vague term detection switched from .includes() substring matching to word boundary regex (\\b) preventing false positives",
         "Word boundary patterns updated to support both spaced ('8 weeks') and spaceless ('8weeks') formats while preventing false matches",
@@ -1363,7 +1401,7 @@ export const changelogEntries = [
         "FAQs 'How smart is my AI coach really?' to include Nova Micro and Nova 2 Lite alongside other models",
         "Technology page tagline to 'Where cutting-edge agentic AI meets real coaching. Best-in-class models, industry-recognized patterns, and sophisticated orchestration—all invisible behind naturally intuitive conversations.'",
         "Technology page philosophy section reference from 'would make any tech nerd's heart race' to 'enterprise-grade architecture and best-in-class models'",
-        "Technology page AI Agents section updated to explicitly mention planner models (Sonnet 4.5) and executor models (Haiku 4.5, Nova 2 Lite) for Coach Creator, Program Designer, and Workout Logger",
+        "Technology page AI Agents section updated to explicitly mention planner models (Sonnet 4.6) and executor models (Haiku 4.5, Nova 2 Lite) for Coach Creator, Program Designer, and Workout Logger",
         "Technology page 'Smart Model Selection' to include Haiku 4.5 and Nova 2 Lite for fast responses, Nova Micro for efficient background processing",
         "Technology page 'Memory Management Workflows' to include all record types: workouts, training programs, user memories, conversation summaries, coach configurations, methodology knowledge bases",
         "Technology page 'Our Technical Philosophy' moved out of sub-container to regular section with 2-column grid layout and expanded descriptions",
@@ -1453,7 +1491,7 @@ export const changelogEntries = [
         "Guaranteed JSON mode support for Bedrock API with strict schema enforcement eliminating malformed JSON and conversational filler in tool responses",
         "strictSchema option to BedrockApiOptions interface enabling/disabling guaranteed JSON mode (defaults to true for Claude 4.5 and Nova 2 Lite with tools)",
         "anthropicBeta option to BedrockApiOptions interface for advanced schema features (e.g., 'tool-use-examples-2025-10-29' for complex nested objects)",
-        "isStrictCapableModel() helper function detecting models supporting guaranteed JSON (Claude Sonnet 4.5, Haiku 4.5, Nova 2 Lite)",
+        "isStrictCapableModel() helper function detecting models supporting guaranteed JSON (Claude Sonnet 4.6, Haiku 4.5, Nova 2 Lite)",
         "Double-encoding detection logging in extractToolUseResult() identifying stringified fields in Bedrock responses with sample previews for debugging",
         "Comprehensive debug logging at 4 checkpoints in workout data flow (Bedrock response, before tool return, at storage, at retrieval) to trace double-encoding issues through entire pipeline",
         "Deep inspection of nested properties with subproperty type checking in storeToolResult and validate_workout_completeness for granular double-encoding detection",
@@ -1507,7 +1545,7 @@ export const changelogEntries = [
         "STORAGE_KEY_MAP pattern for semantic tool result storage in coach-creator agent mapping tool IDs to descriptive keys (requirements, personality_selection, methodology_selection, coach_prompts, assembled_config, validation, normalization, save)",
         "STORAGE_KEY_MAP pattern extended to workout-logger agent for consistent architecture (discipline, extraction, validation, normalization, summary, save)",
         "STORAGE_KEY_MAP pattern extended to program-designer agent for consistent architecture (requirements, phase_structure, phase_workouts, validation, normalization, summary, save)",
-        "AI-driven coach name generation using Claude Sonnet 4.5 with COACH_NAME_SCHEMA for creative, contextual, and gender-appropriate naming",
+        "AI-driven coach name generation using Claude Sonnet 4.6 with COACH_NAME_SCHEMA for creative, contextual, and gender-appropriate naming",
         "generateCoachName() helper function in tool-generation.ts integrating personality template, gender preference, user goals, specializations, and methodology into AI naming prompt",
         "COACH_NAME_SCHEMA in coach-creator-tool-schemas.ts defining structured output for coach_name, name_reasoning, and coach_description fields",
         "CoachNameGenerationContext interface for type-safe coach name generation with personality, gender, goals, specializations, and methodology parameters",
@@ -1531,7 +1569,7 @@ export const changelogEntries = [
         "AI generation logic extracted from inline tool execution to dedicated helper functions in tool-generation.ts (generatePersonalitySelection, generateMethodologySelection, generateCoachPrompts, runConfigValidation, generateCoachName)",
         "Tool input schemas simplified across all 8 coach creator tools to require minimal or no parameters, with tools retrieving all necessary data from stored context",
         "assembleCoachConfig() function in helpers.ts made async to support AI-driven name generation with await generateCoachName() call",
-        "Hardcoded coach name generation replaced with AI-driven approach using Claude Sonnet 4.5 for creativity, personality alignment, and gender appropriateness",
+        "Hardcoded coach name generation replaced with AI-driven approach using Claude Sonnet 4.6 for creativity, personality alignment, and gender appropriateness",
         "Workout logger agent storeToolResult() enhanced to use STORAGE_KEY_MAP for semantic key storage (extract_workout_data → extraction, validate_workout_completeness → validation)",
         "Program designer agent storeToolResult() enhanced to use STORAGE_KEY_MAP with conditional application for phase_workouts using unique keys (phase_workouts:phaseId)",
         "Coach creator agent storage keys centralized in STORAGE_KEY_MAP object for maintainable, self-documenting key management across agent workflow",
@@ -1735,7 +1773,7 @@ export const changelogEntries = [
         "Semantic Retrieval (detectMemoryRetrievalNeed) converted from JSON formatting instructions to tool calling with analyze_semantic_retrieval tool and SEMANTIC_RETRIEVAL_SCHEMA",
         "Complexity Detection (detectConversationComplexity) converted from JSON formatting instructions to tool calling with analyze_complexity tool and CONVERSATION_COMPLEXITY_SCHEMA",
         "Response handling in Smart Router, Semantic Retrieval, and Complexity Detection updated to use structured response.input directly instead of parseJsonWithFallbacks",
-        "Model selection logging in selectModelForConversation() updated to use dynamic MODEL_IDS display names instead of hardcoded 'HAIKU 4.5' and 'SONNET 4.5'",
+        "Model selection logging in selectModelForConversation() updated to use dynamic MODEL_IDS display names instead of hardcoded 'HAIKU 4.5' and 'Sonnet 4.6'",
         "Error throwing pattern standardized across all Bedrock API functions to use logAwsError() helper before throwing errors",
         "AWS error logging consolidated from 90+ lines of duplicate code to single logAwsError() helper function called 5 times",
         "Bedrock API call start logging consolidated from 60+ lines of duplicate code to single logBedrockCallStart() helper function",
@@ -1771,7 +1809,7 @@ export const changelogEntries = [
         "Defensive validation in save_workout_to_database tool ensuring workout_id and discipline are present before saving with auto-population of user_id from context",
       ],
       changed: [
-        "Workout logger agent image processing architecture completely refactored - images now processed once by agent (Claude Sonnet 4.5 with vision) instead of three times (agent + detect_discipline tool + extract_workout_data tool)",
+        "Workout logger agent image processing architecture completely refactored - images now processed once by agent (Claude Sonnet 4.6 with vision) instead of three times (agent + detect_discipline tool + extract_workout_data tool)",
         "detect_discipline tool schema updated to remove imageS3Keys parameter and emphasize tools work with text descriptions only",
         "extract_workout_data tool schema updated to remove imageS3Keys parameter with guidance that agent analyzes images and includes details in userMessage",
         "detectDiscipline function simplified to text-only implementation removing multimodal API call and imageS3Keys parameter",
@@ -1900,8 +1938,8 @@ export const changelogEntries = [
         "detectDiscipline function signature updated to accept optional imageS3Keys parameter for multimodal discipline detection",
         "detectDisciplineTool schema updated to include optional imageS3Keys array parameter for passing workout images to AI",
         "Discipline detection now uses single-path callBedrockApiMultimodal implementation (handles text-only gracefully when no images provided)",
-        "Workout logger agent architecture optimized to process images once at conversation start (agent level with Sonnet 4.5), then pass extracted text to downstream tools for cost efficiency",
-        "generateWorkoutSummary function switched to Claude Haiku 4.5 from Sonnet 4.5 for 3x cost savings on summary generation while maintaining quality",
+        "Workout logger agent architecture optimized to process images once at conversation start (agent level with Sonnet 4.6), then pass extracted text to downstream tools for cost efficiency",
+        "generateWorkoutSummary function switched to Claude Haiku 4.5 from Sonnet 4.6 for 3x cost savings on summary generation while maintaining quality",
         "crossfit-chipper-with-image test expectations updated to minMultimodalApiCalls: 1 reflecting single image processing at agent level instead of per-tool processing",
         "Program designer session creation now calculates totalItems from todo list before saving to DynamoDB ensuring accurate progress tracking across page refreshes",
       ],
@@ -2099,7 +2137,7 @@ export const changelogEntries = [
         "Explicit line break formatting instructions in training program workout template descriptions with CRITICAL FORMATTING guidance for AI",
         "Three comprehensive examples showing proper workout formatting: single exercise, multi-exercise rounds with bullets, and complex multi-section workouts",
         "Detailed formatting rules for exercise separation, blank lines between sections, and readability improvements in workout prescriptions",
-        "Extended thinking support (Claude Sonnet 4.5) for program and workout summary generation improving quality of AI-generated summaries for Pinecone semantic search",
+        "Extended thinking support (Claude Sonnet 4.6) for program and workout summary generation improving quality of AI-generated summaries for Pinecone semantic search",
         "S3 content validation in build-program integration tests checking Phase-Workout Alignment (all workouts have valid phaseId references preventing orphaned templates)",
         "S3 content validation in build-program integration tests checking Workout-Day Range Validation (workouts assigned to days within their phase boundaries)",
         "Two new integration test scenarios for build-program: Hyrox competition prep (10-week, 5 days/week with running + station work) and body recomposition (12-week, 4 days/week physique focus)",
@@ -2320,9 +2358,9 @@ export const changelogEntries = [
     date: "2025-12-12",
     changes: {
       added: [
-        "AI-powered compression system for Pinecone metadata using Claude Sonnet 4.5 to intelligently compress oversized content while preserving semantic meaning and searchability",
+        "AI-powered compression system for Pinecone metadata using Claude Sonnet 4.6 to intelligently compress oversized content while preserving semantic meaning and searchability",
         "storeWithAutoCompression() wrapper function providing automatic retry logic: attempts original content first, then uses AI compression if size limit exceeded, with emergency truncation as last resort",
-        "compressContent() function using Claude Sonnet 4.5 to semantically compress content to target size while preserving keywords, concepts, entities, and searchable terms",
+        "compressContent() function using Claude Sonnet 4.6 to semantically compress content to target size while preserving keywords, concepts, entities, and searchable terms",
         "calculateMetadataSize() utility for accurate byte-size estimation of Pinecone content and metadata before storage attempts",
         "Intelligent compression targeting 80% of Pinecone's 40KB limit by default, leaving safety margin for metadata overhead and encoding variations",
         "Comprehensive logging for compression operations showing original size, compressed size, compression ratio achieved, and whether result is within target limits",
@@ -2375,7 +2413,7 @@ export const changelogEntries = [
         "Hybrid exercise validation combining fast property checks (powerlifting/CrossFit/running) with AI semantic validation for qualitative disciplines (yoga/martial arts/climbing)",
         "Code-level blocking enforcement preventing agent from overriding validation decisions (shouldSave: false) with defense-in-depth approach",
         "Automatic normalization skipping for very high confidence extractions (≥95%) improving performance by 40-50 seconds per workout",
-        "Two-tier model selection for normalization using Claude Haiku 4.5 for simple fixes and Claude Sonnet 4.5 for complex structural issues",
+        "Two-tier model selection for normalization using Claude Haiku 4.5 for simple fixes and Claude Sonnet 4.6 for complex structural issues",
         "Comprehensive workout completeness scoring with confidence thresholds triggering normalization only when needed (confidence < 0.95 for complex workouts)",
         "Enhanced prompt caching for agent workflows reducing token costs by 90% on repeated extractions",
       ],
@@ -2466,9 +2504,9 @@ export const changelogEntries = [
     date: "2025-12-04",
     changes: {
       added: [
-        "Two-tier model selection for training program normalization using Claude Haiku 4.5 (high confidence ≥0.8) and Claude Sonnet 4.5 (low confidence <0.8) for cost-optimized validation",
+        "Two-tier model selection for training program normalization using Claude Haiku 4.5 (high confidence ≥0.8) and Claude Sonnet 4.6 (low confidence <0.8) for cost-optimized validation",
         "S3 detail key preservation logic in build-program handler ensuring s3DetailKey survives normalization process and is correctly stored in DynamoDB",
-        "Smart model routing for program designer conversations using Claude Haiku 4.5 for Q&A (3x cost savings) and Claude Sonnet 4.5 for completion messages (quality)",
+        "Smart model routing for program designer conversations using Claude Haiku 4.5 for Q&A (3x cost savings) and Claude Sonnet 4.6 for completion messages (quality)",
         "Comprehensive logging throughout program generation flow tracking normalization model selection, S3 key preservation, and query methods",
         "In-memory coach filtering in get-programs handler supporting optional coachId filtering after GSI-based query",
         "Coach ownership verification in getProgram and updateProgram operations for multi-coach security",
@@ -3268,12 +3306,12 @@ export const changelogEntries = [
     changes: {
       added: [
         "requiresDeepReasoning flag to SmartRequestRouter interface for intelligent model selection based on conversation complexity",
-        "selectModelBasedOnReasoning() helper function for dynamic Sonnet 4.5 vs Haiku 4.5 routing based on deep reasoning requirements",
+        "selectModelBasedOnReasoning() helper function for dynamic Sonnet 4.6 vs Haiku 4.5 routing based on deep reasoning requirements",
         "Comprehensive deep reasoning detection guidelines in smart router prompt distinguishing complex multi-variable scenarios from straightforward questions",
         "Smart model selection logging showing selected model (Sonnet/Haiku) and reasoning flag in CloudWatch for monitoring and optimization",
       ],
       changed: [
-        "Coach conversation streaming now uses Haiku 4.5 by default (90-95% of traffic) with Sonnet 4.5 reserved for complex reasoning (5-10% of traffic)",
+        "Coach conversation streaming now uses Haiku 4.5 by default (90-95% of traffic) with Sonnet 4.6 reserved for complex reasoning (5-10% of traffic)",
         "generateAIResponseStream() updated to accept routerAnalysis parameter and dynamically select model based on requiresDeepReasoning flag",
         "generateAIResponse() updated to accept routerAnalysis parameter for consistent model selection across streaming and non-streaming paths",
         "Coach creator sessions now use Haiku 4.5 for all Q&A interactions (structured questionnaire doesn't require deep reasoning capabilities)",
@@ -3285,7 +3323,7 @@ export const changelogEntries = [
       fixed: [
         "Contextual update indicators not triggering scrollToBottom behavior in chat windows, causing updates to appear off-screen during AI processing",
         "Missing contextualUpdate dependency in useEffect scroll hooks preventing automatic scrolling when processing stages display",
-        "Cost inefficiency where all conversations used expensive Sonnet 4.5 regardless of complexity level or reasoning requirements",
+        "Cost inefficiency where all conversations used expensive Sonnet 4.6 regardless of complexity level or reasoning requirements",
       ],
     },
   },
@@ -3633,7 +3671,7 @@ export const changelogEntries = [
         "Presigned URL generation for secure client-side image uploads (generate-upload-urls Lambda)",
         "Presigned URL generation for secure image downloads from private S3 bucket (generate-download-urls Lambda)",
         "ImageWithPresignedUrl shared component for consistent image display across pages",
-        "Multimodal AI vision support using Claude Sonnet 4.5 via AWS Bedrock Converse API",
+        "Multimodal AI vision support using Claude Sonnet 4.6 via AWS Bedrock Converse API",
         "Image hydration system (image-hydration.ts) to download images from S3 and format for Claude API",
         "Client-side image processing utilities (imageProcessing.js) with HEIC conversion and compression",
         "useImageUpload React hook for managing image selection, preview, and upload state",

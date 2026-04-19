@@ -16,6 +16,7 @@ import { ExerciseAgent } from "../utils/agents/ExerciseAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import EmptyStateCard from "./shared/EmptyStateCard";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
@@ -549,8 +550,7 @@ function ManageExercises() {
                           {capitalizeFirst(
                             session.originalName || session.exerciseName,
                           )}
-                          {(formatMetrics(session.metrics) || "No metrics") &&
-                            ` - ${formatMetrics(session.metrics) || "No metrics"}`}
+                          {` - ${formatMetrics(session.metrics) || "No metrics"}`}
                         </span>
                       </div>
                       <svg
@@ -758,7 +758,7 @@ function ManageExercises() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="exercises-info"
                 data-tooltip-content="Browse your exercise history and track your personal records. See progression over time for each movement."
               >
@@ -910,15 +910,18 @@ function ManageExercises() {
           {!exerciseAgentState.isLoadingNames &&
             !exerciseAgentState.error &&
             filteredExercises.length === 0 && (
-              <div className="text-center py-12">
-                <div className="font-body text-synthwave-neon-cyan text-base">
-                  {searchQuery ? "No Matching Exercises" : "No Exercises Yet"}
-                </div>
-                <div className="font-body text-synthwave-text-muted text-sm mt-2">
-                  {searchQuery
-                    ? `No exercises match "${searchQuery}". Try a different search term.`
-                    : "Log some workouts to start tracking your exercise history and progression."}
-                </div>
+              <div className="mb-8">
+                <EmptyStateCard
+                  icon={searchQuery ? "🔍" : "💪"}
+                  title={
+                    searchQuery ? "No Matching Exercises" : "No Exercises Yet"
+                  }
+                  description={
+                    searchQuery
+                      ? `No exercises match "${searchQuery}". Try a different search term.`
+                      : "Log some workouts to start tracking your exercise history and progression."
+                  }
+                />
               </div>
             )}
 

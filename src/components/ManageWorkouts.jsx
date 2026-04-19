@@ -21,6 +21,7 @@ import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import EmptyStateCard from "./shared/EmptyStateCard";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
@@ -971,7 +972,7 @@ function ManageWorkouts() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Page Title with Hover Tooltip */}
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="workouts-info"
                 data-tooltip-content="Review, organize, and analyze your complete workout history. Track your fitness journey and monitor your progress over time."
               >
@@ -1177,6 +1178,19 @@ function ManageWorkouts() {
               })()}
             </div>
           )}
+          {!workoutAgentState.isLoadingAllItems &&
+            !workoutAgentState.error &&
+            workoutAgentState.allWorkouts.length === 0 && (
+              <div className="mb-8">
+                <EmptyStateCard
+                  icon="🏋️"
+                  title="No Workouts Logged"
+                  description="Log your first workout and start building your training history."
+                  actionLabel="Log a Workout"
+                  onAction={() => onCommandPaletteToggle("/log-workout ")}
+                />
+              </div>
+            )}
           <AppFooter />
         </div>
       </div>

@@ -169,8 +169,10 @@ export class CoachConversationAgent {
     try {
       const result = await getCoachConversations(userId, coachId);
 
-      // Sort by last activity (most recent first) and apply limit
+      // Filter out workout_edit conversations (contextual editing sessions accessed only via WorkoutDetails),
+      // sort by last activity (most recent first), and apply limit
       const sortedConversations = (result.conversations || [])
+        .filter((conv) => conv.mode !== CONVERSATION_MODES.WORKOUT_EDIT)
         .sort((a, b) => {
           const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
           const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
@@ -256,6 +258,120 @@ export class CoachConversationAgent {
     } catch (error) {
       logger.error("Error finding workout edit conversation:", error);
       return null;
+    }
+  }
+
+  /**
+   * Finds the most recent chat-mode conversation whose metadata.tags includes `tag`.
+   */
+  async findChatConversationByTag(userId, coachId, tag) {
+    if (!userId || !coachId || !tag) return null;
+
+    try {
+      const result = await getCoachConversations(userId, coachId);
+      const conversations = result.conversations || [];
+
+      const match = conversations
+        .filter(
+          (conv) =>
+            conv.mode === CONVERSATION_MODES.CHAT &&
+            Array.isArray(conv.metadata?.tags) &&
+            conv.metadata.tags.includes(tag),
+        )
+        .sort((a, b) => {
+          const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
+          const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
+          return dateB - dateA;
+        })[0];
+
+      return match || null;
+    } catch (error) {
+      logger.error("Error finding chat conversation by tag:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Returns metadata.tags for a conversation (fresh read from API).
+   */
+  async fetchConversationTags(userId, coachId, conversationId) {
+    const data = await getCoachConversation(userId, coachId, conversationId);
+    const conv = data.conversation || data;
+    return Array.isArray(conv.metadata?.tags) ? conv.metadata.tags : [];
+  }
+
+  /**
+   * PATCH tags remotely; only merges into local agent state if this conversation is loaded.
+   */
+  async _patchConversationTags(userId, coachId, conversationId, nextTags) {
+    await updateCoachConversation(userId, coachId, conversationId, {
+      tags: nextTags,
+    });
+    if (this.state.conversation?.conversationId === conversationId) {
+      this._updateState({
+        conversation: {
+          ...this.state.conversation,
+          metadata: {
+            ...this.state.conversation.metadata,
+            tags: nextTags,
+          },
+        },
+      });
+    }
+  }
+
+  /**
+   * Removes one tag without dropping other tags (PUT replaces the whole array).
+   */
+  async removeTagFromConversation(userId, coachId, conversationId, tag) {
+    const tags = await this.fetchConversationTags(
+      userId,
+      coachId,
+      conversationId,
+    );
+    const next = tags.filter((t) => t !== tag);
+    await this._patchConversationTags(userId, coachId, conversationId, next);
+  }
+
+  /**
+   * Appends a tag if missing.
+   */
+  async addTagToConversation(userId, coachId, conversationId, tag) {
+    const tags = await this.fetchConversationTags(
+      userId,
+      coachId,
+      conversationId,
+    );
+    if (tags.includes(tag)) return;
+    await this._patchConversationTags(userId, coachId, conversationId, [
+      ...tags,
+      tag,
+    ]);
+  }
+
+  /**
+   * Moves inline home tag from an old conversation to a new one (Training Grounds FAB).
+   * Adds to new conversation first to ensure tag is never lost.
+   */
+  async migrateInlineHomeTag(
+    userId,
+    coachId,
+    oldConversationId,
+    newConversationId,
+    tag,
+  ) {
+    await this.addTagToConversation(userId, coachId, newConversationId, tag);
+    if (oldConversationId && oldConversationId !== newConversationId) {
+      try {
+        await this.removeTagFromConversation(
+          userId,
+          coachId,
+          oldConversationId,
+          tag,
+        );
+      } catch (e) {
+        logger.error("migrateInlineHomeTag: failed to strip tag from old:", e);
+      }
     }
   }
 
@@ -381,6 +497,7 @@ export class CoachConversationAgent {
             content: messageContent,
             timestamp: message.timestamp || new Date().toISOString(),
             imageS3Keys: message.imageS3Keys || undefined,
+            documentS3Keys: message.documentS3Keys || undefined,
             messageType: message.messageType || undefined,
             metadata: message.metadata || undefined, // Preserve metadata (includes mode for Build mode styling)
           });
@@ -433,9 +550,12 @@ export class CoachConversationAgent {
     messageContent,
     imageS3Keys = [],
     editContext = null,
+    documentS3Keys = [],
   ) {
     // Input validation - allow text OR images
-    if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
+    if (
+      !validateStreamingInput(this, messageContent, imageS3Keys, documentS3Keys)
+    ) {
       logger.warn("❌ sendMessageStream validation failed");
       return;
     }
@@ -458,6 +578,10 @@ export class CoachConversationAgent {
         timestamp: new Date().toISOString(),
         imageS3Keys:
           imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
+        documentS3Keys:
+          documentS3Keys && documentS3Keys.length > 0
+            ? documentS3Keys
+            : undefined,
       };
       this._addMessage(userMessage);
 
@@ -491,6 +615,7 @@ export class CoachConversationAgent {
           messageContent.trim(),
           imageS3Keys,
           resolvedEditContext,
+          documentS3Keys,
         );
 
         // Process the stream

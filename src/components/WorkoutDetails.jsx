@@ -19,6 +19,7 @@ import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import WorkoutViewer from "./WorkoutViewer";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
 import ShareWorkoutModal from "./workouts/ShareWorkoutModal";
 import IconButton from "./shared/IconButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -31,7 +32,6 @@ import {
   LightningIcon,
   BarChartIcon,
   SparkleIcon,
-  EditIcon,
 } from "./themes/SynthwaveComponents";
 
 const ShareCardIcon = () => (
@@ -95,7 +95,11 @@ function WorkoutDetails() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { userProfile } = useAuth();
+  const { userProfile, user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
 
   // Derive unit system from user profile preferences (default: imperial)
   const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
@@ -433,7 +437,7 @@ function WorkoutDetails() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title */}
             <h1
-              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
               data-tooltip-id="workout-details-info"
               data-tooltip-content="View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics."
             >
@@ -451,26 +455,17 @@ function WorkoutDetails() {
             )}
           </div>
 
-          {/* Right section: Edit + Share + Command Palette */}
+          {/* Right section: Share + Command Palette */}
           <div className="flex items-center gap-3">
             {workout && (
-              <>
-                <IconButton
-                  onClick={() => setIsEditDrawerOpen(true)}
-                  tooltip="Edit workout with AI coach"
-                  aria-label="Edit workout with AI coach"
-                >
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  onClick={() => setShowShareModal(true)}
-                  tooltip="Share workout"
-                  aria-label="Share workout"
-                  className="cursor-pointer"
-                >
-                  <ShareCardIcon />
-                </IconButton>
-              </>
+              <IconButton
+                onClick={() => setShowShareModal(true)}
+                tooltip="Share workout"
+                aria-label="Share workout"
+                className="cursor-pointer"
+              >
+                <ShareCardIcon />
+              </IconButton>
             )}
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
@@ -617,6 +612,15 @@ function WorkoutDetails() {
         </div>
       )}
 
+      {/* Floating panda-head chat button — opens the edit/chat drawer */}
+      {workout && (
+        <EntityChatFAB
+          onClick={() => setIsEditDrawerOpen(true)}
+          isOpen={isEditDrawerOpen}
+          tooltip="Chat with coach"
+        />
+      )}
+
       {/* Edit workout drawer */}
       <ContextualChatDrawer
         isOpen={isEditDrawerOpen}
@@ -631,6 +635,7 @@ function WorkoutDetails() {
         userId={userId}
         coachId={coachId}
         coachData={coachData}
+        userInitial={userInitial}
         onEntityUpdated={async () => {
           try {
             const updated = await workoutAgentRef.current.getWorkout(workoutId);

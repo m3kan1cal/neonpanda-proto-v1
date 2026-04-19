@@ -10,9 +10,9 @@
 
 import {
   CoachMessage,
-  MESSAGE_TYPES,
   CONVERSATION_MODES,
 } from "../coach-conversation/types";
+import { buildUserMessage } from "../coach-conversation/message-utils";
 import { MODEL_IDS, invokeAsyncLambda } from "../api-helpers";
 import { saveCoachConversation } from "../../../dynamodb/operations";
 import { formatChunkEvent, formatCompleteEvent } from "../streaming";
@@ -113,18 +113,11 @@ export async function* handleGoodbyeAutoComplete(
   }
 
   // Create messages
-  const goodbyeUserMessage: CoachMessage = {
-    id: `msg_${Date.now()}_user`,
-    role: "user",
-    content: params.userResponse,
-    timestamp: new Date(),
-    ...(params.imageS3Keys && params.imageS3Keys.length > 0
-      ? {
-          imageS3Keys: params.imageS3Keys,
-          messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
-        }
-      : {}),
-  };
+  const goodbyeUserMessage: CoachMessage = buildUserMessage(
+    params.userResponse,
+    params.imageS3Keys,
+    params.documentS3Keys,
+  );
 
   const goodbyeAiMessage: CoachMessage = {
     id: `msg_${Date.now()}_assistant`,

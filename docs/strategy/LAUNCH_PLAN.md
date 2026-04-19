@@ -54,7 +54,7 @@ I built it because every fitness app I tried felt like it was built for someone 
 
 This isn't my day job. I built it for me first. But somewhere around month three, I realized it might actually help other people too.
 
-The tech is where it gets interesting — multiple AI agents working together. Anthropic Claude Sonnet 4.5 and Haiku 4.5, Amazon Nova 2 models, other LLMs, all orchestrated through a serverless AWS architecture. The system routes each request to the right model: complex program design needs deep reasoning, quick motivation needs speed. The user just sees a coach who responds instantly and somehow always knows the right thing to say.
+The tech is where it gets interesting — multiple AI agents working together. Anthropic Claude Sonnet 4.6 and Haiku 4.5, Amazon Nova 2 models, other LLMs, all orchestrated through a serverless AWS architecture. The system routes each request to the right model: complex program design needs deep reasoning, quick motivation needs speed. The user just sees a coach who responds instantly and somehow always knows the right thing to say.
 
 I'm documenting the entire build in a 5-part technical blog series. Part 1 covers the serverless foundation and the patterns behind sub-2-second AI responses. I'll keep sharing what I learn — the wins, the mistakes, what's actually working.
 
@@ -136,7 +136,7 @@ Week 3 of the NeonPanda technical series covers the Workout Logger Agent—the A
 
 The challenge: fitness data is messy. "Fran" means something specific to CrossFitters. "5x5 at 225" means something to powerlifters. "8 rounds for time" means something different than "8 rounds EMOM."
 
-Our solution: multi-turn extraction with Claude Sonnet 4.5. The agent understands context, asks smart follow-up questions, and normalizes everything into consistent schemas—while preserving the original natural language so nothing gets lost.
+Our solution: multi-turn extraction with Claude Sonnet 4.6. The agent understands context, asks smart follow-up questions, and normalizes everything into consistent schemas—while preserving the original natural language so nothing gets lost.
 
 The result: you log workouts like you're texting a friend, and the system builds a complete training history you can actually analyze.
 
@@ -173,7 +173,7 @@ Week 4 of the NeonPanda technical series covers the Program Designer Agent—our
 
 The architecture:
 - Async Lambda invocation (this takes time, and we don't want to block)
-- Multi-model orchestration (Claude Sonnet 4.5 for reasoning, lighter models for validation)
+- Multi-model orchestration (Claude Sonnet 4.6 for reasoning, lighter models for validation)
 - Streaming contextual updates so users know what's happening
 - Rich S3 storage for detailed program content
 - Pinecone indexing for semantic retrieval later

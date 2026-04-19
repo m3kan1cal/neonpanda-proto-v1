@@ -19,7 +19,7 @@ import {
  * - 'text_with_images': Text message with image attachments
  * - 'voice': Voice message (future feature)
  */
-export type MessageType = "text" | "text_with_images" | "voice";
+export type MessageType = "text" | "text_with_images" | "text_with_attachments" | "voice";
 
 /**
  * Message type constants
@@ -28,6 +28,7 @@ export type MessageType = "text" | "text_with_images" | "voice";
 export const MESSAGE_TYPES = {
   TEXT: "text" as const,
   TEXT_WITH_IMAGES: "text_with_images" as const,
+  TEXT_WITH_ATTACHMENTS: "text_with_attachments" as const,
   VOICE: "voice" as const,
 } satisfies Record<string, MessageType>;
 
@@ -88,6 +89,7 @@ export interface CoachMessage {
 
   messageType?: MessageType;
   imageS3Keys?: string[]; // S3 keys like "user-uploads/user-123/abc.jpg"
+  documentS3Keys?: string[]; // S3 keys like "user-uploads/user-123/abc.pdf"
 
   metadata?: {
     tokens?: number;

@@ -12,7 +12,8 @@ export interface ValidationParams {
   conversationId: string;
   userResponse: string;
   messageTimestamp: string;
-  imageS3Keys?: string[]; // NEW: Optional image S3 keys
+  imageS3Keys?: string[];
+  documentS3Keys?: string[];
 }
 
 // Data loading result types

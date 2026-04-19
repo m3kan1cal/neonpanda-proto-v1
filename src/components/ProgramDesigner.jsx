@@ -39,6 +39,7 @@ import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import { CONVERSATION_MODES } from "../constants/conversationModes";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
+import DocumentThumbnail from "./shared/DocumentThumbnail";
 import { deleteProgramDesignerSession } from "../utils/apis/programDesignerApi";
 import { TrashIcon } from "./themes/SynthwaveComponents";
 import {
@@ -697,12 +698,14 @@ function ProgramDesigner() {
   };
 
   // Message submission handler for ChatInput component
-  const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
+  const handleMessageSubmit = async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
     // Prevent double execution from React StrictMode or duplicate events
     if (isSendingMessage.current || !agentRef.current) return;
 
-    // Validate input - require either text or images
-    if (!messageContent?.trim() && (!imageS3Keys || imageS3Keys.length === 0)) {
+    // Validate input - require either text, images, or documents
+    const hasImages = imageS3Keys && imageS3Keys.length > 0;
+    const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+    if (!messageContent?.trim() && !hasImages && !hasDocuments) {
       return;
     }
 
@@ -722,6 +725,7 @@ function ProgramDesigner() {
             handleStreamingError(error, { error: showError });
           },
         },
+        documentS3Keys,
       );
 
       // Scroll after message is sent to ensure we're at the bottom
@@ -764,15 +768,23 @@ function ProgramDesigner() {
 
     return (
       <>
-        {/* Render images if present */}
-        {message.imageS3Keys && message.imageS3Keys.length > 0 && (
+        {/* Render attachments — images and documents share one row */}
+        {((message.imageS3Keys && message.imageS3Keys.length > 0) ||
+          (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
           <div className="flex flex-wrap gap-2 mb-2">
-            {message.imageS3Keys.map((s3Key, index) => (
+            {message.imageS3Keys?.map((s3Key, index) => (
               <ImageWithPresignedUrl
                 key={index}
                 s3Key={s3Key}
                 userId={userId}
                 index={index}
+              />
+            ))}
+            {message.documentS3Keys?.map((s3Key, index) => (
+              <DocumentThumbnail
+                key={index}
+                s3Key={s3Key}
+                userId={userId}
               />
             ))}
           </div>
@@ -963,7 +975,7 @@ function ProgramDesigner() {
             {/* Page Title with Hover Tooltip */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="program-designer-info"
                 data-tooltip-content="Design a structured training program with your AI coach through guided conversation"
               >

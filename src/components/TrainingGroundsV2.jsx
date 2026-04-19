@@ -19,6 +19,8 @@ import {
   formatWorkoutCount,
 } from "../utils/dateUtils";
 import AppFooter from "./shared/AppFooter";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
 import {
   NeonBorder,
   NewBadge,
@@ -131,15 +133,22 @@ function TrainingGroundsV2() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { userProfile } = useAuth();
+  const { userProfile, user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
   const { success: showSuccess, error: showError } = useToast();
 
   // Derive unit system from user profile preferences (default: imperial)
   const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
-  // Global Command Palette state
-  const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
-    useNavigationContext();
+  // Global Command Palette + inline coach drawer (mobile shell visibility)
+  const {
+    setIsCommandPaletteOpen,
+    onCommandPaletteToggle,
+    setIsInlineCoachDrawerOpen,
+  } = useNavigationContext();
 
   const coachAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
@@ -210,6 +219,16 @@ function TrainingGroundsV2() {
   // Component-local UI state
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   // Pagination state (Show More / Show Less)
   const [showAllPrograms, setShowAllPrograms] = useState(false);
@@ -1282,7 +1301,7 @@ function TrainingGroundsV2() {
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             <h1
-              className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
               data-tooltip-id="training-grounds-info"
               data-tooltip-content="Your central hub to track progress, access resources, chat with your coach, and manage your complete fitness journey."
             >
@@ -1661,6 +1680,26 @@ function TrainingGroundsV2() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Training Grounds"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+          />
+        </>
+      )}
     </div>
   );
 }

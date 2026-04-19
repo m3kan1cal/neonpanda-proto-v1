@@ -342,7 +342,7 @@ function WeeklyReports() {
             {/* Page Title with Beta Badge */}
             <div className="flex items-center gap-3">
               <h1
-                className="font-header font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
                 data-tooltip-id="weekly-report-info"
                 data-tooltip-content="Comprehensive analysis of your weekly training performance including volume, progression, and insights."
               >

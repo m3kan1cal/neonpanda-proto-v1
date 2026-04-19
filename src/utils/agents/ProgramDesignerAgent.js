@@ -7,6 +7,7 @@ import {
   deleteProgramDesignerConversation,
 } from "../apis/programDesignerApi";
 import {
+  createCoachConversation,
   getCoachConversations,
   getCoachConversationsCount,
 } from "../apis/coachConversationApi";
@@ -313,12 +314,13 @@ export class ProgramDesignerAgent {
       // Generate title if not provided
       const conversationTitle = title || this.generateConversationTitle();
 
-      // Create conversation via API (defaults to CHAT mode)
-      const result = await createProgramDesignerConversation(
+      // Create conversation via API
+      const result = await createCoachConversation(
         userId,
         coachId,
         conversationTitle,
         initialMessage,
+        mode,
       );
       const conversation = result.conversation;
       const conversationId = conversation.conversationId;

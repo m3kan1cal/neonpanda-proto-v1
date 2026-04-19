@@ -118,6 +118,12 @@
   }
 }
 
+/* react-tooltip v5 — inner content default is 8px 16px; we override for balanced padding (not stacked with outer). */
+[class*="react-tooltip"] [class*="styles-module_content"] {
+  padding: 8px 14px !important;
+  line-height: 1.4;
+}
+
 /* =====================================================================
    Custom background image utilities (no @theme namespace for bg-image)
    ===================================================================== */
@@ -152,11 +158,10 @@
    Custom utility classes
    ===================================================================== */
 @utility text-gradient-neon {
-  background: linear-gradient(45deg, #ff0080 0%, #00ffff 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
+  text-shadow:
+    0 0 8px rgba(255, 0, 128, 0.4),
+    0 0 18px rgba(255, 0, 128, 0.2);
 }
 
 @utility text-gradient-purple {
@@ -181,6 +186,10 @@
 @utility scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@utility glow-flash {
+  animation: pulse-glow 0.6s ease-out 2;
 }
 
 /* Pseudo-element scrollbar styles (can't be @utility) */
@@ -239,6 +248,11 @@
   pointer-events: none;
   height: 0;
   font-family: var(--font-body);
+}
+
+/* Contextual drawer — compact placeholder text (one step smaller than default) */
+.contextual-drawer-input .tiptap-content p.is-editor-empty:first-child::before {
+  font-size: 0.8rem;
 }
 
 /* Tiptap content area reset */

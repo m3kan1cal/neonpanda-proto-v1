@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Use case: Grant — First-meet prep, in-chat program rebuild, adductor
+      resolved in 9 days
+    </title>
+    <meta
+      name="description"
+      content="How an intermediate powerlifter used NeonPanda to rebuild meet prep in one conversation, resolve an adductor asymmetry in nine days, and land sumo—published April 2026."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #0a0a0a;
+        --ink-soft: #3a3a3a;
+        --ink-quiet: #666;
+        --line: #e6e6e6;
+        --panel: #fafafa;
+        --cyan: #00b8b8;
+        --cyan-bright: #00ffff;
+        --pink: #ff10f0;
+        --pink-soft: #ffe6fb;
+        --lime: #39ff14;
+        --accent-bg: #f5fdfd;
+        --radius: 14px;
+        --maxw: 780px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        background: #fff;
+        line-height: 1.65;
+        font-size: 17.5px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .wrap {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 48px 28px 80px;
+      }
+      .site-header-logo {
+        text-align: center;
+        margin: 0 0 22px;
+        padding: 14px 16px 12px;
+        border-radius: 12px;
+        background: linear-gradient(
+          135deg,
+          #0d0a1a 0%,
+          #1a0d2e 42%,
+          #2a1a4a 100%
+        );
+        border: 1px solid rgba(0, 255, 255, 0.18);
+        box-shadow:
+          0 0 0 1px rgba(159, 0, 255, 0.1) inset,
+          0 8px 28px rgba(13, 10, 26, 0.28);
+      }
+      .site-header-logo a {
+        display: inline-block;
+        line-height: 0;
+      }
+      .site-header-logo img {
+        width: min(168px, 68vw);
+        height: auto;
+      }
+      .footer-brand {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        padding: 8px 10px 9px;
+        border-radius: 10px;
+        background: linear-gradient(
+          135deg,
+          #0d0a1a 0%,
+          #1a0d2e 55%,
+          #1e1e2e 100%
+        );
+        border: 1px solid rgba(0, 255, 255, 0.15);
+        box-shadow: 0 6px 20px rgba(13, 10, 26, 0.18);
+      }
+      .footer-brand a {
+        display: inline-block;
+        line-height: 0;
+      }
+      .footer-brand img {
+        width: min(152px, 52vw);
+        height: auto;
+      }
+      .kicker {
+        font-family: "Barlow", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--cyan);
+        margin-bottom: 14px;
+      }
+      h1 {
+        font-family: "Barlow", sans-serif;
+        font-weight: 800;
+        font-size: 39px;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+        margin: 0 0 14px;
+      }
+      .subtitle {
+        font-size: 20px;
+        color: var(--ink-soft);
+        font-weight: 500;
+        margin: 0 0 36px;
+        line-height: 1.45;
+      }
+      h2 {
+        font-family: "Barlow", sans-serif;
+        font-weight: 700;
+        font-size: 27px;
+        letter-spacing: -0.005em;
+        margin: 48px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--line);
+      }
+      h3 {
+        font-family: "Barlow", sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        margin: 32px 0 10px;
+        color: var(--ink);
+      }
+      .beat-title {
+        font-family: "Barlow", sans-serif;
+        font-weight: 700;
+        font-size: 17.5px;
+        letter-spacing: 0.01em;
+        color: var(--ink);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .beat-num {
+        color: var(--cyan);
+        font-family: "Barlow", sans-serif;
+        font-weight: 800;
+        margin-right: 6px;
+      }
+      p {
+        margin: 0 0 16px;
+      }
+      ul {
+        padding-left: 22px;
+        margin: 0 0 18px;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      code {
+        font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 14.5px;
+        background: #f3f3f3;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .share-card {
+        background: var(--accent-bg);
+        border: 1px solid #c7f1f1;
+        border-left: 4px solid var(--cyan);
+        border-radius: var(--radius);
+        padding: 28px 30px 22px;
+        margin: 0 0 20px;
+        position: relative;
+      }
+      .share-card .kicker {
+        color: var(--cyan);
+        margin-bottom: 8px;
+      }
+      .share-card p.intro {
+        font-size: 18px;
+        line-height: 1.55;
+        margin-bottom: 18px;
+      }
+      .share-card ul {
+        padding-left: 22px;
+      }
+      .share-card li {
+        margin-bottom: 10px;
+        font-size: 16.5px;
+      }
+      .share-card li ul {
+        margin-top: 8px;
+      }
+      .share-card .note {
+        font-size: 14px;
+        color: var(--ink-quiet);
+        font-style: italic;
+        margin-top: 14px;
+        margin-bottom: 0;
+      }
+      .callout-card {
+        background: linear-gradient(
+          135deg,
+          #fff8fd 0%,
+          var(--pink-soft) 45%,
+          #fff5fb 100%
+        );
+        border: 1px solid rgba(255, 16, 240, 0.22);
+        border-left: 4px solid var(--pink);
+        border-radius: var(--radius);
+        padding: 24px 28px 22px;
+        margin: 28px 0;
+        box-shadow: 0 10px 32px rgba(255, 16, 240, 0.07);
+      }
+      .callout-card .kicker {
+        font-family: "Barlow", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-weight: 700;
+        font-size: 13px;
+        color: #c4006b;
+        margin-bottom: 12px;
+      }
+      .callout-card p.intro {
+        font-size: 18px;
+        line-height: 1.55;
+        margin: 0 0 12px;
+        color: var(--ink-soft);
+      }
+      .callout-card p.intro:last-child {
+        margin-bottom: 0;
+      }
+      .ataglance {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 20px 26px;
+        margin-bottom: 24px;
+      }
+      .ataglance ul {
+        margin: 0;
+      }
+      .ataglance li {
+        font-size: 16.5px;
+      }
+      blockquote {
+        margin: 18px 0;
+        padding: 14px 20px;
+        border-left: 3px solid var(--pink);
+        background: var(--pink-soft);
+        border-radius: 0 10px 10px 0;
+        color: var(--ink);
+        font-size: 17px;
+        font-style: italic;
+      }
+      blockquote.quiet {
+        border-left-color: var(--cyan);
+        background: var(--accent-bg);
+      }
+      blockquote .attrib {
+        display: block;
+        font-style: normal;
+        color: var(--ink-quiet);
+        font-size: 14.5px;
+        margin-top: 8px;
+      }
+      .method {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 18px 24px;
+        font-size: 15.5px;
+        color: var(--ink-soft);
+      }
+      .method h3 {
+        margin-top: 0;
+      }
+      .method ul li {
+        margin-bottom: 6px;
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 44px 0;
+      }
+      .footer {
+        margin-top: 60px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        font-size: 13.5px;
+        color: var(--ink-quiet);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .footer-tags {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .footer-type-tag,
+      .published-tag {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+      .footer-type-tag {
+        background: #d4f4f4;
+        color: #045a5a;
+      }
+      .published-tag {
+        background: #e8f8f0;
+        color: #0d5c3d;
+        border: 1px solid rgba(13, 92, 61, 0.18);
+      }
+      .subject-portrait {
+        margin: 0 0 28px;
+        text-align: center;
+      }
+      .subject-portrait figure {
+        margin: 0 auto;
+        max-width: 300px;
+      }
+      .subject-portrait img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        box-shadow: 0 10px 28px rgba(13, 10, 26, 0.1);
+      }
+      .subject-portrait figcaption {
+        margin-top: 10px;
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--ink-quiet);
+        font-style: italic;
+        text-align: center;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .doc-meta {
+        font-size: 14.5px;
+        color: var(--ink-quiet);
+        margin: 0 0 22px;
+        line-height: 1.5;
+      }
+      @media (max-width: 520px) {
+        .wrap {
+          padding: 32px 18px 60px;
+        }
+        h1 {
+          font-size: 31px;
+        }
+        .subtitle {
+          font-size: 18px;
+        }
+        h2 {
+          font-size: 23px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site-header-logo">
+        <a href="https://neonpanda.ai"
+          ><img src="../images/logo-dark-sm-head.webp" alt="NeonPanda"
+        /></a>
+      </header>
+      <div class="kicker">Use-case white paper · Published</div>
+      <p class="doc-meta">
+        Published April 2026 · NeonPanda, LLC · Subject reviewed and approved
+        for publication
+      </p>
+      <h1>
+        How a detail-obsessed powerlifter rebuilt his first-meet prep in a
+        single conversation — and turned a medical procedure into better
+        programming
+      </h1>
+      <p class="subtitle">
+        When the 5-workout-a-week program didn't fit a 4-day-a-week athlete, the
+        fix took thirty-three minutes. The harder work came next: diagnosing a
+        left-side weakness and resolving it nine days later.
+      </p>
+
+      <blockquote class="quiet">
+        "Something clicked and it's finally feeling natural to me."
+        <span class="attrib"
+          >— Grant, April 8, 2026. Sumo deadlift at 135 lbs, two days after a
+          brief outpatient procedure.</span
+        >
+      </blockquote>
+
+      <div class="subject-portrait">
+        <figure>
+          <img
+            src="../images/white-papers/grant-avatar.png"
+            width="440"
+            height="440"
+            alt="Portrait of Grant, generated as aspirational meet-day energy"
+            loading="lazy"
+          />
+          <figcaption>
+            Grant used AI to render &ldquo;future meet-day&rdquo; energy. Think
+            aspirational meet poster, not a gym-mirror selfie&mdash;your logged
+            sessions remain the ground truth.
+          </figcaption>
+        </figure>
+      </div>
+
+      <section class="share-card">
+        <div class="kicker">Shareable summary</div>
+        <p class="intro">
+          <strong>Grant</strong> is the kind of athlete who logs every session
+          down to the second — heart rate, calories, enjoyment rating,
+          exercise-level reps. He signed up for NeonPanda in late January to add
+          a structured sumo-deadlift meet prep on top of an already full
+          training life. In March, a scheduling mismatch forced a pivot. By
+          April, the program had diagnosed a measurable left-side adductor
+          asymmetry, resolved it with nine days of targeted work, and helped him
+          complete his first fully embodied sumo deadlift session two days after
+          a brief outpatient procedure.
+        </p>
+        <ul>
+          <li>
+            <strong>Who:</strong> An intermediate-to-advanced powerlifter
+            prepping for his first powerlifting competition, training four
+            planned days a week across an in-person trainer, group conditioning
+            classes, and NeonPanda
+          </li>
+          <li>
+            <strong>Where he started:</strong> January 24, 2026 — 22-Week
+            Mobility &amp; Deadlift Meet Prep, an ambitious plan that prescribed
+            more days than his week actually had
+          </li>
+          <li>
+            <strong>What he wanted:</strong> A supplementary sumo-focused
+            program that fit <em>around</em> his primary training, not on top of
+            it
+          </li>
+          <li>
+            <strong>What shifted in ~12 weeks:</strong>
+            <ul>
+              <li>
+                Rebuilt the entire meet prep in one conversation — 33 minutes
+                from "real talk" to a new active program
+              </li>
+              <li>
+                Copenhagen planks surfaced a left adductor asymmetry on April 5;
+                it was resolved through targeted programming by April 14
+              </li>
+              <li>
+                Sumo deadlift pattern "clicked" on April 8 at 135 lbs, two days
+                after that outpatient procedure
+              </li>
+              <li>
+                Living profile matured to version 14 at 0.97 confidence — the
+                coach now knows <em>how</em> to coach him, specifically
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Why it matters:</strong> The program was reshaped around his
+            real week, his real body, and his real life — without him having to
+            restart.
+          </li>
+        </ul>
+        <p class="note">
+          Screenshot or paste this block anywhere — it stands on its own.
+        </p>
+      </section>
+
+      <hr />
+
+      <h2>The story</h2>
+
+      <h3>At a glance</h3>
+      <div class="ataglance">
+        <ul>
+          <li>
+            <strong>Who:</strong> Grant, intermediate-to-advanced powerlifter,
+            first-meet prep, data-driven to the second
+          </li>
+          <li>
+            <strong>Starting point:</strong> Signed up January 23, 2026;
+            configured coach "Marcus" (technical/collaborative); first program
+            built January 24 prescribed five workouts per week for a
+            four-day-a-week athlete
+          </li>
+          <li>
+            <strong>Primary goals:</strong> Complete a 22-week sumo-deadlift
+            meet prep on top of an existing three-stream training system without
+            burning out
+          </li>
+          <li>
+            <strong>Timeframe:</strong> January 24 – April 16, 2026 (≈12 weeks
+            active, 88 workouts logged across 52 training days, 70 coach
+            conversations)
+          </li>
+          <li>
+            <strong>What changed:</strong> A second program designed for the
+            week he actually trains; a structured coaching relationship that
+            diagnoses before prescribing; an adductor asymmetry caught, tracked,
+            and resolved; a sumo pattern that went from "I still don't love it"
+            to "it clicked and feels natural"
+          </li>
+        </ul>
+      </div>
+
+      <h3>The situation</h3>
+      <p>
+        Grant doesn't train in one place, with one coach, toward one thing. He
+        operates a deliberately layered three-stream system: a personal trainer
+        on Monday and Wednesday, a semi-private group fitness class on Thursday,
+        and a circuit-plus-mobility double on Saturday. That's the spine of his
+        week, and it's non-negotiable. NeonPanda was supposed to slot in
+        <em>around</em> it — a dedicated meet prep that respected the fact that
+        his primary programming was already well-handled.
+      </p>
+      <p>
+        He's also fat-adapted keto (working with a nutrition coach at Virta
+        Health), works from home with a well-equipped office-gym, runs Hinge
+        Health exercise therapy as structured active recovery, and logs sessions
+        with unusual precision — HR averages, zone distributions, calories,
+        session-level enjoyment ratings, exercise names, reps, duration to the
+        second. Body awareness is high. Expectations are specific. Inaccuracy in
+        a coach's response gets corrected on the spot, calmly and without
+        defensiveness.
+      </p>
+
+      <h3>The program that didn't fit vs. the program that did</h3>
+      <p>
+        The first program, created the day after signup, wasn't wrong — it was
+        miscalibrated.
+      </p>
+      <p>
+        The <em>22-Week Mobility &amp; Deadlift Meet Preparation</em> was
+        structurally sound on paper: a phased build toward a first competition
+        with a proper deload cadence. But it prescribed five workouts a week for
+        an athlete whose week only had four gym days available and whose primary
+        trainer was already handling deadlift work and accessories on two of
+        them. For seven weeks Grant worked around the mismatch, skipping some
+        sessions, logging others. Then, on March 17, he surfaced the problem
+        directly:
+      </p>
+
+      <blockquote>
+        "Real talk: you have prescribed 5 workouts for me this week and next
+        week. I go to the gym 4 days a week (as you know). I cannot succeed with
+        this program with this volume and also succeed with my real life
+        personal trainer."
+      </blockquote>
+
+      <p>
+        He laid out the full structure in two follow-up sentences — Monday and
+        Wednesday PT, Thursday semi-private, Saturday circuit plus mobility —
+        and asked Marcus to scale the program back and treat any extra work as
+        supplemental, not required. His trainer, he noted, was also running
+        deadlift work; the semi-private was already doing deadlift accessories.
+      </p>
+      <p>
+        Thirty-three minutes later — same conversation, no tickets filed, no
+        settings page opened — a new active program existed:
+        <strong>22-Week Sumo Deadlift Meet Prep</strong>, built through an
+        in-conversation program designer session and explicitly scoped as two
+        supplementary sessions per week that slot around the immutable baseline.
+        The old program was paused. The new one was designed to
+        <em>respect</em> what was already working rather than compete with it.
+      </p>
+      <p>
+        That thirty-three-minute window is the product. Most platforms would
+        have surfaced this as a "submit a request, we'll rebuild your plan." For
+        Grant, it was a coaching conversation that ended with a new block
+        periodization on his screen.
+      </p>
+
+      <section class="callout-card">
+        <div class="kicker">What Grant's coaching taught the product</div>
+        <p class="intro">
+          Grant treats inaccuracy like a failed rep: notice it, correct it,
+          expect better on the next set. Across
+          <strong>seventy conversations</strong>, that standard surfaced a long
+          tail of places where the model would
+          <strong>misstate a coach's prescription</strong>, blur live program
+          context, or answer as if this thread were the only one that mattered.
+          His calm, specific corrections are a major reason those failure modes
+          got closed — and why <strong>AI-generated coach guidance</strong> now
+          stays aligned with the program and history an athlete can actually
+          verify in their log.
+        </p>
+        <p class="intro">
+          The same precision shaped
+          <strong>how coach and athlete talk to each other</strong>: rationale
+          before prescription, diagnostic questions before new load, pacing that
+          respects someone who self-regulates intelligently. What's
+          <strong>smooth today in coach–athlete conversation</strong> —
+          including continuity that doesn't reset when the week gets complicated
+          — is tied to the standard Grant held in chat.
+        </p>
+        <p class="intro">
+          Under the hood, that also forced
+          <strong>cross-conversation intelligence</strong> to mature: memories
+          and profile updates that carry across threads so the coach doesn't
+          contradict what it already committed to. In short: the polish on
+          continuity is in no small part
+          <strong>thanks to Grant</strong> training the product the way he
+          trains sumo — detail-obsessed, patient, unwilling to pretend a miss is
+          good enough.
+        </p>
+      </section>
+
+      <h3>How the coaching actually works, by example</h3>
+      <p>
+        Three moments from the 12-week window show the coaching relationship
+        earning its keep — and the product mechanism under each.
+      </p>
+
+      <p>
+        <span class="beat-title"
+          ><span class="beat-num">1.</span>The program re-scope.</span
+        >
+        The March 17 exchange above wasn't just a rescue; it was a demonstration
+        of what "in-conversation program editing" looks like when it works.
+        Marcus had the live program state pulled up inside the chat, reasoned
+        through Grant's full week with him (PT + semi-private + Saturday circuit
+        as protected), and then invoked the program designer with the new brief:
+        supplementary-only, two sessions per week, sumo-focused, same 22-week
+        meet-prep timeline. The product capability — program state retrievable
+        and editable in conversation, plus a program designer that can generate
+        a full phased block plan in-chat — turned a structural conflict into a
+        thirty-three-minute fix. No churn, no re-onboarding, no lost training
+        history.
+      </p>
+
+      <p>
+        <span class="beat-title"
+          ><span class="beat-num">2.</span>The adductor becomes a diagnostic,
+          then a resolution.</span
+        >
+        On April 5, Grant ran Copenhagen planks and they "brutally exposed" a
+        significant left-side adductor weakness that neither he nor Marcus had
+        been tracking. The product move here is less about the diagnosis itself
+        and more about what happened next. Marcus didn't prescribe immediately.
+        He paused, asked clarifying questions — fatigue or stability breakdown?
+        — and encoded the finding as a
+        <strong>behavioral user memory</strong> with a specific rule:
+        <em
+          >prioritize unilateral and anti-rotation movements, frame them as
+          "asymmetry diagnostics" rather than accessories, track left vs.
+          right</em
+        >. Every downstream session read that memory first. Copenhagen planks,
+        single-leg RDLs, and split squats were layered into the supplementary
+        blocks with asymmetry tracking built in. On April 14, a new episodic
+        memory recorded the outcome:
+        <em
+          >"A measurable left adductor weakness asymmetry was successfully
+          resolved through targeted Copenhagen plank programming."</em
+        >
+        Nine days, problem named, problem gone.
+      </p>
+
+      <p>
+        <span class="beat-title"
+          ><span class="beat-num">3.</span>Sumo clicks — on a week most coaches
+          would have written off.</span
+        >
+        A week earlier, on April 3, Grant had told Marcus that sumo was
+        partially "clicking" but that he "still didn't love it" — a candid
+        admission that the mechanics were landing intellectually while the
+        identity ("this isn't a <em>real</em> deadlift") hadn't caught up. On
+        April 6, he underwent a planned outpatient procedure. Marcus reframed
+        the recovery window, in advance, as a deliberate periodization asset
+        rather than a lost week; Grant proactively rescheduled his PT and stayed
+        careful about nutrition and hydration during the clinician-directed prep
+        window. On April 8, two days afterward, he reported that sumo had
+        finally <em>clicked</em> — that it felt automatic and embodied, at 135
+        lbs. Marcus's response respected an already-documented pattern in the
+        profile:
+        <em
+          >"intellectual acceptance precedes emotional ownership by a meaningful
+          lag; emotional ownership eventually arrives through accumulated
+          positive reps at conservative loads."</em
+        >
+        No hype, no premature load push. The product move — a living profile
+        that had already encoded <em>how</em> this athlete adopts technical
+        change — let the coach meet the breakthrough with the right tempo.
+      </p>
+
+      <h3>The quiet compounding</h3>
+      <p>
+        Over 12 weeks, Grant's living profile matured to
+        <strong>version 14 at 0.97 confidence</strong>. It now holds an explicit
+        communication preference sheet (lead with rationale, diagnostic
+        questioning before prescription, don't re-open scheduling discussions
+        unless he initiates), a training identity paragraph that names him as an
+        intermediate-to-advanced powerlifter with a "three-stream training
+        system," a goals list that runs 15 items deep (from tempo sumo work to
+        landmine press progression to a note about following up with support on
+        a logging issue), and a life-context block that tracks his Virta Health
+        nutrition coaching, his Hinge Health level (14), his home-gym setup, and
+        the standing he's earned in his gym community.
+      </p>
+      <p>
+        The mechanism is mundane — structured memory plus a living profile
+        refreshed after each turn. The effect is that the coach's defaults now
+        <em>match</em> how Grant actually wants to be coached: as a reasoning
+        partner, not a top-down instructor. When Marcus suggested he push
+        through inertia rope work post-arm-fatigue but validated him capping TRX
+        decline rows at 3–4 reps to preserve form, that wasn't coincidence —
+        both moves came from a profile that has observed, in writing, that this
+        athlete self-regulates intelligently and shouldn't be second-guessed on
+        it.
+      </p>
+
+      <h3>Progress &amp; observations</h3>
+      <p>
+        Twelve weeks is early for first-meet prep, and the pattern here is what
+        a sophisticated intermediate would want: steady technical consolidation
+        rather than load chasing.
+      </p>
+      <ul>
+        <li>
+          <strong>Sumo deadlift:</strong> Working load topped at 205 lbs in late
+          February, dropped deliberately into the 30–60 lb range for tempo work
+          (5-second eccentrics) in late March / early April, and rebuilt through
+          a 135/155/175/195 build-up for 4 × 5 reps by April 16. The April 8
+          session at 135 lbs is logged as the "click" — the nervous-system
+          integration, not the peak load.
+        </li>
+        <li>
+          <strong>Bench press:</strong> 100 lbs × 3 on April 1 inside a density
+          circuit — moving cleanly, not chasing a true 1RM.
+        </li>
+        <li>
+          <strong>Accessories:</strong> Face pulls 23 → 29 lbs between late
+          March and early April; half-kneeling landmine press logged at 55 lbs ×
+          5/side with Grant volunteering
+          <em>"I like the half kneeling landmine press"</em> unprompted (a rare,
+          significant expression of movement affinity, per his own
+          observed-patterns record); Copenhagen plank progression targeted at
+          the adductor asymmetry, resolved nine days after it was identified.
+        </li>
+        <li>
+          <strong>Emotional series:</strong> Across 35 emotional snapshots,
+          averages sit at energy 7.4, motivation 7.8, confidence 7.7, and coach
+          satisfaction 8.5 on the platform's 1–10 scale, with "determined" as
+          the dominant emotion in 31 of 35 snapshots. A weekly trend rollup
+          flags motivation as "declining" on one window — but the numeric
+          averages don't support that read (the sample is small and the absolute
+          numbers are high), so treat the label with skepticism.
+        </li>
+        <li>
+          <strong>Training discipline:</strong> 88 workouts logged across 52
+          training days, including a full structured session run fasted on
+          medical prep day (April 5) and a return to full training load within
+          two days of the procedure.
+        </li>
+      </ul>
+
+      <h3>What this suggests (for readers)</h3>
+      <p>
+        If you train seriously, run multiple programs from multiple sources, and
+        don't want an app that pretends yours is the only one — the useful
+        takeaway isn't that Grant is unusually disciplined (he is). It's that
+        the coaching relationship could be configured to
+        <strong>respect</strong> his existing training system rather than
+        compete with it, and then sharpen against him over 70 conversations.
+      </p>
+      <p>
+        The mechanics that mattered were undramatic: a program designer that
+        runs in chat, structured user memories that actually steer downstream
+        prescriptions, a living profile that records how an athlete prefers to
+        be coached and acts on it without being reminded. None of those are
+        flashy features. They're what let a small scheduling mismatch get fixed
+        in 33 minutes, a measurable asymmetry get caught and closed in nine
+        days, and a first-meet sumo pattern land at the right emotional tempo —
+        on a week the athlete was recovering from a medical procedure.
+      </p>
+      <p>
+        Twelve weeks is a short runway to a first powerlifting meet. What we can
+        say is that the coaching relationship is <em>associated</em> with a
+        level of follow-through (88 workouts across 52 days, zero re-onboarding
+        events, an asymmetry tracked from diagnosis through resolution) that
+        fitness apps rarely earn in their first quarter with a user.
+      </p>
+
+      <div class="method">
+        <h3>Method &amp; limitations</h3>
+        <ul>
+          <li>
+            <strong>Source:</strong> A single DynamoDB export of 1,415 records
+            for one user, parsed cleanly (0 lossy records) via balanced-brace
+            recovery on January 23 – April 18, 2026 data.
+          </li>
+          <li>
+            <strong>Entity mix:</strong> 1 user profile (with v14 living
+            profile), 1 coach configuration, 70 coach conversations (846 total
+            messages), 2 programs (first paused, second active), 88 workouts,
+            983 exercise records, 178 user memories, 38 conversation summaries,
+            35 emotional snapshots, 3 weekly emotional trend rollups, 9
+            analytics rollups, 5 program designer sessions, 1 shared program.
+          </li>
+          <li>
+            <strong>Window covered in depth:</strong> January 24 – April 16,
+            2026, with a specific emphasis on the March 17 program pivot and the
+            April 5–14 adductor diagnostic-to-resolution arc.
+          </li>
+          <li>
+            <strong>Known data quirks:</strong> Workout <code>duration</code> is
+            stored in seconds, not minutes; exercise records' working-weight
+            data lives under a <code>metrics</code> subtree (the top-level
+            <code>sets</code>/<code>reps</code>/<code>weight</code> fields are
+            often empty) — strength progressions above are read through that
+            subtree, not from the record shells; one weekly emotional trend
+            labels motivation as "declining" on a small sample despite high
+            underlying averages — the label is treated as a noisy signal, not a
+            verdict; coach creation date (March 5) post-dates the first program
+            and first conversations, likely reflecting a migration or
+            re-creation rather than a relationship that started in March.
+          </li>
+          <li>
+            <strong>Publication &amp; consent:</strong> Grant has consented to
+            this use-case narrative under his real name. The document is
+            published for external distribution; training loads and dates above
+            reflect logged data only and exclude account identifiers or Dynamo
+            keys.
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer">
+        <div class="footer-brand">
+          <a href="https://neonpanda.ai"
+            ><img src="../images/logo-dark-sm.webp" alt="NeonPanda"
+          /></a>
+        </div>
+        <div class="footer-tags">
+          <span class="footer-type-tag">Use-case white paper</span>
+          <span class="published-tag">Published</span>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

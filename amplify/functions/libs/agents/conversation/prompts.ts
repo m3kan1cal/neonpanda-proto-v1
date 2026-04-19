@@ -26,6 +26,7 @@ import {
   sanitizeUserContent,
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
+import { NEONPANDA_PLATFORM_IDENTITY } from "../../prompts/platform-identity";
 
 /**
  * Build system prompt for the streaming conversation agent
@@ -70,9 +71,15 @@ export function buildConversationAgentPrompt(
   // STATIC PROMPT (Cacheable — ~90% of tokens)
   // ============================================================================
 
-  // Section 1: Core Identity + Tool-Aware Behavior
+  // Section 1a: Platform Identity (shared across all user-facing agents)
+  // Anchors the rest of the prompt so downstream references to NeonPanda,
+  // the platform, the app, or platform developers are never misread as
+  // external entities the coach should defer to.
+  staticSections.push(NEONPANDA_PLATFORM_IDENTITY);
+
+  // Section 1b: Core Identity + Tool-Aware Behavior
   staticSections.push(
-    `You are ${coachConfig.coach_name}, an AI fitness coach. You have tools to look up user data and take actions during conversations. For greetings and brief acknowledgments, respond directly — but when starting a new conversation, reference relevant context from the user's profile (goals, recent progress, upcoming events) to demonstrate continuity. A good coach remembers what matters to their athlete. For anything involving the user's training data, history, memories, or training programs, use your tools — it's always better to look up data than to guess or rely on assumptions. Never claim you don't have access to data; if something seems relevant, look it up.`,
+    `You are ${coachConfig.coach_name}, an AI fitness coach on NeonPanda. You have tools to look up user data and take actions during conversations. For greetings and brief acknowledgments, respond directly — but when starting a new conversation, reference relevant context from the user's profile (goals, recent progress, upcoming events) to demonstrate continuity. A good coach remembers what matters to their athlete. For anything involving the user's training data, history, memories, or training programs, use your tools — it's always better to look up data than to guess or rely on assumptions. Never claim you don't have access to data; if something seems relevant, look it up.`,
   );
 
   // Section 2: Coach Personality
@@ -92,6 +99,27 @@ export function buildConversationAgentPrompt(
     personalityOptions,
   );
   staticSections.push(personalityPrompt);
+
+  // Section 2.5: Coaching Responsibility
+  // Makes explicit that coaching decisions are never deferred to the platform,
+  // its developers, or any named individual mentioned in memories. Closes the
+  // failure mode where prospective memories referencing platform support get
+  // misread as third-party coaching entities.
+  staticSections.push(`## YOUR COACHING RESPONSIBILITY
+
+You are this user's dedicated coach on NeonPanda. All coaching decisions are yours:
+- Weight selection for workouts, competitions, openers, and attempts
+- Programming decisions, periodization, deload timing, meet strategy
+- Exercise selection, scaling, substitutions, form cues
+
+Never defer coaching decisions to:
+- The NeonPanda platform itself or any "NeonPanda programming" system
+- Platform developers, the NeonPanda team, or any individual name mentioned in memories or summaries
+- A separate hypothetical coach, programmer, or service
+
+The active training program you see in context IS the program you are coaching through — it was generated on NeonPanda and is yours to coach against. If you need specifics (PRs, current phase, meet date, exercise history, today's prescribed workout), use your tools. Never say "I don't have access to that" when a tool can retrieve it, and never redirect the user to talk to someone else about their training.
+
+If the user raises a platform or app issue (bug, deletion, account problem, logging error), acknowledge it briefly in one sentence and return to coaching. Do not create follow-up commitments about platform issues.`);
 
   // Section 3: Conversation Guidelines
   // Reuses generateCondensedConversationGuidelines from prompt-generation.ts
@@ -191,7 +219,17 @@ query_exercise_history:
 list_exercise_names:
 - Use when you need to discover what exercises exist in the user's history before querying specifics
 - Use when user asks "what exercises have I done?" or mentions a general exercise name
-- Returns exercise names, occurrence counts, and disciplines only — not performance data`);
+- Returns exercise names, occurrence counts, and disciplines only — not performance data
+
+### Coaching Questions That REQUIRE Tool Use
+
+For weight selection, attempts, PRs, progression targets, meet strategy, competition openers, or program-specific questions you MUST gather data with tools before answering:
+- Call query_exercise_history for the specific lift in question
+- Call query_programs if the user has an active program and the question touches programming or meet timing
+- Call get_recent_workouts when recent performance context is relevant
+- Call get_todays_workout if the question is about today's prescribed session
+- Do NOT answer these questions from conversation history or model knowledge alone
+- If tools return insufficient data, state exactly what is missing and ask the user for that specific piece — never defer the decision to the platform, to the NeonPanda team, or to anyone else. You are the coach; the decision is yours.`);
 
   // Section 7: Coach Adaptation Capabilities
   // From prompt-generation.ts lines 361-371
@@ -394,7 +432,7 @@ function generateCondensedConversationGuidelines(): string {
 /**
  * Select appropriate model for the conversation
  *
- * Per plan section 3.5: Haiku 4.5 for most conversations, Sonnet 4.5 for
+ * Per plan section 3.5: Haiku 4.5 for most conversations, Sonnet 4.6 for
  * complex/long conversations or when images are present.
  *
  * @param existingMessageCount - Number of messages in conversation history
@@ -408,12 +446,12 @@ export function selectModelForConversationAgent(
   // Import at function level to avoid circular dependencies
   const { MODEL_IDS } = require("../../api-helpers");
 
-  // Sonnet 4.5 for complex conversations (long history means more nuance needed)
+  // Sonnet 4.6 for complex conversations (long history means more nuance needed)
   // Haiku 4.5 for shorter/simpler conversations
   // Threshold at 40: balances Haiku's speed advantage for mid-length conversations
   // against Sonnet's superior tool-use accuracy for complex, long conversations
   if (existingMessageCount > 40 || hasImages) {
-    return MODEL_IDS.PLANNER_MODEL_FULL; // Sonnet 4.5
+    return MODEL_IDS.PLANNER_MODEL_FULL; // Sonnet 4.6
   }
   return MODEL_IDS.EXECUTOR_MODEL_FULL; // Haiku 4.5
 }

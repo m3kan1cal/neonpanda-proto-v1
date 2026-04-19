@@ -18,18 +18,38 @@ import React, {
   useId,
   useMemo,
 } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
+import {
+  getCoachConversation,
+  getCoachConversations,
+} from "../../utils/apis/coachConversationApi";
 import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
+import DocumentThumbnail from "./DocumentThumbnail";
 import { ContextualUpdateIndicator } from "../../utils/ui/streamingUiHelper.jsx";
+import { Tooltip } from "react-tooltip";
 import {
   contextualDrawerPatterns,
   avatarPatterns,
-  badgePatterns,
   typographyPatterns,
+  iconButtonPatterns,
+  tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
+import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
-import { CloseIcon, EditIcon } from "../themes/SynthwaveComponents";
+import {
+  INLINE_TRAINING_GROUNDS_TAG,
+  getTrainingGroundsInlineSessionKey,
+  TRAINING_GROUNDS_INLINE_PICKER_LIMIT,
+} from "../../constants/contextualChat";
+import {
+  CloseIcon,
+  PlusIcon,
+  ChatIconSmall,
+  ChevronLeftIcon,
+} from "../themes/SynthwaveComponents";
 import { useToast } from "../../contexts/ToastContext";
 import { logger } from "../../utils/logger";
 
@@ -37,13 +57,180 @@ import { logger } from "../../utils/logger";
 const INITIAL_PROMPT =
   "Please load my workout details so we can get started. I have some corrections to make.";
 
+/** @typedef {"workoutEdit" | "trainingGroundsInlineChat"} ContextualChatDrawerVariant */
+
+function OpenFullPageIcon({ className = "w-4 h-4" }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Conversation picker — ExerciseSelector-style trigger and panel, compact for the drawer.
+ */
+function TrainingGroundsConversationPicker({
+  options,
+  value,
+  onSelect,
+  disabled,
+  isLoading,
+  labelledBy,
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wrapperRef = useRef(null);
+  const listboxId = useId();
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [menuOpen]);
+
+  const selected = useMemo(
+    () => options.find((o) => o.conversationId === value),
+    [options, value],
+  );
+
+  const displayLabel = (() => {
+    if (selected?.title?.trim()) return selected.title.trim();
+    if (value) return `${value.slice(0, 14)}…`;
+    if (isLoading) return "Loading…";
+    return "Select conversation…";
+  })();
+
+  const toggleDisabled = disabled || isLoading || !onSelect;
+
+  return (
+    <div ref={wrapperRef} className="relative w-full min-w-0">
+      <div
+        role="combobox"
+        aria-expanded={menuOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={labelledBy}
+        aria-controls={listboxId}
+        className={`relative flex items-center w-full rounded-md transition-all duration-300 cursor-pointer min-h-9 ${
+          toggleDisabled
+            ? "opacity-50 cursor-not-allowed border border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/20"
+            : menuOpen
+              ? "border border-synthwave-neon-cyan bg-synthwave-bg-primary/50"
+              : "border border-synthwave-neon-cyan/20 bg-synthwave-bg-primary/30 hover:border-synthwave-neon-cyan/40"
+        }`}
+        onClick={() => {
+          if (toggleDisabled) return;
+          setMenuOpen((o) => !o);
+        }}
+      >
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
+          <span className="inline-flex w-3.5 h-3.5 items-center justify-center [&_svg]:!w-3.5 [&_svg]:!h-3.5">
+            <ChatIconSmall />
+          </span>
+        </div>
+        <div className="flex-1 pl-8 pr-9 py-2 min-h-9 flex items-center">
+          <span className="font-body text-xs text-white truncate w-full">
+            {displayLabel}
+          </span>
+        </div>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg
+            className={`w-3.5 h-3.5 text-synthwave-text-muted shrink-0 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </div>
+
+      {menuOpen && !toggleDisabled && (
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan"
+        >
+          {options.length === 0 ? (
+            <div className="px-3 py-3 text-center font-body text-xs text-synthwave-text-muted">
+              No conversations yet.
+            </div>
+          ) : (
+            options.map((c) => {
+              const isSelected = c.conversationId === value;
+              const rowLabel =
+                c.title?.trim() ||
+                (c.conversationId
+                  ? `${c.conversationId.slice(0, 14)}…`
+                  : "Chat");
+              return (
+                <button
+                  key={c.conversationId}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onSelect(c.conversationId);
+                    setMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 font-body text-xs transition-colors duration-150 cursor-pointer ${
+                    isSelected
+                      ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink"
+                      : "text-white hover:bg-synthwave-neon-cyan/10"
+                  }`}
+                >
+                  <span className="truncate block">{rowLabel}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * ContextualChatDrawer
  *
  * @param {boolean} isOpen - Controls visibility
  * @param {Function} onClose - Called when the drawer is closed
+ * @param {ContextualChatDrawerVariant} [variant="workoutEdit"]
  * @param {string} entityType - "workout" (extensible to "program", etc.)
- * @param {string} entityId - The entity ID being edited
+ * @param {string} entityId - The entity ID being edited (workout variant)
  * @param {string} entityLabel - Display name for the entity (e.g., workout title)
  * @param {string} userId - The authenticated user's ID
  * @param {string} coachId - The coach ID for the conversation
@@ -53,6 +240,7 @@ const INITIAL_PROMPT =
 export default function ContextualChatDrawer({
   isOpen,
   onClose,
+  variant = "workoutEdit",
   entityType,
   entityId,
   entityLabel,
@@ -60,13 +248,18 @@ export default function ContextualChatDrawer({
   coachId,
   coachData,
   onEntityUpdated,
+  userInitial = "U",
 }) {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const headingId = useId();
 
   const [agentState, setAgentState] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(
+    () => localStorage.getItem("neonpanda-chat-drawer-expanded") === "true",
+  );
 
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
@@ -75,20 +268,132 @@ export default function ContextualChatDrawer({
   const mobileInputFocusRef = useRef(null);
   const closeTriggerRef = useRef(null);
   const lastEditMessageIdRef = useRef(null);
+  const loadedEntityIdRef = useRef(null);
+
+  const [trainingPickerOptions, setTrainingPickerOptions] = useState([]);
+  const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
 
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
+
+  /** Keeps the latest onClose without re-subscribing history effects when parents pass inline arrows. */
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  const requestClose = useCallback(() => {
+    if (
+      variant === "trainingGroundsInlineChat" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1023px)").matches &&
+      window.history.state?.npeInlineCoachChat
+    ) {
+      window.history.back();
+    } else {
+      onCloseRef.current();
+    }
+  }, [variant]);
+
   const editContext = useMemo(
-    () => (entityType && entityId ? { entityType, entityId } : null),
-    [entityType, entityId],
+    () =>
+      variant === "workoutEdit" && entityType && entityId
+        ? { entityType, entityId }
+        : null,
+    [variant, entityType, entityId],
   );
 
+  const refreshTrainingPicker = useCallback(async () => {
+    if (!userId || !coachId || variant !== "trainingGroundsInlineChat") return;
+    setIsLoadingTrainingPicker(true);
+    try {
+      const { conversations = [] } = await getCoachConversations(
+        userId,
+        coachId,
+      );
+      const chats = conversations.filter(
+        (c) => c.mode === CONVERSATION_MODES.CHAT,
+      );
+      chats.sort((a, b) => {
+        const dateA = new Date(
+          a.metadata?.lastActivity || a.updatedAt || a.createdAt || 0,
+        );
+        const dateB = new Date(
+          b.metadata?.lastActivity || b.updatedAt || b.createdAt || 0,
+        );
+        return dateB - dateA;
+      });
+      setTrainingPickerOptions(
+        chats.slice(0, TRAINING_GROUNDS_INLINE_PICKER_LIMIT),
+      );
+    } catch (err) {
+      logger.error("ContextualChatDrawer: training picker load failed:", err);
+    } finally {
+      setIsLoadingTrainingPicker(false);
+    }
+  }, [userId, coachId, variant]);
+
   // ──────────────────────────────────────────────────────────────────────────
-  // Agent lifecycle — create a fresh conversation each time the drawer opens
+  // Training Grounds: conversation picker list
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (
+      !isOpen ||
+      variant !== "trainingGroundsInlineChat" ||
+      !userId ||
+      !coachId
+    )
+      return;
+    refreshTrainingPicker();
+  }, [isOpen, userId, coachId, variant, refreshTrainingPicker]);
+
+  // Mobile Training Grounds: history entry so Android back closes the drawer first.
+  // Do not depend on `onClose` identity (use onCloseRef) or each parent re-render re-pushes state.
+  const mobileHistoryActiveRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen || variant !== "trainingGroundsInlineChat") return;
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+
+    window.history.pushState({ npeInlineCoachChat: true }, "");
+    mobileHistoryActiveRef.current = true;
+
+    const onPop = () => {
+      mobileHistoryActiveRef.current = false;
+      onCloseRef.current();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      if (
+        mobileHistoryActiveRef.current &&
+        window.history.state?.npeInlineCoachChat
+      ) {
+        mobileHistoryActiveRef.current = false;
+        window.history.back();
+      }
+    };
+  }, [isOpen, variant]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Agent lifecycle — workout edit variant
+  // ──────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (variant !== "workoutEdit") return;
     if (!isOpen || !userId || !coachId || !entityId) return;
 
     let cancelled = false;
+
+    if (agentRef.current && loadedEntityIdRef.current === entityId) {
+      agentRef.current.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      if (agentRef.current.state) {
+        setAgentState({ ...agentRef.current.state });
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
 
     async function initConversation() {
       setIsInitializing(true);
@@ -108,7 +413,6 @@ export default function ContextualChatDrawer({
       agentRef.current = agent;
 
       try {
-        // Resume an existing workout_edit conversation for this entity if one exists
         const existing = await agent.findWorkoutEditConversation(
           userId,
           coachId,
@@ -145,9 +449,12 @@ export default function ContextualChatDrawer({
           );
           showToast("Failed to open edit session. Please try again.", "error");
         }
+        return;
       } finally {
         if (!cancelled) setIsInitializing(false);
       }
+
+      if (!cancelled) loadedEntityIdRef.current = entityId;
     }
 
     initConversation();
@@ -155,7 +462,224 @@ export default function ContextualChatDrawer({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, userId, coachId, entityId]); // intentionally excludes entityLabel to avoid re-init on title change
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- entityLabel/editContext churn should not reset workout edit session
+  }, [isOpen, userId, coachId, entityId, variant, showToast]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Agent lifecycle — Training Grounds inline chat variant
+  // ──────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (variant !== "trainingGroundsInlineChat") return;
+    if (!isOpen || !userId || !coachId) return;
+
+    let cancelled = false;
+    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+
+    async function resolveTrainingTargetId(agent) {
+      let sessionId = null;
+      try {
+        sessionId = sessionStorage.getItem(sessionKey);
+      } catch {
+        /* ignore */
+      }
+
+      if (sessionId) {
+        try {
+          const data = await getCoachConversation(userId, coachId, sessionId);
+          const conv = data.conversation || data;
+          if (conv.mode === CONVERSATION_MODES.CHAT) return sessionId;
+          try {
+            sessionStorage.removeItem(sessionKey);
+          } catch {
+            /* ignore */
+          }
+        } catch {
+          try {
+            sessionStorage.removeItem(sessionKey);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+
+      const home = await agent.findChatConversationByTag(
+        userId,
+        coachId,
+        INLINE_TRAINING_GROUNDS_TAG,
+      );
+      if (home) return home.conversationId;
+      return "__create__";
+    }
+
+    async function initTrainingConversation() {
+      setIsInitializing(true);
+      lastEditMessageIdRef.current = null;
+
+      const agent =
+        agentRef.current ||
+        new CoachConversationAgent({
+          userId,
+          coachId,
+        });
+      agentRef.current = agent;
+      // Must rebind whenever this effect runs: a reused agent still holds the
+      // previous effect's onStateChange closure (with cancelled === true).
+      agent.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      agent.onError = (err) => {
+        logger.error("ContextualChatDrawer agent error:", err);
+      };
+
+      try {
+        const target = await resolveTrainingTargetId(agent);
+        if (cancelled) return;
+
+        if (target !== "__create__") {
+          if (agent.conversationId === target && agent.state?.conversation) {
+            if (agent.state) setAgentState({ ...agent.state });
+          } else {
+            await agent.loadExistingConversation(userId, coachId, target);
+          }
+        } else {
+          await agent.createConversation(
+            userId,
+            coachId,
+            "Training Grounds",
+            null,
+            CONVERSATION_MODES.CHAT,
+          );
+          if (cancelled) return;
+          await agent.addTagToConversation(
+            userId,
+            coachId,
+            agent.conversationId,
+            INLINE_TRAINING_GROUNDS_TAG,
+          );
+        }
+        if (!cancelled) {
+          try {
+            const id = agent.conversationId;
+            if (id) sessionStorage.setItem(sessionKey, id);
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          logger.error(
+            "ContextualChatDrawer: failed to initialize training chat:",
+            err,
+          );
+          showToast("Failed to open chat. Please try again.", "error");
+        }
+      } finally {
+        if (!cancelled) setIsInitializing(false);
+      }
+    }
+
+    initTrainingConversation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, userId, coachId, variant, showToast]);
+
+  const handleTrainingPickerChange = useCallback(
+    async (conversationId) => {
+      const agent = agentRef.current;
+      if (!agent || !conversationId || !userId || !coachId) return;
+      const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+      setIsInitializing(true);
+      try {
+        await agent.loadExistingConversation(userId, coachId, conversationId);
+        try {
+          sessionStorage.setItem(sessionKey, conversationId);
+        } catch {
+          /* ignore */
+        }
+        await refreshTrainingPicker();
+      } catch (err) {
+        logger.error("ContextualChatDrawer: picker load failed:", err);
+        showToast("Could not open that conversation.", "error");
+        try {
+          sessionStorage.removeItem(sessionKey);
+        } catch {
+          /* ignore */
+        }
+      } finally {
+        setIsInitializing(false);
+      }
+    },
+    [userId, coachId, showToast, refreshTrainingPicker],
+  );
+
+  const handleTrainingNewConversation = useCallback(async () => {
+    const agent = agentRef.current;
+    if (!agent || !userId || !coachId) return;
+    if (agent.state?.isStreaming || agent.state?.isTyping) return;
+
+    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+    setIsInitializing(true);
+    try {
+      const oldTagged = await agent.findChatConversationByTag(
+        userId,
+        coachId,
+        INLINE_TRAINING_GROUNDS_TAG,
+      );
+      await agent.createConversation(
+        userId,
+        coachId,
+        "Training Grounds",
+        null,
+        CONVERSATION_MODES.CHAT,
+      );
+      const newId = agent.conversationId;
+      await agent.migrateInlineHomeTag(
+        userId,
+        coachId,
+        oldTagged?.conversationId || null,
+        newId,
+        INLINE_TRAINING_GROUNDS_TAG,
+      );
+      try {
+        sessionStorage.setItem(sessionKey, newId);
+      } catch {
+        /* ignore */
+      }
+      await refreshTrainingPicker();
+    } catch (err) {
+      logger.error(
+        "ContextualChatDrawer: new training conversation failed:",
+        err,
+      );
+      showToast("Could not start a new conversation.", "error");
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [userId, coachId, showToast, refreshTrainingPicker]);
+
+  const handleOpenFullPageChat = useCallback(() => {
+    const id = agentRef.current?.conversationId;
+    if (!userId || !coachId || !id) return;
+    const url = `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}&conversationId=${encodeURIComponent(id)}`;
+    const mobileWithSyntheticHistory =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1023px)").matches &&
+      window.history.state?.npeInlineCoachChat;
+
+    if (mobileWithSyntheticHistory) {
+      const afterPop = () => {
+        window.removeEventListener("popstate", afterPop);
+        navigate(url);
+      };
+      window.addEventListener("popstate", afterPop);
+      window.history.back();
+    } else {
+      navigate(url);
+      onCloseRef.current();
+    }
+  }, [userId, coachId, navigate]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Auto-scroll message area to bottom on new messages (target visible panel)
@@ -164,13 +688,23 @@ export default function ContextualChatDrawer({
     if (!agentState?.messages) return;
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
     const ref = isDesktop ? desktopMessageAreaRef : mobileMessageAreaRef;
-    if (ref.current) {
-      ref.current.scrollTop = ref.current.scrollHeight;
-    }
+    const el = ref.current;
+    if (!el) return;
+
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
+    const t = window.setTimeout(scrollToBottom, 80);
+    return () => window.clearTimeout(t);
   }, [
     agentState?.messages,
     agentState?.streamingMessage,
     agentState?.contextualUpdate,
+    agentState?.conversation?.conversationId,
+    isInitializing,
   ]);
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -194,6 +728,7 @@ export default function ContextualChatDrawer({
   // Tracks the last processed message ID so every new edit fires the callback.
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (variant !== "workoutEdit") return;
     if (!agentState?.messages) return;
 
     const lastAssistant = [...agentState.messages]
@@ -212,7 +747,7 @@ export default function ContextualChatDrawer({
         onEntityUpdated();
       }
     }
-  }, [agentState?.messages, onEntityUpdated]);
+  }, [variant, agentState?.messages, onEntityUpdated]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Escape key to close
@@ -222,20 +757,24 @@ export default function ContextualChatDrawer({
 
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
-        onClose();
+        requestClose();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, requestClose]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Message send handler
   // ──────────────────────────────────────────────────────────────────────────
   const handleSend = useCallback(
-    async (messageContent, imageS3Keys = []) => {
-      if (!agentRef.current || !messageContent.trim()) return;
+    async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
+      if (!agentRef.current) return;
+
+      const hasImages = imageS3Keys && imageS3Keys.length > 0;
+      const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
+      if (!messageContent?.trim() && !hasImages && !hasDocuments) return;
       setInputMessage("");
 
       try {
@@ -243,6 +782,7 @@ export default function ContextualChatDrawer({
           messageContent.trim(),
           imageS3Keys,
           editContext,
+          documentS3Keys,
         );
       } catch (err) {
         logger.error("ContextualChatDrawer: sendMessageStream failed:", err);
@@ -251,13 +791,60 @@ export default function ContextualChatDrawer({
     [editContext],
   );
 
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded((prev) => {
+      const next = !prev;
+      localStorage.setItem("neonpanda-chat-drawer-expanded", String(next));
+      return next;
+    });
+  }, []);
+
   const isStreaming =
     agentState?.isStreaming || agentState?.isTyping || isInitializing;
+  const streamBusy = !!(agentState?.isStreaming || agentState?.isTyping);
   const messages = agentState?.messages || [];
   const contextualUpdate = agentState?.contextualUpdate;
-  const streamingMessage = agentState?.streamingMessage;
+
+  const currentConversationId = agentState?.conversation?.conversationId || "";
+  const trainingPickerEffective = useMemo(() => {
+    if (variant !== "trainingGroundsInlineChat") return [];
+    const ids = new Set(
+      trainingPickerOptions.map((o) => o.conversationId).filter(Boolean),
+    );
+    const out = [...trainingPickerOptions];
+    if (currentConversationId && !ids.has(currentConversationId)) {
+      out.unshift({
+        conversationId: currentConversationId,
+        title: agentState?.conversation?.title || "Current conversation",
+      });
+    }
+    return out;
+  }, [
+    variant,
+    trainingPickerOptions,
+    currentConversationId,
+    agentState?.conversation?.title,
+  ]);
+
+  const dialogAriaLabel =
+    variant === "trainingGroundsInlineChat"
+      ? `Chat with ${entityLabel || "coach"}`
+      : `Edit ${entityLabel || entityType} with AI coach`;
 
   if (!isOpen) return null;
+
+  const panelExtras = {
+    variant,
+    trainingPickerOptions: trainingPickerEffective,
+    isLoadingTrainingPicker,
+    currentConversationId,
+    onTrainingPickerChange: handleTrainingPickerChange,
+    onTrainingNewConversation: handleTrainingNewConversation,
+    onOpenFullPageChat: handleOpenFullPageChat,
+    userId,
+    coachId,
+    streamBusy,
+  };
 
   return (
     <>
@@ -273,13 +860,14 @@ export default function ContextualChatDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
-        aria-label={`Edit ${entityLabel || entityType} with AI coach`}
+        aria-label={dialogAriaLabel}
         className={[
           // Desktop: right slide-over
           `hidden lg:flex ${contextualDrawerPatterns.panelDesktop}`,
           // Slide-in animation
           isOpen ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
+        style={{ width: isExpanded ? "620px" : "420px" }}
       >
         <PanelContent
           headingId={headingId}
@@ -287,17 +875,23 @@ export default function ContextualChatDrawer({
           entityType={entityType}
           coachData={coachData}
           coachInitial={coachInitial}
+          userInitial={userInitial}
           onClose={onClose}
+          requestClose={requestClose}
+          mobileTrainingSheetChrome={false}
           messageAreaRef={desktopMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
-          streamingMessage={streamingMessage}
           isStreaming={isStreaming}
+          isInitializing={isInitializing}
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
           handleSend={handleSend}
           inputFocusRef={desktopInputFocusRef}
           userId={userId}
+          isExpanded={isExpanded}
+          onToggleExpand={handleToggleExpand}
+          {...panelExtras}
         />
       </div>
 
@@ -306,7 +900,7 @@ export default function ContextualChatDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${headingId}-mobile`}
-        aria-label={`Edit ${entityLabel || entityType} with AI coach`}
+        aria-label={dialogAriaLabel}
         className={[
           `flex lg:hidden ${contextualDrawerPatterns.panelMobile}`,
           isOpen ? "translate-y-0" : "translate-y-full",
@@ -318,20 +912,61 @@ export default function ContextualChatDrawer({
           entityType={entityType}
           coachData={coachData}
           coachInitial={coachInitial}
+          userInitial={userInitial}
           onClose={onClose}
+          requestClose={requestClose}
+          mobileTrainingSheetChrome={variant === "trainingGroundsInlineChat"}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
-          streamingMessage={streamingMessage}
           isStreaming={isStreaming}
+          isInitializing={isInitializing}
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
           handleSend={handleSend}
           inputFocusRef={mobileInputFocusRef}
           userId={userId}
+          isExpanded={isExpanded}
+          onToggleExpand={handleToggleExpand}
+          {...panelExtras}
         />
       </div>
     </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Mobile sheet drag handle — swipe down to close when the message list is at top
+// ──────────────────────────────────────────────────────────────────────────────
+function MobileTrainingDragHandle({ messageAreaRef, requestClose }) {
+  const touchStartY = useRef(null);
+
+  const onTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const onTouchEnd = (e) => {
+    if (touchStartY.current == null) return;
+    const endY = e.changedTouches[0].clientY;
+    const delta = endY - touchStartY.current;
+    touchStartY.current = null;
+    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
+    if (delta > 72 && scrollTop <= 0) {
+      requestClose();
+    }
+  };
+
+  return (
+    <div
+      className="flex justify-center pt-2 pb-1 shrink-0 touch-pan-x"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      <div
+        className="w-10 h-1.5 rounded-full bg-synthwave-text-muted/40"
+        aria-hidden
+      />
+    </div>
   );
 }
 
@@ -344,55 +979,214 @@ function PanelContent({
   entityType,
   coachData,
   coachInitial,
+  userInitial,
   onClose,
+  requestClose,
+  mobileTrainingSheetChrome = false,
   messageAreaRef,
   messages,
   contextualUpdate,
-  streamingMessage,
   isStreaming,
+  isInitializing,
   inputMessage,
   setInputMessage,
   handleSend,
   inputFocusRef,
   userId,
+  isExpanded,
+  onToggleExpand,
+  variant = "workoutEdit",
+  trainingPickerOptions = [],
+  isLoadingTrainingPicker = false,
+  currentConversationId = "",
+  onTrainingPickerChange,
+  onTrainingNewConversation,
+  onOpenFullPageChat,
+  coachId,
+  streamBusy = false,
 }) {
+  const trainingSelectId = useId();
+  const tipNewChatId = useId();
+  const tipOpenFullId = useId();
+  const tipViewAllId = useId();
+  const isTraining = variant === "trainingGroundsInlineChat";
+  const exit = requestClose ?? onClose;
+  const viewAllUrl =
+    userId && coachId
+      ? `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
+      : "#";
+
+  const inputPlaceholder = isTraining
+    ? "Message your coach…"
+    : "Describe what you'd like to correct…";
+  const emptySessionMessage = "Starting edit session…";
+
+  const showMessageList = !(isTraining && isInitializing);
+  const suppressTrainingOverlay = isTraining && isInitializing;
+
   return (
     <>
+      {mobileTrainingSheetChrome && (
+        <MobileTrainingDragHandle
+          messageAreaRef={messageAreaRef}
+          requestClose={exit}
+        />
+      )}
+
       {/* Header */}
       <div className={contextualDrawerPatterns.header}>
-        {/* Coach avatar */}
-        <div className={`${avatarPatterns.coachSmall} shrink-0`}>
-          {coachInitial}
-        </div>
+        {mobileTrainingSheetChrome ? (
+          <>
+            <button
+              type="button"
+              className={`${contextualDrawerPatterns.closeButton} shrink-0 -ml-1`}
+              onClick={exit}
+              aria-label="Back"
+            >
+              <span className="inline-flex w-5 h-5 items-center justify-center [&_svg]:!w-5 [&_svg]:!h-5">
+                <ChevronLeftIcon />
+              </span>
+            </button>
+            <div className="flex-1 min-w-0">
+              <div
+                id={headingId}
+                className={contextualDrawerPatterns.headerLabel}
+              >
+                {entityLabel ||
+                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+              </div>
+            </div>
+            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
+              Beta
+            </span>
+            <button
+              type="button"
+              onClick={exit}
+              className="shrink-0 px-2 py-1.5 rounded-md font-body font-semibold text-sm text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer"
+            >
+              Done
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Expand/collapse button — desktop only (mobile is always full-screen) */}
+            <button
+              type="button"
+              className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
+              onClick={onToggleExpand}
+              aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
+            >
+              <DrawerResizeIcon isExpanded={isExpanded} />
+            </button>
 
-        {/* Entity label */}
-        <div className="flex-1 min-w-0">
-          <div id={headingId} className={contextualDrawerPatterns.headerLabel}>
-            {entityLabel || `Editing ${entityType}`}
-          </div>
-        </div>
+            {/* Section header dot */}
+            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0" />
 
-        {/* "Editing" badge */}
-        <span className={contextualDrawerPatterns.headerBadge}>
-          <EditIcon />
-          <span className="ml-1">Editing</span>
-        </span>
+            {/* Entity label */}
+            <div className="flex-1 min-w-0">
+              <div
+                id={headingId}
+                className={contextualDrawerPatterns.headerLabel}
+              >
+                {entityLabel ||
+                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+              </div>
+            </div>
 
-        {/* Beta badge */}
-        <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
-          Beta
-        </span>
+            {/* Beta badge */}
+            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
+              Beta
+            </span>
 
-        {/* Close button */}
-        <button
-          type="button"
-          className={contextualDrawerPatterns.closeButton}
-          onClick={onClose}
-          aria-label="Close edit session"
-        >
-          <CloseIcon />
-        </button>
+            {/* Close button */}
+            <button
+              type="button"
+              className={contextualDrawerPatterns.closeButton}
+              onClick={onClose}
+              aria-label={isTraining ? "Close chat" : "Close edit session"}
+            >
+              <CloseIcon />
+            </button>
+          </>
+        )}
       </div>
+
+      {isTraining && (
+        <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/40">
+          <span id={trainingSelectId} className="sr-only">
+            Conversation
+          </span>
+          <div className="flex-1 min-w-0">
+            <TrainingGroundsConversationPicker
+              options={trainingPickerOptions}
+              value={currentConversationId}
+              onSelect={onTrainingPickerChange}
+              disabled={
+                isLoadingTrainingPicker ||
+                isInitializing ||
+                !onTrainingPickerChange
+              }
+              isLoading={isLoadingTrainingPicker}
+              labelledBy={trainingSelectId}
+            />
+          </div>
+          <div className="flex shrink-0 gap-1 items-center">
+            <button
+              type="button"
+              onClick={() => onTrainingNewConversation?.()}
+              disabled={
+                streamBusy || isInitializing || !onTrainingNewConversation
+              }
+              data-tooltip-id={tipNewChatId}
+              data-tooltip-content="New chat"
+              data-tooltip-place="bottom"
+              aria-label="New chat"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <PlusIcon />
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenFullPageChat?.()}
+              disabled={!currentConversationId || !onOpenFullPageChat}
+              data-tooltip-id={tipOpenFullId}
+              data-tooltip-content="Open in full page"
+              data-tooltip-place="bottom"
+              aria-label="Open in full page"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-cyan hover:!text-synthwave-neon-cyan hover:!bg-synthwave-neon-cyan/10 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <OpenFullPageIcon />
+            </button>
+            <Link
+              to={viewAllUrl}
+              data-tooltip-id={tipViewAllId}
+              data-tooltip-content="View all"
+              data-tooltip-place="bottom"
+              aria-label="View all conversations"
+              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-purple hover:!text-synthwave-neon-purple hover:!bg-synthwave-neon-purple/10 inline-flex items-center justify-center cursor-pointer`}
+            >
+              <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
+                <ChatIconSmall />
+              </span>
+            </Link>
+          </div>
+          <Tooltip
+            id={tipNewChatId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipNewChatId}"]`}
+          />
+          <Tooltip
+            id={tipOpenFullId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipOpenFullId}"]`}
+          />
+          <Tooltip
+            id={tipViewAllId}
+            {...tooltipPatterns.standard}
+            anchorSelect={`[data-tooltip-id="${tipViewAllId}"]`}
+          />
+        </div>
+      )}
 
       {/* Message area */}
       <div
@@ -401,36 +1195,46 @@ function PanelContent({
         aria-live="polite"
         aria-label="Conversation messages"
       >
-        {messages.length === 0 && !isStreaming && (
-          <div className="flex items-center justify-center h-full">
-            <p className={`${typographyPatterns.bodySmall} text-center`}>
-              Starting edit session…
-            </p>
-          </div>
+        {/* Skeleton: training whenever loading; workout edit on first load with no messages yet */}
+        {isInitializing && (isTraining || messages.length === 0) && (
+          <DrawerSkeleton />
         )}
 
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id || message.messageId}
-            message={message}
-            coachInitial={coachInitial}
-          />
-        ))}
+        {/* Empty state — workout edit */}
+        {!isTraining &&
+          messages.length === 0 &&
+          !isStreaming &&
+          !isInitializing && (
+            <div className="flex items-center justify-center h-full">
+              <p className={`${typographyPatterns.bodySmall} text-center px-4`}>
+                {emptySessionMessage}
+              </p>
+            </div>
+          )}
 
-        {/* Live streaming response */}
-        {streamingMessage && (
-          <div className="flex gap-2">
-            <div className={`${avatarPatterns.coachSmall} shrink-0 mt-0.5`}>
-              {coachInitial}
+        {/* Empty state — training drawer: curated tips */}
+        {isTraining &&
+          messages.length === 0 &&
+          !isStreaming &&
+          !isInitializing && (
+            <div className="flex flex-1 min-h-0 items-stretch justify-center w-full">
+              <CoachConversationEmptyTips variant="drawer" />
             </div>
-            <div className={contextualDrawerPatterns.aiMessage}>
-              <MarkdownRenderer content={streamingMessage} />
-            </div>
-          </div>
-        )}
+          )}
+
+        {showMessageList &&
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id || message.messageId}
+              message={message}
+              coachInitial={coachInitial}
+              userInitial={userInitial}
+              userId={userId}
+            />
+          ))}
 
         {/* Contextual update indicator (tool-use feedback) */}
-        {contextualUpdate && (
+        {contextualUpdate && !suppressTrainingOverlay && (
           <ContextualUpdateIndicator
             content={contextualUpdate.content}
             avatarLabel={coachInitial}
@@ -441,55 +1245,169 @@ function PanelContent({
 
       {/* Pinned input area */}
       <div className={contextualDrawerPatterns.inputArea}>
-        <ChatInput
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          onSubmit={handleSend}
-          isTyping={isStreaming}
-          placeholder="Describe what you'd like to correct…"
-          userId={userId}
-          coachName={coachData?.name || "Coach"}
-          context="coaching"
-          enableRecording={false}
-          enablePhotoAttachment={false}
-          enableFileAttachment={false}
-          showTipsButton={false}
-          showDeleteButton={false}
-          enableSlashCommands={false}
-          textareaRef={inputFocusRef}
-        />
+        <div className="contextual-drawer-input">
+          <ChatInput
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            onSubmit={handleSend}
+            isTyping={isStreaming}
+            placeholder={inputPlaceholder}
+            userId={userId}
+            coachName={coachData?.name || "Coach"}
+            context="coaching"
+            enableRecording={false}
+            enablePhotoAttachment={true}
+            enableFileAttachment={true}
+            enableQuickPrompts={false}
+            showTipsButton={false}
+            showDeleteButton={false}
+            enableSlashCommands={false}
+            textareaRef={inputFocusRef}
+            editorMinHeight="44px"
+            editorMaxHeight="120px"
+            compact={true}
+          />
+        </div>
       </div>
     </>
   );
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Expand/collapse icon — double right chevrons (>>) when narrow, double left (<<) when wide
+// ──────────────────────────────────────────────────────────────────────────────
+function DrawerResizeIcon({ isExpanded }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {isExpanded ? (
+        // Collapse: >> (two right-facing chevrons)
+        <path d="M3 4L6 7L3 10M7 4L10 7L7 10" />
+      ) : (
+        // Expand: << (two left-facing chevrons)
+        <path d="M7 4L4 7L7 10M11 4L8 7L11 10" />
+      )}
+    </svg>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Skeleton shown while the conversation initializes (before first messages arrive)
+// ──────────────────────────────────────────────────────────────────────────────
+function DrawerSkeleton() {
+  return (
+    <div className="space-y-6 pt-2">
+      {/* User message skeleton — right-aligned pill */}
+      <div className="flex flex-col items-end">
+        <div className="h-8 w-[70%] rounded-md rounded-br-none bg-synthwave-text-muted/20 animate-pulse" />
+        <div className="mt-1.5 w-6 h-6 rounded-full bg-synthwave-text-muted/20 animate-pulse" />
+      </div>
+
+      {/* AI message skeleton — left-aligned text lines */}
+      <div className="flex flex-col items-start">
+        <div className="space-y-1.5 w-full">
+          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-full" />
+          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-4/5" />
+          <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-3/5" />
+        </div>
+        <div className="mt-2 w-6 h-6 rounded-full bg-synthwave-text-muted/20 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Timestamp formatter — same format as CoachConversations, scaled for the drawer
+// ──────────────────────────────────────────────────────────────────────────────
+function formatDrawerTime(timestamp) {
+  if (!timestamp) return "";
+  return new Date(timestamp).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Individual message bubble
 // ──────────────────────────────────────────────────────────────────────────────
-function MessageBubble({ message, coachInitial }) {
+function MessageBubble({ message, coachInitial, userInitial, userId }) {
   const isUser = message.type === "user" || message.role === "user";
   const content =
     message.content || message.displayContent || message.streamingContent || "";
+  const hasImages = message.imageS3Keys && message.imageS3Keys.length > 0;
+  const hasDocuments =
+    message.documentS3Keys && message.documentS3Keys.length > 0;
 
-  if (!content) return null;
+  if (!content && !hasImages && !hasDocuments) return null;
 
   if (isUser) {
     return (
-      <div className="flex justify-end">
+      <div className="flex flex-col items-end">
         <div className={contextualDrawerPatterns.userMessage}>
-          <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
+          {(hasImages || hasDocuments) && (
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {message.imageS3Keys?.map((s3Key, index) => (
+                <ImageWithPresignedUrl
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  index={index}
+                  thumbnailSize="w-16 h-16"
+                  variant="maroon"
+                />
+              ))}
+              {message.documentS3Keys?.map((s3Key, index) => (
+                <DocumentThumbnail
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  thumbnailSize="w-16 h-16"
+                  variant="purple"
+                />
+              ))}
+            </div>
+          )}
+          <p className="whitespace-pre-wrap break-words">{content}</p>
+        </div>
+        <div className="flex items-center gap-2 mt-1.5 justify-end">
+          {message.timestamp && (
+            <span className="text-[10px] text-synthwave-text-muted font-body">
+              {formatDrawerTime(message.timestamp)}
+            </span>
+          )}
+          <div className={`${avatarPatterns.userXSmall} shrink-0`}>
+            {userInitial}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex gap-2">
-      <div className={`${avatarPatterns.coachSmall} shrink-0 mt-0.5`}>
-        {coachInitial}
-      </div>
+    <div className="flex flex-col">
       <div className={contextualDrawerPatterns.aiMessage}>
         <MarkdownRenderer content={content} />
+      </div>
+      <div className="flex items-center gap-2 mt-1">
+        <div className={`${avatarPatterns.aiXSmall} shrink-0`}>
+          {coachInitial}
+        </div>
+        {message.timestamp && (
+          <span className="text-[10px] text-synthwave-text-muted font-body">
+            {formatDrawerTime(message.timestamp)}
+          </span>
+        )}
       </div>
     </div>
   );

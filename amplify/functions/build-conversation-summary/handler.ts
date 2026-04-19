@@ -5,6 +5,7 @@ import {
   storeDebugDataInS3,
   BedrockToolUseResult,
   invokeAsyncLambda,
+  TEMPERATURE_PRESETS,
 } from "../libs/api-helpers";
 import {
   saveCoachConversationSummary,
@@ -176,6 +177,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       {
         tools: [CONVERSATION_SUMMARY_TOOL],
         expectedToolName: "generate_conversation_summary",
+        temperature: TEMPERATURE_PRESETS.STRUCTURED, // Schema extraction — low temp for format compliance
       },
     )) as BedrockToolUseResult; // When using tools, always returns BedrockToolUseResult
     const endTime = Date.now();

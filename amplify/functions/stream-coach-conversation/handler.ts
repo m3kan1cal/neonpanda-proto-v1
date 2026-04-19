@@ -25,7 +25,6 @@ import {
 } from "../../dynamodb/operations";
 import {
   CoachMessage,
-  MESSAGE_TYPES,
   CONVERSATION_MODES,
 } from "../libs/coach-conversation/types";
 import { queryPrograms } from "../../dynamodb/program";
@@ -41,6 +40,7 @@ import {
   formatProspectiveMemoriesForPrompt,
 } from "../libs/memory/prospective";
 import { formatConversationSummaryForPrompt } from "../libs/coach-conversation/summary";
+import { buildUserMessage } from "../libs/coach-conversation/message-utils";
 import { buildMessagesWithCaching } from "../libs/agents/shared/message-caching";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
@@ -160,16 +160,18 @@ async function* createCoachConversationEventStreamV2(
       isBase64Encoded: event.isBase64Encoded,
     });
 
-    const { userResponse, imageS3Keys, editContext } =
+    const { userResponse, imageS3Keys, documentS3Keys, editContext } =
       validateStreamingRequestBody(event.body, userId, {
         requireUserResponse: false,
         maxImages: 5,
+        maxDocuments: 3,
         isBase64Encoded: event.isBase64Encoded,
       });
 
     const params = {
       userResponse,
       imageS3Keys,
+      documentS3Keys,
       editContext,
     };
 
@@ -436,7 +438,7 @@ async function* createCoachConversationEventStreamV2(
     logger.info("✅ V2: Model selected:", {
       modelId:
         modelId === MODEL_IDS.PLANNER_MODEL_FULL
-          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.5)"
+          ? MODEL_IDS.PLANNER_MODEL_DISPLAY + " (Sonnet 4.6)"
           : MODEL_IDS.EXECUTOR_MODEL_DISPLAY + " (Haiku 4.5)",
       reason: isEditMode
         ? "workout_edit mode (structured output)"
@@ -485,6 +487,7 @@ async function* createCoachConversationEventStreamV2(
       const agentGenerator = agent.converseStream(
         params.userResponse || "",
         params.imageS3Keys,
+        params.documentS3Keys,
       );
 
       // Consume the generator and capture the return value
@@ -529,18 +532,11 @@ async function* createCoachConversationEventStreamV2(
     }
 
     // 11. Build and save messages
-    const newUserMessage: CoachMessage = {
-      id: `msg_${Date.now()}_user`,
-      role: "user",
-      content: params.userResponse || "",
-      timestamp: new Date(),
-      ...(params.imageS3Keys && params.imageS3Keys.length > 0
-        ? {
-            imageS3Keys: params.imageS3Keys,
-            messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
-          }
-        : {}),
-    };
+    const newUserMessage: CoachMessage = buildUserMessage(
+      params.userResponse || "",
+      params.imageS3Keys,
+      params.documentS3Keys,
+    );
 
     const newAiMessage: CoachMessage = {
       id: `msg_${Date.now()}_assistant`,
@@ -559,6 +555,17 @@ async function* createCoachConversationEventStreamV2(
         ...(guardrailWarning ? { guardrailWarning: true } : {}),
       } as any, // Use type assertion to allow agent-specific metadata
     };
+
+    // Log truncated message previews for operational searchability
+    // (search CloudWatch for a phrase a user reports to find the log stream)
+    logger.info("[USER_MSG]", {
+      conversationId,
+      preview: (params.userResponse || "").slice(0, 200),
+    });
+    logger.info("[AI_MSG]", {
+      conversationId,
+      preview: fullResponseText.slice(0, 200),
+    });
 
     // Add agent-specific metadata separately
     (newAiMessage.metadata as any).agent = {
