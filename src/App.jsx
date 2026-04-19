@@ -38,9 +38,6 @@ const CoachConversations = lazy(
   () => import("./components/CoachConversations"),
 );
 const ProgramDesigner = lazy(() => import("./components/ProgramDesigner"));
-const StreamingDebugTest = lazy(
-  () => import("./components/StreamingDebugTest"),
-);
 const WorkoutDetails = lazy(() => import("./components/WorkoutDetails"));
 const ManageWorkouts = lazy(() => import("./components/ManageWorkouts"));
 const ManageExercises = lazy(() => import("./components/ManageExercises"));
@@ -73,7 +70,7 @@ import {
 } from "./components/navigation";
 import { ToastProvider } from "./contexts/ToastContext";
 import ToastContainer from "./components/shared/ToastContainer";
-import { AuthProvider, useAuth, AuthRouter, ProtectedRoute } from "./auth";
+import { AuthProvider, AuthRouter, ProtectedRoute } from "./auth";
 import { setAuthFailureHandler } from "./utils/apis/apiConfig";
 import { usePageTitle } from "./hooks/usePageTitle";
 
@@ -313,14 +310,6 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <ProgramDesigner />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/streaming-debug-test"
-              element={
-                <ProtectedRoute>
-                  <StreamingDebugTest />
                 </ProtectedRoute>
               }
             />

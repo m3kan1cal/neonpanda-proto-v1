@@ -17,7 +17,7 @@ const LoginForm = ({
   showPasswordResetSuccess,
   oauthErrorMessage,
 }) => {
-  const { signIn, checkAuthState } = useAuth();
+  const { signIn } = useAuth();
   const [globalError, setGlobalError] = useState("");
   const [showVerificationOption, setShowVerificationOption] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState("");
