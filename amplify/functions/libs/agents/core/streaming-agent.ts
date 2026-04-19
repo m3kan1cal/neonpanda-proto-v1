@@ -38,6 +38,7 @@ import type {
 } from "./types";
 
 const MAX_ITERATIONS = 15; // Safety limit for ReAct loop
+/** Caps {@link maybeStreamingCoachPulse} invocations per {@link StreamingConversationAgent.converseStream} (including abandoned races). */
 const MAX_LLM_CONTEXTUAL_PULSES = 2;
 
 function sleepMs(ms: number): Promise<void> {
@@ -206,6 +207,7 @@ export class StreamingConversationAgent<
         }
       }
       if (flags && llmPulseBudget > 0) {
+        llmPulseBudget -= 1;
         const line = await maybeStreamingCoachPulse({
           role: flags.contextualUserRole,
           userSnippet: userMessage,
@@ -220,7 +222,6 @@ export class StreamingConversationAgent<
           coachPersonality: flags.coachPersonality,
         });
         if (line?.trim()) {
-          llmPulseBudget -= 1;
           yield formatContextualEvent(line.trim(), "streaming_llm");
         }
       }
@@ -411,6 +412,7 @@ export class StreamingConversationAgent<
               lastLine: lastContextLine,
             });
           if (llmPulseBudget > 0 && flags) {
+            llmPulseBudget -= 1;
             const pulsePromise = maybeStreamingCoachPulse({
               role: flags.contextualUserRole,
               userSnippet: userMessage,
@@ -448,7 +450,6 @@ export class StreamingConversationAgent<
 
             const line = pulseOrStream.line;
             if (line?.trim()) {
-              llmPulseBudget -= 1;
               const trimmed = line.trim();
               lastContextLine = trimmed;
               yield formatContextualEvent(trimmed, "streaming_llm");
