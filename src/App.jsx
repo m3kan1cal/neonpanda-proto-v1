@@ -463,6 +463,7 @@ function AppContent() {
       {/* App Navigation Components - Only for app pages, not public pages */}
       {!isPublicPage && (
         <>
+          {/* Mobile shell: hidden on chat routes and while inline coach drawer is open */}
           {!hideMobileImmersiveChrome && <BottomNav />}
           {!hideMobileImmersiveChrome && <MoreMenu />}
 

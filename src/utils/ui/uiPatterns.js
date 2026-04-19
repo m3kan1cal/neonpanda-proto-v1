@@ -1050,7 +1050,9 @@ export const navigationPatterns = {
       "fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden animate-fade-in",
   },
 
-  // Entity Chat FAB — Training Grounds / WorkoutDetails; mobile bottom matches Quick FAB slot when Quick FAB hidden.
+  // Entity Chat FAB — floating panda-head chat button (Training Grounds, WorkoutDetails).
+  // Mobile bottom aligns with QuickActionsFAB slot (80px + safe area) when Quick FAB is hidden on those routes.
+  //   desktop: calc(32px + safe-area) — above viewport edge
   entityChatFab: {
     container: "fixed right-8 z-50 md:[--entity-fab-bottom:32px]",
     containerStyle: {
@@ -1244,6 +1246,7 @@ export const scrollbarPatterns = {
 // Desktop (lg+): right-side slide-over, ~420px wide, overlays content with backdrop
 // Mobile (<lg): full-screen takeover, slides up from bottom
 export const contextualDrawerPatterns = {
+  // Backdrop overlay — desktop; z above mobile bottom nav (50) but below panel (70)
   backdrop: "fixed inset-0 z-[60] bg-black/20 transition-opacity duration-300",
 
   panelDesktop:
