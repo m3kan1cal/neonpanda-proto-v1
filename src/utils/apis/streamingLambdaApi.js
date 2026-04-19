@@ -33,6 +33,7 @@ async function* streamLambdaRequest({
   imageS3Keys = [],
   documentS3Keys = [],
   editContext = null,
+  clientContext = null,
   logContext = {},
 }) {
   if (!isStreamingEnabled(endpointType)) {
@@ -61,6 +62,10 @@ async function* streamLambdaRequest({
   // Add editContext if present (workout_edit mode)
   if (editContext) {
     requestBody.editContext = editContext;
+  }
+
+  if (clientContext) {
+    requestBody.clientContext = clientContext;
   }
 
   try {
@@ -191,6 +196,7 @@ export async function* streamCoachConversationLambda(
   imageS3Keys = [],
   editContext = null,
   documentS3Keys = [],
+  clientContext = null,
 ) {
   const path = `users/${userId}/coaches/${coachId}/conversations/${conversationId}/stream`;
 
@@ -202,6 +208,7 @@ export async function* streamCoachConversationLambda(
     imageS3Keys,
     documentS3Keys,
     editContext,
+    clientContext,
   });
 }
 

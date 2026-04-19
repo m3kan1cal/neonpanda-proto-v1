@@ -1,20 +1,28 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import { CoachAgent } from "../../utils/agents/CoachAgent";
+import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
+import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../../auth/contexts/AuthContext";
 import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import QuickStats from "../shared/QuickStats";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import AppFooter from "../shared/AppFooter";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { Tooltip } from "react-tooltip";
 import {
   containerPatterns,
   layoutPatterns,
-  buttonPatterns,
-  badgePatterns,
-  typographyPatterns,
   tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
 import {
@@ -33,6 +41,8 @@ import PhaseTimeline from "./PhaseTimeline";
 import PhaseBreakdown from "./PhaseBreakdown";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
 import { useToast } from "../../contexts/ToastContext";
+import { useUpgradePrompts } from "../../hooks/useUpgradePrompts";
+import { UpgradePrompt } from "../subscription";
 import { logger } from "../../utils/logger";
 
 export default function ProgramDashboard() {
@@ -42,6 +52,17 @@ export default function ProgramDashboard() {
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId");
 
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
+  const { user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
+
   const [program, setProgram] = useState(null);
   const [programDetails, setProgramDetails] = useState(null);
   const [todaysWorkout, setTodaysWorkout] = useState(null);
@@ -50,25 +71,77 @@ export default function ProgramDashboard() {
   const [error, setError] = useState(null);
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const [conversationAgentState, setConversationAgentState] = useState({
+    totalMessages: 0,
+    isLoadingConversationCount: false,
+  });
 
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  const conversationAgentRef = useRef(null);
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
   const toast = useToast();
 
-  // Load program data
-  useEffect(() => {
-    loadData();
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
 
-    // Cleanup
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const {
+    isPromptOpen: showUpgradePrompt,
+    activeTrigger: upgradeTrigger,
+    closePrompt: closeUpgradePrompt,
+    isPremium,
+  } = useUpgradePrompts(userId, {
+    messagesCount: conversationAgentState.totalMessages || 0,
+    workoutCount: program?.completedWorkouts ?? 0,
+  });
+
+  const newChatThreadTitle = useMemo(() => {
+    const name = program?.name?.trim();
+    return name ? `Program: ${name}` : "Program Dashboard";
+  }, [program?.name]);
+
+  const streamClientContext = useMemo(() => {
+    if (!programId) return null;
+    return { surface: "program_dashboard", programId };
+  }, [programId]);
+
+  useEffect(() => {
+    if (!conversationAgentRef.current) {
+      conversationAgentRef.current = new CoachConversationAgent({
+        onStateChange: (newState) => setConversationAgentState(newState),
+        onError: (err) =>
+          logger.error("ProgramDashboard CoachConversationAgent error:", err),
+      });
+    }
     return () => {
-      if (programAgentRef.current) {
-        programAgentRef.current.destroy();
+      if (conversationAgentRef.current) {
+        conversationAgentRef.current.destroy();
+        conversationAgentRef.current = null;
       }
     };
-  }, [userId, coachId, programId]);
+  }, []);
 
-  const loadData = async () => {
+  useEffect(() => {
+    if (
+      conversationAgentRef.current &&
+      userId &&
+      coachId &&
+      isValidUserId &&
+      !isValidatingUserId
+    ) {
+      conversationAgentRef.current.loadConversationCount(userId, coachId);
+    }
+  }, [userId, coachId, isValidUserId, isValidatingUserId]);
+
+  const loadData = useCallback(async () => {
     if (!userId || !coachId || !programId) {
       setError("Missing required parameters");
       setIsLoading(false);
@@ -147,7 +220,19 @@ export default function ProgramDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, coachId, programId]);
+
+  // Load program data
+  useEffect(() => {
+    loadData();
+
+    // Cleanup
+    return () => {
+      if (programAgentRef.current) {
+        programAgentRef.current.destroy();
+      }
+    };
+  }, [loadData]);
 
   // Handle program status changes (pause/resume/complete)
   const handleProgramUpdate = (updatedProgram) => {
@@ -197,6 +282,16 @@ export default function ProgramDashboard() {
   const handleShareClose = () => {
     setShowShareModal(false);
   };
+
+  useEffect(() => {
+    if (!isValidatingUserId && (userIdError || !isValidUserId)) {
+      navigate("/auth", { replace: true });
+    }
+  }, [isValidatingUserId, userIdError, isValidUserId, navigate]);
+
+  if (isValidatingUserId || userIdError || !isValidUserId) {
+    return <DashboardSkeleton />;
+  }
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -469,6 +564,37 @@ export default function ProgramDashboard() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {!isPremium && showUpgradePrompt && (
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={closeUpgradePrompt}
+          userId={userId}
+          trigger={upgradeTrigger}
+        />
+      )}
+
+      {coachData && programId && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Program Dashboard"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
 
       {/* Share Program Modal - rendered at top level to avoid CSS stacking context issues */}
       {showShareModal && program && (
