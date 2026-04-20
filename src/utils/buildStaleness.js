@@ -40,7 +40,10 @@ function safeStorage(storage) {
   if (storage) return storage;
   if (typeof window === "undefined") return null;
   try {
-    return window.sessionStorage;
+    // localStorage (not sessionStorage) is intentional: SNOOZE_TTL_MS is 24h
+    // and must survive tab closes. A newer remote buildId always bypasses the
+    // snooze via isSnoozed(), so users never get trapped on a stale build.
+    return window.localStorage;
   } catch {
     return null;
   }
