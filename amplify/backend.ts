@@ -1663,7 +1663,8 @@ const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
 
 console.info("✅ Monthly analytics scheduled (1st of month at 9am UTC)");
 
-// Create EventBridge schedule for inactive user notifications (every 14 days)
+// Create EventBridge schedule for inactive user notifications
+// (daily evaluation; per-user cooldowns of 60 days across both reminder streams)
 const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
   backend.notifyInactiveUsers.stack,
   backend.notifyInactiveUsers.resources.lambda,
