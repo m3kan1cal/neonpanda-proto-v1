@@ -53,6 +53,11 @@ export function buildConversationAgentPrompt(
       completedWorkouts: number;
       totalWorkouts: number;
     } | null;
+    /** User opened chat from a specific program screen (e.g. dashboard). */
+    sessionProgramContext?: {
+      programId: string;
+      programName: string;
+    };
     coachCreatorSessionSummary?: string;
     conversationSummaryContext?: string;
     emotionalContext?: string;
@@ -327,6 +332,18 @@ when making recommendations, but apply it contextually based on the situation.`)
 
 Note: Use the get_todays_workout tool to see today's prescribed workout details, exercises, sets, and reps.
 This context tells you the user has an active program, but you need to call the tool to get specifics.`);
+  }
+
+  if (options.sessionProgramContext) {
+    const sp = options.sessionProgramContext;
+    const safeId = sanitizeUserContent(sp.programId, 200);
+    const safeName = sanitizeUserContent(sp.programName, 200);
+    dynamicSections.push(`## SESSION UI CONTEXT
+
+The user opened this chat from the **Program Dashboard** for the program below. Prioritize answering in terms of this program (phases, calendar, prescribed days) even if they have other programs. The ACTIVE TRAINING PROGRAM section above reflects the program loaded for tools in this turn — it should match this session when the user is viewing that program.
+
+- Program ID: ${safeId}
+- Program name: ${safeName}`);
   }
 
   // Section 6: Emotional Context (conditional — dynamic, changes each session)

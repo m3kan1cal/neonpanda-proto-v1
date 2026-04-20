@@ -3,12 +3,19 @@
  */
 
 import type { ConversationEditContext } from "../coach-conversation/types";
-import { SUPPORTED_DOCUMENT_EXTENSIONS } from '../document-types';
+import { SUPPORTED_DOCUMENT_EXTENSIONS } from "../document-types";
+
+/** Optional UI origin hints for coach conversation streaming (non-edit modes). */
+export type ConversationClientContext = {
+  surface: "program_dashboard";
+  programId: string;
+};
 
 /**
  * Parse and validate request body from streaming event.
  * Handles base64-encoded bodies from Lambda Function URLs.
  */
+
 export function parseRequestBody(
   body: string | undefined,
   isBase64Encoded?: boolean,
@@ -18,6 +25,7 @@ export function parseRequestBody(
   imageS3Keys?: string[];
   documentS3Keys?: string[];
   editContext?: ConversationEditContext;
+  clientContext?: unknown;
 } {
   if (!body) {
     throw new Error("Request body is required");
@@ -34,8 +42,14 @@ export function parseRequestBody(
     throw new Error("Invalid JSON in request body");
   }
 
-  const { userResponse, messageTimestamp, imageS3Keys, documentS3Keys, editContext } =
-    parsedBody;
+  const {
+    userResponse,
+    messageTimestamp,
+    imageS3Keys,
+    documentS3Keys,
+    editContext,
+    clientContext,
+  } = parsedBody;
 
   return {
     userResponse,
@@ -43,7 +57,43 @@ export function parseRequestBody(
     imageS3Keys,
     documentS3Keys,
     editContext,
+    clientContext,
   };
+}
+
+const ALLOWED_CLIENT_CONTEXT_SURFACES = ["program_dashboard"] as const;
+
+/**
+ * Validates optional clientContext from the streaming request body.
+ * Returns undefined when absent or empty; throws on malformed values.
+ */
+export function validateConversationClientContext(
+  clientContext: unknown,
+): ConversationClientContext | undefined {
+  if (clientContext === undefined || clientContext === null) {
+    return undefined;
+  }
+  if (typeof clientContext !== "object" || Array.isArray(clientContext)) {
+    throw new Error("clientContext must be a plain object");
+  }
+  const raw = clientContext as Record<string, unknown>;
+  const keys = Object.keys(raw);
+  if (keys.length === 0) {
+    return undefined;
+  }
+  const surface = raw.surface;
+  if (surface !== "program_dashboard") {
+    throw new Error(
+      `clientContext.surface must be one of: ${ALLOWED_CLIENT_CONTEXT_SURFACES.join(", ")}`,
+    );
+  }
+  const programId = raw.programId;
+  if (typeof programId !== "string" || !programId.trim()) {
+    throw new Error(
+      "clientContext.programId is required for program_dashboard surface",
+    );
+  }
+  return { surface: "program_dashboard", programId: programId.trim() };
 }
 
 /**
@@ -110,7 +160,7 @@ export function validateDocumentS3Keys(
     if (!key.startsWith(`user-uploads/${userId}/`)) {
       throw new Error(`Invalid document key: ${key}`);
     }
-    const ext = key.split('.').pop()?.toLowerCase();
+    const ext = key.split(".").pop()?.toLowerCase();
     if (!ext || !SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
       throw new Error(`Unsupported document type: ${ext}`);
     }
@@ -152,6 +202,7 @@ export function validateStreamingRequestBody(
   imageS3Keys?: string[];
   documentS3Keys?: string[];
   editContext?: ConversationEditContext;
+  clientContext?: ConversationClientContext;
 } {
   const {
     requireUserResponse = true,
@@ -162,7 +213,16 @@ export function validateStreamingRequestBody(
 
   // Parse body
   const parsed = parseRequestBody(body, isBase64Encoded);
-  const { userResponse, messageTimestamp, imageS3Keys, documentS3Keys, editContext } = parsed;
+  const {
+    userResponse,
+    messageTimestamp,
+    imageS3Keys,
+    documentS3Keys,
+    editContext,
+    clientContext: rawClientContext,
+  } = parsed;
+
+  const clientContext = validateConversationClientContext(rawClientContext);
 
   // Validate user response (if required)
   if (requireUserResponse && !userResponse) {
@@ -197,5 +257,6 @@ export function validateStreamingRequestBody(
     imageS3Keys,
     documentS3Keys,
     editContext,
+    clientContext,
   };
 }

@@ -236,6 +236,8 @@ function TrainingGroundsConversationPicker({
  * @param {string} coachId - The coach ID for the conversation
  * @param {Object} coachData - Coach info ({ name, avatar, etc. })
  * @param {Function} onEntityUpdated - Callback to refresh parent after a successful edit
+ * @param {string} [newConversationTitle] - trainingGroundsInlineChat: title for newly created threads
+ * @param {{ surface: string, programId: string } | null} [streamClientContext] - Optional per-turn API context (e.g. program dashboard)
  */
 export default function ContextualChatDrawer({
   isOpen,
@@ -249,6 +251,8 @@ export default function ContextualChatDrawer({
   coachData,
   onEntityUpdated,
   userInitial = "U",
+  newConversationTitle = "Training Grounds",
+  streamClientContext = null,
 }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -275,6 +279,8 @@ export default function ContextualChatDrawer({
 
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
 
+  const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+
   /** Keeps the latest onClose without re-subscribing history effects when parents pass inline arrows. */
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -283,7 +289,7 @@ export default function ContextualChatDrawer({
 
   const requestClose = useCallback(() => {
     if (
-      variant === "trainingGroundsInlineChat" &&
+      isTrainingInlineChat &&
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 1023px)").matches &&
       window.history.state?.npeInlineCoachChat
@@ -292,7 +298,7 @@ export default function ContextualChatDrawer({
     } else {
       onCloseRef.current();
     }
-  }, [variant]);
+  }, [isTrainingInlineChat]);
 
   const editContext = useMemo(
     () =>
@@ -303,7 +309,7 @@ export default function ContextualChatDrawer({
   );
 
   const refreshTrainingPicker = useCallback(async () => {
-    if (!userId || !coachId || variant !== "trainingGroundsInlineChat") return;
+    if (!userId || !coachId || !isTrainingInlineChat) return;
     setIsLoadingTrainingPicker(true);
     try {
       const { conversations = [] } = await getCoachConversations(
@@ -330,27 +336,21 @@ export default function ContextualChatDrawer({
     } finally {
       setIsLoadingTrainingPicker(false);
     }
-  }, [userId, coachId, variant]);
+  }, [userId, coachId, isTrainingInlineChat]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Training Grounds: conversation picker list
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (
-      !isOpen ||
-      variant !== "trainingGroundsInlineChat" ||
-      !userId ||
-      !coachId
-    )
-      return;
+    if (!isOpen || !isTrainingInlineChat || !userId || !coachId) return;
     refreshTrainingPicker();
-  }, [isOpen, userId, coachId, variant, refreshTrainingPicker]);
+  }, [isOpen, userId, coachId, isTrainingInlineChat, refreshTrainingPicker]);
 
   // Mobile Training Grounds: history entry so Android back closes the drawer first.
   // Do not depend on `onClose` identity (use onCloseRef) or each parent re-render re-pushes state.
   const mobileHistoryActiveRef = useRef(false);
   useEffect(() => {
-    if (!isOpen || variant !== "trainingGroundsInlineChat") return;
+    if (!isOpen || !isTrainingInlineChat) return;
     if (typeof window === "undefined") return;
     if (window.matchMedia("(min-width: 1024px)").matches) return;
 
@@ -372,7 +372,7 @@ export default function ContextualChatDrawer({
         window.history.back();
       }
     };
-  }, [isOpen, variant]);
+  }, [isOpen, isTrainingInlineChat]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Agent lifecycle — workout edit variant
@@ -469,7 +469,7 @@ export default function ContextualChatDrawer({
   // Agent lifecycle — Training Grounds inline chat variant
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (variant !== "trainingGroundsInlineChat") return;
+    if (!isTrainingInlineChat) return;
     if (!isOpen || !userId || !coachId) return;
 
     let cancelled = false;
@@ -545,7 +545,7 @@ export default function ContextualChatDrawer({
           await agent.createConversation(
             userId,
             coachId,
-            "Training Grounds",
+            newConversationTitle,
             null,
             CONVERSATION_MODES.CHAT,
           );
@@ -583,7 +583,14 @@ export default function ContextualChatDrawer({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, userId, coachId, variant, showToast]);
+  }, [
+    isOpen,
+    userId,
+    coachId,
+    isTrainingInlineChat,
+    newConversationTitle,
+    showToast,
+  ]);
 
   const handleTrainingPickerChange = useCallback(
     async (conversationId) => {
@@ -630,7 +637,7 @@ export default function ContextualChatDrawer({
       await agent.createConversation(
         userId,
         coachId,
-        "Training Grounds",
+        newConversationTitle,
         null,
         CONVERSATION_MODES.CHAT,
       );
@@ -657,7 +664,7 @@ export default function ContextualChatDrawer({
     } finally {
       setIsInitializing(false);
     }
-  }, [userId, coachId, showToast, refreshTrainingPicker]);
+  }, [userId, coachId, showToast, refreshTrainingPicker, newConversationTitle]);
 
   const handleOpenFullPageChat = useCallback(() => {
     const id = agentRef.current?.conversationId;
@@ -783,12 +790,13 @@ export default function ContextualChatDrawer({
           imageS3Keys,
           editContext,
           documentS3Keys,
+          isTrainingInlineChat ? streamClientContext : null,
         );
       } catch (err) {
         logger.error("ContextualChatDrawer: sendMessageStream failed:", err);
       }
     },
-    [editContext],
+    [editContext, isTrainingInlineChat, streamClientContext],
   );
 
   const handleToggleExpand = useCallback(() => {
@@ -807,7 +815,7 @@ export default function ContextualChatDrawer({
 
   const currentConversationId = agentState?.conversation?.conversationId || "";
   const trainingPickerEffective = useMemo(() => {
-    if (variant !== "trainingGroundsInlineChat") return [];
+    if (!isTrainingInlineChat) return [];
     const ids = new Set(
       trainingPickerOptions.map((o) => o.conversationId).filter(Boolean),
     );
@@ -820,16 +828,15 @@ export default function ContextualChatDrawer({
     }
     return out;
   }, [
-    variant,
+    isTrainingInlineChat,
     trainingPickerOptions,
     currentConversationId,
     agentState?.conversation?.title,
   ]);
 
-  const dialogAriaLabel =
-    variant === "trainingGroundsInlineChat"
-      ? `Chat with ${entityLabel || "coach"}`
-      : `Edit ${entityLabel || entityType} with AI coach`;
+  const dialogAriaLabel = isTrainingInlineChat
+    ? `Chat with ${entityLabel || "coach"}`
+    : `Edit ${entityLabel || entityType} with AI coach`;
 
   if (!isOpen) return null;
 
@@ -915,7 +922,7 @@ export default function ContextualChatDrawer({
           userInitial={userInitial}
           onClose={onClose}
           requestClose={requestClose}
-          mobileTrainingSheetChrome={variant === "trainingGroundsInlineChat"}
+          mobileTrainingSheetChrome={isTrainingInlineChat}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
