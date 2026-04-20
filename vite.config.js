@@ -35,6 +35,24 @@ function resolveBuildId() {
 }
 
 function resolveAppVersion() {
+  // Prefer the most recent git tag so the deployed bundle always mirrors an
+  // actual GitHub release. We deliberately avoid `git describe` here because
+  // it needs the tagged commit to be reachable from HEAD, which does not hold
+  // on shallow clones (Amplify) or on feature branches whose tags predate the
+  // divergence. `git tag --list --sort=-v:refname` only needs the tag ref to
+  // exist locally, so `git fetch --tags` in amplify.yml is sufficient.
+  try {
+    const fromTag = execSync("git tag --list 'v*' --sort=-v:refname", {
+      cwd: __dirname,
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .toString()
+      .trim()
+      .split("\n")[0];
+    if (fromTag) return fromTag.replace(/^v/, "");
+  } catch {
+    // fall through to package.json
+  }
   try {
     const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
     return typeof pkg.version === "string" ? pkg.version : "0.0.0";
