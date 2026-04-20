@@ -58,6 +58,15 @@ import { logger } from "../../utils/logger";
 const INITIAL_PROMPT =
   "Please load my workout details so we can get started. I have some corrections to make.";
 
+// Fallbacks used when a caller forgets to pass the inline tag/session key
+// props. Kept in sync with the Training Grounds constants so existing
+// wiring keeps working, but new inline surfaces (e.g. Program Dashboard)
+// MUST pass their own scoped values — see the `inlineConversationTag`
+// and `inlineSessionKey` props below.
+const DEFAULT_INLINE_CONVERSATION_TAG = INLINE_TRAINING_GROUNDS_TAG;
+const defaultInlineSessionKey = (userId, coachId) =>
+  getTrainingGroundsInlineSessionKey(userId, coachId);
+
 /** @typedef {"workoutEdit" | "trainingGroundsInlineChat"} ContextualChatDrawerVariant */
 
 function OpenFullPageIcon({ className = "w-4 h-4" }) {
@@ -241,6 +250,8 @@ function TrainingGroundsConversationPicker({
  * @param {{ surface: "program_dashboard", programId: string }
  *        | { surface: "training_grounds" }
  *        | null} [streamClientContext] - Optional per-turn API context (telemetry / priming)
+ * @param {string} [inlineConversationTag] - Metadata tag applied to the inline "home" conversation. Required for any inline surface other than Training Grounds; each surface MUST pass its own tag so conversations don't cross-wire between surfaces (e.g. TG vs. Program Dashboard). Defaults to the Training Grounds tag for back-compat.
+ * @param {string} [inlineSessionKey] - sessionStorage key used to remember the most recently opened inline conversation. Must be unique per logical surface (and scope — e.g. per `programId` for the Program Dashboard) to prevent cross-surface hijacking of the stored conversationId. Defaults to the Training Grounds key for back-compat.
  */
 export default function ContextualChatDrawer({
   isOpen,
@@ -256,6 +267,8 @@ export default function ContextualChatDrawer({
   userInitial = "U",
   newConversationTitle,
   streamClientContext = null,
+  inlineConversationTag,
+  inlineSessionKey,
 }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -284,6 +297,18 @@ export default function ContextualChatDrawer({
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
 
   const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+
+  // Effective inline tag + session key. Each inline surface (Training Grounds,
+  // Program Dashboard, etc.) MUST pass its own scoped values — sharing these
+  // between surfaces causes conversations to cross-wire (the "home" chat on
+  // one surface silently becomes the home chat on the other). Defaults are
+  // the Training Grounds constants so legacy callers still work.
+  const effectiveInlineTag =
+    inlineConversationTag || DEFAULT_INLINE_CONVERSATION_TAG;
+  const effectiveInlineSessionKey = useMemo(() => {
+    if (!userId || !coachId) return null;
+    return inlineSessionKey || defaultInlineSessionKey(userId, coachId);
+  }, [inlineSessionKey, userId, coachId]);
 
   const inlineNewConversationTitle = useMemo(() => {
     if (!isTrainingInlineChat) {
@@ -493,7 +518,8 @@ export default function ContextualChatDrawer({
     if (!isOpen || !userId || !coachId) return;
 
     let cancelled = false;
-    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+    const sessionKey = effectiveInlineSessionKey;
+    const inlineTag = effectiveInlineTag;
 
     async function resolveTrainingTargetId(agent) {
       let sessionId = null;
@@ -525,7 +551,7 @@ export default function ContextualChatDrawer({
       const home = await agent.findChatConversationByTag(
         userId,
         coachId,
-        INLINE_TRAINING_GROUNDS_TAG,
+        inlineTag,
       );
       if (home) return home.conversationId;
       return "__create__";
@@ -574,10 +600,10 @@ export default function ContextualChatDrawer({
             userId,
             coachId,
             agent.conversationId,
-            INLINE_TRAINING_GROUNDS_TAG,
+            inlineTag,
           );
         }
-        if (!cancelled) {
+        if (!cancelled && sessionKey) {
           try {
             const id = agent.conversationId;
             if (id) sessionStorage.setItem(sessionKey, id);
@@ -609,6 +635,8 @@ export default function ContextualChatDrawer({
     coachId,
     isTrainingInlineChat,
     inlineNewConversationTitle,
+    effectiveInlineTag,
+    effectiveInlineSessionKey,
     showToast,
   ]);
 
@@ -616,29 +644,39 @@ export default function ContextualChatDrawer({
     async (conversationId) => {
       const agent = agentRef.current;
       if (!agent || !conversationId || !userId || !coachId) return;
-      const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+      const sessionKey = effectiveInlineSessionKey;
       setIsInitializing(true);
       try {
         await agent.loadExistingConversation(userId, coachId, conversationId);
-        try {
-          sessionStorage.setItem(sessionKey, conversationId);
-        } catch {
-          /* ignore */
+        if (sessionKey) {
+          try {
+            sessionStorage.setItem(sessionKey, conversationId);
+          } catch {
+            /* ignore */
+          }
         }
         await refreshTrainingPicker();
       } catch (err) {
         logger.error("ContextualChatDrawer: picker load failed:", err);
         showToast("Could not open that conversation.", "error");
-        try {
-          sessionStorage.removeItem(sessionKey);
-        } catch {
-          /* ignore */
+        if (sessionKey) {
+          try {
+            sessionStorage.removeItem(sessionKey);
+          } catch {
+            /* ignore */
+          }
         }
       } finally {
         setIsInitializing(false);
       }
     },
-    [userId, coachId, showToast, refreshTrainingPicker],
+    [
+      userId,
+      coachId,
+      showToast,
+      refreshTrainingPicker,
+      effectiveInlineSessionKey,
+    ],
   );
 
   const handleTrainingNewConversation = useCallback(async () => {
@@ -646,13 +684,14 @@ export default function ContextualChatDrawer({
     if (!agent || !userId || !coachId) return;
     if (agent.state?.isStreaming || agent.state?.isTyping) return;
 
-    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+    const sessionKey = effectiveInlineSessionKey;
+    const inlineTag = effectiveInlineTag;
     setIsInitializing(true);
     try {
       const oldTagged = await agent.findChatConversationByTag(
         userId,
         coachId,
-        INLINE_TRAINING_GROUNDS_TAG,
+        inlineTag,
       );
       await agent.createConversation(
         userId,
@@ -667,12 +706,14 @@ export default function ContextualChatDrawer({
         coachId,
         oldTagged?.conversationId || null,
         newId,
-        INLINE_TRAINING_GROUNDS_TAG,
+        inlineTag,
       );
-      try {
-        sessionStorage.setItem(sessionKey, newId);
-      } catch {
-        /* ignore */
+      if (sessionKey) {
+        try {
+          sessionStorage.setItem(sessionKey, newId);
+        } catch {
+          /* ignore */
+        }
       }
       await refreshTrainingPicker();
     } catch (err) {
@@ -690,6 +731,8 @@ export default function ContextualChatDrawer({
     showToast,
     refreshTrainingPicker,
     inlineNewConversationTitle,
+    effectiveInlineTag,
+    effectiveInlineSessionKey,
   ]);
 
   const handleOpenFullPageChat = useCallback(() => {

@@ -19,6 +19,10 @@ import AppFooter from "../shared/AppFooter";
 import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import EntityChatFAB from "../shared/EntityChatFAB";
 import { useNavigationContext } from "../../contexts/NavigationContext";
+import {
+  getProgramDashboardInlineTag,
+  getProgramDashboardInlineSessionKey,
+} from "../../constants/contextualChat";
 import { Tooltip } from "react-tooltip";
 import {
   containerPatterns,
@@ -113,6 +117,22 @@ export default function ProgramDashboard() {
     if (!programId) return null;
     return { surface: "program_dashboard", programId };
   }, [programId]);
+
+  // Scope the inline drawer's "home" conversation to (userId, coachId,
+  // programId) so different programs don't share a home chat and the
+  // Training Grounds home chat isn't hijacked by the dashboard (or vice
+  // versa). The tag itself is program-scoped so the tag-based fallback
+  // lookup (when sessionStorage is cold) can't return another program's
+  // home thread. See ContextualChatDrawer's `inlineConversationTag` /
+  // `inlineSessionKey` props for the contract.
+  const inlineConversationTag = useMemo(() => {
+    if (!programId) return null;
+    return getProgramDashboardInlineTag(programId);
+  }, [programId]);
+  const inlineSessionKey = useMemo(() => {
+    if (!userId || !coachId || !programId) return null;
+    return getProgramDashboardInlineSessionKey(userId, coachId, programId);
+  }, [userId, coachId, programId]);
 
   useEffect(() => {
     if (!conversationAgentRef.current) {
@@ -592,6 +612,8 @@ export default function ProgramDashboard() {
           />
           <ContextualChatDrawer
             variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
             isOpen={isInlineChatDrawerOpen}
             onClose={closeInlineCoachDrawer}
             entityLabel="Program Dashboard"

@@ -28,6 +28,10 @@ import AppFooter from "./shared/AppFooter";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import EntityChatFAB from "./shared/EntityChatFAB";
 import {
+  INLINE_TRAINING_GROUNDS_TAG,
+  getTrainingGroundsInlineSessionKey,
+} from "../constants/contextualChat";
+import {
   NeonBorder,
   NewBadge,
   ConversationIcon,
@@ -1708,6 +1712,11 @@ function TrainingGroundsV2() {
           />
           <ContextualChatDrawer
             variant="trainingGroundsInlineChat"
+            inlineConversationTag={INLINE_TRAINING_GROUNDS_TAG}
+            inlineSessionKey={getTrainingGroundsInlineSessionKey(
+              userId,
+              coachId,
+            )}
             isOpen={isInlineChatDrawerOpen}
             onClose={closeInlineCoachDrawer}
             entityLabel="Training Grounds"

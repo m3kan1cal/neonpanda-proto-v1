@@ -1133,8 +1133,13 @@ export const quickStatsPatterns = {
   container:
     "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
 
-  // Individual stat item - icon + number grouping
-  item: "flex items-center gap-1.5 md:gap-2 group cursor-help",
+  // Individual stat item - icon + number grouping.
+  // NOTE: The display class ("flex" vs "hidden sm:flex") is intentionally
+  // NOT included here — QuickStats.jsx composes it based on the stat's
+  // priority so secondary stats can be hidden on mobile. Do not add "flex"
+  // back into this string; doing so will cause "flex" and "hidden sm:flex"
+  // to fight and secondary stats will become visible on mobile.
+  item: "items-center gap-1.5 md:gap-2 group cursor-help",
 
   // Icon containers with color variants (matches existing neon colors)
   iconContainer: {
@@ -1155,7 +1160,9 @@ export const quickStatsPatterns = {
   skeleton: {
     container:
       "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
-    item: "flex items-center gap-1.5 md:gap-2",
+    // Display class ("flex" vs "hidden sm:flex") is composed by QuickStats.jsx
+    // based on the stat's priority; see the note on `item` above.
+    item: "items-center gap-1.5 md:gap-2",
     icon: "w-5 h-5 md:w-7 md:h-7 bg-synthwave-text-muted/20 animate-pulse",
     value: "h-4 w-6 md:h-6 md:w-8 bg-synthwave-text-muted/20 animate-pulse",
   },

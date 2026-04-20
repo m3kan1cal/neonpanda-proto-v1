@@ -52,14 +52,10 @@ function QuickStats({ stats = [] }) {
         const iconColor = stat.color || "cyan";
         const tooltipId = stat.id || `quick-stat-${index}`;
         const isSecondary = stat.priority === "secondary";
-        // Secondary stats render only on >=sm so mobile stays on one line.
-        // We strip the leading "flex " from the base pattern and re-add the
-        // correct display class so "hidden sm:flex" isn't fighting "flex".
-        const itemBase = quickStatsPatterns.item.replace(/^flex\s+/, "");
-        const skeletonBase = quickStatsPatterns.skeleton.item.replace(
-          /^flex\s+/,
-          "",
-        );
+        // Secondary stats are hidden below sm so mobile stays on one line.
+        // The base patterns in `quickStatsPatterns.item` / `.skeleton.item`
+        // are intentionally display-class-free (see uiPatterns.js); we own
+        // the display class here so "flex" and "hidden sm:flex" don't fight.
         const displayClass = isSecondary ? "hidden sm:flex" : "flex";
 
         // If loading, show skeleton
@@ -67,7 +63,7 @@ function QuickStats({ stats = [] }) {
           return (
             <div
               key={`skeleton-${index}`}
-              className={`${displayClass} ${skeletonBase}`}
+              className={`${displayClass} ${quickStatsPatterns.skeleton.item}`}
             >
               <div className={quickStatsPatterns.skeleton.icon} />
               <div className={quickStatsPatterns.skeleton.value} />
@@ -78,7 +74,7 @@ function QuickStats({ stats = [] }) {
         return (
           <div
             key={stat.id || `stat-${index}`}
-            className={`${displayClass} ${itemBase}`}
+            className={`${displayClass} ${quickStatsPatterns.item}`}
             data-tooltip-id={tooltipId}
             data-tooltip-html={`<strong>${stat.tooltip?.title || ""}</strong><br/>${stat.tooltip?.description || ""}`}
             aria-label={
