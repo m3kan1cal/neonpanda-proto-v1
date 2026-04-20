@@ -1528,7 +1528,11 @@ function ChatInput({
           </div>
           {/* Right: Keyboard shortcuts - always visible */}
           <div className="flex items-center">
-            {/* Desktop: Show keyboard shortcuts */}
+            {/* Mobile: icon-only compact hint */}
+            <span className="inline-flex md:hidden items-center gap-1 text-[10px]">
+              <ReturnKeyIcon /> send · ⇧<ReturnKeyIcon /> new line
+            </span>
+            {/* Desktop: full keyboard shortcut labels */}
             <span className="hidden md:inline-flex items-center gap-1">
               <ReturnKeyIcon /> to send · ⇧<ReturnKeyIcon /> for new line
             </span>

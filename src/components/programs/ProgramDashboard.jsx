@@ -19,11 +19,16 @@ import AppFooter from "../shared/AppFooter";
 import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import EntityChatFAB from "../shared/EntityChatFAB";
 import { useNavigationContext } from "../../contexts/NavigationContext";
+import {
+  getProgramDashboardInlineTag,
+  getProgramDashboardInlineSessionKey,
+} from "../../constants/contextualChat";
 import { Tooltip } from "react-tooltip";
 import {
   containerPatterns,
   layoutPatterns,
   tooltipPatterns,
+  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import {
   CalendarIcon,
@@ -112,6 +117,22 @@ export default function ProgramDashboard() {
     if (!programId) return null;
     return { surface: "program_dashboard", programId };
   }, [programId]);
+
+  // Scope the inline drawer's "home" conversation to (userId, coachId,
+  // programId) so different programs don't share a home chat and the
+  // Training Grounds home chat isn't hijacked by the dashboard (or vice
+  // versa). The tag itself is program-scoped so the tag-based fallback
+  // lookup (when sessionStorage is cold) can't return another program's
+  // home thread. See ContextualChatDrawer's `inlineConversationTag` /
+  // `inlineSessionKey` props for the contract.
+  const inlineConversationTag = useMemo(() => {
+    if (!programId) return null;
+    return getProgramDashboardInlineTag(programId);
+  }, [programId]);
+  const inlineSessionKey = useMemo(() => {
+    if (!userId || !coachId || !programId) return null;
+    return getProgramDashboardInlineSessionKey(userId, coachId, programId);
+  }, [userId, coachId, programId]);
 
   useEffect(() => {
     if (!conversationAgentRef.current) {
@@ -349,7 +370,7 @@ export default function ProgramDashboard() {
                 Program Dashboard
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
+                className={`${badgePatterns.beta} cursor-help`}
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -391,6 +412,7 @@ export default function ProgramDashboard() {
                 description: "Current day in your training program",
               },
               color: "pink",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `Day ${program.currentDay || 0} of program`,
               id: "program-stat-current-day",
@@ -403,6 +425,7 @@ export default function ProgramDashboard() {
                 description: "Total duration of this training program",
               },
               color: "cyan",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.totalDays || program.duration || 0} total days`,
               id: "program-stat-total-days",
@@ -415,6 +438,7 @@ export default function ProgramDashboard() {
                 description: "Progress through the training program",
               },
               color: "purple",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `${Math.round(((program.currentDay || 0) / (program.totalDays || program.duration || 1)) * 100)}% complete`,
               id: "program-stat-progress",
@@ -427,6 +451,7 @@ export default function ProgramDashboard() {
                 description: "Workouts you've completed in this program",
               },
               color: "cyan",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `${program.completedWorkouts || 0} completed workouts`,
               id: "program-stat-completed",
@@ -439,6 +464,7 @@ export default function ProgramDashboard() {
                 description: "Workouts you've skipped in this program",
               },
               color: "pink",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.skippedWorkouts || 0} skipped workouts`,
               id: "program-stat-skipped",
@@ -451,6 +477,7 @@ export default function ProgramDashboard() {
                 description: "Rest days you've completed in this program",
               },
               color: "purple",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.completedRestDays || 0} completed rest days`,
               id: "program-stat-rest-days",
@@ -463,6 +490,7 @@ export default function ProgramDashboard() {
                 description: "Total workouts scheduled in this program",
               },
               color: "purple",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `${program.totalWorkouts || 0} total workouts`,
               id: "program-stat-total",
@@ -475,6 +503,7 @@ export default function ProgramDashboard() {
                 description: "Training phases in this program",
               },
               color: "cyan",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.phases?.length || 0} phases`,
               id: "program-stat-phases",
@@ -583,6 +612,8 @@ export default function ProgramDashboard() {
           />
           <ContextualChatDrawer
             variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
             isOpen={isInlineChatDrawerOpen}
             onClose={closeInlineCoachDrawer}
             entityLabel="Program Dashboard"

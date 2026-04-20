@@ -1,6 +1,6 @@
-import React from 'react';
-import { Tooltip } from 'react-tooltip';
-import { quickStatsPatterns, tooltipPatterns } from '../../utils/ui/uiPatterns';
+import React from "react";
+import { Tooltip } from "react-tooltip";
+import { quickStatsPatterns, tooltipPatterns } from "../../utils/ui/uiPatterns";
 
 /**
  * QuickStats Component
@@ -19,6 +19,7 @@ import { quickStatsPatterns, tooltipPatterns } from '../../utils/ui/uiPatterns';
  * @param {boolean} props.stats[].isLoading - Show skeleton loader if true
  * @param {string} props.stats[].ariaLabel - Accessibility label for screen readers
  * @param {string} props.stats[].id - Unique ID for tooltip targeting
+ * @param {'primary' | 'secondary'} [props.stats[].priority='primary'] - 'primary' always renders; 'secondary' is hidden on mobile (<sm)
  *
  * @example
  * <QuickStats
@@ -31,6 +32,7 @@ import { quickStatsPatterns, tooltipPatterns } from '../../utils/ui/uiPatterns';
  *         description: "Total coach conversations you've started"
  *       },
  *       color: "pink",
+ *       priority: "primary",
  *       isLoading: false,
  *       ariaLabel: "42 total chats",
  *       id: "stat-chats"
@@ -47,13 +49,22 @@ function QuickStats({ stats = [] }) {
     <div className={quickStatsPatterns.container}>
       {stats.map((stat, index) => {
         const Icon = stat.icon;
-        const iconColor = stat.color || 'cyan';
+        const iconColor = stat.color || "cyan";
         const tooltipId = stat.id || `quick-stat-${index}`;
+        const isSecondary = stat.priority === "secondary";
+        // Secondary stats are hidden below sm so mobile stays on one line.
+        // The base patterns in `quickStatsPatterns.item` / `.skeleton.item`
+        // are intentionally display-class-free (see uiPatterns.js); we own
+        // the display class here so "flex" and "hidden sm:flex" don't fight.
+        const displayClass = isSecondary ? "hidden sm:flex" : "flex";
 
         // If loading, show skeleton
         if (stat.isLoading) {
           return (
-            <div key={`skeleton-${index}`} className={quickStatsPatterns.skeleton.item}>
+            <div
+              key={`skeleton-${index}`}
+              className={`${displayClass} ${quickStatsPatterns.skeleton.item}`}
+            >
               <div className={quickStatsPatterns.skeleton.icon} />
               <div className={quickStatsPatterns.skeleton.value} />
             </div>
@@ -63,18 +74,28 @@ function QuickStats({ stats = [] }) {
         return (
           <div
             key={stat.id || `stat-${index}`}
-            className={quickStatsPatterns.item}
+            className={`${displayClass} ${quickStatsPatterns.item}`}
             data-tooltip-id={tooltipId}
-            data-tooltip-html={`<strong>${stat.tooltip?.title || ''}</strong><br/>${stat.tooltip?.description || ''}`}
-            aria-label={stat.ariaLabel || `${stat.value} ${stat.tooltip?.title || 'items'}`}
+            data-tooltip-html={`<strong>${stat.tooltip?.title || ""}</strong><br/>${stat.tooltip?.description || ""}`}
+            aria-label={
+              stat.ariaLabel ||
+              `${stat.value} ${stat.tooltip?.title || "items"}`
+            }
             role="status"
             aria-live="polite"
           >
             {/* Icon Container */}
             <div className={quickStatsPatterns.iconContainer[iconColor]}>
               {Icon && (
-                <div className={quickStatsPatterns.icon} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon style={{ width: '100%', height: '100%' }} />
+                <div
+                  className={quickStatsPatterns.icon}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon style={{ width: "100%", height: "100%" }} />
                 </div>
               )}
             </div>
@@ -85,10 +106,7 @@ function QuickStats({ stats = [] }) {
             </div>
 
             {/* Tooltip */}
-            <Tooltip
-              id={tooltipId}
-              {...tooltipPatterns.standard}
-            />
+            <Tooltip id={tooltipId} {...tooltipPatterns.standard} />
           </div>
         );
       })}

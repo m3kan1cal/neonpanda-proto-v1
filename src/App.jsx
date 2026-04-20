@@ -126,7 +126,8 @@ function AppContent() {
 
   const hideQuickFabOnEntityCoachMobile =
     location.pathname === "/training-grounds" ||
-    location.pathname === "/training-grounds/workouts";
+    location.pathname === "/training-grounds/workouts" ||
+    location.pathname.startsWith("/training-grounds/programs/dashboard");
 
   // Workout agent for command palette
   const workoutAgentRef = useRef(null);

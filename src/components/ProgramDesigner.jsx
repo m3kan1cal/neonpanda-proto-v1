@@ -22,6 +22,7 @@ import {
   tooltipPatterns,
   messagePatterns,
   typographyPatterns,
+  badgePatterns,
 } from "../utils/ui/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CompactCoachCard from "./shared/CompactCoachCard";
@@ -698,7 +699,11 @@ function ProgramDesigner() {
   };
 
   // Message submission handler for ChatInput component
-  const handleMessageSubmit = async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
+  const handleMessageSubmit = async (
+    messageContent,
+    imageS3Keys = [],
+    documentS3Keys = [],
+  ) => {
     // Prevent double execution from React StrictMode or duplicate events
     if (isSendingMessage.current || !agentRef.current) return;
 
@@ -781,11 +786,7 @@ function ProgramDesigner() {
               />
             ))}
             {message.documentS3Keys?.map((s3Key, index) => (
-              <DocumentThumbnail
-                key={index}
-                s3Key={s3Key}
-                userId={userId}
-              />
+              <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
             ))}
           </div>
         )}
@@ -982,7 +983,7 @@ function ProgramDesigner() {
                 Program Designer
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
+                className={`${badgePatterns.beta} cursor-help`}
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -1324,46 +1325,45 @@ function ProgramDesigner() {
           ref={completionBannerRef}
           className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-purple/30 shadow-lg shadow-synthwave-neon-purple/20 z-50"
         >
-          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 flex justify-center">
-            <div
-              className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-synthwave-neon-purple/10 border-2 border-synthwave-neon-purple flex items-center justify-center shrink-0">
-                  <svg
-                    className="w-5 h-5 text-synthwave-neon-purple"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
+            <div className={`${containerPatterns.coachNotesSection} w-full`}>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-synthwave-neon-purple/10 border-2 border-synthwave-neon-purple flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-4 h-4 text-synthwave-neon-purple"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-header text-sm sm:text-base text-white uppercase tracking-wider">
+                      Program Design Complete
+                    </h3>
+                    <p className="font-body text-xs sm:text-sm text-synthwave-text-secondary mt-0.5">
+                      Your program is being built (2-3 minutes).
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-header text-base text-white uppercase tracking-wider">
-                    Program Design Complete
-                  </h3>
-                  <p className="font-body text-sm text-synthwave-text-secondary mt-0.5">
-                    Your program is being built (2-3 minutes). You can close
-                    this page or navigate to your programs.
-                  </p>
-                </div>
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/training-grounds/programs?userId=${userId}&coachId=${coachId}`,
+                    )
+                  }
+                  className={`${buttonPatterns.secondarySmall} w-full sm:w-auto shrink-0`}
+                >
+                  View Programs
+                </button>
               </div>
-              <button
-                onClick={() =>
-                  navigate(
-                    `/training-grounds/programs?userId=${userId}&coachId=${coachId}`,
-                  )
-                }
-                className={`${buttonPatterns.secondarySmall} shrink-0`}
-              >
-                View Programs
-              </button>
             </div>
           </div>
         </div>

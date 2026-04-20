@@ -36,6 +36,7 @@ import {
   typographyPatterns,
   iconButtonPatterns,
   tooltipPatterns,
+  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
@@ -56,6 +57,15 @@ import { logger } from "../../utils/logger";
 // Initial auto-prompt to trigger the AI to load workout context on first open
 const INITIAL_PROMPT =
   "Please load my workout details so we can get started. I have some corrections to make.";
+
+// Fallbacks used when a caller forgets to pass the inline tag/session key
+// props. Kept in sync with the Training Grounds constants so existing
+// wiring keeps working, but new inline surfaces (e.g. Program Dashboard)
+// MUST pass their own scoped values — see the `inlineConversationTag`
+// and `inlineSessionKey` props below.
+const DEFAULT_INLINE_CONVERSATION_TAG = INLINE_TRAINING_GROUNDS_TAG;
+const defaultInlineSessionKey = (userId, coachId) =>
+  getTrainingGroundsInlineSessionKey(userId, coachId);
 
 /** @typedef {"workoutEdit" | "trainingGroundsInlineChat"} ContextualChatDrawerVariant */
 
@@ -240,6 +250,8 @@ function TrainingGroundsConversationPicker({
  * @param {{ surface: "program_dashboard", programId: string }
  *        | { surface: "training_grounds" }
  *        | null} [streamClientContext] - Optional per-turn API context (telemetry / priming)
+ * @param {string} [inlineConversationTag] - Metadata tag applied to the inline "home" conversation. Required for any inline surface other than Training Grounds; each surface MUST pass its own tag so conversations don't cross-wire between surfaces (e.g. TG vs. Program Dashboard). Defaults to the Training Grounds tag for back-compat.
+ * @param {string} [inlineSessionKey] - sessionStorage key used to remember the most recently opened inline conversation. Must be unique per logical surface (and scope — e.g. per `programId` for the Program Dashboard) to prevent cross-surface hijacking of the stored conversationId. Defaults to the Training Grounds key for back-compat.
  */
 export default function ContextualChatDrawer({
   isOpen,
@@ -255,6 +267,8 @@ export default function ContextualChatDrawer({
   userInitial = "U",
   newConversationTitle,
   streamClientContext = null,
+  inlineConversationTag,
+  inlineSessionKey,
 }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -270,6 +284,7 @@ export default function ContextualChatDrawer({
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
   const mobileMessageAreaRef = useRef(null);
+  const mobileSheetRef = useRef(null);
   const desktopInputFocusRef = useRef(null);
   const mobileInputFocusRef = useRef(null);
   const closeTriggerRef = useRef(null);
@@ -282,6 +297,18 @@ export default function ContextualChatDrawer({
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
 
   const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+
+  // Effective inline tag + session key. Each inline surface (Training Grounds,
+  // Program Dashboard, etc.) MUST pass its own scoped values — sharing these
+  // between surfaces causes conversations to cross-wire (the "home" chat on
+  // one surface silently becomes the home chat on the other). Defaults are
+  // the Training Grounds constants so legacy callers still work.
+  const effectiveInlineTag =
+    inlineConversationTag || DEFAULT_INLINE_CONVERSATION_TAG;
+  const effectiveInlineSessionKey = useMemo(() => {
+    if (!userId || !coachId) return null;
+    return inlineSessionKey || defaultInlineSessionKey(userId, coachId);
+  }, [inlineSessionKey, userId, coachId]);
 
   const inlineNewConversationTitle = useMemo(() => {
     if (!isTrainingInlineChat) {
@@ -491,7 +518,8 @@ export default function ContextualChatDrawer({
     if (!isOpen || !userId || !coachId) return;
 
     let cancelled = false;
-    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+    const sessionKey = effectiveInlineSessionKey;
+    const inlineTag = effectiveInlineTag;
 
     async function resolveTrainingTargetId(agent) {
       let sessionId = null;
@@ -523,7 +551,7 @@ export default function ContextualChatDrawer({
       const home = await agent.findChatConversationByTag(
         userId,
         coachId,
-        INLINE_TRAINING_GROUNDS_TAG,
+        inlineTag,
       );
       if (home) return home.conversationId;
       return "__create__";
@@ -572,10 +600,10 @@ export default function ContextualChatDrawer({
             userId,
             coachId,
             agent.conversationId,
-            INLINE_TRAINING_GROUNDS_TAG,
+            inlineTag,
           );
         }
-        if (!cancelled) {
+        if (!cancelled && sessionKey) {
           try {
             const id = agent.conversationId;
             if (id) sessionStorage.setItem(sessionKey, id);
@@ -607,6 +635,8 @@ export default function ContextualChatDrawer({
     coachId,
     isTrainingInlineChat,
     inlineNewConversationTitle,
+    effectiveInlineTag,
+    effectiveInlineSessionKey,
     showToast,
   ]);
 
@@ -614,29 +644,39 @@ export default function ContextualChatDrawer({
     async (conversationId) => {
       const agent = agentRef.current;
       if (!agent || !conversationId || !userId || !coachId) return;
-      const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+      const sessionKey = effectiveInlineSessionKey;
       setIsInitializing(true);
       try {
         await agent.loadExistingConversation(userId, coachId, conversationId);
-        try {
-          sessionStorage.setItem(sessionKey, conversationId);
-        } catch {
-          /* ignore */
+        if (sessionKey) {
+          try {
+            sessionStorage.setItem(sessionKey, conversationId);
+          } catch {
+            /* ignore */
+          }
         }
         await refreshTrainingPicker();
       } catch (err) {
         logger.error("ContextualChatDrawer: picker load failed:", err);
         showToast("Could not open that conversation.", "error");
-        try {
-          sessionStorage.removeItem(sessionKey);
-        } catch {
-          /* ignore */
+        if (sessionKey) {
+          try {
+            sessionStorage.removeItem(sessionKey);
+          } catch {
+            /* ignore */
+          }
         }
       } finally {
         setIsInitializing(false);
       }
     },
-    [userId, coachId, showToast, refreshTrainingPicker],
+    [
+      userId,
+      coachId,
+      showToast,
+      refreshTrainingPicker,
+      effectiveInlineSessionKey,
+    ],
   );
 
   const handleTrainingNewConversation = useCallback(async () => {
@@ -644,13 +684,14 @@ export default function ContextualChatDrawer({
     if (!agent || !userId || !coachId) return;
     if (agent.state?.isStreaming || agent.state?.isTyping) return;
 
-    const sessionKey = getTrainingGroundsInlineSessionKey(userId, coachId);
+    const sessionKey = effectiveInlineSessionKey;
+    const inlineTag = effectiveInlineTag;
     setIsInitializing(true);
     try {
       const oldTagged = await agent.findChatConversationByTag(
         userId,
         coachId,
-        INLINE_TRAINING_GROUNDS_TAG,
+        inlineTag,
       );
       await agent.createConversation(
         userId,
@@ -665,12 +706,14 @@ export default function ContextualChatDrawer({
         coachId,
         oldTagged?.conversationId || null,
         newId,
-        INLINE_TRAINING_GROUNDS_TAG,
+        inlineTag,
       );
-      try {
-        sessionStorage.setItem(sessionKey, newId);
-      } catch {
-        /* ignore */
+      if (sessionKey) {
+        try {
+          sessionStorage.setItem(sessionKey, newId);
+        } catch {
+          /* ignore */
+        }
       }
       await refreshTrainingPicker();
     } catch (err) {
@@ -688,6 +731,8 @@ export default function ContextualChatDrawer({
     showToast,
     refreshTrainingPicker,
     inlineNewConversationTitle,
+    effectiveInlineTag,
+    effectiveInlineSessionKey,
   ]);
 
   const handleOpenFullPageChat = useCallback(() => {
@@ -928,6 +973,7 @@ export default function ContextualChatDrawer({
 
       {/* Mobile: full-screen takeover */}
       <div
+        ref={mobileSheetRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${headingId}-mobile`}
@@ -947,6 +993,7 @@ export default function ContextualChatDrawer({
           onClose={onClose}
           requestClose={requestClose}
           mobileTrainingSheetChrome={isTrainingInlineChat}
+          mobileSheetRef={mobileSheetRef}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
@@ -967,34 +1014,106 @@ export default function ContextualChatDrawer({
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Mobile sheet drag handle — swipe down to close when the message list is at top
+// Mobile sheet drag handle — swipe down to close when the message list is at top.
+// Drag-to-follow: we mutate the sheet's transform directly on touchmove so the
+// panel tracks the finger; on touchend we snap back or dismiss at a 64px threshold.
 // ──────────────────────────────────────────────────────────────────────────────
-function MobileTrainingDragHandle({ messageAreaRef, requestClose }) {
+function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
   const touchStartY = useRef(null);
+  const activeRef = useRef(false);
+  const [dragging, setDragging] = useState(false);
+
+  const resetSheet = () => {
+    const el = sheetRef?.current;
+    if (!el) return;
+    el.style.transform = "";
+    el.style.transition = "";
+  };
 
   const onTouchStart = (e) => {
+    // Only start a pull when the list is basically at the top (small fudge).
+    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
+    if (scrollTop > 4) return;
     touchStartY.current = e.touches[0].clientY;
+    activeRef.current = true;
+    setDragging(true);
+    const el = sheetRef?.current;
+    if (el) {
+      // Disable transition so the sheet tracks the finger 1:1.
+      el.style.transition = "none";
+    }
+  };
+
+  const onTouchMove = (e) => {
+    if (!activeRef.current || touchStartY.current == null) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    const el = sheetRef?.current;
+    if (!el) return;
+    if (delta <= 0) {
+      el.style.transform = "";
+      return;
+    }
+    el.style.transform = `translateY(${delta}px)`;
+  };
+
+  const finishDrag = (delta) => {
+    const el = sheetRef?.current;
+    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
+    activeRef.current = false;
+    touchStartY.current = null;
+    setDragging(false);
+
+    if (delta > 64 && scrollTop <= 4) {
+      // Let the class-based translate-y-full animation finish the exit.
+      if (el) {
+        el.style.transform = "";
+        el.style.transition = "";
+      }
+      requestClose();
+      return;
+    }
+
+    if (el) {
+      // Snap back with a short ease-out so the panel feels springy.
+      el.style.transition = "transform 200ms ease-out";
+      el.style.transform = "";
+      const clear = () => {
+        el.style.transition = "";
+        el.removeEventListener("transitionend", clear);
+      };
+      el.addEventListener("transitionend", clear);
+    }
   };
 
   const onTouchEnd = (e) => {
-    if (touchStartY.current == null) return;
-    const endY = e.changedTouches[0].clientY;
-    const delta = endY - touchStartY.current;
-    touchStartY.current = null;
-    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
-    if (delta > 72 && scrollTop <= 0) {
-      requestClose();
+    if (!activeRef.current || touchStartY.current == null) {
+      resetSheet();
+      return;
     }
+    const endY = e.changedTouches[0].clientY;
+    finishDrag(endY - touchStartY.current);
+  };
+
+  const onTouchCancel = () => {
+    if (!activeRef.current) return;
+    finishDrag(0);
   };
 
   return (
     <div
-      className="flex justify-center pt-2 pb-1 shrink-0 touch-pan-x"
+      role="button"
+      aria-label="Drag down to close"
+      tabIndex={0}
+      className="flex justify-center pt-3 pb-2 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchCancel}
     >
       <div
-        className="w-10 h-1.5 rounded-full bg-synthwave-text-muted/40"
+        className={`w-12 h-1.5 rounded-full transition-colors duration-150 ${
+          dragging ? "bg-synthwave-neon-cyan/70" : "bg-synthwave-text-muted/60"
+        }`}
         aria-hidden
       />
     </div>
@@ -1014,6 +1133,7 @@ function PanelContent({
   onClose,
   requestClose,
   mobileTrainingSheetChrome = false,
+  mobileSheetRef,
   messageAreaRef,
   messages,
   contextualUpdate,
@@ -1060,6 +1180,7 @@ function PanelContent({
       {mobileTrainingSheetChrome && (
         <MobileTrainingDragHandle
           messageAreaRef={messageAreaRef}
+          sheetRef={mobileSheetRef}
           requestClose={exit}
         />
       )}
@@ -1078,18 +1199,18 @@ function PanelContent({
                 <ChevronLeftIcon />
               </span>
             </button>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex items-center gap-2">
               <div
                 id={headingId}
-                className={contextualDrawerPatterns.headerLabel}
+                className={`${contextualDrawerPatterns.headerLabel} min-w-0 truncate`}
               >
                 {entityLabel ||
                   (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
               </div>
+              <span className={`${badgePatterns.betaSmall} shrink-0`}>
+                Beta
+              </span>
             </div>
-            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
-              Beta
-            </span>
             <button
               type="button"
               onClick={exit}
@@ -1125,9 +1246,7 @@ function PanelContent({
             </div>
 
             {/* Beta badge */}
-            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
-              Beta
-            </span>
+            <span className={`${badgePatterns.betaSmall} shrink-0`}>Beta</span>
 
             {/* Close button */}
             <button
