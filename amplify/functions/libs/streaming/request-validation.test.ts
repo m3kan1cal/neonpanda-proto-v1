@@ -28,8 +28,11 @@ describe("validateConversationClientContext", () => {
       validateConversationClientContext({
         surface: "program_dashboard",
         programId: "  pid  ",
-      })?.programId,
-    ).toBe("pid");
+      }),
+    ).toEqual({
+      surface: "program_dashboard",
+      programId: "pid",
+    });
   });
 
   it("rejects unknown surface", () => {
