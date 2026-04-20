@@ -27,7 +27,7 @@ import {
   CoachMessage,
   CONVERSATION_MODES,
 } from "../libs/coach-conversation/types";
-import { queryPrograms } from "../../dynamodb/program";
+import { getProgram, queryPrograms } from "../../dynamodb/program";
 import {
   queryMemories as queryMemoriesFromDb,
   queryEmotionalSnapshots,
@@ -161,20 +161,30 @@ async function* createCoachConversationEventStreamV2(
       isBase64Encoded: event.isBase64Encoded,
     });
 
-    const { userResponse, imageS3Keys, documentS3Keys, editContext } =
-      validateStreamingRequestBody(event.body, userId, {
-        requireUserResponse: false,
-        maxImages: 5,
-        maxDocuments: 3,
-        isBase64Encoded: event.isBase64Encoded,
-      });
+    const {
+      userResponse,
+      imageS3Keys,
+      documentS3Keys,
+      editContext,
+      clientContext,
+    } = validateStreamingRequestBody(event.body, userId, {
+      requireUserResponse: false,
+      maxImages: 5,
+      maxDocuments: 3,
+      isBase64Encoded: event.isBase64Encoded,
+    });
 
     const params = {
       userResponse,
       imageS3Keys,
       documentS3Keys,
       editContext,
+      clientContext,
     };
+
+    let sessionProgramContextToStore:
+      | { programId: string; programName: string }
+      | undefined;
 
     logger.info("✅ V2: Params validated:", {
       userId,
@@ -187,6 +197,11 @@ async function* createCoachConversationEventStreamV2(
         !!(params.imageS3Keys && params.imageS3Keys.length > 0),
       hasEditContext: !!editContext,
       editEntityType: editContext?.entityType,
+      clientContextSurface: clientContext?.surface,
+      clientContextProgramId:
+        clientContext?.surface === "program_dashboard"
+          ? clientContext.programId
+          : undefined,
     });
 
     const timings: Record<string, number> = {};
@@ -224,6 +239,61 @@ async function* createCoachConversationEventStreamV2(
       throw new Error("Failed to load conversation or coach config");
     }
 
+    // Load program for program_dashboard context.
+    //
+    // Correctness note: `activeProgramResult` only returns the user's currently
+    // ACTIVE program (status: "active"). The dashboard may be rendering any
+    // program by id (active, paused, or completed), so we cannot assume the
+    // active-program row is the program being viewed. We also cannot rely on
+    // a cached `{ programId, programName }` in conversation metadata alone —
+    // downstream agent context needs live stats (currentDay, totalDays,
+    // completedWorkouts, phases, s3DetailKey). Merging the cached identity
+    // over a different active program (or over null) produced stale defaults
+    // or cross-wired stats from two different programs. Strategy:
+    //   - Fast path: if the dashboard's programId matches the already-fetched
+    //     active program, reuse that row (has full stats, no extra DDB call).
+    //   - Otherwise: fetch the viewed program fresh so stats are correct.
+    let programForClientContext: any = null;
+    if (clientContext?.surface === "program_dashboard") {
+      const cachedContext = (existingConversation.metadata as any)
+        ?.sessionProgramContext;
+      const activeProgramCandidate = activeProgramResult[0] || null;
+
+      if (
+        activeProgramCandidate &&
+        activeProgramCandidate.programId === clientContext.programId
+      ) {
+        logger.info(
+          "✅ V2: Dashboard program matches active program — reusing queried row",
+        );
+        programForClientContext = activeProgramCandidate;
+      } else {
+        logger.info(
+          "🔎 V2: Loading dashboard program fresh (not the active program)",
+        );
+        programForClientContext = await getProgram(
+          userId,
+          coachId,
+          clientContext.programId,
+        ).catch((err) => {
+          logger.warn("V2: program load for clientContext failed:", err);
+          return null;
+        });
+      }
+
+      // Seed the session identity cache once per conversation so prompts keep
+      // a stable { programId, programName } across turns. Stats intentionally
+      // stay out of the cache — they must always be read live.
+      if (programForClientContext && !cachedContext) {
+        sessionProgramContextToStore = {
+          programId: programForClientContext.programId,
+          programName: programForClientContext.name || "Program",
+        };
+      }
+    } else if (clientContext?.surface === "training_grounds") {
+      // Telemetry-only surface: `clientContextSurface` logged above; no program priming.
+    }
+
     // 4. Build agent context
     const emotionalContext = formatEmotionalContextForPrompt(
       emotionalSnapshots,
@@ -257,7 +327,42 @@ async function* createCoachConversationEventStreamV2(
     const userTimezone = getUserTimezoneOrDefault(
       (userProfile as any)?.timezone || null,
     );
-    const activeProgram = activeProgramResult[0] || null;
+    const activeProgramFromQuery = activeProgramResult[0] || null;
+
+    let activeProgramForAgent = activeProgramFromQuery;
+    let sessionProgramContext:
+      | { programId: string; programName: string }
+      | undefined;
+
+    if (
+      clientContext?.surface === "program_dashboard" &&
+      programForClientContext
+    ) {
+      // programForClientContext is always a full Program row here (either the
+      // reused active-program row or a fresh getProgram() result), so stats
+      // come straight off `p`. When activeProgramFromQuery is null (user has
+      // no active program but is viewing a paused/completed one) we spread an
+      // empty object so the result is shape-complete and `...p` fills in all
+      // stats-bearing fields authoritatively.
+      const p = programForClientContext;
+      const programName = p.name || "Program";
+      activeProgramForAgent = {
+        ...(activeProgramFromQuery ?? {}),
+        ...p,
+        name: programName,
+      };
+      sessionProgramContext = {
+        programId: p.programId,
+        programName,
+      };
+    } else if (
+      clientContext?.surface === "program_dashboard" &&
+      !programForClientContext
+    ) {
+      logger.warn(
+        "V2: clientContext program_dashboard but program not loaded — using query active program",
+      );
+    }
 
     // Transform critical training directive to expected format
     const criticalDirective = userProfile?.criticalTrainingDirective
@@ -379,17 +484,17 @@ async function* createCoachConversationEventStreamV2(
         contextualUserRole: "coach",
         coachConfig,
       },
-      activeProgram: activeProgram
+      activeProgram: activeProgramForAgent
         ? {
-            programId: activeProgram.programId,
-            programName: activeProgram.name || "Active Program",
-            currentDay: activeProgram.currentDay || 1,
-            totalDays: activeProgram.totalDays || 1,
-            status: activeProgram.status || "active",
-            completedWorkouts: activeProgram.completedWorkouts || 0,
-            totalWorkouts: activeProgram.totalWorkouts || 0,
-            s3DetailKey: activeProgram.s3DetailKey,
-            phases: activeProgram.phases || [],
+            programId: activeProgramForAgent.programId,
+            programName: activeProgramForAgent.name || "Active Program",
+            currentDay: activeProgramForAgent.currentDay || 1,
+            totalDays: activeProgramForAgent.totalDays || 1,
+            status: activeProgramForAgent.status || "unknown",
+            completedWorkouts: activeProgramForAgent.completedWorkouts || 0,
+            totalWorkouts: activeProgramForAgent.totalWorkouts || 0,
+            s3DetailKey: activeProgramForAgent.s3DetailKey,
+            phases: activeProgramForAgent.phases || [],
           }
         : null,
       ...(cappedImageS3Keys.length && { imageS3Keys: cappedImageS3Keys }),
@@ -411,6 +516,7 @@ async function* createCoachConversationEventStreamV2(
         userTimezone,
         criticalTrainingDirective: criticalDirective,
         activeProgram: agentContext.activeProgram,
+        sessionProgramContext,
         coachCreatorSessionSummary:
           coachConfig.metadata?.coach_creator_session_summary,
         conversationSummaryContext,
@@ -602,6 +708,7 @@ async function* createCoachConversationEventStreamV2(
       conversationId,
       [newUserMessage, newAiMessage],
       editContextToStore,
+      sessionProgramContextToStore,
     );
 
     logger.info("✅ V2: Messages saved to DynamoDB");

@@ -57,8 +57,9 @@ export default function CalendarDayCell({
 
   // Status-based styling
   const getStatusStyles = () => {
+    // Mobile: 44px tap target (Apple HIG); desktop keeps the roomier 80px cell.
     const baseStyles =
-      "relative flex flex-col h-20 rounded-md transition-all duration-200 overflow-hidden font-body border border-synthwave-neon-cyan/10";
+      "relative flex flex-col min-h-[44px] md:h-20 rounded-md transition-all duration-200 overflow-hidden font-body border border-synthwave-neon-cyan/10";
 
     switch (status) {
       case "completed":
@@ -86,9 +87,9 @@ export default function CalendarDayCell({
       )}
 
       {/* Day number header */}
-      <div className="flex items-center justify-between px-2 py-1">
+      <div className="flex items-center justify-between px-1 md:px-2 py-1">
         <span
-          className={`text-xs font-semibold ${isCurrentDay ? "text-synthwave-neon-cyan" : status === "rest" ? "text-synthwave-text-muted" : "text-white"}`}
+          className={`text-[10px] md:text-xs font-semibold ${isCurrentDay ? "text-synthwave-neon-cyan" : status === "rest" ? "text-synthwave-text-muted" : "text-white"}`}
         >
           {day.dayNumber}
         </span>
@@ -109,8 +110,8 @@ export default function CalendarDayCell({
         )}
       </div>
 
-      {/* Day body - workout info */}
-      <div className="flex-1 flex flex-col items-center justify-center px-2 py-1">
+      {/* Day body - workout info (hidden on mobile; the dot + day number communicate state) */}
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center px-2 py-1">
         {hasWorkouts ? (
           <>
             {/* Workout count badge - styled like SidebarNav badges */}

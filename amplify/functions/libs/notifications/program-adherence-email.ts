@@ -2,8 +2,8 @@
  * Program Adherence Reminder Email
  *
  * Sent to users who have one or more active training programs but haven't
- * logged a session in 5+ days. More targeted than the general inactivity
- * reminder – references the specific program(s) they're enrolled in.
+ * logged a session in PROGRAM_INACTIVITY_DAYS. More targeted than the general
+ * inactivity reminder – references the specific program(s) they're enrolled in.
  *
  * Tone: warm, coach-like, specific, and encouraging without being preachy.
  */
@@ -18,7 +18,7 @@ import {
 } from "../email-utils";
 import { logger } from "../logger";
 
-const PROGRAM_INACTIVITY_DAYS = 5;
+const PROGRAM_INACTIVITY_DAYS = 14;
 
 /**
  * Determine whether a program is lagging:

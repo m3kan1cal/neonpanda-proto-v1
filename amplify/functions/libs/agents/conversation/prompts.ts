@@ -53,6 +53,11 @@ export function buildConversationAgentPrompt(
       completedWorkouts: number;
       totalWorkouts: number;
     } | null;
+    /** User opened chat from a specific program screen (e.g. dashboard). */
+    sessionProgramContext?: {
+      programId: string;
+      programName: string;
+    };
     coachCreatorSessionSummary?: string;
     conversationSummaryContext?: string;
     emotionalContext?: string;
@@ -316,17 +321,45 @@ This directive takes priority over standard programming principles. Always consi
 when making recommendations, but apply it contextually based on the situation.`);
   }
 
-  // Section 5: Active Program Summary (conditional)
+  // Section 5: Program Summary (conditional)
+  // Header and framing depend on the program's actual status so the agent never
+  // tells the user a paused/completed program is active.
   if (options.activeProgram) {
-    dynamicSections.push(`## ACTIVE TRAINING PROGRAM
+    const ap = options.activeProgram;
+    const normalizedStatus = (ap.status || "").toLowerCase();
+    const isActive = normalizedStatus === "active";
+    const header = isActive
+      ? "## ACTIVE TRAINING PROGRAM"
+      : "## PROGRAM IN FOCUS";
+    const preamble = isActive
+      ? "The user has an active training program. Today's training is driven by this program."
+      : `The user is viewing a program that is **${ap.status || "not active"}** — they are not currently running it. Frame guidance about this program in the correct tense (past/paused) and do not imply they are working it today.`;
+    const toolNote = isActive
+      ? "Note: Use the get_todays_workout tool to see today's prescribed workout details, exercises, sets, and reps. This context tells you the user has an active program, but you need to call the tool to get specifics."
+      : "Note: Use the get_todays_workout tool if the user asks about a specific day in this program; it returns the prescribed template for the requested day. Do not present its output as today's workout unless the program is active.";
 
-- Program: ${options.activeProgram.programName}
-- Progress: Day ${options.activeProgram.currentDay} of ${options.activeProgram.totalDays}
-- Completed: ${options.activeProgram.completedWorkouts}/${options.activeProgram.totalWorkouts} workouts
-- Status: ${options.activeProgram.status}
+    dynamicSections.push(`${header}
 
-Note: Use the get_todays_workout tool to see today's prescribed workout details, exercises, sets, and reps.
-This context tells you the user has an active program, but you need to call the tool to get specifics.`);
+${preamble}
+
+- Program: ${ap.programName}
+- Progress: Day ${ap.currentDay} of ${ap.totalDays}
+- Completed: ${ap.completedWorkouts}/${ap.totalWorkouts} workouts
+- Status: ${ap.status}
+
+${toolNote}`);
+  }
+
+  if (options.sessionProgramContext) {
+    const sp = options.sessionProgramContext;
+    const safeId = sanitizeUserContent(sp.programId, 200);
+    const safeName = sanitizeUserContent(sp.programName, 200);
+    dynamicSections.push(`## SESSION UI CONTEXT
+
+The user opened this chat from the **Program Dashboard** for the program below. Prioritize answering in terms of this program (phases, calendar, prescribed days) even if they have other programs. The program-details section above reflects this program's live stats — check its Status line to know whether this program is currently active, paused, or completed before suggesting actions.
+
+- Program ID: ${safeId}
+- Program name: ${safeName}`);
   }
 
   // Section 6: Emotional Context (conditional — dynamic, changes each session)

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
@@ -21,6 +27,10 @@ import {
 import AppFooter from "./shared/AppFooter";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import EntityChatFAB from "./shared/EntityChatFAB";
+import {
+  INLINE_TRAINING_GROUNDS_TAG,
+  getTrainingGroundsInlineSessionKey,
+} from "../constants/contextualChat";
 import {
   NeonBorder,
   NewBadge,
@@ -229,6 +239,11 @@ function TrainingGroundsV2() {
     setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
     return () => setIsInlineCoachDrawerOpen(false);
   }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const streamClientContext = useMemo(
+    () => ({ surface: "training_grounds" }),
+    [],
+  );
 
   // Pagination state (Show More / Show Less)
   const [showAllPrograms, setShowAllPrograms] = useState(false);
@@ -1335,7 +1350,7 @@ function TrainingGroundsV2() {
             />
           </div>
         ) : (
-          <p className="font-body text-base text-synthwave-text-secondary mb-4 max-w-4xl">
+          <p className="font-body text-sm md:text-base text-synthwave-text-secondary mb-4 max-w-4xl">
             {greeting}
           </p>
         )}
@@ -1356,6 +1371,7 @@ function TrainingGroundsV2() {
                     description: "Total coach conversations you've started",
                   },
                   color: "pink",
+                  priority: "secondary",
                   isLoading: conversationAgentState.isLoadingConversationCount,
                   ariaLabel: `${conversationAgentState.conversationCount || 0} total chats`,
                   id: "v2-stat-chats",
@@ -1368,6 +1384,7 @@ function TrainingGroundsV2() {
                     description: "Total messages exchanged with your coaches",
                   },
                   color: "cyan",
+                  priority: "secondary",
                   isLoading: conversationAgentState.isLoadingConversationCount,
                   ariaLabel: `${conversationAgentState.totalMessages || 0} total messages`,
                   id: "v2-stat-messages",
@@ -1380,6 +1397,7 @@ function TrainingGroundsV2() {
                     description: "Total workouts logged across all coaches",
                   },
                   color: "purple",
+                  priority: "primary",
                   isLoading: workoutState.isLoadingCount,
                   ariaLabel: `${workoutState.totalWorkoutCount || 0} total workouts`,
                   id: "v2-stat-workouts",
@@ -1392,6 +1410,7 @@ function TrainingGroundsV2() {
                     description: `${workoutState.thisWeekWorkoutCount || 0} of 5 workouts completed (Mon-Sun)`,
                   },
                   color: "pink",
+                  priority: "primary",
                   isLoading: workoutState.isLoadingCount,
                   ariaLabel: `${workoutState.thisWeekWorkoutCount || 0} workouts this week`,
                   id: "v2-stat-this-week",
@@ -1405,6 +1424,7 @@ function TrainingGroundsV2() {
                       "Active training programs you're currently following",
                   },
                   color: "cyan",
+                  priority: "primary",
                   isLoading: isLoadingCoachData,
                   ariaLabel: `${coachData?.activePrograms || 0} active programs`,
                   id: "v2-stat-programs",
@@ -1420,6 +1440,7 @@ function TrainingGroundsV2() {
                         : "Log a workout to start your streak",
                   },
                   color: "pink",
+                  priority: "primary",
                   isLoading: workoutState.isLoadingTrainingDays,
                   ariaLabel: `${workoutState.currentStreak || 0} day workout streak`,
                   id: "v2-stat-streak",
@@ -1432,6 +1453,7 @@ function TrainingGroundsV2() {
                     description: "Weekly performance reports generated",
                   },
                   color: "pink",
+                  priority: "secondary",
                   isLoading: reportsState.isLoadingRecentItems,
                   ariaLabel: `${reportsState.recentReports.length || 0} reports`,
                   id: "v2-stat-reports",
@@ -1690,6 +1712,11 @@ function TrainingGroundsV2() {
           />
           <ContextualChatDrawer
             variant="trainingGroundsInlineChat"
+            inlineConversationTag={INLINE_TRAINING_GROUNDS_TAG}
+            inlineSessionKey={getTrainingGroundsInlineSessionKey(
+              userId,
+              coachId,
+            )}
             isOpen={isInlineChatDrawerOpen}
             onClose={closeInlineCoachDrawer}
             entityLabel="Training Grounds"
@@ -1697,6 +1724,8 @@ function TrainingGroundsV2() {
             coachId={coachId}
             coachData={coachData}
             userInitial={userInitial}
+            newConversationTitle="Training Grounds"
+            streamClientContext={streamClientContext}
           />
         </>
       )}

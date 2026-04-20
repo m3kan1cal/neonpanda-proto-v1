@@ -551,6 +551,7 @@ export class CoachConversationAgent {
     imageS3Keys = [],
     editContext = null,
     documentS3Keys = [],
+    clientContext = null,
   ) {
     // Input validation - allow text OR images
     if (
@@ -616,6 +617,7 @@ export class CoachConversationAgent {
           imageS3Keys,
           resolvedEditContext,
           documentS3Keys,
+          clientContext,
         );
 
         // Process the stream

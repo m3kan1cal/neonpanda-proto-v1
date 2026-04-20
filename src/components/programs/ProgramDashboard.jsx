@@ -1,21 +1,34 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import { CoachAgent } from "../../utils/agents/CoachAgent";
+import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
+import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../../auth/contexts/AuthContext";
 import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import QuickStats from "../shared/QuickStats";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import AppFooter from "../shared/AppFooter";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
 import { useNavigationContext } from "../../contexts/NavigationContext";
+import {
+  getProgramDashboardInlineTag,
+  getProgramDashboardInlineSessionKey,
+} from "../../constants/contextualChat";
 import { Tooltip } from "react-tooltip";
 import {
   containerPatterns,
   layoutPatterns,
-  buttonPatterns,
-  badgePatterns,
-  typographyPatterns,
   tooltipPatterns,
+  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import {
   CalendarIcon,
@@ -33,6 +46,8 @@ import PhaseTimeline from "./PhaseTimeline";
 import PhaseBreakdown from "./PhaseBreakdown";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
 import { useToast } from "../../contexts/ToastContext";
+import { useUpgradePrompts } from "../../hooks/useUpgradePrompts";
+import { UpgradePrompt } from "../subscription";
 import { logger } from "../../utils/logger";
 
 export default function ProgramDashboard() {
@@ -42,6 +57,17 @@ export default function ProgramDashboard() {
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId");
 
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
+  const { user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
+
   const [program, setProgram] = useState(null);
   const [programDetails, setProgramDetails] = useState(null);
   const [todaysWorkout, setTodaysWorkout] = useState(null);
@@ -50,25 +76,93 @@ export default function ProgramDashboard() {
   const [error, setError] = useState(null);
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const [conversationAgentState, setConversationAgentState] = useState({
+    totalMessages: 0,
+    isLoadingConversationCount: false,
+  });
 
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  const conversationAgentRef = useRef(null);
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
   const toast = useToast();
 
-  // Load program data
-  useEffect(() => {
-    loadData();
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
 
-    // Cleanup
-    return () => {
-      if (programAgentRef.current) {
-        programAgentRef.current.destroy();
-      }
-    };
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const {
+    isPromptOpen: showUpgradePrompt,
+    activeTrigger: upgradeTrigger,
+    closePrompt: closeUpgradePrompt,
+    isPremium,
+  } = useUpgradePrompts(userId, {
+    messagesCount: conversationAgentState.totalMessages || 0,
+    workoutCount: program?.completedWorkouts ?? 0,
+  });
+
+  const newChatThreadTitle = useMemo(() => {
+    const name = program?.name?.trim();
+    return name ? `Program: ${name}` : "Program Dashboard";
+  }, [program?.name]);
+
+  const streamClientContext = useMemo(() => {
+    if (!programId) return null;
+    return { surface: "program_dashboard", programId };
+  }, [programId]);
+
+  // Scope the inline drawer's "home" conversation to (userId, coachId,
+  // programId) so different programs don't share a home chat and the
+  // Training Grounds home chat isn't hijacked by the dashboard (or vice
+  // versa). The tag itself is program-scoped so the tag-based fallback
+  // lookup (when sessionStorage is cold) can't return another program's
+  // home thread. See ContextualChatDrawer's `inlineConversationTag` /
+  // `inlineSessionKey` props for the contract.
+  const inlineConversationTag = useMemo(() => {
+    if (!programId) return null;
+    return getProgramDashboardInlineTag(programId);
+  }, [programId]);
+  const inlineSessionKey = useMemo(() => {
+    if (!userId || !coachId || !programId) return null;
+    return getProgramDashboardInlineSessionKey(userId, coachId, programId);
   }, [userId, coachId, programId]);
 
-  const loadData = async () => {
+  useEffect(() => {
+    if (!conversationAgentRef.current) {
+      conversationAgentRef.current = new CoachConversationAgent({
+        onStateChange: (newState) => setConversationAgentState(newState),
+        onError: (err) =>
+          logger.error("ProgramDashboard CoachConversationAgent error:", err),
+      });
+    }
+    return () => {
+      if (conversationAgentRef.current) {
+        conversationAgentRef.current.destroy();
+        conversationAgentRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      conversationAgentRef.current &&
+      userId &&
+      coachId &&
+      isValidUserId &&
+      !isValidatingUserId
+    ) {
+      conversationAgentRef.current.loadConversationCount(userId, coachId);
+    }
+  }, [userId, coachId, isValidUserId, isValidatingUserId]);
+
+  const loadData = useCallback(async () => {
     if (!userId || !coachId || !programId) {
       setError("Missing required parameters");
       setIsLoading(false);
@@ -147,7 +241,19 @@ export default function ProgramDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, coachId, programId]);
+
+  // Load program data
+  useEffect(() => {
+    loadData();
+
+    // Cleanup
+    return () => {
+      if (programAgentRef.current) {
+        programAgentRef.current.destroy();
+      }
+    };
+  }, [loadData]);
 
   // Handle program status changes (pause/resume/complete)
   const handleProgramUpdate = (updatedProgram) => {
@@ -197,6 +303,16 @@ export default function ProgramDashboard() {
   const handleShareClose = () => {
     setShowShareModal(false);
   };
+
+  useEffect(() => {
+    if (!isValidatingUserId && (userIdError || !isValidUserId)) {
+      navigate("/auth", { replace: true });
+    }
+  }, [isValidatingUserId, userIdError, isValidUserId, navigate]);
+
+  if (isValidatingUserId || userIdError || !isValidUserId) {
+    return <DashboardSkeleton />;
+  }
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -254,7 +370,7 @@ export default function ProgramDashboard() {
                 Program Dashboard
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
+                className={`${badgePatterns.beta} cursor-help`}
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -296,6 +412,7 @@ export default function ProgramDashboard() {
                 description: "Current day in your training program",
               },
               color: "pink",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `Day ${program.currentDay || 0} of program`,
               id: "program-stat-current-day",
@@ -308,6 +425,7 @@ export default function ProgramDashboard() {
                 description: "Total duration of this training program",
               },
               color: "cyan",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.totalDays || program.duration || 0} total days`,
               id: "program-stat-total-days",
@@ -320,6 +438,7 @@ export default function ProgramDashboard() {
                 description: "Progress through the training program",
               },
               color: "purple",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `${Math.round(((program.currentDay || 0) / (program.totalDays || program.duration || 1)) * 100)}% complete`,
               id: "program-stat-progress",
@@ -332,6 +451,7 @@ export default function ProgramDashboard() {
                 description: "Workouts you've completed in this program",
               },
               color: "cyan",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `${program.completedWorkouts || 0} completed workouts`,
               id: "program-stat-completed",
@@ -344,6 +464,7 @@ export default function ProgramDashboard() {
                 description: "Workouts you've skipped in this program",
               },
               color: "pink",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.skippedWorkouts || 0} skipped workouts`,
               id: "program-stat-skipped",
@@ -356,6 +477,7 @@ export default function ProgramDashboard() {
                 description: "Rest days you've completed in this program",
               },
               color: "purple",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.completedRestDays || 0} completed rest days`,
               id: "program-stat-rest-days",
@@ -368,6 +490,7 @@ export default function ProgramDashboard() {
                 description: "Total workouts scheduled in this program",
               },
               color: "purple",
+              priority: "primary",
               isLoading: false,
               ariaLabel: `${program.totalWorkouts || 0} total workouts`,
               id: "program-stat-total",
@@ -380,6 +503,7 @@ export default function ProgramDashboard() {
                 description: "Training phases in this program",
               },
               color: "cyan",
+              priority: "secondary",
               isLoading: false,
               ariaLabel: `${program.phases?.length || 0} phases`,
               id: "program-stat-phases",
@@ -469,6 +593,39 @@ export default function ProgramDashboard() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {!isPremium && showUpgradePrompt && (
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={closeUpgradePrompt}
+          userId={userId}
+          trigger={upgradeTrigger}
+        />
+      )}
+
+      {coachData && programId && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Program Dashboard"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
 
       {/* Share Program Modal - rendered at top level to avoid CSS stacking context issues */}
       {showShareModal && program && (

@@ -14,11 +14,15 @@ import {
   sendProgramAdherenceEmail,
 } from "../libs/notifications/program-adherence-email";
 
-const INACTIVITY_PERIOD_DAYS = 14;
-const MIN_DAYS_BETWEEN_REMINDERS = 28;
+const INACTIVITY_PERIOD_DAYS = 28;
+const MIN_DAYS_BETWEEN_REMINDERS = 60;
 
-const PROGRAM_INACTIVITY_DAYS = 5;
-const MIN_DAYS_BETWEEN_PROGRAM_REMINDERS = 7;
+const PROGRAM_INACTIVITY_DAYS = 14;
+const MIN_DAYS_BETWEEN_PROGRAM_REMINDERS = 60;
+
+// When either reminder stream sends, suppress the other stream for this window
+// so a disengaged user receives at most ~1 reminder email every 2 months total.
+const CROSS_STREAM_SUPPRESSION_DAYS = 60;
 
 interface NotificationStats {
   totalUsers: number;
@@ -42,8 +46,11 @@ interface NotificationStats {
 
 /**
  * EventBridge handler to run daily user notification checks:
- * 1. General inactivity reminder (no workouts in 14 days)
- * 2. Program adherence reminder (active program with no workouts logged in 5 days)
+ * 1. General inactivity reminder (no workouts in INACTIVITY_PERIOD_DAYS)
+ * 2. Program adherence reminder (active program with no workouts logged in PROGRAM_INACTIVITY_DAYS)
+ *
+ * Both streams share a CROSS_STREAM_SUPPRESSION_DAYS window so sending one
+ * reminder blocks the other, capping total reminder volume per user.
  */
 export const handler = async () => {
   return withHeartbeat("Daily User Notification Check", async () => {
@@ -53,6 +60,7 @@ export const handler = async () => {
       minDaysBetweenReminders: MIN_DAYS_BETWEEN_REMINDERS,
       programInactivityDays: PROGRAM_INACTIVITY_DAYS,
       minDaysBetweenProgramReminders: MIN_DAYS_BETWEEN_PROGRAM_REMINDERS,
+      crossStreamSuppressionDays: CROSS_STREAM_SUPPRESSION_DAYS,
     });
 
     const stats: NotificationStats = {
@@ -171,6 +179,18 @@ async function checkGeneralInactivity(
     }
   }
 
+  const lastProgramReminderSent = user.preferences?.lastSent?.programAdherence;
+  if (lastProgramReminderSent) {
+    const daysSince = daysSinceDate(lastProgramReminderSent);
+    if (daysSince < CROSS_STREAM_SUPPRESSION_DAYS) {
+      logger.info(
+        `⏭️ User ${user.userId} received program adherence reminder ${daysSince} days ago, suppressing cross-stream check-in`,
+      );
+      stats.emailsSkipped.recentReminder++;
+      return;
+    }
+  }
+
   const workoutCount = await queryWorkoutsCount(user.userId, {
     fromDate: new Date(
       Date.now() - INACTIVITY_PERIOD_DAYS * 24 * 60 * 60 * 1000,
@@ -191,7 +211,7 @@ async function checkGeneralInactivity(
   stats.inactiveUsers++;
 
   await sendInactivityReminderEmail(user);
-  await updateLastSentTimestamp(user.userId, "coachCheckIns");
+  await updateLastSentTimestamp(user, "coachCheckIns");
 
   stats.emailsSent++;
   logger.info(`✅ Inactivity reminder sent to ${user.email}`);
@@ -225,6 +245,18 @@ async function checkProgramAdherence(
     }
   }
 
+  const lastCoachCheckInSent = user.preferences?.lastSent?.coachCheckIns;
+  if (lastCoachCheckInSent) {
+    const daysSince = daysSinceDate(lastCoachCheckInSent);
+    if (daysSince < CROSS_STREAM_SUPPRESSION_DAYS) {
+      logger.info(
+        `⏭️ User ${user.userId} received coach check-in ${daysSince} days ago, suppressing cross-stream program adherence reminder`,
+      );
+      stats.programAdherenceSkipped.recentReminder++;
+      return;
+    }
+  }
+
   const activePrograms = await queryPrograms(user.userId, { status: "active" });
   if (activePrograms.length === 0) {
     logger.info(`⏭️ User ${user.userId} has no active programs`);
@@ -247,7 +279,7 @@ async function checkProgramAdherence(
   );
 
   await sendProgramAdherenceEmail(user, laggingPrograms);
-  await updateLastSentTimestamp(user.userId, "programAdherence");
+  await updateLastSentTimestamp(user, "programAdherence");
 
   stats.programAdherenceEmailsSent++;
   logger.info(`✅ Program adherence reminder sent to ${user.email}`);
@@ -262,16 +294,29 @@ function daysSinceDate(date: Date | string): number {
 }
 
 async function updateLastSentTimestamp(
-  userId: string,
+  user: UserProfile,
   key: "coachCheckIns" | "programAdherence",
 ): Promise<void> {
-  await updateUserProfile(userId, {
+  const now = new Date();
+
+  await updateUserProfile(user.userId, {
     preferences: {
       lastSent: {
-        [key]: new Date(),
+        [key]: now,
       },
     },
   });
 
-  logger.info(`Updated preferences.lastSent.${key} for user ${userId}`);
+  // Mirror the write on the in-memory user so the sibling stream check running
+  // later in this same handler invocation sees the fresh timestamp. Without
+  // this, processUser -> checkGeneralInactivity (sends) -> checkProgramAdherence
+  // would still read the stale pre-send value and fire a second email on the
+  // same day, defeating CROSS_STREAM_SUPPRESSION_DAYS.
+  user.preferences = user.preferences ?? ({} as UserProfile["preferences"]);
+  user.preferences.lastSent = {
+    ...(user.preferences.lastSent ?? {}),
+    [key]: now,
+  };
+
+  logger.info(`Updated preferences.lastSent.${key} for user ${user.userId}`);
 }

@@ -125,7 +125,7 @@ export default function ProgramCalendar({
   }
 
   return (
-    <div className={`${containerPatterns.cardMedium} p-6`}>
+    <div className={`${containerPatterns.cardMedium} p-4 md:p-6`}>
       {/* Section Header */}
       <div className="flex items-start space-x-3 mb-4">
         <div
@@ -136,10 +136,10 @@ export default function ProgramCalendar({
         </h3>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Controls - stack on mobile to avoid cramping */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         {/* Legend */}
-        <div className="flex flex-wrap gap-3 text-xs font-body">
+        <div className="flex flex-wrap gap-2 sm:gap-3 text-xs font-body">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-synthwave-neon-pink"></div>
             <span className="text-synthwave-text-secondary">Done</span>
@@ -221,8 +221,8 @@ export default function ProgramCalendar({
                 </span>
               </div>
 
-              {/* Days grid - tighter spacing, taller cells */}
-              <div className="grid grid-cols-7 gap-1.5">
+              {/* Days grid - tighter spacing on mobile */}
+              <div className="grid grid-cols-7 gap-1 md:gap-1.5">
                 {week.map((day) => (
                   <CalendarDayCell
                     key={day.dayNumber}

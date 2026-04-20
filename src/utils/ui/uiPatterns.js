@@ -121,30 +121,30 @@ export const badgePatterns = {
   numberedCircleText: "font-body font-bold text-white text-xs",
 
   // Pink badges - For high priority, primary categorization
-  pink: "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 text-xs font-body",
+  pink: "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded-md text-xs font-body",
   pinkBorder:
-    "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 text-xs font-body border border-synthwave-neon-pink/40",
+    "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded-md text-xs font-body border border-synthwave-neon-pink/40",
 
   // Cyan badges - For secondary categorization, info tags
-  cyan: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 text-xs font-body",
+  cyan: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-body",
   cyanBorder:
-    "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 text-xs font-body border border-synthwave-neon-cyan/40",
+    "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-body border border-synthwave-neon-cyan/40",
 
   // Purple badges - For special categorization
   purple:
-    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 text-xs font-body",
+    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded-md text-xs font-body",
   purpleBorder:
-    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 text-xs font-body border border-synthwave-neon-purple/40",
+    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded-md text-xs font-body border border-synthwave-neon-purple/40",
 
   // Muted badges - For low priority or secondary information
   muted:
-    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 text-xs font-body",
+    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 rounded-md text-xs font-body",
   mutedBorder:
-    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 text-xs font-body border border-synthwave-text-muted/40",
+    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 rounded-md text-xs font-body border border-synthwave-text-muted/40",
 
   // Workout detail badges - For equipment and exercise lists (cyan themed)
   workoutDetail:
-    "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 text-sm font-body text-synthwave-text-secondary",
+    "px-2 py-1 rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 text-sm font-body text-synthwave-text-secondary",
 
   // Count badges - For numerical indicators (sidebar, calendar, etc.) - matches SidebarNav styling
   countBase:
@@ -175,12 +175,16 @@ export const badgePatterns = {
     "bg-synthwave-text-secondary/20 text-synthwave-text-secondary",
 
   // Beta badge - For AI/experimental features (purple themed)
-  beta: "bg-synthwave-neon-purple/10 text-synthwave-neon-purple px-2 py-1 text-xs font-body",
+  // Standard size for page headers; use betaSmall for dense chrome (drawers, inline).
+  beta: "inline-flex items-center px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider",
+  betaSmall:
+    "inline-flex items-center px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider",
 
   // Green badges - For status indicators (active, qualified, PR)
-  green: "bg-green-500/20 text-green-400 px-2 py-1 text-xs font-body",
+  green:
+    "bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-body",
   greenBorder:
-    "bg-green-500/20 text-green-400 px-2 py-1 text-xs font-body border border-green-500/40",
+    "bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-body border border-green-500/40",
 };
 
 export const iconButtonPatterns = {
@@ -1054,10 +1058,12 @@ export const navigationPatterns = {
   // Mobile bottom aligns with QuickActionsFAB slot (80px + safe area) when Quick FAB is hidden on those routes.
   //   desktop: calc(32px + safe-area) — above viewport edge
   entityChatFab: {
+    // Mobile: 96px from viewport bottom keeps ~32px clearance above the ~64px
+    // bottom nav, matching the 32px (right-8) distance from the right edge.
     container: "fixed right-8 z-50 md:[--entity-fab-bottom:32px]",
     containerStyle: {
       bottom:
-        "calc(var(--entity-fab-bottom, 80px) + env(safe-area-inset-bottom))",
+        "calc(var(--entity-fab-bottom, 96px) + env(safe-area-inset-bottom))",
     },
     button:
       "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink/40 transition-all duration-300 hover:border-synthwave-neon-pink/70 hover:shadow-[0_0_20px_rgba(255,0,128,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
@@ -1123,33 +1129,43 @@ export const navigationPatterns = {
 // Icon-only format with rich tooltips for context
 export const quickStatsPatterns = {
   // Outer container - wraps and positions stats below header
-  // Negative margin pulls stats closer to header for tighter spacing
-  container: "flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4",
+  // Negative margin pulls stats closer to header for tighter spacing.
+  // Mobile: tighter gap and keep on a single line so we never wrap into two rows.
+  container:
+    "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
 
-  // Individual stat item - icon + number grouping
-  item: "flex items-center gap-2 group cursor-help",
+  // Individual stat item - icon + number grouping.
+  // NOTE: The display class ("flex" vs "hidden sm:flex") is intentionally
+  // NOT included here — QuickStats.jsx composes it based on the stat's
+  // priority so secondary stats can be hidden on mobile. Do not add "flex"
+  // back into this string; doing so will cause "flex" and "hidden sm:flex"
+  // to fight and secondary stats will become visible on mobile.
+  item: "items-center gap-1.5 md:gap-2 group cursor-help",
 
   // Icon containers with color variants (matches existing neon colors)
   iconContainer: {
-    pink: "p-1.5 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200",
-    cyan: "p-1.5 rounded-md bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200",
+    pink: "p-1 md:p-1.5 rounded md:rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200",
+    cyan: "p-1 md:p-1.5 rounded md:rounded-md bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200",
     purple:
-      "p-1.5 rounded-md bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 transition-all duration-200",
+      "p-1 md:p-1.5 rounded md:rounded-md bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 transition-all duration-200",
   },
 
-  // Icon size (16x16px - balanced size for visibility and hierarchy)
-  icon: "w-4 h-4",
+  // Icon size (14px mobile / 16px desktop for visibility and hierarchy)
+  icon: "w-3.5 h-3.5 md:w-4 md:h-4",
 
-  // Value display - large number
+  // Value display - compact on mobile, large on desktop
   value:
-    "text-xl font-body font-bold text-white group-hover:scale-105 transition-transform duration-200",
+    "text-sm md:text-xl font-body font-semibold md:font-bold text-white group-hover:scale-105 transition-transform duration-200",
 
   // Skeleton loading states (matches optimized sizing: 16px icons, 6px padding, -16px margin)
   skeleton: {
-    container: "flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4",
-    item: "flex items-center gap-2",
-    icon: "w-7 h-7 bg-synthwave-text-muted/20 animate-pulse", // 28px total (16px icon + 6px padding on each side)
-    value: "h-6 w-8 bg-synthwave-text-muted/20 animate-pulse",
+    container:
+      "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
+    // Display class ("flex" vs "hidden sm:flex") is composed by QuickStats.jsx
+    // based on the stat's priority; see the note on `item` above.
+    item: "items-center gap-1.5 md:gap-2",
+    icon: "w-5 h-5 md:w-7 md:h-7 bg-synthwave-text-muted/20 animate-pulse",
+    value: "h-4 w-6 md:h-6 md:w-8 bg-synthwave-text-muted/20 animate-pulse",
   },
 };
 

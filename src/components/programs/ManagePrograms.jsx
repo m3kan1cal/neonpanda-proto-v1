@@ -12,6 +12,7 @@ import {
   iconButtonPatterns,
   formPatterns,
   inputPatterns,
+  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import { Tooltip } from "react-tooltip";
 import CompactCoachCard from "../shared/CompactCoachCard";
@@ -866,7 +867,7 @@ function ManagePrograms() {
     return (
       <div
         key={program.programId}
-        className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full relative`}
+        className={`${containerPatterns.cardMedium} p-4 md:p-6 flex flex-col justify-between h-full relative`}
       >
         {/* Actions Menu */}
         <div className="absolute top-3 right-3 z-10 actions-menu-container">
@@ -962,15 +963,15 @@ function ManagePrograms() {
             <div
               className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
             ></div>
-            <h3 className="font-header font-bold text-white text-xl uppercase">
+            <h3 className="font-header font-bold text-white text-lg md:text-xl uppercase">
               {program.name}
             </h3>
           </div>
 
-          {/* Program Description */}
+          {/* Program Description — hidden on mobile to keep card compact */}
           {program.description && (
             <p
-              className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-2`}
+              className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-2 hidden sm:block`}
             >
               {program.description}
             </p>
@@ -999,7 +1000,17 @@ function ManagePrograms() {
                   className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
                 >
                   <WorkoutIconSmall />
-                  <span className="text-sm">
+                  {/* Mobile: simple totals; desktop: full ✓ / ✕ breakdown */}
+                  <span className="text-sm sm:hidden">
+                    <span className="text-synthwave-neon-cyan font-semibold">
+                      {program.completedWorkouts || 0}
+                    </span>
+                    <span className="text-synthwave-text-secondary">
+                      {" "}
+                      / {workoutCount} workouts
+                    </span>
+                  </span>
+                  <span className="text-sm hidden sm:inline">
                     <span className="text-synthwave-neon-pink font-semibold">
                       ✓ {program.completedWorkouts || 0}
                     </span>
@@ -1040,7 +1051,11 @@ function ManagePrograms() {
                 >
                   <CalendarIcon />
                   <span className="text-sm">
-                    Day {program.currentDay || 1} of {program.totalDays} •{" "}
+                    {/* Hide "Day X of Y •" on mobile; the progress bar carries the visual weight */}
+                    <span className="hidden sm:inline">
+                      Day {program.currentDay || 1} of {program.totalDays}{" "}
+                      •{" "}
+                    </span>
                     <span className="text-synthwave-neon-cyan font-semibold">
                       {progressPercentage}% Complete
                     </span>
@@ -1069,9 +1084,9 @@ function ManagePrograms() {
               </div>
             )}
 
-            {/* Created Date */}
+            {/* Created Date — hidden on mobile to compress card height */}
             <div
-              className={`flex items-center space-x-2 ${typographyPatterns.caption}`}
+              className={`hidden sm:flex items-center space-x-2 ${typographyPatterns.caption}`}
             >
               <CalendarIcon />
               <span>
@@ -1381,10 +1396,10 @@ function ManagePrograms() {
                 data-tooltip-id="programs-info"
                 data-tooltip-content="Manage all your training programs. View progress, pause, resume, or complete programs across all your coaches."
               >
-                Your Training Programs
+                Your Programs
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
+                className={`${badgePatterns.beta} cursor-help`}
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >
@@ -1435,16 +1450,16 @@ function ManagePrograms() {
                 : "cursor-pointer"
             }`}
           >
-            <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
+            <div className="text-center h-full flex flex-col justify-between min-h-[260px] md:min-h-[400px]">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
                 {/* Plus Icon or Spinner */}
-                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
+                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3 md:mb-4">
                   {isCreatingProgram ? (
-                    <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-8 h-8 md:w-12 md:h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <svg
-                      className="w-12 h-12"
+                      className="w-8 h-8 md:w-12 md:h-12"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1460,7 +1475,7 @@ function ManagePrograms() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
+                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-base md:text-lg uppercase mb-2 md:mb-3 transition-colors duration-300">
                   {isCreatingProgram
                     ? "Creating Session..."
                     : "Design New Program"}
@@ -1468,16 +1483,16 @@ function ManagePrograms() {
 
                 {/* Description */}
                 <p
-                  className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto`}
+                  className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-xs md:text-sm transition-colors duration-300 text-center mb-3 md:mb-4 max-w-xs mx-auto`}
                 >
                   {isCreatingProgram
                     ? "Setting up your program design session"
                     : "Chat with your coach to design a personalized training program"}
                 </p>
 
-                {/* Info Badge */}
+                {/* Info Badge - hidden on mobile to reduce card height */}
                 {!isCreatingProgram && (
-                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
+                  <div className="hidden md:block bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
                     <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
                       5-10 minute guided conversation
                     </p>
@@ -1485,9 +1500,9 @@ function ManagePrograms() {
                 )}
               </div>
 
-              {/* Bottom Features - Only show when not creating */}
+              {/* Bottom Features - desktop only; mobile keeps the card compact */}
               {!isCreatingProgram && (
-                <div className="border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
+                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
                   <div className="grid grid-cols-1 gap-2">
                     <div
                       className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}

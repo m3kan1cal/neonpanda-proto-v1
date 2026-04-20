@@ -70,6 +70,7 @@ import {
 } from "./components/navigation";
 import { ToastProvider } from "./contexts/ToastContext";
 import ToastContainer from "./components/shared/ToastContainer";
+import NewBuildBanner from "./components/shared/NewBuildBanner";
 import { AuthProvider, AuthRouter, ProtectedRoute } from "./auth";
 import { setAuthFailureHandler } from "./utils/apis/apiConfig";
 import { usePageTitle } from "./hooks/usePageTitle";
@@ -125,7 +126,8 @@ function AppContent() {
 
   const hideQuickFabOnEntityCoachMobile =
     location.pathname === "/training-grounds" ||
-    location.pathname === "/training-grounds/workouts";
+    location.pathname === "/training-grounds/workouts" ||
+    location.pathname.startsWith("/training-grounds/programs/dashboard");
 
   // Workout agent for command palette
   const workoutAgentRef = useRef(null);
@@ -423,6 +425,7 @@ function AppContent() {
         </Suspense>
       </div>
       <ToastContainer />
+      <NewBuildBanner />
 
       {/* Command Palette - Global */}
       <CommandPalette
