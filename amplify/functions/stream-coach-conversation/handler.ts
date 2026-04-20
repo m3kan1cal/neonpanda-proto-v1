@@ -337,13 +337,14 @@ async function* createCoachConversationEventStreamV2(
     ) {
       // programForClientContext is always a full Program row here (either the
       // reused active-program row or a fresh getProgram() result), so stats
-      // come straight off `p`. Spreading activeProgramFromQuery first is a
-      // no-op when they're the same program and is harmless otherwise because
-      // `...p` fully overwrites the stats-bearing fields.
+      // come straight off `p`. When activeProgramFromQuery is null (user has
+      // no active program but is viewing a paused/completed one) we spread an
+      // empty object so the result is shape-complete and `...p` fills in all
+      // stats-bearing fields authoritatively.
       const p = programForClientContext;
       const programName = p.name || "Program";
       activeProgramForAgent = {
-        ...activeProgramFromQuery,
+        ...(activeProgramFromQuery ?? {}),
         ...p,
         name: programName,
       };
@@ -486,7 +487,7 @@ async function* createCoachConversationEventStreamV2(
             programName: activeProgramForAgent.name || "Active Program",
             currentDay: activeProgramForAgent.currentDay || 1,
             totalDays: activeProgramForAgent.totalDays || 1,
-            status: activeProgramForAgent.status || "active",
+            status: activeProgramForAgent.status || "unknown",
             completedWorkouts: activeProgramForAgent.completedWorkouts || 0,
             totalWorkouts: activeProgramForAgent.totalWorkouts || 0,
             s3DetailKey: activeProgramForAgent.s3DetailKey,

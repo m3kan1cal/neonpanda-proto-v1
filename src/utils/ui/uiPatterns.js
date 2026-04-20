@@ -121,30 +121,30 @@ export const badgePatterns = {
   numberedCircleText: "font-body font-bold text-white text-xs",
 
   // Pink badges - For high priority, primary categorization
-  pink: "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 text-xs font-body",
+  pink: "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded-md text-xs font-body",
   pinkBorder:
-    "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 text-xs font-body border border-synthwave-neon-pink/40",
+    "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded-md text-xs font-body border border-synthwave-neon-pink/40",
 
   // Cyan badges - For secondary categorization, info tags
-  cyan: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 text-xs font-body",
+  cyan: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-body",
   cyanBorder:
-    "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 text-xs font-body border border-synthwave-neon-cyan/40",
+    "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-body border border-synthwave-neon-cyan/40",
 
   // Purple badges - For special categorization
   purple:
-    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 text-xs font-body",
+    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded-md text-xs font-body",
   purpleBorder:
-    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 text-xs font-body border border-synthwave-neon-purple/40",
+    "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded-md text-xs font-body border border-synthwave-neon-purple/40",
 
   // Muted badges - For low priority or secondary information
   muted:
-    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 text-xs font-body",
+    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 rounded-md text-xs font-body",
   mutedBorder:
-    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 text-xs font-body border border-synthwave-text-muted/40",
+    "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 rounded-md text-xs font-body border border-synthwave-text-muted/40",
 
   // Workout detail badges - For equipment and exercise lists (cyan themed)
   workoutDetail:
-    "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 text-sm font-body text-synthwave-text-secondary",
+    "px-2 py-1 rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 text-sm font-body text-synthwave-text-secondary",
 
   // Count badges - For numerical indicators (sidebar, calendar, etc.) - matches SidebarNav styling
   countBase:
@@ -181,9 +181,10 @@ export const badgePatterns = {
     "inline-flex items-center px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider",
 
   // Green badges - For status indicators (active, qualified, PR)
-  green: "bg-green-500/20 text-green-400 px-2 py-1 text-xs font-body",
+  green:
+    "bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-body",
   greenBorder:
-    "bg-green-500/20 text-green-400 px-2 py-1 text-xs font-body border border-green-500/40",
+    "bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-body border border-green-500/40",
 };
 
 export const iconButtonPatterns = {
