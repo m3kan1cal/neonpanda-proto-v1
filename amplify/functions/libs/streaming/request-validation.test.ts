@@ -40,6 +40,21 @@ describe("validateConversationClientContext", () => {
       }),
     ).toThrow(/surface/);
   });
+
+  it("accepts training_grounds without programId", () => {
+    expect(
+      validateConversationClientContext({ surface: "training_grounds" }),
+    ).toEqual({ surface: "training_grounds" });
+  });
+
+  it("rejects training_grounds with programId", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "training_grounds",
+        programId: "program_u_1_abc",
+      }),
+    ).toThrow(/not allowed for training_grounds/);
+  });
 });
 
 describe("validateStreamingRequestBody clientContext", () => {

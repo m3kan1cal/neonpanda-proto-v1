@@ -40,6 +40,11 @@ applications:
             value: "DENY"
           - key: "X-XSS-Protection"
             value: "1; mode=block"
+      # Build manifest must never be cached so clients can detect new deploys promptly.
+      - pattern: "/build-meta.json"
+        headers:
+          - key: "Cache-Control"
+            value: "no-store, max-age=0, must-revalidate"
     redirects:
       # Public pages - strip trailing slashes
       - source: "/about/"

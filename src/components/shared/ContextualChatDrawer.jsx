@@ -236,8 +236,10 @@ function TrainingGroundsConversationPicker({
  * @param {string} coachId - The coach ID for the conversation
  * @param {Object} coachData - Coach info ({ name, avatar, etc. })
  * @param {Function} onEntityUpdated - Callback to refresh parent after a successful edit
- * @param {string} [newConversationTitle] - trainingGroundsInlineChat: title for newly created threads
- * @param {{ surface: string, programId: string } | null} [streamClientContext] - Optional per-turn API context (e.g. program dashboard)
+ * @param {string} [newConversationTitle] - Required for `trainingGroundsInlineChat` (caller-owned title for new threads). If omitted, falls back to "New Chat" with a dev warning.
+ * @param {{ surface: "program_dashboard", programId: string }
+ *        | { surface: "training_grounds" }
+ *        | null} [streamClientContext] - Optional per-turn API context (telemetry / priming)
  */
 export default function ContextualChatDrawer({
   isOpen,
@@ -251,7 +253,7 @@ export default function ContextualChatDrawer({
   coachData,
   onEntityUpdated,
   userInitial = "U",
-  newConversationTitle = "Training Grounds",
+  newConversationTitle,
   streamClientContext = null,
 }) {
   const navigate = useNavigate();
@@ -280,6 +282,22 @@ export default function ContextualChatDrawer({
   const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
 
   const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+
+  const inlineNewConversationTitle = useMemo(() => {
+    if (!isTrainingInlineChat) {
+      return newConversationTitle;
+    }
+    if (
+      typeof newConversationTitle === "string" &&
+      newConversationTitle.trim()
+    ) {
+      return newConversationTitle.trim();
+    }
+    logger.warn(
+      "ContextualChatDrawer: newConversationTitle is required for trainingGroundsInlineChat; using neutral fallback",
+    );
+    return "New Chat";
+  }, [isTrainingInlineChat, newConversationTitle]);
 
   /** Keeps the latest onClose without re-subscribing history effects when parents pass inline arrows. */
   const onCloseRef = useRef(onClose);
@@ -545,7 +563,7 @@ export default function ContextualChatDrawer({
           await agent.createConversation(
             userId,
             coachId,
-            newConversationTitle,
+            inlineNewConversationTitle,
             null,
             CONVERSATION_MODES.CHAT,
           );
@@ -588,7 +606,7 @@ export default function ContextualChatDrawer({
     userId,
     coachId,
     isTrainingInlineChat,
-    newConversationTitle,
+    inlineNewConversationTitle,
     showToast,
   ]);
 
@@ -637,7 +655,7 @@ export default function ContextualChatDrawer({
       await agent.createConversation(
         userId,
         coachId,
-        newConversationTitle,
+        inlineNewConversationTitle,
         null,
         CONVERSATION_MODES.CHAT,
       );
@@ -664,7 +682,13 @@ export default function ContextualChatDrawer({
     } finally {
       setIsInitializing(false);
     }
-  }, [userId, coachId, showToast, refreshTrainingPicker, newConversationTitle]);
+  }, [
+    userId,
+    coachId,
+    showToast,
+    refreshTrainingPicker,
+    inlineNewConversationTitle,
+  ]);
 
   const handleOpenFullPageChat = useCallback(() => {
     const id = agentRef.current?.conversationId;

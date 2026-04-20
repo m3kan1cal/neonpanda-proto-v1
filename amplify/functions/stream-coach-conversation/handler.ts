@@ -260,6 +260,8 @@ async function* createCoachConversationEventStreamV2(
           };
         }
       }
+    } else if (clientContext?.surface === "training_grounds") {
+      // Telemetry-only surface: `clientContextSurface` logged above; no program priming.
     }
 
     // 4. Build agent context
