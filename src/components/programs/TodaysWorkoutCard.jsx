@@ -1,6 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { containerPatterns, buttonPatterns } from "../../utils/ui/uiPatterns";
+import {
+  containerPatterns,
+  buttonPatterns,
+  badgePatterns,
+} from "../../utils/ui/uiPatterns";
 import { WorkoutIconSmall } from "../themes/SynthwaveComponents";
 import { EmptyState, InlineError } from "../shared/ErrorStates";
 
@@ -266,7 +270,7 @@ function TodaysWorkoutCard({
           Today's Workout
         </h3>
         <div
-          className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
+          className={`${badgePatterns.beta} cursor-help`}
           data-tooltip-id="beta-badge-todays-workout"
           data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
         >

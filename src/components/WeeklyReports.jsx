@@ -7,6 +7,7 @@ import {
   containerPatterns,
   layoutPatterns,
   tooltipPatterns,
+  badgePatterns,
 } from "../utils/ui/uiPatterns";
 import { CenteredErrorState } from "./shared/ErrorStates";
 import CompactCoachCard from "./shared/CompactCoachCard";
@@ -349,7 +350,7 @@ function WeeklyReports() {
                 Weekly Report
               </h1>
               <div
-                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider cursor-help"
+                className={`${badgePatterns.beta} cursor-help`}
                 data-tooltip-id="beta-badge"
                 data-tooltip-content="Weekly reports v2 are in beta. You may experience pre-release behavior. We appreciate your feedback!"
               >

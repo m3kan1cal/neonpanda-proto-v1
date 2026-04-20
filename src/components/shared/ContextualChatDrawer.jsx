@@ -36,6 +36,7 @@ import {
   typographyPatterns,
   iconButtonPatterns,
   tooltipPatterns,
+  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
@@ -270,6 +271,7 @@ export default function ContextualChatDrawer({
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
   const mobileMessageAreaRef = useRef(null);
+  const mobileSheetRef = useRef(null);
   const desktopInputFocusRef = useRef(null);
   const mobileInputFocusRef = useRef(null);
   const closeTriggerRef = useRef(null);
@@ -928,6 +930,7 @@ export default function ContextualChatDrawer({
 
       {/* Mobile: full-screen takeover */}
       <div
+        ref={mobileSheetRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${headingId}-mobile`}
@@ -947,6 +950,7 @@ export default function ContextualChatDrawer({
           onClose={onClose}
           requestClose={requestClose}
           mobileTrainingSheetChrome={isTrainingInlineChat}
+          mobileSheetRef={mobileSheetRef}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}
           contextualUpdate={contextualUpdate}
@@ -967,34 +971,106 @@ export default function ContextualChatDrawer({
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Mobile sheet drag handle — swipe down to close when the message list is at top
+// Mobile sheet drag handle — swipe down to close when the message list is at top.
+// Drag-to-follow: we mutate the sheet's transform directly on touchmove so the
+// panel tracks the finger; on touchend we snap back or dismiss at a 64px threshold.
 // ──────────────────────────────────────────────────────────────────────────────
-function MobileTrainingDragHandle({ messageAreaRef, requestClose }) {
+function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
   const touchStartY = useRef(null);
+  const activeRef = useRef(false);
+  const [dragging, setDragging] = useState(false);
+
+  const resetSheet = () => {
+    const el = sheetRef?.current;
+    if (!el) return;
+    el.style.transform = "";
+    el.style.transition = "";
+  };
 
   const onTouchStart = (e) => {
+    // Only start a pull when the list is basically at the top (small fudge).
+    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
+    if (scrollTop > 4) return;
     touchStartY.current = e.touches[0].clientY;
+    activeRef.current = true;
+    setDragging(true);
+    const el = sheetRef?.current;
+    if (el) {
+      // Disable transition so the sheet tracks the finger 1:1.
+      el.style.transition = "none";
+    }
+  };
+
+  const onTouchMove = (e) => {
+    if (!activeRef.current || touchStartY.current == null) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    const el = sheetRef?.current;
+    if (!el) return;
+    if (delta <= 0) {
+      el.style.transform = "";
+      return;
+    }
+    el.style.transform = `translateY(${delta}px)`;
+  };
+
+  const finishDrag = (delta) => {
+    const el = sheetRef?.current;
+    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
+    activeRef.current = false;
+    touchStartY.current = null;
+    setDragging(false);
+
+    if (delta > 64 && scrollTop <= 4) {
+      // Let the class-based translate-y-full animation finish the exit.
+      if (el) {
+        el.style.transform = "";
+        el.style.transition = "";
+      }
+      requestClose();
+      return;
+    }
+
+    if (el) {
+      // Snap back with a short ease-out so the panel feels springy.
+      el.style.transition = "transform 200ms ease-out";
+      el.style.transform = "";
+      const clear = () => {
+        el.style.transition = "";
+        el.removeEventListener("transitionend", clear);
+      };
+      el.addEventListener("transitionend", clear);
+    }
   };
 
   const onTouchEnd = (e) => {
-    if (touchStartY.current == null) return;
-    const endY = e.changedTouches[0].clientY;
-    const delta = endY - touchStartY.current;
-    touchStartY.current = null;
-    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
-    if (delta > 72 && scrollTop <= 0) {
-      requestClose();
+    if (!activeRef.current || touchStartY.current == null) {
+      resetSheet();
+      return;
     }
+    const endY = e.changedTouches[0].clientY;
+    finishDrag(endY - touchStartY.current);
+  };
+
+  const onTouchCancel = () => {
+    if (!activeRef.current) return;
+    finishDrag(0);
   };
 
   return (
     <div
-      className="flex justify-center pt-2 pb-1 shrink-0 touch-pan-x"
+      role="button"
+      aria-label="Drag down to close"
+      tabIndex={0}
+      className="flex justify-center pt-3 pb-2 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchCancel}
     >
       <div
-        className="w-10 h-1.5 rounded-full bg-synthwave-text-muted/40"
+        className={`w-12 h-1.5 rounded-full transition-colors duration-150 ${
+          dragging ? "bg-synthwave-neon-cyan/70" : "bg-synthwave-text-muted/60"
+        }`}
         aria-hidden
       />
     </div>
@@ -1014,6 +1090,7 @@ function PanelContent({
   onClose,
   requestClose,
   mobileTrainingSheetChrome = false,
+  mobileSheetRef,
   messageAreaRef,
   messages,
   contextualUpdate,
@@ -1060,6 +1137,7 @@ function PanelContent({
       {mobileTrainingSheetChrome && (
         <MobileTrainingDragHandle
           messageAreaRef={messageAreaRef}
+          sheetRef={mobileSheetRef}
           requestClose={exit}
         />
       )}
@@ -1078,18 +1156,18 @@ function PanelContent({
                 <ChevronLeftIcon />
               </span>
             </button>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex items-center gap-2">
               <div
                 id={headingId}
-                className={contextualDrawerPatterns.headerLabel}
+                className={`${contextualDrawerPatterns.headerLabel} min-w-0 truncate`}
               >
                 {entityLabel ||
                   (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
               </div>
+              <span className={`${badgePatterns.betaSmall} shrink-0`}>
+                Beta
+              </span>
             </div>
-            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
-              Beta
-            </span>
             <button
               type="button"
               onClick={exit}
@@ -1125,9 +1203,7 @@ function PanelContent({
             </div>
 
             {/* Beta badge */}
-            <span className="shrink-0 px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider">
-              Beta
-            </span>
+            <span className={`${badgePatterns.betaSmall} shrink-0`}>Beta</span>
 
             {/* Close button */}
             <button
