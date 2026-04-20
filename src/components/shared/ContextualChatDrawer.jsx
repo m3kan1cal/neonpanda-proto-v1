@@ -848,14 +848,19 @@ export default function ContextualChatDrawer({
     async (messageContent, imageS3Keys = [], documentS3Keys = []) => {
       if (!agentRef.current) return;
 
+      // Normalize up-front so the guard and the send call agree on the
+      // nullable contract. Callers today always pass a string, but the
+      // "attachments without text" path intentionally tolerates empty/null
+      // text — don't let a future caller passing null crash the send.
+      const text = messageContent?.trim() ?? "";
       const hasImages = imageS3Keys && imageS3Keys.length > 0;
       const hasDocuments = documentS3Keys && documentS3Keys.length > 0;
-      if (!messageContent?.trim() && !hasImages && !hasDocuments) return;
+      if (!text && !hasImages && !hasDocuments) return;
       setInputMessage("");
 
       try {
         await agentRef.current.sendMessageStream(
-          messageContent.trim(),
+          text,
           imageS3Keys,
           editContext,
           documentS3Keys,
