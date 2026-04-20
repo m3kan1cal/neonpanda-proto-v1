@@ -1,7 +1,7 @@
 {
   "name": "neonpanda-proto-v1",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.20260420-beta",
   "type": "module",
   "scripts": {
     "dev": "vite",
