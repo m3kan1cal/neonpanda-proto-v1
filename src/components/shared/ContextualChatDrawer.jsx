@@ -484,7 +484,13 @@ export default function ContextualChatDrawer({
 
           if (cancelled) return;
 
-          await agent.sendMessageStream(INITIAL_PROMPT, [], editContext);
+          await agent.sendMessageStream(
+            INITIAL_PROMPT,
+            [],
+            editContext,
+            [],
+            null,
+          );
         }
       } catch (err) {
         if (!cancelled) {

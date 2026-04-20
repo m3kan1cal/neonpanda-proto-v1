@@ -211,7 +211,7 @@ async function checkGeneralInactivity(
   stats.inactiveUsers++;
 
   await sendInactivityReminderEmail(user);
-  await updateLastSentTimestamp(user.userId, "coachCheckIns");
+  await updateLastSentTimestamp(user, "coachCheckIns");
 
   stats.emailsSent++;
   logger.info(`✅ Inactivity reminder sent to ${user.email}`);
@@ -279,7 +279,7 @@ async function checkProgramAdherence(
   );
 
   await sendProgramAdherenceEmail(user, laggingPrograms);
-  await updateLastSentTimestamp(user.userId, "programAdherence");
+  await updateLastSentTimestamp(user, "programAdherence");
 
   stats.programAdherenceEmailsSent++;
   logger.info(`✅ Program adherence reminder sent to ${user.email}`);
@@ -294,16 +294,29 @@ function daysSinceDate(date: Date | string): number {
 }
 
 async function updateLastSentTimestamp(
-  userId: string,
+  user: UserProfile,
   key: "coachCheckIns" | "programAdherence",
 ): Promise<void> {
-  await updateUserProfile(userId, {
+  const now = new Date();
+
+  await updateUserProfile(user.userId, {
     preferences: {
       lastSent: {
-        [key]: new Date(),
+        [key]: now,
       },
     },
   });
 
-  logger.info(`Updated preferences.lastSent.${key} for user ${userId}`);
+  // Mirror the write on the in-memory user so the sibling stream check running
+  // later in this same handler invocation sees the fresh timestamp. Without
+  // this, processUser -> checkGeneralInactivity (sends) -> checkProgramAdherence
+  // would still read the stale pre-send value and fire a second email on the
+  // same day, defeating CROSS_STREAM_SUPPRESSION_DAYS.
+  user.preferences = user.preferences ?? ({} as UserProfile["preferences"]);
+  user.preferences.lastSent = {
+    ...(user.preferences.lastSent ?? {}),
+    [key]: now,
+  };
+
+  logger.info(`Updated preferences.lastSent.${key} for user ${user.userId}`);
 }
