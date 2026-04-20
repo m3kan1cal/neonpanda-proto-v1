@@ -236,15 +236,38 @@ async function* createCoachConversationEventStreamV2(
       throw new Error("Failed to load conversation or coach config");
     }
 
-    // Load program for program_dashboard context, using cached context if available
-    let programForClientContext = null;
+    // Load program for program_dashboard context.
+    //
+    // Correctness note: `activeProgramResult` only returns the user's currently
+    // ACTIVE program (status: "active"). The dashboard may be rendering any
+    // program by id (active, paused, or completed), so we cannot assume the
+    // active-program row is the program being viewed. We also cannot rely on
+    // a cached `{ programId, programName }` in conversation metadata alone —
+    // downstream agent context needs live stats (currentDay, totalDays,
+    // completedWorkouts, phases, s3DetailKey). Merging the cached identity
+    // over a different active program (or over null) produced stale defaults
+    // or cross-wired stats from two different programs. Strategy:
+    //   - Fast path: if the dashboard's programId matches the already-fetched
+    //     active program, reuse that row (has full stats, no extra DDB call).
+    //   - Otherwise: fetch the viewed program fresh so stats are correct.
+    let programForClientContext: any = null;
     if (clientContext?.surface === "program_dashboard") {
       const cachedContext = (existingConversation.metadata as any)
         ?.sessionProgramContext;
-      if (cachedContext) {
-        logger.info("✅ V2: Using cached sessionProgramContext from metadata");
-        programForClientContext = cachedContext;
+      const activeProgramCandidate = activeProgramResult[0] || null;
+
+      if (
+        activeProgramCandidate &&
+        activeProgramCandidate.programId === clientContext.programId
+      ) {
+        logger.info(
+          "✅ V2: Dashboard program matches active program — reusing queried row",
+        );
+        programForClientContext = activeProgramCandidate;
       } else {
+        logger.info(
+          "🔎 V2: Loading dashboard program fresh (not the active program)",
+        );
         programForClientContext = await getProgram(
           userId,
           coachId,
@@ -253,12 +276,16 @@ async function* createCoachConversationEventStreamV2(
           logger.warn("V2: program load for clientContext failed:", err);
           return null;
         });
-        if (programForClientContext) {
-          sessionProgramContextToStore = {
-            programId: programForClientContext.programId,
-            programName: programForClientContext.name || "Program",
-          };
-        }
+      }
+
+      // Seed the session identity cache once per conversation so prompts keep
+      // a stable { programId, programName } across turns. Stats intentionally
+      // stay out of the cache — they must always be read live.
+      if (programForClientContext && !cachedContext) {
+        sessionProgramContextToStore = {
+          programId: programForClientContext.programId,
+          programName: programForClientContext.name || "Program",
+        };
       }
     } else if (clientContext?.surface === "training_grounds") {
       // Telemetry-only surface: `clientContextSurface` logged above; no program priming.
@@ -308,17 +335,21 @@ async function* createCoachConversationEventStreamV2(
       clientContext?.surface === "program_dashboard" &&
       programForClientContext
     ) {
+      // programForClientContext is always a full Program row here (either the
+      // reused active-program row or a fresh getProgram() result), so stats
+      // come straight off `p`. Spreading activeProgramFromQuery first is a
+      // no-op when they're the same program and is harmless otherwise because
+      // `...p` fully overwrites the stats-bearing fields.
       const p = programForClientContext;
-      // Handle both cached context (has programName) and full Program objects (has name)
-      const programName = "programName" in p ? p.programName : p.name;
+      const programName = p.name || "Program";
       activeProgramForAgent = {
         ...activeProgramFromQuery,
         ...p,
-        name: programName || "Program",
+        name: programName,
       };
       sessionProgramContext = {
         programId: p.programId,
-        programName: programName || "Program",
+        programName,
       };
     } else if (
       clientContext?.surface === "program_dashboard" &&
