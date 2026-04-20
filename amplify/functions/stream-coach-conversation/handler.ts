@@ -198,7 +198,10 @@ async function* createCoachConversationEventStreamV2(
       hasEditContext: !!editContext,
       editEntityType: editContext?.entityType,
       clientContextSurface: clientContext?.surface,
-      clientContextProgramId: clientContext?.programId,
+      clientContextProgramId:
+        clientContext?.surface === "program_dashboard"
+          ? clientContext.programId
+          : undefined,
     });
 
     const timings: Record<string, number> = {};
