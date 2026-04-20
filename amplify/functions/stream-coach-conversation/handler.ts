@@ -230,6 +230,12 @@ async function* createCoachConversationEventStreamV2(
       getCoachConversationSummary(userId, conversationId).catch(() => null),
     ]);
 
+    mark("dataLoading", stepStart);
+
+    if (!existingConversation || !coachConfig) {
+      throw new Error("Failed to load conversation or coach config");
+    }
+
     // Load program for program_dashboard context, using cached context if available
     let programForClientContext = null;
     if (clientContext?.surface === "program_dashboard") {
@@ -254,12 +260,6 @@ async function* createCoachConversationEventStreamV2(
           };
         }
       }
-    }
-
-    mark("dataLoading", stepStart);
-
-    if (!existingConversation || !coachConfig) {
-      throw new Error("Failed to load conversation or coach config");
     }
 
     // 4. Build agent context
@@ -307,13 +307,16 @@ async function* createCoachConversationEventStreamV2(
       programForClientContext
     ) {
       const p = programForClientContext;
+      // Handle both cached context (has programName) and full Program objects (has name)
+      const programName = "programName" in p ? p.programName : p.name;
       activeProgramForAgent = {
+        ...activeProgramFromQuery,
         ...p,
-        name: p.name || "Program",
+        name: programName || "Program",
       };
       sessionProgramContext = {
         programId: p.programId,
-        programName: p.name || "Program",
+        programName: programName || "Program",
       };
     } else if (
       clientContext?.surface === "program_dashboard" &&
