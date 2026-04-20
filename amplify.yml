@@ -8,6 +8,12 @@ applications:
             - nvm install 22
             - nvm use 22
             - node -v
+
+            # Fetch tag refs so vite.config.js can stamp build-meta.json
+            # with the latest release tag (Amplify's default clone is shallow
+            # and does not include tags).
+            - git fetch --tags --force origin || true
+
             - npm install --cache .npm --prefer-offline --legacy-peer-deps
 
             # Set the environment variables
