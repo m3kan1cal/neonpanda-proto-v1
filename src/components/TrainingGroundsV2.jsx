@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
@@ -229,6 +235,11 @@ function TrainingGroundsV2() {
     setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
     return () => setIsInlineCoachDrawerOpen(false);
   }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const streamClientContext = useMemo(
+    () => ({ surface: "training_grounds" }),
+    [],
+  );
 
   // Pagination state (Show More / Show Less)
   const [showAllPrograms, setShowAllPrograms] = useState(false);
@@ -1697,6 +1708,8 @@ function TrainingGroundsV2() {
             coachId={coachId}
             coachData={coachData}
             userInitial={userInitial}
+            newConversationTitle="Training Grounds"
+            streamClientContext={streamClientContext}
           />
         </>
       )}

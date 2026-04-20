@@ -6,10 +6,9 @@ import type { ConversationEditContext } from "../coach-conversation/types";
 import { SUPPORTED_DOCUMENT_EXTENSIONS } from "../document-types";
 
 /** Optional UI origin hints for coach conversation streaming (non-edit modes). */
-export type ConversationClientContext = {
-  surface: "program_dashboard";
-  programId: string;
-};
+export type ConversationClientContext =
+  | { surface: "program_dashboard"; programId: string }
+  | { surface: "training_grounds" };
 
 /**
  * Parse and validate request body from streaming event.
@@ -61,7 +60,10 @@ export function parseRequestBody(
   };
 }
 
-const ALLOWED_CLIENT_CONTEXT_SURFACES = ["program_dashboard"] as const;
+const ALLOWED_CLIENT_CONTEXT_SURFACES = [
+  "program_dashboard",
+  "training_grounds",
+] as const;
 
 /**
  * Validates optional clientContext from the streaming request body.
@@ -82,10 +84,18 @@ export function validateConversationClientContext(
     return undefined;
   }
   const surface = raw.surface;
-  if (surface !== "program_dashboard") {
+  if (surface !== "program_dashboard" && surface !== "training_grounds") {
     throw new Error(
       `clientContext.surface must be one of: ${ALLOWED_CLIENT_CONTEXT_SURFACES.join(", ")}`,
     );
+  }
+  if (surface === "training_grounds") {
+    if (raw.programId !== undefined) {
+      throw new Error(
+        "clientContext.programId is not allowed for training_grounds surface",
+      );
+    }
+    return { surface: "training_grounds" };
   }
   const programId = raw.programId;
   if (typeof programId !== "string" || !programId.trim()) {
