@@ -1354,6 +1354,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
           workoutData: workoutData,
           summary: summary,
           completedAt: completedAtDate.toISOString(),
+          userTimezone: context.userTimezone,
           ...(context.templateContext?.scalingAnalysis && {
             templateComparison: context.templateContext.scalingAnalysis,
           }),

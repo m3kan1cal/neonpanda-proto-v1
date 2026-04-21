@@ -116,6 +116,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       coachConfig,
       existingSummary ?? undefined,
       userProfile?.criticalTrainingDirective,
+      getUserTimezone(userProfile),
     );
 
     logger.info("Generated summary prompt:", {

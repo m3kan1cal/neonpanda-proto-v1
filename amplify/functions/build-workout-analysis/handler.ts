@@ -35,6 +35,7 @@ interface BuildWorkoutAnalysisEvent {
   workoutData: any;
   summary: string;
   completedAt: string;
+  userTimezone?: string;
   templateComparison?: {
     wasScaled: boolean;
     modifications: string[];
@@ -111,6 +112,7 @@ export const handler = async (event: BuildWorkoutAnalysisEvent) => {
           event.workoutData.discipline || "general",
           recentSummaries,
           event.templateComparison,
+          event.userTimezone,
         );
 
         const userPrompt =

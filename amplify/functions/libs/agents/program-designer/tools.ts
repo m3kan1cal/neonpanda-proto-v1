@@ -67,6 +67,10 @@ import {
   checkTrainingFrequencyCompliance,
 } from "./helpers";
 import { calculateEndDate } from "../../program/calendar-utils";
+import {
+  convertUtcToUserDate,
+  getUserTimezoneOrDefault,
+} from "../../analytics/date-utils";
 import { generateEntityId } from "../../id-utils";
 import { logger } from "../../logger";
 
@@ -74,7 +78,7 @@ import { logger } from "../../logger";
  * Calculate program end date from start date and total days
  * Uses the existing calendar-utils helper
  */
-function ensureProgramDates(program: any): any {
+function ensureProgramDates(program: any, userTimezone?: string): any {
   if (!program.endDate && program.startDate && program.totalDays) {
     logger.info("📅 Calculating missing endDate", {
       startDate: program.startDate,
@@ -83,10 +87,17 @@ function ensureProgramDates(program: any): any {
     program.endDate = calculateEndDate(program.startDate, program.totalDays);
   }
 
-  // Also set default startDate if missing
+  // Default startDate when missing: use the user's LOCAL calendar day in their
+  // timezone, not server UTC. Previously this used
+  // new Date().toISOString().split("T")[0] which rolls over at UTC midnight —
+  // a US-evening start would get tomorrow's date.
   if (!program.startDate) {
-    logger.info("📅 Setting default startDate to today");
-    program.startDate = new Date().toISOString().split("T")[0];
+    const tz = getUserTimezoneOrDefault(userTimezone ?? null);
+    program.startDate = convertUtcToUserDate(new Date(), tz);
+    logger.info("📅 Setting default startDate to user-local today", {
+      startDate: program.startDate,
+      timezone: tz,
+    });
     if (program.totalDays) {
       program.endDate = calculateEndDate(program.startDate, program.totalDays);
     }
@@ -831,7 +842,7 @@ Returns: isValid, shouldNormalize, confidence, validationIssues`,
     }
 
     // Calculate missing dates before validation
-    program = ensureProgramDates(program);
+    program = ensureProgramDates(program, context.userTimezone);
 
     // Validate program completeness
     const isValid = !!(

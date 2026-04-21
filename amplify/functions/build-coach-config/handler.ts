@@ -21,6 +21,7 @@ import { logger } from "../libs/logger";
 interface CoachConfigEvent {
   userId: string;
   sessionId: string;
+  userTimezone?: string;
 }
 
 export const handler: Handler<CoachConfigEvent> = async (
@@ -28,7 +29,7 @@ export const handler: Handler<CoachConfigEvent> = async (
   context: Context,
 ) => {
   return withHeartbeat("Coach Creator Agent", async () => {
-    const { userId, sessionId } = event;
+    const { userId, sessionId, userTimezone } = event;
     let session: any = null;
     let updatedSession: any = null;
 
@@ -91,6 +92,7 @@ export const handler: Handler<CoachConfigEvent> = async (
         userId,
         sessionId,
         criticalTrainingDirective,
+        userTimezone,
       };
 
       // Step 6: Create CoachCreator agent and run workflow

@@ -477,6 +477,7 @@ async function* createProgramDesignerEventStreamV2(
             .join("\n\n"),
           additionalConsiderations:
             programSession.additionalConsiderations || "none",
+          userTimezone,
         }
       : undefined;
 

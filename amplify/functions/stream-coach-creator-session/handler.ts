@@ -373,6 +373,7 @@ async function* createCoachCreatorEventStreamV2(
       sessionId as string,
       session,
       session.isComplete,
+      userTimezone,
     );
 
     logger.info("✅ V2: Session saved:", {

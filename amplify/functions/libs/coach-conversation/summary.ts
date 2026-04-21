@@ -14,6 +14,7 @@ import {
   wrapUserContent,
 } from "../security/prompt-sanitizer";
 import { NEONPANDA_PLATFORM_IDENTITY_CONDENSED } from "../prompts/platform-identity";
+import { buildTemporalContext } from "../analytics/temporal-context";
 
 /**
  * Sanitizes a string array from model output, handling the case where Claude
@@ -57,6 +58,7 @@ export function buildCoachConversationSummaryPrompt(
   coachConfig: CoachConfig,
   existingSummary?: CoachConversationSummary,
   criticalTrainingDirective?: { content: string; enabled: boolean },
+  userTimezone?: string,
 ): string {
   const coachName = coachConfig.coach_name;
   const coachPersonality = coachConfig.selected_personality.primary_template;
@@ -99,7 +101,13 @@ INSTRUCTIONS: This is a cumulative summary. Build upon the previous summary, upd
 INSTRUCTIONS: This is the first summary for this conversation. Create a comprehensive summary that captures the foundation of the coaching relationship.
 `;
 
+  // Authoritative temporal grounding so references to "this week", "recently",
+  // "tonight" are correctly anchored to the user's local calendar day.
+  const temporal = buildTemporalContext({ userTimezone });
+
   return `${NEONPANDA_PLATFORM_IDENTITY_CONDENSED}
+
+${temporal.promptBlock}
 
 ${directiveSection}You are an AI assistant helping to create conversation memory summaries for fitness coaches.
 

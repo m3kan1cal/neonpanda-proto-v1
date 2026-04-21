@@ -15,11 +15,7 @@ export const WORKOUT_INSIGHTS_TOOL: BedrockToolConfig = {
     "Provide concise, specific observations grounded in the data. Avoid generic advice.",
   inputSchema: {
     type: "object",
-    required: [
-      "performance_comparison",
-      "recovery_impact",
-      "coach_note",
-    ],
+    required: ["performance_comparison", "recovery_impact", "coach_note"],
     properties: {
       performance_comparison: {
         type: "string",
@@ -64,6 +60,8 @@ export const WORKOUT_INSIGHTS_TOOL: BedrockToolConfig = {
  * System prompt for the workout insights generation.
  * Provides context about the athlete training platform and expected output quality.
  */
+import { buildTemporalContext } from "../analytics/temporal-context";
+
 export const getWorkoutInsightsPrompt = (
   workoutSummary: string,
   workoutDiscipline: string,
@@ -74,16 +72,19 @@ export const getWorkoutInsightsPrompt = (
     adherenceScore: number;
     analysisConfidence: number;
   },
+  userTimezone?: string,
 ): string => {
   const hasTemplateContext = !!templateComparison;
   const recentContext =
     recentWorkoutSummaries.length > 0
-      ? recentWorkoutSummaries
-          .map((s, i) => `  ${i + 1}. ${s}`)
-          .join("\n")
+      ? recentWorkoutSummaries.map((s, i) => `  ${i + 1}. ${s}`).join("\n")
       : "  No recent workout history available.";
 
-  return `You are analyzing a ${workoutDiscipline} workout for an athlete training platform.
+  const temporal = buildTemporalContext({ userTimezone });
+
+  return `${temporal.promptBlock}
+
+You are analyzing a ${workoutDiscipline} workout for an athlete training platform.
 Generate concise, data-driven insights comparing this workout to the athlete's recent training history.
 
 ## Current Workout
