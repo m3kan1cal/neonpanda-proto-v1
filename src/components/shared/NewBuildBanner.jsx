@@ -1,12 +1,17 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import useBuildStaleness from "../../hooks/useBuildStaleness";
-import { buttonPatterns } from "../../utils/ui/uiPatterns";
+import {
+  buttonPatterns,
+  containerPatterns,
+} from "../../utils/ui/uiPatterns";
+import { CloseIcon } from "../themes/SynthwaveComponents";
 
 /**
- * Calm, dismissible banner that appears when a newer build is deployed than the
- * one currently running in the tab. Mounted once at the app root and shown on
- * every route.
+ * Centered modal that appears when a newer build is deployed than the one
+ * currently running in the tab. Mounted once at the app root and shown on
+ * every route. Matches the app's standard success-modal pattern so buttons
+ * have unambiguous tap targets on mobile.
  */
 const NewBuildBanner = () => {
   const { isStale, reload, snooze } = useBuildStaleness();
@@ -16,36 +21,51 @@ const NewBuildBanner = () => {
 
   return createPortal(
     <div
-      role="region"
+      role="dialog"
+      aria-modal="true"
       aria-label="App update available"
       aria-live="polite"
-      className="fixed inset-x-0 z-[9998] flex justify-center px-4 pointer-events-none bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-[calc(1rem+env(safe-area-inset-bottom))]"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] px-4"
+      onClick={snooze}
     >
-      <div className="pointer-events-auto max-w-lg w-full rounded-lg border border-synthwave-neon-cyan/40 bg-synthwave-bg-card/95 backdrop-blur-sm shadow-lg shadow-synthwave-neon-cyan/20 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-        <div className="flex-1">
-          <p className="font-heading text-base text-synthwave-text-primary">
+      <div
+        className={`${containerPatterns.successModal} p-6 relative max-w-md w-full`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={snooze}
+          className="absolute top-4 right-4 p-1 text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors cursor-pointer"
+          aria-label="Close"
+        >
+          <CloseIcon />
+        </button>
+
+        <div className="text-center">
+          <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold mb-2 pr-6">
             A new version of NeonPanda is available
-          </p>
-          <p className="font-body text-sm text-synthwave-text-secondary mt-1">
+          </h3>
+          <p className="font-body text-base text-synthwave-text-secondary mb-6">
             Reload the app to pick up the latest fixes and improvements.
           </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={snooze}
-            className={buttonPatterns.secondarySmall}
-          >
-            Not now
-          </button>
-          <button
-            type="button"
-            onClick={reload}
-            className={buttonPatterns.primarySmall}
-            autoFocus={false}
-          >
-            Reload app
-          </button>
+
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={snooze}
+              className={`flex-1 ${buttonPatterns.secondarySmall} text-base`}
+              autoFocus
+            >
+              Not now
+            </button>
+            <button
+              type="button"
+              onClick={reload}
+              className={`flex-1 ${buttonPatterns.primarySmall} text-base`}
+            >
+              Reload app
+            </button>
+          </div>
         </div>
       </div>
     </div>,

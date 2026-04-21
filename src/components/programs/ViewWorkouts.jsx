@@ -1420,15 +1420,15 @@ General thoughts: `;
                           </div>
 
                           {/* Helper text + RPE/Intensity on the same row */}
-                          <div className="mt-2 px-1 flex items-center justify-between gap-4 pb-2">
+                          <div className="mt-2 px-1 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4 pb-2">
                             <p className="text-xs text-synthwave-text-secondary">
                               Edit above to record actual performance - weights
                               used, reps completed, RPE, intensity, movement
                               substitutions, athlete notes, etc.
                             </p>
 
-                            {/* RPE/Intensity Helper - right-aligned */}
-                            <div className="flex items-center gap-3 shrink-0">
+                            {/* RPE/Intensity Helper - right-aligned on desktop, left-aligned on mobile */}
+                            <div className="flex items-center gap-3 md:shrink-0">
                               {/* RPE Helper */}
                               <div
                                 className="flex items-center gap-1.5 cursor-help"

@@ -1132,7 +1132,7 @@ export const quickStatsPatterns = {
   // Negative margin pulls stats closer to header for tighter spacing.
   // Mobile: tighter gap and keep on a single line so we never wrap into two rows.
   container:
-    "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
+    "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-6 -mt-4",
 
   // Individual stat item - icon + number grouping.
   // NOTE: The display class ("flex" vs "hidden sm:flex") is intentionally
@@ -1160,7 +1160,7 @@ export const quickStatsPatterns = {
   // Skeleton loading states (matches optimized sizing: 16px icons, 6px padding, -16px margin)
   skeleton: {
     container:
-      "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
+      "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-6 -mt-4",
     // Display class ("flex" vs "hidden sm:flex") is composed by QuickStats.jsx
     // based on the stat's priority; see the note on `item` above.
     item: "items-center gap-1.5 md:gap-2",
