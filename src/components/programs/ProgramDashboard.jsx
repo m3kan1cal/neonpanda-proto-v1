@@ -665,11 +665,21 @@ function DashboardSkeleton() {
 
         {/* Quick Stats skeleton */}
         <QuickStats
-          stats={[1, 2, 3, 4, 5, 6, 7].map((i) => ({
+          stats={[
+            "primary", // current day
+            "secondary", // total days
+            "primary", // progress
+            "primary", // completed
+            "secondary", // skipped
+            "secondary", // rest days
+            "primary", // total workouts
+            "secondary", // phases
+          ].map((priority, i) => ({
             icon: null,
             value: 0,
             tooltip: { title: "", description: "" },
             color: "cyan",
+            priority,
             isLoading: true,
             id: `skeleton-stat-${i}`,
           }))}
