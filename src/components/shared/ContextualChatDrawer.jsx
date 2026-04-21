@@ -165,7 +165,7 @@ function TrainingGroundsConversationPicker({
             <ChatIconSmall />
           </span>
         </div>
-        <div className="flex-1 pl-8 pr-9 py-2 min-h-9 flex items-center">
+        <div className="flex-1 min-w-0 pl-8 pr-9 py-2 min-h-9 flex items-center">
           <span className="font-body text-xs text-white truncate w-full">
             {displayLabel}
           </span>
