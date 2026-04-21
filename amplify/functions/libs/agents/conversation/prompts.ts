@@ -21,7 +21,7 @@ import {
   buildCoachPersonalityPrompt,
   type FormatCoachPersonalityOptions,
 } from "../../coach-config/personality-utils";
-import { getUserTimezoneOrDefault } from "../../analytics/date-utils";
+import { buildTemporalContext } from "../../analytics/temporal-context";
 import {
   sanitizeUserContent,
   wrapUserContent,
@@ -67,6 +67,17 @@ export function buildConversationAgentPrompt(
       entityType: string;
       entityId: string;
     };
+    /**
+     * ISO timestamp of the user's most recent prior message (not the one being
+     * processed now). Used to ground the model in "how long ago was the last
+     * interaction" so it cannot assume continuity of day.
+     */
+    lastInteractionAt?: string | number | Date | null;
+    /**
+     * Any absolute future dates the user has referenced that the model should
+     * see in its temporal context (e.g. meet day, deload start).
+     */
+    upcomingAnchors?: Array<{ label: string; date: string }>;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -258,33 +269,17 @@ When calling save_memory, do not generate conversational text in the same turn a
   // DYNAMIC PROMPT (Not Cached — ~10% of tokens)
   // ============================================================================
 
-  // Section 1: Current Date/Time
-  // From prompt-generation.ts lines 390-419
-  const now = new Date();
-  const effectiveTimezone = options.userTimezone || "America/Los_Angeles";
-
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: effectiveTimezone,
-  };
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: effectiveTimezone,
-  };
-
-  const formattedDate = now.toLocaleDateString("en-US", dateOptions);
-  const formattedTime = now.toLocaleTimeString("en-US", timeOptions);
-
-  dynamicSections.push(`## CURRENT DATE & TIME
-
-Today is ${formattedDate} at ${formattedTime} (${effectiveTimezone}).
-
-CRITICAL: All temporal references (today, tomorrow, yesterday, this week, last week) must use this date.
-When the user mentions "today's workout" or "yesterday", calculate the date based on ${formattedDate} at ${formattedTime}.`);
+  // Section 1: Authoritative temporal context (current date/time + recency + anchors)
+  // Centralized in libs/analytics/temporal-context.ts so every AI prompt surface
+  // speaks about "today" identically. Includes "days since last interaction"
+  // which directly fixes the failure mode where the model assumes the user is
+  // messaging the day after the previous turn.
+  const temporal = buildTemporalContext({
+    userTimezone: options.userTimezone,
+    lastInteractionAt: options.lastInteractionAt,
+    upcomingAnchors: options.upcomingAnchors,
+  });
+  dynamicSections.push(temporal.promptBlock);
 
   // Section 2: Living Profile (conditional — coach's mental model of the user)
   if (options.livingProfileContext) {

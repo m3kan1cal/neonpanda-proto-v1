@@ -200,6 +200,16 @@ async function* createCoachCreatorEventStreamV2(
       },
     };
 
+    // Timestamp of the most recent prior user message for temporal grounding.
+    const priorCreatorUserMessages = (session.conversationHistory || []).filter(
+      (m) => m.role === "user",
+    );
+    const lastInteractionAt =
+      priorCreatorUserMessages.length > 0
+        ? (priorCreatorUserMessages[priorCreatorUserMessages.length - 1]
+            .timestamp ?? null)
+        : null;
+
     // 5. Build system prompts
     const { staticPrompt, dynamicPrompt } = buildCoachCreatorSessionAgentPrompt(
       session,
@@ -208,6 +218,7 @@ async function* createCoachCreatorEventStreamV2(
         pineconeContext,
         messageCount: session.conversationHistory.length,
         criticalTrainingDirective,
+        lastInteractionAt,
       },
     );
 

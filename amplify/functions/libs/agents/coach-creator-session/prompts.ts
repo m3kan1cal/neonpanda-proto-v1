@@ -30,6 +30,7 @@ import {
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
 import { NEONPANDA_PLATFORM_IDENTITY } from "../../prompts/platform-identity";
+import { buildTemporalContext } from "../../analytics/temporal-context";
 
 /**
  * Build system prompt for the coach creator streaming agent.
@@ -45,6 +46,8 @@ export function buildCoachCreatorSessionAgentPrompt(
     pineconeContext?: string;
     messageCount?: number;
     criticalTrainingDirective?: CriticalTrainingDirective;
+    /** ISO timestamp of the user's most recent prior message in this session. */
+    lastInteractionAt?: string | number | Date | null;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -203,22 +206,6 @@ If user says "yes" / "let's go" / "ready" → call complete_intake.`);
   // DYNAMIC PROMPT (Not Cached — ~10% of tokens)
   // ============================================================================
 
-  // Section 1: Current date/time
-  const now = new Date();
-  const effectiveTimezone = options.userTimezone || "America/Los_Angeles";
-  const formattedDate = now.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: effectiveTimezone,
-  });
-  const formattedTime = now.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: effectiveTimezone,
-  });
-
   // Section 1: Critical training directive (if enabled) — first so it anchors all responses
   if (
     options.criticalTrainingDirective?.enabled &&
@@ -231,10 +218,12 @@ ${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.content,
 This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints. You MUST factor this into the intake you're collecting and ensure it informs the coach design.`);
   }
 
-  // Section 2: Current date & time
-  dynamicSections.push(`## CURRENT DATE & TIME
-
-Today is ${formattedDate} at ${formattedTime} (${effectiveTimezone}).`);
+  // Section 2: Authoritative temporal context
+  const temporal = buildTemporalContext({
+    userTimezone: options.userTimezone,
+    lastInteractionAt: options.lastInteractionAt,
+  });
+  dynamicSections.push(temporal.promptBlock);
 
   // Section 3: Session progress snapshot
   const progress = getTodoProgress(session.todoList);

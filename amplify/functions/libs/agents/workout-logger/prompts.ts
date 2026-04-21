@@ -12,6 +12,7 @@ import {
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
 import { NEONPANDA_PLATFORM_IDENTITY_CONDENSED } from "../../prompts/platform-identity";
+import { buildTemporalContext } from "../../analytics/temporal-context";
 
 /**
  * Build the complete system prompt for the WorkoutLogger agent
@@ -252,45 +253,24 @@ You have 6 tools at your disposal. Here's the recommended workflow:
    - You can call the same tool multiple times with different workoutIndex values in one response
    - Example for 2 workouts: detect both → extract both → validate(workoutIndex=0) + validate(workoutIndex=1) → summarize(workoutIndex=0) + summarize(workoutIndex=1) → save(workoutIndex=0) + save(workoutIndex=1)`);
 
-  // 4. Context information
-  const effectiveTimezone = context.userTimezone || "America/Los_Angeles";
-  const currentDateTime = new Date();
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: effectiveTimezone,
-  };
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: effectiveTimezone,
-    timeZoneName: "short",
-  };
-  const formattedDate = currentDateTime.toLocaleDateString(
-    "en-US",
-    dateOptions,
-  );
-  const formattedTime = currentDateTime.toLocaleTimeString(
-    "en-US",
-    timeOptions,
-  );
+  // 4. Authoritative temporal context + surface metadata
+  const temporal = buildTemporalContext({
+    userTimezone: context.userTimezone,
+  });
+  sections.push(temporal.promptBlock);
 
-  sections.push(`## CONTEXT
+  sections.push(`## EXTRACTION CONTEXT
 
 **Coach**: ${context.coachConfig.coach_name}
-**User Timezone**: ${effectiveTimezone}
-**Current Date**: ${formattedDate}
-**Current Time**: ${formattedTime}
 **Detection Type**: ${context.isSlashCommand ? `Slash Command (/${context.slashCommand})` : "Natural Language"}
 **Conversation ID**: ${context.conversationId}
 
-📅 **TEMPORAL AWARENESS**:
-- Extract tool uses current date/time as reference
-- "this morning" = earlier today (${formattedDate})
-- "yesterday" = previous calendar day
-- Workout dates will be validated against this context
+📅 **WORKOUT TIMESTAMP RULES**:
+- "this morning" / "today" / "earlier today" = ${temporal.isoDate}
+- "yesterday" = ${temporal.yesterdayIso}
+- Prefer an extracted completion time from the user's message over the current time.
+- When no time is mentioned and the user says "yesterday's workout", set completedAt to ${temporal.yesterdayIso} at 12:00 (noon) in the user's timezone.
+- Never assume the workout was done "today" just because the user is logging it now — check the user's wording.
 
 ${
   context.criticalTrainingDirective?.enabled
