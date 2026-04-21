@@ -43,7 +43,7 @@ import { formatConversationSummaryForPrompt } from "../libs/coach-conversation/s
 import { buildUserMessage } from "../libs/coach-conversation/message-utils";
 import { buildMessagesWithCaching } from "../libs/agents/shared/message-caching";
 import { getHistoryAttachmentFlags } from "../libs/streaming/streaming-contextual-flags";
-import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { getUserTimezone } from "../libs/user/timezone";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
 import {
   buildConversationAgentPrompt,
@@ -294,9 +294,7 @@ async function* createCoachConversationEventStreamV2(
       hasConversationSummary: !!conversationSummary,
     });
 
-    const userTimezone = getUserTimezoneOrDefault(
-      (userProfile as any)?.timezone || null,
-    );
+    const userTimezone = getUserTimezone(userProfile);
     const activeProgramFromQuery = activeProgramResult[0] || null;
 
     let activeProgramForAgent = activeProgramFromQuery;

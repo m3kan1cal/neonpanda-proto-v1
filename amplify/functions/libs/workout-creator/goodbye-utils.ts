@@ -8,10 +8,7 @@
  * workout.
  */
 
-import {
-  CoachMessage,
-  CONVERSATION_MODES,
-} from "../coach-conversation/types";
+import { CoachMessage, CONVERSATION_MODES } from "../coach-conversation/types";
 import { buildUserMessage } from "../coach-conversation/message-utils";
 import { MODEL_IDS, invokeAsyncLambda } from "../api-helpers";
 import { saveCoachConversation } from "../../../dynamodb/operations";
@@ -20,6 +17,7 @@ import type { BusinessLogicParams, ConversationData } from "../streaming";
 import { getTodoProgress, hasSubstantialProgress } from "./todo-list-utils";
 import type { WorkoutCreatorSession } from "./types";
 import { logger } from "../logger";
+import { getUserTimezone } from "../user/timezone";
 
 /** Patterns that indicate a closing/goodbye message */
 export const GOODBYE_PATTERNS =
@@ -98,7 +96,7 @@ export async function* handleGoodbyeAutoComplete(
           userMessage: fullUserMessage,
           coachConfig: conversationData.coachConfig,
           imageS3Keys: workoutSession.imageS3Keys || [],
-          userTimezone: conversationData.userProfile?.timezone,
+          userTimezone: getUserTimezone(conversationData.userProfile),
           criticalTrainingDirective:
             conversationData.userProfile?.criticalTrainingDirective,
         },

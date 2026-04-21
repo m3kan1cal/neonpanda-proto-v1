@@ -16,7 +16,7 @@ import {
   GuardrailInterventionError,
 } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
-import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { getUserTimezone } from "../libs/user/timezone";
 import { getTodoProgress } from "../libs/program-designer/todo-list-utils";
 import { saveSessionAndTriggerProgramGeneration } from "../libs/program-designer/session-management";
 import { generateProgramId } from "../libs/id-utils";
@@ -247,9 +247,7 @@ async function* createProgramDesignerEventStreamV2(
         : rawPineconeContext;
 
     // 5. Build agent context
-    const userTimezone = getUserTimezoneOrDefault(
-      (userProfile as any)?.timezone || null,
-    );
+    const userTimezone = getUserTimezone(userProfile);
 
     const coachPersonality =
       coachConfig?.generated_prompts?.personality_prompt || undefined;

@@ -17,7 +17,7 @@ import {
   GuardrailInterventionError,
 } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
-import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { getUserTimezone } from "../libs/user/timezone";
 import {
   saveCoachCreatorSession,
   getUserProfile,
@@ -178,9 +178,7 @@ async function* createCoachCreatorEventStreamV2(
     }
 
     // 4. Build agent context
-    const userTimezone = getUserTimezoneOrDefault(
-      (userProfile as any)?.timezone || null,
-    );
+    const userTimezone = getUserTimezone(userProfile);
 
     const criticalTrainingDirective = (userProfile as any)
       ?.criticalTrainingDirective;
