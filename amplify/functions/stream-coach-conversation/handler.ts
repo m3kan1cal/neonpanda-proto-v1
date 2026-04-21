@@ -43,7 +43,7 @@ import { formatConversationSummaryForPrompt } from "../libs/coach-conversation/s
 import { buildUserMessage } from "../libs/coach-conversation/message-utils";
 import { buildMessagesWithCaching } from "../libs/agents/shared/message-caching";
 import { getHistoryAttachmentFlags } from "../libs/streaming/streaming-contextual-flags";
-import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { getUserTimezone } from "../libs/user/timezone";
 import { StreamingConversationAgent } from "../libs/agents/conversation/agent";
 import {
   buildConversationAgentPrompt,
@@ -324,9 +324,7 @@ async function* createCoachConversationEventStreamV2(
       hasConversationSummary: !!conversationSummary,
     });
 
-    const userTimezone = getUserTimezoneOrDefault(
-      (userProfile as any)?.timezone || null,
-    );
+    const userTimezone = getUserTimezone(userProfile);
     const activeProgramFromQuery = activeProgramResult[0] || null;
 
     let activeProgramForAgent = activeProgramFromQuery;
@@ -509,6 +507,23 @@ async function* createCoachConversationEventStreamV2(
 
     // 5. Build system prompt
     stepStart = Date.now();
+
+    // Find the timestamp of the user's most recent prior message (excluding
+    // the one currently being processed, which is appended separately below).
+    // This grounds the coach's sense of "how long since we last talked" so the
+    // LLM cannot silently assume continuity of day.
+    const priorUserMessages = (existingConversation.messages || []).filter(
+      (m: { role: string }) => m.role === "user",
+    );
+    const lastInteractionAt =
+      priorUserMessages.length > 0
+        ? ((
+            priorUserMessages[priorUserMessages.length - 1] as {
+              timestamp?: Date | string;
+            }
+          ).timestamp ?? null)
+        : null;
+
     const { staticPrompt, dynamicPrompt } = buildConversationAgentPrompt(
       coachConfig,
       {
@@ -523,6 +538,7 @@ async function* createCoachConversationEventStreamV2(
         emotionalContext: emotionalContext || undefined,
         livingProfileContext,
         prospectiveContext,
+        lastInteractionAt,
         ...(isEditMode && { editContext: agentContext.editContext }),
       },
     );

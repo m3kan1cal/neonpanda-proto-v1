@@ -171,9 +171,14 @@ export default function ProgramOverview({
       </div>
 
       {/* Program Name with Status Badge */}
-      <div className="mb-4 flex items-start gap-3">
-        <div className="font-body text-lg text-white">{program.name}</div>
-        {getStatusBadge()}
+      <div className="mb-4 flex items-start gap-3 min-w-0">
+        <div
+          className="font-body text-base sm:text-lg text-white flex-1 min-w-0 line-clamp-2"
+          title={program.name}
+        >
+          {program.name}
+        </div>
+        <div className="shrink-0">{getStatusBadge()}</div>
       </div>
 
       {/* Key Details */}

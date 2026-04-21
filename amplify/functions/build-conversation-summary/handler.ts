@@ -32,6 +32,7 @@ import { initializeLifecycle } from "../libs/memory/lifecycle";
 import { saveEmotionalSnapshot, saveMemory } from "../../dynamodb/memory";
 import { storeMemoryInPinecone } from "../libs/user/pinecone";
 import { logger } from "../libs/logger";
+import { getUserTimezone } from "../libs/user/timezone";
 
 export const handler = async (event: BuildCoachConversationSummaryEvent) => {
   try {
@@ -115,6 +116,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       coachConfig,
       existingSummary ?? undefined,
       userProfile?.criticalTrainingDirective,
+      getUserTimezone(userProfile),
     );
 
     logger.info("Generated summary prompt:", {
@@ -294,7 +296,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
         event.userId,
         event.coachId,
         event.conversationId,
-        (userProfile as any)?.timezone,
+        getUserTimezone(userProfile),
       );
       if (snapshot) {
         await saveEmotionalSnapshot(snapshot);

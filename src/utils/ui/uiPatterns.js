@@ -1058,12 +1058,13 @@ export const navigationPatterns = {
   // Mobile bottom aligns with QuickActionsFAB slot (80px + safe area) when Quick FAB is hidden on those routes.
   //   desktop: calc(32px + safe-area) — above viewport edge
   entityChatFab: {
-    // Mobile: 96px from viewport bottom keeps ~32px clearance above the ~64px
-    // bottom nav, matching the 32px (right-8) distance from the right edge.
-    container: "fixed right-8 z-50 md:[--entity-fab-bottom:32px]",
+    // Mobile: 80px from viewport bottom + safe-area — matches QuickActionsFAB
+    // positioning (right-6, 64px bottom nav + 16px gap) so the coach chat toggle
+    // lands in the exact same bottom-right anchor across pages.
+    container: "fixed right-6 z-50 md:[--entity-fab-bottom:32px]",
     containerStyle: {
       bottom:
-        "calc(var(--entity-fab-bottom, 96px) + env(safe-area-inset-bottom))",
+        "calc(var(--entity-fab-bottom, 80px) + env(safe-area-inset-bottom))",
     },
     button:
       "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink/40 transition-all duration-300 hover:border-synthwave-neon-pink/70 hover:shadow-[0_0_20px_rgba(255,0,128,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
@@ -1132,7 +1133,7 @@ export const quickStatsPatterns = {
   // Negative margin pulls stats closer to header for tighter spacing.
   // Mobile: tighter gap and keep on a single line so we never wrap into two rows.
   container:
-    "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
+    "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-6 -mt-4",
 
   // Individual stat item - icon + number grouping.
   // NOTE: The display class ("flex" vs "hidden sm:flex") is intentionally
@@ -1160,7 +1161,7 @@ export const quickStatsPatterns = {
   // Skeleton loading states (matches optimized sizing: 16px icons, 6px padding, -16px margin)
   skeleton: {
     container:
-      "flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4 mb-6 -mt-4",
+      "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-6 -mt-4",
     // Display class ("flex" vs "hidden sm:flex") is composed by QuickStats.jsx
     // based on the stat's priority; see the note on `item` above.
     item: "items-center gap-1.5 md:gap-2",
@@ -1289,11 +1290,11 @@ export const contextualDrawerPatterns = {
 
   // AI message — plain text style matching CoachConversations (no bubble)
   aiMessage:
-    "font-ai text-xs leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
+    "font-ai text-sm leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
 
   // User message bubble — matches CoachConversations userMessageBubble style, condensed for drawer width
   userMessage:
-    "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white rounded-md rounded-br-none shadow-sm shadow-synthwave-neon-pink/30 px-3 py-2 max-w-[85%] ml-auto font-body text-xs leading-relaxed",
+    "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white rounded-md rounded-br-none shadow-sm shadow-synthwave-neon-pink/30 px-3 py-2 max-w-[85%] ml-auto font-body text-sm leading-relaxed",
 
   // Close button (icon button style)
   closeButton:

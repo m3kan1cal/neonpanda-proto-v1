@@ -10,7 +10,9 @@ vi.mock("../../api-helpers", () => ({
 }));
 
 vi.mock("./prompts", () => ({
-  buildWorkoutLoggerPrompt: vi.fn().mockReturnValue("test workout logger prompt"),
+  buildWorkoutLoggerPrompt: vi
+    .fn()
+    .mockReturnValue("test workout logger prompt"),
 }));
 
 vi.mock("./tools", () => ({
@@ -81,6 +83,15 @@ vi.mock("./tools", () => ({
       templateLinked: false,
     }),
   },
+  computeDateTool: {
+    id: "compute_date",
+    description: "Resolves date references",
+    inputSchema: {},
+    execute: vi.fn().mockResolvedValue({
+      now: { isoDate: "2026-04-20", timezone: "America/Los_Angeles" },
+      results: [],
+    }),
+  },
 }));
 
 vi.mock("../../streaming/multimodal-helpers", () => ({
@@ -94,10 +105,7 @@ import * as tools from "./tools";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const makeBedrockResponse = (
-  stopReason: string,
-  content: any[] = [],
-): any => ({
+const makeBedrockResponse = (stopReason: string, content: any[] = []): any => ({
   stopReason,
   output: { message: { role: "assistant", content } },
   usage: { inputTokens: 10, outputTokens: 5 },
@@ -137,7 +145,10 @@ describe("WorkoutLoggerAgent", () => {
 
   it("returns skipped result when Bedrock returns end_turn without calling any tools", async () => {
     vi.mocked(callBedrockApiForAgent).mockResolvedValue(
-      makeBedrockResponse("end_turn", makeTextContent("I need more information about your workout.")),
+      makeBedrockResponse(
+        "end_turn",
+        makeTextContent("I need more information about your workout."),
+      ),
     );
 
     const agent = new WorkoutLoggerAgent(makeContext());
@@ -170,19 +181,34 @@ describe("WorkoutLoggerAgent", () => {
     // Simulate: Bedrock calls each tool in sequence, then end_turn
     mock
       .mockResolvedValueOnce(
-        makeBedrockResponse("tool_use", makeToolUseContent("detect_discipline")),
+        makeBedrockResponse(
+          "tool_use",
+          makeToolUseContent("detect_discipline"),
+        ),
       )
       .mockResolvedValueOnce(
-        makeBedrockResponse("tool_use", makeToolUseContent("extract_workout_data")),
+        makeBedrockResponse(
+          "tool_use",
+          makeToolUseContent("extract_workout_data"),
+        ),
       )
       .mockResolvedValueOnce(
-        makeBedrockResponse("tool_use", makeToolUseContent("validate_workout_completeness")),
+        makeBedrockResponse(
+          "tool_use",
+          makeToolUseContent("validate_workout_completeness"),
+        ),
       )
       .mockResolvedValueOnce(
-        makeBedrockResponse("tool_use", makeToolUseContent("save_workout_to_database")),
+        makeBedrockResponse(
+          "tool_use",
+          makeToolUseContent("save_workout_to_database"),
+        ),
       )
       .mockResolvedValueOnce(
-        makeBedrockResponse("end_turn", makeTextContent("Workout logged successfully!")),
+        makeBedrockResponse(
+          "end_turn",
+          makeTextContent("Workout logged successfully!"),
+        ),
       );
 
     const agent = new WorkoutLoggerAgent(makeContext());
@@ -212,13 +238,22 @@ describe("WorkoutLoggerAgent", () => {
 
     mock
       .mockResolvedValueOnce(
-        makeBedrockResponse("tool_use", makeToolUseContent("validate_workout_completeness")),
+        makeBedrockResponse(
+          "tool_use",
+          makeToolUseContent("validate_workout_completeness"),
+        ),
       )
       .mockResolvedValueOnce(
-        makeBedrockResponse("tool_use", makeToolUseContent("normalize_workout_data")),
+        makeBedrockResponse(
+          "tool_use",
+          makeToolUseContent("normalize_workout_data"),
+        ),
       )
       .mockResolvedValueOnce(
-        makeBedrockResponse("tool_use", makeToolUseContent("save_workout_to_database")),
+        makeBedrockResponse(
+          "tool_use",
+          makeToolUseContent("save_workout_to_database"),
+        ),
       )
       .mockResolvedValueOnce(
         makeBedrockResponse(

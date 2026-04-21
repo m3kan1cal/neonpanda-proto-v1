@@ -29,6 +29,7 @@ import {
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
 import { NEONPANDA_PLATFORM_IDENTITY } from "../../prompts/platform-identity";
+import { buildTemporalContext } from "../../analytics/temporal-context";
 
 /**
  * Build system prompt for the program designer streaming agent.
@@ -46,6 +47,10 @@ export function buildProgramDesignerSessionAgentPrompt(
     pineconeContext?: string;
     messageCount?: number;
     criticalTrainingDirective?: CriticalTrainingDirective;
+    /** ISO timestamp of the user's most recent prior message in this session. */
+    lastInteractionAt?: string | number | Date | null;
+    /** Absolute future dates the user has referenced (meet day, test-out, etc). */
+    upcomingAnchors?: Array<{ label: string; date: string }>;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -276,7 +281,13 @@ in the same turn so you can include the result in your response:
   with those constraints FIRST — then call complete_design. The additionalConsiderations
   parameter is for free-form notes; structured data should still be captured as named items.
 - Pass the user's complete answer as additionalConsiderations (even if "nothing" or "no")
-- Explicitly tell the user their program is being built AFTER calling this tool`);
+- Explicitly tell the user their program is being built AFTER calling this tool
+
+### compute_date:
+- Call whenever the user references a date ("my meet on may 3", "start next monday", "test out in 4 weeks", "last saturday")
+- Program phases, start dates, and meet dates are high-stakes — never estimate calendar days by hand. compute_date is the authoritative source
+- When the user gives a meet date, an event date, or a program start date, capture it via update_design_fields as an ISO YYYY-MM-DD after calling compute_date
+- If resolved=false, ask the user to clarify that date rather than guessing`);
 
   // Section 4: Conversation flow guidance
   staticSections.push(`## CONVERSATION FLOW GUIDANCE
@@ -339,22 +350,6 @@ If user says "Nothing else, let's go" → call complete_design with "no addition
   // DYNAMIC PROMPT (Not Cached — ~10% of tokens)
   // ============================================================================
 
-  // Section 1: Current date/time
-  const now = new Date();
-  const effectiveTimezone = options.userTimezone || "America/Los_Angeles";
-  const formattedDate = now.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: effectiveTimezone,
-  });
-  const formattedTime = now.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: effectiveTimezone,
-  });
-
   // Section 1: Critical training directive (if enabled) — first so it anchors all responses
   if (
     options.criticalTrainingDirective?.enabled &&
@@ -367,10 +362,13 @@ ${wrapUserContent(sanitizeUserContent(options.criticalTrainingDirective.content,
 This directive is NON-NEGOTIABLE and takes precedence over all other instructions except safety constraints. You MUST incorporate this into every recommendation and program decision.`);
   }
 
-  // Section 2: Current date & time
-  dynamicSections.push(`## CURRENT DATE & TIME
-
-Today is ${formattedDate} at ${formattedTime} (${effectiveTimezone}).`);
+  // Section 2: Authoritative temporal context
+  const temporal = buildTemporalContext({
+    userTimezone: options.userTimezone,
+    lastInteractionAt: options.lastInteractionAt,
+    upcomingAnchors: options.upcomingAnchors,
+  });
+  dynamicSections.push(temporal.promptBlock);
 
   // Section 3: Session progress snapshot
   const progress = getTodoProgress(session.todoList);

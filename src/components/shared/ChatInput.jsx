@@ -1529,7 +1529,7 @@ function ChatInput({
           {/* Right: Keyboard shortcuts - always visible */}
           <div className="flex items-center">
             {/* Mobile: icon-only compact hint */}
-            <span className="inline-flex md:hidden items-center gap-1 text-[10px]">
+            <span className="inline-flex md:hidden items-center gap-1">
               <ReturnKeyIcon /> send · ⇧<ReturnKeyIcon /> new line
             </span>
             {/* Desktop: full keyboard shortcut labels */}

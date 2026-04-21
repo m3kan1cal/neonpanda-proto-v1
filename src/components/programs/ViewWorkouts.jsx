@@ -743,12 +743,12 @@ General thoughts: `;
           </header>
 
           {/* Program Context Skeleton */}
-          <div className="mb-8">
-            <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-80 mb-2"></div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
+          <div className="mb-4">
+            <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-3/4 max-w-xs sm:w-80 mb-2"></div>
+            <div className="flex items-center gap-3 sm:gap-4 text-sm">
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32 max-w-[40%]"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20 max-w-[30%]"></div>
+              <div className="hidden sm:block h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
             </div>
           </div>
 
@@ -908,6 +908,24 @@ General thoughts: `;
       .join(" ");
   };
 
+  // Format a minute count into a human-readable rest duration.
+  // AI-generated programs commonly set a full 24h rest (1440 min) between daily
+  // workouts, which reads poorly as "1440 min" — prefer hours/days at higher ranges.
+  const formatRestAfter = (minutes) => {
+    if (minutes == null || minutes === "") return "0 min";
+    const mins = Number(minutes);
+    if (!Number.isFinite(mins) || mins <= 0) return "0 min";
+    if (mins < 60) return `${mins} min`;
+    if (mins < 1440) {
+      const hours = mins / 60;
+      return Number.isInteger(hours) ? `${hours} hr` : `${hours.toFixed(1)} hr`;
+    }
+    const days = mins / 1440;
+    return Number.isInteger(days)
+      ? `${days} day${days > 1 ? "s" : ""}`
+      : `${days.toFixed(1)} days`;
+  };
+
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
@@ -958,14 +976,14 @@ General thoughts: `;
 
         {/* Program Context */}
         <div className="mb-4">
-          <div className="flex items-center gap-3 mb-1">
+          <div className="flex items-center gap-3 mb-1 min-w-0">
             <button
               onClick={() =>
                 navigate(
                   `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
                 )
               }
-              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer"
+              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left"
               data-tooltip-id="program-name-link"
               data-tooltip-content="View training program"
             >
@@ -997,8 +1015,8 @@ General thoughts: `;
                 </span>
               )}
           </div>
-          <div className="flex items-center gap-4 text-sm pb-1">
-            <div className="font-body text-synthwave-text-secondary">
+          <div className="flex items-center gap-3 sm:gap-4 text-sm pb-1 min-w-0">
+            <div className="font-body text-synthwave-text-secondary truncate min-w-0 flex-1 sm:flex-initial">
               {phaseNumber ? (
                 <>
                   <span className="text-synthwave-text-muted">
@@ -1013,17 +1031,19 @@ General thoughts: `;
                 </>
               )}
             </div>
-            <div className="font-body text-synthwave-text-muted">
+            <div className="font-body text-synthwave-text-muted shrink-0 whitespace-nowrap">
               Day {workoutDayNumber} of {program.totalDays}
             </div>
             {!isRestDay && (
-              <span className="font-body text-synthwave-neon-cyan">
+              <span className="hidden sm:inline font-body text-synthwave-neon-cyan shrink-0">
                 {templates.length} Workout{templates.length > 1 ? "s" : ""}{" "}
                 Scheduled
               </span>
             )}
             {isRestDay && (
-              <div className="font-body text-synthwave-neon-cyan">Rest Day</div>
+              <div className="hidden sm:block font-body text-synthwave-neon-cyan shrink-0">
+                Rest Day
+              </div>
             )}
           </div>
         </div>
@@ -1151,7 +1171,11 @@ General thoughts: `;
                     <div className="flex-1">
                       <div className="flex items-start gap-3 mb-2">
                         <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-                        <h3 className="font-header text-lg font-bold uppercase text-white">
+                        <h3
+                          className={`font-header text-base sm:text-lg font-bold uppercase text-white flex-1 min-w-0 ${
+                            isCollapsed ? "line-clamp-2" : ""
+                          }`}
+                        >
                           {template.name}
                         </h3>
                         {/* Difficulty Badge - always show if available */}
@@ -1164,19 +1188,23 @@ General thoughts: `;
                                     "intermediate"
                                   ? badgePatterns.purple
                                   : badgePatterns.cyan
-                            } uppercase`}
+                            } uppercase shrink-0`}
                           >
                             {template.metadata.difficulty}
                           </span>
                         )}
                         {/* Status Badge */}
                         {isCompleted && (
-                          <span className={`${badgePatterns.cyan} uppercase`}>
+                          <span
+                            className={`${badgePatterns.cyan} uppercase shrink-0`}
+                          >
                             ✓ Logged
                           </span>
                         )}
                         {isSkipped && (
-                          <span className={`${badgePatterns.cyan} uppercase`}>
+                          <span
+                            className={`${badgePatterns.cyan} uppercase shrink-0`}
+                          >
                             ✕ Skipped
                           </span>
                         )}
@@ -1216,10 +1244,7 @@ General thoughts: `;
                             Rest After:
                           </span>
                           <span className="text-synthwave-neon-cyan font-medium">
-                            {template.restAfter != null &&
-                            template.restAfter !== ""
-                              ? `${template.restAfter} min`
-                              : "0 min"}
+                            {formatRestAfter(template.restAfter)}
                           </span>
                         </div>
                         {template.type && (
@@ -1420,15 +1445,15 @@ General thoughts: `;
                           </div>
 
                           {/* Helper text + RPE/Intensity on the same row */}
-                          <div className="mt-2 px-1 flex items-center justify-between gap-4 pb-2">
+                          <div className="mt-2 px-1 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4 pb-2">
                             <p className="text-xs text-synthwave-text-secondary">
                               Edit above to record actual performance - weights
                               used, reps completed, RPE, intensity, movement
                               substitutions, athlete notes, etc.
                             </p>
 
-                            {/* RPE/Intensity Helper - right-aligned */}
-                            <div className="flex items-center gap-3 shrink-0">
+                            {/* RPE/Intensity Helper - right-aligned on desktop, left-aligned on mobile */}
+                            <div className="flex items-center gap-3 md:shrink-0">
                               {/* RPE Helper */}
                               <div
                                 className="flex items-center gap-1.5 cursor-help"

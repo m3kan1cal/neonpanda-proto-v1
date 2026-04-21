@@ -21,6 +21,7 @@ import type { CriticalTrainingDirective } from "../../user/types";
 export interface BuildCoachConfigEvent {
   userId: string;
   sessionId: string;
+  userTimezone?: string;
 }
 
 /**
@@ -38,6 +39,9 @@ export interface CoachCreatorContext
 
   // Critical training directive from user profile (when enabled)
   criticalTrainingDirective?: CriticalTrainingDirective;
+
+  // IANA user timezone — optional, used for "today" grounding in prompts
+  userTimezone?: string;
 }
 
 /**

@@ -29,6 +29,7 @@ import {
   createQueryExerciseHistoryTool,
   createListExerciseNamesTool,
   createQueryCoachesTool,
+  createComputeDateTool,
 } from "../shared/tools";
 import {
   getTodoProgress,
@@ -72,6 +73,9 @@ const listExerciseNamesTool =
 
 const queryCoachesTool =
   createQueryCoachesTool<ProgramDesignerSessionAgentContext>();
+
+const computeDateTool =
+  createComputeDateTool<ProgramDesignerSessionAgentContext>();
 
 // ============================================================================
 // TOOL 10: update_design_fields  (designer-specific)
@@ -355,6 +359,7 @@ export const programDesignerSessionAgentTools: Tool<ProgramDesignerSessionAgentC
     queryExerciseHistoryTool,
     listExerciseNamesTool,
     queryCoachesTool,
+    computeDateTool,
     updateDesignFieldsTool,
     getDesignStatusTool,
     completeDesignTool,

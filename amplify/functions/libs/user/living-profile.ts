@@ -10,17 +10,14 @@
  *   (per-message: loads livingProfile from UserProfile, injects into prompt)
  */
 
-import {
-  callBedrockApi,
-  MODEL_IDS,
-  TEMPERATURE_PRESETS,
-} from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { LIVING_PROFILE_GENERATION_SCHEMA } from "../schemas/living-profile-schema";
 import { LivingProfile } from "./types";
 import { UserMemory } from "../memory/types";
 import { logger } from "../logger";
 import { fixDoubleEncodedProperties } from "../response-utils";
 import { NEONPANDA_PLATFORM_IDENTITY_CONDENSED } from "../prompts/platform-identity";
+import { buildTemporalContext } from "../analytics/temporal-context";
 
 /**
  * Generate or update a Living Profile from conversation data.
@@ -36,6 +33,7 @@ export async function generateLivingProfile(params: {
   userMemories: UserMemory[];
   totalConversations: number;
   coachName: string;
+  userTimezone?: string;
 }): Promise<LivingProfile> {
   const {
     existingProfile,
@@ -44,17 +42,24 @@ export async function generateLivingProfile(params: {
     userMemories,
     totalConversations,
     coachName,
+    userTimezone,
   } = params;
 
   const isUpdate = !!existingProfile;
 
+  const temporal = buildTemporalContext({ userTimezone });
+
   const systemPrompt = `${NEONPANDA_PLATFORM_IDENTITY_CONDENSED}
+
+${temporal.promptBlock}
 
 You are an AI assistant that builds and maintains a structured "mental model" of a fitness coaching client — their Living Profile.
 
 TASK: ${isUpdate ? "UPDATE the existing profile with new information from the latest conversation." : "CREATE an initial profile from the available data."}
 
-${isUpdate ? `EXISTING PROFILE:
+${
+  isUpdate
+    ? `EXISTING PROFILE:
 ${JSON.stringify(existingProfile, null, 2)}
 
 IMPORTANT UPDATE RULES:
@@ -64,12 +69,14 @@ IMPORTANT UPDATE RULES:
 - For observedPatterns: increase confidence and observedCount for repeated patterns, add new ones
 - For highlightReel: add significant new moments, keep up to 10 most significant (drop oldest medium-significance)
 - For knowledgeGaps: remove topics that are now known, add newly identified gaps
-- If existing data conflicts with new data, favor the newer data and note the change in reasoning` : `INITIAL PROFILE CREATION:
+- If existing data conflicts with new data, favor the newer data and note the change in reasoning`
+    : `INITIAL PROFILE CREATION:
 - Build the best profile you can from available data
 - Mark uncertain/unknown areas honestly
 - Set confidence lower for areas with little data
 - Populate knowledgeGaps with important unknown topics
-- It's better to say "Unknown" than to guess`}
+- It's better to say "Unknown" than to guess`
+}
 
 COACH NAME: ${coachName}
 TOTAL CONVERSATIONS: ${totalConversations}
@@ -84,8 +91,7 @@ RELATIONSHIP STAGE GUIDELINES:
     userMemories.length > 0
       ? `\n\nUSER MEMORIES (${userMemories.length} total):\n${userMemories
           .map(
-            (m) =>
-              `- [${m.memoryType}/${m.metadata.importance}] ${m.content}`,
+            (m) => `- [${m.memoryType}/${m.metadata.importance}] ${m.content}`,
           )
           .join("\n")}`
       : "";
@@ -212,9 +218,7 @@ Use the generate_living_profile tool to ${isUpdate ? "update" : "create"} the Li
  * Format a Living Profile for injection into the coach's system prompt.
  * Produces a concise, coaching-oriented summary — not a data dump.
  */
-export function formatLivingProfileForPrompt(
-  profile: LivingProfile,
-): string {
+export function formatLivingProfileForPrompt(profile: LivingProfile): string {
   const sections: string[] = [
     `# YOUR MENTAL MODEL OF THIS ATHLETE
 _Last updated: ${profile.metadata.lastUpdated} (v${profile.metadata.version})_`,
@@ -259,11 +263,12 @@ Stage: ${profile.coachingRelationship.relationshipStage} (${profile.coachingRela
 ${profile.coachingRelationship.communicationDynamic}`);
 
   // Knowledge gaps (coaching hints)
-  if (
-    profile.knowledgeGaps.suggestedQuestions.length > 0
-  ) {
+  if (profile.knowledgeGaps.suggestedQuestions.length > 0) {
     sections.push(`## Knowledge Gaps (ask naturally over time)
-${profile.knowledgeGaps.suggestedQuestions.slice(0, 3).map((q) => `- ${q}`).join("\n")}`);
+${profile.knowledgeGaps.suggestedQuestions
+  .slice(0, 3)
+  .map((q) => `- ${q}`)
+  .join("\n")}`);
   }
 
   // Observed patterns (coaching guidance)
@@ -272,7 +277,10 @@ ${profile.knowledgeGaps.suggestedQuestions.slice(0, 3).map((q) => `- ${q}`).join
   );
   if (strongPatterns.length > 0) {
     sections.push(`## Observed Patterns
-${strongPatterns.slice(0, 5).map((p) => `- ${p.pattern} (${p.category})`).join("\n")}`);
+${strongPatterns
+  .slice(0, 5)
+  .map((p) => `- ${p.pattern} (${p.category})`)
+  .join("\n")}`);
   }
 
   // Highlight reel (shared moments for continuity)

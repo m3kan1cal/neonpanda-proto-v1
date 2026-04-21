@@ -1,17 +1,19 @@
 # Release on every push to `main` (including PR merges).
 #
-# Validation (after first merge to main with this workflow):
-# - package.json / package-lock.json version matches the new tag (without leading v), e.g. 1.0.20260419-beta.
-# - The follow-up "bump" commit message contains [skip release]; a second workflow run exits immediately
-#   without creating another release.
-# - GitHub shows a new prerelease with tag v1.0.YYYYMMDD-beta on the bump commit.
-# - A second feature merge the same UTC day should produce v1.0.YYYYMMDD-beta.1 (next free serial).
+# Tag-only flow: this workflow creates a new prerelease tag and GitHub release
+# pointing at the merge SHA. It intentionally does NOT commit a version bump
+# back to `main`; that extra commit triggered a second Amplify deploy for every
+# merge. The deployed bundle reads its version from the latest git tag at build
+# time (see vite.config.js), so package.json no longer has to carry the version.
 #
-# Optional: include [skip release] in a merge commit message to skip releasing that push.
-# Requires branch rules to allow github-actions[bot] to push to main (or use a PAT).
+# Validation after a merge:
+# - A new prerelease `v1.0.YYYYMMDD-beta[.N]` appears in GitHub Releases,
+#   tagged on the merge commit.
+# - Only one Amplify build runs per merge (no follow-up bump commit).
+# - A second merge the same UTC day produces `v1.0.YYYYMMDD-beta.1`, then .2, etc.
 #
-# We run `npm version` without `npm ci` so the job does not fail when package-lock is
-# slightly behind package.json; `npm version` only updates the root version fields.
+# Optional: include [skip release] anywhere in the head commit message to skip
+# releasing that push.
 
 name: Release on main
 
@@ -38,17 +40,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Bump version, push, create GitHub Release
+      - name: Create tag and GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -70,32 +62,27 @@ jobs:
             break
           done
 
-          NPM_VERSION="${GIT_TAG#v}"
-
           PREVIOUS_TAG="$(git tag -l 'v1.0.*' | sort -V | tail -n1 || true)"
 
-          echo "Next tag: ${GIT_TAG} (npm: ${NPM_VERSION})"
+          echo "New tag: ${GIT_TAG}"
           echo "Previous tag for notes: ${PREVIOUS_TAG:-<none>}"
+          echo "Target SHA: ${GITHUB_SHA}"
 
-          npm version "${NPM_VERSION}" --no-git-tag-version
-
-          git add package.json package-lock.json
-          git commit -m "chore(release): bump version to ${NPM_VERSION} [skip release]"
-          git push origin HEAD:main
-
-          TARGET_SHA="$(git rev-parse HEAD)"
-
+          # gh release create will create the tag on the target SHA if it does
+          # not already exist, so we do not need a separate `git tag && git push`
+          # step. The release is targeted at the exact merge SHA so the release
+          # page ties back to the commit that triggered this run.
           if [ -n "${PREVIOUS_TAG}" ]; then
             gh release create "${GIT_TAG}" \
               --title "${GIT_TAG}" \
               --generate-notes \
               --notes-start-tag "${PREVIOUS_TAG}" \
-              --target "${TARGET_SHA}" \
+              --target "${GITHUB_SHA}" \
               --prerelease
           else
             gh release create "${GIT_TAG}" \
               --title "${GIT_TAG}" \
               --generate-notes \
-              --target "${TARGET_SHA}" \
+              --target "${GITHUB_SHA}" \
               --prerelease
           fi

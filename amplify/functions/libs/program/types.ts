@@ -368,6 +368,7 @@ export interface BuildProgramEvent {
   todoList: any; // ProgramDesignerTodoList with complete requirements
   conversationContext: string; // Full conversation history as text
   additionalConsiderations?: string; // User's final thoughts/requirements (asked as last question)
+  userTimezone?: string; // IANA timezone (e.g. "America/Los_Angeles") — used for dateable program fields like startDate
 }
 
 /**
