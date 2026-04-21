@@ -133,8 +133,8 @@ export const weekdayLabelForIsoDate = (
  * - `2026-05-03` — ISO passthrough (validated)
  * - `today`, `tonight`, `this morning`, `this afternoon`, `this evening`
  * - `tomorrow`, `yesterday`
- * - `this monday` / `this sat` — the nearest upcoming occurrence in the current week;
- *   if today is that weekday, returns today
+ * - `this monday` / `this sat` — the occurrence of that weekday in the current week
+ *   (past if already passed, or today/future if not yet reached)
  * - `next monday` / `next sat` — the following week's occurrence (always 7-13 days out)
  * - `last monday` — the previous occurrence
  * - `in 3 days`, `in 2 weeks`, `in 1 month`
@@ -178,7 +178,7 @@ export const resolveRelativeDate = (
   const thisDow = matchWeekdayPhrase(trimmed, "this");
   if (thisDow !== null) {
     const todayDow = weekdayForIsoDate(today, timezone);
-    const delta = (thisDow - todayDow + 7) % 7;
+    const delta = thisDow - todayDow;
     return addDays(today, delta);
   }
 

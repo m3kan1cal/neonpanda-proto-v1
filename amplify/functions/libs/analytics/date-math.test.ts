@@ -99,6 +99,20 @@ describe("resolveRelativeDate", () => {
     expect(resolveRelativeDate("this sat", now, tz)).toBe("2026-04-25");
   });
 
+  it("resolves 'this <weekday>' to a past date in the current week when already passed", () => {
+    // Thursday 2026-04-23, 12:00pm PT
+    const thursday = new Date("2026-04-23T19:00:00Z");
+    expect(resolveRelativeDate("this monday", thursday, tz)).toBe("2026-04-20");
+    expect(resolveRelativeDate("this wednesday", thursday, tz)).toBe(
+      "2026-04-22",
+    );
+    // Future days should still go forward
+    expect(resolveRelativeDate("this friday", thursday, tz)).toBe("2026-04-24");
+    expect(resolveRelativeDate("this saturday", thursday, tz)).toBe(
+      "2026-04-25",
+    );
+  });
+
   it("resolves 'next <weekday>' always to 7-13 days ahead", () => {
     // Today is Monday 2026-04-20
     expect(resolveRelativeDate("next monday", now, tz)).toBe("2026-04-27");
