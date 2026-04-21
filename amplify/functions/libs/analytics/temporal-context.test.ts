@@ -80,6 +80,18 @@ describe("buildTemporalContext", () => {
     expect(ctx.promptBlock).not.toContain("earlier today");
   });
 
+  it("clamps future-dated lastInteractionAt to 'earlier today' (clock skew guard)", () => {
+    const now = new Date("2026-04-20T12:00:00Z");
+    const ctx = buildTemporalContext({
+      now,
+      userTimezone: "America/Los_Angeles",
+      lastInteractionAt: "2026-04-22T12:00:00Z", // 2 days in the future
+    });
+    expect(ctx.daysSinceLastInteraction).toBe(0);
+    expect(ctx.promptBlock).toContain("earlier today");
+    expect(ctx.promptBlock).not.toContain("It has been");
+  });
+
   it("renders upcoming anchors with day counts", () => {
     const now = new Date("2026-04-20T19:00:00Z");
     const ctx = buildTemporalContext({

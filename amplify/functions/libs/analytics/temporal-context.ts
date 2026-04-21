@@ -124,9 +124,14 @@ export const buildTemporalContext = (
         "buildTemporalContext.lastInteractionAt",
       );
       lastInteractionDate = convertUtcToUserDate(lastDate, timezone);
-      daysSinceLastInteraction = diffInCalendarDays(
-        lastInteractionDate,
-        isoDate,
+      // Clamp negatives to 0: a future-dated lastInteractionAt (clock skew,
+      // test/seed data, or a caller passing a forward-dated value) is
+      // semantically nonsense. Treat it as "earlier today" so the prompt
+      // block still renders a coherent recency line instead of silently
+      // dropping it.
+      daysSinceLastInteraction = Math.max(
+        0,
+        diffInCalendarDays(lastInteractionDate, isoDate),
       );
     } catch {
       daysSinceLastInteraction = null;
