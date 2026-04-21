@@ -55,6 +55,21 @@ describe("weekdayLabelForIsoDate", () => {
       "Sunday",
     );
   });
+
+  it("is timezone-independent for UTC+12+ zones (Pacific/Auckland)", () => {
+    // Regression: earlier impl formatted noon-UTC via Intl in the user TZ,
+    // which pushed UTC+12+ into the next local day and returned the wrong
+    // weekday (Monday → Tuesday) for NZ/Fiji/Tonga/Samoa/Kiribati users.
+    expect(weekdayLabelForIsoDate("2026-04-20", "Pacific/Auckland")).toBe(
+      "Monday",
+    );
+    expect(weekdayLabelForIsoDate("2026-05-03", "Pacific/Tongatapu")).toBe(
+      "Sunday",
+    );
+    expect(weekdayLabelForIsoDate("2026-04-25", "Pacific/Kiritimati")).toBe(
+      "Saturday",
+    );
+  });
 });
 
 describe("resolveRelativeDate", () => {
@@ -121,6 +136,30 @@ describe("resolveRelativeDate", () => {
     expect(resolveRelativeDate("sometime soon", now, tz)).toBeNull();
     expect(resolveRelativeDate("maybe friday or saturday", now, tz)).toBeNull();
     expect(resolveRelativeDate("", now, tz)).toBeNull();
+  });
+
+  it("resolves weekday phrases correctly for UTC+12+ zones (Pacific/Auckland)", () => {
+    // 2026-04-20T00:00Z is 2026-04-20 12:00 NZST (Monday noon in Auckland).
+    // Regression: with the old Intl+timeZone weekday lookup, noon-UTC of the
+    // ISO date landed on Tuesday locally, yielding todayDow=2 and shifting
+    // every "this/next/last <weekday>" result by one day.
+    const aucklandNow = new Date("2026-04-20T00:00:00Z");
+    const aucklandTz = "Pacific/Auckland";
+    expect(resolveRelativeDate("today", aucklandNow, aucklandTz)).toBe(
+      "2026-04-20",
+    );
+    expect(resolveRelativeDate("this monday", aucklandNow, aucklandTz)).toBe(
+      "2026-04-20",
+    );
+    expect(resolveRelativeDate("this saturday", aucklandNow, aucklandTz)).toBe(
+      "2026-04-25",
+    );
+    expect(resolveRelativeDate("next monday", aucklandNow, aucklandTz)).toBe(
+      "2026-04-27",
+    );
+    expect(resolveRelativeDate("last friday", aucklandNow, aucklandTz)).toBe(
+      "2026-04-17",
+    );
   });
 });
 

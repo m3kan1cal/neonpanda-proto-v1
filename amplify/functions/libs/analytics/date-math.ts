@@ -13,16 +13,6 @@ import { convertUtcToUserDate } from "./date-utils";
  * caller is at 11:59pm.
  */
 
-const WEEKDAY_NAMES = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-] as const;
-
 const WEEKDAY_LABELS = [
   "Sunday",
   "Monday",
@@ -80,21 +70,23 @@ export const addDays = (isoDate: string, days: number): string => {
 };
 
 /**
- * Return the day-of-week (0 = Sunday, 6 = Saturday) for a YYYY-MM-DD string
- * as interpreted in the given IANA timezone.
+ * Return the day-of-week (0 = Sunday, 6 = Saturday) for a YYYY-MM-DD string.
+ *
+ * The weekday of an ISO calendar date is globally fixed — 2026-04-20 is
+ * Monday everywhere — so this is intentionally timezone-independent. We
+ * parse to noon UTC (same as every other helper in this module) and read
+ * the weekday directly via getUTCDay().
+ *
+ * An earlier version formatted the noon-UTC Date via Intl.DateTimeFormat
+ * with a timezone, which silently returned the wrong weekday for users at
+ * UTC+12 and above (Pacific/Auckland, Pacific/Tongatapu, Pacific/Kiritimati,
+ * etc.) because noon UTC lands on the following local calendar day there.
+ *
+ * The timezone parameter is retained on the signature for call-site
+ * compatibility but is unused; a future cleanup can drop it.
  */
-const weekdayForIsoDate = (isoDate: string, timezone: string): number => {
-  const dt = isoDateToNoonUtc(isoDate);
-  const weekdayName = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    timeZone: timezone,
-  })
-    .format(dt)
-    .toLowerCase();
-  const idx = WEEKDAY_NAMES.indexOf(
-    weekdayName as (typeof WEEKDAY_NAMES)[number],
-  );
-  return idx >= 0 ? idx : 0;
+const weekdayForIsoDate = (isoDate: string, _timezone: string): number => {
+  return isoDateToNoonUtc(isoDate).getUTCDay();
 };
 
 /**
