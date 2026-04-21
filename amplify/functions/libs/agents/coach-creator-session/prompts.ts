@@ -145,7 +145,12 @@ NEVER skip step 1 when the user has shared intake information. Progress tracking
 ### complete_intake:
 - ONLY call when allRequiredFieldsCollected is true (verified via get_collection_status)
 - ONLY call after the user has confirmed they're ready to proceed
-- Explicitly tell the user their coach is being built AFTER calling this tool`);
+- Explicitly tell the user their coach is being built AFTER calling this tool
+
+### compute_date:
+- Call whenever the user references a date ("tomorrow", "next saturday", "may 3", "in 2 weeks", "3 days ago")
+- Never estimate days-until or days-since by hand — this tool is the authoritative source
+- If the tool returns resolved=false, ask the user to clarify rather than guessing`);
 
   // Section 4: Conversation flow guidance
   staticSections.push(`## CONVERSATION FLOW GUIDANCE

@@ -19,6 +19,7 @@ import {
   normalizeWorkoutDataTool,
   generateWorkoutSummaryTool,
   saveWorkoutToDatabaseTool,
+  computeDateTool,
 } from "./tools";
 import { buildWorkoutLoggerPrompt } from "./prompts";
 import { MODEL_IDS } from "../../api-helpers";
@@ -361,6 +362,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
         normalizeWorkoutDataTool,
         generateWorkoutSummaryTool,
         saveWorkoutToDatabaseTool,
+        computeDateTool,
       ],
       modelId: MODEL_IDS.PLANNER_MODEL_FULL,
       context,
@@ -417,15 +419,11 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
         // If retry also failed, fall back to original result
         if (!retryResult.success && retryResult.skipped) {
-          logger.warn(
-            "⚠️ Retry also resulted in skip - using original result",
-          );
+          logger.warn("⚠️ Retry also resulted in skip - using original result");
           return result;
         }
 
-        logger.info(
-          "✅ Retry successful - workout logged after clarification",
-        );
+        logger.info("✅ Retry successful - workout logged after clarification");
         return retryResult;
       }
 

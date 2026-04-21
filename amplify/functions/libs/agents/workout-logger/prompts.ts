@@ -179,7 +179,12 @@ You have 6 tools at your disposal. Here's the recommended workflow:
 ### 6. save_workout_to_database (FINAL STEP)
 - Saves to DynamoDB and Pinecone vector database
 - Updates program templates if workout is from a training program
-- **ONLY call this after validation passes (shouldSave: true)**`);
+- **ONLY call this after validation passes (shouldSave: true)**
+
+### 7. compute_date (date arithmetic)
+- Call this WHENEVER the user's message contains a relative date ("yesterday", "last saturday", "this morning", "3 days ago", "last monday") or a month-day phrase ("may 3")
+- Returns the concrete YYYY-MM-DD in the user's timezone — use that when building completedAt
+- Never guess calendar days by hand. If resolved=false, ask the user to clarify the date instead of defaulting to today`);
 
   // 3. Critical rules
   sections.push(`## CRITICAL RULES

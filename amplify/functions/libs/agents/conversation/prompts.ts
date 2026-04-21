@@ -237,6 +237,13 @@ list_exercise_names:
 - Use when user asks "what exercises have I done?" or mentions a general exercise name
 - Returns exercise names, occurrence counts, and disciplines only — not performance data
 
+compute_date:
+- ALWAYS call this whenever the user mentions an absolute date, a relative date phrase ("tomorrow", "this saturday", "next monday", "in 3 weeks", "a week ago"), or asks how many days until/since something
+- Never estimate calendar days by hand — this tool is the authoritative source
+- Accepts ISO dates (2026-05-03) and month/day phrases ("may 3", "may 3rd", "may 3 2026")
+- If resolved=false for any reference, ask the user to clarify that date rather than guessing
+- When replying, include both the ISO date and the day-count (e.g. "your meet on 2026-05-03 (13 days from today)")
+
 ### Coaching Questions That REQUIRE Tool Use
 
 For weight selection, attempts, PRs, progression targets, meet strategy, competition openers, or program-specific questions you MUST gather data with tools before answering:

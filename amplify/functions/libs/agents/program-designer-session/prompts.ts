@@ -281,7 +281,13 @@ in the same turn so you can include the result in your response:
   with those constraints FIRST — then call complete_design. The additionalConsiderations
   parameter is for free-form notes; structured data should still be captured as named items.
 - Pass the user's complete answer as additionalConsiderations (even if "nothing" or "no")
-- Explicitly tell the user their program is being built AFTER calling this tool`);
+- Explicitly tell the user their program is being built AFTER calling this tool
+
+### compute_date:
+- Call whenever the user references a date ("my meet on may 3", "start next monday", "test out in 4 weeks", "last saturday")
+- Program phases, start dates, and meet dates are high-stakes — never estimate calendar days by hand. compute_date is the authoritative source
+- When the user gives a meet date, an event date, or a program start date, capture it via update_design_fields as an ISO YYYY-MM-DD after calling compute_date
+- If resolved=false, ask the user to clarify that date rather than guessing`);
 
   // Section 4: Conversation flow guidance
   staticSections.push(`## CONVERSATION FLOW GUIDANCE
