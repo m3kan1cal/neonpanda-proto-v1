@@ -4,6 +4,7 @@ import {
   parseCompletedAt,
 } from "./date-utils";
 import {
+  addDays,
   daysUntil,
   diffInCalendarDays,
   weekdayLabelForIsoDate,
@@ -109,8 +110,8 @@ export const buildTemporalContext = (
     timeZone: timezone,
   }).format(now);
 
-  const yesterdayIso = shiftDate(isoDate, -1);
-  const tomorrowIso = shiftDate(isoDate, 1);
+  const yesterdayIso = addDays(isoDate, -1);
+  const tomorrowIso = addDays(isoDate, 1);
 
   let daysSinceLastInteraction: number | null = null;
   let lastInteractionDate: string | null = null;
@@ -178,13 +179,6 @@ export const buildTemporalContext = (
     upcomingAnchors,
     promptBlock,
   };
-};
-
-const shiftDate = (isoDate: string, days: number): string => {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().slice(0, 10);
 };
 
 interface FormatInput {

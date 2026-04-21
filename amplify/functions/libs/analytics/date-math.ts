@@ -73,7 +73,7 @@ const isoDateToNoonUtc = (isoDate: string): Date => {
  * Add N calendar days to a YYYY-MM-DD string and return a new YYYY-MM-DD.
  * Operates in UTC so it's independent of the caller's timezone.
  */
-const addDays = (isoDate: string, days: number): string => {
+export const addDays = (isoDate: string, days: number): string => {
   const base = isoDateToNoonUtc(isoDate);
   base.setUTCDate(base.getUTCDate() + days);
   return base.toISOString().slice(0, 10);
