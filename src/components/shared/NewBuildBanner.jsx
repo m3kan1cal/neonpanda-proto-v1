@@ -5,6 +5,7 @@ import {
   buttonPatterns,
   containerPatterns,
 } from "../../utils/ui/uiPatterns";
+import { CloseIcon } from "../themes/SynthwaveComponents";
 
 /**
  * Centered modal that appears when a newer build is deployed than the one
@@ -28,11 +29,20 @@ const NewBuildBanner = () => {
       onClick={snooze}
     >
       <div
-        className={`${containerPatterns.successModal} p-6 max-w-md w-full`}
+        className={`${containerPatterns.successModal} p-6 relative max-w-md w-full`}
         onClick={(e) => e.stopPropagation()}
       >
+        <button
+          type="button"
+          onClick={snooze}
+          className="absolute top-4 right-4 p-1 text-synthwave-text-muted hover:text-synthwave-neon-pink transition-colors cursor-pointer"
+          aria-label="Close"
+        >
+          <CloseIcon />
+        </button>
+
         <div className="text-center">
-          <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold mb-2">
+          <h3 className="text-synthwave-neon-cyan font-body text-xl font-bold mb-2 pr-6">
             A new version of NeonPanda is available
           </h3>
           <p className="font-body text-base text-synthwave-text-secondary mb-6">
