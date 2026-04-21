@@ -7,6 +7,7 @@
 
 import type { ProgramDesignerContext } from "./types";
 import { buildCoachPersonalityPrompt } from "../../coach-config/personality-utils";
+import { buildTemporalContext } from "../../analytics/temporal-context";
 
 /**
  * Build the complete system prompt for the ProgramDesigner agent
@@ -353,6 +354,14 @@ DO NOT wait for one phase to complete before calling the next. Make all calls in
    - Follow the workflow precisely
    - Parallelize phase generation for speed
    - If validation fails, stop there`);
+
+  // 3.5 Authoritative temporal context — ensures the builder grounds
+  // startDate, endDate, and any "now", "this week", "next 4 weeks" reasoning
+  // in the user's local day rather than UTC or whatever it infers.
+  const temporal = buildTemporalContext({
+    userTimezone: context.userTimezone,
+  });
+  sections.push(temporal.promptBlock);
 
   // 4. Context information
   sections.push(`## CONTEXT

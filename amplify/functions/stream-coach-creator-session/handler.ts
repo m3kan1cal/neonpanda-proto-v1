@@ -17,7 +17,7 @@ import {
   GuardrailInterventionError,
 } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
-import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { getUserTimezone } from "../libs/user/timezone";
 import {
   saveCoachCreatorSession,
   getUserProfile,
@@ -178,9 +178,7 @@ async function* createCoachCreatorEventStreamV2(
     }
 
     // 4. Build agent context
-    const userTimezone = getUserTimezoneOrDefault(
-      (userProfile as any)?.timezone || null,
-    );
+    const userTimezone = getUserTimezone(userProfile);
 
     const criticalTrainingDirective = (userProfile as any)
       ?.criticalTrainingDirective;
@@ -202,6 +200,16 @@ async function* createCoachCreatorEventStreamV2(
       },
     };
 
+    // Timestamp of the most recent prior user message for temporal grounding.
+    const priorCreatorUserMessages = (session.conversationHistory || []).filter(
+      (m) => m.role === "user",
+    );
+    const lastInteractionAt =
+      priorCreatorUserMessages.length > 0
+        ? (priorCreatorUserMessages[priorCreatorUserMessages.length - 1]
+            .timestamp ?? null)
+        : null;
+
     // 5. Build system prompts
     const { staticPrompt, dynamicPrompt } = buildCoachCreatorSessionAgentPrompt(
       session,
@@ -210,6 +218,7 @@ async function* createCoachCreatorEventStreamV2(
         pineconeContext,
         messageCount: session.conversationHistory.length,
         criticalTrainingDirective,
+        lastInteractionAt,
       },
     );
 
@@ -364,6 +373,7 @@ async function* createCoachCreatorEventStreamV2(
       sessionId as string,
       session,
       session.isComplete,
+      userTimezone,
     );
 
     logger.info("✅ V2: Session saved:", {

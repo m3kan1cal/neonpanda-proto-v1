@@ -143,6 +143,7 @@ export async function saveSessionAndTriggerCoachConfig(
   sessionId: string,
   session: CoachCreatorSession,
   isComplete: boolean,
+  userTimezone?: string,
 ): Promise<{ coachConfigId?: string; alreadyGenerating?: boolean }> {
   logger.info("💾 Preparing to save session..");
 
@@ -226,6 +227,7 @@ export async function saveSessionAndTriggerCoachConfig(
           {
             userId,
             sessionId,
+            userTimezone,
           },
           "coach config generation",
         );

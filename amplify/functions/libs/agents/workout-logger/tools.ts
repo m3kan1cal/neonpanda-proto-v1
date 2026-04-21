@@ -20,6 +20,7 @@ import type {
   WorkoutSummaryResult,
   WorkoutSaveResult,
 } from "./types";
+import { createComputeDateTool } from "../shared/tools";
 import {
   DETECT_DISCIPLINE_SCHEMA,
   EXTRACT_WORKOUT_DATA_SCHEMA,
@@ -1353,6 +1354,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
           workoutData: workoutData,
           summary: summary,
           completedAt: completedAtDate.toISOString(),
+          userTimezone: context.userTimezone,
           ...(context.templateContext?.scalingAnalysis && {
             templateComparison: context.templateContext.scalingAnalysis,
           }),
@@ -1393,3 +1395,11 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     };
   },
 };
+
+// ============================================================================
+// Tool 7: compute_date
+//
+// Deterministic date math so the logger never guesses calendar days when
+// interpreting "yesterday", "last saturday", "in 3 days", etc.
+// ============================================================================
+export const computeDateTool = createComputeDateTool<WorkoutLoggerContext>();

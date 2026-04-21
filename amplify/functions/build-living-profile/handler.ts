@@ -17,6 +17,7 @@ import {
 import { queryMemories } from "../../dynamodb/memory";
 import { generateLivingProfile } from "../libs/user/living-profile";
 import { logger } from "../libs/logger";
+import { getUserTimezone } from "../libs/user/timezone";
 
 export interface BuildLivingProfileEvent {
   userId: string;
@@ -38,10 +39,7 @@ export const handler = async (event: BuildLivingProfileEvent) => {
     // Load data in parallel
     const [userProfile, conversationSummary, userMemories] = await Promise.all([
       getUserProfile(event.userId),
-      getCoachConversationSummary(
-        event.userId,
-        event.conversationId,
-      ),
+      getCoachConversationSummary(event.userId, event.conversationId),
       queryMemories(event.userId, event.coachId, { limit: 50 }),
     ]);
 
@@ -66,6 +64,7 @@ export const handler = async (event: BuildLivingProfileEvent) => {
       userMemories,
       totalConversations: event.totalConversations,
       coachName: event.coachName,
+      userTimezone: getUserTimezone(userProfile),
     });
 
     // Save the updated living profile to the user profile

@@ -26,6 +26,7 @@ import {
   createQueryExerciseHistoryTool,
   createListExerciseNamesTool,
   createQueryCoachesTool,
+  createComputeDateTool,
 } from "../shared/tools";
 import {
   getTodoProgress,
@@ -68,6 +69,9 @@ const listExerciseNamesTool =
 
 const queryCoachesTool =
   createQueryCoachesTool<CoachCreatorSessionAgentContext>();
+
+const computeDateTool =
+  createComputeDateTool<CoachCreatorSessionAgentContext>();
 
 // ============================================================================
 // TOOL 9: update_intake_fields  (creator-specific)
@@ -308,7 +312,9 @@ DO NOT call this tool if required fields are still pending.`,
       context.session.isComplete = true;
       context.session.completedAt = new Date();
 
-      console.info("✅ Intake marked complete. Handler will save and trigger coach config generation.");
+      console.info(
+        "✅ Intake marked complete. Handler will save and trigger coach config generation.",
+      );
 
       return {
         completed: true,
@@ -351,6 +357,7 @@ export const coachCreatorSessionAgentTools: Tool<CoachCreatorSessionAgentContext
     queryExerciseHistoryTool,
     listExerciseNamesTool,
     queryCoachesTool,
+    computeDateTool,
     updateIntakeFieldsTool,
     getCollectionStatusTool,
     completeIntakeTool,

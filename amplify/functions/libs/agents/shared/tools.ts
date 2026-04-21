@@ -15,7 +15,11 @@
  * get_todays_workout) are NOT in this file — they remain in conversation/tools.ts.
  */
 
-import type { Tool, BaseStreamingAgentContext } from "../core/types";
+import type {
+  Tool,
+  BaseStreamingAgentContext,
+  AgentContext,
+} from "../core/types";
 import { queryPineconeContext, storePineconeContext } from "../../api-helpers";
 import {
   SEARCH_KNOWLEDGE_BASE_SCHEMA,
@@ -27,7 +31,10 @@ import {
   QUERY_EXERCISE_HISTORY_SCHEMA,
   LIST_EXERCISE_NAMES_SCHEMA,
   QUERY_COACHES_SCHEMA,
+  COMPUTE_DATE_SCHEMA,
 } from "../../schemas/conversation-agent-tool-schemas";
+import { resolveDateReferences } from "../../analytics/date-math";
+import { getUserTimezoneOrDefault } from "../../analytics/date-utils";
 import { queryCoachConfigs } from "../../../../dynamodb/coach-config";
 import {
   formatPineconeContext,
@@ -925,6 +932,77 @@ NOT for:
     "Looking up your coaches...",
     "Checking your coaching roster...",
     "Pulling your coach lineup...",
+  ];
+
+  return tool;
+}
+
+// ============================================================================
+// FACTORY 10: compute_date
+//
+// Deterministic date math so the model never has to count days. Returns the
+// concrete YYYY-MM-DD, day-of-week, and daysFromToday for each reference.
+// ============================================================================
+
+/**
+ * Factory for `compute_date` — accepts any agent context. Tool only needs
+ * `userTimezone` on the context but accepts optional so workout-logger (which
+ * has userTimezone?: string) can use the same factory.
+ */
+export function createComputeDateTool<
+  TContext extends AgentContext & { userTimezone?: string },
+>(): Tool<TContext> {
+  const tool: Tool<TContext> = {
+    id: "compute_date",
+    description: `Resolve one or more date references into concrete YYYY-MM-DD values with day-of-week and days-from-today.
+
+Call this whenever the user mentions an absolute date, a relative date phrase, or asks "how many days until …". Never estimate date math by hand — this tool is the authoritative source.
+
+Accepts ISO dates (2026-05-03), "today", "tomorrow", "yesterday", "tonight", "this saturday", "next monday", "last friday", "in 3 days", "in 2 weeks", "in 1 month", "3 days ago", "2 weeks ago", and month-day phrases like "may 3", "may 3rd", "may 3 2026", "3 may".
+
+Returns, for each reference:
+- input: the original string
+- resolved: true|false
+- isoDate: YYYY-MM-DD in the user's timezone (null if unresolved)
+- dayOfWeek: "Monday" etc. (null if unresolved)
+- daysFromToday: integer (negative = past, 0 = today, positive = future) (null if unresolved)
+
+When resolved=false, the tool could not confidently parse the phrase — ask the user for clarification rather than guessing.
+
+Guidance for answers:
+- Always include both the ISO date and the day-count in your reply, e.g. "your meet on 2026-05-03 (13 days from today)".
+- Do not silently correct the user if their stated date disagrees with the resolved one — point out the mismatch and ask which they meant.`,
+    inputSchema: COMPUTE_DATE_SCHEMA,
+    async execute(input, context) {
+      const references: string[] = Array.isArray(input?.references)
+        ? input.references.filter(
+            (r: unknown): r is string => typeof r === "string",
+          )
+        : [];
+
+      const tz = getUserTimezoneOrDefault(context.userTimezone ?? null);
+      console.info("📅 Executing compute_date:", {
+        count: references.length,
+        userTimezone: tz,
+      });
+
+      const now = new Date();
+      const resolved = resolveDateReferences(references, now, tz);
+
+      return {
+        now: {
+          isoDate: resolveDateReferences(["today"], now, tz)[0].isoDate,
+          timezone: tz,
+        },
+        results: resolved,
+      };
+    },
+  };
+
+  (tool as any).contextualMessage = [
+    "Checking the calendar...",
+    "Working out the dates...",
+    "Counting the days...",
   ];
 
   return tool;

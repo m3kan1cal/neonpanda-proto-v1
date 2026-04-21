@@ -23,6 +23,7 @@ import {
   createQueryExerciseHistoryTool,
   createListExerciseNamesTool,
   createQueryCoachesTool,
+  createComputeDateTool,
 } from "../shared/tools";
 import { invokeAsyncLambda } from "../../api-helpers";
 import {
@@ -86,6 +87,9 @@ export const listExerciseNamesTool =
 
 export const queryCoachesTool =
   createQueryCoachesTool<ConversationAgentContext>();
+
+export const computeDateTool =
+  createComputeDateTool<ConversationAgentContext>();
 
 // ============================================================================
 // TOOL 5: Log Workout  (conversation-specific)
@@ -589,6 +593,7 @@ export const conversationAgentTools: Tool<ConversationAgentContext>[] = [
   queryExerciseHistoryTool,
   listExerciseNamesTool,
   queryCoachesTool,
+  computeDateTool,
 ];
 
 /**

@@ -16,7 +16,7 @@ import {
   GuardrailInterventionError,
 } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
-import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { getUserTimezone } from "../libs/user/timezone";
 import { getTodoProgress } from "../libs/program-designer/todo-list-utils";
 import { saveSessionAndTriggerProgramGeneration } from "../libs/program-designer/session-management";
 import { generateProgramId } from "../libs/id-utils";
@@ -247,9 +247,7 @@ async function* createProgramDesignerEventStreamV2(
         : rawPineconeContext;
 
     // 5. Build agent context
-    const userTimezone = getUserTimezoneOrDefault(
-      (userProfile as any)?.timezone || null,
-    );
+    const userTimezone = getUserTimezone(userProfile);
 
     const coachPersonality =
       coachConfig?.generated_prompts?.personality_prompt || undefined;
@@ -280,6 +278,19 @@ async function* createProgramDesignerEventStreamV2(
       },
     };
 
+    // Timestamp of the most recent prior user message for temporal grounding.
+    const priorDesignerUserMessages = (
+      programSession.conversationHistory || []
+    ).filter((m: { role: string }) => m.role === "user");
+    const lastInteractionAt =
+      priorDesignerUserMessages.length > 0
+        ? ((
+            priorDesignerUserMessages[priorDesignerUserMessages.length - 1] as {
+              timestamp?: Date | string;
+            }
+          ).timestamp ?? null)
+        : null;
+
     // 6. Build system prompts
     const { staticPrompt, dynamicPrompt } =
       buildProgramDesignerSessionAgentPrompt(programSession, {
@@ -289,6 +300,7 @@ async function* createProgramDesignerEventStreamV2(
         pineconeContext,
         messageCount: programSession.conversationHistory?.length || 0,
         criticalTrainingDirective,
+        lastInteractionAt,
       });
 
     logger.info("✅ V2: System prompt built:", {
@@ -465,6 +477,7 @@ async function* createProgramDesignerEventStreamV2(
             .join("\n\n"),
           additionalConsiderations:
             programSession.additionalConsiderations || "none",
+          userTimezone,
         }
       : undefined;
 

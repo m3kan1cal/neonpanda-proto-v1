@@ -31,6 +31,7 @@ import {
 import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from "./types";
 import { handleGoodbyeAutoComplete } from "./goodbye-utils";
 import { logger } from "../logger";
+import { getUserTimezone } from "../user/timezone";
 
 /**
  * Start a new workout collection session when insufficient data is detected
@@ -378,7 +379,7 @@ export async function* handleWorkoutCreatorFlow(
                 coachConfig: conversationData.coachConfig, // REQUIRED: build-workout needs coach name and config
                 imageS3Keys: workoutSession.imageS3Keys || [],
                 // Optional fields that may help extraction
-                userTimezone: conversationData.userProfile?.timezone,
+                userTimezone: getUserTimezone(conversationData.userProfile),
                 criticalTrainingDirective:
                   conversationData.userProfile?.criticalTrainingDirective,
               },

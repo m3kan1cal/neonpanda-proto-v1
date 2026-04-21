@@ -279,6 +279,20 @@ export const LIST_EXERCISE_NAMES_SCHEMA = {
 // Workout editing tool schemas (used in workout_edit conversation mode)
 // ============================================================================
 
+export const COMPUTE_DATE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    references: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "One or more date references to resolve. Accepts ISO dates (2026-05-03), 'today', 'tomorrow', 'yesterday', 'tonight', 'this saturday', 'next monday', 'last friday', 'in 3 days', 'in 2 weeks', 'in 1 month', '3 days ago', '2 weeks ago', 'may 3', 'may 3rd', 'may 3 2026', '3 may'. Any phrase the tool cannot confidently resolve comes back with resolved=false — when that happens, ask the user for clarification.",
+    },
+  },
+  required: ["references"],
+};
+
 export const LOAD_WORKOUT_DETAILS_SCHEMA = {
   type: "object",
   additionalProperties: false,

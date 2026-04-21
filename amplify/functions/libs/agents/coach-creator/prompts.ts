@@ -15,12 +15,20 @@ import {
   sanitizeUserContent,
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
+import { buildTemporalContext } from "../../analytics/temporal-context";
 
 /**
  * Build the complete system prompt for the CoachCreator agent
  */
 export function buildCoachCreatorPrompt(context: CoachCreatorContext): string {
   const sections: string[] = [];
+
+  // 0. Authoritative temporal context — grounds any "start", "timeline",
+  // "recently", or future-date reasoning the builder might perform.
+  const temporal = buildTemporalContext({
+    userTimezone: context.userTimezone,
+  });
+  sections.push(temporal.promptBlock);
 
   // 1. Core identity and mission
   sections.push(`# YOU ARE A COACH CREATION SPECIALIST
