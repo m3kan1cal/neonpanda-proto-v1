@@ -121,11 +121,12 @@ describe("resolveRelativeDate", () => {
     expect(resolveRelativeDate("2 weeks ago", now, tz)).toBe("2026-04-06");
   });
 
-  it("resolves month-day phrases, rolling forward if past", () => {
+  it("resolves month-day phrases, returning null if past without explicit year", () => {
     // Today is April 20. "May 3" resolves to 2026-05-03.
     expect(resolveRelativeDate("may 3", now, tz)).toBe("2026-05-03");
-    // "March 15" has passed — should roll to next year.
-    expect(resolveRelativeDate("march 15", now, tz)).toBe("2027-03-15");
+    // "March 15" has passed this year — ambiguous without explicit year, so returns null.
+    // This prevents the workout logger from confidently saving workouts to next year.
+    expect(resolveRelativeDate("march 15", now, tz)).toBeNull();
     expect(resolveRelativeDate("3 may", now, tz)).toBe("2026-05-03");
     expect(resolveRelativeDate("may 3rd", now, tz)).toBe("2026-05-03");
     expect(resolveRelativeDate("may 3 2026", now, tz)).toBe("2026-05-03");

@@ -303,11 +303,12 @@ const buildMonthDay = (
   if (!isValidIsoDate(candidate)) return null;
 
   if (!explicitYear) {
-    // If the date has already passed this year, roll forward to next year.
-    // This matches user intuition: "may 3" said in november means next year.
+    // If the date has already passed this year, it's ambiguous without an explicit year.
+    // Return null rather than confidently rolling forward to next year.
+    // This is critical for past-tense contexts like workout logging where "march 15"
+    // almost always means the recent past, not next year.
     if (diffInCalendarDays(today, candidate) < 0) {
-      const next = `${String(year + 1).padStart(4, "0")}-${String(monthNum).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      return isValidIsoDate(next) ? next : null;
+      return null;
     }
   }
 
