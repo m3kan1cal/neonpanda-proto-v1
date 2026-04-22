@@ -291,8 +291,17 @@ function ViewWorkouts() {
     // Cancel any pending draft from previous workout to prevent stale timer
     cancelPendingDraft();
 
-    // Copy prescribed description and append placeholders for performance data and athlete notes
-    const prescribedWithPlaceholders = `${template.description}
+    // Copy prescribed description and append placeholders for performance data and athlete notes.
+    // Strip trailing whitespace per line, collapse blank-line runs, and strip leading/trailing
+    // blank lines — but preserve leading indentation on content lines (e.g. "  - bullet").
+    const normalizedDescription = (template.description || "")
+      .split("\n")
+      .map((line) => line.trimEnd())
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/^\n+|\n+$/g, "");
+
+    const prescribedWithPlaceholders = `${normalizedDescription}
 
 --- Performance Data ---
 RPE - How hard it felt (1=easy, 10=max effort):
@@ -1049,7 +1058,7 @@ General thoughts: `;
         </div>
 
         {/* Workout Templates Grid */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Rest Day Card */}
           {isRestDay && (
             <div className={`${containerPatterns.cardMedium} p-6`}>
@@ -1156,152 +1165,162 @@ General thoughts: `;
               return (
                 <div
                   key={template.templateId}
-                  className={`${containerPatterns.cardMedium} animate-fadeIn ${
+                  className={`space-y-3 animate-fadeIn ${
                     isCompleted || isSkipped ? "opacity-75" : ""
-                  } ${glowingTemplateId === template.templateId ? "glow-flash" : ""}`}
+                  }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* Workout Header - Clickable for collapse/expand */}
+                  {/* Workout Header Sub-Card - Clickable for collapse/expand */}
                   <div
-                    className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-                      isCollapsed ? "" : ""
+                    className={`${containerPatterns.cardMedium} ${
+                      glowingTemplateId === template.templateId
+                        ? "glow-flash"
+                        : ""
                     }`}
-                    onClick={() => toggleCardCollapse(template.templateId)}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-start gap-3 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-                        <h3
-                          className={`font-header text-base sm:text-lg font-bold uppercase text-white flex-1 min-w-0 ${
-                            isCollapsed ? "line-clamp-2" : ""
-                          }`}
-                        >
-                          {template.name}
-                        </h3>
-                        {/* Difficulty Badge - always show if available */}
-                        {template.metadata?.difficulty && (
-                          <span
-                            className={`${
-                              template.metadata.difficulty === "advanced"
-                                ? badgePatterns.pink
-                                : template.metadata.difficulty ===
-                                    "intermediate"
-                                  ? badgePatterns.purple
-                                  : badgePatterns.cyan
-                            } uppercase shrink-0`}
+                    <div
+                      className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300"
+                      onClick={() => toggleCardCollapse(template.templateId)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
+                          <h3
+                            className={`font-header text-base sm:text-lg font-bold uppercase text-white flex-1 min-w-0 ${
+                              isCollapsed ? "line-clamp-2" : ""
+                            }`}
                           >
-                            {template.metadata.difficulty}
-                          </span>
-                        )}
-                        {/* Status Badge */}
-                        {isCompleted && (
-                          <span
-                            className={`${badgePatterns.cyan} uppercase shrink-0`}
-                          >
-                            ✓ Logged
-                          </span>
-                        )}
-                        {isSkipped && (
-                          <span
-                            className={`${badgePatterns.cyan} uppercase shrink-0`}
-                          >
-                            ✕ Skipped
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center flex-wrap gap-4">
-                        {template.estimatedDuration && (
-                          <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
-                            <svg
-                              className="w-4 h-4 shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                            {template.name}
+                          </h3>
+                          {/* Difficulty Badge - always show if available */}
+                          {template.metadata?.difficulty && (
+                            <span
+                              className={`${
+                                template.metadata.difficulty === "advanced"
+                                  ? badgePatterns.pink
+                                  : template.metadata.difficulty ===
+                                      "intermediate"
+                                    ? badgePatterns.purple
+                                    : badgePatterns.cyan
+                              } uppercase shrink-0`}
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <span>{template.estimatedDuration} min</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5 font-body text-sm">
-                          <span className="text-synthwave-text-muted">
-                            Time Cap:
-                          </span>
-                          <span className="text-synthwave-neon-cyan font-medium">
-                            {template.timeCap
-                              ? `${template.timeCap} min`
-                              : "None"}
-                          </span>
+                              {template.metadata.difficulty}
+                            </span>
+                          )}
+                          {/* Status Badge */}
+                          {isCompleted && (
+                            <span
+                              className={`${badgePatterns.cyan} uppercase shrink-0`}
+                            >
+                              ✓ Logged
+                            </span>
+                          )}
+                          {isSkipped && (
+                            <span
+                              className={`${badgePatterns.cyan} uppercase shrink-0`}
+                            >
+                              ✕ Skipped
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1.5 font-body text-sm">
-                          <span className="text-synthwave-text-muted">
-                            Rest After:
-                          </span>
-                          <span className="text-synthwave-neon-cyan font-medium">
-                            {formatRestAfter(template.restAfter)}
-                          </span>
-                        </div>
-                        {template.type && (
+
+                        <div className="flex items-center flex-wrap gap-4">
+                          {template.estimatedDuration && (
+                            <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
+                              <svg
+                                className="w-4 h-4 shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <span>{template.estimatedDuration} min</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-muted">
-                              Type:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium capitalize">
-                              {template.type}
-                            </span>
-                          </div>
-                        )}
-                        {template.scoringType && (
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-muted">
-                              Scoring:
+                              Time Cap:
                             </span>
                             <span className="text-synthwave-neon-cyan font-medium">
-                              {formatScoringType(template.scoringType)}
+                              {template.timeCap
+                                ? `${template.timeCap} min`
+                                : "None"}
                             </span>
                           </div>
-                        )}
+                          <div className="flex items-center gap-1.5 font-body text-sm">
+                            <span className="text-synthwave-text-muted">
+                              Rest After:
+                            </span>
+                            <span className="text-synthwave-neon-cyan font-medium">
+                              {formatRestAfter(template.restAfter)}
+                            </span>
+                          </div>
+                          {template.type && (
+                            <div className="flex items-center gap-1.5 font-body text-sm">
+                              <span className="text-synthwave-text-muted">
+                                Type:
+                              </span>
+                              <span className="text-synthwave-neon-cyan font-medium capitalize">
+                                {template.type}
+                              </span>
+                            </div>
+                          )}
+                          {template.scoringType && (
+                            <div className="flex items-center gap-1.5 font-body text-sm">
+                              <span className="text-synthwave-text-muted">
+                                Scoring:
+                              </span>
+                              <span className="text-synthwave-neon-cyan font-medium">
+                                {formatScoringType(template.scoringType)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {/* Collapse/Expand Icon */}
-                      <svg
-                        className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${
-                          isCollapsed ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <div className="flex items-center gap-3">
+                        {/* Collapse/Expand Icon */}
+                        <svg
+                          className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${
+                            isCollapsed ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Collapsible Card Content */}
+                  {/* Collapsible Card Content - Modular Sub-Cards */}
                   {!isCollapsed && (
-                    <div className="px-6 pb-6">
+                    <div className="space-y-3">
                       {/* Prescribed Workout - Read-only */}
                       {template.description && (
-                        <div className="mb-4">
-                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                            Prescribed Workout
-                          </h4>
-                          <div
-                            className={`${containerPatterns.workoutDescriptionEditable} text-sm`}
-                          >
-                            {template.description}
+                        <div className={containerPatterns.cardMedium}>
+                          <div className="px-6 pt-5 pb-2">
+                            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold">
+                              Prescribed Workout
+                            </h4>
+                          </div>
+                          <div className="px-6 pb-6">
+                            <div
+                              className={`${containerPatterns.workoutDescriptionEditable} text-sm`}
+                            >
+                              {template.description}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -1310,9 +1329,9 @@ General thoughts: `;
                       {editingWorkoutId === template.templateId && (
                         <div
                           id={`workout-form-${template.templateId}`}
-                          className="mb-4 animate-slideDown"
+                          className={`${containerPatterns.cardMedium} animate-slideDown`}
                         >
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="px-6 pt-5 pb-2 flex items-center justify-between">
                             <h4 className="font-body text-sm text-synthwave-neon-pink uppercase font-semibold">
                               What You Did
                             </h4>
@@ -1337,128 +1356,134 @@ General thoughts: `;
                               </div>
                             )}
                           </div>
-                          <div className={inputPatterns.chatInputWrapper}>
-                            {/* Hidden file input */}
-                            <input
-                              ref={photoInputRef}
-                              type="file"
-                              accept="image/*,.heic,.heif"
-                              multiple
-                              style={{ display: "none" }}
-                              onChange={async (e) => {
-                                if (e.target.files?.length) {
-                                  try {
-                                    await selectImages(e.target.files, userId);
-                                  } catch (err) {
-                                    logger.error(
-                                      "Error selecting images:",
-                                      err,
-                                    );
+                          <div className="px-6 pb-6">
+                            <div className={inputPatterns.chatInputWrapper}>
+                              {/* Hidden file input */}
+                              <input
+                                ref={photoInputRef}
+                                type="file"
+                                accept="image/*,.heic,.heif"
+                                multiple
+                                style={{ display: "none" }}
+                                onChange={async (e) => {
+                                  if (e.target.files?.length) {
+                                    try {
+                                      await selectImages(
+                                        e.target.files,
+                                        userId,
+                                      );
+                                    } catch (err) {
+                                      logger.error(
+                                        "Error selecting images:",
+                                        err,
+                                      );
+                                    }
                                   }
-                                }
-                                if (photoInputRef.current) {
-                                  photoInputRef.current.value = "";
-                                }
-                              }}
-                            />
+                                  if (photoInputRef.current) {
+                                    photoInputRef.current.value = "";
+                                  }
+                                }}
+                              />
 
-                            <TiptapEditor
-                              content={editedPerformance}
-                              onUpdate={(html, text) => {
-                                setEditedPerformance(text);
-                                saveDraft(editingWorkoutId, text);
-                              }}
-                              onPaste={handleEditorPaste}
-                              onAttachPhoto={() =>
-                                photoInputRef.current?.click()
-                              }
-                              attachPhotoDisabled={selectedImages.length >= 5}
-                              attachPhotoCount={selectedImages.length}
-                              variant="pink"
-                              className="tiptap-editor-pink w-full rounded-t-md text-sm"
-                              contentClassName="px-4 py-3"
-                              placeholder="Edit to record what you actually did..."
-                              mode="rich"
-                              showToolbar={true}
-                              minHeight="60px"
-                              maxHeight="260px"
-                              allowFullscreen={true}
-                            />
+                              <TiptapEditor
+                                content={editedPerformance}
+                                onUpdate={(html, text) => {
+                                  setEditedPerformance(text);
+                                  saveDraft(editingWorkoutId, text);
+                                }}
+                                onPaste={handleEditorPaste}
+                                onAttachPhoto={() =>
+                                  photoInputRef.current?.click()
+                                }
+                                attachPhotoDisabled={selectedImages.length >= 5}
+                                attachPhotoCount={selectedImages.length}
+                                variant="pink"
+                                className="tiptap-editor-pink w-full rounded-t-md text-sm"
+                                contentClassName="px-4 py-3"
+                                placeholder="Edit to record what you actually did..."
+                                mode="rich"
+                                showToolbar={true}
+                                minHeight="60px"
+                                maxHeight="260px"
+                                allowFullscreen={true}
+                              />
 
-                            {/* Photo thumbnails strip */}
-                            {selectedImages.length > 0 && (
-                              <div className="flex flex-wrap gap-2 px-3 pb-2">
-                                {selectedImages.map((image) => (
-                                  <div
-                                    key={image.id}
-                                    className={imagePreviewPatterns.container}
+                              {/* Photo thumbnails strip */}
+                              {selectedImages.length > 0 && (
+                                <div className="flex flex-wrap gap-2 px-3 pb-2">
+                                  {selectedImages.map((image) => (
+                                    <div
+                                      key={image.id}
+                                      className={imagePreviewPatterns.container}
+                                    >
+                                      <div
+                                        className={
+                                          imagePreviewPatterns.imageWrapper
+                                        }
+                                      >
+                                        <img
+                                          src={image.previewUrl}
+                                          alt={image.name}
+                                          className={imagePreviewPatterns.image}
+                                        />
+                                        {uploadingImageIds.has(image.id) && (
+                                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                            <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => removeImage(image.id)}
+                                        className={
+                                          imagePreviewPatterns.removeButton
+                                        }
+                                        disabled={uploadingImageIds.has(
+                                          image.id,
+                                        )}
+                                      >
+                                        <XIcon className="w-3 h-3" />
+                                      </button>
+                                      <div
+                                        className={
+                                          imagePreviewPatterns.sizeLabel
+                                        }
+                                      >
+                                        {(image.size / 1024).toFixed(0)}KB
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Image error */}
+                              {imageError && (
+                                <div className="mx-3 mb-2 flex items-center justify-between px-2 py-1 bg-red-900/20 border border-red-500/30 rounded text-xs font-body text-red-400">
+                                  <span>{imageError}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setImageError(null)}
+                                    className="ml-2"
                                   >
-                                    <div
-                                      className={
-                                        imagePreviewPatterns.imageWrapper
-                                      }
-                                    >
-                                      <img
-                                        src={image.previewUrl}
-                                        alt={image.name}
-                                        className={imagePreviewPatterns.image}
-                                      />
-                                      {uploadingImageIds.has(image.id) && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                          <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                                        </div>
-                                      )}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeImage(image.id)}
-                                      className={
-                                        imagePreviewPatterns.removeButton
-                                      }
-                                      disabled={uploadingImageIds.has(image.id)}
-                                    >
-                                      <XIcon className="w-3 h-3" />
-                                    </button>
-                                    <div
-                                      className={imagePreviewPatterns.sizeLabel}
-                                    >
-                                      {(image.size / 1024).toFixed(0)}KB
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                                    <XIcon className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
 
-                            {/* Image error */}
-                            {imageError && (
-                              <div className="mx-3 mb-2 flex items-center justify-between px-2 py-1 bg-red-900/20 border border-red-500/30 rounded text-xs font-body text-red-400">
-                                <span>{imageError}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setImageError(null)}
-                                  className="ml-2"
-                                >
-                                  <XIcon className="w-3 h-3" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                            {/* Helper text + RPE/Intensity on the same row */}
+                            <div className="mt-2 px-1 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4 pb-2">
+                              <p className="text-xs text-synthwave-text-secondary truncate min-w-0">
+                                Edit above to log what you actually did.
+                              </p>
 
-                          {/* Helper text + RPE/Intensity on the same row */}
-                          <div className="mt-2 px-1 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4 pb-2">
-                            <p className="text-xs text-synthwave-text-secondary">
-                              Edit above to record actual performance - weights
-                              used, reps completed, RPE, intensity, movement
-                              substitutions, athlete notes, etc.
-                            </p>
-
-                            {/* RPE/Intensity Helper - right-aligned on desktop, left-aligned on mobile */}
-                            <div className="flex items-center gap-3 md:shrink-0">
-                              {/* RPE Helper */}
-                              <div
-                                className="flex items-center gap-1.5 cursor-help"
-                                data-tooltip-id="rpe-scale"
-                                data-tooltip-html={`
+                              {/* RPE/Intensity Helper - right-aligned on desktop, left-aligned on mobile */}
+                              <div className="flex items-center gap-3 md:shrink-0">
+                                {/* RPE Helper */}
+                                <div
+                                  className="flex items-center gap-1.5 cursor-help"
+                                  data-tooltip-id="rpe-scale"
+                                  data-tooltip-html={`
                                   <div style="max-width: 280px;">
                                     <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff;">RPE Scale (Rate of Perceived Exertion)</div>
                                     <div style="font-size: 14px; line-height: 1.5;">
@@ -1471,30 +1496,30 @@ General thoughts: `;
                                     </div>
                                   </div>
                                 `}
-                              >
-                                <svg
-                                  className="w-4 h-4 text-synthwave-neon-cyan shrink-0"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-                                <span className="font-body text-xs text-synthwave-text-secondary">
-                                  RPE Scale
-                                </span>
-                              </div>
+                                  <svg
+                                    className="w-4 h-4 text-synthwave-neon-cyan shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                  <span className="font-body text-xs text-synthwave-text-secondary">
+                                    RPE Scale
+                                  </span>
+                                </div>
 
-                              {/* Intensity Helper */}
-                              <div
-                                className="flex items-center gap-1.5 cursor-help"
-                                data-tooltip-id="intensity-scale"
-                                data-tooltip-html={`
+                                {/* Intensity Helper */}
+                                <div
+                                  className="flex items-center gap-1.5 cursor-help"
+                                  data-tooltip-id="intensity-scale"
+                                  data-tooltip-html={`
                                   <div style="max-width: 280px;">
                                     <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff;">Intensity Scale</div>
                                     <div style="font-size: 14px; line-height: 1.5;">
@@ -1507,23 +1532,24 @@ General thoughts: `;
                                     </div>
                                   </div>
                                 `}
-                              >
-                                <svg
-                                  className="w-4 h-4 text-synthwave-neon-pink shrink-0"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                                  />
-                                </svg>
-                                <span className="font-body text-xs text-synthwave-text-secondary">
-                                  Intensity Scale
-                                </span>
+                                  <svg
+                                    className="w-4 h-4 text-synthwave-neon-pink shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                                    />
+                                  </svg>
+                                  <span className="font-body text-xs text-synthwave-text-secondary">
+                                    Intensity Scale
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1532,178 +1558,199 @@ General thoughts: `;
 
                       {/* Coach Notes */}
                       {template.notes && (
-                        <div className="mb-4">
-                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                            Coach Notes
-                          </h4>
-                          <div className={containerPatterns.coachNotesSection}>
-                            <MarkdownRenderer content={template.notes} />
+                        <div className={containerPatterns.cardMedium}>
+                          <div className="px-6 pt-5 pb-2">
+                            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold">
+                              Coach Notes
+                            </h4>
+                          </div>
+                          <div className="px-6 pb-6">
+                            <div
+                              className={containerPatterns.coachNotesSection}
+                            >
+                              <MarkdownRenderer content={template.notes} />
+                            </div>
                           </div>
                         </div>
                       )}
 
                       {/* Equipment, Exercises & Focus Areas */}
-                      <div className="space-y-4 mb-4">
-                        {template.equipment &&
-                          template.equipment.length > 0 && (
-                            <div>
-                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                                Equipment Needed
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {template.equipment.map((item, i) => (
-                                  <span
-                                    key={i}
-                                    className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
-                                      expandedBadge?.term === item &&
-                                      expandedBadge?.termType === "equipment" &&
-                                      expandedBadge?.templateId ===
-                                        template.templateId
-                                        ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                        : "hover:border-synthwave-neon-cyan/50"
-                                    }`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleBadgeClick(
-                                        item,
-                                        "equipment",
-                                        template.templateId,
-                                      );
-                                    }}
-                                  >
-                                    {item}
-                                  </span>
-                                ))}
-                              </div>
+                      {((template.equipment && template.equipment.length > 0) ||
+                        (template.prescribedExercises &&
+                          template.prescribedExercises.length > 0) ||
+                        (template.metadata?.focusAreas &&
+                          template.metadata.focusAreas.length > 0)) && (
+                        <div className={containerPatterns.cardMedium}>
+                          <div className="px-6 py-6 space-y-4">
+                            {template.equipment &&
+                              template.equipment.length > 0 && (
+                                <div>
+                                  <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                                    Equipment Needed
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {template.equipment.map((item, i) => (
+                                      <span
+                                        key={i}
+                                        className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                          expandedBadge?.term === item &&
+                                          expandedBadge?.termType ===
+                                            "equipment" &&
+                                          expandedBadge?.templateId ===
+                                            template.templateId
+                                            ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                            : "hover:border-synthwave-neon-cyan/50"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleBadgeClick(
+                                            item,
+                                            "equipment",
+                                            template.templateId,
+                                          );
+                                        }}
+                                      >
+                                        {item}
+                                      </span>
+                                    ))}
+                                  </div>
 
-                              {/* Equipment Explanation Container */}
-                              {expandedBadge &&
-                                expandedBadge.templateId ===
-                                  template.templateId &&
-                                expandedBadge.termType === "equipment" && (
-                                  <ExplanationPopup
-                                    isLoading={isLoadingExplanation}
-                                    explanation={expandedBadge.explanation}
-                                    onClose={handleCloseExplanation}
-                                  />
-                                )}
-                            </div>
-                          )}
+                                  {/* Equipment Explanation Container */}
+                                  {expandedBadge &&
+                                    expandedBadge.templateId ===
+                                      template.templateId &&
+                                    expandedBadge.termType === "equipment" && (
+                                      <ExplanationPopup
+                                        isLoading={isLoadingExplanation}
+                                        explanation={expandedBadge.explanation}
+                                        onClose={handleCloseExplanation}
+                                      />
+                                    )}
+                                </div>
+                              )}
 
-                        {template.prescribedExercises &&
-                          template.prescribedExercises.length > 0 && (
-                            <div>
-                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                                Prescribed Exercises
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {template.prescribedExercises.map(
-                                  (exercise, i) => (
-                                    <span
-                                      key={i}
-                                      className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
-                                        expandedBadge?.term === exercise &&
-                                        expandedBadge?.termType ===
-                                          "exercise" &&
-                                        expandedBadge?.templateId ===
-                                          template.templateId
-                                          ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                          : "hover:border-synthwave-neon-cyan/50"
-                                      }`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleBadgeClick(
-                                          exercise,
-                                          "exercise",
-                                          template.templateId,
-                                        );
-                                      }}
-                                    >
-                                      {exercise}
-                                    </span>
-                                  ),
-                                )}
-                              </div>
+                            {template.prescribedExercises &&
+                              template.prescribedExercises.length > 0 && (
+                                <div>
+                                  <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                                    Prescribed Exercises
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {template.prescribedExercises.map(
+                                      (exercise, i) => (
+                                        <span
+                                          key={i}
+                                          className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                            expandedBadge?.term === exercise &&
+                                            expandedBadge?.termType ===
+                                              "exercise" &&
+                                            expandedBadge?.templateId ===
+                                              template.templateId
+                                              ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                              : "hover:border-synthwave-neon-cyan/50"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleBadgeClick(
+                                              exercise,
+                                              "exercise",
+                                              template.templateId,
+                                            );
+                                          }}
+                                        >
+                                          {exercise}
+                                        </span>
+                                      ),
+                                    )}
+                                  </div>
 
-                              {/* Exercise Explanation Container */}
-                              {expandedBadge &&
-                                expandedBadge.templateId ===
-                                  template.templateId &&
-                                expandedBadge.termType === "exercise" && (
-                                  <ExplanationPopup
-                                    isLoading={isLoadingExplanation}
-                                    explanation={expandedBadge.explanation}
-                                    onClose={handleCloseExplanation}
-                                  />
-                                )}
-                            </div>
-                          )}
+                                  {/* Exercise Explanation Container */}
+                                  {expandedBadge &&
+                                    expandedBadge.templateId ===
+                                      template.templateId &&
+                                    expandedBadge.termType === "exercise" && (
+                                      <ExplanationPopup
+                                        isLoading={isLoadingExplanation}
+                                        explanation={expandedBadge.explanation}
+                                        onClose={handleCloseExplanation}
+                                      />
+                                    )}
+                                </div>
+                              )}
 
-                        {template.metadata?.focusAreas &&
-                          template.metadata.focusAreas.length > 0 && (
-                            <div>
-                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                                Focus Areas
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {template.metadata.focusAreas.map((area, i) => (
-                                  <span
-                                    key={i}
-                                    className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
-                                      expandedBadge?.term === area &&
-                                      expandedBadge?.termType ===
-                                        "focus_area" &&
-                                      expandedBadge?.templateId ===
-                                        template.templateId
-                                        ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                        : "hover:border-synthwave-neon-cyan/50"
-                                    }`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleBadgeClick(
-                                        area,
-                                        "focus_area",
-                                        template.templateId,
-                                      );
-                                    }}
-                                  >
-                                    {area}
-                                  </span>
-                                ))}
-                              </div>
+                            {template.metadata?.focusAreas &&
+                              template.metadata.focusAreas.length > 0 && (
+                                <div>
+                                  <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                                    Focus Areas
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {template.metadata.focusAreas.map(
+                                      (area, i) => (
+                                        <span
+                                          key={i}
+                                          className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                            expandedBadge?.term === area &&
+                                            expandedBadge?.termType ===
+                                              "focus_area" &&
+                                            expandedBadge?.templateId ===
+                                              template.templateId
+                                              ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                              : "hover:border-synthwave-neon-cyan/50"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleBadgeClick(
+                                              area,
+                                              "focus_area",
+                                              template.templateId,
+                                            );
+                                          }}
+                                        >
+                                          {area}
+                                        </span>
+                                      ),
+                                    )}
+                                  </div>
 
-                              {/* Focus Area Explanation Container */}
-                              {expandedBadge &&
-                                expandedBadge.templateId ===
-                                  template.templateId &&
-                                expandedBadge.termType === "focus_area" && (
-                                  <ExplanationPopup
-                                    isLoading={isLoadingExplanation}
-                                    explanation={expandedBadge.explanation}
-                                    onClose={handleCloseExplanation}
-                                  />
-                                )}
-                            </div>
-                          )}
-                      </div>
+                                  {/* Focus Area Explanation Container */}
+                                  {expandedBadge &&
+                                    expandedBadge.templateId ===
+                                      template.templateId &&
+                                    expandedBadge.termType === "focus_area" && (
+                                      <ExplanationPopup
+                                        isLoading={isLoadingExplanation}
+                                        explanation={expandedBadge.explanation}
+                                        onClose={handleCloseExplanation}
+                                      />
+                                    )}
+                                </div>
+                              )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Photos attached to this completed workout */}
                       {isCompleted &&
                         template.imageS3Keys &&
                         template.imageS3Keys.length > 0 && (
-                          <div className="mb-4">
-                            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                              Workout Photos
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {template.imageS3Keys.map((s3Key, i) => (
-                                <ImageWithPresignedUrl
-                                  key={s3Key}
-                                  s3Key={s3Key}
-                                  userId={userId}
-                                  index={i}
-                                />
-                              ))}
+                          <div className={containerPatterns.cardMedium}>
+                            <div className="px-6 pt-5 pb-2">
+                              <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold">
+                                Workout Photos
+                              </h4>
+                            </div>
+                            <div className="px-6 pb-6">
+                              <div className="flex flex-wrap gap-2">
+                                {template.imageS3Keys.map((s3Key, i) => (
+                                  <ImageWithPresignedUrl
+                                    key={s3Key}
+                                    s3Key={s3Key}
+                                    userId={userId}
+                                    index={i}
+                                  />
+                                ))}
+                              </div>
                             </div>
                           </div>
                         )}
