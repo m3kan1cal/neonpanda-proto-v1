@@ -1167,11 +1167,17 @@ General thoughts: `;
                   key={template.templateId}
                   className={`space-y-3 animate-fadeIn ${
                     isCompleted || isSkipped ? "opacity-75" : ""
-                  } ${glowingTemplateId === template.templateId ? "glow-flash" : ""}`}
+                  }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Workout Header Sub-Card - Clickable for collapse/expand */}
-                  <div className={containerPatterns.cardMedium}>
+                  <div
+                    className={`${containerPatterns.cardMedium} ${
+                      glowingTemplateId === template.templateId
+                        ? "glow-flash"
+                        : ""
+                    }`}
+                  >
                     <div
                       className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300"
                       onClick={() => toggleCardCollapse(template.templateId)}
