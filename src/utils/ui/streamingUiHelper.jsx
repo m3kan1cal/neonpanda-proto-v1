@@ -134,7 +134,12 @@ export function ContextualUpdateIndicator({
   const avatarClass = compact ? avatarPatterns.aiXSmall : avatarPatterns.aiSmall;
 
   return (
-    <div className={streamingPatterns.contextualUpdate.container}>
+    <div className="flex flex-row items-start gap-3 mb-1 animate-message-in">
+      {showAvatar && (
+        <div className={`shrink-0 mt-1 ${avatarClass}`}>
+          {avatarLabel}
+        </div>
+      )}
       <div className={borderAccentClass}>
         <div className={streamingPatterns.contextualUpdate.contentRow}>
           <div className={streamingPatterns.contextualUpdate.dotsContainer}>
@@ -156,13 +161,6 @@ export function ContextualUpdateIndicator({
           </span>
         </div>
       </div>
-      {showAvatar && (
-        <div className={streamingPatterns.avatarRow}>
-          <div className={`shrink-0 ${avatarClass}`}>
-            {avatarLabel}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

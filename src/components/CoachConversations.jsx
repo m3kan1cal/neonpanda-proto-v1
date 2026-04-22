@@ -123,6 +123,40 @@ const TypingIndicator = () => (
 
 // ContextualUpdateIndicator imported from streamingUiHelper.jsx
 
+// Memoized footer row (timestamp + status dots + copy) — isolated from chunk re-renders
+const MessageFooter = memo(
+  ({ isCurrentlyStreaming, timestamp, messageType, messageContent, formatTime }) => (
+    <div
+      className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
+    >
+      {messageType === "user" && (
+        <div className="flex gap-1">
+          <div className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotPink}`} />
+          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink}`} />
+        </div>
+      )}
+      <span className="text-xs text-synthwave-text-secondary font-body">
+        {formatTime(timestamp)}
+      </span>
+      {messageType === "ai" && (
+        <div className="flex gap-1">
+          <div className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotCyan}`} />
+          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan}`} />
+        </div>
+      )}
+      {messageType === "ai" && !isCurrentlyStreaming && (
+        <CopyButton text={messageContent} />
+      )}
+    </div>
+  ),
+  (prev, next) =>
+    prev.isCurrentlyStreaming === next.isCurrentlyStreaming &&
+    prev.timestamp === next.timestamp &&
+    prev.messageContent === next.messageContent &&
+    prev.messageType === next.messageType,
+);
+MessageFooter.displayName = "MessageFooter";
+
 // Memoized MessageItem component to prevent unnecessary re-renders
 const MessageItem = memo(
   ({
@@ -136,27 +170,64 @@ const MessageItem = memo(
     renderMessageContent,
     conversationMode,
   }) => {
-    return (
-      <div
-        className={`flex flex-col mb-8 group animate-message-in ${
-          message.type === "user" ? "items-end" : "items-start"
-        }`}
-      >
-        {/* Message Content */}
-        <div
-          className={`w-full min-w-0 ${message.type === "user" ? "md:max-w-[85%] items-end" : "items-start"} flex flex-col`}
-        >
-          {/* Coaching Chat Indicator Badge (only for AI messages with explicit chat mode set by v2 handler) */}
-          {message.type === "ai" &&
-            message.metadata?.mode === CONVERSATION_MODES.CHAT && (
-              <div className={`${buttonPatterns.modeBadgeChat} mb-1`}>
-                <ChatIconTiny className="w-3 h-3" />
-                <span className="translate-y-px">Coaching Chat</span>
-              </div>
-            )}
+    const isCurrentlyStreaming = isMessageStreaming(message, agentState);
 
-          {/* Guardrail Warning Banner — shown when ASYNC guardrail flagged this response */}
-          {message.type === "ai" && message.metadata?.guardrailWarning && (
+    if (message.type === "user") {
+      return (
+        <div className="flex flex-row-reverse items-start gap-3 mb-8 group animate-message-in">
+          {/* User avatar: anchored top-right, never shifts */}
+          <div className="shrink-0 mt-1">
+            <UserAvatar
+              email={userEmail}
+              username={userDisplayName}
+              size={32}
+            />
+          </div>
+          {/* Content column */}
+          <div className="min-w-0 flex flex-col items-end md:max-w-[85%]">
+            <div
+              className={getStreamingMessageClasses(
+                message,
+                agentState,
+                containerPatterns.userMessageBubble,
+              )}
+            >
+              <div className="font-body text-base leading-relaxed">
+                {renderMessageContent(message)}
+              </div>
+            </div>
+            <MessageFooter
+              isCurrentlyStreaming={isCurrentlyStreaming}
+              timestamp={message.timestamp}
+              messageType={message.type}
+              messageContent={message.content}
+              formatTime={formatTime}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-row items-start gap-3 mb-8 group animate-message-in">
+        {/* AI avatar: anchored top-left, never shifts as content grows */}
+        <div className="shrink-0 mt-1">
+          <div className={avatarPatterns.aiSmall}>
+            {coachName?.charAt(0) || "C"}
+          </div>
+        </div>
+        {/* Content column */}
+        <div className="min-w-0 flex-1 flex flex-col">
+          {/* Coaching Chat Indicator Badge */}
+          {message.metadata?.mode === CONVERSATION_MODES.CHAT && (
+            <div className={`${buttonPatterns.modeBadgeChat} mb-1`}>
+              <ChatIconTiny className="w-3 h-3" />
+              <span className="translate-y-px">Coaching Chat</span>
+            </div>
+          )}
+
+          {/* Guardrail Warning Banner */}
+          {message.metadata?.guardrailWarning && (
             <div className={`${containerPatterns.guardrailWarningBanner}`}>
               <svg
                 className="w-4 h-4 shrink-0"
@@ -175,97 +246,30 @@ const MessageItem = memo(
             </div>
           )}
 
-          {message.type === "user" ? (
-            <div
-              className={getStreamingMessageClasses(
-                message,
-                agentState,
-                containerPatterns.userMessageBubble,
-              )}
-            >
-              <div className="font-body text-base leading-relaxed">
-                {renderMessageContent(message)}
-              </div>
-            </div>
-          ) : (
-            <div
-              className={getStreamingMessageClasses(
-                message,
-                agentState,
-                "w-full min-w-0",
-              )}
-            >
-              <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
-                {renderMessageContent(message)}
-              </div>
-            </div>
-          )}
-
-          {/* Timestamp, status, and avatar on same line */}
           <div
-            className={`flex items-start gap-2 px-2 mt-2 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+            className={getStreamingMessageClasses(
+              message,
+              agentState,
+              "w-full min-w-0",
+            )}
           >
-            {/* Avatar for AI messages (left side) */}
-            {message.type === "ai" && (
-              <div className="shrink-0">
-                <div className={avatarPatterns.aiSmall}>
-                  {coachName?.charAt(0) || "C"}
-                </div>
-              </div>
-            )}
-
-            <span className="text-xs text-synthwave-text-secondary font-body">
-              {formatTime(message.timestamp)}
-            </span>
-            {message.type === "user" && (
-              <div className="flex gap-1">
-                <div
-                  className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotPink}`}
-                ></div>
-                <div
-                  className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink}`}
-                ></div>
-              </div>
-            )}
-            {message.type === "ai" && (
-              <div className="flex gap-1">
-                <div
-                  className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotCyan}`}
-                ></div>
-                <div
-                  className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan}`}
-                ></div>
-              </div>
-            )}
-            {message.type === "ai" &&
-              !isMessageStreaming(message, agentState) && (
-                <CopyButton text={message.content} />
-              )}
-
-            {/* Avatar for user messages (right side) */}
-            {message.type === "user" && (
-              <div className="shrink-0">
-                <UserAvatar
-                  email={userEmail}
-                  username={userDisplayName}
-                  size={32}
-                />
-              </div>
-            )}
+            <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
+              {renderMessageContent(message)}
+            </div>
           </div>
+
+          <MessageFooter
+            isCurrentlyStreaming={isCurrentlyStreaming}
+            timestamp={message.timestamp}
+            messageType={message.type}
+            messageContent={message.content}
+            formatTime={formatTime}
+          />
         </div>
       </div>
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison function for React.memo
-    // Re-render if:
-    // 1. Message content changed (for streaming updates)
-    // 2. Message ID changed (different message)
-    // 3. Agent streaming state changed (affects this message's rendering)
-    // 4. Coach name changed (affects avatar)
-    // 5. Message metadata changed (affects badges like Multi-Turn or Build Mode)
-
     const messageChanged =
       prevProps.message.id !== nextProps.message.id ||
       prevProps.message.content !== nextProps.message.content ||
@@ -283,15 +287,7 @@ const MessageItem = memo(
       prevProps.userEmail !== nextProps.userEmail ||
       prevProps.userDisplayName !== nextProps.userDisplayName;
 
-    const shouldRerender =
-      messageChanged ||
-      streamingStateChanged ||
-      coachNameChanged ||
-      userChanged;
-
-    // Return true if props are equal (no re-render needed)
-    // Return false if props changed (re-render needed)
-    return !shouldRerender;
+    return !(messageChanged || streamingStateChanged || coachNameChanged || userChanged);
   },
 );
 
@@ -1237,7 +1233,11 @@ function CoachConversations() {
                 {/* Typing Indicator - Show only when typing but not actively streaming content */}
                 {typingState.showTypingIndicator &&
                   !coachConversationAgentState.contextualUpdate && (
-                    <div className="flex flex-col items-start mb-1 animate-message-in">
+                    <div className="flex flex-row items-start gap-3 mb-1 animate-message-in">
+                      <div className={`shrink-0 mt-1 ${avatarPatterns.aiSmall}`}>
+                        {coachConversationAgentState.coach?.name?.charAt(0) ||
+                          "C"}
+                      </div>
                       <div
                         className={`${containerPatterns.aiChatBubble} px-4 py-3`}
                       >
@@ -1251,12 +1251,6 @@ function CoachConversations() {
                             className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
                             style={{ animationDelay: "0.4s" }}
                           ></div>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2 mt-2">
-                        <div className={`shrink-0 ${avatarPatterns.aiSmall}`}>
-                          {coachConversationAgentState.coach?.name?.charAt(0) ||
-                            "C"}
                         </div>
                       </div>
                     </div>
