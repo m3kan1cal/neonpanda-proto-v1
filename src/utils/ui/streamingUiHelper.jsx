@@ -2,7 +2,9 @@
  * Small, focused UI helpers for streaming message interactions
  * Each function handles a specific aspect of streaming UI without complex state management
  */
-import { avatarPatterns, streamingPatterns } from "./uiPatterns";
+import { memo } from "react";
+import { avatarPatterns, messagePatterns, streamingPatterns } from "./uiPatterns";
+import CopyButton from "../../components/shared/CopyButton";
 import { logger } from "../logger";
 
 /**
@@ -107,6 +109,63 @@ export function getStreamingMessageClasses(
 
   return classes.filter(Boolean).join(" ");
 }
+
+/**
+ * Shared message footer row used across all streaming conversation pages.
+ * Renders timestamp, status dots, and (when not streaming) a copy button.
+ * Memoized with a comparator that excludes streamingMessage so the footer
+ * DOM is not recreated on every chunk — only when streaming ends or dot
+ * colors change.
+ *
+ * @param {boolean} isCurrentlyStreaming - Whether this message is actively streaming
+ * @param {string} timestamp - ISO timestamp string
+ * @param {"ai"|"user"} messageType - Message sender type
+ * @param {string} messageContent - Final message text (for copy button)
+ * @param {Function} formatTime - Timestamp formatting function
+ * @param {string} aiDotColorClass - Tailwind color class for AI status dots (e.g. messagePatterns.statusDotCyan)
+ * @param {string} userDotColorClass - Tailwind color class for user status dots
+ */
+export const MessageFooter = memo(
+  ({
+    isCurrentlyStreaming,
+    timestamp,
+    messageType,
+    messageContent,
+    formatTime,
+    aiDotColorClass = messagePatterns.statusDotCyan,
+    userDotColorClass = messagePatterns.statusDotPink,
+  }) => (
+    <div
+      className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
+    >
+      {messageType === "user" && (
+        <div className="flex gap-1">
+          <div className={`${messagePatterns.statusDotSecondary} ${userDotColorClass}`} />
+          <div className={`${messagePatterns.statusDotPrimary} ${userDotColorClass}`} />
+        </div>
+      )}
+      <span className="text-xs text-synthwave-text-secondary font-body">
+        {formatTime(timestamp)}
+      </span>
+      {messageType === "ai" && (
+        <div className="flex gap-1">
+          <div className={`${messagePatterns.statusDotSecondary} ${aiDotColorClass}`} />
+          <div className={`${messagePatterns.statusDotPrimary} ${aiDotColorClass}`} />
+        </div>
+      )}
+      {messageType === "ai" && !isCurrentlyStreaming && (
+        <CopyButton text={messageContent} />
+      )}
+    </div>
+  ),
+  (prev, next) =>
+    prev.isCurrentlyStreaming === next.isCurrentlyStreaming &&
+    prev.timestamp === next.timestamp &&
+    prev.messageContent === next.messageContent &&
+    prev.messageType === next.messageType &&
+    prev.aiDotColorClass === next.aiDotColorClass,
+);
+MessageFooter.displayName = "MessageFooter";
 
 /**
  * Contextual update indicator - shows AI processing stages during streaming (ephemeral)

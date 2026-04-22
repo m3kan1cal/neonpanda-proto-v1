@@ -24,6 +24,7 @@ import {
   typographyPatterns,
   badgePatterns,
 } from "../utils/ui/uiPatterns";
+// messagePatterns used for aiDotColorClass/userDotColorClass props passed to MessageFooter
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
@@ -32,7 +33,6 @@ import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
-import CopyButton from "./shared/CopyButton";
 import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 // No imports needed - session ID comes from URL
 import ProgramDesignerAgent from "../utils/agents/ProgramDesignerAgent";
@@ -51,6 +51,7 @@ import {
   getTypingState,
   handleStreamingError,
   ContextualUpdateIndicator,
+  MessageFooter,
 } from "../utils/ui/streamingUiHelper.jsx";
 import { BuildModeIconTiny } from "./themes/SynthwaveComponents";
 import { logger } from "../utils/logger";
@@ -108,45 +109,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-// ContextualUpdateIndicator imported from streamingUiHelper.jsx
-
-// Memoized footer row (timestamp + status dots + copy) — isolated from chunk re-renders
-const MessageFooter = memo(
-  ({ isCurrentlyStreaming, timestamp, messageType, messageMode, messageContent, formatTime }) => {
-    const isProgramDesign = messageMode === CONVERSATION_MODES.PROGRAM_DESIGN;
-    return (
-      <div
-        className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
-      >
-        {messageType === "user" && (
-          <div className="flex gap-1">
-            <div className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotPink}`} />
-            <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink}`} />
-          </div>
-        )}
-        <span className="text-xs text-synthwave-text-secondary font-body">
-          {formatTime(timestamp)}
-        </span>
-        {messageType === "ai" && (
-          <div className="flex gap-1">
-            <div className={`${messagePatterns.statusDotSecondary} ${isProgramDesign ? messagePatterns.statusDotPurple : messagePatterns.statusDotCyan}`} />
-            <div className={`${messagePatterns.statusDotPrimary} ${isProgramDesign ? messagePatterns.statusDotPurple : messagePatterns.statusDotCyan}`} />
-          </div>
-        )}
-        {messageType === "ai" && !isCurrentlyStreaming && (
-          <CopyButton text={messageContent} />
-        )}
-      </div>
-    );
-  },
-  (prev, next) =>
-    prev.isCurrentlyStreaming === next.isCurrentlyStreaming &&
-    prev.timestamp === next.timestamp &&
-    prev.messageContent === next.messageContent &&
-    prev.messageType === next.messageType &&
-    prev.messageMode === next.messageMode,
-);
-MessageFooter.displayName = "MessageFooter";
+// ContextualUpdateIndicator and MessageFooter imported from streamingUiHelper.jsx
 
 // Memoized MessageItem component to prevent unnecessary re-renders
 const MessageItem = memo(
@@ -191,7 +154,6 @@ const MessageItem = memo(
               isCurrentlyStreaming={isCurrentlyStreaming}
               timestamp={message.timestamp}
               messageType={message.type}
-              messageMode={message.metadata?.mode}
               messageContent={message.content}
               formatTime={formatTime}
             />
@@ -252,9 +214,13 @@ const MessageItem = memo(
             isCurrentlyStreaming={isCurrentlyStreaming}
             timestamp={message.timestamp}
             messageType={message.type}
-            messageMode={message.metadata?.mode}
             messageContent={message.content}
             formatTime={formatTime}
+            aiDotColorClass={
+              message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
+                ? messagePatterns.statusDotPurple
+                : messagePatterns.statusDotCyan
+            }
           />
         </div>
       </div>

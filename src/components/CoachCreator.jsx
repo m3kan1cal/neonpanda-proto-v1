@@ -29,7 +29,6 @@ import ProgressIndicator from "./shared/ProgressIndicator";
 import UserAvatar from "./shared/UserAvatar";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
-import CopyButton from "./shared/CopyButton";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { MarkdownRenderer } from "./shared/MarkdownRenderer";
@@ -47,6 +46,7 @@ import {
   getTypingState,
   handleStreamingError,
   ContextualUpdateIndicator,
+  MessageFooter,
 } from "../utils/ui/streamingUiHelper.jsx";
 
 // Vesper coach data - static coach for coach creator
@@ -117,41 +117,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-// ContextualUpdateIndicator imported from streamingUiHelper.jsx
-
-// Memoized footer row (timestamp + status dots + copy) — isolated from chunk re-renders
-const MessageFooter = memo(
-  ({ isCurrentlyStreaming, timestamp, messageType, messageContent, formatTime }) => (
-    <div
-      className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
-    >
-      {messageType === "user" && (
-        <div className="flex gap-1">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60" />
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink" />
-        </div>
-      )}
-      <span className="text-xs text-synthwave-text-secondary font-body">
-        {formatTime(timestamp)}
-      </span>
-      {messageType === "ai" && (
-        <div className="flex gap-1">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60" />
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan" />
-        </div>
-      )}
-      {messageType === "ai" && !isCurrentlyStreaming && (
-        <CopyButton text={messageContent} />
-      )}
-    </div>
-  ),
-  (prev, next) =>
-    prev.isCurrentlyStreaming === next.isCurrentlyStreaming &&
-    prev.timestamp === next.timestamp &&
-    prev.messageContent === next.messageContent &&
-    prev.messageType === next.messageType,
-);
-MessageFooter.displayName = "MessageFooter";
+// ContextualUpdateIndicator and MessageFooter imported from streamingUiHelper.jsx
 
 // Memoized MessageItem component to prevent unnecessary re-renders during streaming
 const MessageItem = memo(

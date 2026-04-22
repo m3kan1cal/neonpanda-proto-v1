@@ -20,7 +20,6 @@ import {
   iconButtonPatterns,
   buttonPatterns,
   tooltipPatterns,
-  messagePatterns,
   typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
@@ -33,7 +32,6 @@ import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
-import CopyButton from "./shared/CopyButton";
 import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
@@ -50,6 +48,7 @@ import {
   getTypingState,
   handleStreamingError,
   ContextualUpdateIndicator,
+  MessageFooter,
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
 import CoachConversationEmptyTips from "./shared/CoachConversationEmptyTips";
@@ -121,41 +120,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-// ContextualUpdateIndicator imported from streamingUiHelper.jsx
-
-// Memoized footer row (timestamp + status dots + copy) — isolated from chunk re-renders
-const MessageFooter = memo(
-  ({ isCurrentlyStreaming, timestamp, messageType, messageContent, formatTime }) => (
-    <div
-      className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
-    >
-      {messageType === "user" && (
-        <div className="flex gap-1">
-          <div className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotPink}`} />
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink}`} />
-        </div>
-      )}
-      <span className="text-xs text-synthwave-text-secondary font-body">
-        {formatTime(timestamp)}
-      </span>
-      {messageType === "ai" && (
-        <div className="flex gap-1">
-          <div className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotCyan}`} />
-          <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan}`} />
-        </div>
-      )}
-      {messageType === "ai" && !isCurrentlyStreaming && (
-        <CopyButton text={messageContent} />
-      )}
-    </div>
-  ),
-  (prev, next) =>
-    prev.isCurrentlyStreaming === next.isCurrentlyStreaming &&
-    prev.timestamp === next.timestamp &&
-    prev.messageContent === next.messageContent &&
-    prev.messageType === next.messageType,
-);
-MessageFooter.displayName = "MessageFooter";
+// ContextualUpdateIndicator and MessageFooter imported from streamingUiHelper.jsx
 
 // Memoized MessageItem component to prevent unnecessary re-renders
 const MessageItem = memo(
