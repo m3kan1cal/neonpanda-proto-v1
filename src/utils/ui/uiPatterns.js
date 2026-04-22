@@ -609,10 +609,6 @@ export const containerPatterns = {
   // AI Explanation Popup - Inner card (always paired with explanationPopupWrapper)
   explanationPopupInner: "rounded-md bg-synthwave-bg-card px-4 pb-4 pt-2 h-full",
 
-  // AI Explanation Popup - Close button (top-right corner overlay)
-  explanationPopupCloseButton:
-    "cursor-pointer absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors",
-
   // Scrollable AI response content area - for explanation popups, AI text blocks with overflow
   // Pink scrollbar, 300px max height, standard body text sizing
   aiResponseContent:
@@ -1631,7 +1627,7 @@ export const skeletonPatterns = {
 // AI Explanation Popup (gradient border via padding trick):
 // <div className={containerPatterns.explanationPopupWrapper} style={{ backgroundSize: "200% 200%", animation: "slideDown 0.3s ease-out forwards, gradient-flow 3s ease infinite" }}>
 // <div className={containerPatterns.explanationPopupInner}>
-//  <button className={containerPatterns.explanationPopupCloseButton}><XIcon /></button>
+//  <div className="flex items-center justify-end mb-2"><button onClick={onClose}><XIcon /></button></div>
 //  <div className={containerPatterns.aiResponseContent}><MarkdownRenderer content={...} /></div>
 // </div>
 // </div>

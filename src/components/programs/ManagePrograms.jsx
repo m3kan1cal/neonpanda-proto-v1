@@ -968,14 +968,15 @@ function ManagePrograms() {
             </h3>
           </div>
 
-          {/* Program Description — hidden on mobile to keep card compact */}
-          {program.description && (
-            <p
-              className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-2 hidden sm:block`}
-            >
-              {program.description}
-            </p>
-          )}
+          {/* Program Description — 1-line teaser on desktop only, hidden for completed */}
+          {program.description &&
+            program.status !== PROGRAM_STATUS.COMPLETED && (
+              <p
+                className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-1 hidden sm:block`}
+              >
+                {program.description}
+              </p>
+            )}
 
           {/* Program Details */}
           <div className="space-y-3">
@@ -1042,6 +1043,25 @@ function ManagePrograms() {
                 </div>
               )}
 
+            {/* Duration - only for completed programs */}
+            {program.status === PROGRAM_STATUS.COMPLETED &&
+              program.totalDays > 0 && (
+                <div
+                  className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
+                >
+                  <CalendarIcon />
+                  <span className="text-sm">
+                    <span className="text-synthwave-neon-cyan font-semibold">
+                      {Math.ceil(program.totalDays / 7)}
+                    </span>{" "}
+                    {Math.ceil(program.totalDays / 7) === 1
+                      ? "week"
+                      : "weeks"}{" "}
+                    program
+                  </span>
+                </div>
+              )}
+
             {/* Progress - only for active/paused programs */}
             {(program.status === PROGRAM_STATUS.ACTIVE ||
               program.status === PROGRAM_STATUS.PAUSED) && (
@@ -1084,15 +1104,17 @@ function ManagePrograms() {
               </div>
             )}
 
-            {/* Created Date — hidden on mobile to compress card height */}
-            <div
-              className={`hidden sm:flex items-center space-x-2 ${typographyPatterns.caption}`}
-            >
-              <CalendarIcon />
-              <span>
-                Created {formatDate(program.createdAt, program.programId)}
-              </span>
-            </div>
+            {/* Created Date — active/paused only; completed date is more relevant for completed */}
+            {program.status !== PROGRAM_STATUS.COMPLETED && (
+              <div
+                className={`hidden sm:flex items-center space-x-2 ${typographyPatterns.caption}`}
+              >
+                <CalendarIcon />
+                <span>
+                  Created {formatDate(program.createdAt, program.programId)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
