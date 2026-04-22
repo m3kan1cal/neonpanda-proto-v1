@@ -1,14 +1,14 @@
 # Release on every push to `main` (including PR merges).
 #
-# Tag-only flow: this workflow creates a new prerelease tag and GitHub release
-# pointing at the merge SHA. It intentionally does NOT commit a version bump
-# back to `main`; that extra commit triggered a second Amplify deploy for every
-# merge. The deployed bundle reads its version from the latest git tag at build
-# time (see vite.config.js), so package.json no longer has to carry the version.
+# Tag-only flow: this workflow creates a new tag and GitHub release pointing at
+# the merge SHA. It intentionally does NOT commit a version bump back to `main`;
+# that extra commit triggered a second Amplify deploy for every merge. The
+# deployed bundle reads its version from the latest git tag at build time (see
+# vite.config.js), so package.json no longer has to carry the version.
 #
 # Validation after a merge:
-# - A new prerelease `v1.0.YYYYMMDD-beta[.N]` appears in GitHub Releases,
-#   tagged on the merge commit.
+# - A new `v1.0.YYYYMMDD-beta[.N]` appears in GitHub Releases, tagged on the
+#   merge commit, and shows as Latest Release on the repo home page.
 # - Only one Amplify build runs per merge (no follow-up bump commit).
 # - A second merge the same UTC day produces `v1.0.YYYYMMDD-beta.1`, then .2, etc.
 #
@@ -77,12 +77,10 @@ jobs:
               --title "${GIT_TAG}" \
               --generate-notes \
               --notes-start-tag "${PREVIOUS_TAG}" \
-              --target "${GITHUB_SHA}" \
-              --prerelease
+              --target "${GITHUB_SHA}"
           else
             gh release create "${GIT_TAG}" \
               --title "${GIT_TAG}" \
               --generate-notes \
-              --target "${GITHUB_SHA}" \
-              --prerelease
+              --target "${GITHUB_SHA}"
           fi

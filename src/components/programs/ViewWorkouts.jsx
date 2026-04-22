@@ -11,6 +11,7 @@ import {
   badgePatterns,
   formPatterns,
   imagePreviewPatterns,
+  messagePatterns,
 } from "../../utils/ui/uiPatterns";
 import { Tooltip } from "react-tooltip";
 import CompactCoachCard from "../shared/CompactCoachCard";
@@ -286,13 +287,40 @@ function ViewWorkouts() {
     });
   };
 
+  // Per-workout sub-card collapse state. Keyed by `${templateId}:${section}` so
+  // collapsing a section on one workout doesn't bleed into another on the same day.
+  // Default = expanded (empty set).
+  const [collapsedSubCards, setCollapsedSubCards] = useState(() => new Set());
+
+  const toggleSubCard = (templateId, section) => {
+    const key = `${templateId}:${section}`;
+    setCollapsedSubCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const isSubCardCollapsed = (templateId, section) =>
+    collapsedSubCards.has(`${templateId}:${section}`);
+
   // Start logging - opens the editable form
   const handleLogWorkout = (template) => {
     // Cancel any pending draft from previous workout to prevent stale timer
     cancelPendingDraft();
 
-    // Copy prescribed description and append placeholders for performance data and athlete notes
-    const prescribedWithPlaceholders = `${template.description}
+    // Copy prescribed description and append placeholders for performance data and athlete notes.
+    // Strip trailing whitespace per line, collapse blank-line runs, and strip leading/trailing
+    // blank lines — but preserve leading indentation on content lines (e.g. "  - bullet").
+    const normalizedDescription = (template.description || "")
+      .split("\n")
+      .map((line) => line.trimEnd())
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/^\n+|\n+$/g, "");
+
+    const prescribedWithPlaceholders = `${normalizedDescription}
 
 --- Performance Data ---
 RPE - How hard it felt (1=easy, 10=max effort):
@@ -308,6 +336,17 @@ General thoughts: `;
 
     setEditingWorkoutId(template.templateId);
     setLastSavedAt(null);
+
+    // Ensure the "What You Did" sub-card is expanded when re-entering logging
+    // for this template — otherwise a prior collapse would leave only the
+    // header visible with the editor hidden behind the collapse gate.
+    setCollapsedSubCards((prev) => {
+      const key = `${template.templateId}:what-you-did`;
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
 
     // Restore draft if one exists, otherwise use the prescribed template
     const draft = getDraft(template.templateId);
@@ -1049,7 +1088,7 @@ General thoughts: `;
         </div>
 
         {/* Workout Templates Grid */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Rest Day Card */}
           {isRestDay && (
             <div className={`${containerPatterns.cardMedium} p-6`}>
@@ -1156,167 +1195,183 @@ General thoughts: `;
               return (
                 <div
                   key={template.templateId}
-                  className={`${containerPatterns.cardMedium} animate-fadeIn ${
+                  className={`space-y-3 animate-fadeIn ${
                     isCompleted || isSkipped ? "opacity-75" : ""
-                  } ${glowingTemplateId === template.templateId ? "glow-flash" : ""}`}
+                  }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* Workout Header - Clickable for collapse/expand */}
+                  {/* Workout Header Sub-Card - Clickable for collapse/expand */}
                   <div
-                    className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-                      isCollapsed ? "" : ""
+                    className={`${containerPatterns.cardMedium} ${
+                      glowingTemplateId === template.templateId
+                        ? "glow-flash"
+                        : ""
                     }`}
-                    onClick={() => toggleCardCollapse(template.templateId)}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-start gap-3 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-                        <h3
-                          className={`font-header text-base sm:text-lg font-bold uppercase text-white flex-1 min-w-0 ${
-                            isCollapsed ? "line-clamp-2" : ""
-                          }`}
-                        >
-                          {template.name}
-                        </h3>
-                        {/* Difficulty Badge - always show if available */}
-                        {template.metadata?.difficulty && (
-                          <span
-                            className={`${
-                              template.metadata.difficulty === "advanced"
-                                ? badgePatterns.pink
-                                : template.metadata.difficulty ===
-                                    "intermediate"
-                                  ? badgePatterns.purple
-                                  : badgePatterns.cyan
-                            } uppercase shrink-0`}
+                    <div
+                      className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300"
+                      onClick={() => toggleCardCollapse(template.templateId)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-start flex-wrap gap-3 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
+                          <h3
+                            className={`font-header text-base sm:text-lg font-bold uppercase text-white min-w-0 ${
+                              isCollapsed ? "line-clamp-2" : ""
+                            }`}
                           >
-                            {template.metadata.difficulty}
-                          </span>
-                        )}
-                        {/* Status Badge */}
-                        {isCompleted && (
-                          <span
-                            className={`${badgePatterns.cyan} uppercase shrink-0`}
-                          >
-                            ✓ Logged
-                          </span>
-                        )}
-                        {isSkipped && (
-                          <span
-                            className={`${badgePatterns.cyan} uppercase shrink-0`}
-                          >
-                            ✕ Skipped
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center flex-wrap gap-4">
-                        {template.estimatedDuration && (
-                          <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
-                            <svg
-                              className="w-4 h-4 shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                            {template.name}
+                          </h3>
+                          {/* Difficulty Badge - always show if available */}
+                          {template.metadata?.difficulty && (
+                            <span
+                              className={`${
+                                template.metadata.difficulty === "advanced"
+                                  ? badgePatterns.pink
+                                  : template.metadata.difficulty ===
+                                      "intermediate"
+                                    ? badgePatterns.purple
+                                    : badgePatterns.cyan
+                              } uppercase shrink-0`}
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <span>{template.estimatedDuration} min</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5 font-body text-sm">
-                          <span className="text-synthwave-text-muted">
-                            Time Cap:
-                          </span>
-                          <span className="text-synthwave-neon-cyan font-medium">
-                            {template.timeCap
-                              ? `${template.timeCap} min`
-                              : "None"}
-                          </span>
+                              {template.metadata.difficulty}
+                            </span>
+                          )}
+                          {/* Status Badge */}
+                          {isCompleted && (
+                            <span
+                              className={`${badgePatterns.cyan} uppercase shrink-0`}
+                            >
+                              ✓ Logged
+                            </span>
+                          )}
+                          {isSkipped && (
+                            <span
+                              className={`${badgePatterns.cyan} uppercase shrink-0`}
+                            >
+                              ✕ Skipped
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1.5 font-body text-sm">
-                          <span className="text-synthwave-text-muted">
-                            Rest After:
-                          </span>
-                          <span className="text-synthwave-neon-cyan font-medium">
-                            {formatRestAfter(template.restAfter)}
-                          </span>
-                        </div>
-                        {template.type && (
+
+                        <div className="flex items-center flex-wrap gap-4">
+                          {template.estimatedDuration && (
+                            <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
+                              <svg
+                                className="w-4 h-4 shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <span>{template.estimatedDuration} min</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1.5 font-body text-sm">
                             <span className="text-synthwave-text-muted">
-                              Type:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium capitalize">
-                              {template.type}
-                            </span>
-                          </div>
-                        )}
-                        {template.scoringType && (
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-muted">
-                              Scoring:
+                              Time Cap:
                             </span>
                             <span className="text-synthwave-neon-cyan font-medium">
-                              {formatScoringType(template.scoringType)}
+                              {template.timeCap
+                                ? `${template.timeCap} min`
+                                : "None"}
                             </span>
                           </div>
-                        )}
+                          <div className="flex items-center gap-1.5 font-body text-sm">
+                            <span className="text-synthwave-text-muted">
+                              Rest After:
+                            </span>
+                            <span className="text-synthwave-neon-cyan font-medium">
+                              {formatRestAfter(template.restAfter)}
+                            </span>
+                          </div>
+                          {template.type && (
+                            <div className="flex items-center gap-1.5 font-body text-sm">
+                              <span className="text-synthwave-text-muted">
+                                Type:
+                              </span>
+                              <span className="text-synthwave-neon-cyan font-medium capitalize">
+                                {template.type}
+                              </span>
+                            </div>
+                          )}
+                          {template.scoringType && (
+                            <div className="flex items-center gap-1.5 font-body text-sm">
+                              <span className="text-synthwave-text-muted">
+                                Scoring:
+                              </span>
+                              <span className="text-synthwave-neon-cyan font-medium">
+                                {formatScoringType(template.scoringType)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {/* Collapse/Expand Icon */}
-                      <svg
-                        className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${
-                          isCollapsed ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <div className="flex items-center gap-3">
+                        {/* Collapse/Expand Icon */}
+                        <svg
+                          className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${
+                            isCollapsed ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Collapsible Card Content */}
+                  {/* Collapsible Card Content - Modular Sub-Cards */}
                   {!isCollapsed && (
-                    <div className="px-6 pb-6">
+                    <div className="space-y-3">
                       {/* Prescribed Workout - Read-only */}
                       {template.description && (
-                        <div className="mb-4">
-                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                            Prescribed Workout
-                          </h4>
+                        <CollapsibleSubCard
+                          title="Prescribed Workout"
+                          isCollapsed={isSubCardCollapsed(
+                            template.templateId,
+                            "prescribed",
+                          )}
+                          onToggle={() =>
+                            toggleSubCard(template.templateId, "prescribed")
+                          }
+                        >
                           <div
                             className={`${containerPatterns.workoutDescriptionEditable} text-sm`}
                           >
                             {template.description}
                           </div>
-                        </div>
+                        </CollapsibleSubCard>
                       )}
 
                       {/* What You Did - Editable Form (only when logging) */}
                       {editingWorkoutId === template.templateId && (
-                        <div
+                        <CollapsibleSubCard
                           id={`workout-form-${template.templateId}`}
-                          className="mb-4 animate-slideDown"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-body text-sm text-synthwave-neon-pink uppercase font-semibold">
-                              What You Did
-                            </h4>
-                            {lastSavedAt && (
+                          wrapperClassName="animate-slideDown"
+                          title="What You Did"
+                          isCollapsed={isSubCardCollapsed(
+                            template.templateId,
+                            "what-you-did",
+                          )}
+                          onToggle={() =>
+                            toggleSubCard(template.templateId, "what-you-did")
+                          }
+                          headerRight={
+                            lastSavedAt && (
                               <div className="flex items-center gap-1">
                                 <svg
                                   className="w-3 h-3 text-synthwave-neon-cyan/50"
@@ -1335,8 +1390,9 @@ General thoughts: `;
                                   Draft saved
                                 </span>
                               </div>
-                            )}
-                          </div>
+                            )
+                          }
+                        >
                           <div className={inputPatterns.chatInputWrapper}>
                             {/* Hidden file input */}
                             <input
@@ -1446,10 +1502,8 @@ General thoughts: `;
 
                           {/* Helper text + RPE/Intensity on the same row */}
                           <div className="mt-2 px-1 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4 pb-2">
-                            <p className="text-xs text-synthwave-text-secondary">
-                              Edit above to record actual performance - weights
-                              used, reps completed, RPE, intensity, movement
-                              substitutions, athlete notes, etc.
+                            <p className="text-xs text-synthwave-text-secondary truncate min-w-0">
+                              Edit above to log what you actually did.
                             </p>
 
                             {/* RPE/Intensity Helper - right-aligned on desktop, left-aligned on mobile */}
@@ -1527,84 +1581,58 @@ General thoughts: `;
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </CollapsibleSubCard>
                       )}
 
                       {/* Coach Notes */}
                       {template.notes && (
-                        <div className="mb-4">
-                          <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                            Coach Notes
-                          </h4>
+                        <CollapsibleSubCard
+                          title="Coach Notes"
+                          isCollapsed={isSubCardCollapsed(
+                            template.templateId,
+                            "coach-notes",
+                          )}
+                          onToggle={() =>
+                            toggleSubCard(template.templateId, "coach-notes")
+                          }
+                        >
                           <div className={containerPatterns.coachNotesSection}>
                             <MarkdownRenderer content={template.notes} />
                           </div>
-                        </div>
+                        </CollapsibleSubCard>
                       )}
 
-                      {/* Equipment, Exercises & Focus Areas */}
-                      <div className="space-y-4 mb-4">
-                        {template.equipment &&
-                          template.equipment.length > 0 && (
-                            <div>
-                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                                Equipment Needed
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {template.equipment.map((item, i) => (
-                                  <span
-                                    key={i}
-                                    className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
-                                      expandedBadge?.term === item &&
-                                      expandedBadge?.termType === "equipment" &&
-                                      expandedBadge?.templateId ===
-                                        template.templateId
-                                        ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                        : "hover:border-synthwave-neon-cyan/50"
-                                    }`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleBadgeClick(
-                                        item,
-                                        "equipment",
-                                        template.templateId,
-                                      );
-                                    }}
-                                  >
-                                    {item}
-                                  </span>
-                                ))}
-                              </div>
-
-                              {/* Equipment Explanation Container */}
-                              {expandedBadge &&
-                                expandedBadge.templateId ===
-                                  template.templateId &&
-                                expandedBadge.termType === "equipment" && (
-                                  <ExplanationPopup
-                                    isLoading={isLoadingExplanation}
-                                    explanation={expandedBadge.explanation}
-                                    onClose={handleCloseExplanation}
-                                  />
-                                )}
-                            </div>
+                      {/* Details - Equipment, Exercises & Focus Areas */}
+                      {((template.equipment && template.equipment.length > 0) ||
+                        (template.prescribedExercises &&
+                          template.prescribedExercises.length > 0) ||
+                        (template.metadata?.focusAreas &&
+                          template.metadata.focusAreas.length > 0)) && (
+                        <CollapsibleSubCard
+                          title="Details"
+                          isCollapsed={isSubCardCollapsed(
+                            template.templateId,
+                            "details",
                           )}
-
-                        {template.prescribedExercises &&
-                          template.prescribedExercises.length > 0 && (
-                            <div>
-                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                                Prescribed Exercises
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {template.prescribedExercises.map(
-                                  (exercise, i) => (
+                          onToggle={() =>
+                            toggleSubCard(template.templateId, "details")
+                          }
+                          bodyClassName="space-y-4"
+                        >
+                          {template.equipment &&
+                            template.equipment.length > 0 && (
+                              <div>
+                                <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                                  Equipment Needed
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {template.equipment.map((item, i) => (
                                     <span
                                       key={i}
                                       className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
-                                        expandedBadge?.term === exercise &&
+                                        expandedBadge?.term === item &&
                                         expandedBadge?.termType ===
-                                          "exercise" &&
+                                          "equipment" &&
                                         expandedBadge?.templateId ===
                                           template.templateId
                                           ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
@@ -1613,88 +1641,145 @@ General thoughts: `;
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleBadgeClick(
-                                          exercise,
-                                          "exercise",
+                                          item,
+                                          "equipment",
                                           template.templateId,
                                         );
                                       }}
                                     >
-                                      {exercise}
+                                      {item}
                                     </span>
-                                  ),
-                                )}
-                              </div>
+                                  ))}
+                                </div>
 
-                              {/* Exercise Explanation Container */}
-                              {expandedBadge &&
-                                expandedBadge.templateId ===
-                                  template.templateId &&
-                                expandedBadge.termType === "exercise" && (
-                                  <ExplanationPopup
-                                    isLoading={isLoadingExplanation}
-                                    explanation={expandedBadge.explanation}
-                                    onClose={handleCloseExplanation}
-                                  />
-                                )}
-                            </div>
-                          )}
-
-                        {template.metadata?.focusAreas &&
-                          template.metadata.focusAreas.length > 0 && (
-                            <div>
-                              <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                                Focus Areas
+                                {/* Equipment Explanation Container */}
+                                {expandedBadge &&
+                                  expandedBadge.templateId ===
+                                    template.templateId &&
+                                  expandedBadge.termType === "equipment" && (
+                                    <ExplanationPopup
+                                      isLoading={isLoadingExplanation}
+                                      explanation={expandedBadge.explanation}
+                                      onClose={handleCloseExplanation}
+                                    />
+                                  )}
                               </div>
-                              <div className="flex flex-wrap gap-2">
-                                {template.metadata.focusAreas.map((area, i) => (
-                                  <span
-                                    key={i}
-                                    className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
-                                      expandedBadge?.term === area &&
-                                      expandedBadge?.termType ===
-                                        "focus_area" &&
-                                      expandedBadge?.templateId ===
-                                        template.templateId
-                                        ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                        : "hover:border-synthwave-neon-cyan/50"
-                                    }`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleBadgeClick(
-                                        area,
-                                        "focus_area",
-                                        template.templateId,
-                                      );
-                                    }}
-                                  >
-                                    {area}
-                                  </span>
-                                ))}
-                              </div>
+                            )}
 
-                              {/* Focus Area Explanation Container */}
-                              {expandedBadge &&
-                                expandedBadge.templateId ===
-                                  template.templateId &&
-                                expandedBadge.termType === "focus_area" && (
-                                  <ExplanationPopup
-                                    isLoading={isLoadingExplanation}
-                                    explanation={expandedBadge.explanation}
-                                    onClose={handleCloseExplanation}
-                                  />
-                                )}
-                            </div>
-                          )}
-                      </div>
+                          {template.prescribedExercises &&
+                            template.prescribedExercises.length > 0 && (
+                              <div>
+                                <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                                  Prescribed Exercises
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {template.prescribedExercises.map(
+                                    (exercise, i) => (
+                                      <span
+                                        key={i}
+                                        className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                          expandedBadge?.term === exercise &&
+                                          expandedBadge?.termType ===
+                                            "exercise" &&
+                                          expandedBadge?.templateId ===
+                                            template.templateId
+                                            ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                            : "hover:border-synthwave-neon-cyan/50"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleBadgeClick(
+                                            exercise,
+                                            "exercise",
+                                            template.templateId,
+                                          );
+                                        }}
+                                      >
+                                        {exercise}
+                                      </span>
+                                    ),
+                                  )}
+                                </div>
+
+                                {/* Exercise Explanation Container */}
+                                {expandedBadge &&
+                                  expandedBadge.templateId ===
+                                    template.templateId &&
+                                  expandedBadge.termType === "exercise" && (
+                                    <ExplanationPopup
+                                      isLoading={isLoadingExplanation}
+                                      explanation={expandedBadge.explanation}
+                                      onClose={handleCloseExplanation}
+                                    />
+                                  )}
+                              </div>
+                            )}
+
+                          {template.metadata?.focusAreas &&
+                            template.metadata.focusAreas.length > 0 && (
+                              <div>
+                                <div className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+                                  Focus Areas
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {template.metadata.focusAreas.map(
+                                    (area, i) => (
+                                      <span
+                                        key={i}
+                                        className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                          expandedBadge?.term === area &&
+                                          expandedBadge?.termType ===
+                                            "focus_area" &&
+                                          expandedBadge?.templateId ===
+                                            template.templateId
+                                            ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                            : "hover:border-synthwave-neon-cyan/50"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleBadgeClick(
+                                            area,
+                                            "focus_area",
+                                            template.templateId,
+                                          );
+                                        }}
+                                      >
+                                        {area}
+                                      </span>
+                                    ),
+                                  )}
+                                </div>
+
+                                {/* Focus Area Explanation Container */}
+                                {expandedBadge &&
+                                  expandedBadge.templateId ===
+                                    template.templateId &&
+                                  expandedBadge.termType === "focus_area" && (
+                                    <ExplanationPopup
+                                      isLoading={isLoadingExplanation}
+                                      explanation={expandedBadge.explanation}
+                                      onClose={handleCloseExplanation}
+                                    />
+                                  )}
+                              </div>
+                            )}
+                        </CollapsibleSubCard>
+                      )}
 
                       {/* Photos attached to this completed workout */}
                       {isCompleted &&
                         template.imageS3Keys &&
                         template.imageS3Keys.length > 0 && (
-                          <div className="mb-4">
-                            <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                              Workout Photos
-                            </h4>
+                          <CollapsibleSubCard
+                            title="Workout Photos"
+                            isCollapsed={isSubCardCollapsed(
+                              template.templateId,
+                              "photos",
+                            )}
+                            onToggle={() =>
+                              toggleSubCard(template.templateId, "photos")
+                            }
+                          >
                             <div className="flex flex-wrap gap-2">
                               {template.imageS3Keys.map((s3Key, i) => (
                                 <ImageWithPresignedUrl
@@ -1705,7 +1790,7 @@ General thoughts: `;
                                 />
                               ))}
                             </div>
-                          </div>
+                          </CollapsibleSubCard>
                         )}
 
                       {/* Action Buttons */}
@@ -2100,6 +2185,69 @@ General thoughts: `;
 }
 
 /**
+ * Collapsible sub-card used for each section within an expanded workout
+ * (Prescribed Workout, What You Did, Coach Notes, Details, Workout Photos).
+ * Clickable header with cyan dot + Barlow title + rotating chevron; body
+ * fades in when expanded. `headerRight` renders between the title and the
+ * chevron (e.g. the "Draft saved" indicator on What You Did).
+ */
+function CollapsibleSubCard({
+  title,
+  isCollapsed,
+  onToggle,
+  headerRight,
+  bodyClassName = "",
+  wrapperClassName = "",
+  id,
+  children,
+}) {
+  return (
+    <div
+      id={id}
+      className={`${containerPatterns.cardMedium} ${wrapperClassName}`}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-6 pt-5 pb-2 hover:bg-synthwave-bg-card/40 transition-colors cursor-pointer"
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
+          />
+          <h4 className="font-header font-bold text-white text-lg uppercase">
+            {title}
+          </h4>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {headerRight}
+          <svg
+            className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 shrink-0 ${
+              isCollapsed ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </button>
+      {!isCollapsed && (
+        <div className={`px-6 pb-6 animate-fadeIn ${bodyClassName}`}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Reusable explanation popup component
  * Displays AI-generated explanations with animated gradient border
  */
@@ -2114,17 +2262,21 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
       }}
     >
       <div className={containerPatterns.explanationPopupInner}>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          className={containerPatterns.explanationPopupCloseButton}
-        >
-          <XIcon className="w-4 h-4" />
-        </button>
+        <div className="flex items-center justify-end mb-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="w-8 h-8 flex items-center justify-center rounded-md text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-colors cursor-pointer"
+            aria-label="Close explanation"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-2 pt-1">
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
