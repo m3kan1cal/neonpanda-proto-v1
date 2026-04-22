@@ -2,7 +2,9 @@
  * Small, focused UI helpers for streaming message interactions
  * Each function handles a specific aspect of streaming UI without complex state management
  */
-import { avatarPatterns, streamingPatterns } from "./uiPatterns";
+import { memo } from "react";
+import { avatarPatterns, messagePatterns, streamingPatterns } from "./uiPatterns";
+import CopyButton from "../../components/shared/CopyButton";
 import { logger } from "../logger";
 
 /**
@@ -109,6 +111,71 @@ export function getStreamingMessageClasses(
 }
 
 /**
+ * Shared message footer row used across all streaming conversation pages.
+ * Renders timestamp, status dots, and (when not streaming) a copy button.
+ * Memoized with a comparator that excludes streamingMessage so the footer
+ * DOM is not recreated on every chunk — only when streaming ends or dot
+ * colors change.
+ *
+ * @param {boolean} isCurrentlyStreaming - Whether this message is actively streaming
+ * @param {string} timestamp - ISO timestamp string
+ * @param {"ai"|"user"} messageType - Message sender type
+ * @param {string} messageContent - Final message text (for copy button)
+ * @param {Function} formatTime - Timestamp formatting function
+ * @param {string} aiDotColorClass - Tailwind color class for AI status dots (e.g. messagePatterns.statusDotCyan)
+ * @param {string} userDotColorClass - Tailwind color class for user status dots
+ */
+export const MessageFooter = memo(
+  ({
+    isCurrentlyStreaming,
+    timestamp,
+    messageType,
+    messageContent,
+    formatTime,
+    aiDotColorClass = messagePatterns.statusDotCyan,
+    userDotColorClass = messagePatterns.statusDotPink,
+  }) => (
+    <div
+      className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
+    >
+      {/* User messages: timestamp first, then dots (matches original ordering) */}
+      {messageType === "user" && (
+        <>
+          <span className="text-xs text-synthwave-text-secondary font-body">
+            {formatTime(timestamp)}
+          </span>
+          <div className="flex gap-1">
+            <div className={`${messagePatterns.statusDotSecondary} ${userDotColorClass}`} />
+            <div className={`${messagePatterns.statusDotPrimary} ${userDotColorClass}`} />
+          </div>
+        </>
+      )}
+      {/* AI messages: timestamp, dots, copy button */}
+      {messageType === "ai" && (
+        <>
+          <span className="text-xs text-synthwave-text-secondary font-body">
+            {formatTime(timestamp)}
+          </span>
+          <div className="flex gap-1">
+            <div className={`${messagePatterns.statusDotSecondary} ${aiDotColorClass}`} />
+            <div className={`${messagePatterns.statusDotPrimary} ${aiDotColorClass}`} />
+          </div>
+          {!isCurrentlyStreaming && <CopyButton text={messageContent} />}
+        </>
+      )}
+    </div>
+  ),
+  (prev, next) =>
+    prev.isCurrentlyStreaming === next.isCurrentlyStreaming &&
+    prev.timestamp === next.timestamp &&
+    prev.messageContent === next.messageContent &&
+    prev.messageType === next.messageType &&
+    prev.aiDotColorClass === next.aiDotColorClass &&
+    prev.userDotColorClass === next.userDotColorClass,
+);
+MessageFooter.displayName = "MessageFooter";
+
+/**
  * Contextual update indicator - shows AI processing stages during streaming (ephemeral)
  * Displays a left-bordered message with animated processing dots and contextual text,
  * followed by the AI avatar. Used consistently across all conversation flows.
@@ -134,7 +201,12 @@ export function ContextualUpdateIndicator({
   const avatarClass = compact ? avatarPatterns.aiXSmall : avatarPatterns.aiSmall;
 
   return (
-    <div className={streamingPatterns.contextualUpdate.container}>
+    <div className="flex flex-row items-start gap-3 mb-1 animate-message-in">
+      {showAvatar && (
+        <div className={`shrink-0 mt-1 ${avatarClass}`}>
+          {avatarLabel}
+        </div>
+      )}
       <div className={borderAccentClass}>
         <div className={streamingPatterns.contextualUpdate.contentRow}>
           <div className={streamingPatterns.contextualUpdate.dotsContainer}>
@@ -156,13 +228,6 @@ export function ContextualUpdateIndicator({
           </span>
         </div>
       </div>
-      {showAvatar && (
-        <div className={streamingPatterns.avatarRow}>
-          <div className={`shrink-0 ${avatarClass}`}>
-            {avatarLabel}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
