@@ -292,14 +292,14 @@ function ViewWorkouts() {
     cancelPendingDraft();
 
     // Copy prescribed description and append placeholders for performance data and athlete notes.
-    // Strip trailing whitespace per line and collapse blank-line runs so the seeded editor
-    // content doesn't carry invisible trailing spaces from the source description.
+    // Strip trailing whitespace per line, collapse blank-line runs, and strip leading/trailing
+    // blank lines — but preserve leading indentation on content lines (e.g. "  - bullet").
     const normalizedDescription = (template.description || "")
       .split("\n")
       .map((line) => line.trimEnd())
       .join("\n")
       .replace(/\n{3,}/g, "\n\n")
-      .trim();
+      .replace(/^\n+|\n+$/g, "");
 
     const prescribedWithPlaceholders = `${normalizedDescription}
 
