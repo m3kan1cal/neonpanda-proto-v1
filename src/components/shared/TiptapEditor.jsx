@@ -181,9 +181,11 @@ const TiptapEditor = forwardRef(
             const htmlContent = content
               .replace(/\n{3,}/g, "\n\n")
               .split("\n")
-              .map((line) =>
-                line.trim() === "" ? "<p></p>" : `<p>${line}</p>`,
-              )
+              .map((line) => {
+                // trimEnd only — preserve leading indentation like "  - bullet"
+                const trimmed = line.trimEnd();
+                return trimmed === "" ? "<p></p>" : `<p>${trimmed}</p>`;
+              })
               .join("");
             editor.commands.setContent(htmlContent);
           }
