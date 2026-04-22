@@ -138,23 +138,30 @@ export const MessageFooter = memo(
     <div
       className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
     >
+      {/* User messages: timestamp first, then dots (matches original ordering) */}
       {messageType === "user" && (
-        <div className="flex gap-1">
-          <div className={`${messagePatterns.statusDotSecondary} ${userDotColorClass}`} />
-          <div className={`${messagePatterns.statusDotPrimary} ${userDotColorClass}`} />
-        </div>
+        <>
+          <span className="text-xs text-synthwave-text-secondary font-body">
+            {formatTime(timestamp)}
+          </span>
+          <div className="flex gap-1">
+            <div className={`${messagePatterns.statusDotSecondary} ${userDotColorClass}`} />
+            <div className={`${messagePatterns.statusDotPrimary} ${userDotColorClass}`} />
+          </div>
+        </>
       )}
-      <span className="text-xs text-synthwave-text-secondary font-body">
-        {formatTime(timestamp)}
-      </span>
+      {/* AI messages: timestamp, dots, copy button */}
       {messageType === "ai" && (
-        <div className="flex gap-1">
-          <div className={`${messagePatterns.statusDotSecondary} ${aiDotColorClass}`} />
-          <div className={`${messagePatterns.statusDotPrimary} ${aiDotColorClass}`} />
-        </div>
-      )}
-      {messageType === "ai" && !isCurrentlyStreaming && (
-        <CopyButton text={messageContent} />
+        <>
+          <span className="text-xs text-synthwave-text-secondary font-body">
+            {formatTime(timestamp)}
+          </span>
+          <div className="flex gap-1">
+            <div className={`${messagePatterns.statusDotSecondary} ${aiDotColorClass}`} />
+            <div className={`${messagePatterns.statusDotPrimary} ${aiDotColorClass}`} />
+          </div>
+          {!isCurrentlyStreaming && <CopyButton text={messageContent} />}
+        </>
       )}
     </div>
   ),
@@ -163,7 +170,8 @@ export const MessageFooter = memo(
     prev.timestamp === next.timestamp &&
     prev.messageContent === next.messageContent &&
     prev.messageType === next.messageType &&
-    prev.aiDotColorClass === next.aiDotColorClass,
+    prev.aiDotColorClass === next.aiDotColorClass &&
+    prev.userDotColorClass === next.userDotColorClass,
 );
 MessageFooter.displayName = "MessageFooter";
 
