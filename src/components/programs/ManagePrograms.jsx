@@ -1045,7 +1045,7 @@ function ManagePrograms() {
 
             {/* Duration - only for completed programs */}
             {program.status === PROGRAM_STATUS.COMPLETED &&
-              program.totalDays && (
+              program.totalDays > 0 && (
                 <div
                   className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
                 >
@@ -1054,7 +1054,10 @@ function ManagePrograms() {
                     <span className="text-synthwave-neon-cyan font-semibold">
                       {Math.ceil(program.totalDays / 7)}
                     </span>{" "}
-                    week program
+                    {Math.ceil(program.totalDays / 7) === 1
+                      ? "week"
+                      : "weeks"}{" "}
+                    program
                   </span>
                 </div>
               )}
