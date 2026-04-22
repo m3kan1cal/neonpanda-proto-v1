@@ -337,6 +337,17 @@ General thoughts: `;
     setEditingWorkoutId(template.templateId);
     setLastSavedAt(null);
 
+    // Ensure the "What You Did" sub-card is expanded when re-entering logging
+    // for this template — otherwise a prior collapse would leave only the
+    // header visible with the editor hidden behind the collapse gate.
+    setCollapsedSubCards((prev) => {
+      const key = `${template.templateId}:what-you-did`;
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+
     // Restore draft if one exists, otherwise use the prescribed template
     const draft = getDraft(template.templateId);
     if (draft) {
