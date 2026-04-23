@@ -8,6 +8,7 @@ import {
   badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import Footer from "../shared/Footer";
+import { useSeoHead } from "../../hooks/useSeoHead";
 
 // Blog post metadata
 const blogPosts = [
@@ -107,6 +108,11 @@ const blogPosts = [
 ];
 
 function BlogIndex() {
+  useSeoHead({
+    description:
+      "The NeonPanda blog — a technical deep-dive series on building an agentic AI coaching platform: serverless architecture, multi-agent orchestration, and memory systems.",
+  });
+
   // Auto-scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0);

@@ -77,17 +77,22 @@ export const getRouteDisplayNames = (pathname) => {
  * @param {string} pathname - The current pathname
  * @returns {string} - The formatted page title
  */
+// Keep the site-wide default in sync with the <title> in index.html so there
+// is no visible flash when the client-side router updates document.title.
+const DEFAULT_PAGE_TITLE =
+  "AI Fitness Coach for CrossFit, Powerlifting & HYROX | NeonPanda";
+
 export const generatePageTitle = (pathname) => {
-  // Home page gets the default title
+  // Home page uses the default title (matches index.html)
   if (pathname === "/") {
-    return "NeonPanda - Create Your Perfect Virtual Coach";
+    return DEFAULT_PAGE_TITLE;
   }
 
   const displayNames = getRouteDisplayNames(pathname);
 
   // Build the title: "PageName - NeonPanda" or "Parent > Child - NeonPanda"
   if (displayNames.length === 0) {
-    return "NeonPanda - Create Your Perfect Virtual Coach";
+    return DEFAULT_PAGE_TITLE;
   } else if (displayNames.length === 1) {
     return `${displayNames[0]} - NeonPanda`;
   } else {

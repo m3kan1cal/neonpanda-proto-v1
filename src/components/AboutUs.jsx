@@ -7,9 +7,14 @@ import {
   buttonPatterns,
 } from "../utils/ui/uiPatterns";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 function AboutUs() {
   const navigate = useNavigate();
+  useSeoHead({
+    description:
+      "Meet the team and mission behind NeonPanda — personalized AI fitness coaching that adapts to every athlete across 11 disciplines.",
+  });
 
   // Auto-scroll to top when page loads
   useEffect(() => {

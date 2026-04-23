@@ -7,10 +7,15 @@ import {
   buttonPatterns,
 } from "../utils/ui/uiPatterns";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 function Technology() {
   const navigate = useNavigate();
   const [modalImage, setModalImage] = useState(null);
+  useSeoHead({
+    description:
+      "The technology behind NeonPanda — agentic AI, Amazon Bedrock, Pinecone, and a serverless AWS architecture powering real-time fitness coaching.",
+  });
 
   // Auto-scroll to top when page loads
   useEffect(() => {
