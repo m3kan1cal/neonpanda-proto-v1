@@ -8,11 +8,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   try {
     // Auth handled by middleware - userId is already validated
     const userId = event.user.userId;
-    const coachId = event.pathParameters?.coachId;
 
     // Query parameters for filtering
     const queryParams = event.queryStringParameters || {};
-    const { status, includeArchived, includeStatus } = queryParams;
+    const { status, includeArchived, includeStatus, coachId } = queryParams;
 
     // Parse and validate limit/offset via the shared helper so every
     // paginated list endpoint rejects invalid input with the same 400 shape.

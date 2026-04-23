@@ -410,7 +410,7 @@ async function filterAndSortWorkouts(
   // Primary + stable secondary sort by workoutId so offset-based pagination is
   // deterministic even when two rows tie on the primary sort key.
   const sortOrder: "asc" | "desc" =
-    options?.sortOrder === "asc" ? "asc" : "desc";
+    options?.sortOrder === "asc" || !options?.sortOrder ? "asc" : "desc";
   const orderMultiplier = sortOrder === "desc" ? -1 : 1;
   const primarySortBy: "completedAt" | "confidence" | "workoutName" =
     options?.sortBy || "completedAt";
