@@ -283,7 +283,7 @@ function AboutUs() {
                     Fit matters more than fame
                   </strong>
                   —your coach should work for your specific situation, across
-                  any of our 11 supported disciplines.
+                  any of our 14 supported disciplines.
                 </p>
               </div>
 
@@ -450,7 +450,7 @@ function AboutUs() {
             <h2
               className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan`}
             >
-              Multi-Discipline Support: 8 and Growing
+              Multi-Discipline Support: 14 and Growing
             </h2>
 
             <div className="space-y-8">
@@ -461,7 +461,7 @@ function AboutUs() {
                   Currently Supported Disciplines
                 </h3>
                 <p className={`${typographyPatterns.description} text-lg mb-6`}>
-                  NeonPanda currently supports 11 training disciplines:
+                  NeonPanda currently supports 14 training disciplines:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
@@ -470,12 +470,15 @@ function AboutUs() {
                     "Olympic Weightlifting",
                     "Bodybuilding",
                     "Running",
+                    "Trail Running",
                     "Cycling",
                     "HYROX",
                     "Calisthenics",
                     "Functional Bodybuilding",
                     "Circuit Training",
                     "Hybrid",
+                    "Backpacking",
+                    "Rucking",
                   ].map((discipline, idx) => (
                     <div
                       key={idx}
@@ -530,7 +533,7 @@ function AboutUs() {
                 <p className={`${typographyPatterns.description} text-lg`}>
                   Create AI coaches that understand your specific situation so
                   well that interacting with them feels like talking to someone
-                  who's been training with you for years. Across 11 disciplines,
+                  who's been training with you for years. Across 14 disciplines,
                   with more launching soon.
                 </p>
               </div>
