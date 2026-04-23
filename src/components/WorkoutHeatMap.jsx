@@ -4,18 +4,32 @@ import { Tooltip } from "react-tooltip";
 import { containerPatterns, heatMapPatterns } from "../utils/ui/uiPatterns";
 import { getWorkouts } from "../utils/apis/workoutApi";
 
-// Short discipline labels for display inside the 36px tiles
+// Short discipline labels for display inside the 36px tiles.
+// Covers all 14 supported ExerciseDiscipline values plus a few historical
+// synonyms we still receive from legacy records (gymnastics, conditioning,
+// yoga, swimming). Keep this list in sync with src/constants/disciplines.js
+// when adding a new discipline.
 const DISCIPLINE_ABBR = {
   crossfit: "CF",
   powerlifting: "PL",
-  running: "RUN",
   bodybuilding: "BB",
   olympic_weightlifting: "OLY",
+  functional_bodybuilding: "FBB",
+  calisthenics: "CAL",
+  running: "RUN",
+  trail_running: "TR",
+  cycling: "BIKE",
+  hyrox: "HYR",
+  circuit_training: "CT",
+  hybrid: "HYB",
+  backpacking: "BP",
+  rucking: "RK",
+  // Legacy / synonym keys we still see in older records:
   gymnastics: "GYM",
   conditioning: "COND",
   yoga: "YOGA",
   swimming: "SWIM",
-  cycling: "BIKE",
+  functional_fitness: "CF",
 };
 
 const getRPEColorClass = (rpe) => {

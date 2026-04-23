@@ -174,6 +174,22 @@ export const badgePatterns = {
   workoutBadgeMuted:
     "bg-synthwave-text-secondary/20 text-synthwave-text-secondary",
 
+  // Per-discipline badge color token assignments. The color per discipline
+  // is the source-of-truth in `src/constants/disciplines.js` (DISCIPLINE_COLORS);
+  // this map exists purely so consumers that already import from uiPatterns
+  // can resolve a Tailwind class without a second import. Keep in sync with
+  // the constants file — the two must agree or we get color drift across the
+  // heat map, filters, and share card.
+  //
+  // trail_running = pink (runs-family), backpacking = cyan (long-form trail),
+  // rucking = purple (structured load work). Matches DISCIPLINE_COLORS.
+  disciplineBadgeByColor: {
+    pink: "bg-synthwave-neon-pink/20 text-synthwave-neon-pink",
+    cyan: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan",
+    purple: "bg-synthwave-neon-purple/20 text-synthwave-neon-purple",
+    muted: "bg-synthwave-text-secondary/20 text-synthwave-text-secondary",
+  },
+
   // Beta badge - For AI/experimental features (purple themed)
   // Standard size for page headers; use betaSmall for dense chrome (drawers, inline).
   beta: "inline-flex items-center px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider",
@@ -607,7 +623,8 @@ export const containerPatterns = {
     "mt-3 relative rounded-md bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px]",
 
   // AI Explanation Popup - Inner card (always paired with explanationPopupWrapper)
-  explanationPopupInner: "rounded-md bg-synthwave-bg-card px-4 pb-4 pt-2 h-full",
+  explanationPopupInner:
+    "rounded-md bg-synthwave-bg-card px-4 pb-4 pt-2 h-full",
 
   // Scrollable AI response content area - for explanation popups, AI text blocks with overflow
   // Pink scrollbar, 300px max height, standard body text sizing
