@@ -25,7 +25,7 @@ KEY CONCEPTS:
 
 BACKPACKING EXTRACTION EXAMPLES:
 - "Day 2 of Uintas loop: 12.3 mi, 3,200 ft gain, 40 lb pack, 7h moving" → trip_name: "Uintas loop", trip_day: 2, total_distance: 12.3, distance_unit: "miles", moving_time: 25200, elevation_gain: 3200, pack_weight: 40, pack_weight_unit: "lbs", surface: "trail"
-- "Loaded hike up Elbert, 30 lb pack, 4,500 ft gain, 6h car-to-car" → trip_name: "Elbert", total_distance: ~9 (if mentioned), elevation_gain: 4500, elevation_unit: "ft", pack_weight: 30, total_time: 21600, surface: "mountain"
+- "Loaded hike up Elbert, 30 lb pack, 4,500 ft gain, 6h car-to-car" → trip_name: "Elbert", total_distance: ~9 (if mentioned), elevation_gain: 4500, elevation_unit: "ft", pack_weight: 30, total_time: 21600, surface: "trail"
 - "Rainier prep: 8 mi with 45 lb pack, 2,500 ft gain, 3h45m" → pack_weight: 45, elevation_gain: 2500, total_distance: 8, total_time: 13500
 - "Overnight in Winds, 14 mi day 1 with 50 lb pack" → trip_day: 1, total_distance: 14, pack_weight: 50
 
