@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "generatedAt": null,
+  "notes": "Placeholder baseline. Regenerate by running `tsx test/evals/discipline-detection/runner.ts --update-baseline` against a known-good commit before enforcing in CI.",
+  "results": {}
+}

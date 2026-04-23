@@ -221,6 +221,97 @@ describe("WorkoutLoggerAgent", () => {
 
   // ─── Blocking enforcement ─────────────────────────────────────────────────
 
+  // ─── Boundary-case discipline detection ───────────────────────────────────
+  //
+  // These tests exercise the agent with mountain-discipline detection results
+  // to confirm the full flow routes correctly for trail_running, backpacking,
+  // and rucking, and that the agent keeps its tool ordering regardless of the
+  // detected discipline. Full LLM-level accuracy for detect_discipline is
+  // measured in test/evals/discipline-detection/ using labeled fixtures.
+
+  it.each([
+    {
+      discipline: "trail_running",
+      reasoning:
+        "Trail surface with 2,800 ft of gain and singletrack references",
+      utterance:
+        "12 mile trail run, 2,800 ft of gain on singletrack. Ran the flats and power-hiked the climbs.",
+      workoutName: "Trail long run",
+    },
+    {
+      discipline: "backpacking",
+      reasoning: "Multi-day trip, heavy pack, elevation over a full day",
+      utterance:
+        "Day 2 of the JMT — 14 miles with 40 lb pack, 3,500 ft gain over Muir Pass.",
+      workoutName: "JMT Day 2 — Muir Pass",
+    },
+    {
+      discipline: "rucking",
+      reasoning: "Structured loaded-march on road with defined pace and weight",
+      utterance:
+        "45 min ruck, 3 miles on road with a 35 lb pack. Held a 15 min/mi pace.",
+      workoutName: "Road ruck",
+    },
+  ])(
+    "routes mountain discipline $discipline through the full tool sequence",
+    async ({ discipline, reasoning, utterance, workoutName }) => {
+      vi.mocked(tools.detectDisciplineTool.execute).mockResolvedValueOnce({
+        discipline,
+        confidence: 0.93,
+        method: "ai_detection",
+        reasoning,
+      });
+
+      vi.mocked(tools.extractWorkoutDataTool.execute).mockResolvedValueOnce({
+        workoutData: { workout_name: workoutName, discipline },
+        completedAt: new Date(),
+        generationMethod: "tool",
+        userMessage: utterance,
+      } as any);
+
+      const mock = vi.mocked(callBedrockApiForAgent);
+      mock
+        .mockResolvedValueOnce(
+          makeBedrockResponse(
+            "tool_use",
+            makeToolUseContent("detect_discipline"),
+          ),
+        )
+        .mockResolvedValueOnce(
+          makeBedrockResponse(
+            "tool_use",
+            makeToolUseContent("extract_workout_data"),
+          ),
+        )
+        .mockResolvedValueOnce(
+          makeBedrockResponse(
+            "tool_use",
+            makeToolUseContent("validate_workout_completeness"),
+          ),
+        )
+        .mockResolvedValueOnce(
+          makeBedrockResponse(
+            "tool_use",
+            makeToolUseContent("save_workout_to_database"),
+          ),
+        )
+        .mockResolvedValueOnce(
+          makeBedrockResponse(
+            "end_turn",
+            makeTextContent("Workout logged successfully!"),
+          ),
+        );
+
+      const agent = new WorkoutLoggerAgent(makeContext());
+      const result = await agent.logWorkout(utterance);
+
+      expect(result.success).toBe(true);
+      expect(tools.detectDisciplineTool.execute).toHaveBeenCalled();
+      expect(tools.extractWorkoutDataTool.execute).toHaveBeenCalled();
+      expect(tools.saveWorkoutToDatabaseTool.execute).toHaveBeenCalled();
+    },
+  );
+
   it("blocks normalize and save when validation returns shouldSave=false", async () => {
     // Override validateWorkoutCompletenessTool to return blocking result
     vi.mocked(tools.validateWorkoutCompletenessTool.execute).mockResolvedValue({
