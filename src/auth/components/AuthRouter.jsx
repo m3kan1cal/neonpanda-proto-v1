@@ -6,6 +6,7 @@ import RegisterForm from "./RegisterForm";
 import VerifyEmailForm from "./VerifyEmailForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import ResetPasswordForm from "./ResetPasswordForm";
+import { useSeoHead } from "../../hooks/useSeoHead";
 
 const AUTH_VIEWS = {
   LOGIN: "login",
@@ -19,6 +20,8 @@ const AuthRouter = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user, loading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  useSeoHead({ robots: "noindex, nofollow" });
 
   // Determine initial view from URL parameters
   const getInitialView = () => {

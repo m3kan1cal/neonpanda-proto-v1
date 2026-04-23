@@ -7,8 +7,14 @@ import {
   typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 function LandingPage() {
+  useSeoHead({
+    description:
+      "Create your own AI fitness coach that programs your training, remembers every PR and injury, and logs workouts in plain English. Built for CrossFit, powerlifting, HYROX, running, and 7 more disciplines.",
+  });
+
   // Random hero image selection
   const [heroImage, setHeroImage] = React.useState("");
 

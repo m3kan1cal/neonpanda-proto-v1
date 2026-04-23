@@ -11,6 +11,7 @@ import {
 } from "../utils/changelogData";
 import { ChevronDownIcon } from "./themes/SynthwaveComponents";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 // Release icon
 const ReleaseIcon = () => (
@@ -69,6 +70,11 @@ const CollapsibleSection = ({
 };
 
 function Changelog() {
+  useSeoHead({
+    description:
+      "Changelog for NeonPanda — new features, improvements, and fixes shipped across the AI coaching platform.",
+  });
+
   // Auto-scroll to top when page loads, or scroll to anchor if present
   useEffect(() => {
     // Check if there's a hash in the URL

@@ -7,10 +7,15 @@ import {
   buttonPatterns,
 } from "../utils/ui/uiPatterns";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 function FAQs() {
   const navigate = useNavigate();
   const [openFAQ, setOpenFAQ] = useState(null);
+  useSeoHead({
+    description:
+      "Frequently asked questions about NeonPanda — how AI coaching works, programming, workout logging, analytics, pricing, and safety.",
+  });
 
   // Auto-scroll to top when page loads
   useEffect(() => {
@@ -203,8 +208,25 @@ function FAQs() {
     navigate("/contact?type=general");
   };
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+
   return (
     <div className={layoutPatterns.pageContainer}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <div className={layoutPatterns.contentWrapper}>
         {/* Header */}
         <div className="text-center mb-12">

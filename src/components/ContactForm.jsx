@@ -10,8 +10,13 @@ import { useToast } from "../contexts/ToastContext";
 import ContactFormAgent from "../utils/agents/ContactFormAgent";
 import FormInput from "./shared/FormInput";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 function ContactForm() {
+  useSeoHead({
+    description:
+      "Get in touch with NeonPanda — questions, support, partnerships, or feedback about AI fitness coaching.",
+  });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const contactType = searchParams.get("type") || "general";
