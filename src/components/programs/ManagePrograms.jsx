@@ -1231,11 +1231,6 @@ function ManagePrograms() {
 
                   {/* Program details skeleton */}
                   <div className="space-y-3">
-                    {/* Coach */}
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
-                    </div>
                     {/* Workout stats */}
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
@@ -1335,11 +1330,6 @@ function ManagePrograms() {
 
                     {/* Program details skeleton */}
                     <div className="space-y-3">
-                      {/* Coach */}
-                      <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
-                      </div>
                       {/* Workout stats */}
                       <div className="flex items-center space-x-2">
                         <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
