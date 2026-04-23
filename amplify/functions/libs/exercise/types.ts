@@ -16,13 +16,51 @@ export type ExerciseDiscipline =
   | "powerlifting"
   | "bodybuilding"
   | "running"
+  | "trail_running"
   | "cycling"
   | "hyrox"
   | "olympic_weightlifting"
   | "functional_bodybuilding"
   | "calisthenics"
   | "circuit_training"
-  | "hybrid";
+  | "hybrid"
+  | "backpacking"
+  | "rucking";
+
+/**
+ * Single-source-of-truth ordered list of supported disciplines.
+ *
+ * Every backend array-based allowlist (handler validators, `validateWorkout`,
+ * future validators) must derive from this constant so that adding a new
+ * discipline is a single-line change.
+ */
+export const SUPPORTED_DISCIPLINES = [
+  "crossfit",
+  "powerlifting",
+  "bodybuilding",
+  "running",
+  "trail_running",
+  "cycling",
+  "hyrox",
+  "olympic_weightlifting",
+  "functional_bodybuilding",
+  "calisthenics",
+  "circuit_training",
+  "hybrid",
+  "backpacking",
+  "rucking",
+] as const satisfies readonly ExerciseDiscipline[];
+
+export type SupportedDiscipline = (typeof SUPPORTED_DISCIPLINES)[number];
+
+export function isSupportedDiscipline(
+  value: string | null | undefined,
+): value is ExerciseDiscipline {
+  return (
+    typeof value === "string" &&
+    (SUPPORTED_DISCIPLINES as readonly string[]).includes(value)
+  );
+}
 
 /**
  * Exercise metrics - discipline-agnostic structure capturing all possible metrics
@@ -81,7 +119,14 @@ export interface ExerciseMetrics {
   pace?: string; // "MM:SS" per mile/km
   calories?: number;
   elevationGain?: number;
+  elevationLoss?: number; // Used by trail_running and backpacking for downhill durability
+  elevationUnit?: string; // "ft" | "m"
   surface?: string; // "road" | "trail" | "track" | "treadmill"
+
+  // === Loaded-carry metrics (rucking, backpacking) ===
+  packWeight?: number;
+  packWeightUnit?: "lbs" | "kg";
+  cadence?: number; // steps per minute (rucking)
 
   // === Calisthenics/skill metrics ===
   holdTime?: number; // seconds (for static holds)

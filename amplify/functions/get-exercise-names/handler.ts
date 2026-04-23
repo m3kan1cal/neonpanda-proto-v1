@@ -8,7 +8,10 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { queryExerciseNames } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
-import type { ExerciseDiscipline } from "../libs/exercise/types";
+import {
+  SUPPORTED_DISCIPLINES,
+  type ExerciseDiscipline,
+} from "../libs/exercise/types";
 import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -19,25 +22,15 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const queryParams = event.queryStringParameters || {};
   const { discipline, limit } = queryParams;
 
-  // Validate discipline if provided
-  const validDisciplines: ExerciseDiscipline[] = [
-    "crossfit",
-    "powerlifting",
-    "bodybuilding",
-    "running",
-    "hyrox",
-    "olympic_weightlifting",
-    "functional_bodybuilding",
-    "calisthenics",
-  ];
-
+  // Derive valid disciplines from the SUPPORTED_DISCIPLINES single source of
+  // truth so a new backend enum value is automatically accepted here.
   if (
     discipline &&
-    !validDisciplines.includes(discipline as ExerciseDiscipline)
+    !(SUPPORTED_DISCIPLINES as readonly string[]).includes(discipline)
   ) {
     return createErrorResponse(
       400,
-      `Invalid discipline. Must be one of: ${validDisciplines.join(", ")}`,
+      `Invalid discipline. Must be one of: ${SUPPORTED_DISCIPLINES.join(", ")}`,
     );
   }
 

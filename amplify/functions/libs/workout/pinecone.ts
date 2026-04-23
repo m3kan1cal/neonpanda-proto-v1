@@ -97,6 +97,70 @@ export const storeWorkoutSummaryInPinecone = async (
       };
     }
 
+    if (
+      workoutData.discipline === "trail_running" &&
+      workoutData.discipline_specific?.trail_running
+    ) {
+      const trailRunning = workoutData.discipline_specific.trail_running;
+      disciplineMetadata = {
+        runType: trailRunning.run_type,
+        isUltra: trailRunning.is_ultra ?? false,
+        ...filterNullish({
+          totalDistance: trailRunning.total_distance,
+          totalTime: trailRunning.total_time,
+          averagePace: trailRunning.average_pace,
+          surface: trailRunning.surface,
+          technicality: trailRunning.technicality,
+          elevationGain: trailRunning.elevation_gain,
+          elevationLoss: trailRunning.elevation_loss,
+          raceName: trailRunning.race_name,
+        }),
+      };
+    }
+
+    if (
+      workoutData.discipline === "backpacking" &&
+      workoutData.discipline_specific?.backpacking
+    ) {
+      const backpacking = workoutData.discipline_specific.backpacking;
+      disciplineMetadata = {
+        ...filterNullish({
+          tripName: backpacking.trip_name,
+          tripDay: backpacking.trip_day,
+          totalTripDays: backpacking.total_trip_days,
+          totalDistance: backpacking.total_distance,
+          totalTime: backpacking.total_time,
+          movingTime: backpacking.moving_time,
+          packWeight: backpacking.pack_weight,
+          packWeightUnit: backpacking.pack_weight_unit,
+          elevationGain: backpacking.elevation_gain,
+          elevationLoss: backpacking.elevation_loss,
+          surface: backpacking.surface,
+        }),
+      };
+    }
+
+    if (
+      workoutData.discipline === "rucking" &&
+      workoutData.discipline_specific?.rucking
+    ) {
+      const rucking = workoutData.discipline_specific.rucking;
+      disciplineMetadata = {
+        ruckType: rucking.ruck_type,
+        ...filterNullish({
+          eventName: rucking.event_name,
+          totalDistance: rucking.total_distance,
+          totalTime: rucking.total_time,
+          averagePace: rucking.average_pace,
+          packWeight: rucking.pack_weight,
+          packWeightUnit: rucking.pack_weight_unit,
+          cadence: rucking.cadence,
+          elevationGain: rucking.elevation_gain,
+          surface: rucking.surface,
+        }),
+      };
+    }
+
     // PR achievements (if any)
     const prMetadata =
       workoutData.pr_achievements && workoutData.pr_achievements.length > 0

@@ -32,6 +32,12 @@ import { logger } from "../logger";
 
 /**
  * Map of discipline names to their schema plugins
+ *
+ * Note: `trail_running`, `backpacking`, and `rucking` are intentionally NOT
+ * registered here for the MVP rollout. They fall back to the `hybrid` schema
+ * in `composeWorkoutSchema`, which accepts loose discipline-shaped data under
+ * a flexible structure. Dedicated plugins for these disciplines are a
+ * deliberate follow-up once we have real data volume to motivate the shape.
  */
 const DISCIPLINE_PLUGIN_MAP: Record<string, any> = {
   crossfit: CROSSFIT_SCHEMA_PLUGIN,

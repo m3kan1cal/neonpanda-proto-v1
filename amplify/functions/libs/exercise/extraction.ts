@@ -25,6 +25,9 @@ import type {
   BodybuildingWorkout,
   BodybuildingExercise,
   RunningWorkout,
+  TrailRunningWorkout,
+  BackpackingWorkout,
+  RuckingWorkout,
   CyclingWorkout,
   CyclingSegment,
   HyroxWorkout,
@@ -83,6 +86,21 @@ export function extractExercisesFromWorkout(
 
     case "running":
       return extractRunningExercises(disciplineSpecific.running, discipline);
+
+    case "trail_running":
+      return extractTrailRunningExercises(
+        disciplineSpecific.trail_running,
+        discipline,
+      );
+
+    case "backpacking":
+      return extractBackpackingExercises(
+        disciplineSpecific.backpacking,
+        discipline,
+      );
+
+    case "rucking":
+      return extractRuckingExercises(disciplineSpecific.rucking, discipline);
 
     case "cycling":
       return extractCyclingExercises(disciplineSpecific.cycling, discipline);
@@ -556,6 +574,253 @@ function extractRunningExercises(
   }
 
   return { exercises, discipline, extractionMethod: "running_segments" };
+}
+
+/**
+ * Trail-running exercise extraction
+ *
+ * Primary exercise: the overall trail run (e.g. "long_trail_run", "vert_repeats").
+ * Segments become additional exercise records when they have a distinct type
+ * beyond "warmup"/"cooldown", capturing distance, vert, time, and surface.
+ */
+function extractTrailRunningExercises(
+  trailRunning: TrailRunningWorkout | undefined,
+  discipline: ExerciseDiscipline,
+): ExerciseExtractionResult {
+  if (!trailRunning) {
+    return {
+      exercises: [],
+      discipline,
+      extractionMethod: "trail_running_empty",
+    };
+  }
+
+  const exercises: ExtractedExercise[] = [];
+
+  if (trailRunning.run_type) {
+    const mainName = trailRunning.is_ultra
+      ? "trail_ultra"
+      : `${trailRunning.run_type}_trail_run`;
+
+    const mainMetrics: ExerciseMetrics = {
+      distance: trailRunning.total_distance,
+      distanceUnit: trailRunning.distance_unit,
+      time: trailRunning.total_time,
+      pace: trailRunning.average_pace,
+      elevationGain: trailRunning.elevation_gain,
+      elevationLoss: trailRunning.elevation_loss,
+      elevationUnit: trailRunning.elevation_unit,
+      surface: trailRunning.surface,
+    };
+
+    exercises.push({
+      originalName: mainName,
+      discipline,
+      metrics: mainMetrics,
+    });
+  } else {
+    logger.warn("⚠️ Skipping Trail Running exercise without run_type");
+  }
+
+  if (trailRunning.segments) {
+    for (const segment of trailRunning.segments) {
+      if (
+        !segment.segment_type ||
+        segment.segment_type === "warmup" ||
+        segment.segment_type === "cooldown" ||
+        segment.segment_type === "aid_station"
+      ) {
+        continue;
+      }
+
+      const segmentMetrics: ExerciseMetrics = {
+        distance: segment.distance,
+        distanceUnit: trailRunning.distance_unit,
+        time: segment.time,
+        pace: segment.pace,
+        elevationGain: segment.elevation_gain,
+        elevationLoss: segment.elevation_loss,
+        elevationUnit: trailRunning.elevation_unit,
+        surface: segment.surface,
+      };
+
+      exercises.push({
+        originalName: `${segment.segment_type}_trail_segment`,
+        discipline,
+        metrics: segmentMetrics,
+        sourceSegment: segment.segment_number,
+        notes: segment.notes || undefined,
+      });
+    }
+  }
+
+  return {
+    exercises,
+    discipline,
+    extractionMethod: "trail_running_segments",
+  };
+}
+
+/**
+ * Backpacking exercise extraction
+ *
+ * Primary exercise is the backpacking day ("backpacking_day" or
+ * "summit_day" if segment indicates summit). Segments become additional
+ * records when they have a non-rest type, capturing distance, vert, and
+ * pack weight.
+ */
+function extractBackpackingExercises(
+  backpacking: BackpackingWorkout | undefined,
+  discipline: ExerciseDiscipline,
+): ExerciseExtractionResult {
+  if (!backpacking) {
+    return {
+      exercises: [],
+      discipline,
+      extractionMethod: "backpacking_empty",
+    };
+  }
+
+  const exercises: ExtractedExercise[] = [];
+
+  const mainName =
+    backpacking.trip_day && backpacking.total_trip_days
+      ? `backpacking_day_${backpacking.trip_day}`
+      : "backpacking_day";
+
+  const mainMetrics: ExerciseMetrics = {
+    distance: backpacking.total_distance,
+    distanceUnit: backpacking.distance_unit,
+    time: backpacking.moving_time ?? backpacking.total_time,
+    elevationGain: backpacking.elevation_gain,
+    elevationLoss: backpacking.elevation_loss,
+    elevationUnit: backpacking.elevation_unit,
+    packWeight: backpacking.pack_weight,
+    packWeightUnit: backpacking.pack_weight_unit,
+    surface: backpacking.surface,
+  };
+
+  exercises.push({
+    originalName: mainName,
+    discipline,
+    metrics: mainMetrics,
+  });
+
+  if (backpacking.segments) {
+    for (const segment of backpacking.segments) {
+      if (
+        !segment.segment_type ||
+        segment.segment_type === "rest" ||
+        segment.segment_type === "camp"
+      ) {
+        continue;
+      }
+
+      const segmentMetrics: ExerciseMetrics = {
+        distance: segment.distance,
+        distanceUnit: backpacking.distance_unit,
+        time: segment.duration_min ? segment.duration_min * 60 : undefined,
+        elevationGain: segment.elevation_gain_ft,
+        elevationLoss: segment.elevation_loss_ft,
+        elevationUnit: backpacking.elevation_unit ?? "ft",
+        packWeight: segment.pack_weight_lb ?? backpacking.pack_weight,
+        packWeightUnit: backpacking.pack_weight_unit ?? "lbs",
+        surface: segment.surface,
+      };
+
+      exercises.push({
+        originalName: `${segment.segment_type}_backpacking_segment`,
+        discipline,
+        metrics: segmentMetrics,
+        sourceSegment: segment.segment_number,
+        notes: segment.notes || undefined,
+      });
+    }
+  }
+
+  return {
+    exercises,
+    discipline,
+    extractionMethod: "backpacking_segments",
+  };
+}
+
+/**
+ * Rucking exercise extraction
+ *
+ * Primary exercise is the ruck ("endurance_ruck", "speed_ruck", etc.).
+ * Segments are recorded when they have a non-warmup/cooldown type, capturing
+ * distance, time, pace, pack weight, and cadence.
+ */
+function extractRuckingExercises(
+  rucking: RuckingWorkout | undefined,
+  discipline: ExerciseDiscipline,
+): ExerciseExtractionResult {
+  if (!rucking) {
+    return { exercises: [], discipline, extractionMethod: "rucking_empty" };
+  }
+
+  const exercises: ExtractedExercise[] = [];
+
+  if (rucking.ruck_type) {
+    const mainName = rucking.event_name
+      ? `${rucking.ruck_type}_ruck_event`
+      : `${rucking.ruck_type}_ruck`;
+
+    const mainMetrics: ExerciseMetrics = {
+      distance: rucking.total_distance,
+      distanceUnit: rucking.distance_unit,
+      time: rucking.total_time,
+      pace: rucking.average_pace,
+      packWeight: rucking.pack_weight,
+      packWeightUnit: rucking.pack_weight_unit,
+      cadence: rucking.cadence ?? undefined,
+      elevationGain: rucking.elevation_gain ?? undefined,
+      elevationUnit: rucking.elevation_unit ?? undefined,
+      surface: rucking.surface,
+    };
+
+    exercises.push({
+      originalName: mainName,
+      discipline,
+      metrics: mainMetrics,
+    });
+  } else {
+    logger.warn("⚠️ Skipping Rucking exercise without ruck_type");
+  }
+
+  if (rucking.segments) {
+    for (const segment of rucking.segments) {
+      if (
+        !segment.segment_type ||
+        segment.segment_type === "warmup" ||
+        segment.segment_type === "cooldown" ||
+        segment.segment_type === "recovery"
+      ) {
+        continue;
+      }
+
+      const segmentMetrics: ExerciseMetrics = {
+        distance: segment.distance,
+        distanceUnit: rucking.distance_unit,
+        time: segment.duration_min ? segment.duration_min * 60 : undefined,
+        pace: segment.pace,
+        packWeight: segment.pack_weight_lb ?? rucking.pack_weight,
+        packWeightUnit: rucking.pack_weight_unit,
+        cadence: segment.cadence,
+      };
+
+      exercises.push({
+        originalName: `${segment.segment_type}_ruck_segment`,
+        discipline,
+        metrics: segmentMetrics,
+        sourceSegment: segment.segment_number,
+        notes: segment.notes || undefined,
+      });
+    }
+  }
+
+  return { exercises, discipline, extractionMethod: "rucking_segments" };
 }
 
 /**
