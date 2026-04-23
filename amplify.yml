@@ -87,8 +87,28 @@ applications:
       - source: "/blog/"
         target: "/blog"
         status: "301"
+      - source: "/white-papers/"
+        target: "/white-papers"
+        status: "301"
       - source: "/welcome/"
         target: "/welcome"
+        status: "301"
+
+      # Preserve the pre-React-route URL for the one externally linked white
+      # paper (Grant) so the April platform update email link keeps working.
+      # The other three papers weren't shared externally, but we 301 them too
+      # as cheap insurance for any internal references we missed.
+      - source: "/white-papers/use-case-grant-first-meet-prep.html"
+        target: "/white-papers/use-case-grant-first-meet-prep"
+        status: "301"
+      - source: "/white-papers/use-case-david-returning-athlete.html"
+        target: "/white-papers/use-case-david-returning-athlete"
+        status: "301"
+      - source: "/white-papers/use-case-james-functional-chaos.html"
+        target: "/white-papers/use-case-james-functional-chaos"
+        status: "301"
+      - source: "/white-papers/use-case-paige-respiratory-therapist-iterates.html"
+        target: "/white-papers/use-case-paige-respiratory-therapist-iterates"
         status: "301"
 
       # Protected pages - strip trailing slashes

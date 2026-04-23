@@ -23,6 +23,7 @@ import {
   SignOutIconTiny,
   SettingsIconTiny,
   BlogIconTiny,
+  WhitePaperIconTiny,
   DocsIconTiny,
 } from "../themes/SynthwaveComponents";
 
@@ -86,6 +87,12 @@ const PublicHeader = () => {
       label: "Blog",
       path: "/blog",
       icon: BlogIconTiny,
+    },
+    {
+      id: "white-papers",
+      label: "White Papers",
+      path: "/white-papers",
+      icon: WhitePaperIconTiny,
     },
     {
       id: "docs",
