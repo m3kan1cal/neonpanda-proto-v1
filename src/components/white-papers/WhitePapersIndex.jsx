@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../shared/Footer";
+import { usePageSEO } from "../../hooks/usePageSEO";
 import {
   getWhitePapersForHub,
   formatPublishedDate,
@@ -230,89 +231,18 @@ const HUB_CSS = `
 }
 `;
 
-function useHubSEO() {
-  useEffect(() => {
-    const previousTitle = document.title;
-    const pageTitle = "White Papers — NeonPanda";
-    document.title = pageTitle;
-
-    const description =
-      "Real stories of athletes using NeonPanda — in-depth use-case white papers on meet prep, returning athletes, self-directed training, and constraint-heavy design.";
-    const canonicalHref = "https://neonpanda.ai/white-papers";
-
-    const upsertMeta = (selector, attrs) => {
-      let tag = document.head.querySelector(selector);
-      const created = !tag;
-      const previousContent = tag ? tag.getAttribute("content") : null;
-      if (!tag) {
-        tag = document.createElement("meta");
-        Object.entries(attrs).forEach(([key, value]) => {
-          if (key !== "content") tag.setAttribute(key, value);
-        });
-        document.head.appendChild(tag);
-      }
-      if (attrs.content != null) tag.setAttribute("content", attrs.content);
-      return { tag, created, previousContent };
-    };
-
-    const metas = [
-      upsertMeta('meta[name="description"]', {
-        name: "description",
-        content: description,
-      }),
-      upsertMeta('meta[property="og:title"]', {
-        property: "og:title",
-        content: pageTitle,
-      }),
-      upsertMeta('meta[property="og:description"]', {
-        property: "og:description",
-        content: description,
-      }),
-      upsertMeta('meta[property="og:type"]', {
-        property: "og:type",
-        content: "website",
-      }),
-      upsertMeta('meta[property="og:url"]', {
-        property: "og:url",
-        content: canonicalHref,
-      }),
-    ];
-
-    let canonical = document.head.querySelector('link[rel="canonical"]');
-    const canonicalCreated = !canonical;
-    const previousCanonicalHref = canonical
-      ? canonical.getAttribute("href")
-      : null;
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.setAttribute("rel", "canonical");
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute("href", canonicalHref);
-
-    return () => {
-      document.title = previousTitle;
-      metas.forEach(({ tag, created, previousContent }) => {
-        if (created && tag.parentNode) {
-          tag.parentNode.removeChild(tag);
-        } else if (!created && previousContent != null) {
-          tag.setAttribute("content", previousContent);
-        }
-      });
-      if (canonicalCreated && canonical.parentNode) {
-        canonical.parentNode.removeChild(canonical);
-      } else if (canonical && previousCanonicalHref != null) {
-        canonical.setAttribute("href", previousCanonicalHref);
-      }
-    };
-  }, []);
-}
-
 function WhitePapersIndex() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  useHubSEO();
+
+  usePageSEO({
+    pageTitle: "White Papers — NeonPanda",
+    description:
+      "Real stories of athletes using NeonPanda — in-depth use-case white papers on meet prep, returning athletes, self-directed training, and constraint-heavy design.",
+    canonicalHref: "https://neonpanda.ai/white-papers",
+    ogType: "website",
+  });
 
   const papers = getWhitePapersForHub();
 
