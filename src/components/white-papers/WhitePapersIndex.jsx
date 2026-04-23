@@ -5,6 +5,7 @@ import {
   getWhitePapersForHub,
   formatPublishedDate,
   statusLabel,
+  statusPillClass,
 } from "../../data/whitePapers";
 
 // Scoped stylesheet for the hub. Mirrors the paper-style palette from
@@ -229,21 +230,6 @@ const HUB_CSS = `
 }
 `;
 
-function statusPillClass(status) {
-  switch (status) {
-    case "published":
-      return "published";
-    case "approved":
-      return "approved";
-    case "draft-for-subject-review":
-      return "draft";
-    case "internal-draft":
-      return "internal";
-    default:
-      return "draft";
-  }
-}
-
 function useHubSEO() {
   useEffect(() => {
     const previousTitle = document.title;
@@ -257,6 +243,7 @@ function useHubSEO() {
     const upsertMeta = (selector, attrs) => {
       let tag = document.head.querySelector(selector);
       const created = !tag;
+      const previousContent = tag ? tag.getAttribute("content") : null;
       if (!tag) {
         tag = document.createElement("meta");
         Object.entries(attrs).forEach(([key, value]) => {
@@ -265,7 +252,7 @@ function useHubSEO() {
         document.head.appendChild(tag);
       }
       if (attrs.content != null) tag.setAttribute("content", attrs.content);
-      return { tag, created };
+      return { tag, created, previousContent };
     };
 
     const metas = [
@@ -305,8 +292,12 @@ function useHubSEO() {
 
     return () => {
       document.title = previousTitle;
-      metas.forEach(({ tag, created }) => {
-        if (created && tag.parentNode) tag.parentNode.removeChild(tag);
+      metas.forEach(({ tag, created, previousContent }) => {
+        if (created && tag.parentNode) {
+          tag.parentNode.removeChild(tag);
+        } else if (!created && previousContent != null) {
+          tag.setAttribute("content", previousContent);
+        }
       });
       if (canonicalCreated && canonical.parentNode) {
         canonical.parentNode.removeChild(canonical);

@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import Footer from "../shared/Footer";
-import { statusLabel, formatPublishedDate } from "../../data/whitePapers";
+import {
+  statusLabel,
+  formatPublishedDate,
+  statusPillClass,
+} from "../../data/whitePapers";
 
 // Scoped paper stylesheet — injected once per page via the <style> tag below.
 // Every rule is namespaced under .white-paper-root so the paper design does
@@ -307,30 +311,9 @@ const PAPER_CSS = `
 `;
 
 /**
- * Map a WhitePaperStatus to the CSS modifier class used by the footer pill.
- *
- * @param {string} status
- * @returns {string}
- */
-function statusPillClass(status) {
-  switch (status) {
-    case "published":
-      return "published";
-    case "approved":
-      return "approved";
-    case "draft-for-subject-review":
-      return "draft";
-    case "internal-draft":
-      return "internal";
-    default:
-      return "draft";
-  }
-}
-
-/**
  * Set <title>, meta description, Open Graph, and canonical link from the paper
- * entry on mount. Cleans up by restoring the previous <title> when the paper
- * unmounts so breadcrumbs etc. stay accurate.
+ * entry on mount. Cleans up by restoring the previous <title> and meta tag
+ * values when the paper unmounts so breadcrumbs etc. stay accurate.
  */
 function useWhitePaperSEO(paper) {
   useEffect(() => {
@@ -345,6 +328,7 @@ function useWhitePaperSEO(paper) {
     const upsertMeta = (selector, attrs) => {
       let tag = document.head.querySelector(selector);
       const created = !tag;
+      const previousContent = tag ? tag.getAttribute("content") : null;
       if (!tag) {
         tag = document.createElement("meta");
         Object.entries(attrs).forEach(([key, value]) => {
@@ -353,7 +337,7 @@ function useWhitePaperSEO(paper) {
         document.head.appendChild(tag);
       }
       if (attrs.content != null) tag.setAttribute("content", attrs.content);
-      return { tag, created };
+      return { tag, created, previousContent };
     };
 
     const metas = [
@@ -393,8 +377,12 @@ function useWhitePaperSEO(paper) {
 
     return () => {
       document.title = previousTitle;
-      metas.forEach(({ tag, created }) => {
-        if (created && tag.parentNode) tag.parentNode.removeChild(tag);
+      metas.forEach(({ tag, created, previousContent }) => {
+        if (created && tag.parentNode) {
+          tag.parentNode.removeChild(tag);
+        } else if (!created && previousContent != null) {
+          tag.setAttribute("content", previousContent);
+        }
       });
       if (canonicalCreated && canonical.parentNode) {
         canonical.parentNode.removeChild(canonical);
