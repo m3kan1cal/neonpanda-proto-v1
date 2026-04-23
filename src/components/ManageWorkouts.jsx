@@ -17,6 +17,9 @@ import MarkdownRenderer from "./shared/MarkdownRenderer";
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
+import { notifyLoadMoreError } from "../utils/loadMoreErrors";
+import { LIST_PAGE_SIZE } from "../constants/pagination";
+import LoadMoreButton from "./shared/LoadMoreButton";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import CompactCoachCard from "./shared/CompactCoachCard";
@@ -119,11 +122,14 @@ function ManageWorkouts() {
     allWorkouts: [],
     recentWorkouts: [],
     isLoadingAllItems: !!userId,
+    isLoadingMoreAllItems: false,
     isLoadingRecentItems: false,
     isLoadingItem: false,
     isLoadingStats: !!userId,
     error: null,
     totalCount: 0,
+    allWorkoutsOffset: 0,
+    allWorkoutsTotalCount: 0,
     currentStreak: 0,
     bestStreak: 0,
     trainingDaysCount: 0,
@@ -157,6 +163,18 @@ function ManageWorkouts() {
             newState.isLoadingAllItems !== undefined
               ? newState.isLoadingAllItems
               : prevState.isLoadingAllItems,
+          isLoadingMoreAllItems:
+            newState.isLoadingMoreAllItems !== undefined
+              ? newState.isLoadingMoreAllItems
+              : prevState.isLoadingMoreAllItems,
+          allWorkoutsOffset:
+            newState.allWorkoutsOffset !== undefined
+              ? newState.allWorkoutsOffset
+              : prevState.allWorkoutsOffset,
+          allWorkoutsTotalCount:
+            newState.allWorkoutsTotalCount !== undefined
+              ? newState.allWorkoutsTotalCount
+              : prevState.allWorkoutsTotalCount,
           isLoadingRecentItems:
             newState.isLoadingRecentItems !== undefined
               ? newState.isLoadingRecentItems
@@ -250,7 +268,7 @@ function ManageWorkouts() {
           workoutAgentRef.current.loadAllWorkouts({
             sortBy: "completedAt",
             sortOrder: "desc",
-            limit: 100,
+            limit: LIST_PAGE_SIZE,
           }),
           workoutAgentRef.current.loadTotalWorkoutCount(),
           workoutAgentRef.current.loadWorkoutStats(),
@@ -262,6 +280,19 @@ function ManageWorkouts() {
 
     loadWorkouts();
   }, [userId]);
+
+  // Handle load more (next page of workouts). Errors leave the list intact so
+  // the user can retry by re-clicking; the agent already preserves items,
+  // offset, and totalCount on failure.
+  const toastApi = { error };
+  const handleLoadMoreWorkouts = async () => {
+    if (!workoutAgentRef.current) return;
+    try {
+      await workoutAgentRef.current.loadMoreAllWorkouts(LIST_PAGE_SIZE);
+    } catch (err) {
+      notifyLoadMoreError(toastApi, err);
+    }
+  };
 
   // Handle coach card click
   const handleCoachCardClick = () => {
@@ -1234,6 +1265,16 @@ function ManageWorkouts() {
                   </>
                 );
               })()}
+              <div className="flex justify-center mt-6">
+                <LoadMoreButton
+                  onClick={handleLoadMoreWorkouts}
+                  isLoading={workoutAgentState.isLoadingMoreAllItems}
+                  hasMore={
+                    workoutAgentState.allWorkouts.length <
+                    (workoutAgentState.allWorkoutsTotalCount || 0)
+                  }
+                />
+              </div>
             </div>
           )}
           {!workoutAgentState.isLoadingAllItems &&

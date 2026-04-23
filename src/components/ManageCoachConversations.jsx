@@ -15,6 +15,9 @@ import {
   typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
+import { LIST_PAGE_SIZE } from "../constants/pagination";
+import LoadMoreButton from "./shared/LoadMoreButton";
+import { notifyLoadMoreError } from "../utils/loadMoreErrors";
 import { CONVERSATION_MODES } from "../constants/conversationModes";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
@@ -145,9 +148,11 @@ function ManageCoachConversations() {
   const [conversationAgentState, setConversationAgentState] = useState({
     allConversations: [],
     isLoadingAllItems: !!(userId && coachId),
+    isLoadingMoreAllItems: false,
     isLoadingItem: false,
     error: null,
     totalCount: 0,
+    allConversationsOffset: 0,
     coaches: [],
   });
 
@@ -211,8 +216,14 @@ function ManageCoachConversations() {
         }
         const [coachData, result] = await Promise.all([
           coachAgentRef.current.loadCoachDetails(userId, coachId),
+          // Manage Coach Conversations is the only caller that opts into
+          // `excludeModes: ["workout_edit"]`; other callers (the chat agent,
+          // contextual drawer, program designer) keep receiving every mode.
           getCoachConversations(userId, coachId, {
             includeFirstMessages: true,
+            limit: LIST_PAGE_SIZE,
+            offset: 0,
+            excludeModes: [CONVERSATION_MODES.WORKOUT_EDIT],
           }),
         ]);
 
@@ -230,11 +241,19 @@ function ManageCoachConversations() {
           coachId: coachData.rawCoach?.coachConfig?.coach_id || coachId,
         }));
 
+        const totalCount =
+          typeof result.totalCount === "number"
+            ? result.totalCount
+            : typeof result.count === "number"
+              ? result.count
+              : conversations.length;
+
         setConversationAgentState((prev) => ({
           ...prev,
           isLoadingAllItems: false,
           allConversations: conversations,
-          totalCount: conversations.length,
+          allConversationsOffset: conversations.length,
+          totalCount,
           coaches: [coachData],
         }));
       } catch (error) {
@@ -320,6 +339,68 @@ function ManageCoachConversations() {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
   };
 
+  // Load next page of conversations. On failure we leave items/offset/total
+  // untouched so a retry re-requests the same page.
+  const handleLoadMoreConversations = async () => {
+    if (!userId || !coachId) return;
+    if (conversationAgentState.isLoadingMoreAllItems) return;
+    const offset = conversationAgentState.allConversationsOffset;
+    if (offset >= (conversationAgentState.totalCount || 0)) return;
+
+    setConversationAgentState((prev) => ({
+      ...prev,
+      isLoadingMoreAllItems: true,
+    }));
+
+    try {
+      const result = await getCoachConversations(userId, coachId, {
+        includeFirstMessages: true,
+        limit: LIST_PAGE_SIZE,
+        offset,
+        excludeModes: [CONVERSATION_MODES.WORKOUT_EDIT],
+      });
+
+      const coach = conversationAgentState.coaches[0];
+      const newConversations = (result.conversations || []).map((conv) => ({
+        ...conv,
+        coachName: coach?.name,
+        coachId: coach?.rawCoach?.coachConfig?.coach_id || coachId,
+      }));
+
+      setConversationAgentState((prev) => {
+        const existingIds = new Set(
+          prev.allConversations.map((c) => c.conversationId),
+        );
+        const merged = [...prev.allConversations];
+        for (const conv of newConversations) {
+          if (!existingIds.has(conv.conversationId)) {
+            merged.push(conv);
+            existingIds.add(conv.conversationId);
+          }
+        }
+        const nextTotal =
+          typeof result.totalCount === "number"
+            ? result.totalCount
+            : typeof result.count === "number"
+              ? result.count
+              : prev.totalCount;
+        return {
+          ...prev,
+          allConversations: merged,
+          allConversationsOffset: merged.length,
+          totalCount: nextTotal,
+          isLoadingMoreAllItems: false,
+        };
+      });
+    } catch (err) {
+      setConversationAgentState((prev) => ({
+        ...prev,
+        isLoadingMoreAllItems: false,
+      }));
+      notifyLoadMoreError({ error }, err);
+    }
+  };
+
   const handleDeleteClick = (conversation) => {
     setConversationToDelete(conversation);
     setShowDeleteModal(true);
@@ -353,14 +434,21 @@ function ManageCoachConversations() {
         setShowDeleteModal(false);
         setConversationToDelete(null);
 
-        // Refresh the conversation list
+        // Optimistic local patch: remove the deleted conversation from the
+        // loaded page, decrement totalCount so hasMore stays accurate, and
+        // decrement the paginated offset so the next Load more request
+        // doesn't skip a row.
         setConversationAgentState((prev) => ({
           ...prev,
           allConversations: prev.allConversations.filter(
             (conv) =>
               conv.conversationId !== conversationToDelete.conversationId,
           ),
-          totalCount: prev.totalCount - 1,
+          allConversationsOffset: Math.max(
+            0,
+            (prev.allConversationsOffset || 0) - 1,
+          ),
+          totalCount: Math.max(0, (prev.totalCount || 0) - 1),
         }));
       } else {
         addToast("Failed to delete conversation", "error");
@@ -870,6 +958,16 @@ function ManageCoachConversations() {
                 </div>
               ))}
           </div>
+        </div>
+        <div className="flex justify-center mt-6">
+          <LoadMoreButton
+            onClick={handleLoadMoreConversations}
+            isLoading={conversationAgentState.isLoadingMoreAllItems}
+            hasMore={
+              conversationAgentState.allConversations.length <
+              (conversationAgentState.totalCount || 0)
+            }
+          />
         </div>
       </div>
     );

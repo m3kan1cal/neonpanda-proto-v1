@@ -80,61 +80,121 @@ export async function getCoachConversation(
   };
 }
 
+export interface QueryCoachConversationsOptions {
+  includeFirstMessages?: boolean;
+  excludeModes?: string[];
+  limit?: number;
+  offset?: number;
+}
+
+export interface QueryCoachConversationsPaginatedResult {
+  items: CoachConversationListItem[];
+  totalCount: number;
+}
+
 /**
- * Load conversation summaries for a user and specific coach (optimized - excludes messages)
+ * Load conversation summaries for a user and specific coach without applying
+ * pagination slicing. Centralizes the DynamoDB fetch, excludeModes filter,
+ * and deterministic ordering so both the legacy list-only signature and the
+ * paginated signature share the same filtering + sorting pipeline.
  */
-export async function queryCoachConversations(
+async function filterAndSortCoachConversations(
   userId: string,
   coachId: string,
-  options?: { includeFirstMessages?: boolean },
+  options: QueryCoachConversationsOptions = {},
 ): Promise<CoachConversationListItem[]> {
-  try {
-    // Use the generic query function to get all coach conversations for the user + coach
-    const items = await queryFromDynamoDB<any>(
-      `user#${userId}`,
-      `coachConversation#${coachId}#`,
-      "coachConversation",
-    );
+  const items = await queryFromDynamoDB<any>(
+    `user#${userId}`,
+    `coachConversation#${coachId}#`,
+    "coachConversation",
+  );
 
-    // Extract attributes and optionally include first messages
-    return items.map((item) => {
-      const { messages, ...summaryAttributes } = item.attributes;
+  const truncateMessage = (content: string | undefined) => {
+    if (!content) return undefined;
+    return content.length > 250 ? content.substring(0, 250) + "..." : content;
+  };
 
-      // If includeFirstMessages is true, extract first user and AI messages
-      if (
-        options?.includeFirstMessages &&
-        messages &&
-        Array.isArray(messages)
-      ) {
-        const firstUserMessage = messages.find((m: any) => m.role === "user");
-        const firstAiMessage = messages.find(
-          (m: any) => m.role === "assistant",
-        );
+  let shaped: CoachConversationListItem[] = items.map((item) => {
+    const { messages, ...summaryAttributes } = item.attributes;
 
-        // Truncate messages to first 250 characters
-        const truncateMessage = (content: string | undefined) => {
-          if (!content) return undefined;
-          return content.length > 250
-            ? content.substring(0, 250) + "..."
-            : content;
-        };
+    if (options.includeFirstMessages && messages && Array.isArray(messages)) {
+      const firstUserMessage = messages.find((m: any) => m.role === "user");
+      const firstAiMessage = messages.find((m: any) => m.role === "assistant");
 
-        return {
-          ...summaryAttributes,
-          createdAt: new Date(item.createdAt),
-          updatedAt: new Date(item.updatedAt),
-          firstUserMessage: truncateMessage(firstUserMessage?.content),
-          firstAiMessage: truncateMessage(firstAiMessage?.content),
-        };
-      }
-
-      // Default behavior: exclude all messages
       return {
         ...summaryAttributes,
         createdAt: new Date(item.createdAt),
         updatedAt: new Date(item.updatedAt),
-      };
-    });
+        firstUserMessage: truncateMessage(firstUserMessage?.content),
+        firstAiMessage: truncateMessage(firstAiMessage?.content),
+      } as CoachConversationListItem;
+    }
+
+    return {
+      ...summaryAttributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt),
+    } as CoachConversationListItem;
+  });
+
+  // Opt-in mode exclusion — Manage Coach Conversations passes
+  // `excludeModes: ["workout_edit"]`; other callers continue to receive
+  // every mode.
+  if (options.excludeModes && options.excludeModes.length > 0) {
+    const excludeSet = new Set(options.excludeModes);
+    shaped = shaped.filter((c) => !c.mode || !excludeSet.has(c.mode));
+  }
+
+  // Primary sort by most recent activity (or createdAt fallback), with a
+  // deterministic secondary sort on conversationId so offset-based slices
+  // are stable across requests when lastActivity timestamps tie.
+  shaped.sort((a, b) => {
+    const aActivity = a.metadata?.lastActivity
+      ? new Date(a.metadata.lastActivity).getTime()
+      : a.createdAt
+        ? new Date(a.createdAt).getTime()
+        : 0;
+    const bActivity = b.metadata?.lastActivity
+      ? new Date(b.metadata.lastActivity).getTime()
+      : b.createdAt
+        ? new Date(b.createdAt).getTime()
+        : 0;
+    if (bActivity !== aActivity) return bActivity - aActivity;
+    return a.conversationId.localeCompare(b.conversationId);
+  });
+
+  return shaped;
+}
+
+/**
+ * Paginated coach conversations query. Returns the page slice alongside the
+ * full post-filter, pre-slice totalCount so the Manage Coach Conversations
+ * UI can drive a Load more control without a separate count call.
+ */
+export async function queryCoachConversationsPaginated(
+  userId: string,
+  coachId: string,
+  options: QueryCoachConversationsOptions = {},
+): Promise<QueryCoachConversationsPaginatedResult> {
+  try {
+    const filtered = await filterAndSortCoachConversations(
+      userId,
+      coachId,
+      options,
+    );
+
+    const totalCount = filtered.length;
+    const offset =
+      typeof options.offset === "number" && options.offset > 0
+        ? options.offset
+        : 0;
+    const sliced = offset > 0 ? filtered.slice(offset) : filtered;
+    const items =
+      typeof options.limit === "number" && options.limit > 0
+        ? sliced.slice(0, options.limit)
+        : sliced;
+
+    return { items, totalCount };
   } catch (error) {
     logger.error(
       `Error loading coach conversations for user ${userId}, coach ${coachId}:`,
@@ -142,6 +202,24 @@ export async function queryCoachConversations(
     );
     throw error;
   }
+}
+
+/**
+ * Legacy list-only signature. Preserved so non-Manage callers
+ * (CoachConversationAgent, ProgramDesignerAgent, ContextualChatDrawer) keep
+ * receiving full lists without needing to consume pagination metadata.
+ */
+export async function queryCoachConversations(
+  userId: string,
+  coachId: string,
+  options?: QueryCoachConversationsOptions,
+): Promise<CoachConversationListItem[]> {
+  const { items } = await queryCoachConversationsPaginated(
+    userId,
+    coachId,
+    options,
+  );
+  return items;
 }
 
 /**

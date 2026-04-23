@@ -140,10 +140,31 @@ export async function getSharedProgramByProgramId(
 }
 
 /**
- * Query all shared programs for a user
- * Pattern: Follows queryPrograms using gsi1 with pagination
+ * Options for shared-program list queries.
  */
-export async function querySharedPrograms(
+export interface QuerySharedProgramsOptions {
+  /** Maximum number of shared programs to return after filtering/sorting. */
+  limit?: number;
+  /** Zero-indexed offset into the filtered+sorted set. */
+  offset?: number;
+}
+
+/**
+ * Paginated result for shared-program list queries.
+ */
+export interface QuerySharedProgramsPaginatedResult {
+  items: SharedProgram[];
+  /** Total shared programs that matched the filter, BEFORE slicing. */
+  totalCount: number;
+}
+
+/**
+ * Shared inner helper: fetch all shared programs for a user, filter to
+ * active ones, then sort by createdAt DESC with a secondary sort on
+ * sharedProgramId so offset-based slicing is deterministic across
+ * requests even when multiple items share the same createdAt value.
+ */
+async function fetchAllActiveSharedPrograms(
   userId: string,
 ): Promise<SharedProgram[]> {
   const tableName = getTableName();
@@ -154,7 +175,6 @@ export async function querySharedPrograms(
     let lastEvaluatedKey: any = undefined;
     let pageCount = 0;
 
-    // Paginate through all results
     do {
       pageCount++;
       const command = new QueryCommand({
@@ -177,7 +197,6 @@ export async function querySharedPrograms(
       const result = await docClient.send(command);
       const pageItems = (result.Items || []) as DynamoDBItem<SharedProgram>[];
 
-      // Deserialize and add to collection
       allSharedProgramItems = allSharedProgramItems.concat(
         pageItems.map((item) => deserializeFromDynamoDB(item)),
       );
@@ -185,14 +204,28 @@ export async function querySharedPrograms(
       lastEvaluatedKey = result.LastEvaluatedKey;
     } while (lastEvaluatedKey);
 
-    // Filter to only active shared programs and include timestamps
     const activePrograms = allSharedProgramItems
       .filter((item) => item.attributes.isActive)
       .map((item) => ({
         ...item.attributes,
         createdAt: new Date(item.createdAt),
         updatedAt: new Date(item.updatedAt),
-      }));
+      }))
+      // Primary sort: newest first. Secondary sort on sharedProgramId
+      // guarantees stable offset-based pagination across requests even
+      // when multiple rows share the same createdAt value.
+      .sort((a, b) => {
+        const aTime =
+          a.createdAt instanceof Date
+            ? a.createdAt.getTime()
+            : new Date(a.createdAt).getTime();
+        const bTime =
+          b.createdAt instanceof Date
+            ? b.createdAt.getTime()
+            : new Date(b.createdAt).getTime();
+        if (bTime !== aTime) return bTime - aTime;
+        return (a.sharedProgramId || "").localeCompare(b.sharedProgramId || "");
+      });
 
     logger.info("User shared programs queried successfully:", {
       userId,
@@ -203,6 +236,41 @@ export async function querySharedPrograms(
 
     return activePrograms;
   }, operationName);
+}
+
+/**
+ * Query shared programs with pagination. Returns both the requested slice
+ * and the pre-slice `totalCount` so callers can drive a "Load more" UI
+ * without a separate count endpoint.
+ */
+export async function querySharedProgramsPaginated(
+  userId: string,
+  options: QuerySharedProgramsOptions = {},
+): Promise<QuerySharedProgramsPaginatedResult> {
+  const all = await fetchAllActiveSharedPrograms(userId);
+  const totalCount = all.length;
+
+  const { limit, offset = 0 } = options;
+  if (limit === undefined) {
+    // Backward-compat: when the caller doesn't ask for pagination we
+    // return the full list unchanged.
+    return { items: all, totalCount };
+  }
+  const start = Math.max(0, offset);
+  const end = start + limit;
+  return { items: all.slice(start, end), totalCount };
+}
+
+/**
+ * Query all shared programs for a user.
+ * Preserved for existing callers that want the full list; delegates to
+ * the paginated helper and returns only the items.
+ */
+export async function querySharedPrograms(
+  userId: string,
+): Promise<SharedProgram[]> {
+  const { items } = await querySharedProgramsPaginated(userId);
+  return items;
 }
 
 /**

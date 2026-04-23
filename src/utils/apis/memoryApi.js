@@ -1,4 +1,4 @@
-import { getApiUrl, authenticatedFetch } from './apiConfig';
+import { getApiUrl, authenticatedFetch } from "./apiConfig";
 import { logger } from "../logger";
 
 /**
@@ -13,33 +13,44 @@ import { logger } from "../logger";
  * @param {string} [options.memoryType] - Filter by memory type (preference, goal, constraint, instruction, context)
  * @param {string} [options.importance] - Filter by importance (high, medium, low)
  * @param {number} [options.limit] - Maximum number of results (default: 100)
+ * @param {number} [options.offset] - Number of results to skip (default: 0)
  * @returns {Promise<Object>} - The API response with memories array
  */
 export const getMemories = async (userId, options = {}) => {
   // Validate limit parameter
   if (options.limit !== undefined) {
-    if (typeof options.limit !== 'number' || options.limit < 1 || options.limit > 100) {
-      throw new Error('limit must be a number between 1 and 100');
+    if (
+      typeof options.limit !== "number" ||
+      options.limit < 1 ||
+      options.limit > 100
+    ) {
+      throw new Error("limit must be a number between 1 and 100");
+    }
+  }
+  if (options.offset !== undefined) {
+    if (typeof options.offset !== "number" || options.offset < 0) {
+      throw new Error("offset must be a non-negative number");
     }
   }
 
   // Build query parameters
   const params = new URLSearchParams();
 
-  if (options.coachId) params.append('coachId', options.coachId);
-  if (options.memoryType) params.append('memoryType', options.memoryType);
-  if (options.importance) params.append('importance', options.importance);
-  if (options.limit) params.append('limit', options.limit.toString());
+  if (options.coachId) params.append("coachId", options.coachId);
+  if (options.memoryType) params.append("memoryType", options.memoryType);
+  if (options.importance) params.append("importance", options.importance);
+  if (options.limit) params.append("limit", options.limit.toString());
+  if (options.offset) params.append("offset", options.offset.toString());
 
   const queryString = params.toString();
-  const url = `${getApiUrl('')}/users/${userId}/memories${queryString ? '?' + queryString : ''}`;
+  const url = `${getApiUrl("")}/users/${userId}/memories${queryString ? "?" + queryString : ""}`;
 
   const response = await authenticatedFetch(url, {
-    method: 'GET',
+    method: "GET",
   });
 
   if (!response.ok) {
-    logger.error('getMemories: API Error - Status:', response.status);
+    logger.error("getMemories: API Error - Status:", response.status);
 
     // Try to get the specific error message from the response
     let errorMessage = `API Error: ${response.status}`;
@@ -47,10 +58,10 @@ export const getMemories = async (userId, options = {}) => {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
-        logger.error('getMemories: Specific error message:', errorMessage);
+        logger.error("getMemories: Specific error message:", errorMessage);
       }
     } catch (jsonError) {
-      logger.warn('getMemories: Could not parse error response as JSON');
+      logger.warn("getMemories: Could not parse error response as JSON");
     }
 
     throw new Error(errorMessage);
@@ -70,7 +81,7 @@ export const getMemories = async (userId, options = {}) => {
  * @note Memory type and importance are automatically determined by AI
  */
 export const createMemory = async (userId, memoryData) => {
-  const url = `${getApiUrl('')}/users/${userId}/memories`;
+  const url = `${getApiUrl("")}/users/${userId}/memories`;
 
   const requestBody = {
     content: memoryData.content,
@@ -79,12 +90,12 @@ export const createMemory = async (userId, memoryData) => {
   };
 
   const response = await authenticatedFetch(url, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
-    logger.error('createMemory: API Error - Status:', response.status);
+    logger.error("createMemory: API Error - Status:", response.status);
 
     // Try to get the specific error message from the response
     let errorMessage = `API Error: ${response.status}`;
@@ -92,10 +103,10 @@ export const createMemory = async (userId, memoryData) => {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
-        logger.error('createMemory: Specific error message:', errorMessage);
+        logger.error("createMemory: Specific error message:", errorMessage);
       }
     } catch (jsonError) {
-      logger.warn('createMemory: Could not parse error response as JSON');
+      logger.warn("createMemory: Could not parse error response as JSON");
     }
 
     throw new Error(errorMessage);
@@ -112,14 +123,14 @@ export const createMemory = async (userId, memoryData) => {
  * @returns {Promise<Object>} - The API response confirming deletion
  */
 export const deleteMemory = async (userId, memoryId) => {
-  const url = `${getApiUrl('')}/users/${userId}/memories/${memoryId}`;
+  const url = `${getApiUrl("")}/users/${userId}/memories/${memoryId}`;
 
   const response = await authenticatedFetch(url, {
-    method: 'DELETE',
+    method: "DELETE",
   });
 
   if (!response.ok) {
-    logger.error('deleteMemory: API Error - Status:', response.status);
+    logger.error("deleteMemory: API Error - Status:", response.status);
 
     // Try to get the specific error message from the response
     let errorMessage = `API Error: ${response.status}`;
@@ -127,10 +138,10 @@ export const deleteMemory = async (userId, memoryId) => {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
-        logger.error('deleteMemory: Specific error message:', errorMessage);
+        logger.error("deleteMemory: Specific error message:", errorMessage);
       }
     } catch (jsonError) {
-      logger.warn('deleteMemory: Could not parse error response as JSON');
+      logger.warn("deleteMemory: Could not parse error response as JSON");
     }
 
     throw new Error(errorMessage);
@@ -148,25 +159,25 @@ export const deleteMemory = async (userId, memoryId) => {
  * @returns {Promise<Object>} - The API response with the updated memory
  */
 export const updateMemory = async (userId, memoryId, updateData) => {
-  const url = `${getApiUrl('')}/users/${userId}/memories/${memoryId}`;
+  const url = `${getApiUrl("")}/users/${userId}/memories/${memoryId}`;
 
   const response = await authenticatedFetch(url, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(updateData),
   });
 
   if (!response.ok) {
-    logger.error('updateMemory: API Error - Status:', response.status);
+    logger.error("updateMemory: API Error - Status:", response.status);
 
     let errorMessage = `API Error: ${response.status}`;
     try {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
-        logger.error('updateMemory: Specific error message:', errorMessage);
+        logger.error("updateMemory: Specific error message:", errorMessage);
       }
     } catch (jsonError) {
-      logger.warn('updateMemory: Could not parse error response as JSON');
+      logger.warn("updateMemory: Could not parse error response as JSON");
     }
 
     throw new Error(errorMessage);

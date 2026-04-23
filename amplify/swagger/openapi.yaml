@@ -161,7 +161,11 @@ components:
         minimum: 1
         maximum: 100
         default: 25
-      description: Maximum number of items to return
+      description: |
+        Maximum number of items to return. When omitted, list endpoints
+        return the full result set (no silent paging) to preserve backward
+        compatibility for callers that predate the Load more UI. Values
+        outside [1, 100] return a 400 error.
     OffsetParam:
       name: offset
       in: query
@@ -1414,6 +1418,17 @@ paths:
       parameters:
         - $ref: "#/components/parameters/UserIdParam"
         - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+        - name: excludeModes
+          in: query
+          schema:
+            type: string
+          description: |
+            Opt-in comma-separated list of conversation modes to exclude from
+            results (e.g. `workout_edit`). Applied server-side before
+            pagination so `totalCount` reflects the post-filter total. When
+            omitted the full conversation set is returned.
       responses:
         "200":
           description: List of conversations
@@ -1430,6 +1445,16 @@ paths:
                           $ref: "#/components/schemas/CoachConversation"
                       count:
                         type: integer
+                        description: |
+                          Legacy field: number of conversations returned in
+                          this response (page length). Prefer `totalCount`
+                          for the authoritative total.
+                      totalCount:
+                        type: integer
+                        description: |
+                          Total conversations matching the query post-filter
+                          and pre-slice. Drives the Load more UI's
+                          `hasMore` check.
 
   /users/{userId}/coaches/{coachId}/conversations/{conversationId}:
     get:
@@ -1658,9 +1683,41 @@ paths:
     get:
       tags: [Programs]
       summary: List all user programs
-      description: Returns all training programs across all coaches for the user.
+      description: |
+        Returns training programs across all coaches for the user. Supports
+        per-status pagination used by the Manage Programs UI (three independent
+        Load more buckets for `active`, `paused`, `completed`).
       parameters:
         - $ref: "#/components/parameters/UserIdParam"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, paused, completed, archived]
+          description: |
+            Filter to programs in a single status. Combine with
+            `limit`/`offset` to drive the per-status Load more UI.
+        - name: includeStatus
+          in: query
+          schema:
+            type: string
+          description: |
+            Comma-separated list of statuses to include (alternative to
+            `status`). Applied server-side before pagination.
+        - name: coachId
+          in: query
+          schema:
+            type: string
+          description: |
+            Filter to programs for a specific coach. Applied before
+            pagination so `totalCount` reflects the coach-scoped total.
+        - name: includeArchived
+          in: query
+          schema:
+            type: boolean
+          description: Include archived programs in the result set.
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
       responses:
         "200":
           description: List of programs
@@ -1675,6 +1732,17 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/Program"
+                      count:
+                        type: integer
+                        description: |
+                          Legacy field: number of programs returned in this
+                          response (page length). Prefer `totalCount`.
+                      totalCount:
+                        type: integer
+                        description: |
+                          Total programs matching the query post-filter and
+                          pre-slice. Drives the Load more UI's `hasMore`
+                          check for the active/paused/completed bucket.
 
   /users/{userId}/coaches/{coachId}/programs:
     post:
@@ -1980,6 +2048,8 @@ paths:
       summary: List user's shared programs
       parameters:
         - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
       responses:
         "200":
           description: List of shared programs
@@ -1994,6 +2064,17 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/SharedProgram"
+                      count:
+                        type: integer
+                        description: |
+                          Legacy field: number of shared programs returned in
+                          this response (page length). Prefer `totalCount`.
+                      totalCount:
+                        type: integer
+                        description: |
+                          Total active shared programs for the user pre-slice.
+                          Drives the Load more UI's `hasMore` check and the
+                          QuickStats total.
 
   /users/{userId}/shared-programs/{sharedProgramId}:
     delete:
@@ -2124,8 +2205,17 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/Workout"
+                      count:
+                        type: integer
+                        description: |
+                          Legacy field: number of workouts returned in this
+                          response (page length). Prefer `totalCount`.
                       totalCount:
                         type: integer
+                        description: |
+                          Total workouts matching the query post-filter and
+                          pre-slice. Drives the Load more UI's `hasMore`
+                          check.
     post:
       tags: [Workouts]
       summary: Log a workout
@@ -2392,6 +2482,7 @@ paths:
             enum: [high, medium, low]
           description: Filter by importance level
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
       responses:
         "200":
           description: List of memories
@@ -2406,8 +2497,17 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/Memory"
+                      count:
+                        type: integer
+                        description: |
+                          Legacy field: number of memories returned in this
+                          response (page length). Prefer `totalCount`.
                       totalCount:
                         type: integer
+                        description: |
+                          Total memories matching the query post-filter and
+                          pre-slice. Drives the Load more UI's `hasMore`
+                          check.
     post:
       tags: [Memories]
       summary: Create a memory
@@ -2586,6 +2686,15 @@ paths:
                           $ref: "#/components/schemas/WeeklyReport"
                       count:
                         type: integer
+                        description: |
+                          Legacy field: number of reports returned in this
+                          response (page length). Prefer `totalCount`.
+                      totalCount:
+                        type: integer
+                        description: |
+                          Total weekly reports matching the query post-filter
+                          and pre-slice. Drives the Load more UI's `hasMore`
+                          check on the weekly tab.
                       userId:
                         type: string
 
@@ -2646,6 +2755,15 @@ paths:
                           $ref: "#/components/schemas/MonthlyReport"
                       count:
                         type: integer
+                        description: |
+                          Legacy field: number of reports returned in this
+                          response (page length). Prefer `totalCount`.
+                      totalCount:
+                        type: integer
+                        description: |
+                          Total monthly reports matching the query post-filter
+                          and pre-slice. Drives the Load more UI's `hasMore`
+                          check on the monthly tab.
 
   /users/{userId}/reports/monthly/{monthId}:
     get:

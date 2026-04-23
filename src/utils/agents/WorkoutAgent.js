@@ -46,10 +46,18 @@ export class WorkoutAgent {
       currentStreak: 0,
       bestStreak: 0,
       recentPrAchievements: [],
+      // Pagination metadata for allWorkouts. `allWorkoutsTotalCount` tracks
+      // the matching-rows count returned by the list API so the Manage page
+      // can compute hasMore even if the user applies filters that diverge
+      // from the global workouts count (which stays in totalWorkoutCount).
+      allWorkoutsOffset: 0,
+      allWorkoutsTotalCount: 0,
+      allWorkoutsFilters: null,
       isLoadingCount: false,
       isLoadingTrainingDays: false,
       isLoadingRecentItems: false,
       isLoadingAllItems: false,
+      isLoadingMoreAllItems: false,
       isLoadingItem: false,
       isLoadingPrAchievements: false,
       error: null,
@@ -600,36 +608,124 @@ export class WorkoutAgent {
   }
 
   /**
-   * Loads all workout sessions with optional filtering
+   * Loads the first page of all workout sessions with optional filtering.
+   * When `options.limit` is provided this acts as page 0 for the Load more
+   * flow; when `options.limit` is omitted the endpoint still returns every
+   * matching row, preserving the legacy non-paginated behavior.
    */
   async loadAllWorkouts(options = {}) {
     if (!this.userId) return;
 
-    this._updateState({ isLoadingAllItems: true, error: null });
+    this._updateState({
+      isLoadingAllItems: true,
+      error: null,
+      allWorkoutsFilters: options,
+    });
 
     try {
-      const result = await getWorkouts(this.userId, options);
-      // API returns 'workouts' property, not 'workouts'
-      const allWorkouts = result.workouts || [];
+      const requestOptions = { ...options, offset: 0 };
+      const result = await getWorkouts(this.userId, requestOptions);
+      const pageItems = result.workouts || [];
+      // Prefer the authoritative post-filter, pre-slice totalCount when the
+      // server dual-emits it; fall back to the legacy `count` field, and
+      // finally to the length of the page so older server responses still
+      // produce a sensible hasMore signal.
+      const totalCount =
+        typeof result.totalCount === "number"
+          ? result.totalCount
+          : typeof result.count === "number"
+            ? result.count
+            : pageItems.length;
 
-      // Calculate days since last workout from all workouts
-      const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(allWorkouts);
+      const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(pageItems);
 
       this._updateState({
-        allWorkouts,
-        lastWorkoutDaysAgo: lastWorkoutDaysAgo,
+        allWorkouts: pageItems,
+        allWorkoutsOffset: pageItems.length,
+        allWorkoutsTotalCount: totalCount,
+        lastWorkoutDaysAgo,
         isLoadingAllItems: false,
       });
 
-      return allWorkouts;
+      return pageItems;
     } catch (error) {
       logger.error("Error loading all workouts:", error);
       this._updateState({
         isLoadingAllItems: false,
         error: error.message,
         allWorkouts: [],
+        allWorkoutsOffset: 0,
+        allWorkoutsTotalCount: 0,
       });
       this.onError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Loads the next page of workouts using the currently-applied filters and
+   * appends them to `allWorkouts`. On failure, keeps offset/items/totalCount
+   * untouched so a retry re-requests the same page.
+   */
+  async loadMoreAllWorkouts(pageSize) {
+    if (!this.userId) return;
+    if (this.state.isLoadingMoreAllItems) return;
+
+    const offset = this.state.allWorkoutsOffset;
+    const total = this.state.allWorkoutsTotalCount;
+    if (offset >= total) return;
+
+    const filters = this.state.allWorkoutsFilters || {};
+    const limit =
+      typeof pageSize === "number" && pageSize > 0
+        ? pageSize
+        : filters.limit || 25;
+
+    this._updateState({ isLoadingMoreAllItems: true });
+
+    try {
+      const result = await getWorkouts(this.userId, {
+        ...filters,
+        limit,
+        offset,
+      });
+      const pageItems = result.workouts || [];
+      const totalCount =
+        typeof result.totalCount === "number"
+          ? result.totalCount
+          : typeof result.count === "number"
+            ? result.count
+            : total;
+
+      // Dedupe by workoutId to survive out-of-band mutations between the
+      // initial page and load-more responses.
+      const existingIds = new Set(
+        this.state.allWorkouts.map((w) => w.workoutId),
+      );
+      const merged = [...this.state.allWorkouts];
+      for (const item of pageItems) {
+        if (!existingIds.has(item.workoutId)) {
+          merged.push(item);
+          existingIds.add(item.workoutId);
+        }
+      }
+
+      this._updateState({
+        allWorkouts: merged,
+        allWorkoutsOffset: merged.length,
+        allWorkoutsTotalCount: totalCount,
+        isLoadingMoreAllItems: false,
+      });
+
+      return pageItems;
+    } catch (error) {
+      logger.error("Error loading more workouts:", error);
+      // Deliberately leave allWorkouts / offset / totalCount untouched so the
+      // button can be retried without skipping a page or double-counting.
+      this._updateState({ isLoadingMoreAllItems: false });
+      if (typeof this.onError === "function") {
+        this.onError(error);
+      }
       throw error;
     }
   }
@@ -921,14 +1017,30 @@ export class WorkoutAgent {
       // Call API to delete workout
       const result = await deleteWorkout(userId, workoutId);
 
-      // Remove from local state if it exists
+      // Optimistic local patch: remove from in-memory lists, decrement the
+      // paginated totalCount so hasMore/QuickStats stay accurate without a
+      // refetch, and bump the global count used by QuickStats.
+      const wasInAllWorkouts = this.state.allWorkouts.some(
+        (w) => w.workoutId === workoutId,
+      );
+      const nextAllWorkouts = this.state.allWorkouts.filter(
+        (w) => w.workoutId !== workoutId,
+      );
+      const nextAllWorkoutsTotalCount = wasInAllWorkouts
+        ? Math.max(0, (this.state.allWorkoutsTotalCount || 0) - 1)
+        : this.state.allWorkoutsTotalCount || 0;
+      const nextAllWorkoutsOffset = wasInAllWorkouts
+        ? Math.max(0, (this.state.allWorkoutsOffset || 0) - 1)
+        : this.state.allWorkoutsOffset || 0;
+
       this._updateState({
         recentWorkouts: this.state.recentWorkouts.filter(
           (w) => w.workoutId !== workoutId,
         ),
-        allWorkouts: this.state.allWorkouts.filter(
-          (w) => w.workoutId !== workoutId,
-        ),
+        allWorkouts: nextAllWorkouts,
+        allWorkoutsOffset: nextAllWorkoutsOffset,
+        allWorkoutsTotalCount: nextAllWorkoutsTotalCount,
+        totalWorkoutCount: Math.max(0, (this.state.totalWorkoutCount || 0) - 1),
         recentPrAchievements: this.state.recentPrAchievements.filter(
           (pr) => pr.workoutId !== workoutId,
         ),
@@ -998,10 +1110,14 @@ export class WorkoutAgent {
       trainingDaysCount: 0,
       lastWorkoutDaysAgo: 0,
       recentPrAchievements: [],
+      allWorkoutsOffset: 0,
+      allWorkoutsTotalCount: 0,
+      allWorkoutsFilters: null,
       isLoadingCount: false,
       isLoadingTrainingDays: false,
       isLoadingRecentItems: false,
       isLoadingAllItems: false,
+      isLoadingMoreAllItems: false,
       isLoadingItem: false,
       isLoadingPrAchievements: false,
       error: null,
