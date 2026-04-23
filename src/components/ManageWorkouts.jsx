@@ -252,7 +252,6 @@ function ManageWorkouts() {
             sortOrder: "desc",
             limit: 100,
           }),
-          workoutAgentRef.current.loadTotalWorkoutCount(),
           workoutAgentRef.current.loadWorkoutStats(),
         ]);
       } catch (error) {
