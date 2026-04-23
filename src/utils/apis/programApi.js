@@ -17,11 +17,27 @@ import { logger } from "../logger";
  * @returns {Promise<Object>} - The API response with programs array
  */
 export const getPrograms = async (userId, coachId, options = {}) => {
+  if (options.limit !== undefined) {
+    if (
+      typeof options.limit !== "number" ||
+      options.limit < 1 ||
+      options.limit > 100
+    ) {
+      throw new Error("limit must be a number between 1 and 100");
+    }
+  }
+  if (options.offset !== undefined) {
+    if (typeof options.offset !== "number" || options.offset < 0) {
+      throw new Error("offset must be a non-negative number");
+    }
+  }
+
   // Build query parameters
   const params = new URLSearchParams();
 
   if (options.status) params.append("status", options.status);
   if (options.limit) params.append("limit", options.limit.toString());
+  if (options.offset) params.append("offset", options.offset.toString());
   if (options.sortBy) params.append("sortBy", options.sortBy);
   if (options.sortOrder) params.append("sortOrder", options.sortOrder);
   if (options.includeArchived !== undefined)
@@ -80,15 +96,37 @@ export const getPrograms = async (userId, coachId, options = {}) => {
  * @returns {Promise<Object>} - The API response with programs array
  */
 export const getAllPrograms = async (userId, options = {}) => {
+  if (options.limit !== undefined) {
+    if (
+      typeof options.limit !== "number" ||
+      options.limit < 1 ||
+      options.limit > 100
+    ) {
+      throw new Error("limit must be a number between 1 and 100");
+    }
+  }
+  if (options.offset !== undefined) {
+    if (typeof options.offset !== "number" || options.offset < 0) {
+      throw new Error("offset must be a non-negative number");
+    }
+  }
+
   // Build query parameters
   const params = new URLSearchParams();
 
   if (options.status) params.append("status", options.status);
   if (options.limit) params.append("limit", options.limit.toString());
+  if (options.offset) params.append("offset", options.offset.toString());
   if (options.sortBy) params.append("sortBy", options.sortBy);
   if (options.sortOrder) params.append("sortOrder", options.sortOrder);
   if (options.includeArchived !== undefined)
     params.append("includeArchived", options.includeArchived.toString());
+  if (options.includeStatus) {
+    const statusArray = Array.isArray(options.includeStatus)
+      ? options.includeStatus
+      : [options.includeStatus];
+    params.append("includeStatus", statusArray.join(","));
+  }
 
   const queryString = params.toString();
   const url = `${getApiUrl("")}/users/${userId}/programs${queryString ? "?" + queryString : ""}`;

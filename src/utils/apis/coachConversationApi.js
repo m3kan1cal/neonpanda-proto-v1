@@ -229,16 +229,49 @@ export const updateCoachConversation = async (
 };
 
 /**
- * Gets all coach conversations for a specific user and coach
+ * Gets coach conversations for a specific user and coach. Extended with
+ * pagination + opt-in mode exclusion so Manage Coach Conversations can drive
+ * the Load more control while non-Manage callers (CoachConversationAgent,
+ * ProgramDesignerAgent, ContextualChatDrawer) keep receiving full lists.
  * @param {string} userId - The user ID
  * @param {string} coachId - The coach ID
- * @returns {Promise<Object>} - The API response with conversations array
+ * @param {Object} [options]
+ * @param {boolean} [options.includeFirstMessages]
+ * @param {number} [options.limit] - Max results per page (1-100).
+ * @param {number} [options.offset] - Number of results to skip (>=0).
+ * @param {string[]} [options.excludeModes] - Conversation modes to exclude.
+ *   Only sent when provided so the default (legacy) behavior is unchanged.
+ * @returns {Promise<Object>} - The API response with conversations + totalCount
  */
 export const getCoachConversations = async (userId, coachId, options = {}) => {
   requireValidUserId(userId, "getCoachConversations");
-  const { includeFirstMessages = false } = options;
-  const queryParams = includeFirstMessages ? "?includeFirstMessages=true" : "";
-  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations${queryParams}`;
+  const { includeFirstMessages = false, limit, offset, excludeModes } = options;
+
+  if (limit !== undefined) {
+    if (typeof limit !== "number" || limit < 1 || limit > 100) {
+      throw new Error("limit must be a number between 1 and 100");
+    }
+  }
+  if (offset !== undefined) {
+    if (typeof offset !== "number" || offset < 0) {
+      throw new Error("offset must be a non-negative number");
+    }
+  }
+
+  const params = new URLSearchParams();
+  if (includeFirstMessages) params.append("includeFirstMessages", "true");
+  if (typeof limit === "number") params.append("limit", limit.toString());
+  if (typeof offset === "number" && offset > 0) {
+    params.append("offset", offset.toString());
+  }
+  if (Array.isArray(excludeModes) && excludeModes.length > 0) {
+    params.append("excludeModes", excludeModes.join(","));
+  }
+
+  const queryString = params.toString();
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations${
+    queryString ? "?" + queryString : ""
+  }`;
   const response = await authenticatedFetch(url, {
     method: "GET",
   });

@@ -21,6 +21,9 @@ import {
   tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
 import { logger } from "../../utils/logger";
+import { LIST_PAGE_SIZE } from "../../constants/pagination";
+import LoadMoreButton from "../shared/LoadMoreButton";
+import { notifyLoadMoreError } from "../../utils/loadMoreErrors";
 import {
   TrashIcon,
   ShareIconTiny,
@@ -106,6 +109,13 @@ function ManageSharedPrograms() {
   const coachId = searchParams.get("coachId"); // Preserve coach context if available
   const toast = useToast();
   const [sharedPrograms, setSharedPrograms] = useState([]);
+  // Pagination state for Load more. `offset` is the zero-indexed start of
+  // the next page to request. `totalCount` is the authoritative total
+  // from the server and drives hasMore. `isLoadingMore` is distinct from
+  // `loading` so we can render existing items while paging.
+  const [offset, setOffset] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
@@ -191,15 +201,64 @@ function ManageSharedPrograms() {
     try {
       setLoading(true);
       setError(null);
-      const response = await querySharedPrograms(userId);
-      // Backend returns { sharedPrograms: [...] }
-      setSharedPrograms(response.sharedPrograms || []);
+      const response = await querySharedPrograms(userId, {
+        limit: LIST_PAGE_SIZE,
+        offset: 0,
+      });
+      const items = response.sharedPrograms || [];
+      const resolvedTotal =
+        typeof response.totalCount === "number"
+          ? response.totalCount
+          : typeof response.count === "number"
+            ? response.count
+            : items.length;
+      setSharedPrograms(items);
+      setOffset(items.length);
+      setTotalCount(resolvedTotal);
     } catch (err) {
       logger.error("Failed to load shared programs:", err);
       setError(err.message || "Failed to load shared programs");
       toast.error("Failed to load shared programs");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch the next page of shared programs and append. Errors surface as
+  // a toast without touching items/offset/totalCount so a retry is just a
+  // re-click of the button.
+  const handleLoadMore = async () => {
+    if (isLoadingMore) return;
+    if (sharedPrograms.length >= totalCount) return;
+
+    setIsLoadingMore(true);
+    try {
+      const response = await querySharedPrograms(userId, {
+        limit: LIST_PAGE_SIZE,
+        offset,
+      });
+      const pageItems = response.sharedPrograms || [];
+      const resolvedTotal =
+        typeof response.totalCount === "number"
+          ? response.totalCount
+          : typeof response.count === "number"
+            ? response.count
+            : totalCount;
+
+      setSharedPrograms((prev) => {
+        // Dedupe against any optimistic mutation that may have happened
+        // while the fetch was in flight.
+        const seen = new Set(prev.map((p) => p.sharedProgramId));
+        const appended = pageItems.filter((p) => !seen.has(p.sharedProgramId));
+        return [...prev, ...appended];
+      });
+      setOffset((prev) => prev + pageItems.length);
+      setTotalCount(resolvedTotal);
+    } catch (err) {
+      logger.error("Failed to load more shared programs:", err);
+      notifyLoadMoreError(toast, err);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -226,10 +285,19 @@ function ManageSharedPrograms() {
     try {
       await deactivateSharedProgram(userId, programToDelete.sharedProgramId);
       toast.success("Program unshared successfully");
+      // Optimistic local patch — remove from items, decrement offset and
+      // totalCount so hasMore stays accurate without a full refetch.
+      const deletedId = programToDelete.sharedProgramId;
+      setSharedPrograms((prev) => {
+        const next = prev.filter((p) => p.sharedProgramId !== deletedId);
+        if (next.length !== prev.length) {
+          setOffset((currentOffset) => Math.max(0, currentOffset - 1));
+          setTotalCount((currentTotal) => Math.max(0, currentTotal - 1));
+        }
+        return next;
+      });
       setShowDeleteModal(false);
       setProgramToDelete(null);
-      // Refresh the list
-      await loadSharedPrograms();
     } catch (err) {
       logger.error("Failed to unshare program:", err);
       toast.error(err.message || "Failed to unshare program");
@@ -247,8 +315,13 @@ function ManageSharedPrograms() {
     window.open(`/shared/programs/${sharedProgramId}`, "_blank");
   };
 
-  // Calculate stats
-  const totalPrograms = sharedPrograms.length;
+  // Quick Stats reflect global totals. `totalPrograms` comes from the
+  // server's totalCount so it counts the full matching set even before
+  // the user scrolls through every Load more page. Per-item aggregates
+  // (totalDays/Workouts/Views/Copies) fall back to the loaded subset
+  // because the API doesn't emit aggregate metrics today; this matches
+  // the pre-pagination behavior during rollout.
+  const totalPrograms = totalCount || sharedPrograms.length;
   const totalDays = sharedPrograms.reduce(
     (sum, p) => sum + (p.programSnapshot?.totalDays || 0),
     0,
@@ -449,14 +522,12 @@ function ManageSharedPrograms() {
       );
     }
 
-    // Sort by createdAt descending (newest first)
-    const sortedPrograms = [...sharedPrograms].sort((a, b) => {
-      const dateA = new Date(a.createdAt || 0);
-      const dateB = new Date(b.createdAt || 0);
-      return dateB - dateA;
-    });
+    // Server already sorts shared programs by createdAt DESC with a
+    // secondary id tiebreaker for stable pagination; rely on that order
+    // so new pages appended via Load more stay in sequence. Resorting
+    // here would risk shuffling items once pagination returns ties.
+    const sortedPrograms = sharedPrograms;
 
-    // Show empty state if no programs
     if (sortedPrograms.length === 0) {
       return (
         <div className="text-center py-12">
@@ -504,6 +575,12 @@ function ManageSharedPrograms() {
               ))}
           </div>
         </div>
+
+        <LoadMoreButton
+          onClick={handleLoadMore}
+          isLoading={isLoadingMore}
+          hasMore={sharedPrograms.length < totalCount}
+        />
       </div>
     );
   };

@@ -18,6 +18,7 @@ import {
 } from "../functions/libs/memory/emotional-types";
 import { calculateDecayScore } from "../functions/libs/memory/lifecycle";
 import { logger } from "../functions/libs/logger";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // MEMORY OPERATIONS
@@ -52,17 +53,31 @@ export async function saveMemory(memory: UserMemory): Promise<void> {
   });
 }
 
+export interface QueryMemoriesOptions {
+  memoryType?: UserMemory["memoryType"];
+  importance?: UserMemory["metadata"]["importance"];
+  limit?: number;
+  offset?: number;
+}
+
+export interface QueryMemoriesPaginatedResult {
+  items: UserMemory[];
+  totalCount: number;
+}
+
 /**
- * Query memories for a specific user and optionally coach
+ * Filter and sort memories without applying pagination slicing. Exposed so
+ * `queryMemories` (legacy, returns full list) and `queryMemoriesPaginated`
+ * (new, returns paginated + totalCount) can share a single source of truth
+ * for filtering + ordering. Keeps the composite-score sort used for ranking
+ * but adds a deterministic secondary sort on `memoryId` so offset-based
+ * pagination slices are stable across requests even when recency/usage
+ * scores drift between calls.
  */
-export async function queryMemories(
+async function filterAndSortMemories(
   userId: string,
   coachId?: string,
-  options?: {
-    memoryType?: UserMemory["memoryType"];
-    importance?: UserMemory["metadata"]["importance"];
-    limit?: number;
-  },
+  options: Pick<QueryMemoriesOptions, "memoryType" | "importance"> = {},
 ): Promise<UserMemory[]> {
   const items = await queryFromDynamoDB<UserMemory>(
     `user#${userId}`,
@@ -72,40 +87,33 @@ export async function queryMemories(
 
   let filteredItems = items.map((item) => item.attributes);
 
-  // Filter by coach if specified
   if (coachId) {
     filteredItems = filteredItems.filter(
       (memory) =>
         memory.coachId === coachId ||
         !memory.coachId ||
-        memory.coachId === null, // Include global memories
+        memory.coachId === null,
     );
   }
 
-  // Filter by memory type if specified
-  if (options?.memoryType) {
+  if (options.memoryType) {
     filteredItems = filteredItems.filter(
       (memory) => memory.memoryType === options.memoryType,
     );
   }
 
-  // Filter by importance if specified
-  if (options?.importance) {
+  if (options.importance) {
     filteredItems = filteredItems.filter(
       (memory) => memory.metadata.importance === options.importance,
     );
   }
 
-  // Filter out archived memories by default
   filteredItems = filteredItems.filter(
     (memory) => memory.metadata.lifecycle?.state !== "archived",
   );
 
-  // Sort by importance, decay-based recency, and usage with balanced scoring
   filteredItems.sort((a, b) => {
-    // Calculate composite scores for balanced ranking
     const getCompositeScore = (memory: UserMemory) => {
-      // Importance score (high=3, medium=2, low=1)
       const importanceOrder: Record<
         UserMemory["metadata"]["importance"],
         number
@@ -114,49 +122,80 @@ export async function queryMemories(
         medium: 2,
         low: 1,
       };
-      const importanceScore = importanceOrder[memory.metadata.importance] * 100; // Weight: 100
-
-      // Decay-based recency score (replaces flat 30-day window)
-      // Uses DSR model: memories reinforced often decay slower
-      // Falls back to flat scoring for memories without lifecycle data
-      const recencyScore = calculateDecayScore(memory); // 0-30 range
-
-      // Usage score (capped to prevent overwhelming recency)
-      const usageScore = Math.min(memory.metadata.usageCount * 2, 20); // Weight: 2 per use, max 20
-
+      const importanceScore = importanceOrder[memory.metadata.importance] * 100;
+      const recencyScore = calculateDecayScore(memory);
+      const usageScore = Math.min(memory.metadata.usageCount * 2, 20);
       return importanceScore + recencyScore + usageScore;
     };
 
     const scoreA = getCompositeScore(a);
     const scoreB = getCompositeScore(b);
-
-    // Sort by composite score (highest first)
     if (scoreB !== scoreA) return scoreB - scoreA;
 
-    // Tie-breaker: newest first
-    return (
+    const createdDiff =
       new Date(b.metadata.createdAt).getTime() -
-      new Date(a.metadata.createdAt).getTime()
-    );
+      new Date(a.metadata.createdAt).getTime();
+    if (createdDiff !== 0) return createdDiff;
+
+    // Secondary sort on memoryId so offset-based pagination slices are
+    // deterministic even when composite score + createdAt tie.
+    return a.memoryId.localeCompare(b.memoryId);
   });
 
-  // Apply limit if specified
-  if (options?.limit) {
-    filteredItems = filteredItems.slice(0, options.limit);
-  }
+  return filteredItems;
+}
+
+/**
+ * Query memories with pagination metadata. Returns the slice of `items` for
+ * the requested page plus the full pre-slice `totalCount` so UIs can drive a
+ * Load more control without issuing a separate count call.
+ */
+export async function queryMemoriesPaginated(
+  userId: string,
+  coachId?: string,
+  options: QueryMemoriesOptions = {},
+): Promise<QueryMemoriesPaginatedResult> {
+  const filtered = await filterAndSortMemories(userId, coachId, {
+    memoryType: options.memoryType,
+    importance: options.importance,
+  });
+
+  const totalCount = filtered.length;
+  const items = applyPaginationSlice(filtered, options);
 
   logger.info("Memories queried successfully:", {
     userId,
     coachId: coachId || "all",
-    totalFound: filteredItems.length,
+    totalCount,
+    returned: items.length,
     filtered: {
-      memoryType: options?.memoryType,
-      importance: options?.importance,
-      limit: options?.limit,
+      memoryType: options.memoryType,
+      importance: options.importance,
+      limit: options.limit,
+      offset: options.offset,
     },
   });
 
-  return filteredItems;
+  return { items, totalCount };
+}
+
+/**
+ * Query memories for a specific user and optionally coach. Maintains the
+ * legacy list-only signature for callers that have not migrated to the
+ * paginated response shape.
+ */
+export async function queryMemories(
+  userId: string,
+  coachId?: string,
+  options?: {
+    memoryType?: UserMemory["memoryType"];
+    importance?: UserMemory["metadata"]["importance"];
+    limit?: number;
+    offset?: number;
+  },
+): Promise<UserMemory[]> {
+  const { items } = await queryMemoriesPaginated(userId, coachId, options);
+  return items;
 }
 
 /**

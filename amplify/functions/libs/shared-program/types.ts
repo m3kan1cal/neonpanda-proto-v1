@@ -125,10 +125,16 @@ export interface GetSharedProgramResponse {
 }
 
 /**
- * API response for querying user's shared programs
+ * API response for querying user's shared programs.
+ *
+ * During the Load more rollout we dual-emit both `count` (legacy page
+ * length) and `totalCount` (new authoritative total-after-filter). A
+ * follow-up will remove `count` once readers have been migrated.
  */
 export interface QuerySharedProgramsResponse {
   sharedPrograms: SharedProgram[];
+  count?: number;
+  totalCount?: number;
 }
 
 /**

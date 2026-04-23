@@ -13,6 +13,7 @@ import {
 } from "./core";
 import { Workout, WorkoutSummary } from "../functions/libs/workout/types";
 import { logger } from "../functions/libs/logger";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // WORKOUT OPERATIONS
@@ -300,156 +301,199 @@ export async function queryWorkoutSummaries(
   }, operationName);
 }
 
+export interface QueryWorkoutsOptions {
+  // Date filtering
+  fromDate?: Date;
+  toDate?: Date;
+
+  // Discipline filtering
+  discipline?: string;
+  workoutType?: string;
+  location?: string;
+
+  // Coach filtering
+  coachId?: string;
+
+  // Quality filtering
+  minConfidence?: number;
+
+  // Pagination
+  limit?: number;
+  offset?: number;
+
+  // Sorting
+  sortBy?: "completedAt" | "confidence" | "workoutName";
+  sortOrder?: "asc" | "desc";
+}
+
+export interface QueryWorkoutsPaginatedResult {
+  items: Workout[];
+  totalCount: number;
+}
+
 /**
- * Query all workout sessions for a user with optional filtering
+ * Internal: runs full filter + sort against the user's workouts and returns
+ * the fully-filtered, fully-sorted list plus the pre-slice total count.
+ * Sorting always applies a stable secondary sort on workoutId so offset-based
+ * pagination is deterministic across requests.
  */
-export async function queryWorkouts(
+async function filterAndSortWorkouts(
   userId: string,
-  options?: {
-    // Date filtering
-    fromDate?: Date;
-    toDate?: Date;
-
-    // Discipline filtering
-    discipline?: string;
-    workoutType?: string;
-    location?: string;
-
-    // Coach filtering
-    coachId?: string;
-
-    // Quality filtering
-    minConfidence?: number;
-
-    // Pagination
-    limit?: number;
-    offset?: number;
-
-    // Sorting
-    sortBy?: "completedAt" | "confidence" | "workoutName";
-    sortOrder?: "asc" | "desc";
-  },
+  options?: QueryWorkoutsOptions,
 ): Promise<Workout[]> {
-  try {
-    // Get all workout sessions for the user
-    const allSessionItems = await queryFromDynamoDB<Workout>(
-      `user#${userId}`,
-      "workout#",
-      "workout",
-    );
+  // Get all workout sessions for the user
+  const allSessionItems = await queryFromDynamoDB<Workout>(
+    `user#${userId}`,
+    "workout#",
+    "workout",
+  );
 
-    // Extract attributes and include timestamps
-    let allSessions = allSessionItems.map((item) => ({
-      ...item.attributes,
-      createdAt: new Date(item.createdAt),
-      updatedAt: new Date(item.updatedAt),
-    }));
+  // Extract attributes and include timestamps
+  const allSessions = allSessionItems.map((item) => ({
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt),
+  }));
 
-    // Apply filters
-    let filteredSessions = allSessions;
+  // Apply filters
+  let filteredSessions = allSessions;
 
-    // Date filtering
-    if (options?.fromDate || options?.toDate) {
-      filteredSessions = filteredSessions.filter((session) => {
-        const completedAt = session.completedAt;
-        const sessionDate = new Date(completedAt);
+  // Date filtering
+  if (options?.fromDate || options?.toDate) {
+    filteredSessions = filteredSessions.filter((session) => {
+      const completedAt = session.completedAt;
+      const sessionDate = new Date(completedAt);
 
-        if (options.fromDate && sessionDate < options.fromDate) return false;
-        if (options.toDate && sessionDate > options.toDate) return false;
+      if (options.fromDate && sessionDate < options.fromDate) return false;
+      if (options.toDate && sessionDate > options.toDate) return false;
 
-        return true;
-      });
-    }
-
-    // Discipline filtering
-    if (options?.discipline) {
-      filteredSessions = filteredSessions.filter(
-        (session) => session.workoutData.discipline === options.discipline,
-      );
-    }
-
-    // Workout type filtering
-    if (options?.workoutType) {
-      filteredSessions = filteredSessions.filter(
-        (session) => session.workoutData.workout_type === options.workoutType,
-      );
-    }
-
-    // Location filtering
-    if (options?.location) {
-      filteredSessions = filteredSessions.filter(
-        (session) => session.workoutData.location === options.location,
-      );
-    }
-
-    // Coach filtering
-    if (options?.coachId) {
-      filteredSessions = filteredSessions.filter((session) =>
-        session.coachIds.includes(options.coachId!),
-      );
-    }
-
-    // Confidence filtering
-    if (options?.minConfidence) {
-      filteredSessions = filteredSessions.filter(
-        (session) =>
-          session.extractionMetadata.confidence >= options.minConfidence!,
-      );
-    }
-
-    // Sorting
-    if (options?.sortBy) {
-      filteredSessions.sort((a, b) => {
-        let aValue: any, bValue: any;
-
-        switch (options.sortBy) {
-          case "completedAt":
-            aValue = new Date(a.completedAt);
-            bValue = new Date(b.completedAt);
-            break;
-          case "confidence":
-            aValue = a.extractionMetadata.confidence;
-            bValue = b.extractionMetadata.confidence;
-            break;
-          case "workoutName":
-            aValue = a.workoutData.workout_name || "";
-            bValue = b.workoutData.workout_name || "";
-            break;
-          default:
-            aValue = new Date(a.completedAt);
-            bValue = new Date(b.completedAt);
-        }
-
-        const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-        return options.sortOrder === "desc" ? -comparison : comparison;
-      });
-    } else {
-      // Default sort by completedAt descending (most recent first)
-      filteredSessions.sort(
-        (a, b) =>
-          new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime(),
-      );
-    }
-
-    // Pagination
-    if (options?.offset || options?.limit) {
-      const offset = options.offset || 0;
-      const limit = options.limit || 50;
-      filteredSessions = filteredSessions.slice(offset, offset + limit);
-    }
-
-    logger.info("Workouts queried successfully:", {
-      userId,
-      totalFound: allSessions.length,
-      afterFiltering: filteredSessions.length,
-      filters: options,
+      return true;
     });
+  }
 
-    return filteredSessions;
+  // Discipline filtering
+  if (options?.discipline) {
+    filteredSessions = filteredSessions.filter(
+      (session) => session.workoutData.discipline === options.discipline,
+    );
+  }
+
+  // Workout type filtering
+  if (options?.workoutType) {
+    filteredSessions = filteredSessions.filter(
+      (session) => session.workoutData.workout_type === options.workoutType,
+    );
+  }
+
+  // Location filtering
+  if (options?.location) {
+    filteredSessions = filteredSessions.filter(
+      (session) => session.workoutData.location === options.location,
+    );
+  }
+
+  // Coach filtering
+  if (options?.coachId) {
+    filteredSessions = filteredSessions.filter((session) =>
+      session.coachIds.includes(options.coachId!),
+    );
+  }
+
+  // Confidence filtering
+  if (options?.minConfidence) {
+    filteredSessions = filteredSessions.filter(
+      (session) =>
+        session.extractionMetadata.confidence >= options.minConfidence!,
+    );
+  }
+
+  // Primary + stable secondary sort by workoutId so offset-based pagination is
+  // deterministic even when two rows tie on the primary sort key.
+  const sortOrder: "asc" | "desc" =
+    options?.sortOrder === "asc" || !options?.sortOrder ? "asc" : "desc";
+  const orderMultiplier = sortOrder === "desc" ? -1 : 1;
+  const primarySortBy: "completedAt" | "confidence" | "workoutName" =
+    options?.sortBy || "completedAt";
+
+  filteredSessions.sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+    switch (primarySortBy) {
+      case "completedAt":
+        aValue = new Date(a.completedAt).getTime();
+        bValue = new Date(b.completedAt).getTime();
+        break;
+      case "confidence":
+        aValue = a.extractionMetadata.confidence;
+        bValue = b.extractionMetadata.confidence;
+        break;
+      case "workoutName":
+        aValue = a.workoutData.workout_name || "";
+        bValue = b.workoutData.workout_name || "";
+        break;
+      default:
+        aValue = new Date(a.completedAt).getTime();
+        bValue = new Date(b.completedAt).getTime();
+    }
+
+    const primary = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+    if (primary !== 0) {
+      return primary * orderMultiplier;
+    }
+
+    // Stable secondary sort on workoutId. Keep this independent of sortOrder
+    // so that ties always resolve to the same deterministic order across
+    // requests (otherwise pages could skip/duplicate items on reload).
+    if (a.workoutId < b.workoutId) return -1;
+    if (a.workoutId > b.workoutId) return 1;
+    return 0;
+  });
+
+  logger.info("Workouts queried successfully:", {
+    userId,
+    totalFound: allSessions.length,
+    afterFiltering: filteredSessions.length,
+    filters: options,
+  });
+
+  return filteredSessions;
+}
+
+/**
+ * Query workouts with offset+limit pagination and return both the page of
+ * items and the pre-slice total count. The total count represents every row
+ * matching the filter criteria (post-filter, pre-slice).
+ */
+export async function queryWorkoutsPaginated(
+  userId: string,
+  options?: QueryWorkoutsOptions,
+): Promise<QueryWorkoutsPaginatedResult> {
+  try {
+    const filtered = await filterAndSortWorkouts(userId, options);
+    const totalCount = filtered.length;
+    const page = applyPaginationSlice(filtered, options || {});
+
+    return { items: page, totalCount };
   } catch (error) {
     logger.error(`Error querying workout sessions for user ${userId}:`, error);
     throw error;
   }
+}
+
+/**
+ * Query all workout sessions for a user with optional filtering.
+ *
+ * Backward-compatible array return: when no `limit` is provided, the full
+ * filtered list is returned so legacy callers that don't paginate (sidebar
+ * counts, analytics, coach context, etc.) continue to receive every matching
+ * row. When a `limit` is provided, the array is sliced to the requested page.
+ */
+export async function queryWorkouts(
+  userId: string,
+  options?: QueryWorkoutsOptions,
+): Promise<Workout[]> {
+  const { items } = await queryWorkoutsPaginated(userId, options);
+  return items;
 }
 
 /**

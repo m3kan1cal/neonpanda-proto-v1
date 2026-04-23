@@ -22,6 +22,9 @@ import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import AppFooter from "./shared/AppFooter";
 import TiptapEditor from "./shared/TiptapEditor";
 import { useToast } from "../contexts/ToastContext";
+import { notifyLoadMoreError } from "../utils/loadMoreErrors";
+import { LIST_PAGE_SIZE } from "../constants/pagination";
+import LoadMoreButton from "./shared/LoadMoreButton";
 import { MemoryAgent } from "../utils/agents/MemoryAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
@@ -140,9 +143,11 @@ function ManageMemories() {
   const [memoryAgentState, setMemoryAgentState] = useState({
     allMemories: [],
     isLoadingAllItems: !!userId,
+    isLoadingMoreAllItems: false,
     isLoadingItem: false,
     error: null,
     totalCount: 0,
+    allMemoriesOffset: 0,
   });
 
   // Collapsed memory descriptions - initialize with all memory IDs (collapsed by default)
@@ -217,6 +222,14 @@ function ManageMemories() {
             newState.isLoadingAllItems !== undefined
               ? newState.isLoadingAllItems
               : false,
+          isLoadingMoreAllItems:
+            newState.isLoadingMoreAllItems !== undefined
+              ? newState.isLoadingMoreAllItems
+              : prevState.isLoadingMoreAllItems,
+          allMemoriesOffset:
+            newState.allMemoriesOffset !== undefined
+              ? newState.allMemoriesOffset
+              : prevState.allMemoriesOffset,
           isLoadingItem:
             newState.isLoadingItem !== undefined
               ? newState.isLoadingItem
@@ -227,8 +240,8 @@ function ManageMemories() {
         }));
       });
 
-      // Load initial data
-      memoryAgentRef.current.loadAllMemories();
+      // Load initial data (first page for Load more UI)
+      memoryAgentRef.current.loadAllMemories({ limit: LIST_PAGE_SIZE });
     }
 
     return () => {
@@ -309,6 +322,18 @@ function ManageMemories() {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
   };
 
+  // Load more memories (next page). Errors leave the list intact so the user
+  // can retry by re-clicking — the agent already preserves items and offset
+  // on failure.
+  const handleLoadMoreMemories = async () => {
+    if (!memoryAgentRef.current) return;
+    try {
+      await memoryAgentRef.current.loadMoreMemories(LIST_PAGE_SIZE);
+    } catch (err) {
+      notifyLoadMoreError({ error }, err);
+    }
+  };
+
   const handleDeleteClick = (memory) => {
     setMemoryToDelete(memory);
     setShowDeleteModal(true);
@@ -351,7 +376,8 @@ function ManageMemories() {
   };
 
   const handleSaveEditMemory = async () => {
-    if (!editingMemory || !memoryAgentRef.current || !editMemoryContent.trim()) return;
+    if (!editingMemory || !memoryAgentRef.current || !editMemoryContent.trim())
+      return;
     setIsSavingMemory(true);
     try {
       await memoryAgentRef.current.updateMemory(editingMemory.memoryId, {
@@ -739,6 +765,16 @@ function ManageMemories() {
                 </div>
               ))}
           </div>
+        </div>
+        <div className="flex justify-center mt-6">
+          <LoadMoreButton
+            onClick={handleLoadMoreMemories}
+            isLoading={memoryAgentState.isLoadingMoreAllItems}
+            hasMore={
+              memoryAgentState.allMemories.length <
+              (memoryAgentState.totalCount || 0)
+            }
+          />
         </div>
       </div>
     );

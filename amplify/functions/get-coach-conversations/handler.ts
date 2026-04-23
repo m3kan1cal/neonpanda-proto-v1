@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
-import { queryCoachConversations } from "../../dynamodb/operations";
+import { queryCoachConversationsPaginated } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { parsePaginationParams } from "../libs/pagination";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -11,18 +12,47 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, "coachId is required");
   }
 
-  // Check if includeFirstMessages query parameter is set
-  const includeFirstMessages =
-    event.queryStringParameters?.includeFirstMessages === "true";
+  const queryParams = event.queryStringParameters || {};
+  const includeFirstMessages = queryParams.includeFirstMessages === "true";
 
-  // Load conversation summaries for user + coach
-  const conversationSummaries = await queryCoachConversations(userId, coachId, {
-    includeFirstMessages,
-  });
+  // Parse and validate limit / offset using the shared helper so every
+  // paginated list endpoint rejects invalid input with the same 400 shape.
+  const paginationResult = parsePaginationParams(queryParams);
+  if (!paginationResult.ok) {
+    return paginationResult.response;
+  }
+  const { limit, offset } = paginationResult.params;
+
+  // Opt-in mode exclusion. Only Manage Coach Conversations passes this; the
+  // default behavior (no `excludeModes` param) continues to return every
+  // mode for legacy callers such as CoachConversationAgent and
+  // ContextualChatDrawer.
+  const excludeModesRaw = queryParams.excludeModes;
+  const excludeModes = excludeModesRaw
+    ? excludeModesRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+    : undefined;
+
+  const { items, totalCount } = await queryCoachConversationsPaginated(
+    userId,
+    coachId,
+    {
+      includeFirstMessages,
+      excludeModes,
+      limit,
+      offset,
+    },
+  );
 
   return createOkResponse({
-    conversations: conversationSummaries.map((item) => item),
-    count: conversationSummaries.length,
+    conversations: items,
+    // Dual-emit during the Load more transition: `count` keeps legacy
+    // semantics (page length), `totalCount` is the authoritative pre-slice
+    // row count used by the paginated Manage UI.
+    count: items.length,
+    totalCount,
   });
 };
 
