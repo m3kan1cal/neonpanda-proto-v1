@@ -11,7 +11,18 @@ import { ValueDisplay } from "../../shared/ValueDisplay";
  * Keep this lean for MVP — once trail_running has its own schema plugin we
  * can layer in the same depth as RunningSection.
  */
-const TrailRunningSegmentDisplay = ({ segment }) => {
+// Segment units inherit from the parent trail run: trail_running schema
+// exposes distance_unit ("miles" | "km") and elevation_unit ("ft" | "m").
+// Default to miles/ft if the parent didn't set them (matches US voice).
+const formatDistanceUnit = (unit) => (unit === "km" ? "km" : "mi");
+
+const TrailRunningSegmentDisplay = ({
+  segment,
+  distanceUnit,
+  elevationUnit,
+}) => {
+  const distLabel = formatDistanceUnit(distanceUnit);
+  const elevLabel = elevationUnit === "m" ? "m" : "ft";
   return (
     <div className="py-2">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
@@ -21,7 +32,7 @@ const TrailRunningSegmentDisplay = ({ segment }) => {
         </span>
         {segment.distance && (
           <span className="text-synthwave-text-secondary">
-            {segment.distance} mi
+            {segment.distance} {distLabel}
           </span>
         )}
         {segment.time && (
@@ -35,12 +46,14 @@ const TrailRunningSegmentDisplay = ({ segment }) => {
         )}
         {segment.elevation_gain ? (
           <span className="text-synthwave-text-secondary">
-            +{segment.elevation_gain}ft
+            +{segment.elevation_gain}
+            {elevLabel}
           </span>
         ) : null}
         {segment.elevation_loss ? (
           <span className="text-synthwave-text-secondary">
-            -{segment.elevation_loss}ft
+            -{segment.elevation_loss}
+            {elevLabel}
           </span>
         ) : null}
         {segment.surface && (
@@ -237,7 +250,12 @@ export const TrailRunningSection = ({
             <div className="px-6 pb-6">
               <div className="space-y-3">
                 {trailRunningData.segments.map((segment, index) => (
-                  <TrailRunningSegmentDisplay key={index} segment={segment} />
+                  <TrailRunningSegmentDisplay
+                    key={index}
+                    segment={segment}
+                    distanceUnit={trailRunningData.distance_unit}
+                    elevationUnit={trailRunningData.elevation_unit}
+                  />
                 ))}
               </div>
             </div>

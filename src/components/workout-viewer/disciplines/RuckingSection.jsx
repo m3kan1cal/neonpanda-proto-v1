@@ -8,7 +8,12 @@ import { ValueDisplay } from "../../shared/ValueDisplay";
  * (distance, pack weight, pace) render upstream in the Performance Metrics
  * row; this section shows ruck type, cadence, event context, and segments.
  */
-const RuckingSegmentDisplay = ({ segment }) => {
+// Segment.distance inherits the parent ruck's distance_unit; pack_weight_lb
+// is literally named in pounds, so that label stays lb.
+const formatDistanceUnit = (unit) => (unit === "km" ? "km" : "mi");
+
+const RuckingSegmentDisplay = ({ segment, distanceUnit }) => {
+  const distLabel = formatDistanceUnit(distanceUnit);
   return (
     <div className="py-2">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
@@ -18,7 +23,7 @@ const RuckingSegmentDisplay = ({ segment }) => {
         </span>
         {segment.distance && (
           <span className="text-synthwave-text-secondary">
-            {segment.distance} mi
+            {segment.distance} {distLabel}
           </span>
         )}
         {segment.duration_min && (
@@ -204,7 +209,11 @@ export const RuckingSection = ({
             <div className="px-6 pb-6">
               <div className="space-y-3">
                 {ruckingData.segments.map((segment, index) => (
-                  <RuckingSegmentDisplay key={index} segment={segment} />
+                  <RuckingSegmentDisplay
+                    key={index}
+                    segment={segment}
+                    distanceUnit={ruckingData.distance_unit}
+                  />
                 ))}
               </div>
             </div>

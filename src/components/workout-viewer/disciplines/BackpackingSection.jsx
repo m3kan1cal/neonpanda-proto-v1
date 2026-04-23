@@ -22,7 +22,13 @@ const formatMovingTime = (seconds) => {
   const mins = totalMinutes % 60;
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 };
-const BackpackingSegmentDisplay = ({ segment }) => {
+// Segment.distance inherits the parent trip's distance_unit ("miles" | "km");
+// elevation_gain_ft / elevation_loss_ft / pack_weight_lb are literally named
+// with their unit suffix so those stay as ft / lb.
+const formatDistanceUnit = (unit) => (unit === "km" ? "km" : "mi");
+
+const BackpackingSegmentDisplay = ({ segment, distanceUnit }) => {
+  const distLabel = formatDistanceUnit(distanceUnit);
   return (
     <div className="py-2">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-body">
@@ -32,7 +38,7 @@ const BackpackingSegmentDisplay = ({ segment }) => {
         </span>
         {segment.distance && (
           <span className="text-synthwave-text-secondary">
-            {segment.distance} mi
+            {segment.distance} {distLabel}
           </span>
         )}
         {segment.duration_min && (
@@ -236,7 +242,11 @@ export const BackpackingSection = ({
             <div className="px-6 pb-6">
               <div className="space-y-3">
                 {backpackingData.segments.map((segment, index) => (
-                  <BackpackingSegmentDisplay key={index} segment={segment} />
+                  <BackpackingSegmentDisplay
+                    key={index}
+                    segment={segment}
+                    distanceUnit={backpackingData.distance_unit}
+                  />
                 ))}
               </div>
             </div>
