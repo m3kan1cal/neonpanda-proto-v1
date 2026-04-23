@@ -14,6 +14,7 @@ import {
 } from "./core";
 import { Program, ProgramSummary } from "../functions/libs/program/types";
 import { logger } from "../functions/libs/logger";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // TRAINING PROGRAM OPERATIONS
@@ -356,15 +357,7 @@ export async function queryProgramsPaginated(
     });
 
     const totalCount = programs.length;
-    const offset =
-      typeof options?.offset === "number" && options.offset > 0
-        ? options.offset
-        : 0;
-    const sliced = offset > 0 ? programs.slice(offset) : programs;
-    const items =
-      typeof options?.limit === "number" && options.limit > 0
-        ? sliced.slice(0, options.limit)
-        : sliced;
+    const items = applyPaginationSlice(programs, options || {});
 
     logger.info("All training programs queried successfully:", {
       userId,

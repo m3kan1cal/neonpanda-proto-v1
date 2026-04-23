@@ -15,6 +15,7 @@ import {
   CoachMessage,
   CoachConversationSummary,
 } from "../functions/libs/coach-conversation/types";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // COACH CONVERSATION INTERFACES
@@ -184,15 +185,7 @@ export async function queryCoachConversationsPaginated(
     );
 
     const totalCount = filtered.length;
-    const offset =
-      typeof options.offset === "number" && options.offset > 0
-        ? options.offset
-        : 0;
-    const sliced = offset > 0 ? filtered.slice(offset) : filtered;
-    const items =
-      typeof options.limit === "number" && options.limit > 0
-        ? sliced.slice(0, options.limit)
-        : sliced;
+    const items = applyPaginationSlice(filtered, options);
 
     return { items, totalCount };
   } catch (error) {

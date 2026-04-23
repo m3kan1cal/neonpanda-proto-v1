@@ -9,6 +9,7 @@ import {
   WeeklyAnalytics,
   MonthlyAnalytics,
 } from "../functions/libs/analytics/types";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // WEEKLY ANALYTICS OPERATIONS
@@ -127,13 +128,7 @@ export async function queryWeeklyAnalyticsPaginated(
 
     const filtered = filterAndSortWeeklyAnalytics(allAnalytics, options);
     const totalCount = filtered.length;
-
-    let items = filtered;
-    if (options?.offset !== undefined || options?.limit !== undefined) {
-      const offset = options?.offset || 0;
-      const limit = options?.limit ?? totalCount;
-      items = filtered.slice(offset, offset + limit);
-    }
+    const items = applyPaginationSlice(filtered, options || {});
 
     logger.info(
       `Found ${items.length}/${totalCount} weekly analytics records for user ${userId}`,
@@ -292,13 +287,7 @@ export async function queryMonthlyAnalyticsPaginated(
 
     const filtered = filterAndSortMonthlyAnalytics(allAnalytics, options);
     const totalCount = filtered.length;
-
-    let items = filtered;
-    if (options?.offset !== undefined || options?.limit !== undefined) {
-      const offset = options?.offset || 0;
-      const limit = options?.limit ?? totalCount;
-      items = filtered.slice(offset, offset + limit);
-    }
+    const items = applyPaginationSlice(filtered, options || {});
 
     logger.info(
       `Found ${items.length}/${totalCount} monthly analytics records for user ${userId}`,

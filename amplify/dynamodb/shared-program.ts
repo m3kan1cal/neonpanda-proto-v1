@@ -12,6 +12,7 @@ import {
 } from "./core";
 import { SharedProgram } from "../functions/libs/shared-program/types";
 import { logger } from "../functions/libs/logger";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // SHARED PROGRAM OPERATIONS
@@ -249,16 +250,8 @@ export async function querySharedProgramsPaginated(
 ): Promise<QuerySharedProgramsPaginatedResult> {
   const all = await fetchAllActiveSharedPrograms(userId);
   const totalCount = all.length;
-
-  const { limit, offset = 0 } = options;
-  if (limit === undefined) {
-    // Backward-compat: when the caller doesn't ask for pagination we
-    // return the full list unchanged.
-    return { items: all, totalCount };
-  }
-  const start = Math.max(0, offset);
-  const end = start + limit;
-  return { items: all.slice(start, end), totalCount };
+  const items = applyPaginationSlice(all, options);
+  return { items, totalCount };
 }
 
 /**

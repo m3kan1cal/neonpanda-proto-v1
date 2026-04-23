@@ -13,6 +13,7 @@ import {
 } from "./core";
 import { Workout, WorkoutSummary } from "../functions/libs/workout/types";
 import { logger } from "../functions/libs/logger";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // WORKOUT OPERATIONS
@@ -470,17 +471,7 @@ export async function queryWorkoutsPaginated(
   try {
     const filtered = await filterAndSortWorkouts(userId, options);
     const totalCount = filtered.length;
-
-    let page = filtered;
-    if (
-      (options?.offset !== undefined && options.offset > 0) ||
-      options?.limit !== undefined
-    ) {
-      const offset = options.offset || 0;
-      const end =
-        options.limit !== undefined ? offset + options.limit : undefined;
-      page = filtered.slice(offset, end);
-    }
+    const page = applyPaginationSlice(filtered, options || {});
 
     return { items: page, totalCount };
   } catch (error) {

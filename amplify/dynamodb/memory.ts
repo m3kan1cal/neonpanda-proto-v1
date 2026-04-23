@@ -18,6 +18,7 @@ import {
 } from "../functions/libs/memory/emotional-types";
 import { calculateDecayScore } from "../functions/libs/memory/lifecycle";
 import { logger } from "../functions/libs/logger";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // MEMORY OPERATIONS
@@ -160,15 +161,7 @@ export async function queryMemoriesPaginated(
   });
 
   const totalCount = filtered.length;
-  const offset =
-    typeof options.offset === "number" && options.offset > 0
-      ? options.offset
-      : 0;
-  const sliced = offset > 0 ? filtered.slice(offset) : filtered;
-  const items =
-    typeof options.limit === "number" && options.limit > 0
-      ? sliced.slice(0, options.limit)
-      : sliced;
+  const items = applyPaginationSlice(filtered, options);
 
   logger.info("Memories queried successfully:", {
     userId,
@@ -179,7 +172,7 @@ export async function queryMemoriesPaginated(
       memoryType: options.memoryType,
       importance: options.importance,
       limit: options.limit,
-      offset,
+      offset: options.offset,
     },
   });
 
