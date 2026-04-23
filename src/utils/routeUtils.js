@@ -8,6 +8,7 @@ export const routeMap = {
   changelog: "Changelog",
   contact: "Contact",
   docs: "Docs",
+  "white-papers": "White Papers",
   "creating-a-coach": "Creating a Coach",
   "logging-workouts": "Logging Workouts",
   auth: "Authentication",
