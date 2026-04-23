@@ -95,7 +95,7 @@ export const detectDisciplineTool: Tool<WorkoutLoggerContext> = {
 
 ALWAYS CALL THIS FIRST before extract_workout_data to identify the workout type.
 
-This tool analyzes the workout description and classifies it into one of these disciplines:
+This tool analyzes the workout description and classifies it into one of these 14 disciplines:
 - crossfit: Functional fitness with AMRAPs, EMOMs, "For Time" workouts, benchmark WODs
 - powerlifting: Squat/bench/deadlift focus, low rep ranges (1-5), RPE tracking, competition lifts
 - bodybuilding: Hypertrophy focus (8-12 reps), split training, tempo work, isolation exercises
@@ -103,12 +103,18 @@ This tool analyzes the workout description and classifies it into one of these d
 - functional_bodybuilding: EMOM with quality/tempo focus, Marcus Filly/Persist style
 - calisthenics: Bodyweight skill development, gymnastics strength, progressions
 - hyrox: 8 stations + 9 runs, race simulation
-- running: Distance runs, pace work, intervals, race training
+- running: Road/track distance running, pace work, intervals, road ultras, race training (NOT trail)
+- trail_running: Trail-surface/vert/technical-terrain running; includes trail ultras (Western States, UTMB, Hardrock, HURT 100, mountain 50k/100k)
+- cycling: Road, mountain, gravel, trainer (Zwift/TrainerRoad), power-based training
 - circuit_training: Station-based timed intervals, F45, Orange Theory, boot camps
 - hybrid: Mixed-modality workouts that don't fit a single discipline, personal training, open gym, general fitness
+- backpacking: Trail + pack context (US backcountry voice): multi-day trips, Alpine prep, mountaineering prep, loaded hikes where vert + trail + pack are the main story
+- rucking: Structured loaded-march training where pace + distance + load is the main story (typically flatter terrain); GoRuck events, speed rucks, ruck intervals
 
 NOTE: Truly mixed-modality workouts with multiple distinct sections (strength + cardio + mobility) should be classified as "hybrid".
 Low-confidence detections (below 0.65) will automatically fall back to "hybrid".
+
+Boundary rules: road runs stay "running"; trail runs with vert go to "trail_running"; loaded-but-flat marches are "rucking"; trail + pack + meaningful vert is "backpacking".
 
 The detected discipline enables targeted extraction with discipline-specific schema and guidance,
 reducing token usage by ~70% and improving extraction accuracy.

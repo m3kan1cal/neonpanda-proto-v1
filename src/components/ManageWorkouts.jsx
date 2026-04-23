@@ -315,7 +315,7 @@ function ManageWorkouts() {
         userId,
         workoutToDelete.workoutId,
       );
-      await workoutAgentRef.current.loadTotalWorkoutCount();
+      await workoutAgentRef.current.loadWorkoutStats();
       success("Workout deleted successfully");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);

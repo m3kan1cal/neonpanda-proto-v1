@@ -7,10 +7,15 @@ import {
   buttonPatterns,
 } from "../utils/ui/uiPatterns";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 function FAQs() {
   const navigate = useNavigate();
   const [openFAQ, setOpenFAQ] = useState(null);
+  useSeoHead({
+    description:
+      "Frequently asked questions about NeonPanda — how AI coaching works, programming, workout logging, analytics, pricing, and safety.",
+  });
 
   // Auto-scroll to top when page loads
   useEffect(() => {
@@ -110,7 +115,7 @@ function FAQs() {
     {
       question: "How smart is my AI coach really?",
       answer:
-        "Your AI coach is powered by best-in-class AI models including Claude Sonnet 4.6 and Opus 4.6 for complex coaching decisions, Claude Haiku 4.5 for fast real-time responses, Nvidia Nemotron and Amazon Nova 2 Lite for efficient background processing, and Nvidia NV-Embed-V2 for intelligent memory retrieval. This multi-model architecture combines deep expertise in exercise science with personalized understanding of your goals across 10 supported disciplines. Think of it as having access to the collective knowledge of expert coaches, orchestrated by sophisticated agentic AI specifically for your journey.",
+        "Your AI coach is powered by best-in-class AI models including Claude Sonnet 4.6 and Opus 4.6 for complex coaching decisions, Claude Haiku 4.5 for fast real-time responses, Nvidia Nemotron and Amazon Nova 2 Lite for efficient background processing, and Nvidia NV-Embed-V2 for intelligent memory retrieval. This multi-model architecture combines deep expertise in exercise science with personalized understanding of your goals across 14 supported disciplines. Think of it as having access to the collective knowledge of expert coaches, orchestrated by sophisticated agentic AI specifically for your journey.",
     },
     {
       question: "Is there a community aspect?",
@@ -172,7 +177,7 @@ function FAQs() {
     {
       question: "Who else is using this?",
       answer:
-        "Our community spans all 11 supported disciplines—CrossFit athletes chasing competition PRs, body recomp enthusiasts transforming their physiques, powerlifters building strength, runners logging miles, cyclists tracking watts and TSS, HYROX competitors preparing for race day, hybrid athletes mixing it all together, and everyone in between. What unites them is wanting coaching that actually adapts to their life, not generic programming. We're building a community of people who believe fitness should be personal, intelligent, and genuinely supportive.",
+        "Our community spans all 14 supported disciplines—CrossFit athletes chasing competition PRs, body recomp enthusiasts transforming their physiques, powerlifters building strength, road and trail runners logging miles, cyclists tracking watts and TSS, HYROX competitors preparing for race day, hybrid athletes mixing it all together, backpackers and mountaineers training for the backcountry, and ruckers chasing steady-state loaded work, and everyone in between. What unites them is wanting coaching that actually adapts to their life, not generic programming. We're building a community of people who believe fitness should be personal, intelligent, and genuinely supportive.",
     },
     {
       question: "What if I have feedback or want to request features?",
@@ -182,12 +187,12 @@ function FAQs() {
     {
       question: "When can I start using NeonPanda?",
       answer:
-        "Right now! NeonPanda is live and actively onboarding users. Sign up today and start building your first AI coach. We're targeting full public launch in Q2 2026 and are actively seeking fitness enthusiasts across our 11 supported disciplines to help shape the platform.",
+        "Right now! NeonPanda is live and actively onboarding users. Sign up today and start building your first AI coach. We're targeting full public launch in Q2 2026 and are actively seeking fitness enthusiasts across our 14 supported disciplines to help shape the platform.",
     },
     {
       question: "What training disciplines does NeonPanda support?",
       answer:
-        "NeonPanda currently supports 11 training disciplines: CrossFit, Powerlifting, Olympic Weightlifting, Bodybuilding, Running, Cycling, HYROX, Calisthenics, Functional Bodybuilding, Circuit Training, and Hybrid. The Hybrid discipline is for methodology-agnostic athletes who want to blend the best of multiple training styles without being boxed into one. Each discipline has specialized methodology understanding, workout extraction schemas, and program design patterns.",
+        "NeonPanda currently supports 14 training disciplines: CrossFit, Powerlifting, Olympic Weightlifting, Bodybuilding, Running (road/track), Trail Running (trail surface and vert), Cycling, HYROX, Calisthenics, Functional Bodybuilding, Circuit Training, Hybrid, Backpacking (multi-day trail trips and mountaineering prep), and Rucking (structured loaded-march training). The Hybrid discipline is for methodology-agnostic athletes who want to blend the best of multiple training styles without being boxed into one. Each discipline has specialized methodology understanding, workout extraction schemas, and program design patterns.",
     },
   ];
 
@@ -203,8 +208,25 @@ function FAQs() {
     navigate("/contact?type=general");
   };
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+
   return (
     <div className={layoutPatterns.pageContainer}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <div className={layoutPatterns.contentWrapper}>
         {/* Header */}
         <div className="text-center mb-12">

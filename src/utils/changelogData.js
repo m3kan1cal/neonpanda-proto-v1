@@ -10,6 +10,32 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260420-beta",
+    date: "2026-04-20",
+    changes: {
+      added: [
+        "Three new first-class training disciplines: `trail_running`, `backpacking`, and `rucking`, bringing the platform to 14 supported disciplines end-to-end.",
+        "Trail Running support with surface type, technicality, elevation gain/loss, segment pacing, ultra/race context, and dedicated workout-viewer section.",
+        "Backpacking support with trip name, trip day, total days, pack weight, terrain notes, and per-segment distance, duration, and elevation tracking.",
+        "Rucking support with ruck type (training, event, tactical), event name, pack weight, cadence, and surface, plus structured segment tracking.",
+        "`SUPPORTED_DISCIPLINES` constant (backend) and `src/constants/disciplines.js` (frontend) as single sources of truth for all 14 disciplines, their display names, colors, and abbreviations.",
+        "Discipline-specific extraction logic in the workout logger (`extractTrailRunningExercises`, `extractBackpackingExercises`, `extractRuckingExercises`) so mountain workouts produce structured segments with distance, elevation, and load data.",
+        "Trail running, backpacking, and rucking guidance modules wired into the program designer, giving coaches discipline-aware programming for vert, loaded carries, and multi-day trips.",
+        "Pinecone workout metadata now mirrors discipline-specific fields (pack weight, trip day, race name, event name, cadence, ultra flag) so semantic recall can filter mountain workouts precisely.",
+        "`detect_discipline` evaluation harness under `test/evals/discipline-detection/` with labeled fixtures (including road-vs-trail ultra, rucking-vs-loaded-hike, and fast-pack boundary cases) and a committed non-regression baseline.",
+      ],
+      changed: [
+        "Running discipline narrowed to road/track; trail surface, vert-heavy, and ultra-on-trail workouts now route to the new `trail_running` discipline with clearer boundary rules in the detector and logger prompts.",
+        "Landing, About, FAQ, Technology, Blog index, Coach Creator, Workout Logger, and Program Designer pages updated to reflect 14 supported disciplines and describe the new mountain coverage.",
+        "April 2026 platform update HTML (`public/updates/platform-update-apr-2026.html`) roadmap section updated: mountain disciplines are now listed as shipped rather than planned.",
+        "Workout heatmap, share-card metric derivation, and badge colors now source discipline names, colors, and abbreviations from the shared frontend constants.",
+      ],
+      fixed: [
+        "Taxonomy drift across marketing copy, blog posts, and UI chrome: discipline counts and lists are now consistent everywhere and driven from shared constants.",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260419-beta",
     date: "2026-04-19",
     changes: {

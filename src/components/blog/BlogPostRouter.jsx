@@ -7,6 +7,7 @@ import BlogPost3WorkoutLogger from "./BlogPost3WorkoutLogger";
 import BlogPost4ProgramDesigner from "./BlogPost4ProgramDesigner";
 import BlogPost5Orchestration from "./BlogPost5Orchestration";
 import BlogPost6Memory from "./BlogPost6Memory";
+import { useSeoHead } from "../../hooks/useSeoHead";
 
 // Map slugs to their corresponding blog post components
 const blogPostComponents = {
@@ -30,6 +31,8 @@ const publishedSlugs = [
 
 function BlogPostRouter() {
   const { slug } = useParams();
+
+  useSeoHead();
 
   // Redirect unpublished posts back to blog index
   if (slug && !publishedSlugs.includes(slug) && blogPostComponents[slug]) {

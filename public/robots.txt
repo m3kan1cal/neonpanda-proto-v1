@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /welcome
+Disallow: /coach-creator
+Disallow: /coaches
+Disallow: /settings
+Disallow: /training-grounds
+Disallow: /shared
+
+Sitemap: https://neonpanda.ai/sitemap.xml

@@ -160,12 +160,12 @@ function BlogPost4ProgramDesigner() {
         </p>
       </section>
 
-      {/* Purpose-Built for 10 Disciplines */}
+      {/* Purpose-Built for 14 Disciplines */}
       <section className="mb-16">
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan mb-6`}
         >
-          Speaking Ten Languages: Methodology Intelligence
+          Speaking Fourteen Languages: Methodology Intelligence
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
           Different disciplines don't just have different exercises—they have
@@ -175,12 +175,12 @@ function BlogPost4ProgramDesigner() {
           development. A running coach thinks in mileage phases and taper
           protocols. And some athletes don't fit neatly into any single
           discipline at all—they just want to get fitter, stronger, and more
-          capable. The Program Designer speaks all ten fluently.
+          capable. The Program Designer speaks all fourteen fluently.
         </p>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
           <h3 className="font-body font-semibold text-xl text-white mb-4">
-            10 Disciplines, 10 Programming Philosophies
+            14 Disciplines, 14 Programming Philosophies
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
@@ -210,8 +210,20 @@ function BlogPost4ProgramDesigner() {
               },
               {
                 name: "Running",
-                focus: "Endurance, speed work, racing",
+                focus: "Road and track endurance, speed work, racing",
                 example: "Base → tempo → speed → taper",
+                color: "cyan",
+              },
+              {
+                name: "Trail Running",
+                focus: "Vert, technical terrain, trail ultras",
+                example: "Climb blocks, downhill durability, race taper",
+                color: "pink",
+              },
+              {
+                name: "Cycling",
+                focus: "Watts, zones, endurance and FTP",
+                example: "Base miles → sweet-spot → race peak",
                 color: "cyan",
               },
               {
@@ -243,6 +255,18 @@ function BlogPost4ProgramDesigner() {
                 focus: "Methodology-agnostic fitness",
                 example: "Best of all worlds, your way",
                 color: "pink",
+              },
+              {
+                name: "Backpacking",
+                focus: "Multi-day trail + pack, mountaineering prep",
+                example: "Approach days → loaded vert → summit push",
+                color: "cyan",
+              },
+              {
+                name: "Rucking",
+                focus: "Structured loaded-march training",
+                example: "Progressive distance, pace, and load cycles",
+                color: "purple",
               },
             ].map((discipline, idx) => (
               <div
@@ -1565,7 +1589,7 @@ function BlogPost4ProgramDesigner() {
             </div>
             <div>
               <div className="text-2xl font-header text-synthwave-neon-purple mb-1">
-                10
+                14
               </div>
               <div className="font-body text-sm text-synthwave-text-muted">
                 Disciplines Supported

@@ -12,6 +12,7 @@ import {
   SUBSCRIPTION_TIERS,
 } from "../../utils/apis/subscriptionApi";
 import { ArrowRightIcon, CheckIcon } from "../themes/SynthwaveComponents";
+import { useSeoHead } from "../../hooks/useSeoHead";
 
 /**
  * WelcomePage - Post-checkout success page
@@ -25,6 +26,8 @@ function WelcomePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+
+  useSeoHead({ robots: "noindex, nofollow" });
 
   const userId =
     searchParams.get("userId") || user?.attributes?.["custom:user_id"];
