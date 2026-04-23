@@ -10,6 +10,7 @@ import { queryExercisesCount } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import {
   SUPPORTED_DISCIPLINES,
+  isSupportedDiscipline,
   type ExerciseDiscipline,
 } from "../libs/exercise/types";
 import { logger } from "../libs/logger";
@@ -26,7 +27,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   // truth so a new backend enum value is automatically accepted here.
   if (
     discipline &&
-    !(SUPPORTED_DISCIPLINES as readonly string[]).includes(discipline)
+    !isSupportedDiscipline(discipline)
   ) {
     return createErrorResponse(
       400,
