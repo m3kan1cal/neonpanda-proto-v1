@@ -716,15 +716,23 @@ function extractBackpackingExercises(
         continue;
       }
 
+      // Segment fields are literally suffixed `_ft` / `_lb` in the schema, so
+      // their values are always in feet / pounds regardless of what unit the
+      // parent backpacking workout was logged in. Hard-code the units here so
+      // a metric parent workout doesn't mislabel segment values as meters/kg.
       const segmentMetrics: ExerciseMetrics = {
         distance: segment.distance,
         distanceUnit: backpacking.distance_unit,
         time: segment.duration_min ? segment.duration_min * 60 : undefined,
         elevationGain: segment.elevation_gain_ft,
         elevationLoss: segment.elevation_loss_ft,
-        elevationUnit: backpacking.elevation_unit ?? "ft",
-        packWeight: segment.pack_weight_lb ?? backpacking.pack_weight,
-        packWeightUnit: backpacking.pack_weight_unit ?? "lbs",
+        elevationUnit: "ft",
+        packWeight:
+          segment.pack_weight_lb ??
+          (backpacking.pack_weight_unit === "lbs"
+            ? backpacking.pack_weight
+            : undefined),
+        packWeightUnit: "lbs",
         surface: segment.surface,
       };
 
@@ -800,13 +808,20 @@ function extractRuckingExercises(
         continue;
       }
 
+      // Segment field is literally `pack_weight_lb` in the schema, so the
+      // value is always in pounds. Only fall back to the parent pack weight
+      // when it was also logged in pounds.
       const segmentMetrics: ExerciseMetrics = {
         distance: segment.distance,
         distanceUnit: rucking.distance_unit,
         time: segment.duration_min ? segment.duration_min * 60 : undefined,
         pace: segment.pace,
-        packWeight: segment.pack_weight_lb ?? rucking.pack_weight,
-        packWeightUnit: rucking.pack_weight_unit,
+        packWeight:
+          segment.pack_weight_lb ??
+          (rucking.pack_weight_unit === "lbs"
+            ? rucking.pack_weight
+            : undefined),
+        packWeightUnit: "lbs",
         cadence: segment.cadence,
       };
 
