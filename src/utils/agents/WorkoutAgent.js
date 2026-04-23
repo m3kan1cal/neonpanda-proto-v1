@@ -283,6 +283,7 @@ export class WorkoutAgent {
     // Set loading state for all metrics
     this._updateState({
       isLoadingCount: true,
+      isLoadingAllItems: true,
       isLoadingRecentItems: true,
       isLoadingTrainingDays: true,
       isLoadingPrAchievements: true,
@@ -353,8 +354,10 @@ export class WorkoutAgent {
       // Extract PR achievements from the fetched workouts (avoids a duplicate API call)
       const recentPrAchievements = this._extractPrAchievements(workouts, 2);
 
-      // Update all state at once
+      // Update all state at once — allWorkouts is populated here so callers don't
+      // need a separate loadAllWorkouts() call with the same fetch parameters.
       this._updateState({
+        allWorkouts: workouts,
         recentWorkouts,
         totalWorkoutCount: totalCount,
         thisWeekWorkoutCount: thisWeekWorkouts.length,
@@ -364,6 +367,7 @@ export class WorkoutAgent {
         bestStreak,
         recentPrAchievements,
         isLoadingCount: false,
+        isLoadingAllItems: false,
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
         isLoadingPrAchievements: false,
@@ -377,6 +381,7 @@ export class WorkoutAgent {
       );
       this._updateState({
         isLoadingCount: false,
+        isLoadingAllItems: false,
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
         isLoadingPrAchievements: false,

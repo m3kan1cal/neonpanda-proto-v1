@@ -246,14 +246,7 @@ function ManageWorkouts() {
           error: null,
         }));
 
-        await Promise.all([
-          workoutAgentRef.current.loadAllWorkouts({
-            sortBy: "completedAt",
-            sortOrder: "desc",
-            limit: 100,
-          }),
-          workoutAgentRef.current.loadWorkoutStats(),
-        ]);
+        await workoutAgentRef.current.loadWorkoutStats();
       } catch (error) {
         logger.error("Error loading workout history:", error);
       }
