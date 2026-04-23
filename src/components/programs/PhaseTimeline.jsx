@@ -220,28 +220,23 @@ export default function PhaseTimeline({ program }) {
             >
               <button
                 onClick={() => togglePhase(phaseKey)}
-                className="w-full flex items-start justify-between mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+                className="w-full flex items-center justify-between gap-3 mb-2 cursor-pointer hover:opacity-80 transition-opacity"
               >
-                <div className="text-left">
-                  <div className="flex items-center gap-2">
+                <div className="text-left min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-base text-white">
                       {phase.name || `Phase ${index + 1}`}
                     </h3>
-                    <svg
-                      className={`w-4 h-4 transition-transform duration-200 text-synthwave-text-secondary ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                    {status === "current" && (
+                      <span className={`${badgePatterns.pinkBorder} uppercase`}>
+                        Current
+                      </span>
+                    )}
+                    {status === "completed" && (
+                      <span className={`${badgePatterns.cyanBorder} uppercase`}>
+                        ✓ Complete
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs mt-1">
                     <span className="text-synthwave-text-secondary">
@@ -253,18 +248,21 @@ export default function PhaseTimeline({ program }) {
                   </p>
                 </div>
 
-                <div className="shrink-0">
-                  {status === "current" && (
-                    <span className={`${badgePatterns.pinkBorder} uppercase`}>
-                      Current
-                    </span>
-                  )}
-                  {status === "completed" && (
-                    <span className={`${badgePatterns.cyanBorder} uppercase`}>
-                      ✓ Complete
-                    </span>
-                  )}
-                </div>
+                <svg
+                  className={`w-4 h-4 shrink-0 transition-transform duration-200 text-synthwave-text-secondary ${
+                    isExpanded ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </button>
 
               {isExpanded && (
