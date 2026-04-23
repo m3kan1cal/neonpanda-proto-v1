@@ -80,7 +80,7 @@ function LandingPage() {
     {
       heading: "Your coaches, your rules",
       description:
-        "Create AI coaches designed around your exact goals, training style, and preferences—coaches built specifically for you and your unique fitness journey. Whether you need one coach or several for different goals, each one learns what makes you tick and adapts to support you across 11 supported disciplines. Your coaches belong only to you.",
+        "Create AI coaches designed around your exact goals, training style, and preferences—coaches built specifically for you and your unique fitness journey. Whether you need one coach or several for different goals, each one learns what makes you tick and adapts to support you across 14 supported disciplines. Your coaches belong only to you.",
       imageAlt:
         "Multiple AI coaches interface showing different coaching personalities",
       imagePath: "/images/features/webp/your-coaches.webp",
@@ -1024,7 +1024,7 @@ function LandingPage() {
               </div>
             </div>
 
-            {/* Pair 7: Limited Disciplines vs 10 Disciplines Supported */}
+            {/* Pair 7: Limited Disciplines vs 14 Disciplines Supported */}
             <div
               className={`challenge-pair grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 ${visiblePairs.has("6") ? "visible" : ""}`}
               data-pair-index="6"
@@ -1089,17 +1089,18 @@ function LandingPage() {
                         Your AI Coach
                       </p>
                       <h3 className="text-white text-xl font-body font-bold mb-3">
-                        11 Disciplines. One Platform.
+                        14 Disciplines. One Platform.
                       </h3>
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-body leading-relaxed mb-4">
-                    Train across 11 supported disciplines with one platform and
+                    Train across 14 supported disciplines with one platform and
                     one coach—CrossFit, Powerlifting, Olympic Weightlifting,
-                    Bodybuilding, Running, Cycling, HYROX, Calisthenics,
-                    Functional Bodybuilding, Circuit Training, and Hybrid. Create multiple
-                    coaches for different training styles, or switch between
-                    disciplines as your goals evolve.
+                    Bodybuilding, Running, Trail Running, Cycling, HYROX,
+                    Calisthenics, Functional Bodybuilding, Circuit Training,
+                    Hybrid, Backpacking, and Rucking. Create multiple coaches
+                    for different training styles, or switch between disciplines
+                    as your goals evolve.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-body">
@@ -1389,9 +1390,9 @@ function LandingPage() {
               <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full animate-pulse"></div>
               <span>Public Launch: Q2 2026</span>
             </div>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-pulse"></div>
-              <span>11 Disciplines Supported</span>
+              <span>14 Disciplines Supported</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-pulse"></div>

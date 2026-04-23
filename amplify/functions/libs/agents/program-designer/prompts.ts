@@ -48,7 +48,7 @@ Be thorough but efficient - complete the task systematically using all required 
 ## DESIGN CAPABILITIES
 
 Your design tools are highly sophisticated and can handle:
-- **Multiple training disciplines**: CrossFit, powerlifting, bodybuilding, endurance, hybrid
+- **Multiple training disciplines** (14 supported): CrossFit, powerlifting, bodybuilding, olympic weightlifting, functional bodybuilding, calisthenics, running (road), trail running, cycling, Hyrox, circuit training, hybrid, backpacking (multi-day / mountaineering prep), rucking (structured loaded-march training)
 - **Training methodologies**: User's preferred style/approach (extracted from todoList.trainingMethodology)
 - **Periodization schemes**: Linear, undulating, block, conjugate
 - **Phase-based progression**: Foundation → Build → Peak → Recovery cycles

@@ -6,9 +6,12 @@ import { OlympicWeightliftingSection } from "./OlympicWeightliftingSection";
 import { FunctionalBodybuildingSection } from "./FunctionalBodybuildingSection";
 import { CalisthenicsSection } from "./CalisthenicsSection";
 import { RunningSection } from "./RunningSection";
+import { TrailRunningSection } from "./TrailRunningSection";
 import { CyclingSection } from "./CyclingSection";
 import { CircuitTrainingSection } from "./CircuitTrainingSection";
 import { HybridSection } from "./HybridSection";
+import { BackpackingSection } from "./BackpackingSection";
+import { RuckingSection } from "./RuckingSection";
 
 /**
  * Registry of discipline-specific workout viewer components
@@ -31,9 +34,12 @@ export const DISCIPLINE_COMPONENTS = {
   functional_bodybuilding: FunctionalBodybuildingSection,
   calisthenics: CalisthenicsSection,
   running: RunningSection,
+  trail_running: TrailRunningSection,
   cycling: CyclingSection,
   circuit_training: CircuitTrainingSection,
   hybrid: HybridSection,
+  backpacking: BackpackingSection,
+  rucking: RuckingSection,
   // Legacy discipline mapping - use CrossFit component
   functional_fitness: CrossFitSection,
 };

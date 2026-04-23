@@ -4,7 +4,12 @@
  */
 
 export const RUNNING_EXTRACTION_GUIDANCE = `
-RUNNING-SPECIFIC INTELLIGENCE:
+RUNNING-SPECIFIC INTELLIGENCE (ROAD/TRACK):
+
+SCOPE (BOUNDARY RULES):
+- This guidance is for ROAD and TRACK running, including road ultras (JFK 50, Boston, Leadville Marathon on-road sections).
+- If the workout is on trail, features meaningful vert (> ~50 ft/mi), uses trail/technical terrain, or mentions trail running races (Western States, UTMB, HURT, mountain 50k/100k), DO NOT use "running" — route to "trail_running" instead.
+- If the athlete is carrying a pack as the defining feature of the effort, DO NOT use "running" — route to "rucking" (structured loaded march) or "backpacking" (trail + pack) instead.
 
 DISCIPLINE DETECTION:
 - Distance, pace, splits, cardio terminology, route descriptions

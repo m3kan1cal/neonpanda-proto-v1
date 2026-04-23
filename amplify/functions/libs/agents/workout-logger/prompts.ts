@@ -140,7 +140,8 @@ You have 6 tools at your disposal. Here's the recommended workflow:
 
 ### 1. detect_discipline (CALL FIRST - ALWAYS)
 - **CRITICAL**: Call this FIRST before extract_workout_data
-- Detects the primary training discipline (crossfit, powerlifting, bodybuilding, etc.)
+- Detects the primary training discipline from the 14 supported disciplines: crossfit, powerlifting, bodybuilding, olympic_weightlifting, functional_bodybuilding, calisthenics, running, trail_running, cycling, hyrox, circuit_training, hybrid, backpacking, rucking
+- Uses explicit boundary rules to separate similar disciplines (e.g. road running vs trail running; rucking vs backpacking)
 - Enables targeted extraction with discipline-specific schema and guidance
 - Reduces token usage by ~70% and improves extraction accuracy
 - Returns: discipline, confidence, reasoning

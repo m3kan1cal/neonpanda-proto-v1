@@ -3,19 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { containerPatterns, heatMapPatterns } from "../utils/ui/uiPatterns";
 import { getWorkouts } from "../utils/apis/workoutApi";
+import {
+  DISCIPLINE_ABBR as SUPPORTED_DISCIPLINE_ABBR,
+  LEGACY_DISCIPLINE_ABBR,
+} from "../constants/disciplines";
 
-// Short discipline labels for display inside the 36px tiles
+// Short discipline labels for display inside the 36px tiles. Supported
+// disciplines come from the SSOT in src/constants/disciplines.js; legacy
+// synonyms (gymnastics, conditioning, yoga, swimming, functional_fitness)
+// are merged in so older records still render a sensible abbreviation.
 const DISCIPLINE_ABBR = {
-  crossfit: "CF",
-  powerlifting: "PL",
-  running: "RUN",
-  bodybuilding: "BB",
-  olympic_weightlifting: "OLY",
-  gymnastics: "GYM",
-  conditioning: "COND",
-  yoga: "YOGA",
-  swimming: "SWIM",
-  cycling: "BIKE",
+  ...SUPPORTED_DISCIPLINE_ABBR,
+  ...LEGACY_DISCIPLINE_ABBR,
 };
 
 const getRPEColorClass = (rpe) => {
