@@ -3,6 +3,12 @@ import { useLocation } from "react-router-dom";
 
 const SITE_ORIGIN = "https://neonpanda.ai";
 
+// Mirrors the default <meta name="description"> in index.html so that
+// pages which don't supply a description still reset to a sensible default
+// rather than inheriting stale copy from the previous SPA route.
+const DEFAULT_DESCRIPTION =
+  "Create your own AI fitness coach that remembers every PR, writes personalized programming, and logs workouts in plain English. 11 disciplines. Start free.";
+
 /**
  * Upsert a <link> or <meta> tag in <head>.
  *
@@ -65,16 +71,15 @@ export const useSeoHead = ({ canonical, robots, description } = {}) => {
       (el) => el.setAttribute("content", robotsValue),
     );
 
-    if (description) {
-      upsertTag(
-        'meta[name="description"]',
-        () => {
-          const meta = document.createElement("meta");
-          meta.setAttribute("name", "description");
-          return meta;
-        },
-        (el) => el.setAttribute("content", description),
-      );
-    }
+    const descriptionValue = description || DEFAULT_DESCRIPTION;
+    upsertTag(
+      'meta[name="description"]',
+      () => {
+        const meta = document.createElement("meta");
+        meta.setAttribute("name", "description");
+        return meta;
+      },
+      (el) => el.setAttribute("content", descriptionValue),
+    );
   }, [canonical, robots, description, location.pathname]);
 };
