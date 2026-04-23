@@ -1,5 +1,6 @@
 import React from "react";
 import { ValueDisplay } from "../../shared/ValueDisplay";
+import { formatDistanceUnit } from "../../shared/distanceFormatters";
 
 /**
  * BackpackingSection
@@ -22,10 +23,6 @@ const formatMovingTime = (seconds) => {
   const mins = totalMinutes % 60;
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 };
-// Segment.distance inherits the parent trip's distance_unit ("miles" | "km");
-// elevation_gain_ft / elevation_loss_ft / pack_weight_lb are literally named
-// with their unit suffix so those stay as ft / lb.
-const formatDistanceUnit = (unit) => (unit === "km" ? "km" : "mi");
 
 const BackpackingSegmentDisplay = ({ segment, distanceUnit }) => {
   const distLabel = formatDistanceUnit(distanceUnit);

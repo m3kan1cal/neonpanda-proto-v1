@@ -1,5 +1,6 @@
 import React from "react";
 import { ValueDisplay } from "../../shared/ValueDisplay";
+import { formatDistanceUnit } from "../../shared/distanceFormatters";
 
 /**
  * TrailRunningSection
@@ -14,7 +15,6 @@ import { ValueDisplay } from "../../shared/ValueDisplay";
 // Segment units inherit from the parent trail run: trail_running schema
 // exposes distance_unit ("miles" | "km") and elevation_unit ("ft" | "m").
 // Default to miles/ft if the parent didn't set them (matches US voice).
-const formatDistanceUnit = (unit) => (unit === "km" ? "km" : "mi");
 
 const TrailRunningSegmentDisplay = ({
   segment,

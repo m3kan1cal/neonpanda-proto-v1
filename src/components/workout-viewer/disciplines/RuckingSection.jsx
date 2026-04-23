@@ -1,5 +1,6 @@
 import React from "react";
 import { ValueDisplay } from "../../shared/ValueDisplay";
+import { formatDistanceUnit } from "../../shared/distanceFormatters";
 
 /**
  * RuckingSection
@@ -8,9 +9,6 @@ import { ValueDisplay } from "../../shared/ValueDisplay";
  * (distance, pack weight, pace) render upstream in the Performance Metrics
  * row; this section shows ruck type, cadence, event context, and segments.
  */
-// Segment.distance inherits the parent ruck's distance_unit; pack_weight_lb
-// is literally named in pounds, so that label stays lb.
-const formatDistanceUnit = (unit) => (unit === "km" ? "km" : "mi");
 
 const RuckingSegmentDisplay = ({ segment, distanceUnit }) => {
   const distLabel = formatDistanceUnit(distanceUnit);

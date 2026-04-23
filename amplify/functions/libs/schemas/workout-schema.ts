@@ -10,6 +10,8 @@
  * - amplify/functions/libs/workout/extraction.ts (Extraction logic)
  */
 
+import { SUPPORTED_DISCIPLINES, LEGACY_DISCIPLINES } from "../exercise/types";
+
 // Re-export types from workout module for convenience
 export type {
   UniversalWorkoutSchema,
@@ -1681,27 +1683,8 @@ export function validateWorkout(workout: any): {
   }
 
   // Validate discipline
-  const validDisciplines = [
-    "crossfit",
-    "powerlifting",
-    "bodybuilding",
-    "olympic_weightlifting",
-    "functional_bodybuilding",
-    "calisthenics",
-    "hiit",
-    "running",
-    "trail_running",
-    "swimming",
-    "cycling",
-    "yoga",
-    "martial_arts",
-    "climbing",
-    "hyrox",
-    "hybrid",
-    "circuit_training",
-    "backpacking",
-    "rucking",
-  ];
+  // Compose from SUPPORTED_DISCIPLINES plus legacy disciplines for backward compatibility
+  const validDisciplines = [...SUPPORTED_DISCIPLINES, ...LEGACY_DISCIPLINES];
   if (workout.discipline && !validDisciplines.includes(workout.discipline)) {
     errors.push(`Invalid discipline: ${workout.discipline}`);
   }

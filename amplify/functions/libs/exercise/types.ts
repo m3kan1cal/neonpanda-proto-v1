@@ -53,6 +53,18 @@ export const SUPPORTED_DISCIPLINES = [
 
 export type SupportedDiscipline = (typeof SUPPORTED_DISCIPLINES)[number];
 
+/**
+ * Legacy disciplines that are no longer added to new workouts but must be
+ * accepted by validators for backward compatibility with existing workouts.
+ */
+export const LEGACY_DISCIPLINES = [
+  "hiit",
+  "swimming",
+  "yoga",
+  "martial_arts",
+  "climbing",
+] as const satisfies readonly ExerciseDiscipline[];
+
 export function isSupportedDiscipline(
   value: string | null | undefined,
 ): value is ExerciseDiscipline {
