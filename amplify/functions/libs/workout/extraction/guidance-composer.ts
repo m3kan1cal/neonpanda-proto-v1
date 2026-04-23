@@ -17,6 +17,9 @@ import { CALISTHENICS_EXTRACTION_GUIDANCE } from "./calisthenics-guidance";
 import { CIRCUIT_TRAINING_EXTRACTION_GUIDANCE } from "./circuit-training-guidance";
 import { HYBRID_EXTRACTION_GUIDANCE } from "./hybrid-guidance";
 import { CYCLING_EXTRACTION_GUIDANCE } from "./cycling-guidance";
+import { TRAIL_RUNNING_EXTRACTION_GUIDANCE } from "./trail-running-guidance";
+import { BACKPACKING_EXTRACTION_GUIDANCE } from "./backpacking-guidance";
+import { RUCKING_EXTRACTION_GUIDANCE } from "./rucking-guidance";
 import { logger } from "../../logger";
 
 /**
@@ -26,6 +29,7 @@ const DISCIPLINE_GUIDANCE_MAP: Record<string, string> = {
   crossfit: CROSSFIT_EXTRACTION_GUIDANCE,
   powerlifting: POWERLIFTING_EXTRACTION_GUIDANCE,
   running: RUNNING_EXTRACTION_GUIDANCE,
+  trail_running: TRAIL_RUNNING_EXTRACTION_GUIDANCE,
   bodybuilding: BODYBUILDING_EXTRACTION_GUIDANCE,
   hyrox: HYROX_EXTRACTION_GUIDANCE,
   olympic_weightlifting: OLYMPIC_WEIGHTLIFTING_EXTRACTION_GUIDANCE,
@@ -34,6 +38,8 @@ const DISCIPLINE_GUIDANCE_MAP: Record<string, string> = {
   circuit_training: CIRCUIT_TRAINING_EXTRACTION_GUIDANCE,
   hybrid: HYBRID_EXTRACTION_GUIDANCE,
   cycling: CYCLING_EXTRACTION_GUIDANCE,
+  backpacking: BACKPACKING_EXTRACTION_GUIDANCE,
+  rucking: RUCKING_EXTRACTION_GUIDANCE,
 };
 
 /**

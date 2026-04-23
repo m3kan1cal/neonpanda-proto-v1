@@ -26,7 +26,7 @@ export const EXTRACT_WORKOUT_DATA_SCHEMA = {
     discipline: {
       type: "string",
       description:
-        "The detected workout discipline from detect_discipline tool (e.g., 'crossfit', 'powerlifting')",
+        "The detected workout discipline from detect_discipline tool. One of: 'crossfit', 'powerlifting', 'bodybuilding', 'olympic_weightlifting', 'functional_bodybuilding', 'calisthenics', 'running' (road/track), 'trail_running' (trail surface or vert), 'cycling', 'hyrox', 'circuit_training', 'hybrid', 'backpacking' (trail + pack), 'rucking' (loaded-march on flat/road).",
     },
     userMessage: {
       type: "string",

@@ -30,6 +30,9 @@ COMMON ABBREVIATIONS TO STANDARDIZE:
 - CrossFit: HSPU→handstand_push_up, T2B/TTB→toes_to_bar, C2B→chest_to_bar_pull_up, MU→muscle_up, DU→double_under
 - Weightlifting: OHP→overhead_press, RDL→romanian_deadlift, BB→barbell (often omit), DB→dumbbell, KB→kettlebell
 - Equipment: "Assault Bike"→assault_bike, "Ski Erg"→ski_erg, "Wall Ball"→wall_ball
+- Endurance outdoors: "trail run"→trail_run, "vert repeats"→vert_repeats, "hill repeats"→hill_repeats, "long trail run"→long_trail_run, "trail ultra"→trail_ultra, "elevation repeats"→elevation_repeats
+- Loaded carries: "ruck"→ruck, "speed ruck"→speed_ruck, "ruck march"→ruck_march, "12 mile ruck"→twelve_mile_ruck, "cadence ruck"→cadence_ruck, "ruck event"→ruck_event
+- Backpacking: "backpacking day"→backpacking_day, "approach"→approach, "summit day"→summit_day, "loaded hike"→loaded_hike, "loaded scramble"→loaded_scramble
 
 CONFIDENCE SCORING:
 - 1.0: Exact match to standard exercise name (e.g., "Back Squat" → "back_squat")
