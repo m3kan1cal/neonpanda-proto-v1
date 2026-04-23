@@ -9,6 +9,19 @@ import { ValueDisplay } from "../../shared/ValueDisplay";
  * render in the upstream Performance Metrics row; this section shows
  * trip-level context, segments, fueling, and equipment.
  */
+
+// Moving time comes from extraction in seconds (e.g. "7h moving" → 25200).
+// Render it in a friendly Hh Mm / Mm format without surprising the reader.
+const formatMovingTime = (seconds) => {
+  if (seconds == null) return null;
+  const total = Math.round(Number(seconds));
+  if (!Number.isFinite(total) || total <= 0) return null;
+  const totalMinutes = Math.round(total / 60);
+  if (totalMinutes < 60) return `${totalMinutes} min`;
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+};
 const BackpackingSegmentDisplay = ({ segment }) => {
   return (
     <div className="py-2">
@@ -98,10 +111,10 @@ const BackpackingDetails = ({ backpackingData, containerPatterns }) => {
             dataPath="workoutData.discipline_specific.backpacking.surface"
           />
         )}
-        {backpackingData.moving_time != null && (
+        {formatMovingTime(backpackingData.moving_time) && (
           <ValueDisplay
             label="Moving Time"
-            value={`${backpackingData.moving_time} min`}
+            value={formatMovingTime(backpackingData.moving_time)}
             dataPath="workoutData.discipline_specific.backpacking.moving_time"
           />
         )}

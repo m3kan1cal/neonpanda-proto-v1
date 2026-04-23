@@ -3,33 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { containerPatterns, heatMapPatterns } from "../utils/ui/uiPatterns";
 import { getWorkouts } from "../utils/apis/workoutApi";
+import {
+  DISCIPLINE_ABBR as SUPPORTED_DISCIPLINE_ABBR,
+  LEGACY_DISCIPLINE_ABBR,
+} from "../constants/disciplines";
 
-// Short discipline labels for display inside the 36px tiles.
-// Covers all 14 supported ExerciseDiscipline values plus a few historical
-// synonyms we still receive from legacy records (gymnastics, conditioning,
-// yoga, swimming). Keep this list in sync with src/constants/disciplines.js
-// when adding a new discipline.
+// Short discipline labels for display inside the 36px tiles. Supported
+// disciplines come from the SSOT in src/constants/disciplines.js; legacy
+// synonyms (gymnastics, conditioning, yoga, swimming, functional_fitness)
+// are merged in so older records still render a sensible abbreviation.
 const DISCIPLINE_ABBR = {
-  crossfit: "CF",
-  powerlifting: "PL",
-  bodybuilding: "BB",
-  olympic_weightlifting: "OLY",
-  functional_bodybuilding: "FBB",
-  calisthenics: "CAL",
-  running: "RUN",
-  trail_running: "TR",
-  cycling: "BIKE",
-  hyrox: "HYR",
-  circuit_training: "CT",
-  hybrid: "HYB",
-  backpacking: "BP",
-  rucking: "RK",
-  // Legacy / synonym keys we still see in older records:
-  gymnastics: "GYM",
-  conditioning: "COND",
-  yoga: "YOGA",
-  swimming: "SWIM",
-  functional_fitness: "CF",
+  ...SUPPORTED_DISCIPLINE_ABBR,
+  ...LEGACY_DISCIPLINE_ABBR,
 };
 
 const getRPEColorClass = (rpe) => {

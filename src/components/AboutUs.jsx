@@ -6,6 +6,7 @@ import {
   typographyPatterns,
   buttonPatterns,
 } from "../utils/ui/uiPatterns";
+import { DISCIPLINE_COUNT } from "../constants/disciplines";
 import Footer from "./shared/Footer";
 
 function AboutUs() {
@@ -283,7 +284,7 @@ function AboutUs() {
                     Fit matters more than fame
                   </strong>
                   —your coach should work for your specific situation, across
-                  any of our 14 supported disciplines.
+                  any of our {DISCIPLINE_COUNT} supported disciplines.
                 </p>
               </div>
 
@@ -450,7 +451,7 @@ function AboutUs() {
             <h2
               className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan`}
             >
-              Multi-Discipline Support: 14 and Growing
+              Multi-Discipline Support: {DISCIPLINE_COUNT} and Growing
             </h2>
 
             <div className="space-y-8">
@@ -461,7 +462,8 @@ function AboutUs() {
                   Currently Supported Disciplines
                 </h3>
                 <p className={`${typographyPatterns.description} text-lg mb-6`}>
-                  NeonPanda currently supports 14 training disciplines:
+                  NeonPanda currently supports {DISCIPLINE_COUNT} training
+                  disciplines:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[

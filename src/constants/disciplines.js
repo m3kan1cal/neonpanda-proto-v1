@@ -12,6 +12,8 @@
  * share-card metrics, badge color tokens) in the same PR.
  */
 
+// Heat-map abbreviations are tuned for the 36px tile in WorkoutHeatMap; 2–4
+// chars reads well there. Keep them stable — they surface in the UI.
 export const DISCIPLINES = [
   { id: "crossfit", label: "CrossFit", color: "pink", abbr: "CF" },
   { id: "powerlifting", label: "Powerlifting", color: "purple", abbr: "PL" },
@@ -20,29 +22,41 @@ export const DISCIPLINES = [
     id: "olympic_weightlifting",
     label: "Olympic Weightlifting",
     color: "purple",
-    abbr: "OL",
+    abbr: "OLY",
   },
   {
     id: "functional_bodybuilding",
     label: "Functional Bodybuilding",
     color: "cyan",
-    abbr: "FB",
+    abbr: "FBB",
   },
-  { id: "calisthenics", label: "Calisthenics", color: "pink", abbr: "CL" },
-  { id: "running", label: "Running", color: "pink", abbr: "RN" },
+  { id: "calisthenics", label: "Calisthenics", color: "pink", abbr: "CAL" },
+  { id: "running", label: "Running", color: "pink", abbr: "RUN" },
   { id: "trail_running", label: "Trail Running", color: "pink", abbr: "TR" },
-  { id: "cycling", label: "Cycling", color: "cyan", abbr: "CY" },
-  { id: "hyrox", label: "Hyrox", color: "purple", abbr: "HY" },
+  { id: "cycling", label: "Cycling", color: "cyan", abbr: "BIKE" },
+  { id: "hyrox", label: "Hyrox", color: "purple", abbr: "HYR" },
   {
     id: "circuit_training",
     label: "Circuit Training",
     color: "cyan",
     abbr: "CT",
   },
-  { id: "hybrid", label: "Hybrid", color: "purple", abbr: "HB" },
+  { id: "hybrid", label: "Hybrid", color: "purple", abbr: "HYB" },
   { id: "backpacking", label: "Backpacking", color: "cyan", abbr: "BP" },
   { id: "rucking", label: "Rucking", color: "purple", abbr: "RK" },
 ];
+
+// Legacy / synonym ids that can still appear in older workout records. These
+// are NOT part of the supported discipline set, but consumers that render
+// historical data (e.g. WorkoutHeatMap) may need to map them to an
+// abbreviation.
+export const LEGACY_DISCIPLINE_ABBR = {
+  gymnastics: "GYM",
+  conditioning: "COND",
+  yoga: "YOGA",
+  swimming: "SWIM",
+  functional_fitness: "CF",
+};
 
 export const DISCIPLINE_COUNT = DISCIPLINES.length;
 
