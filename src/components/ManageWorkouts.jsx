@@ -29,11 +29,14 @@ import { logger } from "../utils/logger";
 import {
   StackIcon,
   CalendarMonthIcon,
+  CalendarIcon,
   ClockIcon,
   TargetIcon,
   TrashIcon,
   EllipsisVerticalIcon,
   EditIcon,
+  FireIcon,
+  TrophyIcon,
 } from "./themes/SynthwaveComponents";
 import ShareWorkoutModal from "./workouts/ShareWorkoutModal";
 
@@ -118,8 +121,12 @@ function ManageWorkouts() {
     isLoadingAllItems: !!userId,
     isLoadingRecentItems: false,
     isLoadingItem: false,
+    isLoadingStats: !!userId,
     error: null,
     totalCount: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    trainingDaysCount: 0,
   });
 
   // Redirect if missing required parameters
@@ -149,20 +156,36 @@ function ManageWorkouts() {
           isLoadingAllItems:
             newState.isLoadingAllItems !== undefined
               ? newState.isLoadingAllItems
-              : false,
+              : prevState.isLoadingAllItems,
           isLoadingRecentItems:
             newState.isLoadingRecentItems !== undefined
               ? newState.isLoadingRecentItems
-              : false,
+              : prevState.isLoadingRecentItems,
           isLoadingItem:
             newState.isLoadingItem !== undefined
               ? newState.isLoadingItem
-              : false,
+              : prevState.isLoadingItem,
+          isLoadingStats:
+            newState.isLoadingCount !== undefined
+              ? newState.isLoadingCount
+              : prevState.isLoadingStats,
           error: newState.error !== undefined ? newState.error : null,
           totalCount:
             newState.totalWorkoutCount !== undefined
               ? newState.totalWorkoutCount
-              : 0,
+              : prevState.totalCount,
+          currentStreak:
+            newState.currentStreak !== undefined
+              ? newState.currentStreak
+              : prevState.currentStreak,
+          bestStreak:
+            newState.bestStreak !== undefined
+              ? newState.bestStreak
+              : prevState.bestStreak,
+          trainingDaysCount:
+            newState.trainingDaysCount !== undefined
+              ? newState.trainingDaysCount
+              : prevState.trainingDaysCount,
         }));
       });
 
@@ -223,14 +246,7 @@ function ManageWorkouts() {
           error: null,
         }));
 
-        await Promise.all([
-          workoutAgentRef.current.loadAllWorkouts({
-            sortBy: "completedAt",
-            sortOrder: "desc",
-            limit: 100,
-          }),
-          workoutAgentRef.current.loadTotalWorkoutCount(),
-        ]);
+        await workoutAgentRef.current.loadWorkoutStats();
       } catch (error) {
         logger.error("Error loading workout history:", error);
       }
@@ -260,7 +276,7 @@ function ManageWorkouts() {
         userId,
         workoutToDelete.workoutId,
       );
-      await workoutAgentRef.current.loadTotalWorkoutCount();
+      await workoutAgentRef.current.loadWorkoutStats();
       success("Workout deleted successfully");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
@@ -1015,6 +1031,29 @@ function ManageWorkouts() {
                 ariaLabel: `${workoutAgentState.totalCount || workoutAgentState.allWorkouts.length || 0} total workouts`,
               },
               {
+                icon: FireIcon,
+                value: workoutAgentState.currentStreak || 0,
+                tooltip: {
+                  title: "Current Streak",
+                  description:
+                    "Consecutive days with a logged workout (includes today or yesterday)",
+                },
+                color: "pink",
+                isLoading: workoutAgentState.isLoadingStats,
+                ariaLabel: `${workoutAgentState.currentStreak || 0} day current streak`,
+              },
+              {
+                icon: TrophyIcon,
+                value: workoutAgentState.bestStreak || 0,
+                tooltip: {
+                  title: "Best Streak",
+                  description: "Longest consecutive-day streak in your history",
+                },
+                color: "purple",
+                isLoading: workoutAgentState.isLoadingStats,
+                ariaLabel: `${workoutAgentState.bestStreak || 0} day best streak`,
+              },
+              {
                 icon: CalendarMonthIcon,
                 value:
                   workoutAgentState.allWorkouts.filter((w) => {
@@ -1069,6 +1108,17 @@ function ManageWorkouts() {
                     return workoutDate >= sevenDaysAgo;
                   }).length || 0
                 } workouts this week`,
+              },
+              {
+                icon: CalendarIcon,
+                value: workoutAgentState.trainingDaysCount || 0,
+                tooltip: {
+                  title: "Training Days",
+                  description: "Unique calendar days you've trained",
+                },
+                color: "cyan",
+                isLoading: workoutAgentState.isLoadingStats,
+                ariaLabel: `${workoutAgentState.trainingDaysCount || 0} training days`,
               },
               {
                 icon: TargetIcon,

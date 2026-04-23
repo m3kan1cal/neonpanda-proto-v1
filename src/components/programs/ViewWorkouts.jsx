@@ -1213,46 +1213,52 @@ General thoughts: `;
                       onClick={() => toggleCardCollapse(template.templateId)}
                     >
                       <div className="flex-1">
-                        <div className="flex items-start flex-wrap gap-3 mb-2">
+                        <div className="flex items-start gap-3 mb-2">
                           <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
                           <h3
-                            className={`font-header text-base sm:text-lg font-bold uppercase text-white min-w-0 ${
+                            className={`font-header text-lg font-bold uppercase text-white min-w-0 ${
                               isCollapsed ? "line-clamp-2" : ""
                             }`}
                           >
                             {template.name}
                           </h3>
-                          {/* Difficulty Badge - always show if available */}
-                          {template.metadata?.difficulty && (
-                            <span
-                              className={`${
-                                template.metadata.difficulty === "advanced"
-                                  ? badgePatterns.pink
-                                  : template.metadata.difficulty ===
-                                      "intermediate"
-                                    ? badgePatterns.purple
-                                    : badgePatterns.cyan
-                              } uppercase shrink-0`}
-                            >
-                              {template.metadata.difficulty}
-                            </span>
-                          )}
-                          {/* Status Badge */}
-                          {isCompleted && (
-                            <span
-                              className={`${badgePatterns.cyan} uppercase shrink-0`}
-                            >
-                              ✓ Logged
-                            </span>
-                          )}
-                          {isSkipped && (
-                            <span
-                              className={`${badgePatterns.cyan} uppercase shrink-0`}
-                            >
-                              ✕ Skipped
-                            </span>
-                          )}
                         </div>
+                        {(template.metadata?.difficulty ||
+                          isCompleted ||
+                          isSkipped) && (
+                          <div className="flex items-center flex-wrap gap-2 mb-2">
+                            {/* Difficulty Badge - always show if available */}
+                            {template.metadata?.difficulty && (
+                              <span
+                                className={`${
+                                  template.metadata.difficulty === "advanced"
+                                    ? badgePatterns.pink
+                                    : template.metadata.difficulty ===
+                                        "intermediate"
+                                      ? badgePatterns.purple
+                                      : badgePatterns.cyan
+                                } uppercase shrink-0`}
+                              >
+                                {template.metadata.difficulty}
+                              </span>
+                            )}
+                            {/* Status Badge */}
+                            {isCompleted && (
+                              <span
+                                className={`${badgePatterns.cyan} uppercase shrink-0`}
+                              >
+                                ✓ Logged
+                              </span>
+                            )}
+                            {isSkipped && (
+                              <span
+                                className={`${badgePatterns.cyan} uppercase shrink-0`}
+                              >
+                                ✕ Skipped
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         <div className="flex items-center flex-wrap gap-4">
                           {template.estimatedDuration && (
@@ -1602,14 +1608,14 @@ General thoughts: `;
                         </CollapsibleSubCard>
                       )}
 
-                      {/* Details - Equipment, Exercises & Focus Areas */}
+                      {/* The Setup - Equipment, Exercises & Focus Areas */}
                       {((template.equipment && template.equipment.length > 0) ||
                         (template.prescribedExercises &&
                           template.prescribedExercises.length > 0) ||
                         (template.metadata?.focusAreas &&
                           template.metadata.focusAreas.length > 0)) && (
                         <CollapsibleSubCard
-                          title="Details"
+                          title="The Setup"
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "details",

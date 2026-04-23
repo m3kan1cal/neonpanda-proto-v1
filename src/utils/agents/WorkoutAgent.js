@@ -283,6 +283,7 @@ export class WorkoutAgent {
     // Set loading state for all metrics
     this._updateState({
       isLoadingCount: true,
+      isLoadingAllItems: true,
       isLoadingRecentItems: true,
       isLoadingTrainingDays: true,
       isLoadingPrAchievements: true,
@@ -290,20 +291,27 @@ export class WorkoutAgent {
     });
 
     try {
-      // Make parallel API calls for efficiency
-      const [workoutsResult, countResult] = await Promise.all([
-        // Get recent workouts for calculations (100 is enough for recent items and this week)
+      // Fetch workouts and count in parallel; count failure is non-fatal so
+      // use allSettled — a count error degrades gracefully to 0 rather than
+      // preventing the workout list from loading.
+      const [workoutsSettled, countSettled] = await Promise.allSettled([
         getWorkouts(this.userId, {
           limit: 100,
           sortBy: "completedAt",
           sortOrder: "desc",
         }),
-        // Get accurate total count from count endpoint
         getWorkoutsCount(this.userId),
       ]);
 
-      const workouts = workoutsResult.workouts || [];
-      const totalCount = countResult.totalCount || 0;
+      if (workoutsSettled.status === "rejected") {
+        throw workoutsSettled.reason;
+      }
+
+      const workouts = workoutsSettled.value.workouts || [];
+      const totalCount =
+        countSettled.status === "fulfilled"
+          ? countSettled.value.totalCount || 0
+          : workouts.length;
 
       // Calculate this week's date range
       const now = new Date();
@@ -327,19 +335,9 @@ export class WorkoutAgent {
         return workoutDate >= startOfWeek && workoutDate <= endOfWeek;
       });
 
-      // Calculate unique training days
-      const uniqueDates = new Set();
-      workouts.forEach((workout) => {
-        if (workout.completedAt) {
-          try {
-            const date = new Date(workout.completedAt);
-            const dateString = date.toISOString().split("T")[0];
-            uniqueDates.add(dateString);
-          } catch (error) {
-            logger.warn("Invalid date format for workout:", workout.workoutId);
-          }
-        }
-      });
+      // Use _getUniqueDateStrings for local-timezone-correct date bucketing
+      // (avoids UTC-shifted day boundaries that toISOString() would produce)
+      const uniqueDates = this._getUniqueDateStrings(workouts);
 
       // Calculate days since last workout
       const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(workouts);
@@ -353,8 +351,10 @@ export class WorkoutAgent {
       // Extract PR achievements from the fetched workouts (avoids a duplicate API call)
       const recentPrAchievements = this._extractPrAchievements(workouts, 2);
 
-      // Update all state at once
+      // Update all state at once — allWorkouts is populated here so callers don't
+      // need a separate loadAllWorkouts() call with the same fetch parameters.
       this._updateState({
+        allWorkouts: workouts,
         recentWorkouts,
         totalWorkoutCount: totalCount,
         thisWeekWorkoutCount: thisWeekWorkouts.length,
@@ -364,6 +364,7 @@ export class WorkoutAgent {
         bestStreak,
         recentPrAchievements,
         isLoadingCount: false,
+        isLoadingAllItems: false,
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
         isLoadingPrAchievements: false,
@@ -377,6 +378,7 @@ export class WorkoutAgent {
       );
       this._updateState({
         isLoadingCount: false,
+        isLoadingAllItems: false,
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
         isLoadingPrAchievements: false,

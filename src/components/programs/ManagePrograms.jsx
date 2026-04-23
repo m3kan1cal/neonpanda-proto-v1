@@ -963,16 +963,20 @@ function ManagePrograms() {
             <div
               className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
             ></div>
-            <h3 className="font-header font-bold text-white text-lg md:text-xl uppercase">
+            <h3
+              className="font-header font-bold text-white text-lg md:text-xl uppercase line-clamp-2"
+              data-tooltip-id="program-name-tooltip"
+              data-tooltip-content={program.name}
+            >
               {program.name}
             </h3>
           </div>
 
-          {/* Program Description — 1-line teaser on desktop only, hidden for completed */}
+          {/* Program Description — hidden on mobile and for completed programs */}
           {program.description &&
             program.status !== PROGRAM_STATUS.COMPLETED && (
               <p
-                className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-1 hidden sm:block`}
+                className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-3 hidden sm:block`}
               >
                 {program.description}
               </p>
@@ -980,19 +984,6 @@ function ManagePrograms() {
 
           {/* Program Details */}
           <div className="space-y-3">
-            {/* Coach Name */}
-            <div
-              className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
-            >
-              <TargetIcon />
-              <span className="text-sm">
-                Coach:{" "}
-                <span className="text-synthwave-neon-cyan">
-                  {formatCoachName(program.coachNames?.[0]) || "Unknown"}
-                </span>
-              </span>
-            </div>
-
             {/* Combined Workout Stats - only for active/paused programs */}
             {(program.status === PROGRAM_STATUS.ACTIVE ||
               program.status === PROGRAM_STATUS.PAUSED) &&
@@ -1240,11 +1231,6 @@ function ManagePrograms() {
 
                   {/* Program details skeleton */}
                   <div className="space-y-3">
-                    {/* Coach */}
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
-                    </div>
                     {/* Workout stats */}
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
@@ -1344,11 +1330,6 @@ function ManagePrograms() {
 
                     {/* Program details skeleton */}
                     <div className="space-y-3">
-                      {/* Coach */}
-                      <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
-                      </div>
                       {/* Workout stats */}
                       <div className="flex items-center space-x-2">
                         <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
@@ -2135,6 +2116,12 @@ function ManagePrograms() {
       )}
 
       {/* Tooltips */}
+      <Tooltip
+        id="program-name-tooltip"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
       <Tooltip
         id="programs-info"
         {...tooltipPatterns.standard}
