@@ -6,6 +6,6 @@ Disallow: /coach-creator
 Disallow: /coaches
 Disallow: /settings
 Disallow: /training-grounds
-Disallow: /shared/
+Disallow: /shared
 
 Sitemap: https://neonpanda.ai/sitemap.xml

@@ -79,7 +79,7 @@ export const getRouteDisplayNames = (pathname) => {
  */
 // Keep the site-wide default in sync with the <title> in index.html so there
 // is no visible flash when the client-side router updates document.title.
-export const DEFAULT_PAGE_TITLE =
+const DEFAULT_PAGE_TITLE =
   "AI Fitness Coach for CrossFit, Powerlifting & HYROX | NeonPanda";
 
 export const generatePageTitle = (pathname) => {
