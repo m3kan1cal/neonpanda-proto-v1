@@ -1123,7 +1123,7 @@ function ManagePrograms() {
           {program.description &&
             program.status !== PROGRAM_STATUS.COMPLETED && (
               <p
-                className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-3 hidden sm:block`}
+                className={`${typographyPatterns.cardText} text-sm mb-4 hidden sm:line-clamp-3`}
               >
                 {program.description}
               </p>

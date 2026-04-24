@@ -25,11 +25,11 @@ const NewBuildBanner = () => {
       aria-modal="true"
       aria-label="App update available"
       aria-live="polite"
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] px-4"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
       onClick={snooze}
     >
       <div
-        className={`${containerPatterns.successModal} p-6 relative max-w-md w-full`}
+        className={`${containerPatterns.successModal} p-6 relative max-w-md w-full mx-4`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
