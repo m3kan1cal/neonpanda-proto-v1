@@ -11,7 +11,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Query parameters for filtering
     const queryParams = event.queryStringParameters || {};
-    const { status, includeArchived, includeStatus, coachId } = queryParams;
+    const { status, includeArchived, includeStatus } = queryParams;
+    // coachId arrives as a path parameter on /coaches/{coachId}/programs;
+    // fall back to query string so the shared /users/{userId}/programs route
+    // can optionally scope by coach without a path segment.
+    const coachId = event.pathParameters?.coachId ?? queryParams.coachId;
 
     // Parse and validate limit/offset via the shared helper so every
     // paginated list endpoint rejects invalid input with the same 400 shape.
