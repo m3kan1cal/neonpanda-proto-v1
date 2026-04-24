@@ -7,9 +7,14 @@ import {
   buttonPatterns
 } from '../utils/ui/uiPatterns';
 import Footer from './shared/Footer';
+import { useSeoHead } from '../hooks/useSeoHead';
 
 function TermsOfService() {
   const navigate = useNavigate();
+  useSeoHead({
+    description:
+      "Terms of service for NeonPanda — the agreement governing your use of our AI coaching platform.",
+  });
 
   // Auto-scroll to top when page loads
   useEffect(() => {

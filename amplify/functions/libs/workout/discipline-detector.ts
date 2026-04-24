@@ -28,13 +28,19 @@ You are a fitness discipline classification expert. Analyze this workout descrip
 
 **hyrox**: 8 stations + 9 runs (1km each), specific exercises (SkiErg, Sled Push, Sled Pull, Burpee Broad Jumps, Rowing, Farmers Carry, Sandbag Lunges, Wall Balls), race simulation, division tracking (Open/Pro/Doubles)
 
-**running**: Distance runs (5k, 10k, half marathon, marathon), pace work, intervals, tempo runs, splits tracking, easy/long/speed runs, race training
+**running**: ROAD and TRACK distance running (5k, 10k, half marathon, marathon, road ultras like JFK 50). Pace work, intervals, tempo runs, splits tracking, easy/long/speed runs, race training. Minimal vert and no trail/technical terrain as the main story.
+
+**trail_running**: Trail-surface running where trail, vertical gain, or technical terrain is the defining feature. Includes trail ultras (Western States, UTMB, HURT 100, Leadville 100, Hardrock), mountain 50k/100k, vert repeats, hill repeats on trail, FKT attempts. Expect elevation_gain in feet/meters, trail/technical surface, slower paces on climbs.
 
 **cycling**: Road, mountain, gravel, and track cycling; indoor trainer sessions (Zwift, TrainerRoad, Wahoo SYSTM, Rouvy); power-based training (watts, FTP, NP, TSS, IF, power zones); cadence (rpm); speed-based efforts; criteriums, gran fondos, century rides (100 miles), sportives, time trials; interval workouts by power zone (Z2, sweet spot, threshold, VO2max)
 
 **circuit_training**: Station-based timed intervals, F45, Orange Theory, Barry's Bootcamp, community circuit classes, boot camps, metabolic conditioning circuits, work/rest timing (30s on/30s off), station rotation, round-based circuits, HIIT circuits with stations
 
 **hybrid**: Mixed-modality workouts that combine multiple distinct training styles in one session without clearly belonging to a single discipline. Examples: warmup + strength + cardio + mobility, personal training sessions, open gym mixed work, "general fitness" sessions, workouts with multiple unrelated sections
+
+**backpacking**: Trail/backcountry context WITH a pack, including long single days, multi-day trip days, and mountaineering-specific prep. The pack + vert + terrain are the main story. US backcountry voice (Elbert, Rainier prep, Uintas, Winds, Sierra). Distance often modest relative to load and vert.
+
+**rucking**: Structured loaded-march TRAINING where pace, distance, and load (pack weight) are the main story. Typically flat to rolling road/track/treadmill/mixed. GoRuck events (Tough, Heavy, Star Course), ruck intervals, speed rucks, endurance rucks.
 
 ## IMAGE ANALYSIS GUIDANCE
 
@@ -70,6 +76,24 @@ Visual indicators often trump text descriptions for discipline classification.
 - **Mixed cardio + strength**: Running if foot-based cardio dominates, Cycling if bike-based, CrossFit if balanced
 - **Cycling vs Running**: Cycling uses speed (mph/km/h) + optional power/cadence; Running uses pace (min/mile or min/km). "Bike ride", "watts", "rpm", "FTP", "TSS", "Zwift" → cycling
 - **Gymnastics movements in strength workout**: CrossFit if part of metcon, Calisthenics if skill-focused
+
+### Running vs Trail Running vs Backpacking vs Rucking (Boundary Rules)
+Use this ordered decision tree before classifying any foot-based endurance effort:
+1. **Is there a pack as the main story?**
+   - Trail + pack + meaningful vert or multi-day context → **backpacking**
+   - Flat/rolling road/track/treadmill + structured load → **rucking**
+2. **Is trail surface, meaningful vert, or technical terrain the defining feature?**
+   - Yes → **trail_running** (including mountain ultras like Western States, UTMB, HURT, Hardrock)
+   - No → continue
+3. **Is it a road/track distance effort?**
+   - Yes → **running** (includes road ultras like JFK 50, Boston, flat 50-milers)
+
+Tie-breakers:
+- "Fast-pack" effort: if pace/distance is the main story → trail_running; if pack weight + trail + vert is the main story → backpacking.
+- Road ultra ("50-mile flat road ultra"): stays **running** even though it is ultra distance.
+- Mountain ultra ("50-mile mountain ultra with 10k vert"): always **trail_running**.
+- Loaded hike without multi-day context on flat terrain ("5 mi road with 40 lb pack"): **rucking**, not backpacking.
+- Pack-present but vert and trail dominant ("Elbert loaded hike, 30 lb pack, 4,500 ft gain"): **backpacking**, not rucking.
 
 ### Circuit Training vs CrossFit
 - **Circuit Training**: Station-based with timed intervals, group class format, work/rest timing primary metric
@@ -126,9 +150,29 @@ Visual indicators often trump text descriptions for discipline classification.
 - "Hyrox simulation: 8 stations + 9 runs, finished in 1:34:22" → hyrox, 1.0
 - "Hyrox training: SkiErg 1000m, Sled Push 50m" → hyrox, 0.9
 
-**Running:**
+**Running (road/track):**
 - "10k tempo run: 7:30/mile pace, splits: 7:28, 7:32, 7:29..." → running, 1.0
 - "Easy 5 mile run, felt good" → running, 0.95
+- "50-mile road ultra, JFK 50, 8h20m" → running, 0.95 (road ultra stays running)
+- "Track workout: 6x800m at 3:10 each" → running, 1.0
+
+**Trail Running:**
+- "Trail 10k with 1,800 ft vert, technical rocky descent, 1h12m" → trail_running, 0.95
+- "Western States 100 in 22h45m, 18k ft vert" → trail_running, 1.0 (mountain ultra)
+- "Vert repeats: 8x500ft climb on trail" → trail_running, 0.95
+- "Easy 6 mi on the trail, 800 ft gain, 55 min" → trail_running, 0.9
+
+**Rucking:**
+- "5 mile ruck with 45 lb pack in 1:10, road" → rucking, 1.0
+- "Speed ruck: 3 mi at 12:30/mi with 30 lb vest" → rucking, 0.95
+- "GoRuck Tough finisher: 12 hr, 20 mi, 30 lb pack" → rucking, 0.95 (event-based loaded march)
+- "Ruck intervals: 6x800m at 10:00/mi with 45 lb" → rucking, 0.95
+
+**Backpacking:**
+- "Day 2 of Uintas loop: 12.3 mi, 3,200 ft gain, 40 lb pack, 7h moving" → backpacking, 1.0
+- "Loaded hike up Elbert, 30 lb pack, 4,500 ft gain, 6h car-to-car" → backpacking, 0.95
+- "Rainier prep: 8 mi with 45 lb pack, 2,500 ft gain, 3h45m" → backpacking, 0.95
+- "Overnight in Winds, 14 mi day 1 with 50 lb pack" → backpacking, 0.95
 
 **Cycling:**
 - "60km road ride, avg 32 km/h, NP 210w, TSS 85" → cycling, 1.0

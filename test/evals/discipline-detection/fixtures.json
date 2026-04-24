@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "description": "Labeled prompts for the detect_discipline tool. Includes per-discipline primary fixtures plus explicit boundary fixtures that force disambiguation.",
+  "fixtures": [
+    {
+      "id": "crossfit-01",
+      "expected": "crossfit",
+      "prompt": "Fran in 4:12 Rx — 21-15-9 thrusters (95lb) and pullups."
+    },
+    {
+      "id": "crossfit-02",
+      "expected": "crossfit",
+      "prompt": "Hit Grace today, 30 clean and jerks at 135 in 2:47."
+    },
+    {
+      "id": "crossfit-03",
+      "expected": "crossfit",
+      "prompt": "AMRAP 20: 5 pullups / 10 pushups / 15 air squats. Got 18 rounds + 7 reps."
+    },
+
+    {
+      "id": "powerlifting-01",
+      "expected": "powerlifting",
+      "prompt": "Back squat: worked up to 405x3 at RPE 8. Bench 275x5 all sets."
+    },
+    {
+      "id": "powerlifting-02",
+      "expected": "powerlifting",
+      "prompt": "Deadlift day. Singles at 500, 520, 535. Conventional."
+    },
+
+    {
+      "id": "bodybuilding-01",
+      "expected": "bodybuilding",
+      "prompt": "Push day: incline DB press 4x10 at 70s, lateral raises 4x15, cable flies 3x12."
+    },
+    {
+      "id": "bodybuilding-02",
+      "expected": "bodybuilding",
+      "prompt": "Leg day hypertrophy: hack squat 4x12, RDL 4x10, leg extension drop set."
+    },
+
+    {
+      "id": "olympic-01",
+      "expected": "olympic_weightlifting",
+      "prompt": "Snatch up to 90kg. Clean and jerk doubles at 110kg. Worked on turnover."
+    },
+
+    {
+      "id": "functional-bodybuilding-01",
+      "expected": "functional_bodybuilding",
+      "prompt": "EMOM 20: 3 deadlifts at 315, then 5 strict pullups. Tempo focused, PVDH style."
+    },
+
+    {
+      "id": "calisthenics-01",
+      "expected": "calisthenics",
+      "prompt": "Worked on front lever tucks 5x8s holds. Finished with 4 sets of handstand pushups."
+    },
+
+    {
+      "id": "running-road-01",
+      "expected": "running",
+      "prompt": "5k PR today on the road — 18:42 at MHS track loop."
+    },
+    {
+      "id": "running-road-02",
+      "expected": "running",
+      "prompt": "Easy 6 mile recovery run around town, mostly flat."
+    },
+    {
+      "id": "running-road-03-ultra",
+      "expected": "running",
+      "prompt": "Finished JFK 50 today — 50 mile road/towpath ultra in 8:20.",
+      "notes": "Road ultra stays running per boundary rule."
+    },
+    {
+      "id": "running-track-01",
+      "expected": "running",
+      "prompt": "Track workout: 6x800 at 2:55 with 2min jog rest."
+    },
+
+    {
+      "id": "trail-running-01",
+      "expected": "trail_running",
+      "prompt": "Trail 10k with 1,800ft vert and technical rocky descent in 1:12."
+    },
+    {
+      "id": "trail-running-02-ultra",
+      "expected": "trail_running",
+      "prompt": "Western States 100 trail ultra — 18,000ft gain, 23,000ft loss, 24:40 finish.",
+      "notes": "Mountain ultra routes to trail_running."
+    },
+    {
+      "id": "trail-running-03",
+      "expected": "trail_running",
+      "prompt": "Vert repeats on Green Mountain — 5x1,200ft climb-and-descend."
+    },
+    {
+      "id": "trail-running-04",
+      "expected": "trail_running",
+      "prompt": "Long trail run on the Colorado Trail, 18 miles, 3,400ft gain, pretty technical middle section."
+    },
+
+    {
+      "id": "cycling-01",
+      "expected": "cycling",
+      "prompt": "80 mile road ride, 4,200ft gain, 18.6mph average."
+    },
+    {
+      "id": "cycling-02",
+      "expected": "cycling",
+      "prompt": "Zwift threshold: 4x8min at 300W with 4min recoveries."
+    },
+
+    {
+      "id": "hyrox-01",
+      "expected": "hyrox",
+      "prompt": "Hyrox sim: 8x1km run + 8 stations. Finished in 1:08."
+    },
+
+    {
+      "id": "circuit-01",
+      "expected": "circuit_training",
+      "prompt": "F45 Hollywood class today — 3 rounds of 8 stations, 45s on / 15s off."
+    },
+
+    {
+      "id": "hybrid-01",
+      "expected": "hybrid",
+      "prompt": "Did a little of everything — 10min row, 3 rounds of strength, and some yoga to finish."
+    },
+
+    {
+      "id": "rucking-01",
+      "expected": "rucking",
+      "prompt": "5-mile ruck with a 45lb pack in 1:10 on the bike path."
+    },
+    {
+      "id": "rucking-02",
+      "expected": "rucking",
+      "prompt": "3 mile ruck with 40lb vest at 15:00/mi pace."
+    },
+    {
+      "id": "rucking-03-event",
+      "expected": "rucking",
+      "prompt": "GoRuck Heavy prep: 12 mile ruck with 45lb, steady 14:30/mi, flat paved loop."
+    },
+    {
+      "id": "rucking-04-treadmill",
+      "expected": "rucking",
+      "prompt": "Treadmill ruck, 30 min at 3.5mph, 20lb vest.",
+      "notes": "Pack-first flat effort is still rucking."
+    },
+
+    {
+      "id": "backpacking-01",
+      "expected": "backpacking",
+      "prompt": "Loaded hike up Mt Elbert, 30lb pack, 4,500ft gain, 6hrs total."
+    },
+    {
+      "id": "backpacking-02-multiday",
+      "expected": "backpacking",
+      "prompt": "Day 2 of the Uintas loop — 12.3mi, 3,200ft gain, 40lb pack, 7h moving."
+    },
+    {
+      "id": "backpacking-03-approach",
+      "expected": "backpacking",
+      "prompt": "Approach day for our Gannett attempt — 9 miles in, 35lb pack, 2,800ft gain."
+    },
+    {
+      "id": "backpacking-04-summit-prep",
+      "expected": "backpacking",
+      "prompt": "Rainier training: 4,000ft vert carry with a 55lb pack on trail."
+    },
+
+    {
+      "id": "boundary-fastpack-trailpace",
+      "expected": "trail_running",
+      "prompt": "Fast-pack 8 miles with a light 10lb vest, tried to stay at 11:00/mi.",
+      "notes": "Pace is the story -> trail_running."
+    },
+    {
+      "id": "boundary-fastpack-backpacking",
+      "expected": "backpacking",
+      "prompt": "Fast-pack day 1 of Wind River traverse, 14 miles with a 28lb pack, 3,900ft gain.",
+      "notes": "Trip context + heavier pack + vert -> backpacking."
+    },
+    {
+      "id": "boundary-road-vs-trail",
+      "expected": "trail_running",
+      "prompt": "Steamboat trail half marathon, 2,700ft gain on singletrack, 2:05."
+    },
+    {
+      "id": "boundary-ruck-vs-backpacking",
+      "expected": "backpacking",
+      "prompt": "Weekend shakedown hike, 9 miles, 45lb pack, 2,200ft gain on trail."
+    },
+    {
+      "id": "boundary-ruck-vs-trail",
+      "expected": "rucking",
+      "prompt": "Flat 6 mile ruck on the greenway, 35lb, 14:45 pace."
+    },
+    {
+      "id": "boundary-road-ultra-stays-running",
+      "expected": "running",
+      "prompt": "Umstead 100 road/gravel ultra, 26:10."
+    }
+  ]
+}

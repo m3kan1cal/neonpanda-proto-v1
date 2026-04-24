@@ -77,6 +77,9 @@ import { PROGRAM_STATUS } from "../../constants/conversationModes";
 import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
 import { getAllPrograms } from "../../utils/apis/programApi";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
+import { LIST_PAGE_SIZE } from "../../constants/pagination";
+import LoadMoreButton from "../shared/LoadMoreButton";
+import { notifyLoadMoreError } from "../../utils/loadMoreErrors";
 
 // Helper function to check if a program is new (created within last 7 days)
 const isNewProgram = (createdDate, programId) => {
@@ -176,13 +179,24 @@ function ManagePrograms() {
   // Global Command Palette state
   const { setIsCommandPaletteOpen } = useNavigationContext();
 
-  // Agent state (managed by ProgramAgent)
+  // Per-status "bucket" state. Manage Programs pages each status (active,
+  // paused, completed) independently so buckets can load and fail in
+  // isolation. Each bucket tracks its own page offset, authoritative
+  // totalCount, loading flags, and error message. The aggregate `programs`
+  // array is a derived union used for coach-agent initialization only.
+  const makeEmptyBucket = () => ({
+    items: [],
+    offset: 0,
+    totalCount: 0,
+    isLoadingInitial: false,
+    isLoadingMore: false,
+    error: null,
+  });
+
   const [programState, setProgramState] = useState({
-    programs: [],
-    activePrograms: [],
-    pausedPrograms: [],
-    completedPrograms: [],
-    isLoadingPrograms: false,
+    activeBucket: makeEmptyBucket(),
+    pausedBucket: makeEmptyBucket(),
+    completedBucket: makeEmptyBucket(),
     isLoadingCoaches: false,
     isUpdating: false,
     error: null,
@@ -302,7 +316,55 @@ function ManagePrograms() {
     loadCoach();
   }, [userId, coachId]);
 
-  // Initialize coach agent and fetch coaches and ALL programs
+  // Map PROGRAM_STATUS -> bucket key in programState so shared helpers can
+  // target the right section without repeated conditional trees.
+  const STATUS_TO_BUCKET_KEY = {
+    [PROGRAM_STATUS.ACTIVE]: "activeBucket",
+    [PROGRAM_STATUS.PAUSED]: "pausedBucket",
+    [PROGRAM_STATUS.COMPLETED]: "completedBucket",
+  };
+
+  // Fetch a single status bucket. Returns the API result so the caller can
+  // decide whether to treat this as an initial load or an append, and so
+  // per-bucket failures don't cascade (a failed bucket just throws here).
+  const fetchStatusBucket = async (status, { limit, offset }) => {
+    const result = await getAllPrograms(userId, {
+      status,
+      includeArchived: false,
+      sortOrder: "desc",
+      limit,
+      offset,
+    });
+    const items = result.programs || [];
+    const totalCount =
+      typeof result.totalCount === "number"
+        ? result.totalCount
+        : typeof result.count === "number"
+          ? result.count
+          : items.length;
+    return { items, totalCount };
+  };
+
+  // Ensure we have a ProgramAgent for every coachId that appears in loaded
+  // programs — agents are keyed by coach because mutation endpoints are
+  // coach-scoped.
+  const ensureAgentsForPrograms = (programs) => {
+    programs.forEach((program) => {
+      (program.coachIds || []).forEach((programCoachId) => {
+        if (!programAgentsRef.current[programCoachId]) {
+          programAgentsRef.current[programCoachId] = new ProgramAgent(
+            userId,
+            programCoachId,
+            () => {},
+          );
+        }
+      });
+    });
+  };
+
+  // Initialize coach agent and fetch the first page of every status bucket.
+  // Buckets are fetched in parallel but their loading/error state is tracked
+  // independently so a failure in one never blocks rendering the others.
   useEffect(() => {
     if (!userId) return;
 
@@ -310,71 +372,105 @@ function ManagePrograms() {
       setProgramState((prev) => ({
         ...prev,
         isLoadingCoaches: true,
-        isLoadingPrograms: true,
+        activeBucket: {
+          ...prev.activeBucket,
+          isLoadingInitial: true,
+          error: null,
+        },
+        pausedBucket: {
+          ...prev.pausedBucket,
+          isLoadingInitial: true,
+          error: null,
+        },
+        completedBucket: {
+          ...prev.completedBucket,
+          isLoadingInitial: true,
+          error: null,
+        },
       }));
 
       try {
-        // Initialize coach agent if needed
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent({ userId });
         }
 
-        // Fetch user's coaches and ALL programs in parallel
-        const [coachesData, programsResponse] = await Promise.all([
-          coachAgentRef.current.loadCoaches(),
-          getAllPrograms(userId, { includeArchived: false }),
-        ]);
+        // Load coaches and each status bucket in parallel. We await
+        // settled results so one bucket's failure doesn't short-circuit
+        // the others.
+        const [coachesResult, activeResult, pausedResult, completedResult] =
+          await Promise.allSettled([
+            coachAgentRef.current.loadCoaches(),
+            fetchStatusBucket(PROGRAM_STATUS.ACTIVE, {
+              limit: LIST_PAGE_SIZE,
+              offset: 0,
+            }),
+            fetchStatusBucket(PROGRAM_STATUS.PAUSED, {
+              limit: LIST_PAGE_SIZE,
+              offset: 0,
+            }),
+            fetchStatusBucket(PROGRAM_STATUS.COMPLETED, {
+              limit: LIST_PAGE_SIZE,
+              offset: 0,
+            }),
+          ]);
 
-        setCoaches(coachesData || []);
-
-        // Get all programs (this includes programs for ALL coaches, even deleted ones)
-        const allPrograms = programsResponse.programs || [];
-
-        // Create program agents for each coach that has programs
-        // This is needed for program actions (pause, resume, etc.)
-        const uniqueCoachIds = new Set();
-        allPrograms.forEach((program) => {
-          (program.coachIds || []).forEach((id) => uniqueCoachIds.add(id));
-        });
-
-        for (const programCoachId of uniqueCoachIds) {
-          if (!programAgentsRef.current[programCoachId]) {
-            programAgentsRef.current[programCoachId] = new ProgramAgent(
-              userId,
-              programCoachId,
-              () => {},
-            );
-          }
+        if (coachesResult.status === "fulfilled") {
+          setCoaches(coachesResult.value || []);
+        } else {
+          logger.error("Error loading coaches:", coachesResult.reason);
+          setCoaches([]);
         }
 
-        // Categorize programs by status
-        const activePrograms = allPrograms.filter(
-          (p) => p.status === PROGRAM_STATUS.ACTIVE,
-        );
-        const pausedPrograms = allPrograms.filter(
-          (p) => p.status === PROGRAM_STATUS.PAUSED,
-        );
-        const completedPrograms = allPrograms.filter(
-          (p) => p.status === PROGRAM_STATUS.COMPLETED,
-        );
+        setProgramState((prev) => {
+          const next = { ...prev, isLoadingCoaches: false, error: null };
+          const applyBucket = (bucketKey, result) => {
+            if (result.status === "fulfilled") {
+              ensureAgentsForPrograms(result.value.items);
+              next[bucketKey] = {
+                items: result.value.items,
+                offset: result.value.items.length,
+                totalCount: result.value.totalCount,
+                isLoadingInitial: false,
+                isLoadingMore: false,
+                error: null,
+              };
+            } else {
+              logger.error(`Error loading ${bucketKey}:`, result.reason);
+              next[bucketKey] = {
+                ...prev[bucketKey],
+                isLoadingInitial: false,
+                isLoadingMore: false,
+                error: result.reason?.message || "Failed to load programs",
+              };
+            }
+          };
 
-        setProgramState({
-          programs: allPrograms,
-          activePrograms,
-          pausedPrograms,
-          completedPrograms,
-          isLoadingPrograms: false,
-          isLoadingCoaches: false,
-          isUpdating: false,
-          error: null,
+          applyBucket("activeBucket", activeResult);
+          applyBucket("pausedBucket", pausedResult);
+          applyBucket("completedBucket", completedResult);
+          return next;
         });
       } catch (error) {
         logger.error("Error loading coaches and programs:", error);
         setProgramState((prev) => ({
           ...prev,
           error: error.message || "Failed to load programs",
-          isLoadingPrograms: false,
           isLoadingCoaches: false,
+          activeBucket: {
+            ...prev.activeBucket,
+            isLoadingInitial: false,
+            isLoadingMore: false,
+          },
+          pausedBucket: {
+            ...prev.pausedBucket,
+            isLoadingInitial: false,
+            isLoadingMore: false,
+          },
+          completedBucket: {
+            ...prev.completedBucket,
+            isLoadingInitial: false,
+            isLoadingMore: false,
+          },
         }));
       }
     };
@@ -485,6 +581,98 @@ function ManagePrograms() {
     }
   }, [userId]);
 
+  // Move a program between buckets on a status transition. Both buckets
+  // are updated in a single setState so the UI never flickers through a
+  // "missing" state, and both totalCounts are adjusted so hasMore stays
+  // accurate. `offset` for the removed bucket is decremented so the next
+  // Load more call doesn't skip a page boundary.
+  const moveProgramBetweenBuckets = (
+    programId,
+    fromStatus,
+    toStatus,
+    patch = {},
+  ) => {
+    const fromKey = STATUS_TO_BUCKET_KEY[fromStatus];
+    const toKey = STATUS_TO_BUCKET_KEY[toStatus];
+    if (!fromKey || !toKey || fromKey === toKey) return;
+
+    setProgramState((prev) => {
+      const fromBucket = prev[fromKey];
+      const toBucket = prev[toKey];
+      const program = fromBucket.items.find((p) => p.programId === programId);
+      if (!program) return prev;
+
+      const updated = { ...program, ...patch, status: toStatus };
+      return {
+        ...prev,
+        [fromKey]: {
+          ...fromBucket,
+          items: fromBucket.items.filter((p) => p.programId !== programId),
+          offset: Math.max(0, fromBucket.offset - 1),
+          totalCount: Math.max(0, fromBucket.totalCount - 1),
+        },
+        [toKey]: {
+          ...toBucket,
+          // Prepend so the just-transitioned item appears at the top of
+          // its new bucket immediately.
+          items: [updated, ...toBucket.items],
+          offset: toBucket.offset + 1,
+          totalCount: toBucket.totalCount + 1,
+        },
+      };
+    });
+  };
+
+  // Fetch and append the next page for a single status bucket. Each
+  // bucket has its own in-flight flag so one load-more in progress never
+  // blocks another status. On failure we show a toast and leave offset /
+  // totalCount / items untouched so the user can simply click again.
+  const handleLoadMoreBucket = async (status) => {
+    const bucketKey = STATUS_TO_BUCKET_KEY[status];
+    if (!bucketKey) return;
+    const bucket = programState[bucketKey];
+    if (!bucket || bucket.isLoadingMore) return;
+    if (bucket.items.length >= bucket.totalCount) return;
+
+    setProgramState((prev) => ({
+      ...prev,
+      [bucketKey]: { ...prev[bucketKey], isLoadingMore: true, error: null },
+    }));
+
+    try {
+      const { items, totalCount } = await fetchStatusBucket(status, {
+        limit: LIST_PAGE_SIZE,
+        offset: bucket.offset,
+      });
+      ensureAgentsForPrograms(items);
+
+      setProgramState((prev) => {
+        const current = prev[bucketKey];
+        // Dedupe in case an optimistic mutation already placed a newly
+        // transitioned item into this bucket before load-more returned.
+        const seen = new Set(current.items.map((p) => p.programId));
+        const appended = items.filter((p) => !seen.has(p.programId));
+        return {
+          ...prev,
+          [bucketKey]: {
+            ...current,
+            items: [...current.items, ...appended],
+            offset: current.offset + items.length,
+            totalCount,
+            isLoadingMore: false,
+          },
+        };
+      });
+    } catch (error) {
+      logger.error(`Error loading more ${bucketKey}:`, error);
+      setProgramState((prev) => ({
+        ...prev,
+        [bucketKey]: { ...prev[bucketKey], isLoadingMore: false },
+      }));
+      notifyLoadMoreError(toast, error);
+    }
+  };
+
   // Handle pause program
   const handlePauseProgram = async (program) => {
     const primaryCoachId = program.coachIds?.[0];
@@ -495,28 +683,11 @@ function ManagePrograms() {
     try {
       await agent.pauseProgram(program.programId);
       toast.success("Training program paused successfully");
-
-      // Update local state
-      setProgramState((prev) => {
-        const programs = prev.programs.map((p) =>
-          p.programId === program.programId
-            ? { ...p, status: PROGRAM_STATUS.PAUSED }
-            : p,
-        );
-        return {
-          ...prev,
-          programs,
-          activePrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.ACTIVE,
-          ),
-          pausedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.PAUSED,
-          ),
-          completedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.COMPLETED,
-          ),
-        };
-      });
+      moveProgramBetweenBuckets(
+        program.programId,
+        PROGRAM_STATUS.ACTIVE,
+        PROGRAM_STATUS.PAUSED,
+      );
     } catch (error) {
       logger.error("Error pausing program:", error);
       toast.error("Failed to pause training program");
@@ -535,28 +706,11 @@ function ManagePrograms() {
     try {
       await agent.resumeProgram(program.programId);
       toast.success("Training program resumed successfully");
-
-      // Update local state
-      setProgramState((prev) => {
-        const programs = prev.programs.map((p) =>
-          p.programId === program.programId
-            ? { ...p, status: PROGRAM_STATUS.ACTIVE }
-            : p,
-        );
-        return {
-          ...prev,
-          programs,
-          activePrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.ACTIVE,
-          ),
-          pausedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.PAUSED,
-          ),
-          completedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.COMPLETED,
-          ),
-        };
-      });
+      moveProgramBetweenBuckets(
+        program.programId,
+        PROGRAM_STATUS.PAUSED,
+        PROGRAM_STATUS.ACTIVE,
+      );
     } catch (error) {
       logger.error("Error resuming program:", error);
       toast.error("Failed to resume training program");
@@ -575,32 +729,12 @@ function ManagePrograms() {
     try {
       await agent.completeProgram(program.programId);
       toast.success("Training program completed! Great work!");
-
-      // Update local state
-      setProgramState((prev) => {
-        const programs = prev.programs.map((p) =>
-          p.programId === program.programId
-            ? {
-                ...p,
-                status: PROGRAM_STATUS.COMPLETED,
-                completedAt: new Date().toISOString(),
-              }
-            : p,
-        );
-        return {
-          ...prev,
-          programs,
-          activePrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.ACTIVE,
-          ),
-          pausedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.PAUSED,
-          ),
-          completedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.COMPLETED,
-          ),
-        };
-      });
+      moveProgramBetweenBuckets(
+        program.programId,
+        PROGRAM_STATUS.ACTIVE,
+        PROGRAM_STATUS.COMPLETED,
+        { completedAt: new Date().toISOString() },
+      );
     } catch (error) {
       logger.error("Error completing program:", error);
       toast.error("Failed to complete training program");
@@ -627,25 +761,29 @@ function ManagePrograms() {
     try {
       await agent.deleteProgram(programToDelete.programId);
 
-      // Remove the deleted program from local state
-      setProgramState((prev) => {
-        const programs = prev.programs.filter(
-          (p) => p.programId !== programToDelete.programId,
-        );
-        return {
-          ...prev,
-          programs,
-          activePrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.ACTIVE,
-          ),
-          pausedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.PAUSED,
-          ),
-          completedPrograms: programs.filter(
-            (p) => p.status === PROGRAM_STATUS.COMPLETED,
-          ),
-        };
-      });
+      // Remove from the owning bucket and decrement that bucket's
+      // offset + totalCount so hasMore stays accurate without a refetch.
+      const bucketKey = STATUS_TO_BUCKET_KEY[programToDelete.status];
+      if (bucketKey) {
+        setProgramState((prev) => {
+          const bucket = prev[bucketKey];
+          const wasPresent = bucket.items.some(
+            (p) => p.programId === programToDelete.programId,
+          );
+          if (!wasPresent) return prev;
+          return {
+            ...prev,
+            [bucketKey]: {
+              ...bucket,
+              items: bucket.items.filter(
+                (p) => p.programId !== programToDelete.programId,
+              ),
+              offset: Math.max(0, bucket.offset - 1),
+              totalCount: Math.max(0, bucket.totalCount - 1),
+            },
+          };
+        });
+      }
 
       toast.success("Training program deleted successfully");
       setShowDeleteModal(false);
@@ -686,7 +824,8 @@ function ManagePrograms() {
         description: editProgramDescription.trim(),
       });
 
-      // Update local state
+      // Optimistic in-place patch across all buckets. Status doesn't
+      // change so counts/offsets stay correct.
       const updateProgram = (p) =>
         p.programId === editingProgram.programId
           ? {
@@ -698,10 +837,18 @@ function ManagePrograms() {
 
       setProgramState((prevState) => ({
         ...prevState,
-        programs: prevState.programs.map(updateProgram),
-        activePrograms: prevState.activePrograms.map(updateProgram),
-        pausedPrograms: prevState.pausedPrograms.map(updateProgram),
-        completedPrograms: prevState.completedPrograms.map(updateProgram),
+        activeBucket: {
+          ...prevState.activeBucket,
+          items: prevState.activeBucket.items.map(updateProgram),
+        },
+        pausedBucket: {
+          ...prevState.pausedBucket,
+          items: prevState.pausedBucket.items.map(updateProgram),
+        },
+        completedBucket: {
+          ...prevState.completedBucket,
+          items: prevState.completedBucket.items.map(updateProgram),
+        },
       }));
 
       setEditingProgram(null);
@@ -976,7 +1123,7 @@ function ManagePrograms() {
           {program.description &&
             program.status !== PROGRAM_STATUS.COMPLETED && (
               <p
-                className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-3 hidden sm:block`}
+                className={`${typographyPatterns.cardText} text-sm mb-4 hidden sm:line-clamp-3`}
               >
                 {program.description}
               </p>
@@ -1045,9 +1192,7 @@ function ManagePrograms() {
                     <span className="text-synthwave-neon-cyan font-semibold">
                       {Math.ceil(program.totalDays / 7)}
                     </span>{" "}
-                    {Math.ceil(program.totalDays / 7) === 1
-                      ? "week"
-                      : "weeks"}{" "}
+                    {Math.ceil(program.totalDays / 7) === 1 ? "week" : "weeks"}{" "}
                     program
                   </span>
                 </div>
@@ -1170,11 +1315,22 @@ function ManagePrograms() {
     );
   };
 
-  // Show skeleton loading while validating userId or loading programs
-  if (
-    isValidatingUserId ||
-    (programState.isLoadingPrograms && programState.programs.length === 0)
-  ) {
+  // Show skeleton loading while validating userId or while every bucket
+  // is still on its initial load and nothing is yet rendered. Once any
+  // bucket has items, we drop the skeleton so the others can render in
+  // place as they resolve (independent-failure requirement).
+  const isInitialLoading =
+    (programState.activeBucket.isLoadingInitial &&
+      programState.activeBucket.items.length === 0) ||
+    (programState.pausedBucket.isLoadingInitial &&
+      programState.pausedBucket.items.length === 0) ||
+    (programState.completedBucket.isLoadingInitial &&
+      programState.completedBucket.items.length === 0);
+  const hasAnyProgram =
+    programState.activeBucket.items.length > 0 ||
+    programState.pausedBucket.items.length > 0 ||
+    programState.completedBucket.items.length > 0;
+  if (isValidatingUserId || (isInitialLoading && !hasAnyProgram)) {
     return (
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
@@ -1568,10 +1724,32 @@ function ManagePrograms() {
           </div>
 
           {/* Active Programs */}
-          {programState.activePrograms.map((program) =>
+          {programState.activeBucket.items.map((program) =>
             renderProgramCard(program),
           )}
         </div>
+
+        {/* Active bucket error (independent of other buckets) */}
+        {programState.activeBucket.error &&
+          programState.activeBucket.items.length === 0 && (
+            <div
+              className={`${containerPatterns.inlineError} text-center mt-6`}
+            >
+              <p className={`${typographyPatterns.description} text-red-400`}>
+                {programState.activeBucket.error}
+              </p>
+            </div>
+          )}
+
+        {/* Active bucket load-more */}
+        <LoadMoreButton
+          onClick={() => handleLoadMoreBucket(PROGRAM_STATUS.ACTIVE)}
+          isLoading={programState.activeBucket.isLoadingMore}
+          hasMore={
+            programState.activeBucket.items.length <
+            programState.activeBucket.totalCount
+          }
+        />
 
         {/* In-Progress Program Design Sessions */}
         {inProgressSessions && inProgressSessions.length > 0 && (
@@ -1850,7 +2028,7 @@ function ManagePrograms() {
         )}
 
         {/* Paused Programs Section */}
-        {programState.pausedPrograms.length > 0 && (
+        {programState.pausedBucket.items.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
               <h2 className="font-header font-bold text-xl md:text-2xl text-white mb-4 uppercase">
@@ -1864,15 +2042,37 @@ function ManagePrograms() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-              {programState.pausedPrograms.map((program) =>
+              {programState.pausedBucket.items.map((program) =>
                 renderProgramCard(program),
               )}
             </div>
+
+            <LoadMoreButton
+              onClick={() => handleLoadMoreBucket(PROGRAM_STATUS.PAUSED)}
+              isLoading={programState.pausedBucket.isLoadingMore}
+              hasMore={
+                programState.pausedBucket.items.length <
+                programState.pausedBucket.totalCount
+              }
+            />
           </div>
         )}
 
+        {/* Paused bucket error when empty (so failure is visible but not
+            blocking the other buckets) */}
+        {programState.pausedBucket.error &&
+          programState.pausedBucket.items.length === 0 && (
+            <div className="mt-16">
+              <div className={`${containerPatterns.inlineError} text-center`}>
+                <p className={`${typographyPatterns.description} text-red-400`}>
+                  {programState.pausedBucket.error}
+                </p>
+              </div>
+            </div>
+          )}
+
         {/* Completed Programs Section */}
-        {programState.completedPrograms.length > 0 && (
+        {programState.completedBucket.items.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
               <h2 className="font-header font-bold text-xl md:text-2xl text-white mb-4 uppercase">
@@ -1885,12 +2085,33 @@ function ManagePrograms() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-              {programState.completedPrograms.map((program) =>
+              {programState.completedBucket.items.map((program) =>
                 renderProgramCard(program, false),
               )}
             </div>
+
+            <LoadMoreButton
+              onClick={() => handleLoadMoreBucket(PROGRAM_STATUS.COMPLETED)}
+              isLoading={programState.completedBucket.isLoadingMore}
+              hasMore={
+                programState.completedBucket.items.length <
+                programState.completedBucket.totalCount
+              }
+            />
           </div>
         )}
+
+        {/* Completed bucket error when empty */}
+        {programState.completedBucket.error &&
+          programState.completedBucket.items.length === 0 && (
+            <div className="mt-16">
+              <div className={`${containerPatterns.inlineError} text-center`}>
+                <p className={`${typographyPatterns.description} text-red-400`}>
+                  {programState.completedBucket.error}
+                </p>
+              </div>
+            </div>
+          )}
         <AppFooter />
       </div>
 

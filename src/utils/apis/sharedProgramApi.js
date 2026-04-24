@@ -122,13 +122,41 @@ export async function getSharedProgram(sharedProgramId, { signal } = {}) {
 }
 
 /**
- * Query all shared programs for a user
+ * Query shared programs for a user.
+ *
  * @param {string} userId - The user ID
- * @returns {Promise<Object>} - Object with sharedPrograms array and counts
+ * @param {Object} [options]
+ * @param {number} [options.limit] - Page size (1..100)
+ * @param {number} [options.offset] - Zero-indexed offset (>= 0)
+ * @returns {Promise<Object>} - { sharedPrograms, count, totalCount }
  */
-export async function querySharedPrograms(userId) {
+export async function querySharedPrograms(userId, options = {}) {
   requireValidUserId(userId, "querySharedPrograms");
-  const url = `${getApiUrl("")}/users/${userId}/shared-programs`;
+  if (options.limit !== undefined) {
+    if (
+      typeof options.limit !== "number" ||
+      options.limit < 1 ||
+      options.limit > 100
+    ) {
+      throw new Error("limit must be a number between 1 and 100");
+    }
+  }
+  if (options.offset !== undefined) {
+    if (typeof options.offset !== "number" || options.offset < 0) {
+      throw new Error("offset must be a non-negative number");
+    }
+  }
+
+  const params = new URLSearchParams();
+  if (options.limit !== undefined)
+    params.append("limit", options.limit.toString());
+  if (options.offset !== undefined && options.offset > 0)
+    params.append("offset", options.offset.toString());
+
+  const queryString = params.toString();
+  const url = `${getApiUrl("")}/users/${userId}/shared-programs${
+    queryString ? "?" + queryString : ""
+  }`;
 
   try {
     const response = await authenticatedFetch(url, {

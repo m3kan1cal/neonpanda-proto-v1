@@ -81,26 +81,26 @@
     />
 
     <!-- SEO Meta Tags -->
-    <title>NeonPanda - Create Your Perfect Virtual Coach</title>
+    <title>
+      AI Fitness Coach for CrossFit, Powerlifting &amp; HYROX | NeonPanda
+    </title>
     <meta
       name="description"
-      content="Build personalized AI fitness coaches with adaptive intelligence. Get expert guidance tailored to your goals, experience, and preferences."
+      content="Create your own AI fitness coach that remembers every PR, writes personalized programming, and logs workouts in plain English. 11 disciplines. Start free."
     />
-    <meta
-      name="keywords"
-      content="AI fitness coach, virtual trainer, personalized workouts, fitness AI, adaptive training"
-    />
+    <meta name="robots" content="index, follow" />
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://neonpanda.ai" />
+    <meta property="og:site_name" content="NeonPanda" />
     <meta
       property="og:title"
-      content="NeonPanda - Create Your Perfect Virtual Coach"
+      content="AI Fitness Coach for CrossFit, Powerlifting &amp; HYROX | NeonPanda"
     />
     <meta
       property="og:description"
-      content="Build personalized AI fitness coaches with adaptive intelligence. Get expert guidance tailored to your goals, experience, and preferences."
+      content="Create your own AI fitness coach that remembers every PR, writes personalized programming, and logs workouts in plain English. 11 disciplines. Start free."
     />
     <meta
       property="og:image"
@@ -109,16 +109,60 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="NeonPanda - Create Your Perfect Virtual Coach"
+      content="AI Fitness Coach for CrossFit, Powerlifting &amp; HYROX | NeonPanda"
     />
     <meta
       name="twitter:description"
-      content="Build personalized AI fitness coaches with adaptive intelligence."
+      content="Create your own AI fitness coach that remembers every PR, writes personalized programming, and logs workouts in plain English."
     />
     <meta
       name="twitter:image"
       content="https://neonpanda.ai/images/icons/generated/web/icon-512.png"
     />
+
+    <!-- Canonical URL (route-aware pages override via useSeoHead) -->
+    <link rel="canonical" href="https://neonpanda.ai/" />
+
+    <!-- Structured data: Organization + SoftwareApplication + WebSite.
+         SearchAction is intentionally omitted — no public /search route yet. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "NeonPanda",
+            "url": "https://neonpanda.ai",
+            "logo": "https://neonpanda.ai/images/icons/generated/web/icon-512.png",
+            "sameAs": [
+              "https://www.instagram.com/neonpanda.ai",
+              "https://www.tiktok.com/@neonpanda.ai",
+              "https://www.youtube.com/@NeonPandaAI",
+              "https://twitter.com/NeonPandaAI",
+              "https://www.facebook.com/neonpandaai/"
+            ]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "NeonPanda",
+            "applicationCategory": "HealthApplication",
+            "operatingSystem": "Web",
+            "url": "https://neonpanda.ai",
+            "description": "Personalized AI fitness coaching platform supporting 11 disciplines including CrossFit, powerlifting, HYROX, running, and more.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "url": "https://neonpanda.ai",
+            "name": "NeonPanda"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

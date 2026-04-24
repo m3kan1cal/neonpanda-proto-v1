@@ -187,7 +187,7 @@ export const GET_RECENT_WORKOUTS_SCHEMA = {
     discipline: {
       type: "string",
       description:
-        "Filter by discipline. Examples: 'powerlifting', 'running', 'bodybuilding', 'crossfit', 'calisthenics'. Omit for all disciplines.",
+        "Filter by discipline. One of: 'crossfit', 'powerlifting', 'bodybuilding', 'olympic_weightlifting', 'functional_bodybuilding', 'calisthenics', 'running', 'trail_running', 'cycling', 'hyrox', 'circuit_training', 'hybrid', 'backpacking', 'rucking'. Omit for all disciplines.",
     },
   },
   required: [],
@@ -264,7 +264,7 @@ export const LIST_EXERCISE_NAMES_SCHEMA = {
     discipline: {
       type: "string",
       description:
-        "Optional filter by discipline (e.g., 'powerlifting', 'bodybuilding', 'crossfit'). Omit to see exercises from all disciplines.",
+        "Optional filter by discipline. One of: 'crossfit', 'powerlifting', 'bodybuilding', 'olympic_weightlifting', 'functional_bodybuilding', 'calisthenics', 'running', 'trail_running', 'cycling', 'hyrox', 'circuit_training', 'hybrid', 'backpacking', 'rucking'. Omit to see exercises from all disciplines.",
     },
     limit: {
       type: "number",

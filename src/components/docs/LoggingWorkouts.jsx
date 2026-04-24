@@ -39,8 +39,8 @@ function LoggingWorkouts() {
           Workout logging in NeonPanda is powered by a multi-model AI pipeline.
           You describe your workout in everyday language, and the system
           extracts exercises, sets, reps, weights, durations, and performance
-          metrics automatically. Your coach remembers everything and uses it
-          to personalize future guidance.
+          metrics automatically. Your coach remembers everything and uses it to
+          personalize future guidance.
         </p>
       </div>
 
@@ -87,8 +87,8 @@ function LoggingWorkouts() {
                 Describe your workout
               </h3>
               <p className="font-body text-synthwave-text-secondary text-sm leading-relaxed">
-                Type a natural language description of what you did. Be as
-                brief or detailed as you like.
+                Type a natural language description of what you did. Be as brief
+                or detailed as you like.
               </p>
             </div>
           </div>
@@ -155,6 +155,37 @@ function LoggingWorkouts() {
 
           <div>
             <p className="font-body text-xs text-synthwave-text-muted uppercase tracking-wide mb-1">
+              Trail Running
+            </p>
+            <CodeBlock>
+              12 mile trail run, 2,800 ft of gain on singletrack. Hiked the
+              steep sections, ran the rolling terrain. 2h 35m total, felt strong
+              on the descent.
+            </CodeBlock>
+          </div>
+
+          <div>
+            <p className="font-body text-xs text-synthwave-text-muted uppercase tracking-wide mb-1">
+              Rucking
+            </p>
+            <CodeBlock>
+              45 min ruck, 3 miles on road with a 35 lb pack. Kept a 15 min/mi
+              pace. Shoulders felt fine, hips a little tight.
+            </CodeBlock>
+          </div>
+
+          <div>
+            <p className="font-body text-xs text-synthwave-text-muted uppercase tracking-wide mb-1">
+              Backpacking
+            </p>
+            <CodeBlock>
+              Day 2 of the JMT — 14 miles with 40 lb pack, 3,500 ft gain over
+              Muir Pass. Took about 8 hours with breaks. Legs tired but good.
+            </CodeBlock>
+          </div>
+
+          <div>
+            <p className="font-body text-xs text-synthwave-text-muted uppercase tracking-wide mb-1">
               Quick Log
             </p>
             <CodeBlock>
@@ -177,7 +208,10 @@ function LoggingWorkouts() {
           >
             coach conversation
           </Link>{" "}
-          using the <code className="px-1.5 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/15 text-synthwave-neon-cyan font-ai text-sm">/log-workout</code>{" "}
+          using the{" "}
+          <code className="px-1.5 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/15 text-synthwave-neon-cyan font-ai text-sm">
+            /log-workout
+          </code>{" "}
           slash command. Type the command followed by your workout description,
           and the AI will process it in context with your coach's knowledge of
           your training history.
@@ -200,12 +234,27 @@ function LoggingWorkouts() {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            { label: "Discipline", desc: "Strength, cardio, CrossFit, yoga, etc." },
-            { label: "Exercises", desc: "Individual movements with sets, reps, and weight" },
+            {
+              label: "Discipline",
+              desc: "Strength, cardio, CrossFit, yoga, etc.",
+            },
+            {
+              label: "Exercises",
+              desc: "Individual movements with sets, reps, and weight",
+            },
             { label: "Duration", desc: "Total workout time and rest periods" },
-            { label: "Performance", desc: "Completion times, heart rate, perceived effort" },
-            { label: "PRs", desc: "Personal records are automatically detected and tracked" },
-            { label: "Summary", desc: "AI-generated summary for quick reference" },
+            {
+              label: "Performance",
+              desc: "Completion times, heart rate, perceived effort",
+            },
+            {
+              label: "PRs",
+              desc: "Personal records are automatically detected and tracked",
+            },
+            {
+              label: "Summary",
+              desc: "AI-generated summary for quick reference",
+            },
           ].map((item) => (
             <div
               key={item.label}

@@ -305,7 +305,7 @@ function BlogPost2CoachCreator() {
 
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
           <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
-            10 Disciplines, Countless Coaching Styles
+            14 Disciplines, Countless Coaching Styles
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {[
@@ -313,7 +313,9 @@ function BlogPost2CoachCreator() {
               { name: "Powerlifting", detail: "Strength periodization" },
               { name: "Olympic Weightlifting", detail: "Technical precision" },
               { name: "Bodybuilding", detail: "Hypertrophy focus" },
-              { name: "Running", detail: "Endurance programming" },
+              { name: "Running", detail: "Road and track programming" },
+              { name: "Trail Running", detail: "Trails, vert, and ultras" },
+              { name: "Cycling", detail: "Watts and endurance" },
               { name: "HYROX", detail: "Hybrid competition" },
               { name: "Calisthenics", detail: "Skill progressions" },
               { name: "Functional Bodybuilding", detail: "Best of both" },
@@ -322,6 +324,11 @@ function BlogPost2CoachCreator() {
                 detail: "F45, Orange Theory, boot camps, community classes",
               },
               { name: "Hybrid", detail: "Methodology-agnostic" },
+              {
+                name: "Backpacking",
+                detail: "Trail, pack, mountaineering prep",
+              },
+              { name: "Rucking", detail: "Structured loaded-march training" },
             ].map((discipline, idx) => (
               <div
                 key={idx}

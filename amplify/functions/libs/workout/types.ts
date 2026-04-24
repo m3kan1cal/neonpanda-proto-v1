@@ -158,6 +158,7 @@ export interface DisciplineSpecific {
   crossfit?: CrossFitWorkout;
   powerlifting?: PowerliftingWorkout;
   running?: RunningWorkout;
+  trail_running?: TrailRunningWorkout;
   cycling?: CyclingWorkout;
   bodybuilding?: BodybuildingWorkout;
   hyrox?: HyroxWorkout;
@@ -166,6 +167,8 @@ export interface DisciplineSpecific {
   calisthenics?: CalisthenicsWorkout;
   circuit_training?: CircuitTrainingWorkout;
   hybrid?: HybridWorkout;
+  backpacking?: BackpackingWorkout;
+  rucking?: RuckingWorkout;
 }
 
 /**
@@ -317,6 +320,202 @@ export interface RunningSegment {
   terrain: "flat" | "uphill" | "downhill" | "mixed";
   elevation_change?: number;
   notes?: string;
+}
+
+/**
+ * Trail-running workout structure
+ *
+ * Scope: trail-surface runs where trail, vert, or technical terrain is the
+ * defining feature. Trail ultras (e.g. Western States, mountain 50k/100k)
+ * belong here. Road ultras stay under `RunningWorkout`.
+ */
+export interface TrailRunningWorkout {
+  run_type:
+    | "easy"
+    | "tempo"
+    | "interval"
+    | "long"
+    | "race"
+    | "recovery"
+    | "fartlek"
+    | "hill_repeats"
+    | "vert_repeats"
+    | "fkt_attempt"
+    | "ultra"
+    | "training";
+  total_distance: number;
+  distance_unit: "miles" | "km";
+  total_time: number;
+  average_pace?: string;
+  elevation_gain?: number;
+  elevation_loss?: number;
+  elevation_unit?: "ft" | "m";
+  surface?:
+    | "trail"
+    | "technical_trail"
+    | "fire_road"
+    | "mixed"
+    | "mountain"
+    | "scree";
+  technicality?: "low" | "moderate" | "high" | "very_high";
+  is_ultra?: boolean;
+  race_name?: string | null;
+  vertical_meters_per_km?: number | null;
+  segments?: TrailRunningSegment[];
+  fueling?: {
+    pre_run?: string | null;
+    during_run?: string[] | null;
+    hydration_oz?: number | null;
+    aid_stations?: number | null;
+  };
+  weather?: {
+    temperature?: number | null;
+    temperature_unit?: "F" | "C" | null;
+    conditions?: string | null;
+  };
+  equipment?: {
+    shoes?: string | null;
+    pack?: string | null;
+    poles?: boolean | null;
+    wearable?: string | null;
+  };
+  notes?: string | null;
+}
+
+export interface TrailRunningSegment {
+  segment_number: number;
+  segment_type:
+    | "warmup"
+    | "working"
+    | "climb"
+    | "descent"
+    | "flat"
+    | "recovery"
+    | "cooldown"
+    | "aid_station";
+  distance?: number;
+  time?: number;
+  pace?: string;
+  elevation_gain?: number;
+  elevation_loss?: number;
+  surface?: string;
+  effort_level?: "easy" | "moderate" | "hard" | "max";
+  notes?: string | null;
+}
+
+/**
+ * Backpacking workout structure
+ *
+ * Scope: trail + backcountry context with a pack, including single long days,
+ * multi-day trips, and mountaineering-specific prep. US backcountry voice.
+ */
+export interface BackpackingWorkout {
+  trip_name?: string | null;
+  trip_day?: number | null;
+  total_trip_days?: number | null;
+  total_distance: number;
+  distance_unit: "miles" | "km";
+  total_time?: number;
+  moving_time?: number;
+  pack_weight?: number;
+  pack_weight_unit?: "lbs" | "kg";
+  elevation_gain?: number;
+  elevation_loss?: number;
+  elevation_unit?: "ft" | "m";
+  surface?:
+    | "trail"
+    | "technical_trail"
+    | "off_trail"
+    | "scree"
+    | "snow"
+    | "mixed";
+  terrain_notes?: string | null;
+  segments?: BackpackingSegment[];
+  fueling?: {
+    calories?: number | null;
+    hydration_oz?: number | null;
+    notes?: string | null;
+  };
+  equipment?: {
+    pack?: string | null;
+    footwear?: string | null;
+    poles?: boolean | null;
+    other_gear?: string[] | null;
+  };
+  notes?: string | null;
+}
+
+export interface BackpackingSegment {
+  segment_number: number;
+  segment_type:
+    | "approach"
+    | "climb"
+    | "descent"
+    | "flat"
+    | "rest"
+    | "camp"
+    | "summit"
+    | "other";
+  distance?: number;
+  duration_min?: number;
+  elevation_gain_ft?: number;
+  elevation_loss_ft?: number;
+  pack_weight_lb?: number;
+  surface?: string;
+  notes?: string | null;
+}
+
+/**
+ * Rucking workout structure
+ *
+ * Scope: structured loaded-march training. Pace / distance / load is the main
+ * story. Typically flatter and repeatable. If the defining feature is
+ * trail/vert/backcountry, use `backpacking` instead.
+ */
+export interface RuckingWorkout {
+  ruck_type:
+    | "endurance"
+    | "speed"
+    | "interval"
+    | "event"
+    | "recovery"
+    | "training"
+    | "test";
+  event_name?: string | null;
+  total_distance: number;
+  distance_unit: "miles" | "km";
+  total_time: number;
+  average_pace?: string;
+  pack_weight: number;
+  pack_weight_unit: "lbs" | "kg";
+  cadence?: number | null;
+  elevation_gain?: number | null;
+  elevation_unit?: "ft" | "m" | null;
+  surface?: "road" | "trail" | "track" | "treadmill" | "mixed";
+  segments?: RuckingSegment[];
+  equipment?: {
+    pack?: string | null;
+    footwear?: string | null;
+    plate_weight?: string | null;
+  };
+  notes?: string | null;
+}
+
+export interface RuckingSegment {
+  segment_number: number;
+  segment_type:
+    | "warmup"
+    | "working"
+    | "interval"
+    | "recovery"
+    | "cooldown"
+    | "hill";
+  distance?: number;
+  duration_min?: number;
+  pace?: string;
+  pack_weight_lb?: number;
+  cadence?: number;
+  notes?: string | null;
 }
 
 export interface CyclingWorkout {
