@@ -249,8 +249,6 @@ function AppContent() {
             {/* Blog routes */}
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPostRouter />} />
-            <Route path="/white-papers" element={<WhitePapersIndex />} />
-            <Route path="/white-papers/:slug" element={<WhitePaperRouter />} />
 
             {/* White-paper use cases */}
             <Route path="/white-papers" element={<WhitePapersIndex />} />
