@@ -14,6 +14,7 @@ import {
 } from "./core";
 import { Program, ProgramSummary } from "../functions/libs/program/types";
 import { logger } from "../functions/libs/logger";
+import { applyPaginationSlice } from "../functions/libs/pagination";
 
 // ===========================
 // TRAINING PROGRAM OPERATIONS
@@ -203,19 +204,48 @@ export async function queryProgramsByCoach(
   }
 }
 
+export interface QueryProgramsOptions {
+  status?: Program["status"];
+  limit?: number;
+  offset?: number;
+  sortOrder?: "asc" | "desc";
+  includeArchived?: boolean;
+  // Array of statuses to include (e.g., ["active", "paused"]) - more explicit and safer
+  includeStatus?: string[];
+  // In-memory coachId filter applied AFTER the GSI query and BEFORE slicing
+  // so pagination reflects the coach-scoped set rather than the raw user set.
+  coachId?: string;
+}
+
+export interface QueryProgramsPaginatedResult {
+  items: Program[];
+  totalCount: number;
+}
+
 /**
- * Query training programs for a user across all coaches using GSI-1
+ * Query training programs for a user across all coaches using GSI-1.
+ * Legacy list-only signature preserved for non-Manage callers (navigation,
+ * program designer, etc.) that continue to expect the full array. Internally
+ * delegates to {@link queryProgramsPaginated} so filtering, sorting, and
+ * pagination are defined in one place.
  */
 export async function queryPrograms(
   userId: string,
-  options?: {
-    status?: Program["status"];
-    limit?: number;
-    sortOrder?: "asc" | "desc";
-    includeArchived?: boolean;
-    includeStatus?: string[]; // Array of statuses to include (e.g., ["active", "paused"]) - more explicit and safer
-  },
+  options?: QueryProgramsOptions,
 ): Promise<Program[]> {
+  const { items } = await queryProgramsPaginated(userId, options);
+  return items;
+}
+
+/**
+ * Paginated variant that also returns the pre-slice totalCount. Used by the
+ * Manage Programs UI, which fetches per-status buckets with independent
+ * limit/offset and renders a Load more control for each bucket.
+ */
+export async function queryProgramsPaginated(
+  userId: string,
+  options?: QueryProgramsOptions,
+): Promise<QueryProgramsPaginatedResult> {
   const tableName = getTableName();
   const operationName = `Query all programs for user ${userId}`;
 
@@ -307,26 +337,37 @@ export async function queryPrograms(
       updatedAt: new Date(item.updatedAt),
     }));
 
-    // Sort by startDate
+    // Apply coachId filter before pagination so totalCount reflects the
+    // coach-scoped set and offset-based slices remain consistent.
+    if (options?.coachId) {
+      const coachId = options.coachId;
+      programs = programs.filter((p) => p.coachIds?.includes(coachId));
+    }
+
+    // Primary sort by startDate with a deterministic secondary sort on
+    // programId so offset-based pagination slices are stable across
+    // requests when two programs share a startDate.
     programs.sort((a, b) => {
       const dateA = new Date(a.startDate).getTime();
       const dateB = new Date(b.startDate).getTime();
-      return options?.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      const primary =
+        options?.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      if (primary !== 0) return primary;
+      return a.programId.localeCompare(b.programId);
     });
 
-    // Apply limit if specified
-    if (options?.limit) {
-      programs = programs.slice(0, options.limit);
-    }
+    const totalCount = programs.length;
+    const items = applyPaginationSlice(programs, options || {});
 
     logger.info("All training programs queried successfully:", {
       userId,
-      totalFound: programs.length,
+      totalCount,
+      returned: items.length,
       pagesRead: pageCount,
       filters: options,
     });
 
-    return programs;
+    return { items, totalCount };
   }, operationName);
 }
 

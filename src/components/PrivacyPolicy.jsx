@@ -7,9 +7,14 @@ import {
   buttonPatterns
 } from '../utils/ui/uiPatterns';
 import Footer from './shared/Footer';
+import { useSeoHead } from '../hooks/useSeoHead';
 
 function PrivacyPolicy() {
   const navigate = useNavigate();
+  useSeoHead({
+    description:
+      "Privacy policy for NeonPanda — how we collect, use, and protect your data while building personalized AI coaches.",
+  });
 
   // Auto-scroll to top when page loads
   useEffect(() => {

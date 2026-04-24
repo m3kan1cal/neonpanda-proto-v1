@@ -2342,9 +2342,21 @@ const WorkoutViewer = ({
                   runningData: disciplineData,
                   sectionIds: [6, 7], // Special case: Running uses array
                 },
+                trail_running: {
+                  trailRunningData: disciplineData,
+                  sectionIds: ["trail_details", "trail_segments"],
+                },
                 cycling: {
                   cyclingData: disciplineData,
                   sectionIds: [12, 13], // Special case: Cycling uses array
+                },
+                backpacking: {
+                  backpackingData: disciplineData,
+                  sectionIds: ["backpacking_details", "backpacking_segments"],
+                },
+                rucking: {
+                  ruckingData: disciplineData,
+                  sectionIds: ["rucking_details", "rucking_segments"],
                 },
                 bodybuilding: {
                   bodybuildingData: disciplineData,

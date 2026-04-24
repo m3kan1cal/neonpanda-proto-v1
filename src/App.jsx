@@ -106,7 +106,7 @@ function AppContent() {
     "/auth", // Includes all auth child routes (signin, signup, etc.)
     "/welcome", // Post-checkout welcome page
     "/blog", // Blog index and all blog posts
-    "/white-papers", // Use-case white papers (public)
+    "/white-papers", // White papers hub and individual paper routes
     "/docs", // Documentation pages
     "/shared", // Shared program previews (public access)
   ];
@@ -249,6 +249,8 @@ function AppContent() {
             {/* Blog routes */}
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPostRouter />} />
+            <Route path="/white-papers" element={<WhitePapersIndex />} />
+            <Route path="/white-papers/:slug" element={<WhitePaperRouter />} />
 
             {/* White-paper use cases */}
             <Route path="/white-papers" element={<WhitePapersIndex />} />

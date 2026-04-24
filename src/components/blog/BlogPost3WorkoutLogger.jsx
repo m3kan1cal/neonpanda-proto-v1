@@ -44,8 +44,8 @@ function BlogPost3WorkoutLogger() {
             This is the Workout Logger Agent.
           </span>{" "}
           And it's smarter than it looks. This post dives into how we built an
-          AI that speaks fluent fitness across ten disciplines, understands the
-          difference between "Fran" and "Grace," and knows that "felt heavy"
+          AI that speaks fluent fitness across fourteen disciplines, understands
+          the difference between "Fran" and "Grace," and knows that "felt heavy"
           means something different to a powerlifter than a runner.
         </p>
       </section>
@@ -224,7 +224,7 @@ function BlogPost3WorkoutLogger() {
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan mb-6`}
         >
-          Speaking Nine Languages: Discipline Intelligence
+          Speaking Fourteen Languages: Discipline Intelligence
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
           Here's the thing about fitness: there is no universal workout format.
@@ -497,7 +497,7 @@ function BlogPost3WorkoutLogger() {
         {/* Full Discipline Support */}
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
           <h3 className="font-body font-semibold text-xl text-synthwave-neon-cyan mb-4">
-            10 Disciplines, One Agent
+            14 Disciplines, One Agent
           </h3>
           <p className="text-synthwave-text-secondary font-body mb-4">
             The Workout Logger Agent automatically detects and applies the
@@ -510,11 +510,15 @@ function BlogPost3WorkoutLogger() {
               "Olympic Weightlifting",
               "Bodybuilding",
               "Running",
+              "Trail Running",
+              "Cycling",
               "HYROX",
               "Calisthenics",
               "Functional Bodybuilding",
               "Circuit Training",
               "Hybrid",
+              "Backpacking",
+              "Rucking",
             ].map((discipline, idx) => (
               <span key={idx} className={badgePatterns.cyan}>
                 {discipline}

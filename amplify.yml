@@ -51,6 +51,16 @@ applications:
         headers:
           - key: "Cache-Control"
             value: "no-store, max-age=0, must-revalidate"
+      # SEO discovery files must be served with correct MIME types so Google
+      # does not treat them as soft 404s.
+      - pattern: "/robots.txt"
+        headers:
+          - key: "Content-Type"
+            value: "text/plain; charset=utf-8"
+      - pattern: "/sitemap.xml"
+        headers:
+          - key: "Content-Type"
+            value: "application/xml; charset=utf-8"
     redirects:
       # Public pages - strip trailing slashes
       - source: "/about/"
@@ -77,8 +87,28 @@ applications:
       - source: "/blog/"
         target: "/blog"
         status: "301"
+      - source: "/white-papers/"
+        target: "/white-papers"
+        status: "301"
       - source: "/welcome/"
         target: "/welcome"
+        status: "301"
+
+      # Preserve the pre-React-route URL for the one externally linked white
+      # paper (Grant) so the April platform update email link keeps working.
+      # The other three papers weren't shared externally, but we 301 them too
+      # as cheap insurance for any internal references we missed.
+      - source: "/white-papers/use-case-grant-first-meet-prep.html"
+        target: "/white-papers/use-case-grant-first-meet-prep"
+        status: "301"
+      - source: "/white-papers/use-case-david-returning-athlete.html"
+        target: "/white-papers/use-case-david-returning-athlete"
+        status: "301"
+      - source: "/white-papers/use-case-james-functional-chaos.html"
+        target: "/white-papers/use-case-james-functional-chaos"
+        status: "301"
+      - source: "/white-papers/use-case-paige-respiratory-therapist-iterates.html"
+        target: "/white-papers/use-case-paige-respiratory-therapist-iterates"
         status: "301"
 
       # Protected pages - strip trailing slashes
@@ -101,6 +131,15 @@ applications:
       # API docs - serve static Swagger UI (before SPA fallback)
       - source: "/api-docs"
         target: "/api-docs/index.html"
+        status: "200"
+
+      # SEO discovery files - serve static files directly (before SPA fallback)
+      # so Googlebot does not receive the SPA shell (soft 404).
+      - source: "/robots.txt"
+        target: "/robots.txt"
+        status: "200"
+      - source: "/sitemap.xml"
+        target: "/sitemap.xml"
         status: "200"
 
       # SPA fallback - serve index.html for all other routes

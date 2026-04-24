@@ -1,5 +1,5 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
-import { queryWorkouts } from "../../dynamodb/operations";
+import { queryWorkoutsPaginated } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { logger } from "../libs/logger";
 
@@ -107,8 +107,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     filters: options,
   });
 
-  // Query workout sessions
-  const workouts = await queryWorkouts(userId, options);
+  // Query workout sessions with pagination metadata so we can report the
+  // pre-slice total alongside the page that was returned.
+  const { items: workouts, totalCount } = await queryWorkoutsPaginated(
+    userId,
+    options,
+  );
 
   // Transform the response to include summary information
   const workoutSummaries = workouts.map((session) => ({
@@ -155,7 +159,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   return createOkResponse({
     workouts: workoutSummaries,
-    totalCount: workoutSummaries.length,
+    // Dual-emit during the Load more transition: `count` keeps its legacy
+    // semantics (length of the page returned) so existing readers are
+    // unaffected, while `totalCount` is the authoritative post-filter,
+    // pre-slice row count used by the paginated Manage Workouts UI.
+    count: workoutSummaries.length,
+    totalCount,
   });
 };
 

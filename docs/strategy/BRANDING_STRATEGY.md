@@ -1,6 +1,7 @@
 # NeonPanda Brand Strategy
 
 ## Brand Essence
+
 **The electric fitness companion that makes AI coaching feel approachable, fun, and powerfully effective**
 
 NeonPanda represents the perfect fusion of cutting-edge technology (neon) with approachable warmth (panda). We're not just another fitness app – we're the platform that turns intimidating AI technology into your most trusted training partner.
@@ -8,20 +9,25 @@ NeonPanda represents the perfect fusion of cutting-edge technology (neon) with a
 ## Core Brand Values
 
 ### 1. **Playful Power**
+
 We believe serious results don't require a serious attitude. Our AI coaches are sophisticated enough to rival any human coach, yet approachable enough to feel like a friend who happens to be really good at fitness.
 
 ### 2. **Electric Energy**
+
 Like our neon glow, we bring vibrant energy to every interaction. We're the spark that ignites your fitness journey, the current that keeps you charged, and the bright light guiding you through tough workouts.
 
 ### 3. **Intelligent Approachability**
+
 We demystify both AI and fitness methodology. Complex periodization becomes simple conversation. Advanced biomechanics become friendly tips. We're PhD-level smart with a kindergarten-level ability to make you smile.
 
 ### 4. **Adaptive Authenticity**
+
 Every coach is custom, every personality unique. We don't do generic. Your AI coach learns, adapts, and evolves with you – maintaining consistency while growing alongside your journey.
 
 ## Brand Personality
 
 ### The NeonPanda Character
+
 - **Wise but not intimidating** – Like a panda that somehow got really into CrossFit
 - **Energetic but not exhausting** – Neon bright without being blinding
 - **Knowledgeable but not condescending** – We know our stuff but never talk down
@@ -31,6 +37,7 @@ Every coach is custom, every personality unique. We don't do generic. Your AI co
 ### Voice & Tone
 
 **Primary Voice Attributes:**
+
 - Conversational and warm
 - Confidently knowledgeable
 - Playfully motivating
@@ -38,6 +45,7 @@ Every coach is custom, every personality unique. We don't do generic. Your AI co
 - Technically precise when needed, simply clear always
 
 **Example Voice Comparisons:**
+
 - ❌ "Initiate your workout protocol"
 - ✅ "Ready to crush today's workout? Let's go!"
 
@@ -52,11 +60,13 @@ Every coach is custom, every personality unique. We don't do generic. Your AI co
 ### Color Palette
 
 **Primary Colors:**
+
 - **Electric Cyan** (#00FFFF) – Our signature neon glow
 - **Deep Black** (#0A0A0A) – The night our neon shines against
 - **Pure White** (#FFFFFF) – Clean, modern clarity
 
 **Secondary Colors:**
+
 - **Hot Pink** (#FF10F0) – Energy and excitement
 - **Lime Green** (#39FF14) – Growth and progress
 - **Electric Purple** (#BF00FF) – Wisdom and transformation
@@ -67,22 +77,26 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 ### Typography
 
 **Primary Font:** Modern, clean sans-serif (like Inter or Manrope)
+
 - Headers: Bold, impactful, slightly condensed
 - Body: Regular weight, optimized for readability
 
 **Display Font:** Custom or stylized for logo only
+
 - Should evoke both tech and approachability
 - Possibly incorporating subtle neon glow effects
 
 ### Logo & Mascot
 
 **Logo Concept:**
+
 - Minimalist panda face/silhouette
 - Incorporated neon elements (glowing eyes, outline, or bamboo)
 - Works in full color and monochrome
 - Scalable from app icon to billboard
 
 **Mascot Usage:**
+
 - Not omnipresent – appears at key moments
 - Celebration animations
 - Loading states
@@ -96,6 +110,7 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 **Primary Tagline:** "Your AI Coach, Powered by Personality"
 
 **Alternative Taglines:**
+
 - "Where AI Meets High Fives"
 - "Seriously Smart, Refreshingly Fun"
 - "Custom Coaches, Electric Results"
@@ -135,18 +150,21 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 ### Product Experience
 
 **Onboarding:**
+
 - Conversational, not form-based
 - Personality shines from first interaction
 - Clear value demonstration within 2 minutes
 - Celebration of coach creation
 
 **Daily Interactions:**
+
 - Morning motivation with personality
 - Workout delivery with encouragement
 - Progress celebrations with genuine excitement
 - Struggle support with empathy
 
 **Key Moments:**
+
 - PR celebrations: Full neon light show
 - Milestone achievements: Panda party animations
 - Consistency streaks: Electric energy buildups
@@ -155,12 +173,14 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 ### Marketing Channels
 
 **Social Media Voice:**
+
 - Instagram: Visual progress stories with neon aesthetics
 - TikTok: Funny coach personality showcases
 - Twitter/X: Quick wit and training wisdom
 - YouTube: Deep dives that don't feel like lectures
 
 **Content Themes:**
+
 - "Coaches Say the Darndest Things" – funny AI coach quotes
 - "Neon Transformations" – before/after stories
 - "Panda Wisdom" – bite-sized training tips
@@ -169,12 +189,14 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 ### Community Building
 
 **NeonPanda Community Values:**
+
 - Celebrate every victory, no matter how small
 - Support through struggles without toxic positivity
 - Share knowledge without gatekeeping
 - Compete with yourself, encourage everyone else
 
 **Community Initiatives:**
+
 - Monthly challenges with neon-themed rewards
 - Coach personality contests
 - User spotlight features
@@ -183,6 +205,7 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 ## Competitive Positioning
 
 ### What We're NOT
+
 - Not another generic fitness app
 - Not intimidating tech for tech's sake
 - Not one-size-fits-all programming
@@ -190,6 +213,7 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 - Not bro-culture fitness
 
 ### What We ARE
+
 - The most personalized AI coaching platform
 - The bridge between high-tech and high-touch
 - The fitness platform that makes you smile
@@ -199,23 +223,27 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 ## Brand Evolution Path
 
 ### Phase 1: Launch (Months 1-6)
+
 - Establish core brand identity
 - Focus on approachability message
 - Build initial community around CrossFit
 
 ### Phase 2: Growth (Months 6-12)
+
 - Expand personality showcase
 - Introduce coach personality contests
 - Develop signature visual style
 
 ### Phase 3: Expansion (Year 2+)
-- Extend to new fitness disciplines
+
+- Extend to new fitness disciplines (now 14 supported, including mountain disciplines: trail running, backpacking, and rucking)
 - Develop sub-brands for different markets
 - Create NeonPanda certification program
 
 ## Brand Guidelines Summary
 
 ### Do's
+
 - Use neon sparingly but impactfully
 - Keep messaging conversational and warm
 - Celebrate user achievements enthusiastically
@@ -223,6 +251,7 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 - Show personality in every interaction
 
 ### Don'ts
+
 - Don't overuse technical jargon
 - Don't be generically motivational
 - Don't hide the AI nature – embrace it
@@ -232,6 +261,7 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 ## Measuring Brand Success
 
 ### Brand Health Metrics
+
 - User description alignment (do users describe us as intended?)
 - Emotional connection scores
 - Brand recall and recognition
@@ -239,10 +269,11 @@ Neon colors are used sparingly but impactfully – like accent lights in a dark 
 - Word-of-mouth referral quality
 
 ### Brand Perception Goals
+
 - Year 1: "The fun AI fitness coach creator"
 - Year 2: "The must-have personalized coaching platform"
 - Year 3: "The definitive AI coaching ecosystem"
 
 ---
 
-*NeonPanda: Where electric intelligence meets approachable excellence. We're not just building AI coaches – we're creating relationships that transform lives, one workout at a time.*
+_NeonPanda: Where electric intelligence meets approachable excellence. We're not just building AI coaches – we're creating relationships that transform lives, one workout at a time._

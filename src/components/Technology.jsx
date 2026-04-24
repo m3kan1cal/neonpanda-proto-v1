@@ -7,10 +7,15 @@ import {
   buttonPatterns,
 } from "../utils/ui/uiPatterns";
 import Footer from "./shared/Footer";
+import { useSeoHead } from "../hooks/useSeoHead";
 
 function Technology() {
   const navigate = useNavigate();
   const [modalImage, setModalImage] = useState(null);
+  useSeoHead({
+    description:
+      "The technology behind NeonPanda — agentic AI, Amazon Bedrock, Pinecone, and a serverless AWS architecture powering real-time fitness coaching.",
+  });
 
   // Auto-scroll to top when page loads
   useEffect(() => {
@@ -124,7 +129,7 @@ function Technology() {
               with specialized agents for every aspect of your coaching
               experience. Think of it as your personal coaching staff—each
               specialist doing what they do best, seamlessly coordinating across
-              11 supported disciplines to create your perfect training
+              14 supported disciplines to create your perfect training
               experience.
             </p>
 
@@ -235,7 +240,7 @@ function Technology() {
                     and executor models for validation and parallel
                     processing—ensuring your training follows intelligent
                     progression principles whether you're doing CrossFit,
-                    powerlifting, HYROX, or any of our 11 supported disciplines
+                    powerlifting, HYROX, or any of our 14 supported disciplines
                   </p>
                 </div>
               </div>
@@ -274,7 +279,7 @@ function Technology() {
                     <strong className="text-synthwave-neon-cyan">
                       How it works:
                     </strong>{" "}
-                    Using discipline detection across 10 supported training
+                    Using discipline detection across 14 supported training
                     styles, this agent understands everything from "Did Fran in
                     8:45" to complex powerlifting sessions with warmups and
                     working sets. It handles temporal awareness, partner
@@ -509,7 +514,7 @@ function Technology() {
                       <strong className="text-synthwave-neon-cyan">
                         Discipline Detection:
                       </strong>{" "}
-                      Automatic classification across 11 training disciplines
+                      Automatic classification across 14 training disciplines
                       for targeted extraction schemas and methodology alignment
                     </span>
                   </li>
@@ -950,7 +955,7 @@ function Technology() {
                           Additional Specialized Models:
                         </strong>{" "}
                         Custom-selected models optimized for specific coaching
-                        functions across 11 supported disciplines
+                        functions across 14 supported disciplines
                       </span>
                     </li>
                   </ul>
@@ -1172,7 +1177,7 @@ function Technology() {
                 </h4>
                 <p className={`${typographyPatterns.description} mb-4`}>
                   Our training principles are reviewed by certified coaches and
-                  experienced athletes across all 11 supported disciplines. We
+                  experienced athletes across all 14 supported disciplines. We
                   blend cutting-edge AI with time-tested wisdom from established
                   programming methodologies.
                 </p>

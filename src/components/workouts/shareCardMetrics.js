@@ -362,6 +362,75 @@ export function buildShareCardMetrics(workoutData) {
         unit: "",
       });
     }
+  } else if (discipline === "trail_running") {
+    const tr = ds.trail_running || {};
+    if (tr.total_distance) {
+      metrics.push({
+        label: "Distance",
+        value: String(tr.total_distance),
+        unit: tr.distance_unit || "mi",
+      });
+    }
+    if (tr.elevation_gain) {
+      metrics.push({
+        label: "Vert",
+        value: String(tr.elevation_gain),
+        unit: tr.elevation_unit || "ft",
+      });
+    }
+    if (tr.average_pace) {
+      metrics.push({
+        label: "Avg Pace",
+        value: tr.average_pace,
+        unit: `/${tr.distance_unit || "mi"}`,
+      });
+    }
+  } else if (discipline === "backpacking") {
+    const bp = ds.backpacking || {};
+    if (bp.total_distance) {
+      metrics.push({
+        label: "Distance",
+        value: String(bp.total_distance),
+        unit: bp.distance_unit || "mi",
+      });
+    }
+    if (bp.elevation_gain) {
+      metrics.push({
+        label: "Vert",
+        value: String(bp.elevation_gain),
+        unit: bp.elevation_unit || "ft",
+      });
+    }
+    if (bp.pack_weight != null) {
+      metrics.push({
+        label: "Pack",
+        value: String(bp.pack_weight),
+        unit: bp.pack_weight_unit || "lbs",
+      });
+    }
+  } else if (discipline === "rucking") {
+    const rk = ds.rucking || {};
+    if (rk.total_distance) {
+      metrics.push({
+        label: "Distance",
+        value: String(rk.total_distance),
+        unit: rk.distance_unit || "mi",
+      });
+    }
+    if (rk.pack_weight != null) {
+      metrics.push({
+        label: "Pack",
+        value: String(rk.pack_weight),
+        unit: rk.pack_weight_unit || "lbs",
+      });
+    }
+    if (rk.average_pace) {
+      metrics.push({
+        label: "Avg Pace",
+        value: rk.average_pace,
+        unit: `/${rk.distance_unit || "mi"}`,
+      });
+    }
   }
 
   // Universal fallbacks — RPE and Intensity are excluded here because they
@@ -633,6 +702,84 @@ export function buildShareCardExercises(workoutData) {
     }
     if (cyc.surface) {
       results.push({ name: "Surface", detail: capitalizeWords(cyc.surface) });
+    }
+  } else if (discipline === "trail_running") {
+    const tr = ds.trail_running || {};
+    const distUnit = tr.distance_unit || "mi";
+    const elevUnit = tr.elevation_unit || "ft";
+    if (tr.total_distance) {
+      const detailParts = [`${tr.total_distance} ${distUnit}`];
+      if (tr.average_pace) detailParts.push(`@ ${tr.average_pace}`);
+      results.push({
+        name: capitalizeWords(tr.run_type || "Trail Run"),
+        detail: detailParts.join(" "),
+      });
+    }
+    if (tr.elevation_gain) {
+      results.push({
+        name: "Vert",
+        detail: `+${tr.elevation_gain} ${elevUnit}${tr.elevation_loss ? ` / -${tr.elevation_loss} ${elevUnit}` : ""}`,
+      });
+    }
+    if (tr.technicality) {
+      results.push({
+        name: "Technicality",
+        detail: capitalizeWords(tr.technicality),
+      });
+    }
+    if (tr.race_name) {
+      results.push({ name: "Race", detail: tr.race_name });
+    }
+  } else if (discipline === "backpacking") {
+    const bp = ds.backpacking || {};
+    const distUnit = bp.distance_unit || "mi";
+    const elevUnit = bp.elevation_unit || "ft";
+    if (bp.total_distance) {
+      results.push({
+        name: bp.trip_name || "Backpacking",
+        detail: `${bp.total_distance} ${distUnit}`,
+      });
+    }
+    if (bp.pack_weight != null) {
+      results.push({
+        name: "Pack Weight",
+        detail: `${bp.pack_weight} ${bp.pack_weight_unit || "lbs"}`,
+      });
+    }
+    if (bp.elevation_gain) {
+      results.push({
+        name: "Elevation Gain",
+        detail: `${bp.elevation_gain} ${elevUnit}`,
+      });
+    }
+    if (bp.trip_day && bp.total_trip_days) {
+      results.push({
+        name: "Trip Day",
+        detail: `Day ${bp.trip_day} of ${bp.total_trip_days}`,
+      });
+    }
+  } else if (discipline === "rucking") {
+    const rk = ds.rucking || {};
+    const distUnit = rk.distance_unit || "mi";
+    if (rk.total_distance) {
+      const detailParts = [`${rk.total_distance} ${distUnit}`];
+      if (rk.average_pace) detailParts.push(`@ ${rk.average_pace}`);
+      results.push({
+        name: capitalizeWords(rk.ruck_type || "Ruck"),
+        detail: detailParts.join(" "),
+      });
+    }
+    if (rk.pack_weight != null) {
+      results.push({
+        name: "Pack Weight",
+        detail: `${rk.pack_weight} ${rk.pack_weight_unit || "lbs"}`,
+      });
+    }
+    if (rk.cadence != null) {
+      results.push({ name: "Cadence", detail: `${rk.cadence} spm` });
+    }
+    if (rk.event_name) {
+      results.push({ name: "Event", detail: rk.event_name });
     }
   }
 

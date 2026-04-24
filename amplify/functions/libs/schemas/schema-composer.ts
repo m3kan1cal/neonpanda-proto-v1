@@ -28,16 +28,27 @@ import { CALISTHENICS_SCHEMA_PLUGIN } from "./disciplines/calisthenics-schema";
 import { CIRCUIT_TRAINING_SCHEMA_PLUGIN } from "./disciplines/circuit-training-schema";
 import { HYBRID_SCHEMA_PLUGIN } from "./disciplines/hybrid-schema";
 import { CYCLING_SCHEMA_PLUGIN } from "./disciplines/cycling-schema";
+import { TRAIL_RUNNING_SCHEMA_PLUGIN } from "./disciplines/trail-running-schema";
+import { BACKPACKING_SCHEMA_PLUGIN } from "./disciplines/backpacking-schema";
+import { RUCKING_SCHEMA_PLUGIN } from "./disciplines/rucking-schema";
 import { logger } from "../logger";
 
 /**
- * Map of discipline names to their schema plugins
+ * Map of discipline names to their schema plugins.
+ *
+ * Must cover every value in `SUPPORTED_DISCIPLINES`
+ * (`amplify/functions/libs/exercise/types.ts`). If a new discipline lands in
+ * `ExerciseDiscipline` without a plugin registered here, `composeWorkoutSchema`
+ * silently falls back to `hybrid` and all of that discipline's extraction
+ * functions, Pinecone metadata, and UI sections stop receiving data — so
+ * register the plugin in the same PR that introduces the discipline.
  */
 const DISCIPLINE_PLUGIN_MAP: Record<string, any> = {
   crossfit: CROSSFIT_SCHEMA_PLUGIN,
   powerlifting: POWERLIFTING_SCHEMA_PLUGIN,
   bodybuilding: BODYBUILDING_SCHEMA_PLUGIN,
   running: RUNNING_SCHEMA_PLUGIN,
+  trail_running: TRAIL_RUNNING_SCHEMA_PLUGIN,
   hyrox: HYROX_SCHEMA_PLUGIN,
   olympic_weightlifting: OLYMPIC_WEIGHTLIFTING_SCHEMA_PLUGIN,
   functional_bodybuilding: FUNCTIONAL_BODYBUILDING_SCHEMA_PLUGIN,
@@ -45,6 +56,8 @@ const DISCIPLINE_PLUGIN_MAP: Record<string, any> = {
   circuit_training: CIRCUIT_TRAINING_SCHEMA_PLUGIN,
   hybrid: HYBRID_SCHEMA_PLUGIN,
   cycling: CYCLING_SCHEMA_PLUGIN,
+  backpacking: BACKPACKING_SCHEMA_PLUGIN,
+  rucking: RUCKING_SCHEMA_PLUGIN,
 };
 
 /**

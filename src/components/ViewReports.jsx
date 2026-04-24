@@ -27,6 +27,9 @@ import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
 import MarkdownRenderer from "./shared/MarkdownRenderer";
+import LoadMoreButton from "./shared/LoadMoreButton";
+import { LIST_PAGE_SIZE } from "../constants/pagination";
+import { notifyLoadMoreError } from "../utils/loadMoreErrors";
 import { logger } from "../utils/logger";
 import {
   StackIcon,
@@ -143,10 +146,17 @@ function ViewReports() {
     allMonthlyReports: [], // For monthly reports grid
     isLoadingAllItems: !!userId, // Start loading if we have userId
     isLoadingAllMonthlyItems: false,
+    isLoadingMoreAllItems: false,
+    isLoadingMoreAllMonthlyItems: false,
     isLoadingItem: false,
     error: null,
+    // `totalCount` values come from the paginated list response and are
+    // authoritative for the weekly/monthly QuickStats "Total Reports"
+    // counter and the Load more `hasMore` check.
     totalCount: 0,
     totalMonthlyCount: 0,
+    allReportsOffset: 0,
+    allMonthlyReportsOffset: 0,
   });
 
   // Tab state
@@ -211,11 +221,29 @@ function ViewReports() {
             newState.allMonthlyReports || prevState.allMonthlyReports,
           isLoadingAllItems: newState.isLoadingAllItems || false,
           isLoadingAllMonthlyItems: newState.isLoadingAllMonthlyItems || false,
+          isLoadingMoreAllItems: newState.isLoadingMoreAllItems || false,
+          isLoadingMoreAllMonthlyItems:
+            newState.isLoadingMoreAllMonthlyItems || false,
           isLoadingItem: newState.isLoadingItem || false,
           error: newState.error || null,
-          totalCount: newState.allReports?.length || prevState.totalCount,
+          // Prefer server-reported totals so QuickStats and Load more
+          // both use the post-filter, pre-slice totals.
+          totalCount:
+            typeof newState.allReportsTotalCount === "number"
+              ? newState.allReportsTotalCount
+              : prevState.totalCount,
           totalMonthlyCount:
-            newState.allMonthlyReports?.length || prevState.totalMonthlyCount,
+            typeof newState.allMonthlyReportsTotalCount === "number"
+              ? newState.allMonthlyReportsTotalCount
+              : prevState.totalMonthlyCount,
+          allReportsOffset:
+            typeof newState.allReportsOffset === "number"
+              ? newState.allReportsOffset
+              : prevState.allReportsOffset,
+          allMonthlyReportsOffset:
+            typeof newState.allMonthlyReportsOffset === "number"
+              ? newState.allMonthlyReportsOffset
+              : prevState.allMonthlyReportsOffset,
         }));
       });
 
@@ -250,11 +278,12 @@ function ViewReports() {
           error: null,
         }));
 
-        // Load all weekly reports without date filtering
+        // Load the first page of weekly reports; remaining pages are
+        // fetched on demand by the Load more button below.
         await reportAgentRef.current.loadAllReports({
           sortBy: "weekStart",
           sortOrder: "desc",
-          limit: 100, // Get up to 100 reports (increased from 50)
+          limit: LIST_PAGE_SIZE,
         });
       } catch (error) {
         logger.error("Error loading report history:", error);
@@ -278,11 +307,12 @@ function ViewReports() {
           error: null,
         }));
 
-        // Load all monthly reports
+        // Load the first page of monthly reports; remaining pages are
+        // fetched on demand by the Load more button below.
         await reportAgentRef.current.loadAllMonthlyReports({
           sortBy: "monthStart",
           sortOrder: "desc",
-          limit: 50,
+          limit: LIST_PAGE_SIZE,
         });
       } catch (error) {
         logger.error("Error loading monthly report history:", error);
@@ -657,6 +687,34 @@ function ViewReports() {
     );
   };
 
+  // Load more handlers — each tab loads and fails independently so a
+  // network error on weekly does not block monthly (and vice versa).
+  const handleLoadMoreWeekly = async () => {
+    if (!reportAgentRef.current) return;
+    try {
+      await reportAgentRef.current.loadMoreReports(LIST_PAGE_SIZE);
+    } catch (err) {
+      notifyLoadMoreError(
+        { error },
+        err,
+        "Failed to load more weekly reports. Tap Load more to retry.",
+      );
+    }
+  };
+
+  const handleLoadMoreMonthly = async () => {
+    if (!reportAgentRef.current) return;
+    try {
+      await reportAgentRef.current.loadMoreMonthlyReports(LIST_PAGE_SIZE);
+    } catch (err) {
+      notifyLoadMoreError(
+        { error },
+        err,
+        "Failed to load more monthly reports. Tap Load more to retry.",
+      );
+    }
+  };
+
   // Handle coach card click - navigate to training grounds
   const handleCoachCardClick = () => {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
@@ -673,14 +731,16 @@ function ViewReports() {
     },
   );
 
-  // Show loading while validating userId or loading reports
-  if (
-    isValidatingUserId ||
-    (reportAgentState.isLoadingAllItems &&
-      reportAgentState.allReports.length === 0) ||
-    (reportAgentState.isLoadingAllMonthlyItems &&
-      reportAgentState.allMonthlyReports.length === 0)
-  ) {
+  // Show loading while validating userId or loading the active tab's
+  // initial page. Each tab loads independently so an in-flight fetch
+  // on the inactive tab does not block the active one.
+  const isActiveTabInitialLoading =
+    activeTab === "weekly"
+      ? reportAgentState.isLoadingAllItems &&
+        reportAgentState.allReports.length === 0
+      : reportAgentState.isLoadingAllMonthlyItems &&
+        reportAgentState.allMonthlyReports.length === 0;
+  if (isValidatingUserId || isActiveTabInitialLoading) {
     // Single card skeleton matching the exact real card structure
     const ReportCardSkeleton = () => (
       <div className={`${containerPatterns.cardMedium} p-6 mb-6`}>
@@ -822,14 +882,17 @@ function ViewReports() {
                 ? [
                     {
                       icon: StackIcon,
-                      value: reportAgentState.allReports.length || 0,
+                      // Authoritative full-dataset count from the paginated
+                      // list response; reflects every weekly report not
+                      // just the loaded subset.
+                      value: reportAgentState.totalCount || 0,
                       tooltip: {
                         title: "Total Reports",
                         description: "All weekly reports",
                       },
                       color: "pink",
                       isLoading: reportAgentState.isLoading,
-                      ariaLabel: `${reportAgentState.allReports.length || 0} total reports`,
+                      ariaLabel: `${reportAgentState.totalCount || 0} total reports`,
                     },
                     {
                       icon: CalendarMonthIcon,
@@ -903,14 +966,17 @@ function ViewReports() {
                 : [
                     {
                       icon: StackIcon,
-                      value: reportAgentState.allMonthlyReports.length || 0,
+                      // Authoritative full-dataset count from the paginated
+                      // list response; reflects every monthly report not
+                      // just the loaded subset.
+                      value: reportAgentState.totalMonthlyCount || 0,
                       tooltip: {
                         title: "Total Reports",
                         description: "All monthly reports",
                       },
                       color: "purple",
                       isLoading: reportAgentState.isLoadingAllMonthlyItems,
-                      ariaLabel: `${reportAgentState.allMonthlyReports.length || 0} total monthly reports`,
+                      ariaLabel: `${reportAgentState.totalMonthlyCount || 0} total monthly reports`,
                     },
                     {
                       icon: CalendarMonthIcon,
@@ -1087,6 +1153,14 @@ function ViewReports() {
                       ))}
                   </div>
                 </div>
+                <LoadMoreButton
+                  onClick={handleLoadMoreWeekly}
+                  isLoading={reportAgentState.isLoadingMoreAllItems}
+                  hasMore={
+                    reportAgentState.allReports.length <
+                    reportAgentState.totalCount
+                  }
+                />
               </div>
             )}
 
@@ -1127,6 +1201,14 @@ function ViewReports() {
                       ))}
                   </div>
                 </div>
+                <LoadMoreButton
+                  onClick={handleLoadMoreMonthly}
+                  isLoading={reportAgentState.isLoadingMoreAllMonthlyItems}
+                  hasMore={
+                    reportAgentState.allMonthlyReports.length <
+                    reportAgentState.totalMonthlyCount
+                  }
+                />
               </div>
             )}
           <AppFooter />

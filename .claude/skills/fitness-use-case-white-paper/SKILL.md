@@ -24,25 +24,26 @@ Use this skill when synthesizing **real user journeys** into a **public-facing**
 Ask these four questions **up front** before any analysis or drafting. Use a structured multiple-choice prompt when the tooling supports it (e.g. `AskUserQuestion`); otherwise ask them inline. Do not guess—the answers shape framing, tone, and file output.
 
 1. **Naming / identity handling.** Options:
-   - *Pseudonym* (recommended default) — invented first name or persona label.
-   - *Real first name only* — requires confirmed consent.
-   - *Real full name* — requires explicit written clearance for public use.
-   - *Segment / composite label* — no personal name at all (e.g. "a masters-age CrossFitter"). Required if framing as a multi-user composite.
+   - _Pseudonym_ (recommended default) — invented first name or persona label.
+   - _Real first name only_ — requires confirmed consent.
+   - _Real full name_ — requires explicit written clearance for public use.
+   - _Segment / composite label_ — no personal name at all (e.g. "a masters-age CrossFitter"). Required if framing as a multi-user composite.
 2. **Red lines on quoted or cited detail.** Multi-select. Options:
-   - *No direct message quotes* (paraphrase only).
-   - *No specific numeric PRs / loads / body metrics* (keep quantitative claims qualitative).
-   - *No injury or medical detail.*
-   - *None* — use what the data supports, subject to normal evidence and privacy discipline.
+   - _No direct message quotes_ (paraphrase only).
+   - _No specific numeric PRs / loads / body metrics_ (keep quantitative claims qualitative).
+   - _No injury or medical detail._
+   - _None_ — use what the data supports, subject to normal evidence and privacy discipline.
 3. **Deliverable format.** Options:
-   - *Markdown only* (default) — single `.md` with shareable summary + ~2–3 page story.
-   - *Markdown + HTML* — adds a polished, single-file, self-contained `.html` using Inter + Barlow fonts and a clean light theme (same aesthetic conventions as the `kanban-delivery-report` skill). Best when the user will share via link, Slack, or email preview.
-   - *Markdown + Word (.docx)* — for editorial review by non-technical reviewers.
-   - *Markdown + PDF* — for read-only external distribution.
+   - _React route (default)_ — adds a new `UseCase<Subject>.jsx` under `src/components/white-papers/papers/` using the shared `WhitePaperLayout` + primitives (see "React route output" below) and a new entry in `src/data/whitePapers.js`. This is what the public `/white-papers/<slug>` URLs serve. Drop the subject's portrait (if any) into `public/images/white-papers/`.
+   - _Markdown only_ — single `.md` with shareable summary + ~2–3 page story. Use for quick drafts, internal shares, or when a React route isn't desired yet.
+   - _Archival HTML export_ — a single self-contained `.html` written to `exports/` for email attachments, Slack previews, or standalone archival. Treat this as a **secondary** deliverable; do not put it under `public/` (those URLs now belong to the React route). Same typography and palette as the React route.
+   - _Markdown + Word (.docx)_ — for editorial review by non-technical reviewers.
+   - _Markdown + PDF_ — for read-only external distribution.
 4. **Consent status.** Enumerate clearly; the answer must be surfaced in the deliverable's **Method & limitations** section:
-   - *Internal draft only* — not cleared for external sharing. Label "Internal draft" visibly.
-   - *Draft for subject review* — subject has given conditional consent, wants to review before external publication. Add a visible "Draft · For subject review" badge to the output (markdown frontmatter note + HTML footer tag). Do not frame as publication-ready copy.
-   - *Consent obtained, public-ready* — cleared for external publication now.
-   - *Unsure* — treat conservatively (anonymized, no direct quotes, flag as draft pending consent).
+   - _Internal draft only_ — not cleared for external sharing. Label "Internal draft" visibly.
+   - _Draft for subject review_ — subject has given conditional consent, wants to review before external publication. Add a visible "Draft · For subject review" badge to the output (markdown frontmatter note + HTML footer tag). Do not frame as publication-ready copy.
+   - _Consent obtained, public-ready_ — cleared for external publication now.
+   - _Unsure_ — treat conservatively (anonymized, no direct quotes, flag as draft pending consent).
 
 **Subject scope** (infer from context; confirm if ambiguous): one user, cohort, or anonymized composite. If composite, say so explicitly in copy.
 
@@ -78,7 +79,7 @@ The doc is for **prospects**, but it must also read well for the **person whose 
 
 ## Product-enabler beats (show how NeonPanda helped)
 
-The subject carries the story; NeonPanda is the **partner that adapted around them**. For every major narrative beat, the writer should be able to answer: *"what product capability made this moment possible?"* — without turning the paper into a feature list.
+The subject carries the story; NeonPanda is the **partner that adapted around them**. For every major narrative beat, the writer should be able to answer: _"what product capability made this moment possible?"_ — without turning the paper into a feature list.
 
 Practical technique: for each of the 2–3 representative moments, write one sentence (1) about what the user did, and (2) about the underlying product mechanism (e.g. "the Sabbath constraint got encoded as a high-importance behavioral memory, so every downstream conversation reads it first"). Weave the mechanism into the narrative; don't section it off as "Features used."
 
@@ -206,15 +207,70 @@ Raw dump handling (how records were separated), date range, gaps, known data qui
 1–2 lines approved or clearly paraphrased for reuse elsewhere.
 ```
 
-## HTML output conventions (when requested)
+## React route output (default)
 
-When the user chooses "Markdown + HTML," produce a **single, self-contained** `.html` file alongside the markdown (same base filename, `.html` extension). Follow these conventions:
+The public white-paper surface is a first-class React route at `/white-papers/<slug>`, rendered by `src/components/white-papers/WhitePaperRouter.jsx` and reading from `src/data/whitePapers.js`. When the user chooses the React route deliverable, produce:
+
+1. **A new data entry in `src/data/whitePapers.js`** with `slug`, `title`, `subtitle`, `subject`, `description`, `status`, `publishedAt`, `readTime`, and `topics`. The `slug` drives the URL and must match the component filename.
+2. **A new component at `src/components/white-papers/papers/UseCase<Subject>.jsx`** that imports:
+   - `WhitePaperLayout` from `../WhitePaperLayout`
+   - The primitives (`ShareCard`, `Callout`, `AtAGlance`, `MethodLimitations`, `SubjectPortrait`, `PullQuotes`, `Beat`) from `../primitives`
+   - `getWhitePaperBySlug` from `../../../data/whitePapers`
+
+   Resolve the paper with `getWhitePaperBySlug("<slug>")` and render the body inside `<WhitePaperLayout paper={paper} headline="..." deck="...">`. Use `headline` / `deck` props when the paper's internal h1 is longer than the hub-card title; otherwise let the layout fall back to `paper.title` / `paper.subtitle`.
+
+3. **Registration in `src/components/white-papers/WhitePaperRouter.jsx`** — add the slug → component pair to `whitePaperComponents`.
+4. **Nav is automatic.** The paper appears on the `/white-papers` hub as soon as it's in the data module; no separate nav edits are needed for individual papers.
+5. **Subject portrait (optional):** drop the image into `public/images/white-papers/<slug>-avatar.png` and reference it via `<SubjectPortrait src="/images/white-papers/..." alt="..." caption="..." />`.
+6. **Canonical URL:** `https://neonpanda.ai/white-papers/<slug>` (no `.html`). The layout's `useEffect` sets `document.title`, meta description, OG tags, and the canonical link from the data entry automatically.
+
+Shape of a minimal paper component:
+
+```jsx
+import React from "react";
+import WhitePaperLayout from "../WhitePaperLayout";
+import {
+  ShareCard,
+  Callout,
+  AtAGlance,
+  MethodLimitations,
+  Beat,
+} from "../primitives";
+import { getWhitePaperBySlug } from "../../../data/whitePapers";
+
+function UseCaseSubject() {
+  const paper = getWhitePaperBySlug("use-case-<slug>");
+  return (
+    <WhitePaperLayout paper={paper} headline="..." deck="...">
+      <ShareCard>{/* shareable summary */}</ShareCard>
+      <hr />
+      <h2>The story</h2>
+      <h3>At a glance</h3>
+      <AtAGlance>{/* <ul>...</ul> */}</AtAGlance>
+      {/* body sections */}
+      <Beat num="1" title="...">
+        {/* first narrative beat */}
+      </Beat>
+      <Callout kicker="...">{/* tinted callout */}</Callout>
+      <MethodLimitations>{/* <li>...</li> items */}</MethodLimitations>
+    </WhitePaperLayout>
+  );
+}
+
+export default UseCaseSubject;
+```
+
+All the paper chrome (site header, kicker, h1/subtitle, doc-meta, footer brand strip, scoped stylesheet) lives inside `WhitePaperLayout`. The paper component stays focused on content.
+
+## Archival HTML export (optional)
+
+When the user also wants a standalone HTML file (for email, Slack, or archival), produce a **single, self-contained** `.html` file under `exports/` (never under `public/`). The React route at `/white-papers/<slug>` is the canonical public URL. Follow these conventions:
 
 - **Fonts**: Inter (body) + Barlow (headings, kickers, mascot-ish chrome), loaded from Google Fonts. Mirrors the `kanban-delivery-report` skill's typography.
-- **Palette**: light theme — white background (#fff), near-black body ink (#0a0a0a), muted gray secondary ink (#3a3a3a / #666), soft border (#e6e6e6). Neon used *sparingly* as accent only: Electric Cyan (#00b8b8 body-safe; #00ffff bright) for the shareable-summary border, beat numbers, and section kickers; Hot Pink (#ff10f0) with a soft pink background (#ffe6fb) for the primary pull quote and the "Draft · For subject review" badge when that consent state applies.
+- **Palette**: light theme — white background (#fff), near-black body ink (#0a0a0a), muted gray secondary ink (#3a3a3a / #666), soft border (#e6e6e6). Neon used _sparingly_ as accent only: Electric Cyan (#00b8b8 body-safe; #00ffff bright) for the shareable-summary border, beat numbers, and section kickers; Hot Pink (#ff10f0) with a soft pink background (#ffe6fb) for the primary pull quote and the "Draft · For subject review" badge when that consent state applies.
 - **Structure**: kicker → h1 → subtitle → shareable-summary card (with a 4px cyan left border and light-cyan background) → hr → "The story" h2 and its subsections. Put "Method & limitations" in a gray panel for visual separation. Footer row with brand wordmark + consent badge.
 - **Accessibility**: max content width ~780px, responsive at 520px breakpoint, 16.5px body text, line-height ~1.65.
-- **Consent badge**: if the consent state is *Draft for subject review*, show a pink-pill badge in the footer ("Draft · For subject review"); also add a kicker line at the top ("Use-case white paper · Draft for subject review"). For *Internal draft only*, use a neutral gray pill. For *Public-ready*, omit the badge.
+- **Consent badge**: if the consent state is _Draft for subject review_, show a pink-pill badge in the footer ("Draft · For subject review"); also add a kicker line at the top ("Use-case white paper · Draft for subject review"). For _Internal draft only_, use a neutral gray pill. For _Public-ready_, omit the badge.
 
 Keep the HTML legible and serious — neon accents should punctuate, not dominate.
 

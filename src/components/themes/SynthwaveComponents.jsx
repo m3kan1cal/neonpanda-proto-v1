@@ -151,13 +151,9 @@ export const BarChartUpIcon = ({ className = "w-8 h-8" }) => (
   </svg>
 );
 
-export const ReportIcon = () => (
-  <BarChartUpIcon className="w-8 h-8" />
-);
+export const ReportIcon = () => <BarChartUpIcon className="w-8 h-8" />;
 
-export const ReportIconSmall = () => (
-  <BarChartUpIcon className="w-5 h-5" />
-);
+export const ReportIconSmall = () => <BarChartUpIcon className="w-5 h-5" />;
 
 export const ChatIcon = () => (
   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
@@ -441,6 +437,22 @@ export const BlogIconTiny = ({ className = "w-4 h-4" }) => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+    />
+  </svg>
+);
+
+export const WhitePaperIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"
     />
   </svg>
 );

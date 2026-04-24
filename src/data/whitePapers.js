@@ -111,6 +111,27 @@ export function statusLabel(status) {
 }
 
 /**
+ * Map a WhitePaperStatus to the CSS modifier class used by status pills.
+ *
+ * @param {WhitePaperStatus} status
+ * @returns {string}
+ */
+export function statusPillClass(status) {
+  switch (status) {
+    case "published":
+      return "published";
+    case "approved":
+      return "approved";
+    case "draft-for-subject-review":
+      return "draft";
+    case "internal-draft":
+      return "internal";
+    default:
+      return "draft";
+  }
+}
+
+/**
  * Resolve a white paper by slug. Returns `undefined` if the slug is unknown so
  * callers can redirect to the hub.
  *

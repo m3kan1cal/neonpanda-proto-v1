@@ -1453,7 +1453,7 @@ QUALITATIVE DISCIPLINES (isQualitative: true — more forgiving of missing preci
 - Focus on time, effort, technique, experience rather than exact numbers
 - Often done in uncontrolled environments (outdoors, open water, trails)
 - Performance may be hard to measure precisely but workout still has value
-- Examples: swimming (especially open water), running (especially trails), cycling, yoga, martial arts, climbing, hiking, dance, pilates
+- Examples: swimming (especially open water), running (qualitative on road when easy/recovery), trail_running, cycling, yoga, martial arts, climbing, hiking, dance, pilates, backpacking (outdoor + multi-day), rucking (when event-based or terrain-influenced)
 
 QUANTITATIVE DISCIPLINES (isQualitative: false — require specific performance metrics):
 - Focus on precise weights, reps, sets, distances, times
@@ -1478,6 +1478,9 @@ EDGE CASES:
 - Indoor vs outdoor versions of same sport may differ (indoor rowing = quantitative, outdoor rowing = qualitative)
 - Consider the workout context if provided
 - Some disciplines can have different focuses depending on the specific workout (running can be endurance OR speed)
+- "trail_running" = qualitative + outdoor + primary focus usually "endurance" (sometimes "speed" for vert repeats / hill work)
+- "backpacking" = qualitative + outdoor + primary focus "endurance"
+- "rucking" = quantitative leaning (pack weight + pace + distance are precise metrics) + mixed environment + primary focus "endurance"
 
 Use confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, below 0.5 for unclear.`;
 

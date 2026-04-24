@@ -1,6 +1,11 @@
 import React, { useEffect } from "react";
 import Footer from "../shared/Footer";
-import { statusLabel, formatPublishedDate } from "../../data/whitePapers";
+import { usePageSEO } from "../../hooks/usePageSEO";
+import {
+  statusLabel,
+  formatPublishedDate,
+  statusPillClass,
+} from "../../data/whitePapers";
 
 // Scoped paper stylesheet — injected once per page via the <style> tag below.
 // Every rule is namespaced under .white-paper-root so the paper design does
@@ -307,105 +312,6 @@ const PAPER_CSS = `
 `;
 
 /**
- * Map a WhitePaperStatus to the CSS modifier class used by the footer pill.
- *
- * @param {string} status
- * @returns {string}
- */
-function statusPillClass(status) {
-  switch (status) {
-    case "published":
-      return "published";
-    case "approved":
-      return "approved";
-    case "draft-for-subject-review":
-      return "draft";
-    case "internal-draft":
-      return "internal";
-    default:
-      return "draft";
-  }
-}
-
-/**
- * Set <title>, meta description, Open Graph, and canonical link from the paper
- * entry on mount. Cleans up by restoring the previous <title> when the paper
- * unmounts so breadcrumbs etc. stay accurate.
- */
-function useWhitePaperSEO(paper) {
-  useEffect(() => {
-    if (!paper) return undefined;
-
-    const previousTitle = document.title;
-    const pageTitle = `${paper.title} — NeonPanda`;
-    document.title = pageTitle;
-
-    const canonicalHref = `https://neonpanda.ai/white-papers/${paper.slug}`;
-
-    const upsertMeta = (selector, attrs) => {
-      let tag = document.head.querySelector(selector);
-      const created = !tag;
-      if (!tag) {
-        tag = document.createElement("meta");
-        Object.entries(attrs).forEach(([key, value]) => {
-          if (key !== "content") tag.setAttribute(key, value);
-        });
-        document.head.appendChild(tag);
-      }
-      if (attrs.content != null) tag.setAttribute("content", attrs.content);
-      return { tag, created };
-    };
-
-    const metas = [
-      upsertMeta('meta[name="description"]', {
-        name: "description",
-        content: paper.description,
-      }),
-      upsertMeta('meta[property="og:title"]', {
-        property: "og:title",
-        content: pageTitle,
-      }),
-      upsertMeta('meta[property="og:description"]', {
-        property: "og:description",
-        content: paper.description,
-      }),
-      upsertMeta('meta[property="og:type"]', {
-        property: "og:type",
-        content: "article",
-      }),
-      upsertMeta('meta[property="og:url"]', {
-        property: "og:url",
-        content: canonicalHref,
-      }),
-    ];
-
-    let canonical = document.head.querySelector('link[rel="canonical"]');
-    const canonicalCreated = !canonical;
-    const previousCanonicalHref = canonical
-      ? canonical.getAttribute("href")
-      : null;
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.setAttribute("rel", "canonical");
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute("href", canonicalHref);
-
-    return () => {
-      document.title = previousTitle;
-      metas.forEach(({ tag, created }) => {
-        if (created && tag.parentNode) tag.parentNode.removeChild(tag);
-      });
-      if (canonicalCreated && canonical.parentNode) {
-        canonical.parentNode.removeChild(canonical);
-      } else if (canonical && previousCanonicalHref != null) {
-        canonical.setAttribute("href", previousCanonicalHref);
-      }
-    };
-  }, [paper]);
-}
-
-/**
  * Shared layout for every white paper route. Provides:
  *   - the panda-head site header
  *   - kicker line ("Use-case white paper · {Status}")
@@ -427,14 +333,24 @@ function WhitePaperLayout({
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [paper?.slug]);
-  useWhitePaperSEO(paper);
+
+  usePageSEO({
+    pageTitle: `${paper?.title} — NeonPanda`,
+    description: paper?.description,
+    canonicalHref: `https://neonpanda.ai/white-papers/${paper?.slug}`,
+    ogType: "article",
+  });
 
   if (!paper) {
     return null;
   }
 
   const kickerText = `Use-case white paper · ${statusLabel(paper.status)}`;
-  const publishedLine = `Published ${formatPublishedDate(paper.publishedAt)}`;
+
+  const defaultDocMeta =
+    paper.status === "published"
+      ? `Published ${formatPublishedDate(paper.publishedAt)} · NeonPanda, LLC · ${paper.readTime}`
+      : null;
 
   return (
     <>
@@ -451,11 +367,9 @@ function WhitePaperLayout({
 
           {docMeta ? (
             <p className="doc-meta">{docMeta}</p>
-          ) : (
-            <p className="doc-meta">
-              {publishedLine} · NeonPanda, LLC · {paper.readTime}
-            </p>
-          )}
+          ) : defaultDocMeta ? (
+            <p className="doc-meta">{defaultDocMeta}</p>
+          ) : null}
 
           <h1>{headline ?? paper.title}</h1>
           <p className="subtitle">{deck ?? paper.subtitle}</p>

@@ -1,7 +1,7 @@
 {
-  "name": "NeonPanda - Create Your Perfect Virtual Coach",
+  "name": "NeonPanda - AI Fitness Coach",
   "short_name": "NeonPanda",
-  "description": "Build personalized AI fitness coaches with adaptive intelligence. Get expert guidance tailored to your goals, experience, and preferences.",
+  "description": "Create your own AI fitness coach that remembers every PR, writes personalized programming, and logs workouts in plain English. 11 disciplines. Start free.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#341460",

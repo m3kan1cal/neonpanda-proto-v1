@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { DOCS_SECTIONS, getAdjacentDocs } from "./docsConfig";
 import Footer from "../shared/Footer";
+import { useSeoHead } from "../../hooks/useSeoHead";
 
 function DocsSidebar({ isOpen, onClose }) {
   const location = useLocation();
@@ -161,6 +162,11 @@ function DocsPagination({ currentPath }) {
 function DocsLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+
+  useSeoHead({
+    description:
+      "NeonPanda documentation — how to create AI coaches, log workouts, run coach conversations, and more.",
+  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
