@@ -23,6 +23,8 @@ import Theme from "./components/Theme";
 import RetroTemplate from "./components/themes/RetroComponents";
 import BlogIndex from "./components/blog/BlogIndex";
 import BlogPostRouter from "./components/blog/BlogPostRouter";
+import WhitePapersIndex from "./components/white-papers/WhitePapersIndex";
+import WhitePaperRouter from "./components/white-papers/WhitePaperRouter";
 import SharedProgramPreview from "./components/shared-programs/SharedProgramPreview";
 import DocsLayout from "./components/docs/DocsLayout";
 import DocsHome from "./components/docs/DocsHome";
@@ -104,6 +106,7 @@ function AppContent() {
     "/auth", // Includes all auth child routes (signin, signup, etc.)
     "/welcome", // Post-checkout welcome page
     "/blog", // Blog index and all blog posts
+    "/white-papers", // Use-case white papers (public)
     "/docs", // Documentation pages
     "/shared", // Shared program previews (public access)
   ];
@@ -246,6 +249,10 @@ function AppContent() {
             {/* Blog routes */}
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPostRouter />} />
+
+            {/* White-paper use cases */}
+            <Route path="/white-papers" element={<WhitePapersIndex />} />
+            <Route path="/white-papers/:slug" element={<WhitePaperRouter />} />
 
             {/* Shared program preview (public access) */}
             <Route
