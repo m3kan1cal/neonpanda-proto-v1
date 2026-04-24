@@ -63,7 +63,7 @@ export const LEGACY_DISCIPLINES = [
   "yoga",
   "martial_arts",
   "climbing",
-] as const satisfies readonly ExerciseDiscipline[];
+] as const;
 
 export function isSupportedDiscipline(
   value: string | null | undefined,
