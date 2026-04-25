@@ -1058,19 +1058,21 @@ General thoughts: `;
             <div className="font-body text-synthwave-text-secondary truncate min-w-0 flex-1 sm:flex-initial">
               {(() => {
                 const trimmedPhaseName = (phaseName || "").trim();
-                const alreadyPrefixed = /^phase\s+\d+/i.test(trimmedPhaseName);
-                if (alreadyPrefixed) {
-                  return trimmedPhaseName;
-                }
-                const labelNumber = phaseNumber
-                  ? `Phase ${phaseNumber}:`
-                  : "Phase:";
+                const prefixMatch = trimmedPhaseName.match(
+                  /^(phase\s+\d+\s*:?)\s*(.*)$/i,
+                );
+                const mutedLabel = prefixMatch
+                  ? prefixMatch[1]
+                  : phaseNumber
+                    ? `Phase ${phaseNumber}:`
+                    : "Phase:";
+                const value = prefixMatch ? prefixMatch[2] : trimmedPhaseName;
                 return (
                   <>
                     <span className="text-synthwave-text-muted">
-                      {labelNumber}
-                    </span>{" "}
-                    {trimmedPhaseName}
+                      {mutedLabel}
+                    </span>
+                    {value && <> {value}</>}
                   </>
                 );
               })()}
