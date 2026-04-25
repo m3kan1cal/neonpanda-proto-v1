@@ -1058,7 +1058,7 @@ General thoughts: `;
             <div className="font-body text-synthwave-text-secondary truncate min-w-0 flex-1 sm:flex-initial">
               {(() => {
                 const trimmedPhaseName = (phaseName || "").trim();
-                const alreadyPrefixed = /^phase\b/i.test(trimmedPhaseName);
+                const alreadyPrefixed = /^phase\s+\d+/i.test(trimmedPhaseName);
                 if (alreadyPrefixed) {
                   return trimmedPhaseName;
                 }
