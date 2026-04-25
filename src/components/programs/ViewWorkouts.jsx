@@ -1015,14 +1015,14 @@ General thoughts: `;
 
         {/* Program Context */}
         <div className="mb-4">
-          <div className="flex items-center gap-3 mb-1 min-w-0">
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3 mb-1 min-w-0">
             <button
               onClick={() =>
                 navigate(
                   `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
                 )
               }
-              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left"
+              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left line-clamp-2 sm:line-clamp-none"
               data-tooltip-id="program-name-link"
               data-tooltip-content="View training program"
             >
@@ -1035,7 +1035,7 @@ General thoughts: `;
                 (t) => t.status === "completed" || t.status === "skipped",
               ) && (
                 <span
-                  className={`${badgePatterns.cyan} uppercase flex items-center gap-1`}
+                  className={`${badgePatterns.cyan} uppercase inline-flex items-center gap-1 whitespace-nowrap shrink-0`}
                 >
                   <svg
                     className="w-3 h-3"
@@ -1054,21 +1054,26 @@ General thoughts: `;
                 </span>
               )}
           </div>
-          <div className="flex items-center gap-3 sm:gap-4 text-sm pb-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-sm pb-1 min-w-0">
             <div className="font-body text-synthwave-text-secondary truncate min-w-0 flex-1 sm:flex-initial">
-              {phaseNumber ? (
-                <>
-                  <span className="text-synthwave-text-muted">
-                    Phase {phaseNumber}:
-                  </span>{" "}
-                  {phaseName}
-                </>
-              ) : (
-                <>
-                  <span className="text-synthwave-text-muted">Phase:</span>{" "}
-                  {phaseName}
-                </>
-              )}
+              {(() => {
+                const trimmedPhaseName = (phaseName || "").trim();
+                const alreadyPrefixed = /^phase\b/i.test(trimmedPhaseName);
+                if (alreadyPrefixed) {
+                  return trimmedPhaseName;
+                }
+                const labelNumber = phaseNumber
+                  ? `Phase ${phaseNumber}:`
+                  : "Phase:";
+                return (
+                  <>
+                    <span className="text-synthwave-text-muted">
+                      {labelNumber}
+                    </span>{" "}
+                    {trimmedPhaseName}
+                  </>
+                );
+              })()}
             </div>
             <div className="font-body text-synthwave-text-muted shrink-0 whitespace-nowrap">
               Day {workoutDayNumber} of {program.totalDays}
