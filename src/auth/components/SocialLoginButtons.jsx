@@ -65,7 +65,7 @@ const SocialLoginButtons = ({ disabled = false, mode = "signin" }) => {
       disabled={disabled || isLoading}
       className="group w-full flex items-center justify-center gap-3 px-6 py-3
                  bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan
-                 rounded-md font-body font-semibold text-lg uppercase tracking-wide
+                 rounded-full font-body font-semibold text-lg uppercase tracking-wide
                  transition-all duration-300
                  hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary
                  focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary
