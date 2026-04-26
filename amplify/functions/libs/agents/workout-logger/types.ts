@@ -123,7 +123,15 @@ export interface WorkoutSummaryResult {
 export interface WorkoutSaveResult {
   workoutId: string;
   success: boolean;
-  pineconeStored: boolean;
-  pineconeRecordId: string | null;
-  templateLinked: boolean;
+
+  // Populated when a real save occurred
+  pineconeStored?: boolean;
+  pineconeRecordId?: string | null;
+  templateLinked?: boolean;
+
+  // Populated when the save was skipped because a matching workout already exists
+  duplicate?: boolean;
+  skipped?: boolean;
+  reason?: string;
+  existingWorkoutId?: string;
 }

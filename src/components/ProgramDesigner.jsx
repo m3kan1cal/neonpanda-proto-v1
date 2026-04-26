@@ -796,7 +796,7 @@ function ProgramDesigner() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
           </header>
 
           {/* Conversation Title skeleton */}

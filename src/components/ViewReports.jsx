@@ -784,7 +784,7 @@ function ViewReports() {
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded w-20" />
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse" />
           </header>
 
           {/* Quick Stats skeleton */}

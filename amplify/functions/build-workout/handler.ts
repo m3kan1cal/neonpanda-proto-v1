@@ -10,6 +10,7 @@ import { withHeartbeat } from "../libs/heartbeat";
 import type { BuildWorkoutEvent } from "../libs/workout/types";
 import { WorkoutLoggerAgent } from "../libs/agents/workout-logger/agent";
 import type { WorkoutLoggerContext } from "../libs/agents/workout-logger/types";
+import { revertTemplateStatus } from "../libs/program/template-linking";
 import { logger } from "../libs/logger";
 
 export const handler = async (event: BuildWorkoutEvent) => {
@@ -130,6 +131,19 @@ export const handler = async (event: BuildWorkoutEvent) => {
           allWorkouts: result.allWorkouts,
         });
       } else {
+        // Failure path. If the caller optimistically marked a program template
+        // "completed" but no workout was successfully linked, revert that
+        // optimism so the template doesn't stay stuck in the UI as "processing".
+        // result.workoutId is set when the duplicate-skip path successfully
+        // linked the existing workout — we leave that alone.
+        if (event.templateContext && !result.workoutId) {
+          await revertTemplateStatus(
+            event.userId,
+            event.coachId,
+            event.templateContext,
+          );
+        }
+
         return createOkResponse({
           success: false,
           skipped: true,
@@ -146,6 +160,19 @@ export const handler = async (event: BuildWorkoutEvent) => {
         conversationId: event.conversationId,
         messagePreview: event.userMessage.substring(0, 100),
       });
+
+      // Same revert: an exception path also leaves an optimistically-completed
+      // template orphaned. Best-effort revert; don't let revert errors mask
+      // the original exception.
+      if (event.templateContext) {
+        await revertTemplateStatus(
+          event.userId,
+          event.coachId,
+          event.templateContext,
+        ).catch((err) => {
+          logger.error("⚠️ revertTemplateStatus failed in catch block:", err);
+        });
+      }
 
       const errorMessage =
         error instanceof Error ? error.message : "Unknown extraction error";

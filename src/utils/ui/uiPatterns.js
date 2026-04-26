@@ -1523,7 +1523,7 @@ export const skeletonPatterns = {
   chatInput:
     "w-full h-[80px] rounded-md bg-synthwave-text-muted/20 animate-pulse",
   // Action/send button skeleton
-  actionButton: "w-12 h-12 rounded-md bg-synthwave-text-muted/20 animate-pulse",
+  actionButton: "w-12 h-12 rounded-full bg-synthwave-text-muted/20 animate-pulse",
   // Chat message bubble skeleton
   chatMessage: "px-4 py-3 rounded-md bg-synthwave-text-muted/20 animate-pulse",
 };

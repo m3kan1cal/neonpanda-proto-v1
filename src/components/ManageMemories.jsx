@@ -797,7 +797,7 @@ function ManageMemories() {
             </div>
 
             {/* Right section: Command Palette Button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}

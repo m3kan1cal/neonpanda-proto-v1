@@ -695,7 +695,7 @@ function WorkoutDetailsSkeleton() {
               <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
             </div>
           </div>
-          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
         </header>
 
         {/* Quick Stats skeleton */}
