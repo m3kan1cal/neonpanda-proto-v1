@@ -782,13 +782,20 @@ Complete the workout logging workflow now using your tools.`;
         existingWorkoutId: firstDuplicate.existingWorkoutId,
       });
 
+      // Only surface workoutId when the existing workout was successfully
+      // (re)linked to the template. build-workout/handler.ts treats a missing
+      // workoutId on the failure path as the signal to revert the optimistic
+      // template completion — leaving it set after a failed relink would
+      // strand the template at status="completed", linkedWorkoutId=null.
       return {
         success: false,
         skipped: true,
         reason:
           firstDuplicate.reason ||
           "A workout for this session already exists — skipped duplicate save.",
-        workoutId: firstDuplicate.existingWorkoutId,
+        ...(firstDuplicate.templateLinked
+          ? { workoutId: firstDuplicate.existingWorkoutId }
+          : {}),
       };
     }
 

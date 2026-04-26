@@ -4,7 +4,7 @@
  * Helper functions for linking completed workouts to training program templates.
  */
 
-import { getProgram } from "../../../dynamodb/operations";
+import { getProgram, updateProgram } from "../../../dynamodb/operations";
 import { getProgramDetailsFromS3, saveProgramDetailsToS3 } from "./s3-utils";
 import { logger } from "../logger";
 
@@ -89,12 +89,17 @@ export const linkWorkoutToTemplate = async (
  * Revert a program template back to "pending" after a failed workout build.
  *
  * `log-workout-template/handler.ts` optimistically marks the template as
- * `completed` before invoking build-workout. If build-workout subsequently
- * fails to produce a linked workout (validation error, exception, etc.) the
- * template would otherwise be stuck at `status: completed` with
- * `linkedWorkoutId: null`, which the UI surfaces as "processing".
+ * `completed` before invoking build-workout AND bumps DynamoDB program stats
+ * (`completedWorkouts`, `adherenceRate`, `dayCompletionStatus`, possibly
+ * advancing `currentDay` and flipping `status` to `completed`). If
+ * build-workout subsequently fails to produce a linked workout (validation
+ * error, exception, etc.) both the S3 template and the DynamoDB counters
+ * need to be walked back, otherwise the template stays stuck at
+ * `status: completed` / `linkedWorkoutId: null` (which the UI surfaces as
+ * "processing") and program-level adherence drifts.
  *
- * This helper restores the template to a state where the user can retry.
+ * This helper restores the template to a retryable state and reverses the
+ * optimistic stat increments.
  *
  * @returns true if successfully reverted, false otherwise
  */
@@ -142,6 +147,19 @@ export const revertTemplateStatus = async (
     }
 
     const template = programDetails.workoutTemplates[templateIndex];
+    const dayNumber: number = template.dayNumber;
+
+    // Mirror log-workout-template's STEP 6 ordering so we revert the same
+    // bucket (primary vs. optional) that was incremented.
+    const dayTemplates = programDetails.workoutTemplates.filter(
+      (t: any) => t.dayNumber === dayNumber,
+    );
+    const sortedTemplates = [...dayTemplates].sort((a: any, b: any) =>
+      a.templateId.localeCompare(b.templateId),
+    );
+    const isPrimary =
+      sortedTemplates[0]?.templateId === templateContext.templateId;
+
     template.status = "pending";
     template.completedAt = null;
     template.linkedWorkoutId = null;
@@ -150,6 +168,88 @@ export const revertTemplateStatus = async (
 
     logger.info("✅ Template status reverted to pending:", {
       templateId: templateContext.templateId,
+      dayNumber,
+      isPrimary,
+    });
+
+    // Walk back the DynamoDB program stats written optimistically by
+    // log-workout-template/handler.ts STEP 6.
+    const existingDayStatus = programData.dayCompletionStatus?.[dayNumber];
+    const updatedDayStatus = existingDayStatus
+      ? {
+          ...existingDayStatus,
+          ...(isPrimary
+            ? { primaryComplete: false }
+            : {
+                optionalCompleted: Math.max(
+                  0,
+                  existingDayStatus.optionalCompleted - 1,
+                ),
+              }),
+        }
+      : undefined;
+
+    const decrementedCompleted = Math.max(
+      0,
+      (programData.completedWorkouts ?? 0) - 1,
+    );
+
+    // After undoing this template's contribution, are the day's templates
+    // still all complete? If not, currentDay should not have advanced past
+    // this day.
+    const dayStillFullyComplete =
+      updatedDayStatus !== undefined &&
+      updatedDayStatus.primaryComplete &&
+      updatedDayStatus.optionalCompleted >= updatedDayStatus.totalOptional;
+
+    const shouldRollbackCurrentDay =
+      programData.currentDay > dayNumber && !dayStillFullyComplete;
+
+    const rolledBackCurrentDay = shouldRollbackCurrentDay
+      ? dayNumber
+      : programData.currentDay;
+
+    // Match the percentage scale used by log-workout-template's STEP 6
+    // (completedWorkouts / totalWorkouts * 100) so we don't flip units.
+    const programUpdates: Record<string, any> = {
+      completedWorkouts: decrementedCompleted,
+      adherenceRate:
+        programData.totalWorkouts > 0
+          ? (decrementedCompleted / programData.totalWorkouts) * 100
+          : 0,
+    };
+
+    if (updatedDayStatus) {
+      programUpdates.dayCompletionStatus = {
+        [dayNumber]: updatedDayStatus,
+      };
+    }
+
+    if (shouldRollbackCurrentDay) {
+      programUpdates.currentDay = rolledBackCurrentDay;
+    }
+
+    // If the optimistic write flipped the program to "completed" and the
+    // rollback puts currentDay back inside the program, restore it to active.
+    if (
+      programData.status === "completed" &&
+      rolledBackCurrentDay <= programData.totalDays
+    ) {
+      programUpdates.status = "active";
+    }
+
+    await updateProgram(
+      userId,
+      coachId,
+      templateContext.programId,
+      programUpdates,
+    );
+
+    logger.info("✅ Program stats reverted:", {
+      programId: templateContext.programId,
+      completedWorkouts: programUpdates.completedWorkouts,
+      currentDay: programUpdates.currentDay ?? programData.currentDay,
+      status: programUpdates.status ?? programData.status,
     });
 
     return true;
