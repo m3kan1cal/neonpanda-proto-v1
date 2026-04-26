@@ -580,10 +580,7 @@ export class ProgramAgent {
               "✅ linkedWorkoutId found:",
               updatedTemplate.linkedWorkoutId,
             );
-            this._patchLinkedWorkout(
-              templateId,
-              updatedTemplate.linkedWorkoutId,
-            );
+            this._patchTemplate(templateId, updatedTemplate);
             stopPolling("found");
             return;
           }
@@ -617,15 +614,23 @@ export class ProgramAgent {
   }
 
   /**
-   * Patch a single template's linkedWorkoutId into the current
-   * todaysWorkout state. Used by polling so we don't overwrite the
-   * whole slot with a possibly-stale day's data when the user has
-   * navigated away. No-op if the template isn't in the current state
-   * (the user has moved to a different day; they'll pick up the
-   * updated state next time loadWorkoutTemplates runs for that day).
+   * Merge a fresh template from the API into the current todaysWorkout
+   * state. Used by polling so we don't overwrite the whole slot with a
+   * possibly-stale day's data when the user has navigated away. No-op
+   * if the template isn't in the current state (the user has moved to a
+   * different day; they'll pick up the updated state next time
+   * loadWorkoutTemplates runs for that day).
+   *
+   * The full fresh template is merged (not just linkedWorkoutId) because
+   * the agent's stored template still has the pre-log status="pending"
+   * — only the component's local workoutData carries the optimistic
+   * "completed" update. When this patch fires it forces the component
+   * to mirror agent state via onStateChange, so the merged template
+   * must already include the server-side status="completed" and any
+   * other fields the build-workout Lambda wrote (summary, etc.).
    * @private
    */
-  _patchLinkedWorkout(templateId, linkedWorkoutId) {
+  _patchTemplate(templateId, templatePatch) {
     const current = this.programState.todaysWorkout;
     if (!current?.templates) return;
     const idx = current.templates.findIndex(
@@ -633,7 +638,7 @@ export class ProgramAgent {
     );
     if (idx < 0) return;
     const nextTemplates = [...current.templates];
-    nextTemplates[idx] = { ...nextTemplates[idx], linkedWorkoutId };
+    nextTemplates[idx] = { ...nextTemplates[idx], ...templatePatch };
     this._updateState({
       todaysWorkout: { ...current, templates: nextTemplates },
     });
