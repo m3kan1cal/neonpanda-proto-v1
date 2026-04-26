@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Tooltip } from "react-tooltip";
 import {
+  buttonPatterns,
   containerPatterns,
   typographyPatterns,
   tooltipPatterns,
@@ -13,24 +14,6 @@ import { normalizeListFieldToStringArray } from "../../utils/objectUtils";
 // ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
-
-function ArrowRightIcon() {
-  return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-      />
-    </svg>
-  );
-}
 
 function CloseIcon() {
   return (
@@ -482,10 +465,10 @@ export default function CoachBriefingCard({
 
               {render()}
 
-              {/* View details -- styled like Continue Session button */}
-              <div className="flex items-center space-x-2 text-synthwave-neon-cyan hover:text-white hover:bg-synthwave-neon-cyan/10 px-2 py-2 rounded-md transition-all duration-200 font-body font-medium uppercase tracking-wide self-start -ml-2 mt-1">
-                <ArrowRightIcon />
-                <span className="text-xs">View Details</span>
+              {/* Click is delegated to the parent card's onClick. */}
+              <div className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}>
+                <span>View Details</span>
+                <span>→</span>
               </div>
             </div>
           </div>

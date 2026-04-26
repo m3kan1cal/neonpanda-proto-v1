@@ -1287,7 +1287,7 @@ function TrainingGroundsV2() {
       {/* Analytics entry point */}
       <Link
         to={`/training-grounds/training-pulse?userId=${userId}&coachId=${coachId}`}
-        className="mt-3 flex items-center justify-between px-4 py-3 rounded-md bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 hover:bg-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/50 transition-all duration-200 group"
+        className="mt-3 flex items-center justify-between px-4 py-3 rounded-full bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 hover:bg-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/50 transition-all duration-200 group"
       >
         <div className="flex items-center gap-2.5">
           <span className="text-synthwave-neon-purple">
@@ -1467,7 +1467,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleStartNewConversation}
               disabled={conversationAgentState.isLoadingItem}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-md font-body text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan rounded-full font-body text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1483,7 +1483,7 @@ function TrainingGroundsV2() {
             </button>
             <button
               onClick={handleLogWorkout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-md font-body text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-full font-body text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -1503,7 +1503,7 @@ function TrainingGroundsV2() {
             <button
               onClick={handleDesignProgram}
               disabled={isCreatingProgram}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-md font-body text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-synthwave-neon-purple/30 text-synthwave-neon-purple rounded-full font-body text-xs font-semibold uppercase tracking-wide transition-all duration-200 hover:bg-synthwave-neon-purple/10 hover:border-synthwave-neon-purple/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <svg
                 className="w-3.5 h-3.5"
