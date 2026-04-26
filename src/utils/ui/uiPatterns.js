@@ -54,23 +54,23 @@ export const buttonPatterns = {
   // Mode Toggle Buttons - For conversation mode switching (Chat vs Build)
   // Base classes for all mode toggle buttons
   modeToggleBase:
-    "px-2.5 py-0.5 rounded-md font-body font-semibold text-xs uppercase tracking-wide transition-all duration-200 flex items-center justify-center gap-1.5",
+    "px-2.5 py-0.5 rounded-full font-body font-semibold text-xs uppercase tracking-wide transition-all duration-200 flex items-center justify-center gap-1.5",
 
   // Chat mode active state (Cyan themed - no specific artifact)
   modeToggleChatActive:
-    "rounded-md bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
+    "rounded-full bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
 
   // Chat mode inactive state
   modeToggleChatInactive:
-    "rounded-md bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
+    "rounded-full bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
 
   // Program Design mode active state (Purple themed - creating program artifact)
   modeToggleProgramDesignActive:
-    "rounded-md bg-synthwave-neon-purple/20 text-synthwave-neon-purple border border-synthwave-neon-purple/40",
+    "rounded-full bg-synthwave-neon-purple/20 text-synthwave-neon-purple border border-synthwave-neon-purple/40",
 
   // Program Design mode inactive state
   modeToggleProgramDesignInactive:
-    "rounded-md bg-synthwave-bg-primary/30 text-synthwave-neon-purple border border-transparent hover:border-synthwave-neon-purple/20 hover:bg-synthwave-neon-purple/10",
+    "rounded-full bg-synthwave-bg-primary/30 text-synthwave-neon-purple border border-transparent hover:border-synthwave-neon-purple/20 hover:bg-synthwave-neon-purple/10",
 
   // Inline action button - Transparent hover-effect button for inline rename/delete form actions
   inlineAction:
@@ -78,7 +78,7 @@ export const buttonPatterns = {
 
   // Mode toggle container
   modeToggleContainer:
-    "flex items-center gap-1 rounded-md bg-synthwave-bg-card/50 backdrop-blur-sm border border-synthwave-neon-cyan/10 px-1 py-0.5 shadow-sm",
+    "flex items-center gap-1 rounded-full bg-synthwave-bg-card/50 backdrop-blur-sm border border-synthwave-neon-cyan/10 px-1 py-0.5 shadow-sm",
 
   // Mode indicator badges - Artifact-focused naming for conversation modes (not interactive)
   // Program Design mode badge (purple themed) - shows on AI messages creating program design artifact
@@ -96,9 +96,9 @@ export const buttonPatterns = {
 
   // Tab Toggle Buttons - For switching between views (Weekly/Monthly, Current/All Weeks, etc.)
   tabToggleActive:
-    "cursor-pointer px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
+    "cursor-pointer px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
   tabToggleInactive:
-    "cursor-pointer px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
+    "cursor-pointer px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
 
   // Square icon-only send button (48×48px) - chat input send action with purple→pink gradient
   sendSquare:
