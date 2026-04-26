@@ -15,7 +15,12 @@ import {
 import { AccessDenied } from "./shared/AccessDenied";
 import MarkdownRenderer from "./shared/MarkdownRenderer";
 import { isNewWorkout } from "../utils/dateUtils";
-import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
+import {
+  NeonBorder,
+  NewBadge,
+  SectionHeader,
+  WorkoutIconSmall,
+} from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
 import { notifyLoadMoreError } from "../utils/loadMoreErrors";
 import { LIST_PAGE_SIZE } from "../constants/pagination";
@@ -621,13 +626,13 @@ function ManageWorkouts() {
           )}
         </div>
 
-        {/* Header with pink dot */}
-        <div className="flex items-start gap-3 mb-2 pr-16">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            {workoutName}
-          </h3>
-        </div>
+        <SectionHeader
+          icon={WorkoutIconSmall}
+          color="pink"
+          className="mb-2 pr-16"
+        >
+          {workoutName}
+        </SectionHeader>
 
         <div className="space-y-2 mb-4">
           <div className="flex items-center gap-1.5 font-body text-sm">

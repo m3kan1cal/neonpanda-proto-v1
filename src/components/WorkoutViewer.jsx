@@ -19,6 +19,11 @@ import {
   CoachIcon,
   ProcessingIcon,
   DatabaseIcon,
+  CameraIcon,
+  JsonIcon,
+  LightbulbIcon,
+  SectionHeader,
+  WorkoutIconSmall,
 } from "./themes/SynthwaveComponents";
 import InlineEditField from "./shared/InlineEditField";
 import { MarkdownRenderer } from "./shared/MarkdownRenderer";
@@ -1291,7 +1296,9 @@ const WorkoutViewer = ({
               }}
             >
               <div className="flex items-start gap-3 flex-1">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
+                <span className="shrink-0 mt-1 text-synthwave-neon-pink">
+                  <WorkoutIconSmall />
+                </span>
                 <InlineEditField
                   value={`${workout.workoutData?.workout_name || "Unnamed Workout"} (${workoutData.discipline || "fitness"})`}
                   onSave={onSaveWorkoutTitle}
@@ -2096,12 +2103,9 @@ const WorkoutViewer = ({
                 }
               }}
             >
-              <div className="flex items-start gap-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  Subjective Feedback
-                </h3>
-              </div>
+              <SectionHeader icon={FeedbackIcon} color="pink">
+                Subjective Feedback
+              </SectionHeader>
               <svg
                 className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(8) ? "rotate-180" : ""}`}
                 fill="none"
@@ -2436,7 +2440,9 @@ const WorkoutViewer = ({
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0" />
+                  <span className="shrink-0 text-synthwave-neon-pink">
+                    <CameraIcon />
+                  </span>
                   <span className="font-header font-bold text-white text-lg uppercase">
                     Workout Photos
                   </span>
@@ -2499,12 +2505,9 @@ const WorkoutViewer = ({
                 }
               }}
             >
-              <div className="flex items-start gap-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  Personal Insights
-                </h3>
-              </div>
+              <SectionHeader icon={LightbulbIcon} color="pink">
+                Personal Insights
+              </SectionHeader>
               <svg
                 className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(2) ? "rotate-180" : ""}`}
                 fill="none"
@@ -2828,15 +2831,12 @@ const WorkoutViewer = ({
                 }
               }}
             >
-              <div className="flex items-start gap-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  PR Achievements
-                  {workoutData.pr_achievements &&
-                    workoutData.pr_achievements.length > 0 &&
-                    ` (${workoutData.pr_achievements.length})`}
-                </h3>
-              </div>
+              <SectionHeader icon={TrophyIcon} color="pink">
+                PR Achievements
+                {workoutData.pr_achievements &&
+                  workoutData.pr_achievements.length > 0 &&
+                  ` (${workoutData.pr_achievements.length})`}
+              </SectionHeader>
               <svg
                 className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(3) ? "rotate-180" : ""}`}
                 fill="none"
@@ -2977,12 +2977,9 @@ const WorkoutViewer = ({
               }`}
               onClick={() => toggleCollapse(9)}
             >
-              <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  Coach Notes
-                </h3>
-              </div>
+              <SectionHeader icon={NotesIcon} color="pink">
+                Coach Notes
+              </SectionHeader>
               <svg
                 className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(9) ? "rotate-180" : ""}`}
                 fill="none"
@@ -3213,12 +3210,9 @@ const WorkoutViewer = ({
               }`}
               onClick={() => toggleCollapse(10)}
             >
-              <div className="flex items-start space-x-3">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  Extraction Notes
-                </h3>
-              </div>
+              <SectionHeader icon={NotesIcon} color="pink">
+                Extraction Notes
+              </SectionHeader>
               <svg
                 className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(10) ? "rotate-180" : ""}`}
                 fill="none"
@@ -3523,12 +3517,9 @@ const WorkoutViewer = ({
             }`}
             onClick={() => toggleCollapse(11)}
           >
-            <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
-              <h3 className="font-header font-bold text-white text-lg uppercase">
-                Raw Workout Data
-              </h3>
-            </div>
+            <SectionHeader icon={JsonIcon} color="cyan">
+              Raw Workout Data
+            </SectionHeader>
             <svg
               className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(11) ? "rotate-180" : ""}`}
               fill="none"

@@ -6,6 +6,10 @@ import {
   tooltipPatterns,
   heatMapPatterns,
 } from "../utils/ui/uiPatterns";
+import {
+  BarChartIcon,
+  SectionHeader,
+} from "./themes/SynthwaveComponents";
 
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -184,12 +188,13 @@ const WeeklyHeatMapV2 = ({
     <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
       {/* Section Header */}
       <div className="flex items-start justify-between p-6">
-        <div className="flex items-start gap-3 flex-1">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Weekly Training Intensity
-          </h3>
-        </div>
+        <SectionHeader
+          icon={BarChartIcon}
+          color="pink"
+          className="flex-1"
+        >
+          Weekly Training Intensity
+        </SectionHeader>
       </div>
 
       {/* Heat Map Content */}

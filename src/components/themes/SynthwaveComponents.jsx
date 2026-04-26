@@ -646,8 +646,8 @@ export const DangerIcon = () => (
   </svg>
 );
 
-export const InfoIcon = () => (
-  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+export const InfoIcon = ({ className = "w-4 h-4" } = {}) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
     <path
       fillRule="evenodd"
       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
@@ -856,9 +856,9 @@ export const PlusIcon = () => (
 );
 
 // Lightbulb icon for Total Memories
-export const LightbulbIcon = () => (
+export const LightbulbIcon = ({ className = "w-8 h-8" } = {}) => (
   <svg
-    className="w-8 h-8"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1369,8 +1369,8 @@ export const HomeIcon = () => (
 );
 
 // Training Grounds Section Icons
-export const ProgramIcon = () => (
-  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+export const ProgramIcon = ({ className = "w-8 h-8" } = {}) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
     <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
   </svg>
 );
@@ -1671,3 +1671,30 @@ export const EditIcon = () => (
     />
   </svg>
 );
+
+const SECTION_HEADER_COLOR = {
+  pink: "text-synthwave-neon-pink",
+  cyan: "text-synthwave-neon-cyan",
+  purple: "text-synthwave-neon-purple",
+};
+
+export function SectionHeader({
+  icon: Icon,
+  color = "pink",
+  children,
+  className = "",
+  iconClassName = "w-5 h-5",
+  as: As = "h3",
+}) {
+  const colorClass = SECTION_HEADER_COLOR[color] || SECTION_HEADER_COLOR.pink;
+  return (
+    <div className={`flex items-start gap-3 ${className}`}>
+      <span className={`shrink-0 mt-1 ${colorClass}`}>
+        <Icon className={iconClassName} />
+      </span>
+      <As className="font-header font-bold text-white text-lg uppercase">
+        {children}
+      </As>
+    </div>
+  );
+}

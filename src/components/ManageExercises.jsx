@@ -26,6 +26,8 @@ import {
   CalendarMonthIcon,
   ClockIcon,
   TargetIcon,
+  SectionHeader,
+  WorkoutIconSmall,
 } from "./themes/SynthwaveComponents";
 
 // Icons
@@ -332,13 +334,13 @@ function ManageExercises() {
         className={`${containerPatterns.cardMedium} p-6 mb-6 cursor-pointer`}
         onClick={() => toggleExerciseCollapse(exercise.exerciseName)}
       >
-        {/* Header with pink dot */}
-        <div className="flex items-start gap-3 mb-2">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase flex-1">
-            {exercise.displayName || exercise.exerciseName}
-          </h3>
-        </div>
+        <SectionHeader
+          icon={WorkoutIconSmall}
+          color="pink"
+          className="mb-2"
+        >
+          {exercise.displayName || exercise.exerciseName}
+        </SectionHeader>
 
         {/* Metadata Row - consolidated on one line */}
         <div className="flex items-center flex-wrap gap-4 mb-4">
