@@ -1,6 +1,10 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
 import { badgePatterns } from "../../../utils/ui/uiPatterns";
+import {
+  LightningIconSmall,
+  SectionHeader,
+} from "../../themes/SynthwaveComponents";
 
 /**
  * HybridSection Component
@@ -40,12 +44,9 @@ export const HybridSection = ({
           className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 rounded-xl"
           onClick={() => toggleCollapse(sectionId)}
         >
-          <div className="flex items-start space-x-3">
-            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-            <h3 className="font-header font-bold text-white text-lg uppercase">
-              Hybrid Workout (0)
-            </h3>
-          </div>
+          <SectionHeader icon={LightningIconSmall} color="pink">
+            Hybrid Workout (0)
+          </SectionHeader>
         </div>
         <div className="px-6 pb-6">
           <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
@@ -296,8 +297,10 @@ export const HybridSection = ({
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >
-        <div className="flex items-start space-x-3">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
+        <div className="flex items-start gap-3">
+          <span className="shrink-0 mt-1 text-synthwave-neon-pink">
+            <LightningIconSmall />
+          </span>
           <div className="flex flex-col">
             <h3 className="font-header font-bold text-white text-lg uppercase">
               Hybrid Workout ({totalExerciseCount})

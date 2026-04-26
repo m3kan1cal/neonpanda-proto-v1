@@ -23,6 +23,7 @@ import {
   CheckIcon,
   XIcon,
   HomeIcon,
+  WorkoutIconSmall,
 } from "../themes/SynthwaveComponents";
 import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import CoachAgent from "../../utils/agents/CoachAgent";
@@ -1266,7 +1267,9 @@ General thoughts: `;
                     >
                       <div className="flex-1">
                         <div className="flex items-start gap-3 mb-2">
-                          <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan shrink-0 mt-2" />
+                          <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
+                            <WorkoutIconSmall />
+                          </span>
                           <h3
                             className={`font-header text-lg font-bold uppercase text-white min-w-0 ${
                               isCollapsed ? "line-clamp-2" : ""

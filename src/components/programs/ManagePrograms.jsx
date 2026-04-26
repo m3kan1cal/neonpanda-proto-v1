@@ -1621,7 +1621,7 @@ function ManagePrograms() {
           {/* Create New Program Card */}
           <div
             onClick={isCreatingProgram ? undefined : handleCreateProgram}
-            className={`${containerPatterns.dashedCard} p-6 group ${
+            className={`${containerPatterns.dashedCard} p-4 md:p-6 group ${
               isCreatingProgram
                 ? "opacity-75 cursor-not-allowed"
                 : "cursor-pointer"
@@ -1631,7 +1631,7 @@ function ManagePrograms() {
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
                 {/* Plus Icon or Spinner */}
-                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-2 md:mb-3">
+                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-1 md:mb-3">
                   {isCreatingProgram ? (
                     <div className="w-8 h-8 md:w-12 md:h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
                   ) : (
@@ -1652,7 +1652,7 @@ function ManagePrograms() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-base md:text-lg uppercase mb-2 md:mb-3 transition-colors duration-300">
+                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-base md:text-lg uppercase mb-1 md:mb-3 transition-colors duration-300">
                   {isCreatingProgram
                     ? "Creating Session..."
                     : "Design New Program"}
@@ -1660,7 +1660,7 @@ function ManagePrograms() {
 
                 {/* Description */}
                 <p
-                  className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-xs md:text-sm transition-colors duration-300 text-center mb-3 md:mb-4 max-w-xs mx-auto`}
+                  className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-xs md:text-sm transition-colors duration-300 text-center mb-0 md:mb-4 max-w-xs mx-auto`}
                 >
                   {isCreatingProgram
                     ? "Setting up your program design session"

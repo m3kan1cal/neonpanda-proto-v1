@@ -1,6 +1,10 @@
 import React from "react";
 import { ValueDisplay } from "../../shared/ValueDisplay";
 import { formatDistanceUnit } from "../../shared/distanceFormatters";
+import {
+  SectionHeader,
+  TargetIcon,
+} from "../../themes/SynthwaveComponents";
 
 /**
  * RuckingSection
@@ -137,12 +141,9 @@ export const RuckingSection = ({
           }`}
           onClick={() => toggleCollapse(detailsId)}
         >
-          <div className="flex items-start space-x-3">
-            <div className="w-3 h-3 rounded-full bg-synthwave-neon-purple shrink-0 mt-2" />
-            <h3 className="font-header font-bold text-white text-lg uppercase">
-              Rucking Details
-            </h3>
-          </div>
+          <SectionHeader icon={TargetIcon} color="purple">
+            Rucking Details
+          </SectionHeader>
           <svg
             className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(detailsId) ? "rotate-180" : ""}`}
             fill="none"
@@ -183,12 +184,9 @@ export const RuckingSection = ({
             }`}
             onClick={() => toggleCollapse(segmentsId)}
           >
-            <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-purple shrink-0 mt-2" />
-              <h3 className="font-header font-bold text-white text-lg uppercase">
-                Ruck Segments ({ruckingData.segments.length})
-              </h3>
-            </div>
+            <SectionHeader icon={TargetIcon} color="purple">
+              Ruck Segments ({ruckingData.segments.length})
+            </SectionHeader>
             <svg
               className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(segmentsId) ? "rotate-180" : ""}`}
               fill="none"

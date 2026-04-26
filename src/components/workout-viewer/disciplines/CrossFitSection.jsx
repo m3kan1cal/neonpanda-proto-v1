@@ -1,5 +1,9 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
+import {
+  FireIconSmall,
+  SectionHeader,
+} from "../../themes/SynthwaveComponents";
 
 export const CrossFitSection = ({
   crossfitData,
@@ -20,12 +24,9 @@ export const CrossFitSection = ({
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >
-        <div className="flex items-start space-x-3">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Workout Rounds ({crossfitData?.rounds?.length || 0})
-          </h3>
-        </div>
+        <SectionHeader icon={FireIconSmall} color="pink">
+          Workout Rounds ({crossfitData?.rounds?.length || 0})
+        </SectionHeader>
         <svg
           className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(sectionId) ? "rotate-180" : ""}`}
           fill="none"

@@ -4,6 +4,10 @@ import { Tooltip } from "react-tooltip";
 import { containerPatterns, heatMapPatterns } from "../utils/ui/uiPatterns";
 import { getWorkouts } from "../utils/apis/workoutApi";
 import {
+  BarChartIcon,
+  SectionHeader,
+} from "./themes/SynthwaveComponents";
+import {
   DISCIPLINE_ABBR as SUPPORTED_DISCIPLINE_ABBR,
   LEGACY_DISCIPLINE_ABBR,
 } from "../constants/disciplines";
@@ -272,12 +276,13 @@ const WorkoutHeatMapV2 = ({ weekStart, weekEnd, userId, coachId }) => {
     <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
       {/* Header */}
       <div className="flex items-start justify-between p-6">
-        <div className="flex items-start gap-3 flex-1">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Workout Intensity
-          </h3>
-        </div>
+        <SectionHeader
+          icon={BarChartIcon}
+          color="pink"
+          className="flex-1"
+        >
+          Workout Intensity
+        </SectionHeader>
       </div>
 
       <div className="px-6 pb-6 space-y-4">

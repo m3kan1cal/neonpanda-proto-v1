@@ -1,6 +1,7 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
 import { badgePatterns } from "../../../utils/ui/uiPatterns";
+import { LightningIconSmall } from "../../themes/SynthwaveComponents";
 
 export const CircuitTrainingSection = ({
   circuitTrainingData,
@@ -62,8 +63,10 @@ export const CircuitTrainingSection = ({
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >
-        <div className="flex items-start space-x-3">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
+        <div className="flex items-start gap-3">
+          <span className="shrink-0 mt-1 text-synthwave-neon-pink">
+            <LightningIconSmall />
+          </span>
           <div className="flex flex-col gap-2">
             <h3 className="font-header font-bold text-white text-lg uppercase">
               Circuit Training ({circuitTrainingData?.stations?.length || 0}{" "}

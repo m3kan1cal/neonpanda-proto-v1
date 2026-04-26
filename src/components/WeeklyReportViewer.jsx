@@ -10,6 +10,12 @@ import {
   TrendingUpIcon,
   BrainIcon,
   ActivityIcon,
+  BarChartIcon,
+  HeartIcon,
+  InfoIcon,
+  JsonIcon,
+  LightbulbIcon,
+  SectionHeader,
 } from "./themes/SynthwaveComponents";
 import IconButton from "./shared/IconButton";
 import WorkoutHeatMap from "./WorkoutHeatMap";
@@ -128,12 +134,9 @@ function WeeklyReportViewerV2({
               }
             }}
           >
-            <div className="flex items-start gap-3 flex-1">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-header font-bold text-white text-lg uppercase">
-                Raw Report Data
-              </h3>
-            </div>
+            <SectionHeader icon={JsonIcon} color="pink" className="flex-1">
+              Raw Report Data
+            </SectionHeader>
             <svg
               className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("raw-json") ? "rotate-180" : ""}`}
               fill="none"
@@ -187,12 +190,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Coach Analysis & Insights
-                  </h3>
-                </div>
+                <SectionHeader icon={LightbulbIcon} color="pink" className="flex-1">
+                  Coach Analysis & Insights
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("coach-analysis") ? "rotate-180" : ""}`}
                   fill="none"
@@ -257,12 +257,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Volume Breakdown
-                  </h3>
-                </div>
+                <SectionHeader icon={BarChartIcon} color="pink" className="flex-1">
+                  Volume Breakdown
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("volume-breakdown") ? "rotate-180" : ""}`}
                   fill="none"
@@ -407,12 +404,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Actionable Insights
-                  </h3>
-                </div>
+                <SectionHeader icon={TargetIcon} color="pink" className="flex-1">
+                  Actionable Insights
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("actionable-insights") ? "rotate-180" : ""}`}
                   fill="none"
@@ -480,12 +474,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Performance Markers
-                  </h3>
-                </div>
+                <SectionHeader icon={MetricsIcon} color="pink" className="flex-1">
+                  Performance Markers
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("performance-markers") ? "rotate-180" : ""}`}
                   fill="none"
@@ -576,12 +567,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Coaching Synthesis
-                  </h3>
-                </div>
+                <SectionHeader icon={BrainIcon} color="pink" className="flex-1">
+                  Coaching Synthesis
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("coaching-synthesis") ? "rotate-180" : ""}`}
                   fill="none"
@@ -645,12 +633,9 @@ function WeeklyReportViewerV2({
                 }
               }}
             >
-              <div className="flex items-start gap-3 flex-1">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  Analysis Metadata
-                </h3>
-              </div>
+              <SectionHeader icon={InfoIcon} color="pink" className="flex-1">
+                Analysis Metadata
+              </SectionHeader>
               <svg
                 className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("analysis-metadata") ? "rotate-180" : ""}`}
                 fill="none"
@@ -719,12 +704,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Movement Analysis
-                  </h3>
-                </div>
+                <SectionHeader icon={ActivityIcon} color="pink" className="flex-1">
+                  Movement Analysis
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("movement-analysis") ? "rotate-180" : ""}`}
                   fill="none"
@@ -813,12 +795,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Training Intel
-                  </h3>
-                </div>
+                <SectionHeader icon={BrainIcon} color="pink" className="flex-1">
+                  Training Intel
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("training-intelligence") ? "rotate-180" : ""}`}
                   fill="none"
@@ -900,12 +879,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Weekly Progression
-                  </h3>
-                </div>
+                <SectionHeader icon={TrendingUpIcon} color="pink" className="flex-1">
+                  Weekly Progression
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("weekly-progression") ? "rotate-180" : ""}`}
                   fill="none"
@@ -998,12 +974,9 @@ function WeeklyReportViewerV2({
                   }
                 }}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Fatigue Management
-                  </h3>
-                </div>
+                <SectionHeader icon={HeartIcon} color="pink" className="flex-1">
+                  Fatigue Management
+                </SectionHeader>
                 <svg
                   className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has("fatigue-management") ? "rotate-180" : ""}`}
                   fill="none"

@@ -24,6 +24,7 @@ import {
 import Footer from "../shared/Footer";
 import SelectCoachModal from "./SelectCoachModal";
 import { logger } from "../../utils/logger";
+import { ProgramIcon } from "../themes/SynthwaveComponents";
 
 function SharedProgramPreview() {
   const { sharedProgramId } = useParams();
@@ -630,7 +631,9 @@ function SharedProgramPreview() {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan" />
+                            <span className="shrink-0 text-synthwave-neon-cyan">
+                              <ProgramIcon className="w-5 h-5" />
+                            </span>
                             <h3 className="font-header text-lg font-bold uppercase text-white">
                               {workout.name}
                             </h3>
