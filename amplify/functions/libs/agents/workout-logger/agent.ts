@@ -761,7 +761,36 @@ Complete the workout logging workflow now using your tools.`;
     const allExtractions = this.getAllToolResults("extraction");
     const successfulSaves = allSaves
       .map((save, originalIndex) => ({ save, originalIndex }))
-      .filter((entry) => entry.save.success && entry.save.workoutId);
+      .filter(
+        (entry) =>
+          entry.save.success && entry.save.workoutId && !entry.save.duplicate,
+      );
+
+    // If every save attempt was a duplicate-skip, surface that explicitly so
+    // we don't fabricate success or fall through to the text-parsing fallback.
+    const duplicateSkips = allSaves.filter(
+      (s) => s.duplicate && s.skipped,
+    );
+    if (
+      allSaves.length > 0 &&
+      successfulSaves.length === 0 &&
+      duplicateSkips.length === allSaves.length
+    ) {
+      const firstDuplicate = duplicateSkips[0];
+      logger.info("⚠️ Building duplicate-skip result (no new saves occurred)", {
+        skipCount: duplicateSkips.length,
+        existingWorkoutId: firstDuplicate.existingWorkoutId,
+      });
+
+      return {
+        success: false,
+        skipped: true,
+        reason:
+          firstDuplicate.reason ||
+          "A workout for this session already exists — skipped duplicate save.",
+        workoutId: firstDuplicate.existingWorkoutId,
+      };
+    }
 
     if (successfulSaves.length > 0) {
       // Use the first successful save as the primary result for backward compatibility

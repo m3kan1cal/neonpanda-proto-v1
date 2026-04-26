@@ -302,30 +302,32 @@ function buildIncidentDirName(logGroup) {
 // ─── Claude Code CLI ──────────────────────────────────────────────────────────
 
 /**
- * Invoke the Claude Code CLI with the analysis prompt.
+ * Invoke the Claude Code CLI to analyze the incident.
  *
- * Defaults to --permission-mode plan (read-only, produces a reviewable plan
- * without editing files). Pass apply=true to run in bypassPermissions mode
- * with full write/shell access.
+ * Both modes use --dangerously-skip-permissions so the skill can freely use
+ * Bash, Read, Glob, and Grep without interactive permission prompts. The
+ * difference between plan and apply is controlled by the prompt itself:
+ *
+ *   plan  — analyze and produce a remediation plan; do not change any files
+ *   apply — analyze, plan, and implement the P0/P1 fixes
  *
  * Requires the `claude` CLI: npm install -g @anthropic-ai/claude-code
  */
-async function invokeClaudeCode(prompt, { apply = false, model = null } = {}) {
-  const modeLabel = apply ? "apply (will edit files)" : "read-only analysis";
+async function invokeClaudeCode(
+  incidentDirPath,
+  { apply = false, model = null } = {},
+) {
+  const prompt = apply
+    ? `/analyze-incident-logs Analyze the incident logs in ${incidentDirPath}, produce a structured remediation plan, and implement the P0 and P1 fixes.`
+    : `/analyze-incident-logs Analyze the incident logs in ${incidentDirPath} and produce a structured remediation plan. Do not make any code changes.`;
+
+  const modeLabel = apply ? "apply (will implement fixes)" : "plan only";
   console.info("─── Invoking Claude Code ───────────────────────────────────");
   console.info(`Mode:   ${modeLabel}`);
   if (model) console.info(`Model:  ${model}`);
   console.info(`Prompt: ${prompt}\n`);
 
-  // claude -p <prompt> [--dangerously-skip-permissions | --allowedTools ...]
-  // Read-only: restrict to Read/Glob/Grep so Claude can read files without
-  // permission prompts but cannot write. Apply: bypass all permissions.
-  const cliArgs = ["-p", prompt];
-  if (apply) {
-    cliArgs.push("--dangerously-skip-permissions");
-  } else {
-    cliArgs.push("--allowedTools", "Read,Glob,Grep");
-  }
+  const cliArgs = ["--print", prompt, "--dangerously-skip-permissions"];
   if (model) cliArgs.push("--model", model);
 
   return new Promise((resolve) => {
@@ -345,7 +347,7 @@ async function invokeClaudeCode(prompt, { apply = false, model = null } = {}) {
       } else {
         console.error(`\nError invoking Claude Code: ${err.message}`);
       }
-      resolve(); // Non-fatal — logs are already saved regardless
+      resolve();
     });
 
     child.on("close", (code) => {
@@ -480,10 +482,10 @@ async function main() {
   console.info(`  Context:      ${contextFile}`);
   console.info("═══════════════════════════════════════════════════════════\n");
 
-  const agentPrompt = `/analyze-incident-logs Analyze the incident logs in ${incidentDirPath} and produce a structured remediation plan.`;
+  const interactivePrompt = `/analyze-incident-logs Analyze the incident logs in ${incidentDirPath} and produce a structured remediation plan.`;
 
   if (options.runAgent) {
-    await invokeClaudeCode(agentPrompt, {
+    await invokeClaudeCode(incidentDirPath, {
       apply: options.apply,
       model: options.model,
     });
@@ -492,7 +494,7 @@ async function main() {
       "─── Claude Code Prompt ─────────────────────────────────────",
     );
     console.info("");
-    console.info(agentPrompt);
+    console.info(interactivePrompt);
     console.info("");
     console.info(
       "────────────────────────────────────────────────────────────",
