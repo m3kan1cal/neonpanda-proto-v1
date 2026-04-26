@@ -27,7 +27,12 @@ import { createCoachConversation } from "../utils/apis/coachConversationApi";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
 import { isRecentConversation } from "../utils/dateUtils";
-import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
+import {
+  ChatIconSmall,
+  NeonBorder,
+  NewBadge,
+  SectionHeader,
+} from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
 import { CoachConversationAgent } from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
@@ -693,13 +698,13 @@ function ManageCoachConversations() {
           )}
         </div>
 
-        {/* Header with pink dot */}
-        <div className="flex items-start gap-3 mb-2 pr-16">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            {headerText}
-          </h3>
-        </div>
+        <SectionHeader
+          icon={ChatIconSmall}
+          color="pink"
+          className="mb-2 pr-16"
+        >
+          {headerText}
+        </SectionHeader>
 
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-4 mb-4">

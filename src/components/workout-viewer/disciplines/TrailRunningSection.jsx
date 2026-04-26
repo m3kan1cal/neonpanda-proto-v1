@@ -1,6 +1,10 @@
 import React from "react";
 import { ValueDisplay } from "../../shared/ValueDisplay";
 import { formatDistanceUnit } from "../../shared/distanceFormatters";
+import {
+  ActivityIcon,
+  SectionHeader,
+} from "../../themes/SynthwaveComponents";
 
 /**
  * TrailRunningSection
@@ -180,12 +184,9 @@ export const TrailRunningSection = ({
           }`}
           onClick={() => toggleCollapse(detailsId)}
         >
-          <div className="flex items-start space-x-3">
-            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-            <h3 className="font-header font-bold text-white text-lg uppercase">
-              Trail Running Details
-            </h3>
-          </div>
+          <SectionHeader icon={ActivityIcon} color="pink">
+            Trail Running Details
+          </SectionHeader>
           <svg
             className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(detailsId) ? "rotate-180" : ""}`}
             fill="none"
@@ -226,12 +227,9 @@ export const TrailRunningSection = ({
             }`}
             onClick={() => toggleCollapse(segmentsId)}
           >
-            <div className="flex items-start space-x-3">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-              <h3 className="font-header font-bold text-white text-lg uppercase">
-                Trail Segments ({trailRunningData.segments.length})
-              </h3>
-            </div>
+            <SectionHeader icon={ActivityIcon} color="pink">
+              Trail Segments ({trailRunningData.segments.length})
+            </SectionHeader>
             <svg
               className={`w-5 h-5 text-synthwave-neon-cyan transition-transform duration-200 ${collapsedSections.has(segmentsId) ? "rotate-180" : ""}`}
               fill="none"

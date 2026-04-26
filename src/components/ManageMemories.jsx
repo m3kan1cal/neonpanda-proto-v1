@@ -17,7 +17,12 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import { isNewWorkout } from "../utils/dateUtils";
-import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
+import {
+  MemoryIcon,
+  NeonBorder,
+  NewBadge,
+  SectionHeader,
+} from "./themes/SynthwaveComponents";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import AppFooter from "./shared/AppFooter";
 import TiptapEditor from "./shared/TiptapEditor";
@@ -572,13 +577,13 @@ function ManageMemories() {
           )}
         </div>
 
-        {/* Header with pink dot - using first ~35 chars of description */}
-        <div className="flex items-start gap-3 mb-2 pr-16">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            {headerText}
-          </h3>
-        </div>
+        <SectionHeader
+          icon={MemoryIcon}
+          color="pink"
+          className="mb-2 pr-16"
+        >
+          {headerText}
+        </SectionHeader>
 
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-4 mb-4 pr-16">

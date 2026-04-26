@@ -27,7 +27,9 @@ import { notifyLoadMoreError } from "../../utils/loadMoreErrors";
 import {
   TrashIcon,
   ShareIconTiny,
+  ProgramIcon,
   ProgramIconTiny,
+  SectionHeader,
   WorkoutIconTiny,
 } from "../themes/SynthwaveComponents";
 
@@ -370,13 +372,13 @@ function ManageSharedPrograms() {
           <TrashIcon />
         </button>
 
-        {/* Header with pink dot */}
-        <div className="flex items-start gap-3 mb-2 pr-16">
-          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            {headerText}
-          </h3>
-        </div>
+        <SectionHeader
+          icon={ProgramIcon}
+          color="pink"
+          className="mb-2 pr-16"
+        >
+          {headerText}
+        </SectionHeader>
 
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-4 mb-4 pr-16">

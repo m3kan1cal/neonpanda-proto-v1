@@ -1242,8 +1242,10 @@ function PanelContent({
               <DrawerResizeIcon isExpanded={isExpanded} />
             </button>
 
-            {/* Section header dot */}
-            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink shrink-0" />
+            {/* Section header icon */}
+            <span className="shrink-0 text-synthwave-neon-pink">
+              <ChatIconSmall />
+            </span>
 
             {/* Entity label */}
             <div className="flex-1 min-w-0">
