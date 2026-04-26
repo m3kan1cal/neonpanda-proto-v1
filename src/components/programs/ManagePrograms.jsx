@@ -1977,7 +1977,7 @@ function ManagePrograms() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-xl hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1986,7 +1986,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-xl hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1999,7 +1999,7 @@ function ManagePrograms() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-xl hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -2025,7 +2025,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-xl hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
