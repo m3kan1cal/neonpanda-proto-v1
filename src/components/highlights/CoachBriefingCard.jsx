@@ -427,7 +427,7 @@ export default function CoachBriefingCard({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Card -- neon glass border wrapper */}
           <div
-            className={`${containerPatterns.neonGlassWrapper} group`}
+            className={`${containerPatterns.neonGlassWrapper} group focus:outline-none focus-visible:ring-2 focus-visible:ring-synthwave-neon-cyan/50 focus-visible:ring-offset-2 focus-visible:ring-offset-synthwave-bg-primary`}
             onClick={() => setModalOpen(true)}
             role="button"
             tabIndex={0}
