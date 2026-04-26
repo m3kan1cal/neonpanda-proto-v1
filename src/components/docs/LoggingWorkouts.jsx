@@ -258,7 +258,7 @@ function LoggingWorkouts() {
           ].map((item) => (
             <div
               key={item.label}
-              className="p-3 rounded-md border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30"
+              className="p-3 rounded-xl border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30"
             >
               <p className="font-header font-bold text-sm text-synthwave-neon-cyan">
                 {item.label}

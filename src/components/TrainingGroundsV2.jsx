@@ -682,7 +682,7 @@ function TrainingGroundsV2() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-md animate-pulse"
+                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-xl animate-pulse"
                 ></div>
               ))}
             </div>
@@ -700,7 +700,7 @@ function TrainingGroundsV2() {
                   className={`${containerPatterns.neonGlassSkeletonInner} relative`}
                 >
                   <div className="absolute top-4 right-4">
-                    <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
+                    <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
                   </div>
                   <div className="flex items-center gap-2 pr-10">
                     <span className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse shrink-0" />
@@ -734,14 +734,14 @@ function TrainingGroundsV2() {
                     <div className="space-y-1.5 pt-1">
                       {[1].map((j) => (
                         <div key={j} className="flex items-center gap-2">
-                          <div className="w-5 h-5 min-w-[20px] rounded-md bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
+                          <div className="w-5 h-5 min-w-[20px] rounded-xl bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                           <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 animate-pulse"></div>
                           <div className="h-3 w-8 bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                         </div>
                       ))}
                     </div>
                     <div className="flex-1 min-h-[4px]"></div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse w-full"></div>
+                    <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
                   </div>
                 </div>
               ))}
@@ -767,7 +767,7 @@ function TrainingGroundsV2() {
                     {[1, 2].map((i) => (
                       <div
                         key={i}
-                        className="rounded-md border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 p-4 flex items-center gap-4"
+                        className="rounded-xl border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 p-4 flex items-center gap-4"
                       >
                         <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                         <div className="flex-1 space-y-2">
@@ -823,7 +823,7 @@ function TrainingGroundsV2() {
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse shrink-0 mt-1" />
                     <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32" />
                   </div>
-                  <div className="h-16 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
+                  <div className="h-16 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
                 </div>
                 {/* Recent PRs skeleton - matches RecentPRsCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
@@ -835,7 +835,7 @@ function TrainingGroundsV2() {
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
-                        className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
+                        className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
                         <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />
@@ -854,7 +854,7 @@ function TrainingGroundsV2() {
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
-                        className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
+                        className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 p-3"
                       >
                         <div className="h-2.5 bg-synthwave-text-muted/20 animate-pulse w-2/3 mb-2" />
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-1/2 mb-2" />

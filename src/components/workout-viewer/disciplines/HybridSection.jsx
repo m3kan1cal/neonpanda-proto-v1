@@ -37,7 +37,7 @@ export const HybridSection = ({
     return (
       <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
         <div
-          className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 rounded-md"
+          className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 rounded-xl"
           onClick={() => toggleCollapse(sectionId)}
         >
           <div className="flex items-start space-x-3">
@@ -48,7 +48,7 @@ export const HybridSection = ({
           </div>
         </div>
         <div className="px-6 pb-6">
-          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
             <div className="text-synthwave-text-secondary font-body text-sm">
               No hybrid workout data available. This discipline is for
               mixed-modality workouts that don't fit a single training style.
@@ -144,7 +144,7 @@ export const HybridSection = ({
           </svg>
         </button>
         {!collapsedSubsections.has(subKey) && (
-          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4 animate-fadeIn mb-2">
+          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn mb-2">
             <div className="space-y-2">
               {exercise.sets?.length > 0 ? (
                 exercise.sets.map((set, setIndex) => (
@@ -212,7 +212,7 @@ export const HybridSection = ({
         return (
           <div
             key={phaseIndex}
-            className="border border-synthwave-neon-cyan/10 rounded-md overflow-hidden"
+            className="border border-synthwave-neon-cyan/10 rounded-xl overflow-hidden"
           >
             <button
               onClick={() => toggleSubsection(phaseKey)}
@@ -292,7 +292,7 @@ export const HybridSection = ({
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
         className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-          collapsedSections.has(sectionId) ? "rounded-md" : "rounded-t-md"
+          collapsedSections.has(sectionId) ? "rounded-xl" : "rounded-t-xl"
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >

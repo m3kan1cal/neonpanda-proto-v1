@@ -562,7 +562,7 @@ function ManageWorkouts() {
                 openMenuId === workout.workoutId ? null : workout.workoutId,
               );
             }}
-            className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+            className={`p-2 rounded-xl transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
               openMenuId === workout.workoutId
                 ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                 : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
@@ -575,7 +575,7 @@ function ManageWorkouts() {
 
           {/* Dropdown Menu */}
           {openMenuId === workout.workoutId && (
-            <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+            <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-xl shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -844,7 +844,7 @@ function ManageWorkouts() {
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}

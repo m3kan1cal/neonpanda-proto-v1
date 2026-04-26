@@ -90,7 +90,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
+        <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -189,7 +189,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
+        <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -298,7 +298,7 @@ function TodaysWorkoutCard({
       </button>
 
       {/* Workout details */}
-      <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4 mb-4">
+      <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4 mb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-body font-semibold text-base text-white mb-1">
@@ -322,7 +322,7 @@ function TodaysWorkoutCard({
       {/* Multiple workouts indicator */}
       {templates.length > 1 && (
         <div className="flex items-center justify-center mb-4">
-          <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-md text-xs font-body">
+          <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded-xl text-xs font-body">
             +{templates.length - 1} more workout
             {templates.length > 2 ? "s" : ""} scheduled today
           </div>

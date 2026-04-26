@@ -448,7 +448,7 @@ function SkeletonSubcontainer({ rows = 3, gridCols = false }) {
   return (
     <div>
       <div className="h-3 bg-synthwave-text-muted/20 animate-pulse rounded w-20 mb-2" />
-      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
         {gridCols ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             {[...Array(rows * 2)].map((_, i) => (
@@ -483,7 +483,7 @@ function ReportsSkeleton() {
             {/* Title + BETA badge */}
             <div className="flex items-center gap-3">
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse rounded w-52" />
-              <div className="h-6 w-14 bg-synthwave-text-muted/20 animate-pulse rounded-md" />
+              <div className="h-6 w-14 bg-synthwave-text-muted/20 animate-pulse rounded-xl" />
             </div>
             {/* Coach pill */}
             <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">

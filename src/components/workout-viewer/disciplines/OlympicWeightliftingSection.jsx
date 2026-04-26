@@ -17,7 +17,7 @@ export const OlympicWeightliftingSection = ({
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
         className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-          collapsedSections.has(sectionId) ? "rounded-md" : "rounded-t-md"
+          collapsedSections.has(sectionId) ? "rounded-xl" : "rounded-t-xl"
         }`}
         onClick={() => toggleCollapse(sectionId)}
       >
@@ -80,7 +80,7 @@ export const OlympicWeightliftingSection = ({
                     </svg>
                   </button>
                   {!collapsedSubsections.has(`oly-lift-${liftIndex}`) && (
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4 animate-fadeIn">
+                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
                       <div className="space-y-2">
                         {lift.sets?.map((set, setIndex) => (
                           <div key={setIndex} className="py-2">
@@ -137,7 +137,7 @@ export const OlympicWeightliftingSection = ({
               ))}
             </div>
           ) : (
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No Olympic Weightlifting data available. Include lifts, weights,
                 percentages, and attempts when logging.

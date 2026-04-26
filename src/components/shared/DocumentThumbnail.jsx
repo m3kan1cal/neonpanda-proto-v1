@@ -79,7 +79,7 @@ export default function DocumentThumbnail({
       type="button"
       onClick={handleDownload}
       disabled={isDownloading}
-      className={`relative overflow-hidden rounded-md border ${variantStyle} ${thumbnailSize} bg-synthwave-bg-primary/50 flex items-center justify-center cursor-pointer hover:brightness-110 transition-all duration-200`}
+      className={`relative overflow-hidden rounded-xl border ${variantStyle} ${thumbnailSize} bg-synthwave-bg-primary/50 flex items-center justify-center cursor-pointer hover:brightness-110 transition-all duration-200`}
     >
       {/* Downloading spinner overlay */}
       {isDownloading && (

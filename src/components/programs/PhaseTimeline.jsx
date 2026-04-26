@@ -121,7 +121,7 @@ export default function PhaseTimeline({ program }) {
               return (
                 <div
                   key={phase.phaseId || index}
-                  className={`relative overflow-hidden border-r border-synthwave-bg-primary/50 last:border-r-0 first:rounded-l-md last:rounded-r-md ${colors.bg}`}
+                  className={`relative overflow-hidden border-r border-synthwave-bg-primary/50 last:border-r-0 first:rounded-l-xl last:rounded-r-xl ${colors.bg}`}
                   style={{ width: `${width}%` }}
                 >
                   {/* Progress fill for current phase */}
@@ -142,7 +142,7 @@ export default function PhaseTimeline({ program }) {
                   {/* Phase label centered inside segment - styled like calendar workout count badges */}
                   <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                     <div
-                      className={`${badgePatterns.countBase} rounded-md ${PHASE_COUNT_BADGE_COLORS[index % PHASE_COUNT_BADGE_COLORS.length]}`}
+                      className={`${badgePatterns.countBase} rounded-xl ${PHASE_COUNT_BADGE_COLORS[index % PHASE_COUNT_BADGE_COLORS.length]}`}
                     >
                       {getTimelinePhaseName(phase.name, index)}
                     </div>

@@ -82,7 +82,7 @@ const ImageWithPresignedUrl = ({
     <>
       {/* Thumbnail */}
       <div
-        className={`relative overflow-hidden rounded-md border ${VARIANT_STYLES[variant] ?? VARIANT_STYLES.maroon} ${thumbnailSize} bg-synthwave-bg-primary/50 cursor-zoom-in`}
+        className={`relative overflow-hidden rounded-xl border ${VARIANT_STYLES[variant] ?? VARIANT_STYLES.maroon} ${thumbnailSize} bg-synthwave-bg-primary/50 cursor-zoom-in`}
         onClick={() => !loading && imageLoaded && setIsOpen(true)}
       >
         {/* Spinner — shown while URL is fetching OR while the browser is painting the image */}
@@ -118,7 +118,7 @@ const ImageWithPresignedUrl = ({
             <img
               src={imageUrl}
               alt={`Uploaded image ${index + 1}`}
-              className="block object-contain rounded-md shadow-2xl"
+              className="block object-contain rounded-xl shadow-2xl"
               style={{ maxWidth: "85vw", maxHeight: "80vh" }}
             />
             <button

@@ -803,7 +803,7 @@ Daily Batch (3am UTC, EventBridge)
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link
                 to="/blog/the-foundation"
-                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-xl hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
                   <span className="font-body font-bold text-sm text-synthwave-neon-pink">
@@ -816,7 +816,7 @@ Daily Batch (3am UTC, EventBridge)
               </Link>
               <Link
                 to="/blog/your-coach-your-way"
-                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-xl hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
                   <span className="font-body font-bold text-sm text-synthwave-neon-cyan">
@@ -829,7 +829,7 @@ Daily Batch (3am UTC, EventBridge)
               </Link>
               <Link
                 to="/blog/every-rep-counts"
-                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-xl hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-purple/20 flex items-center justify-center">
                   <span className="font-body font-bold text-sm text-synthwave-neon-purple">
@@ -842,7 +842,7 @@ Daily Batch (3am UTC, EventBridge)
               </Link>
               <Link
                 to="/blog/training-programs-that-think"
-                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-xl hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
                   <span className="font-body font-bold text-sm text-synthwave-neon-pink">
@@ -855,7 +855,7 @@ Daily Batch (3am UTC, EventBridge)
               </Link>
               <Link
                 to="/blog/the-symphony"
-                className="group flex items-center gap-3 p-3 rounded-md hover:bg-synthwave-bg-primary/30 transition-colors"
+                className="group flex items-center gap-3 p-3 rounded-xl hover:bg-synthwave-bg-primary/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
                   <span className="font-body font-bold text-sm text-synthwave-neon-cyan">
