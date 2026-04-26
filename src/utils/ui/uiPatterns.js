@@ -178,7 +178,7 @@ export const badgePatterns = {
   // Standard size for page headers; use betaSmall for dense chrome (drawers, inline).
   beta: "inline-flex items-center px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-full text-synthwave-neon-purple font-body text-xs font-bold uppercase tracking-wider",
   betaSmall:
-    "inline-flex items-center px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-full text-synthwave-neon-purple font-body text-[10px] font-bold uppercase tracking-wider",
+    "inline-flex items-center px-1.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-full text-synthwave-neon-purple font-body font-bold uppercase tracking-wider",
 
   // Green badges - For status indicators (active, qualified, PR)
   green:
@@ -1163,8 +1163,8 @@ export const quickStatsPatterns = {
     // Display class ("flex" vs "hidden sm:flex") is composed by QuickStats.jsx
     // based on the stat's priority; see the note on `item` above.
     item: "items-center gap-1.5 md:gap-2",
-    icon: "w-5 h-5 md:w-7 md:h-7 bg-synthwave-text-muted/20 animate-pulse",
-    value: "h-4 w-6 md:h-6 md:w-8 bg-synthwave-text-muted/20 animate-pulse",
+    icon: "w-5 h-5 md:w-7 md:h-7 rounded-full bg-synthwave-text-muted/20 animate-pulse",
+    value: "h-4 w-6 md:h-6 md:w-8 rounded-lg bg-synthwave-text-muted/20 animate-pulse",
   },
 };
 
@@ -1276,7 +1276,7 @@ export const contextualDrawerPatterns = {
 
   // Header entity label
   headerLabel:
-    "flex-1 min-w-0 font-header font-bold text-white text-sm uppercase truncate",
+    "flex-1 min-w-0 font-header font-bold text-white uppercase truncate",
 
   // Scrollable message area
   messageArea:

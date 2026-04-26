@@ -851,7 +851,7 @@ General thoughts: `;
                       </div>
                     </div>
                     {/* Chevron icon placeholder */}
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm shrink-0 ml-3"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg shrink-0 ml-3"></div>
                   </div>
                 </div>
 
@@ -862,7 +862,7 @@ General thoughts: `;
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
                   <div className="px-6 pb-6 space-y-2">
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
@@ -879,7 +879,7 @@ General thoughts: `;
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
                   <div className="px-6 pb-6 space-y-2">
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
@@ -894,7 +894,7 @@ General thoughts: `;
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
                   <div className="px-6 pb-6 space-y-4">
                     <div>
