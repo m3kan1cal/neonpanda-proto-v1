@@ -1349,7 +1349,7 @@ function ManagePrograms() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
           </header>
 
           {/* Programs grid skeleton */}
@@ -1358,7 +1358,7 @@ function ManagePrograms() {
             <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
               <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
                 <div className="flex-1 flex flex-col justify-center items-center">
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse rounded-md mb-4"></div>
+                  <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse rounded-full mb-4"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 mb-3"></div>
                   <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-56 mb-4"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>

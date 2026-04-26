@@ -573,7 +573,7 @@ function Coaches() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
           </header>
 
           {/* Coaches grid skeleton */}
@@ -582,7 +582,7 @@ function Coaches() {
             <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
               <div className="text-center h-full flex flex-col justify-between min-h-[350px]">
                 <div className="flex-1 flex flex-col justify-center items-center">
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse mb-4"></div>
+                  <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse rounded-full mb-4"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48 mb-3"></div>
                   <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56 mb-4"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
