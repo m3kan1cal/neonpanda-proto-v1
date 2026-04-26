@@ -208,13 +208,15 @@ tell the user it has been logged and suggest editing if changes are needed.`,
         }
       }
 
-      // P0 guard 2: cross-turn dedup — check if a workout was already
-      // logged from this conversation with a matching completedAt date.
+      // P0 guard 2: cross-turn dedup. Prefer templateId (precise) when this
+      // workout is being logged against a program template; fall back to
+      // conversationId + date for free-text logs.
       const resolvedDateOnly = resolvedDate.split("T")[0]; // YYYY-MM-DD
       const duplicate = await checkDuplicateWorkout(
         context.userId,
         context.conversationId,
         resolvedDateOnly,
+        input.templateContext?.templateId,
       );
       if (duplicate) {
         console.warn(

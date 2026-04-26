@@ -452,7 +452,8 @@ export const PROGRAM_RUNTIME_PROPERTIES: Record<string, any> = {
   },
   adherenceRate: {
     type: "number",
-    description: "Program adherence rate: completedWorkouts / totalWorkouts",
+    description:
+      "Program adherence rate as a percentage (0-100): (completedWorkouts / totalWorkouts) * 100",
   },
   lastActivityAt: {
     type: ["string", "null"],

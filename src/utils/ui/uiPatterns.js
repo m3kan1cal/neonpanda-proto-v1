@@ -4,48 +4,48 @@
 export const buttonPatterns = {
   // Primary Actions (Pink) - High-impact actions that create, save, or commit changes
   primary:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-6 py-3 rounded-md font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
 
   // Secondary Actions (Cyan) - Navigation and management actions
   secondary:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-6 py-3 rounded-md font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
 
   // Special Actions (Purple) - AI-powered and premium features
   special:
-    "bg-synthwave-neon-purple text-white px-6 py-3 rounded-md font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-purple/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
+    "bg-synthwave-neon-purple text-white px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-purple/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
 
   // Small variants (32px height)
   primarySmall:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-md font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[32px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[32px] flex items-center justify-center",
 
   secondarySmall:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-3 py-1.5 rounded-md font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[32px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-3 py-1.5 rounded-full font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[32px] flex items-center justify-center",
 
   // Medium variants (40px height)
   primaryMedium:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-2 rounded-md font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center",
 
   secondaryMedium:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-md font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center",
 
   // Compact variants (48px height, text-sm) - For floating menus and compact interfaces
   primaryCompact:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-3 rounded-md font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-3 rounded-full font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
 
   secondaryCompact:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-3 rounded-md font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-3 rounded-full font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[48px] flex items-center justify-center",
 
   // Hero CTA (56px height) - Premium gradient button for landing pages and major CTAs
   heroCTA:
-    "px-8 py-4 rounded-md bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-[transform,box-shadow] duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[56px] flex items-center justify-center cursor-pointer",
+    "px-8 py-4 rounded-full bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-[transform,box-shadow] duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[56px] flex items-center justify-center cursor-pointer",
 
   // Loading state variants - For buttons showing loading spinners
   primaryMediumLoading:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-2 rounded-md font-body font-semibold text-base uppercase tracking-wide min-h-[40px] flex items-center justify-center opacity-75 cursor-not-allowed",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide min-h-[40px] flex items-center justify-center opacity-75 cursor-not-allowed",
 
   // Disabled state variants - For buttons when user is not authenticated or action unavailable
   primaryMediumDisabled:
-    "bg-gray-600/20 border border-gray-600/50 text-gray-500 cursor-not-allowed px-4 py-2 rounded-md font-body font-semibold text-base uppercase tracking-wide min-h-[40px] flex items-center justify-center",
+    "bg-gray-600/20 border border-gray-600/50 text-gray-500 cursor-not-allowed px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide min-h-[40px] flex items-center justify-center",
 
   // Challenge Icon Container - Square gradient container for challenge/agitation icons
   challengeIcon:
@@ -74,7 +74,7 @@ export const buttonPatterns = {
 
   // Inline action button - Transparent hover-effect button for inline rename/delete form actions
   inlineAction:
-    "px-2 py-1 rounded-md bg-transparent border-none transition-all duration-200 font-body font-medium uppercase tracking-wide cursor-pointer",
+    "px-2 py-1 rounded-full bg-transparent border-none transition-all duration-200 font-body font-medium uppercase tracking-wide cursor-pointer",
 
   // Mode toggle container
   modeToggleContainer:
@@ -102,7 +102,7 @@ export const buttonPatterns = {
 
   // Square icon-only send button (48×48px) - chat input send action with purple→pink gradient
   sendSquare:
-    "w-12 h-12 rounded-md bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0",
+    "w-12 h-12 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0",
 
   // Inline circular send button - positioned inside chat input next to emoji button
   sendInline:
@@ -190,55 +190,55 @@ export const badgePatterns = {
 export const iconButtonPatterns = {
   // Minimal Clean - Just color change on hover (Pink)
   minimal:
-    "p-3 rounded-md text-synthwave-neon-pink hover:text-synthwave-neon-pink/80 hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+    "p-3 rounded-full text-synthwave-neon-pink hover:text-synthwave-neon-pink/80 hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
 
   // Soft Background - Subtle background with hover enhancement (Pink)
   softBg:
-    "p-3 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50",
+    "p-3 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50",
 
   // Bordered - Border with hover fill (Cyan)
   bordered:
-    "cursor-pointer p-3 rounded-md border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
+    "cursor-pointer p-3 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
 
   // Solid Fill - Full background with shadow (Pink)
   solid:
-    "p-3 rounded-md bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+    "p-3 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
 
   // Solid Fill Cyan - Full background with shadow (Cyan)
   solidCyan:
-    "p-3 rounded-md bg-synthwave-neon-cyan text-synthwave-bg-primary hover:bg-synthwave-neon-cyan/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+    "p-3 rounded-full bg-synthwave-neon-cyan text-synthwave-bg-primary hover:bg-synthwave-neon-cyan/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
 
   // Floating - Glassmorphism with backdrop blur (Pink)
   floating:
-    "p-3 rounded-md bg-synthwave-bg-card/80 backdrop-blur-sm border border-synthwave-neon-pink/20 text-synthwave-neon-pink hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50",
+    "p-3 rounded-full bg-synthwave-bg-card/80 backdrop-blur-sm border border-synthwave-neon-pink/20 text-synthwave-neon-pink hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50",
 
   // Glow Effect - Animated glow (Cyan)
-  glow: "p-3 rounded-md bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 animate-pulse-glow",
+  glow: "p-3 rounded-full bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 animate-pulse-glow",
 
   // Small Action Buttons - Modern versions of chat action buttons with dark background by default (like microphone button)
   // Icons should be w-5 h-5 (20px) for consistent sizing across all action buttons
   actionSmallBlue:
-    "p-2 sm:p-2.5 rounded-md bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallGreen:
-    "p-2 sm:p-2.5 rounded-md bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-green-400 hover:bg-green-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-green-400 hover:bg-green-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallPurple:
-    "p-2 sm:p-2.5 rounded-md bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-purple-400 hover:bg-purple-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-purple-400 hover:bg-purple-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallPink:
-    "p-2 sm:p-2.5 rounded-md bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallCyan:
-    "p-2 sm:p-2.5 rounded-md bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   // Compact delete button - For card corner delete actions (smaller than minimal, starts muted)
   deleteCompact:
-    "p-1.5 rounded-md text-synthwave-text-muted hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+    "p-1.5 rounded-full text-synthwave-text-muted hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
 
   // Delete card button - Absolute-positioned pink delete/trash button on manage-page cards
   deleteCard:
-    "absolute top-4 right-4 p-2 rounded-md bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer",
+    "absolute top-4 right-4 p-2 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer",
 };
 
 export const formPatterns = {
@@ -326,31 +326,31 @@ export const inlineEditPatterns = {
   // Edit button patterns (show on hover in display mode)
   editButton: {
     small:
-      "p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer",
+      "p-1 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer",
     medium:
-      "p-1.5 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+      "p-1.5 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
     large:
-      "p-2 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+      "p-2 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
   },
 
   // Save button patterns (pink primary action)
   saveButton: {
     small:
-      "p-1 rounded-md bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
     medium:
-      "p-1.5 rounded-md bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1.5 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
     large:
-      "p-2 rounded-md bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-2 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
   },
 
   // Cancel button patterns (cyan secondary action)
   cancelButton: {
     small:
-      "p-1 rounded-md border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
     medium:
-      "p-1.5 rounded-md border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1.5 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
     large:
-      "p-2 rounded-md border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-2 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
   },
 
   // Icon sizes (standardized across all inline edits)
@@ -621,7 +621,7 @@ export const containerPatterns = {
 
   // Action dropdown trigger button base
   actionDropdownTrigger:
-    "p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+    "p-2 rounded-full transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
 
   // Sub-panel container - inner content panels within cards
   subPanel:
@@ -811,7 +811,7 @@ export const compactCardPatterns = {
 export const commandPalettePatterns = {
   // Command palette trigger button - Minimal button showing just keyboard shortcut (hidden on mobile via component)
   triggerButton:
-    "flex items-center justify-center px-3 py-2 rounded-md bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary cursor-pointer",
+    "flex items-center justify-center px-3 py-2 rounded-full bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary cursor-pointer",
 
   // Button text (hidden on mobile)
   triggerButtonText: "font-body text-sm font-medium hidden sm:inline",
@@ -902,7 +902,7 @@ export const navigationPatterns = {
     header: "px-6 py-4 border-b border-synthwave-neon-cyan/10",
     headerTitle: "font-header font-bold text-2xl text-white uppercase",
     headerCloseButton:
-      "p-2 rounded-md text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+      "p-2 rounded-full text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
 
     // Section headers
     sectionContainer: "py-2",
@@ -1296,7 +1296,7 @@ export const contextualDrawerPatterns = {
 
   // Close button (icon button style)
   closeButton:
-    "shrink-0 w-8 h-8 flex items-center justify-center rounded-md text-synthwave-text-muted hover:text-synthwave-text-primary hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+    "shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-synthwave-text-muted hover:text-synthwave-text-primary hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
 };
 
 // Changelog List Patterns - Text-based information display in lists
@@ -1523,7 +1523,7 @@ export const skeletonPatterns = {
   chatInput:
     "w-full h-[80px] rounded-md bg-synthwave-text-muted/20 animate-pulse",
   // Action/send button skeleton
-  actionButton: "w-12 h-12 rounded-md bg-synthwave-text-muted/20 animate-pulse",
+  actionButton: "w-12 h-12 rounded-full bg-synthwave-text-muted/20 animate-pulse",
   // Chat message bubble skeleton
   chatMessage: "px-4 py-3 rounded-md bg-synthwave-text-muted/20 animate-pulse",
 };

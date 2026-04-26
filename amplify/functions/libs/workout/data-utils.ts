@@ -4,13 +4,21 @@
  * Helper functions for extracting and transforming workout data structures.
  */
 
-import { queryWorkouts } from "../../../dynamodb/workout";
+import {
+  queryWorkouts,
+  queryWorkoutsByTemplate,
+} from "../../../dynamodb/workout";
 
 /**
- * Check if a duplicate workout already exists for a given conversation and date.
+ * Check if a duplicate workout already exists.
  *
- * Queries the 10 most recent workouts for the user, then checks if any match
- * both the conversationId and the completedAt date (YYYY-MM-DD).
+ * Two matching strategies:
+ *   1. If `templateId` is provided (program-template logging path), match on
+ *      `userId + templateId`. Templates are unique per program day, so a second
+ *      save against the same template is unambiguously a duplicate.
+ *   2. Otherwise (free-text coach-chat logging), fall back to matching on
+ *      `userId + conversationId + completedAt date`. This is coarser but is
+ *      the only signal available when there is no template.
  *
  * Returns the duplicate workout if found, undefined otherwise.
  * Swallows errors so callers can treat dedup as non-blocking.
@@ -19,13 +27,21 @@ export async function checkDuplicateWorkout(
   userId: string,
   conversationId: string,
   completedAtDate: string | Date,
+  templateId?: string,
 ): Promise<any | undefined> {
-  const dateOnly =
-    completedAtDate instanceof Date
-      ? completedAtDate.toISOString().split("T")[0]
-      : completedAtDate.split("T")[0];
-
   try {
+    // Strategy 1: template-scoped dedup (precise)
+    if (templateId) {
+      const templateWorkouts = await queryWorkoutsByTemplate(templateId);
+      return templateWorkouts.find((w) => w.userId === userId);
+    }
+
+    // Strategy 2: conversation + date dedup (free-text fallback)
+    const dateOnly =
+      completedAtDate instanceof Date
+        ? completedAtDate.toISOString().split("T")[0]
+        : completedAtDate.split("T")[0];
+
     const recentWorkouts = await queryWorkouts(userId, {
       limit: 10,
       sortBy: "completedAt",

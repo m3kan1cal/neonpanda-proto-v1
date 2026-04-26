@@ -593,7 +593,7 @@ function ManageSharedPrograms() {
           {/* Header skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded-md animate-pulse w-80"></div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}

@@ -78,6 +78,10 @@ function ViewWorkouts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingWorkoutId, setProcessingWorkoutId] = useState(null);
+  // templateId -> "polling" | "timeout"; mirrored from ProgramAgent state so
+  // the UI can render an actionable "Refresh to check" button when the
+  // build-workout Lambda runs longer than the polling budget.
+  const [pollingStatus, setPollingStatus] = useState({});
 
   // State for workout logging (replaces fragile refs approach)
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
@@ -148,8 +152,29 @@ function ViewWorkouts() {
   // Prevents stale data from overwriting local optimistic updates during polling
   const prevTodaysWorkoutRef = useRef(null);
 
+  // Ref to track ProgramAgent's pollingStatus reference, mirroring the
+  // todaysWorkout pattern so we only forward changes (the agent
+  // initializes pollingStatus to {} so a truthy guard is always true).
+  const prevPollingStatusRef = useRef(null);
+
   // Ref to track current explanation request (for cancellation)
   const explanationAbortControllerRef = useRef(null);
+
+  // Templates we've already toasted about for a polling timeout, so we don't
+  // re-toast on every render while the "Refresh to check" button is visible.
+  const seenTimeoutsRef = useRef(new Set());
+
+  // Toast once when a template's polling status flips to "timeout".
+  useEffect(() => {
+    Object.entries(pollingStatus).forEach(([tplId, status]) => {
+      if (status === "timeout" && !seenTimeoutsRef.current.has(tplId)) {
+        seenTimeoutsRef.current.add(tplId);
+        showError(
+          "Workout still processing. Tap 'Refresh to check' once it's ready.",
+        );
+      }
+    });
+  }, [pollingStatus, showError]);
 
   // Load program and workout data
   const loadData = async () => {
@@ -184,6 +209,13 @@ function ViewWorkouts() {
             ) {
               prevTodaysWorkoutRef.current = newState.todaysWorkout;
               setWorkoutData(newState.todaysWorkout);
+            }
+            if (
+              newState.pollingStatus &&
+              newState.pollingStatus !== prevPollingStatusRef.current
+            ) {
+              prevPollingStatusRef.current = newState.pollingStatus;
+              setPollingStatus(newState.pollingStatus);
             }
           },
         );
@@ -778,7 +810,7 @@ General thoughts: `;
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
           </header>
 
           {/* Program Context Skeleton */}
@@ -794,86 +826,99 @@ General thoughts: `;
           {/* Workout Cards Skeleton */}
           <div className="space-y-6">
             {[1, 2].map((i) => (
-              <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
-                {/* Workout Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    {/* Name and Badge */}
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                    </div>
-                    {/* Metadata Row */}
-                    <div className="flex items-center flex-wrap gap-4">
-                      <div className="flex items-center gap-1">
-                        <div className="w-4 h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+              <div key={i} className="space-y-3">
+                {/* Workout Header Card */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      {/* Title row with status dot */}
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-2 animate-pulse" />
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-72 max-w-full"></div>
                       </div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+                      {/* Badge row */}
+                      <div className="flex items-center flex-wrap gap-2 mb-2">
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24 rounded-full"></div>
+                      </div>
+                      {/* Metadata row */}
+                      <div className="flex items-center flex-wrap gap-4">
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
+                      </div>
                     </div>
+                    {/* Chevron icon placeholder */}
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm shrink-0 ml-3"></div>
                   </div>
-                  <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
                 </div>
 
-                {/* Description Textarea */}
-                <div className="mb-4">
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4">
-                    <div className="space-y-2">
-                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/6"></div>
+                {/* Prescribed Workout Sub-Card */}
+                <div className={containerPatterns.cardMedium}>
+                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm"></div>
                   </div>
-                  {/* Helper text skeleton */}
-                  <div className="mt-2 h-3 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
+                  <div className="px-6 pb-6 space-y-2">
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/6"></div>
+                  </div>
                 </div>
 
-                {/* Coach Notes Skeleton */}
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-4">
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24 mb-2"></div>
-                  <div className="space-y-2">
+                {/* Coach Notes Sub-Card */}
+                <div className={containerPatterns.cardMedium}>
+                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+                    </div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm"></div>
+                  </div>
+                  <div className="px-6 pb-6 space-y-2">
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
                   </div>
                 </div>
 
-                {/* Equipment, Exercises, Focus Areas Skeleton */}
-                <div className="space-y-4 mb-4">
-                  {/* Equipment Needed */}
-                  <div>
-                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-32 mb-2"></div>
-                    <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                {/* The Setup Sub-Card */}
+                <div className={containerPatterns.cardMedium}>
+                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-sm"></div>
                   </div>
-                  {/* Prescribed Exercises */}
-                  <div>
-                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-36 mb-2"></div>
-                    <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                  <div className="px-6 pb-6 space-y-4">
+                    <div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-40 mb-2"></div>
+                      <div className="flex flex-wrap gap-2">
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                      </div>
                     </div>
-                  </div>
-                  {/* Focus Areas */}
-                  <div>
-                    <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-24 mb-2"></div>
-                    <div className="flex flex-wrap gap-2">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
+                    <div>
+                      <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-28 mb-2"></div>
+                      <div className="flex flex-wrap gap-2">
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Buttons — siblings of cards, full-width pills */}
                 <div className="flex gap-3">
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                  <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -1015,14 +1060,14 @@ General thoughts: `;
 
         {/* Program Context */}
         <div className="mb-4">
-          <div className="flex items-center gap-3 mb-1 min-w-0">
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3 mb-1 min-w-0">
             <button
               onClick={() =>
                 navigate(
                   `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
                 )
               }
-              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left"
+              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left line-clamp-2 sm:line-clamp-none"
               data-tooltip-id="program-name-link"
               data-tooltip-content="View training program"
             >
@@ -1035,7 +1080,7 @@ General thoughts: `;
                 (t) => t.status === "completed" || t.status === "skipped",
               ) && (
                 <span
-                  className={`${badgePatterns.cyan} uppercase flex items-center gap-1`}
+                  className={`${badgePatterns.cyan} uppercase inline-flex items-center gap-1 whitespace-nowrap shrink-0`}
                 >
                   <svg
                     className="w-3 h-3"
@@ -1054,21 +1099,28 @@ General thoughts: `;
                 </span>
               )}
           </div>
-          <div className="flex items-center gap-3 sm:gap-4 text-sm pb-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-sm pb-1 min-w-0">
             <div className="font-body text-synthwave-text-secondary truncate min-w-0 flex-1 sm:flex-initial">
-              {phaseNumber ? (
-                <>
-                  <span className="text-synthwave-text-muted">
-                    Phase {phaseNumber}:
-                  </span>{" "}
-                  {phaseName}
-                </>
-              ) : (
-                <>
-                  <span className="text-synthwave-text-muted">Phase:</span>{" "}
-                  {phaseName}
-                </>
-              )}
+              {(() => {
+                const trimmedPhaseName = (phaseName || "").trim();
+                const prefixMatch = trimmedPhaseName.match(
+                  /^(phase\s+\d+\s*:?)\s*(.*)$/i,
+                );
+                const mutedLabel = prefixMatch
+                  ? prefixMatch[1]
+                  : phaseNumber
+                    ? `Phase ${phaseNumber}:`
+                    : "Phase:";
+                const value = prefixMatch ? prefixMatch[2] : trimmedPhaseName;
+                return (
+                  <>
+                    <span className="text-synthwave-text-muted">
+                      {mutedLabel}
+                    </span>
+                    {value && <> {value}</>}
+                  </>
+                );
+              })()}
             </div>
             <div className="font-body text-synthwave-text-muted shrink-0 whitespace-nowrap">
               Day {workoutDayNumber} of {program.totalDays}
@@ -1819,6 +1871,72 @@ General thoughts: `;
                               <span className="md:hidden">View</span>
                               <span className="hidden md:inline">
                                 View Workout
+                              </span>
+                            </button>
+                          ) : pollingStatus[template.templateId] ===
+                            "timeout" ? (
+                            // Polling exhausted before the build-workout Lambda
+                            // wrote linkedWorkoutId. Let the user trigger a
+                            // manual refresh instead of staring at an inert spinner.
+                            <button
+                              onClick={async () => {
+                                const refreshOptions = {};
+                                if (isViewingToday) {
+                                  refreshOptions.today = true;
+                                } else if (dayParam) {
+                                  refreshOptions.day = parseInt(dayParam);
+                                }
+                                try {
+                                  const result =
+                                    await programAgentRef.current?.loadWorkoutTemplates(
+                                      programId,
+                                      refreshOptions,
+                                    );
+                                  // Only clear the timeout state when the
+                                  // refreshed template actually has a
+                                  // linkedWorkoutId — i.e. build-workout
+                                  // finished. If the workout is still
+                                  // building, leave pollingStatus as
+                                  // "timeout" so the button stays visible
+                                  // for another retry; otherwise the render
+                                  // falls through to the disabled
+                                  // "Processing..." spinner with no recovery.
+                                  const refreshedTemplates =
+                                    result?.templates ||
+                                    result?.todaysWorkoutTemplates?.templates;
+                                  const refreshed = refreshedTemplates?.find(
+                                    (t) =>
+                                      t.templateId === template.templateId,
+                                  );
+                                  if (refreshed?.linkedWorkoutId) {
+                                    seenTimeoutsRef.current.delete(
+                                      template.templateId,
+                                    );
+                                    programAgentRef.current?.clearPollingStatus(
+                                      template.templateId,
+                                    );
+                                  } else {
+                                    showError(
+                                      "Workout still processing. Try again in a moment.",
+                                    );
+                                  }
+                                } catch (err) {
+                                  logger.error(
+                                    "Manual refresh failed:",
+                                    err,
+                                  );
+                                  showError(
+                                    err.message ||
+                                      "Failed to refresh workout status",
+                                  );
+                                }
+                              }}
+                              className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
+                            >
+                              <CheckIcon />
+                              <span className="md:hidden">Refresh</span>
+                              <span className="hidden md:inline">
+                                Refresh to check
                               </span>
                             </button>
                           ) : (

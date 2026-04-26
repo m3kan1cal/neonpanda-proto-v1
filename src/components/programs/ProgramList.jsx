@@ -5,8 +5,7 @@ import { ChevronRightIcon } from "../themes/SynthwaveComponents";
 import { SectionEmptyState } from "../shared/ErrorStates";
 
 /**
- * ProgressRing - Small SVG donut ring showing completion percentage
- * Uses cyan-to-purple gradient fill on the completed arc.
+ * ProgressRing - Small SVG donut ring showing completion percentage.
  */
 function ProgressRing({ percentage = 0, size = 40, strokeWidth = 3.5 }) {
   const radius = (size - strokeWidth) / 2;
@@ -20,24 +19,6 @@ function ProgressRing({ percentage = 0, size = 40, strokeWidth = 3.5 }) {
       viewBox={`0 0 ${size} ${size}`}
       className="shrink-0 -rotate-90"
     >
-      <defs>
-        <linearGradient
-          id={`progress-grad-${percentage}`}
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-        >
-          <stop
-            offset="0%"
-            stopColor="var(--color-synthwave-neon-cyan, #00ffff)"
-          />
-          <stop
-            offset="100%"
-            stopColor="var(--color-synthwave-neon-purple, #9F00FF)"
-          />
-        </linearGradient>
-      </defs>
       {/* Background circle */}
       <circle
         cx={size / 2}
@@ -48,13 +29,13 @@ function ProgressRing({ percentage = 0, size = 40, strokeWidth = 3.5 }) {
         strokeWidth={strokeWidth}
         className="text-synthwave-bg-primary/50"
       />
-      {/* Progress arc */}
+      {/* Progress arc -- solid cyan */}
       <circle
         cx={size / 2}
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke={`url(#progress-grad-${percentage})`}
+        stroke="#00ffff"
         strokeWidth={strokeWidth}
         strokeDasharray={circumference}
         strokeDashoffset={offset}

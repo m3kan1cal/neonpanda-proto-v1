@@ -507,10 +507,10 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-pink">
                           Solid Fill (High Impact)
                         </h4>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Create New
                         </button>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Save Changes
                         </button>
                       </div>
@@ -520,10 +520,10 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-purple">
                           Gradient Fill (Premium)
                         </h4>
-                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Premium Action
                         </button>
-                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-cyan to-synthwave-neon-blue text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-gradient-to-r from-synthwave-neon-cyan to-synthwave-neon-blue text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Cool Action
                         </button>
                       </div>
@@ -533,10 +533,10 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-text-primary">
                           Outlined (Clean)
                         </h4>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Secondary
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                           Alternative
                         </button>
                       </div>
@@ -878,10 +878,10 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-pink">
                           Small (32px)
                         </h4>
-                        <button className="px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30">
+                        <button className="px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-medium text-sm uppercase tracking-wide rounded-full transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30">
                           Small
                         </button>
-                        <button className="p-2 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30">
+                        <button className="p-2 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-full transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30">
                           <svg
                             className="w-4 h-4"
                             fill="none"
@@ -903,10 +903,10 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-cyan">
                           Medium (40px)
                         </h4>
-                        <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary font-body font-semibold text-base uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
+                        <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary font-body font-semibold text-base uppercase tracking-wide rounded-full transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
                           Medium
                         </button>
-                        <button className="p-2.5 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-md transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
+                        <button className="p-2.5 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-full transition-all duration-200 hover:bg-synthwave-neon-cyan/90 hover:shadow-md hover:shadow-synthwave-neon-cyan/30">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -928,10 +928,10 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-purple">
                           Large (48px)
                         </h4>
-                        <button className="px-6 py-3 bg-synthwave-neon-purple text-white font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
+                        <button className="px-6 py-3 bg-synthwave-neon-purple text-white font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
                           Large
                         </button>
-                        <button className="p-3 bg-synthwave-neon-purple text-white rounded-md transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
+                        <button className="p-3 bg-synthwave-neon-purple text-white rounded-full transition-all duration-200 hover:bg-synthwave-neon-purple/90 hover:shadow-lg hover:shadow-synthwave-neon-purple/30">
                           <svg
                             className="w-6 h-6"
                             fill="none"
@@ -953,10 +953,10 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-pink">
                           XL (56px)
                         </h4>
-                        <button className="px-8 py-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide rounded-md transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
+                        <button className="px-8 py-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide rounded-full transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
                           Hero CTA
                         </button>
-                        <button className="p-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-md transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
+                        <button className="p-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0">
                           <svg
                             className="w-7 h-7"
                             fill="none"
@@ -986,11 +986,11 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-pink">
                           Loading States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-pink text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2">
                           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                           <span>Loading...</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-synthwave-neon-cyan text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-synthwave-neon-cyan text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2">
                           <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
                             <div
@@ -1011,7 +1011,7 @@ function Theme() {
                         <h4 className="font-body text-lg text-green-400">
                           Success States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-green-500 text-white font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-green-500 text-white font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1027,7 +1027,7 @@ function Theme() {
                           </svg>
                           <span>Saved!</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-green-500 text-green-500 font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-green-500 text-green-500 font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1050,7 +1050,7 @@ function Theme() {
                         <h4 className="font-body text-lg text-yellow-400">
                           Warning States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-yellow-500 text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-yellow-500 text-synthwave-bg-primary font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1066,7 +1066,7 @@ function Theme() {
                           </svg>
                           <span>Caution</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-yellow-500 text-yellow-500 font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-yellow-500 text-yellow-500 font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1089,7 +1089,7 @@ function Theme() {
                         <h4 className="font-body text-lg text-red-400">
                           Danger States
                         </h4>
-                        <button className="w-full px-6 py-3 bg-red-500 text-white font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-600">
+                        <button className="w-full px-6 py-3 bg-red-500 text-white font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-600">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1105,7 +1105,7 @@ function Theme() {
                           </svg>
                           <span>Delete</span>
                         </button>
-                        <button className="w-full px-6 py-3 bg-transparent border-2 border-red-500 text-red-500 font-body font-semibold text-lg uppercase tracking-wide rounded-md transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-500/10">
+                        <button className="w-full px-6 py-3 bg-transparent border-2 border-red-500 text-red-500 font-body font-semibold text-lg uppercase tracking-wide rounded-full transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-red-500/10">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -1215,7 +1215,7 @@ function Theme() {
                         <h4 className="font-body text-lg text-synthwave-neon-purple">
                           Minimal Clean
                         </h4>
-                        <button className="bg-transparent border-none text-synthwave-neon-purple px-2 py-1 hover:text-white hover:bg-synthwave-neon-purple/10 rounded-md transition-all duration-200 font-body font-medium uppercase tracking-wide">
+                        <button className="bg-transparent border-none text-synthwave-neon-purple px-2 py-1 hover:text-white hover:bg-synthwave-neon-purple/10 rounded-full transition-all duration-200 font-body font-medium uppercase tracking-wide">
                           Cancel
                         </button>
                         <p className="text-synthwave-text-secondary font-body text-xs">
@@ -2470,7 +2470,7 @@ function Theme() {
                                   Enhanced message input...
                                 </span>
                               </div>
-                              <button className="p-4 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-md shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300">
+                              <button className="p-4 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-full shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300">
                                 <SendIcon />
                               </button>
                             </div>
@@ -2648,10 +2648,10 @@ function Theme() {
                               readability on all devices.
                             </p>
                             <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                              <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-md text-sm font-body font-semibold">
+                              <button className="px-4 py-2 bg-synthwave-neon-cyan text-synthwave-bg-primary rounded-full text-sm font-body font-semibold">
                                 Mobile Action
                               </button>
-                              <button className="px-4 py-2 border border-synthwave-neon-cyan text-synthwave-neon-cyan rounded-md text-sm font-body font-semibold">
+                              <button className="px-4 py-2 border border-synthwave-neon-cyan text-synthwave-neon-cyan rounded-full text-sm font-body font-semibold">
                                 Secondary
                               </button>
                             </div>
@@ -2673,10 +2673,10 @@ function Theme() {
                               with adequate spacing.
                             </p>
                             <div className="grid grid-cols-2 gap-3">
-                              <button className="h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-md font-body font-semibold text-sm">
+                              <button className="h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-full font-body font-semibold text-sm">
                                 Touch Me
                               </button>
-                              <button className="h-12 border-2 border-synthwave-neon-pink text-synthwave-neon-pink rounded-md font-body font-semibold text-sm">
+                              <button className="h-12 border-2 border-synthwave-neon-pink text-synthwave-neon-pink rounded-full font-body font-semibold text-sm">
                                 Or Me
                               </button>
                             </div>
@@ -2703,7 +2703,7 @@ function Theme() {
                               placeholder="Enter text..."
                               readOnly
                             />
-                            <button className="p-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
+                            <button className="p-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary">
                               <svg
                                 className="w-4 h-4"
                                 fill="none"
@@ -2718,7 +2718,7 @@ function Theme() {
                                 />
                               </svg>
                             </button>
-                            <button className="p-1.5 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
+                            <button className="p-1.5 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
                               <svg
                                 className="w-4 h-4"
                                 fill="none"
@@ -3250,7 +3250,7 @@ function Theme() {
                               <div className="bg-synthwave-bg-card/30 rounded-md p-3 border border-synthwave-neon-pink/20">
                                 <div className="flex items-center justify-between text-sm font-body">
                                   <div className="flex items-center space-x-2">
-                                    <button className="p-1 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-md transition-colors duration-200">
+                                    <button className="p-1 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-full transition-colors duration-200">
                                       <svg
                                         className="w-4 h-4"
                                         fill="none"

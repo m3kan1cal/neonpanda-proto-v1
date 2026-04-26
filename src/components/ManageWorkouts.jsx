@@ -629,56 +629,40 @@ function ManageWorkouts() {
           </h3>
         </div>
 
-        {/* Metadata Rows - 3 items per line */}
         <div className="space-y-2 mb-4">
-          {/* Row 1: Completed at, Duration, AI Score */}
-          <div className="flex items-center flex-wrap gap-4">
-            {/* Completed at */}
+          <div className="flex items-center gap-1.5 font-body text-sm">
+            <ClockIconSmall />
+            <span className="text-synthwave-text-muted">Completed:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {dateInfo.date} · {dateInfo.time}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:items-center sm:gap-4">
             <div className="flex items-center gap-1.5 font-body text-sm">
-              <ClockIconSmall />
-              <span className="text-synthwave-text-muted">Completed:</span>
+              <span className="text-synthwave-text-muted">Duration:</span>
               <span className="text-synthwave-neon-cyan font-medium">
-                {dateInfo.date} · {dateInfo.time}
+                {duration ? `${duration}m` : "—"}
               </span>
             </div>
-            {/* Duration */}
-            {duration && (
-              <div className="flex items-center gap-1.5 font-body text-sm">
-                <span className="text-synthwave-text-muted">Duration:</span>
-                <span className="text-synthwave-neon-cyan font-medium">
-                  {duration}m
-                </span>
-              </div>
-            )}
-            {/* AI Score */}
             <div className="flex items-center gap-1.5 font-body text-sm">
               <span className="text-synthwave-text-muted">AI Score:</span>
               <span className="text-synthwave-neon-cyan font-medium">
                 {Math.round(confidence * 100)}%
               </span>
             </div>
-          </div>
-          {/* Row 2: Intensity, RPE (only if present) */}
-          {(intensity > 0 || rpe > 0) && (
-            <div className="flex items-center gap-4">
-              {intensity > 0 && (
-                <div className="flex items-center gap-1.5 font-body text-sm">
-                  <span className="text-synthwave-text-muted">Intensity:</span>
-                  <span className="text-synthwave-neon-cyan font-medium">
-                    {intensity}/10
-                  </span>
-                </div>
-              )}
-              {rpe > 0 && (
-                <div className="flex items-center gap-1.5 font-body text-sm">
-                  <span className="text-synthwave-text-muted">RPE:</span>
-                  <span className="text-synthwave-neon-cyan font-medium">
-                    {rpe}/10
-                  </span>
-                </div>
-              )}
+            <div className="flex items-center gap-1.5 font-body text-sm">
+              <span className="text-synthwave-text-muted">Intensity:</span>
+              <span className="text-synthwave-neon-cyan font-medium">
+                {intensity > 0 ? `${intensity}/10` : "—"}
+              </span>
             </div>
-          )}
+            <div className="flex items-center gap-1.5 font-body text-sm">
+              <span className="text-synthwave-text-muted">RPE:</span>
+              <span className="text-synthwave-neon-cyan font-medium">
+                {rpe > 0 ? `${rpe}/10` : "—"}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Collapsible Workout Summary Section */}
@@ -853,7 +837,7 @@ function ManageWorkouts() {
                 <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
               </div>
             </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}

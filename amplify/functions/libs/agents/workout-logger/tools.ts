@@ -1271,31 +1271,51 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       confidence,
     });
 
-    // Idempotency check: verify no workout already exists for
-    // this conversationId + completedAt date combination.
+    // Idempotency check: prefer templateId (precise) when this came from a
+    // program template; otherwise fall back to conversationId + date.
     const completedAtDateOnly = completedAtDate.toISOString().split("T")[0];
     const duplicate = await checkDuplicateWorkout(
       context.userId,
       context.conversationId,
       completedAtDate,
+      context.templateContext?.templateId,
     );
-    if (duplicate) {
+    if (duplicate && duplicate.workoutId !== workout.workoutId) {
       logger.warn(
         "⚠️ save_workout_to_database skipped — duplicate workout exists",
         {
           conversationId: context.conversationId,
           completedAt: completedAtDateOnly,
+          templateId: context.templateContext?.templateId,
           existingWorkoutId: duplicate.workoutId,
           attemptedWorkoutId: workout.workoutId,
         },
       );
+
+      // Even on duplicate, ensure the existing workout is linked to the
+      // template so the program template doesn't end up with linkedWorkoutId=null.
+      // This is idempotent — relinking the same workoutId to the same template
+      // is a no-op in S3.
+      let templateLinked = false;
+      if (context.templateContext) {
+        templateLinked = await linkWorkoutToTemplate(
+          context.userId,
+          context.coachId,
+          context.templateContext,
+          duplicate.workoutId,
+        );
+      }
+
       return {
         workoutId: duplicate.workoutId,
-        success: true,
+        existingWorkoutId: duplicate.workoutId,
+        success: false,
+        skipped: true,
         duplicate: true,
-        message:
+        templateLinked,
+        reason:
           "A workout for this session already exists — skipped duplicate save.",
-      } as any;
+      };
     }
 
     // Save to DynamoDB

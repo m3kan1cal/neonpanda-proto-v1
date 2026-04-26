@@ -41,7 +41,7 @@ export interface Program {
   completedWorkouts: number;
   skippedWorkouts: number;
   completedRestDays: number; // Count of rest days manually completed
-  adherenceRate: number; // completedWorkouts / totalWorkouts
+  adherenceRate: number; // Percentage 0-100: (completedWorkouts / totalWorkouts) * 100
   lastActivityAt: Date | null;
 
   // S3 storage reference for detailed daily workouts

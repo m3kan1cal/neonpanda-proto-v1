@@ -1820,12 +1820,6 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       logger.info("🔧 Initialized dayCompletionStatus: {}");
     }
 
-    // Remove creationConversationId (no longer used)
-    if (program.creationConversationId) {
-      delete program.creationConversationId;
-      logger.info("🔧 Removed creationConversationId (deprecated)");
-    }
-
     logger.info("✅ All tracking fields initialized");
 
     // ============================================================
