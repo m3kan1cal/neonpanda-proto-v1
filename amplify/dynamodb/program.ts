@@ -417,14 +417,17 @@ export async function updateProgram(
   // Deep merge updates into existing program
   const updatedProgram: Program = deepMerge(existingItem.attributes, updates);
 
-  // Recalculate adherence rate if workout counts changed
+  // Recalculate adherence rate if workout counts changed.
+  // Stored as a percentage (0-100) to match log-workout-template,
+  // conversation tools, and revertTemplateStatus, and what the UI renders.
   if (
     updates.completedWorkouts !== undefined ||
     updates.totalWorkouts !== undefined
   ) {
     updatedProgram.adherenceRate =
       updatedProgram.totalWorkouts > 0
-        ? updatedProgram.completedWorkouts / updatedProgram.totalWorkouts
+        ? (updatedProgram.completedWorkouts / updatedProgram.totalWorkouts) *
+          100
         : 0;
   }
 
