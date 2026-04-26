@@ -1163,8 +1163,8 @@ export const quickStatsPatterns = {
     // Display class ("flex" vs "hidden sm:flex") is composed by QuickStats.jsx
     // based on the stat's priority; see the note on `item` above.
     item: "items-center gap-1.5 md:gap-2",
-    icon: "w-5 h-5 md:w-7 md:h-7 bg-synthwave-text-muted/20 animate-pulse",
-    value: "h-4 w-6 md:h-6 md:w-8 bg-synthwave-text-muted/20 animate-pulse",
+    icon: "w-5 h-5 md:w-7 md:h-7 rounded-full bg-synthwave-text-muted/20 animate-pulse",
+    value: "h-4 w-6 md:h-6 md:w-8 rounded-lg bg-synthwave-text-muted/20 animate-pulse",
   },
 };
 
