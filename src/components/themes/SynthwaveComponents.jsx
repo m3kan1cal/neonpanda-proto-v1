@@ -101,9 +101,9 @@ export const LightningIcon = () => (
   </svg>
 );
 
-export const LightningIconSmall = () => (
+export const LightningIconSmall = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -164,8 +164,8 @@ export const ChatIcon = () => (
   </svg>
 );
 
-export const ChatIconSmall = () => (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+export const ChatIconSmall = ({ className = "w-5 h-5" } = {}) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
     <polygon points="19 9 19 11 18 11 18 12 16 12 16 11 15 11 15 9 16 9 16 8 18 8 18 9 19 9" />
     <polygon points="14 9 14 11 13 11 13 12 11 12 11 11 10 11 10 9 11 9 11 8 13 8 13 9 14 9" />
     <polygon points="9 9 9 11 8 11 8 12 6 12 6 11 5 11 5 9 6 9 6 8 8 8 8 9 9 9" />
@@ -173,8 +173,8 @@ export const ChatIconSmall = () => (
   </svg>
 );
 
-export const WorkoutIconSmall = () => (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+export const WorkoutIconSmall = ({ className = "w-5 h-5" } = {}) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
     <path d="M5.50093 6.50098H3.50047V9.50166H5.50093V6.50098Z" />
     <path d="M3.50045 9.50195H1.5V15.5033H3.50045V9.50195Z" />
     <path d="M5.50093 15.5029H3.50047V18.5036H5.50093V15.5029Z" />
@@ -720,9 +720,9 @@ export const LogoutIcon = () => (
   </svg>
 );
 
-export const MemoryIcon = () => (
+export const MemoryIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1070,9 +1070,9 @@ export const CalendarIcon = () => (
   </svg>
 );
 
-export const TargetIcon = () => (
+export const TargetIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1107,9 +1107,9 @@ export const TargetIconTiny = ({ className = "w-4 h-4" }) => (
 );
 
 // Workout Viewer Icons
-export const MetricsIcon = () => (
+export const MetricsIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1123,9 +1123,9 @@ export const MetricsIcon = () => (
   </svg>
 );
 
-export const NotesIcon = () => (
+export const NotesIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1163,9 +1163,9 @@ export const AIIcon = () => (
   </svg>
 );
 
-export const TrophyIcon = () => (
+export const TrophyIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1222,9 +1222,9 @@ export const CyclesIcon = () => (
   </svg>
 );
 
-export const FeedbackIcon = () => (
+export const FeedbackIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1413,9 +1413,9 @@ export const MessagesIcon = () => (
   </svg>
 );
 
-export const BarChartIcon = () => (
+export const BarChartIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
