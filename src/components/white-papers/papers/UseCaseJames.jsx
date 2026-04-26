@@ -5,7 +5,6 @@ import {
   Callout,
   AtAGlance,
   MethodLimitations,
-  PullQuotes,
   Beat,
 } from "../primitives";
 import { getWhitePaperBySlug } from "../../../data/whitePapers";
@@ -498,33 +497,13 @@ function UseCaseJames() {
           in this dataset.
         </li>
         <li>
-          <strong>Consent status:</strong> Subject is the author of NeonPanda
-          and has consented to external publication. The athlete is referred to
-          here by the first name James; no other personally identifying details
-          are used in this copy.
+          <strong>Publication &amp; consent:</strong> James has consented to
+          this use-case narrative under his first name. The document is
+          published for external distribution; training loads, dates, and
+          quotes above reflect logged data only and exclude account
+          identifiers or Dynamo keys.
         </li>
       </MethodLimitations>
-
-      <h3>Optional pull quotes</h3>
-      <PullQuotes>
-        <blockquote>
-          &ldquo;I just really loved it.&rdquo; / &ldquo;I am loving functional
-          bodybuilding right now.&rdquo;
-          <span className="attrib">
-            — A rare moment of unguarded emotional openness from an
-            analytically-dominant communicator, encoded as a behavioral memory
-            at 0.92 confidence.
-          </span>
-        </blockquote>
-        <blockquote className="quiet">
-          &ldquo;Functional Chaos Training — Coaching Summary.&rdquo;
-          <span className="attrib">
-            — The header of James's own multi-week training recap, sent
-            unprompted. The moment a self-named philosophy became the program's
-            shared vocabulary.
-          </span>
-        </blockquote>
-      </PullQuotes>
     </WhitePaperLayout>
   );
 }
