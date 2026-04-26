@@ -1255,7 +1255,7 @@ function ManagePrograms() {
         </div>
 
         {/* Action Buttons - Always show navigation/share, conditionally show status actions */}
-        <div className="mt-3 space-y-2">
+        <div className="mt-2 space-y-2">
           {/* View Dashboard Button - Always visible */}
           <button
             onClick={() => handleViewProgram(program)}
@@ -1356,12 +1356,26 @@ function ManagePrograms() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Add New Program Card skeleton */}
             <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
-              <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
+              <div className="text-center h-full flex flex-col justify-between">
                 <div className="flex-1 flex flex-col justify-center items-center">
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse rounded-full mb-4"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 mb-3"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-56 mb-4"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-md mb-2 md:mb-3"></div>
+                  <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-40 md:w-48 mb-2 md:mb-3"></div>
+                  <div className="h-3 md:h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 md:w-56 mb-3 md:mb-4"></div>
+                  <div className="hidden md:block h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32 mb-3"></div>
+                </div>
+                {/* Bottom features skeleton — desktop only, mirrors loaded card */}
+                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3">
+                  <div className="grid grid-cols-1 gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-center space-x-2"
+                      >
+                        <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                        <div className="h-4 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1370,11 +1384,11 @@ function ManagePrograms() {
             {[1, 2].map((i) => (
               <div
                 key={i}
-                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between`}
+                className={`${containerPatterns.cardMedium} p-4 md:p-6 flex flex-col justify-between`}
               >
                 <div className="flex-1">
                   {/* Program name skeleton with pink dot */}
-                  <div className="flex items-start space-x-3 mb-4">
+                  <div className="flex items-start space-x-3 mb-4 pr-10">
                     <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2"></div>
                     <div className="flex-1">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 mb-2"></div>
@@ -1382,8 +1396,10 @@ function ManagePrograms() {
                   </div>
 
                   {/* Description skeleton */}
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full mb-2"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-3/4 mb-4"></div>
+                  <div className="hidden sm:block">
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-3/4 mb-4"></div>
+                  </div>
 
                   {/* Program details skeleton */}
                   <div className="space-y-3">
@@ -1400,7 +1416,7 @@ function ManagePrograms() {
                     {/* Progress bar */}
                     <div className="h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
                     {/* Created date */}
-                    <div className="flex items-center space-x-2">
+                    <div className="hidden sm:flex items-center space-x-2">
                       <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
                     </div>
@@ -1408,7 +1424,7 @@ function ManagePrograms() {
                 </div>
 
                 {/* Action buttons skeleton — View Dashboard + Pause/Complete */}
-                <div className="mt-6 space-y-2">
+                <div className="mt-2 space-y-2">
                   <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
                   <div className="flex space-x-2">
                     <div className="h-10 flex-1 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
@@ -1469,11 +1485,11 @@ function ManagePrograms() {
               {[1, 2].map((i) => (
                 <div
                   key={`paused-skeleton-${i}`}
-                  className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between`}
+                  className={`${containerPatterns.cardMedium} p-4 md:p-6 flex flex-col justify-between`}
                 >
                   <div className="flex-1">
                     {/* Program name skeleton with pink dot */}
-                    <div className="flex items-start space-x-3 mb-4">
+                    <div className="flex items-start space-x-3 mb-4 pr-10">
                       <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2"></div>
                       <div className="flex-1">
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 mb-2"></div>
@@ -1481,8 +1497,10 @@ function ManagePrograms() {
                     </div>
 
                     {/* Description skeleton */}
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-3/4 mb-4"></div>
+                    <div className="hidden sm:block">
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full mb-2"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-3/4 mb-4"></div>
+                    </div>
 
                     {/* Program details skeleton */}
                     <div className="space-y-3">
@@ -1499,7 +1517,7 @@ function ManagePrograms() {
                       {/* Progress bar */}
                       <div className="h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
                       {/* Created date */}
-                      <div className="flex items-center space-x-2">
+                      <div className="hidden sm:flex items-center space-x-2">
                         <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
                         <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
                       </div>
@@ -1507,7 +1525,7 @@ function ManagePrograms() {
                   </div>
 
                   {/* Action buttons skeleton — View Dashboard + Resume */}
-                  <div className="mt-6 space-y-2">
+                  <div className="mt-2 space-y-2">
                     <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
                     <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
                   </div>
@@ -1609,11 +1627,11 @@ function ManagePrograms() {
                 : "cursor-pointer"
             }`}
           >
-            <div className="text-center h-full flex flex-col justify-between min-h-[260px] md:min-h-[400px]">
+            <div className="text-center h-full flex flex-col justify-between">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
                 {/* Plus Icon or Spinner */}
-                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3 md:mb-4">
+                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-2 md:mb-3">
                   {isCreatingProgram ? (
                     <div className="w-8 h-8 md:w-12 md:h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
                   ) : (
@@ -1651,7 +1669,7 @@ function ManagePrograms() {
 
                 {/* Info Badge - hidden on mobile to reduce card height */}
                 {!isCreatingProgram && (
-                  <div className="hidden md:block bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
+                  <div className="hidden md:block bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-3">
                     <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
                       5-10 minute guided conversation
                     </p>
@@ -1661,7 +1679,7 @@ function ManagePrograms() {
 
               {/* Bottom Features - desktop only; mobile keeps the card compact */}
               {!isCreatingProgram && (
-                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
+                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3">
                   <div className="grid grid-cols-1 gap-2">
                     <div
                       className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
