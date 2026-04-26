@@ -269,19 +269,29 @@ export class ProgramAgent {
         options,
       );
 
-      // Always push fresh templates into agent state. ViewWorkouts renders
-      // one day's templates at a time and reads from todaysWorkout regardless
-      // of whether the user is viewing today or a specific day. Without this,
-      // polling for linkedWorkoutId on a non-today day would never propagate
-      // the updated template into UI state, leaving the button stuck on
-      // "Processing Workout..." even after the build-workout Lambda finished.
-      this._updateState({
-        todaysWorkout:
-          response.todaysWorkoutTemplates ||
-          response.workoutTemplates ||
-          null,
-        isLoadingTodaysWorkout: false,
-      });
+      // Push fresh templates into todaysWorkout for any single-day query
+      // (today=true or day=N). ViewWorkouts renders one day at a time and
+      // reads from todaysWorkout regardless of which day is selected, so
+      // polling for linkedWorkoutId on a non-today day must update this
+      // slot too. All-templates queries (no options) must NOT overwrite
+      // todaysWorkout — ProgramDashboard fires those in parallel with a
+      // today=true query, and clobbering the slot would surface the full
+      // template list in TodaysWorkoutCard.
+      const isSingleDayQuery =
+        options.today === true || options.day !== undefined;
+      if (isSingleDayQuery) {
+        this._updateState({
+          todaysWorkout:
+            response.todaysWorkoutTemplates ||
+            response.workoutTemplates ||
+            null,
+          isLoadingTodaysWorkout: false,
+        });
+      } else {
+        this._updateState({
+          isLoadingTodaysWorkout: false,
+        });
+      }
 
       return response;
     } catch (error) {

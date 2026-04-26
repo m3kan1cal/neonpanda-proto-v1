@@ -1858,12 +1858,6 @@ General thoughts: `;
                             // manual refresh instead of staring at an inert spinner.
                             <button
                               onClick={async () => {
-                                seenTimeoutsRef.current.delete(
-                                  template.templateId,
-                                );
-                                programAgentRef.current?.clearPollingStatus(
-                                  template.templateId,
-                                );
                                 const refreshOptions = {};
                                 if (isViewingToday) {
                                   refreshOptions.today = true;
@@ -1874,6 +1868,17 @@ General thoughts: `;
                                   await programAgentRef.current?.loadWorkoutTemplates(
                                     programId,
                                     refreshOptions,
+                                  );
+                                  // Only clear the timeout state on success.
+                                  // If the refresh fails, leave pollingStatus
+                                  // as "timeout" so the button stays visible
+                                  // and the user can retry instead of being
+                                  // stuck on the disabled "Processing..." spinner.
+                                  seenTimeoutsRef.current.delete(
+                                    template.templateId,
+                                  );
+                                  programAgentRef.current?.clearPollingStatus(
+                                    template.templateId,
                                   );
                                 } catch (err) {
                                   logger.error(
