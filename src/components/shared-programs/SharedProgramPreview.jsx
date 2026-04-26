@@ -227,7 +227,7 @@ function SharedProgramPreview() {
 
             {/* Button skeleton */}
             <div className="flex justify-center">
-              <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+              <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
             </div>
           </div>
         </section>
@@ -302,7 +302,7 @@ function SharedProgramPreview() {
                 <div className="h-4 bg-synthwave-text-muted/20 rounded-md animate-pulse w-3/4 mx-auto"></div>
               </div>
               <div className="flex justify-center">
-                <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                <div className="h-12 w-40 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
               </div>
             </div>
           </div>

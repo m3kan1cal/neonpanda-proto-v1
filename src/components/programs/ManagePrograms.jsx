@@ -1425,10 +1425,10 @@ function ManagePrograms() {
 
                 {/* Action buttons skeleton — View Dashboard + Pause/Complete */}
                 <div className="mt-2 space-y-2">
-                  <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
+                  <div className="h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse"></div>
                   <div className="flex space-x-2">
-                    <div className="h-10 flex-1 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
-                    <div className="h-10 flex-1 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-10 flex-1 rounded-full bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-10 flex-1 rounded-full bg-synthwave-text-muted/20 animate-pulse"></div>
                   </div>
                 </div>
               </div>
@@ -1526,8 +1526,8 @@ function ManagePrograms() {
 
                   {/* Action buttons skeleton — View Dashboard + Resume */}
                   <div className="mt-2 space-y-2">
-                    <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
-                    <div className="h-10 rounded-md bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse"></div>
+                    <div className="h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse"></div>
                   </div>
                 </div>
               ))}
