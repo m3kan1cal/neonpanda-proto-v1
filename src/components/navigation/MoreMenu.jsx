@@ -240,7 +240,7 @@ const MoreMenu = () => {
         {badge !== null && badge !== undefined && (
           <div
             className={`
-            ml-auto min-w-[32px] h-[32px] px-2 rounded-md flex items-center justify-center
+            ml-auto min-w-[32px] h-[32px] px-2 rounded-xl flex items-center justify-center
             font-body font-bold text-sm
             transition-all duration-150
             ${item.color === "pink" ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink" : ""}

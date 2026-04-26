@@ -59,7 +59,7 @@ export default function CalendarDayCell({
   const getStatusStyles = () => {
     // Mobile: 44px tap target (Apple HIG); desktop keeps the roomier 80px cell.
     const baseStyles =
-      "relative flex flex-col min-h-[44px] md:h-20 rounded-md transition-all duration-200 overflow-hidden font-body border border-synthwave-neon-cyan/10";
+      "relative flex flex-col min-h-[44px] md:h-20 rounded-xl transition-all duration-200 overflow-hidden font-body border border-synthwave-neon-cyan/10";
 
     switch (status) {
       case "completed":
@@ -83,7 +83,7 @@ export default function CalendarDayCell({
     >
       {/* Current day ring indicator */}
       {isCurrentDay && (
-        <div className="absolute inset-0 border-2 border-synthwave-neon-cyan rounded-md animate-pulse pointer-events-none" />
+        <div className="absolute inset-0 border-2 border-synthwave-neon-cyan rounded-xl animate-pulse pointer-events-none" />
       )}
 
       {/* Day number header */}
@@ -117,7 +117,7 @@ export default function CalendarDayCell({
             {/* Workout count badge - styled like SidebarNav badges */}
             <div
               className={`
-              ${badgePatterns.countBase} rounded-md
+              ${badgePatterns.countBase} rounded-xl
               ${status === "completed" ? badgePatterns.countPink : ""}
               ${status === "skipped" ? badgePatterns.countCyan : ""}
               ${status === "partial" ? badgePatterns.countPurple : ""}

@@ -176,7 +176,7 @@ export const TrailRunningSection = ({
       <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
         <div
           className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-            collapsedSections.has(detailsId) ? "rounded-md" : "rounded-t-md"
+            collapsedSections.has(detailsId) ? "rounded-xl" : "rounded-t-xl"
           }`}
           onClick={() => toggleCollapse(detailsId)}
         >
@@ -208,7 +208,7 @@ export const TrailRunningSection = ({
                 containerPatterns={containerPatterns}
               />
             ) : (
-              <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+              <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
                 <div className="text-synthwave-text-secondary font-body text-sm">
                   No trail running details available for this workout.
                 </div>
@@ -222,7 +222,7 @@ export const TrailRunningSection = ({
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-              collapsedSections.has(segmentsId) ? "rounded-md" : "rounded-t-md"
+              collapsedSections.has(segmentsId) ? "rounded-xl" : "rounded-t-xl"
             }`}
             onClick={() => toggleCollapse(segmentsId)}
           >

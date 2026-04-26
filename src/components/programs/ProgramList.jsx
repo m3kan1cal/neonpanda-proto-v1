@@ -158,7 +158,7 @@ function ProgramList({
                     {program.name}
                   </div>
                   {isPaused && (
-                    <span className="px-1.5 py-0.5 bg-synthwave-text-muted/20 text-synthwave-text-muted rounded-md text-[10px] font-body uppercase tracking-wider">
+                    <span className="px-1.5 py-0.5 bg-synthwave-text-muted/20 text-synthwave-text-muted rounded-xl text-[10px] font-body uppercase tracking-wider">
                       Paused
                     </span>
                   )}

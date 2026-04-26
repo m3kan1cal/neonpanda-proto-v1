@@ -468,7 +468,7 @@ function AnalyticsSkeleton() {
             </div>
             <div className="h-8 w-32 bg-synthwave-text-muted/10 animate-pulse rounded-full" />
           </div>
-          <div className="h-8 w-8 bg-synthwave-text-muted/10 animate-pulse rounded-md" />
+          <div className="h-8 w-8 bg-synthwave-text-muted/10 animate-pulse rounded-xl" />
         </div>
 
         {/* Performance Overview section header + time range selector */}
@@ -511,7 +511,7 @@ function AnalyticsSkeleton() {
 
         {/* Exercise selector input placeholder */}
         <div className="mb-5 max-w-sm">
-          <div className="relative w-full h-[44px] rounded-md bg-synthwave-text-muted/10 border border-synthwave-neon-cyan/10 animate-pulse flex items-center px-3 gap-2">
+          <div className="relative w-full h-[44px] rounded-xl bg-synthwave-text-muted/10 border border-synthwave-neon-cyan/10 animate-pulse flex items-center px-3 gap-2">
             <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded-sm shrink-0" />
             <div className="h-3 w-40 bg-synthwave-text-muted/20 rounded" />
           </div>

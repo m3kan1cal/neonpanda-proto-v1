@@ -37,7 +37,7 @@ const FieldLabel = ({ children }) => (
 );
 
 const Tag = ({ children }) => (
-  <span className="font-body text-xs px-2 py-0.5 rounded-md bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan">
+  <span className="font-body text-xs px-2 py-0.5 rounded-xl bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan">
     {children}
   </span>
 );
@@ -57,10 +57,10 @@ const LoadingSkeleton = () => (
   <div className="space-y-5 animate-pulse">
     {[...Array(4)].map((_, i) => (
       <div key={i} className="space-y-2">
-        <div className="h-2 w-20 bg-synthwave-neon-cyan/15 rounded-md" />
-        <div className="h-4 w-3/4 bg-white/10 rounded-md" />
-        <div className="h-3 w-full bg-white/5 rounded-md" />
-        <div className="h-3 w-2/3 bg-white/5 rounded-md" />
+        <div className="h-2 w-20 bg-synthwave-neon-cyan/15 rounded-xl" />
+        <div className="h-4 w-3/4 bg-white/10 rounded-xl" />
+        <div className="h-3 w-full bg-white/5 rounded-xl" />
+        <div className="h-3 w-2/3 bg-white/5 rounded-xl" />
       </div>
     ))}
   </div>

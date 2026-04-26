@@ -65,7 +65,7 @@ export default function ExerciseSelector({
     <div ref={wrapperRef} className="relative w-full max-w-sm">
       {/* Input container */}
       <div
-        className={`relative flex items-center w-full rounded-md bg-synthwave-bg-primary/30 border transition-all duration-300 cursor-pointer ${
+        className={`relative flex items-center w-full rounded-xl bg-synthwave-bg-primary/30 border transition-all duration-300 cursor-pointer ${
           isOpen
             ? "border-synthwave-neon-cyan bg-synthwave-bg-primary/50"
             : "border-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40"
@@ -163,7 +163,7 @@ export default function ExerciseSelector({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan">
+        <div className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-xl bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan">
           {isLoading ? (
             <div className="px-4 py-6 text-center">
               <div className="h-3 w-24 mx-auto bg-synthwave-text-muted/20 animate-pulse rounded" />

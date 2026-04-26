@@ -111,12 +111,12 @@ const ForgotPasswordForm = ({ onSwitchToLogin, onResetCodeSent }) => {
         {globalError && (
           <AuthErrorMessage
             error={globalError}
-            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md"
+            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-xl"
           />
         )}
 
         {successMessage && (
-          <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md">
+          <div className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-xl">
             <p className="font-body text-synthwave-neon-cyan text-sm">
               {successMessage}
             </p>

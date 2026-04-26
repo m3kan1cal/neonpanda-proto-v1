@@ -191,7 +191,7 @@ function MiniTooltip({ active, payload, label, unit }) {
   const entry = payload[0];
   return (
     <div
-      className="rounded-md px-2.5 py-1.5 shadow-lg border backdrop-blur-sm"
+      className="rounded-xl px-2.5 py-1.5 shadow-lg border backdrop-blur-sm"
       style={{
         background: chartColors.tooltipBg,
         borderColor: chartColors.tooltipBorder,

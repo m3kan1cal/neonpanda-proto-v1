@@ -640,7 +640,7 @@ function ManageExercises() {
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse"></div>
               </div>
             ))}
@@ -649,7 +649,7 @@ function ManageExercises() {
           {/* Search input skeleton */}
           <div className="mb-6">
             <div className="relative max-w-md">
-              <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+              <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
             </div>
           </div>
 
@@ -849,7 +849,7 @@ function ManageExercises() {
                 placeholder="Search exercises..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-10 rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-body transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="w-full px-4 py-3 pl-10 rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-primary placeholder-synthwave-text-muted font-body transition-all duration-300 focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 style={{ boxShadow: "none", outline: "none" }}
                 onFocus={(e) => {
                   e.target.style.outline = "none";

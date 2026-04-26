@@ -237,7 +237,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
         {globalError && (
           <AuthErrorMessage
             error={globalError}
-            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-md"
+            className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-xl"
           />
         )}
 

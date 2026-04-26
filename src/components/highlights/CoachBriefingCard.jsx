@@ -243,7 +243,7 @@ export default function CoachBriefingCard({
             >
               {/* Dismiss button placeholder */}
               <div className="absolute top-4 right-4">
-                <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
+                <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
               </div>
               {/* Header row */}
               <div className="flex items-center gap-2 pr-10">
@@ -441,12 +441,12 @@ export default function CoachBriefingCard({
             {/* Inner card -- matches neonGlassInner visually but uses
                 ManageWorkouts.jsx positioning strategy (no [&>*]:relative)
                 so absolute positioning works for the dismiss button */}
-            <div className="rounded-md relative bg-synthwave-bg-card p-6 h-full flex flex-col gap-3.5 before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-[#7099C8]/[0.08] before:to-transparent before:pointer-events-none before:z-[-1]">
+            <div className="rounded-xl relative bg-synthwave-bg-card p-6 h-full flex flex-col gap-3.5 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-[#7099C8]/[0.08] before:to-transparent before:pointer-events-none before:z-[-1]">
               {/* Dismiss button -- absolute top-right, matches delete button on ManageWorkouts.jsx */}
               <div className="absolute top-4 right-4 z-10">
                 <button
                   onClick={handleDismiss}
-                  className="p-2 rounded-md text-synthwave-neon-cyan/60 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 cursor-pointer"
+                  className="p-2 rounded-xl text-synthwave-neon-cyan/60 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 cursor-pointer"
                   data-tooltip-id="dismiss-insight-tooltip"
                   data-tooltip-content="Dismiss until next insight"
                   aria-label="Dismiss insight"

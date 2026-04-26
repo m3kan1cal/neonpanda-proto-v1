@@ -273,9 +273,9 @@ function LandingPage() {
             >
               {/* Challenge Side */}
               <div className="challenge-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -293,7 +293,7 @@ function LandingPage() {
                       </h3>
                     </div>
                   </div>
-                  <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
+                  <div className="bg-synthwave-bg-primary/20 rounded-xl p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "$150/session with my trainer who cancels last minute,
                       doesn't remember I can't do overhead movements due to my
@@ -309,9 +309,9 @@ function LandingPage() {
 
               {/* Solution Side */}
               <div className="solution-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -397,9 +397,9 @@ function LandingPage() {
             >
               {/* Challenge Side */}
               <div className="challenge-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -417,7 +417,7 @@ function LandingPage() {
                       </h3>
                     </div>
                   </div>
-                  <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
+                  <div className="bg-synthwave-bg-primary/20 rounded-xl p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "Spent 15 minutes trying to log a simple CrossFit WOD...
                       endless dropdowns, can't find 'Fran', have to manually
@@ -433,9 +433,9 @@ function LandingPage() {
 
               {/* Solution Side */}
               <div className="solution-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -520,9 +520,9 @@ function LandingPage() {
             >
               {/* Challenge Side */}
               <div className="challenge-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="none"
@@ -546,7 +546,7 @@ function LandingPage() {
                       </h3>
                     </div>
                   </div>
-                  <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
+                  <div className="bg-synthwave-bg-primary/20 rounded-xl p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "My workouts are in one app, nutrition notes in another,
                       progress pics scattered across my photo roll, and coach
@@ -562,9 +562,9 @@ function LandingPage() {
 
               {/* Solution Side */}
               <div className="solution-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -650,9 +650,9 @@ function LandingPage() {
             >
               {/* Challenge Side */}
               <div className="challenge-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -670,7 +670,7 @@ function LandingPage() {
                       </h3>
                     </div>
                   </div>
-                  <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
+                  <div className="bg-synthwave-bg-primary/20 rounded-xl p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "Whether I'm learning basic movements or training for
                       competitions, this app gives me the same generic workouts
@@ -687,9 +687,9 @@ function LandingPage() {
 
               {/* Solution Side */}
               <div className="solution-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="currentColor"
@@ -769,9 +769,9 @@ function LandingPage() {
             >
               {/* Challenge Side */}
               <div className="challenge-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="none"
@@ -795,7 +795,7 @@ function LandingPage() {
                       </h3>
                     </div>
                   </div>
-                  <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
+                  <div className="bg-synthwave-bg-primary/20 rounded-xl p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "My app gives me the same mass-market workouts as
                       thousands of other people. Heavy squats Monday, more
@@ -813,9 +813,9 @@ function LandingPage() {
 
               {/* Solution Side */}
               <div className="solution-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -901,9 +901,9 @@ function LandingPage() {
             >
               {/* Challenge Side */}
               <div className="challenge-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="none"
@@ -927,7 +927,7 @@ function LandingPage() {
                       </h3>
                     </div>
                   </div>
-                  <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
+                  <div className="bg-synthwave-bg-primary/20 rounded-xl p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "I've been crushing these weights for months but my
                       program never adjusts. I'm hitting PRs left and right, but
@@ -943,9 +943,9 @@ function LandingPage() {
 
               {/* Solution Side */}
               <div className="solution-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -1031,9 +1031,9 @@ function LandingPage() {
             >
               {/* Challenge Side */}
               <div className="challenge-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-cyan"
                         fill="currentColor"
@@ -1051,7 +1051,7 @@ function LandingPage() {
                       </h3>
                     </div>
                   </div>
-                  <div className="bg-synthwave-bg-primary/20 rounded-md p-4 border border-synthwave-neon-cyan/10">
+                  <div className="bg-synthwave-bg-primary/20 rounded-xl p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-body leading-relaxed mb-2">
                       "My fitness app only works for bodybuilding splits. I want
                       to train for a HYROX race, improve my Olympic lifts, and
@@ -1067,9 +1067,9 @@ function LandingPage() {
 
               {/* Solution Side */}
               <div className="solution-card relative">
-                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-md p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
+                <div className="bg-gradient-to-br from-synthwave-bg-card/80 to-synthwave-bg-secondary/80 backdrop-blur-sm border-l-4 border-synthwave-neon-pink rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-pink/10">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center shrink-0">
                       <svg
                         className="w-6 h-6 text-synthwave-neon-pink"
                         fill="none"
@@ -1235,7 +1235,7 @@ function LandingPage() {
                       <img
                         src={feature.imagePath}
                         alt={feature.imageAlt}
-                        className="max-w-full max-h-full object-contain rounded-md shadow-2xl cursor-zoom-in hover:shadow-3xl transition-shadow duration-300"
+                        className="max-w-full max-h-full object-contain rounded-xl shadow-2xl cursor-zoom-in hover:shadow-3xl transition-shadow duration-300"
                         onClick={() =>
                           setModalImage({
                             src: feature.imagePath,
@@ -1418,7 +1418,7 @@ function LandingPage() {
             <img
               src={modalImage.src}
               alt={modalImage.alt}
-              className="max-w-full max-h-full object-contain rounded-md shadow-2xl"
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
             />
             {/* Close button */}
             <button

@@ -191,7 +191,7 @@ function UpgradePrompt({
           </div>
 
           {/* Price highlight */}
-          <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-md p-4 mb-6 text-center">
+          <div className="bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-xl p-4 mb-6 text-center">
             <span className="font-body text-white text-2xl font-bold">
               {electricInfo.price}
             </span>

@@ -40,7 +40,7 @@ export default function ChartCard({
       {/* Content */}
       {isLoading ? (
         <div className="space-y-3 py-4">
-          <div className="h-40 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
+          <div className="h-40 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
           <div className="flex gap-3">
             <div className="h-3 bg-synthwave-text-muted/15 rounded animate-pulse flex-1" />
             <div className="h-3 bg-synthwave-text-muted/15 rounded animate-pulse w-20" />

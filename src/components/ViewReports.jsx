@@ -465,7 +465,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleMonthlySummaryCollapse(report.monthId)}
-              className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
+              className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-xl"
             >
               <span>Report Summary</span>
               <svg
@@ -485,7 +485,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-3 animate-fadeIn">
+              <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-body text-synthwave-text-secondary text-sm leading-relaxed"
@@ -634,7 +634,7 @@ function ViewReports() {
           <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
             <button
               onClick={() => toggleWeeklySummaryCollapse(report.weekId)}
-              className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-md"
+              className="w-full flex items-center justify-between font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200 cursor-pointer px-2 py-1 -mx-2 rounded-xl"
             >
               <span>Report Summary</span>
               <svg
@@ -654,7 +654,7 @@ function ViewReports() {
               </svg>
             </button>
             {!isSummaryCollapsed && (
-              <div className="rounded-md bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-3 animate-fadeIn">
+              <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4 mb-3 animate-fadeIn">
                 <MarkdownRenderer
                   content={humanSummary || summaryPreview}
                   className="font-body text-synthwave-text-secondary text-sm leading-relaxed"
@@ -791,7 +791,7 @@ function ViewReports() {
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-xl animate-pulse" />
                 <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse rounded" />
               </div>
             ))}
@@ -799,8 +799,8 @@ function ViewReports() {
 
           {/* Tab Switcher skeleton */}
           <div className="flex items-center justify-center gap-2 mb-6 -mt-2">
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-md animate-pulse" />
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-xl animate-pulse" />
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-xl animate-pulse" />
           </div>
 
           {/* Report cards skeleton — single column mobile, two columns desktop */}
