@@ -53,7 +53,7 @@ export const whitePapers = [
     subject: "James",
     description:
       "A masters CrossFit athlete names his own training philosophy, logs 199 workouts across nine months, and peaks cleanly with four rep-max PRs in one week.",
-    status: "approved",
+    status: "published",
     publishedAt: "2026-04-17",
     readTime: "16 min read",
     topics: ["CrossFit", "Masters", "Self-directed training"],
