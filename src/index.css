@@ -250,9 +250,12 @@
   font-family: var(--font-body);
 }
 
-/* Contextual drawer — compact placeholder text (one step smaller than default) */
-.contextual-drawer-input .tiptap-content p.is-editor-empty:first-child::before {
-  font-size: 0.8rem;
+/* Contextual drawer — compact placeholder text (desktop only;
+   on mobile we keep 16px so iOS browsers do not auto-zoom the input). */
+@media (min-width: 768px) {
+  .contextual-drawer-input .tiptap-content p.is-editor-empty:first-child::before {
+    font-size: 0.8rem;
+  }
 }
 
 /* Tiptap content area reset */
@@ -261,6 +264,17 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-body);
+}
+
+/* Prevent iOS auto-zoom when focusing the chat input.
+   iOS browsers (Safari/Edge/Chrome — all WebKit) zoom in whenever a focused
+   field has computed font-size < 16px. Pinning the editor content to 16px on
+   mobile suppresses the zoom without disabling pinch-to-zoom elsewhere. */
+@media (max-width: 767px) {
+  .tiptap-editor-wrapper .tiptap-content,
+  .tiptap-editor-wrapper .tiptap-content p {
+    font-size: 16px;
+  }
 }
 
 .tiptap-content p {

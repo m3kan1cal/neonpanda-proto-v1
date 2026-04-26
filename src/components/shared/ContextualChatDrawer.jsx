@@ -166,7 +166,7 @@ function TrainingGroundsConversationPicker({
           </span>
         </div>
         <div className="flex-1 min-w-0 pl-8 pr-9 py-2 min-h-9 flex items-center">
-          <span className="font-body text-xs text-white truncate w-full">
+          <span className="font-body text-sm md:text-xs text-white truncate w-full">
             {displayLabel}
           </span>
         </div>
@@ -216,7 +216,7 @@ function TrainingGroundsConversationPicker({
                     onSelect(c.conversationId);
                     setMenuOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-1.5 font-body text-xs transition-colors duration-150 cursor-pointer ${
+                  className={`w-full text-left px-3 py-1.5 font-body text-sm md:text-xs transition-colors duration-150 cursor-pointer ${
                     isSelected
                       ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink"
                       : "text-white hover:bg-synthwave-neon-cyan/10"
