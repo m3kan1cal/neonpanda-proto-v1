@@ -1,5 +1,9 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
-import { deleteWorkout, getWorkout } from "../../dynamodb/operations";
+import {
+  deleteExercisesByWorkoutId,
+  deleteWorkout,
+  getWorkout,
+} from "../../dynamodb/operations";
 import { deleteWorkoutSummaryFromPinecone } from "../libs/workout/pinecone";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { logger } from "../libs/logger";
@@ -28,6 +32,18 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Delete the workout session from DynamoDB
     await deleteWorkout(userId, workoutId);
 
+    // Cascade-delete exercise rows tied to this workout (non-blocking)
+    let exercisesDeleted = 0;
+    try {
+      const result = await deleteExercisesByWorkoutId(userId, workoutId);
+      exercisesDeleted = result.deleted;
+    } catch (err) {
+      logger.error(
+        "Failed to delete exercises for workout (non-blocking):",
+        err,
+      );
+    }
+
     // Clean up associated workout summary from Pinecone
     logger.info("🗑️ Cleaning up workout summary from Pinecone..");
     const pineconeResult = await deleteWorkoutSummaryFromPinecone(
@@ -40,6 +56,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       message: "Workout deleted successfully",
       workoutId,
       userId,
+      exercisesDeleted,
       pineconeCleanup: pineconeResult.success,
     });
   } catch (error) {
