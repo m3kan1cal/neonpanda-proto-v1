@@ -1213,12 +1213,12 @@ function PanelContent({
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <div
                 id={headingId}
-                className={`${contextualDrawerPatterns.headerLabel} min-w-0 truncate`}
+                className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
               >
                 {entityLabel ||
                   (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
               </div>
-              <span className={`${badgePatterns.betaSmall} shrink-0`}>
+              <span className={`${badgePatterns.betaSmall} text-xs shrink-0`}>
                 Beta
               </span>
             </div>
@@ -1251,7 +1251,7 @@ function PanelContent({
             <div className="flex-1 min-w-0">
               <div
                 id={headingId}
-                className={contextualDrawerPatterns.headerLabel}
+                className={`${contextualDrawerPatterns.headerLabel} text-sm`}
               >
                 {entityLabel ||
                   (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
@@ -1259,7 +1259,9 @@ function PanelContent({
             </div>
 
             {/* Beta badge */}
-            <span className={`${badgePatterns.betaSmall} shrink-0`}>Beta</span>
+            <span className={`${badgePatterns.betaSmall} text-[10px] shrink-0`}>
+              Beta
+            </span>
 
             {/* Close button */}
             <button
