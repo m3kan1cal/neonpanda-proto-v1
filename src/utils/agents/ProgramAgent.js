@@ -60,6 +60,7 @@ export class ProgramAgent {
       isLoggingWorkout: false,
       error: null,
       lastCheckTime: null,
+      pollingStatus: {}, // templateId -> "polling" | "timeout"
     };
 
     // Add alias for backward compatibility
@@ -236,7 +237,11 @@ export class ProgramAgent {
    * @param {number} [options.day] - Get templates for specific day number
    * @returns {Promise<Object>} - The API response with workout templates
    */
-  async loadWorkoutTemplates(programId = null, options = {}) {
+  async loadWorkoutTemplates(
+    programId = null,
+    options = {},
+    { silent = false } = {},
+  ) {
     if (!this.userId || !this.coachId) {
       logger.error(
         "ProgramAgent.loadWorkoutTemplates: userId and coachId are required",
@@ -255,10 +260,12 @@ export class ProgramAgent {
       return;
     }
 
-    this._updateState({
-      isLoadingTodaysWorkout: true,
-      error: null,
-    });
+    if (!silent) {
+      this._updateState({
+        isLoadingTodaysWorkout: true,
+        error: null,
+      });
+    }
 
     try {
       const response = await getWorkoutTemplates(
@@ -268,19 +275,40 @@ export class ProgramAgent {
         options,
       );
 
-      // If loading today's workout, update the todaysWorkout state
-      if (options.today) {
-        this._updateState({
-          todaysWorkout:
-            response.todaysWorkoutTemplates ||
-            response.workoutTemplates ||
-            null,
-          isLoadingTodaysWorkout: false,
-        });
-      } else {
-        this._updateState({
-          isLoadingTodaysWorkout: false,
-        });
+      if (!silent) {
+        // Push fresh templates into todaysWorkout for any single-day query
+        // (today=true or day=N). ViewWorkouts renders one day at a time and
+        // reads from todaysWorkout regardless of which day is selected, so
+        // polling for linkedWorkoutId on a non-today day must update this
+        // slot too. All-templates queries (no options) must NOT overwrite
+        // todaysWorkout — ProgramDashboard fires those in parallel with a
+        // today=true query, and clobbering the slot would surface the full
+        // template list in TodaysWorkoutCard.
+        //
+        // Response shape differs by query:
+        //   today=true → { todaysWorkoutTemplates: { templates, dayNumber, ... }, ... }
+        //   day=N      → { templates, dayNumber, phaseName, ... } at top level
+        // ViewWorkouts' workoutData consumer expects { templates, dayNumber, ... },
+        // so unwrap todaysWorkoutTemplates for the today path and use the
+        // response directly for the day path.
+        const isSingleDayQuery =
+          options.today === true || options.day !== undefined;
+        if (isSingleDayQuery) {
+          const todaysWorkout =
+            options.today === true
+              ? response.todaysWorkoutTemplates ||
+                response.workoutTemplates ||
+                null
+              : response;
+          this._updateState({
+            todaysWorkout,
+            isLoadingTodaysWorkout: false,
+          });
+        } else {
+          this._updateState({
+            isLoadingTodaysWorkout: false,
+          });
+        }
       }
 
       return response;
@@ -296,20 +324,24 @@ export class ProgramAgent {
         logger.info(
           "ProgramAgent: Rest day detected - no workout template for today",
         );
-        this._updateState({
-          todaysWorkout: null,
-          isLoadingTodaysWorkout: false,
-          error: null, // Clear any previous errors
-        });
+        if (!silent) {
+          this._updateState({
+            todaysWorkout: null,
+            isLoadingTodaysWorkout: false,
+            error: null, // Clear any previous errors
+          });
+        }
         // Don't throw - rest day is a valid state, not an error
         return null;
       }
 
       // For actual errors, set error state and throw
-      this._updateState({
-        error: error.message,
-        isLoadingTodaysWorkout: false,
-      });
+      if (!silent) {
+        this._updateState({
+          error: error.message,
+          isLoadingTodaysWorkout: false,
+        });
+      }
 
       if (this.onError) {
         this.onError(error);
@@ -480,72 +512,89 @@ export class ProgramAgent {
    */
   async _startPollingForLinkedWorkout(programId, templateId, options = {}) {
     let pollCount = 0;
-    const maxPolls = 60; // Max 3 minutes (60 * 3 seconds)
+    // Max 6 minutes (120 * 3 seconds). The build-workout Lambda regularly
+    // takes 100s+ for complex workouts with extended thinking; a single
+    // Bedrock retry can push past 3 minutes. Polling is a cheap S3 + DDB read.
+    const maxPolls = 120;
+
+    // Mark this template as actively polling so the UI can render the
+    // correct in-progress / timeout / refresh state.
+    this._updateState({
+      pollingStatus: {
+        ...this.programState.pollingStatus,
+        [templateId]: "polling",
+      },
+    });
+
+    const stopPolling = (reason) => {
+      clearInterval(pollInterval);
+      this.pollingIntervals.delete(templateId);
+
+      const nextStatus = { ...this.programState.pollingStatus };
+      if (reason === "timeout") {
+        nextStatus[templateId] = "timeout";
+      } else {
+        delete nextStatus[templateId];
+      }
+      this._updateState({ pollingStatus: nextStatus });
+    };
 
     const pollInterval = setInterval(async () => {
       pollCount++;
 
       try {
-        // Reload workout templates silently
-        const freshData = await this.loadWorkoutTemplates(programId, options);
+        // Silent fetch — we don't want polling for an old day to clobber
+        // todaysWorkout if the user navigated to a different day after
+        // starting the log. Captured `options` (e.g. { day: 3 }) would
+        // otherwise overwrite the current view every 3s. We instead
+        // patch only the specific template's linkedWorkoutId into the
+        // current state when found, which is a no-op if the template
+        // is no longer rendered (user navigated away — they'll see the
+        // updated state on their next loadData).
+        const freshData = await this.loadWorkoutTemplates(
+          programId,
+          options,
+          { silent: true },
+        );
 
-        // If freshData is null, it's a rest day - stop polling
         if (freshData === null) {
           logger.info(
             "⏹️ Rest day detected after logging workout - stopping polling for template:",
             templateId,
           );
-          clearInterval(pollInterval);
-          this.pollingIntervals.delete(templateId);
+          stopPolling("restDay");
           return;
         }
 
-        if (freshData && freshData.templates) {
-          const updatedTemplate = freshData.templates.find(
+        const templates =
+          freshData?.templates ||
+          freshData?.todaysWorkoutTemplates?.templates;
+
+        if (templates) {
+          const updatedTemplate = templates.find(
             (t) => t.templateId === templateId,
           );
 
-          // If linkedWorkoutId is now available, stop polling
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
             logger.info(
               "✅ linkedWorkoutId found:",
               updatedTemplate.linkedWorkoutId,
             );
-            clearInterval(pollInterval);
-            this.pollingIntervals.delete(templateId);
-          }
-        } else if (
-          freshData &&
-          freshData.todaysWorkoutTemplates &&
-          freshData.todaysWorkoutTemplates.templates
-        ) {
-          const updatedTemplate =
-            freshData.todaysWorkoutTemplates.templates.find(
-              (t) => t.templateId === templateId,
-            );
-
-          if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            logger.info(
-              "✅ linkedWorkoutId found:",
-              updatedTemplate.linkedWorkoutId,
-            );
-            clearInterval(pollInterval);
-            this.pollingIntervals.delete(templateId);
+            this._patchTemplate(templateId, updatedTemplate);
+            stopPolling("found");
+            return;
           }
         }
 
-        // Stop polling after max attempts
         if (pollCount >= maxPolls) {
           logger.warn(
             "⏱️ Max polling attempts reached for template:",
             templateId,
           );
-          clearInterval(pollInterval);
-          this.pollingIntervals.delete(templateId);
+          stopPolling("timeout");
         }
       } catch (err) {
         logger.error("Error polling for linkedWorkoutId:", err);
-        // Stop polling if we've moved to a rest day (no templates found)
         if (
           err.message === "No templates found for today" ||
           err.message?.includes("No templates found")
@@ -554,8 +603,7 @@ export class ProgramAgent {
             "⏹️ Rest day detected - stopping polling for template:",
             templateId,
           );
-          clearInterval(pollInterval);
-          this.pollingIntervals.delete(templateId);
+          stopPolling("restDay");
         }
         // Continue polling for other errors
       }
@@ -563,6 +611,49 @@ export class ProgramAgent {
 
     // Store interval ID for cleanup
     this.pollingIntervals.set(templateId, pollInterval);
+  }
+
+  /**
+   * Merge a fresh template from the API into the current todaysWorkout
+   * state. Used by polling so we don't overwrite the whole slot with a
+   * possibly-stale day's data when the user has navigated away. No-op
+   * if the template isn't in the current state (the user has moved to a
+   * different day; they'll pick up the updated state next time
+   * loadWorkoutTemplates runs for that day).
+   *
+   * The full fresh template is merged (not just linkedWorkoutId) because
+   * the agent's stored template still has the pre-log status="pending"
+   * — only the component's local workoutData carries the optimistic
+   * "completed" update. When this patch fires it forces the component
+   * to mirror agent state via onStateChange, so the merged template
+   * must already include the server-side status="completed" and any
+   * other fields the build-workout Lambda wrote (summary, etc.).
+   * @private
+   */
+  _patchTemplate(templateId, templatePatch) {
+    const current = this.programState.todaysWorkout;
+    if (!current?.templates) return;
+    const idx = current.templates.findIndex(
+      (t) => t.templateId === templateId,
+    );
+    if (idx < 0) return;
+    const nextTemplates = [...current.templates];
+    nextTemplates[idx] = { ...nextTemplates[idx], ...templatePatch };
+    this._updateState({
+      todaysWorkout: { ...current, templates: nextTemplates },
+    });
+  }
+
+  /**
+   * Clear the polling status entry for a template. Used when the user
+   * manually refreshes after a polling timeout so the UI can return to a
+   * neutral state (and a future timeout for the same template can re-toast).
+   */
+  clearPollingStatus(templateId) {
+    if (!this.programState.pollingStatus[templateId]) return;
+    const nextStatus = { ...this.programState.pollingStatus };
+    delete nextStatus[templateId];
+    this._updateState({ pollingStatus: nextStatus });
   }
 
   /**

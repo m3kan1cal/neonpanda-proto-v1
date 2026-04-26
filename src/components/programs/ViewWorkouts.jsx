@@ -78,6 +78,10 @@ function ViewWorkouts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingWorkoutId, setProcessingWorkoutId] = useState(null);
+  // templateId -> "polling" | "timeout"; mirrored from ProgramAgent state so
+  // the UI can render an actionable "Refresh to check" button when the
+  // build-workout Lambda runs longer than the polling budget.
+  const [pollingStatus, setPollingStatus] = useState({});
 
   // State for workout logging (replaces fragile refs approach)
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
@@ -148,8 +152,29 @@ function ViewWorkouts() {
   // Prevents stale data from overwriting local optimistic updates during polling
   const prevTodaysWorkoutRef = useRef(null);
 
+  // Ref to track ProgramAgent's pollingStatus reference, mirroring the
+  // todaysWorkout pattern so we only forward changes (the agent
+  // initializes pollingStatus to {} so a truthy guard is always true).
+  const prevPollingStatusRef = useRef(null);
+
   // Ref to track current explanation request (for cancellation)
   const explanationAbortControllerRef = useRef(null);
+
+  // Templates we've already toasted about for a polling timeout, so we don't
+  // re-toast on every render while the "Refresh to check" button is visible.
+  const seenTimeoutsRef = useRef(new Set());
+
+  // Toast once when a template's polling status flips to "timeout".
+  useEffect(() => {
+    Object.entries(pollingStatus).forEach(([tplId, status]) => {
+      if (status === "timeout" && !seenTimeoutsRef.current.has(tplId)) {
+        seenTimeoutsRef.current.add(tplId);
+        showError(
+          "Workout still processing. Tap 'Refresh to check' once it's ready.",
+        );
+      }
+    });
+  }, [pollingStatus, showError]);
 
   // Load program and workout data
   const loadData = async () => {
@@ -184,6 +209,13 @@ function ViewWorkouts() {
             ) {
               prevTodaysWorkoutRef.current = newState.todaysWorkout;
               setWorkoutData(newState.todaysWorkout);
+            }
+            if (
+              newState.pollingStatus &&
+              newState.pollingStatus !== prevPollingStatusRef.current
+            ) {
+              prevPollingStatusRef.current = newState.pollingStatus;
+              setPollingStatus(newState.pollingStatus);
             }
           },
         );
@@ -1839,6 +1871,72 @@ General thoughts: `;
                               <span className="md:hidden">View</span>
                               <span className="hidden md:inline">
                                 View Workout
+                              </span>
+                            </button>
+                          ) : pollingStatus[template.templateId] ===
+                            "timeout" ? (
+                            // Polling exhausted before the build-workout Lambda
+                            // wrote linkedWorkoutId. Let the user trigger a
+                            // manual refresh instead of staring at an inert spinner.
+                            <button
+                              onClick={async () => {
+                                const refreshOptions = {};
+                                if (isViewingToday) {
+                                  refreshOptions.today = true;
+                                } else if (dayParam) {
+                                  refreshOptions.day = parseInt(dayParam);
+                                }
+                                try {
+                                  const result =
+                                    await programAgentRef.current?.loadWorkoutTemplates(
+                                      programId,
+                                      refreshOptions,
+                                    );
+                                  // Only clear the timeout state when the
+                                  // refreshed template actually has a
+                                  // linkedWorkoutId — i.e. build-workout
+                                  // finished. If the workout is still
+                                  // building, leave pollingStatus as
+                                  // "timeout" so the button stays visible
+                                  // for another retry; otherwise the render
+                                  // falls through to the disabled
+                                  // "Processing..." spinner with no recovery.
+                                  const refreshedTemplates =
+                                    result?.templates ||
+                                    result?.todaysWorkoutTemplates?.templates;
+                                  const refreshed = refreshedTemplates?.find(
+                                    (t) =>
+                                      t.templateId === template.templateId,
+                                  );
+                                  if (refreshed?.linkedWorkoutId) {
+                                    seenTimeoutsRef.current.delete(
+                                      template.templateId,
+                                    );
+                                    programAgentRef.current?.clearPollingStatus(
+                                      template.templateId,
+                                    );
+                                  } else {
+                                    showError(
+                                      "Workout still processing. Try again in a moment.",
+                                    );
+                                  }
+                                } catch (err) {
+                                  logger.error(
+                                    "Manual refresh failed:",
+                                    err,
+                                  );
+                                  showError(
+                                    err.message ||
+                                      "Failed to refresh workout status",
+                                  );
+                                }
+                              }}
+                              className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
+                            >
+                              <CheckIcon />
+                              <span className="md:hidden">Refresh</span>
+                              <span className="hidden md:inline">
+                                Refresh to check
                               </span>
                             </button>
                           ) : (
