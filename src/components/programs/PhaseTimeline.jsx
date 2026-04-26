@@ -238,7 +238,7 @@ export default function PhaseTimeline({ program }) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs mt-1">
+                  <p className="text-sm md:text-xs mt-1">
                     <span className="text-synthwave-text-secondary">
                       Duration:{" "}
                     </span>
