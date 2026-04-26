@@ -15,7 +15,7 @@ export default function EmptyStateCard({
     <div
       className={`${containerPatterns.mediumGlass} flex flex-col items-center text-center gap-4 py-8 px-6`}
     >
-      <div className="w-16 h-16 flex items-center justify-center rounded-md border border-synthwave-neon-cyan/30 bg-synthwave-neon-cyan/10">
+      <div className="w-16 h-16 flex items-center justify-center rounded-xl border border-synthwave-neon-cyan/30 bg-synthwave-neon-cyan/10">
         {typeof icon === "string" ? (
           <span className="text-3xl">{icon}</span>
         ) : (

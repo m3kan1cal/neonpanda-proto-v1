@@ -148,7 +148,7 @@ function TrainingGroundsConversationPicker({
         aria-haspopup="listbox"
         aria-labelledby={labelledBy}
         aria-controls={listboxId}
-        className={`relative flex items-center w-full rounded-md transition-all duration-300 cursor-pointer min-h-9 ${
+        className={`relative flex items-center w-full rounded-xl transition-all duration-300 cursor-pointer min-h-9 ${
           toggleDisabled
             ? "opacity-50 cursor-not-allowed border border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/20"
             : menuOpen
@@ -192,7 +192,7 @@ function TrainingGroundsConversationPicker({
         <div
           id={listboxId}
           role="listbox"
-          className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-md bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan"
+          className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-xl bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan"
         >
           {options.length === 0 ? (
             <div className="px-3 py-3 text-center font-body text-xs text-synthwave-text-muted">
@@ -1469,7 +1469,7 @@ function DrawerSkeleton() {
     <div className="space-y-6 pt-2">
       {/* User message skeleton — right-aligned pill */}
       <div className="flex flex-col items-end">
-        <div className="h-8 w-[70%] rounded-md rounded-br-none bg-synthwave-text-muted/20 animate-pulse" />
+        <div className="h-8 w-[70%] rounded-xl rounded-br-none bg-synthwave-text-muted/20 animate-pulse" />
         <div className="mt-1.5 w-6 h-6 rounded-full bg-synthwave-text-muted/20 animate-pulse" />
       </div>
 

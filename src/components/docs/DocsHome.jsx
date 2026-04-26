@@ -172,7 +172,7 @@ function DocsHome() {
                 <Link
                   key={item.id}
                   to={item.path}
-                  className="group flex items-start space-x-3 p-3 rounded-md hover:bg-synthwave-neon-cyan/5 border border-transparent hover:border-synthwave-neon-cyan/10 transition-all duration-200"
+                  className="group flex items-start space-x-3 p-3 rounded-xl hover:bg-synthwave-neon-cyan/5 border border-transparent hover:border-synthwave-neon-cyan/10 transition-all duration-200"
                 >
                   <svg
                     className="w-5 h-5 text-synthwave-text-muted group-hover:text-synthwave-neon-cyan transition-colors mt-0.5 shrink-0"

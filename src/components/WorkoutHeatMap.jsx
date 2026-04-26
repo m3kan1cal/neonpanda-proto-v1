@@ -177,7 +177,7 @@ const LoadingSkeleton = () => (
     {/* Stats subcontainer skeleton */}
     <div>
       <div className="w-16 h-2.5 rounded bg-synthwave-bg-secondary/40 animate-pulse mb-2" />
-      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
         <div className="grid grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex flex-col gap-1.5">
@@ -191,7 +191,7 @@ const LoadingSkeleton = () => (
     {/* Heatmap subcontainer skeleton */}
     <div>
       <div className="w-16 h-2.5 rounded bg-synthwave-bg-secondary/40 animate-pulse mb-2" />
-      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+      <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
         <div className="flex flex-wrap gap-x-4 gap-y-3">
           {[2, 1, 3].map((tileCount, i) => (
             <div key={i} className="flex flex-col gap-1 items-start">
@@ -287,7 +287,7 @@ const WorkoutHeatMapV2 = ({ weekStart, weekEnd, userId, coachId }) => {
             <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
               Summary
             </h4>
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
               <div className="grid grid-cols-3 gap-4 font-body text-sm">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-synthwave-text-secondary">
@@ -339,7 +339,7 @@ const WorkoutHeatMapV2 = ({ weekStart, weekEnd, userId, coachId }) => {
             <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
               Workouts
             </h4>
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-md p-4">
+            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
               <div className="flex flex-wrap gap-x-4 gap-y-3">
                 {sortedDates.map((dateKey) => (
                   <WorkoutDateGroup

@@ -227,22 +227,22 @@ function ChatInputSkeleton() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
-        <div className="w-full rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
+        <div className="w-full rounded-xl bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
           <div className="px-4 pt-3 pb-2 min-h-[80px]">
             <div className="h-4 bg-synthwave-text-muted/15 rounded animate-pulse w-1/3"></div>
           </div>
           <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
-            <div className="w-7 h-7 bg-synthwave-text-muted/15 rounded-md animate-pulse"></div>
+            <div className="w-7 h-7 bg-synthwave-text-muted/15 rounded-xl animate-pulse"></div>
             <div className="flex items-center gap-1">
               <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
-              <div className="w-7 h-7 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+              <div className="w-7 h-7 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
               <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
             </div>
           </div>
         </div>
         <div className="flex items-center justify-between gap-2 mt-3">
-          <div className="h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-48"></div>
-          <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse w-64"></div>
+          <div className="h-3 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-48"></div>
+          <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-64"></div>
         </div>
       </div>
     </div>
@@ -819,9 +819,9 @@ function ChatInput({
                 return (
                   <div
                     key={file.id}
-                    className="relative shrink-0 w-16 h-16 rounded-md overflow-visible border border-synthwave-neon-purple/30 bg-synthwave-bg-primary"
+                    className="relative shrink-0 w-16 h-16 rounded-xl overflow-visible border border-synthwave-neon-purple/30 bg-synthwave-bg-primary"
                   >
-                    <div className="absolute inset-0 overflow-hidden rounded-md flex items-center justify-center">
+                    <div className="absolute inset-0 overflow-hidden rounded-xl flex items-center justify-center">
                       {/* Upload spinner overlay */}
                       {file.uploadStatus === "uploading" && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
@@ -935,7 +935,7 @@ function ChatInput({
           <div className="flex-1 relative">
             {/* Slash Command Tooltip - anchored above the full input container */}
             {showSlashCommandTooltip && enableSlashCommands && (
-              <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 rounded-md p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
+              <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 rounded-xl p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
                 <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                   Available Slash Commands
                 </div>
@@ -943,7 +943,7 @@ function ChatInput({
                   {availableSlashCommands.map((cmd, index) => (
                     <div
                       key={index}
-                      className={`flex items-start space-x-3 py-1 px-2 rounded-md cursor-pointer transition-colors duration-200 border ${
+                      className={`flex items-start space-x-3 py-1 px-2 rounded-xl cursor-pointer transition-colors duration-200 border ${
                         index === selectedCommandIndex
                           ? "bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20"
                           : "hover:bg-synthwave-bg-primary/30 border-transparent"
@@ -1029,7 +1029,7 @@ function ChatInput({
                     onClick={() =>
                       setShowQuickActionsPopup(!showQuickActionsPopup)
                     }
-                    className={`p-1 rounded-md text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
+                    className={`p-1 rounded-xl text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 cursor-pointer ${
                       showQuickActionsPopup
                         ? "text-blue-400 bg-blue-400/20"
                         : ""
@@ -1292,7 +1292,7 @@ function ChatInput({
                     <button
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className={`p-1 rounded-md text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+                      className={`p-1 rounded-xl text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
                         showEmojiPicker
                           ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                           : ""
@@ -1328,7 +1328,7 @@ function ChatInput({
                               font-size: 1rem !important;
                               background-color: rgba(10, 10, 10, 0.5) !important;
                               border: 2px solid rgba(255, 0, 128, 0.3) !important;
-                              border-radius: 16px !important;
+                              border-radius: 8px !important;
                               color: #ffffff !important;
                               outline: none !important;
                               box-shadow: none !important;

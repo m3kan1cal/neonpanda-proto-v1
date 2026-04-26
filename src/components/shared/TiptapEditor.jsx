@@ -272,7 +272,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleBold().run();
           }}
-          className={`cursor-pointer px-2.5 py-1 rounded-md text-sm font-bold font-body transition-colors ${
+          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm font-bold font-body transition-colors ${
             editor.isActive("bold") ? accentActive : accentInactive
           }`}
           title="Bold"
@@ -285,7 +285,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleItalic().run();
           }}
-          className={`cursor-pointer px-2.5 py-1 rounded-md text-sm italic font-body transition-colors ${
+          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm italic font-body transition-colors ${
             editor.isActive("italic") ? accentActive : accentInactive
           }`}
           title="Italic"
@@ -298,7 +298,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleStrike().run();
           }}
-          className={`cursor-pointer px-2.5 py-1 rounded-md text-sm line-through font-body transition-colors ${
+          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm line-through font-body transition-colors ${
             editor.isActive("strike") ? accentActive : accentInactive
           }`}
           title="Strikethrough"
@@ -316,7 +316,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleBulletList().run();
           }}
-          className={`cursor-pointer p-1 rounded-md transition-colors ${
+          className={`cursor-pointer p-1 rounded-xl transition-colors ${
             editor.isActive("bulletList") ? accentActive : accentInactive
           }`}
           title="Bullet list"
@@ -344,7 +344,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleOrderedList().run();
           }}
-          className={`cursor-pointer p-1 rounded-md transition-colors ${
+          className={`cursor-pointer p-1 rounded-xl transition-colors ${
             editor.isActive("orderedList") ? accentActive : accentInactive
           }`}
           title="Numbered list"
@@ -405,7 +405,7 @@ const TiptapEditor = forwardRef(
                 if (!attachPhotoDisabled) onAttachPhoto();
               }}
               disabled={attachPhotoDisabled}
-              className={`cursor-pointer p-1 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${accentInactive}`}
+              className={`cursor-pointer p-1 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${accentInactive}`}
               title={
                 attachPhotoDisabled
                   ? "Maximum 5 photos"
@@ -445,7 +445,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 setIsFullscreen((prev) => !prev);
               }}
-              className={`cursor-pointer p-1 rounded-md transition-colors ${accentInactive}`}
+              className={`cursor-pointer p-1 rounded-xl transition-colors ${accentInactive}`}
               title={isFullscreen ? "Exit fullscreen" : "Expand editor"}
             >
               {isFullscreen ? (
@@ -523,7 +523,7 @@ const TiptapEditor = forwardRef(
                 onClick={() => setIsFullscreen(false)}
               >
                 <div
-                  className={`tiptap-fullscreen tiptap-editor-wrapper${isPink ? " tiptap-editor-pink" : ""} flex-1 flex flex-col w-full max-w-4xl mx-auto rounded-md bg-synthwave-bg-card/95 backdrop-blur-xl border ${isPink ? "border-synthwave-neon-pink/20" : "border-synthwave-neon-cyan/20"} shadow-lg overflow-hidden text-synthwave-text-secondary`}
+                  className={`tiptap-fullscreen tiptap-editor-wrapper${isPink ? " tiptap-editor-pink" : ""} flex-1 flex flex-col w-full max-w-4xl mx-auto rounded-xl bg-synthwave-bg-card/95 backdrop-blur-xl border ${isPink ? "border-synthwave-neon-pink/20" : "border-synthwave-neon-cyan/20"} shadow-lg overflow-hidden text-synthwave-text-secondary`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {toolbar}

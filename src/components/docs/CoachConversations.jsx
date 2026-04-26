@@ -181,7 +181,7 @@ function CoachConversationsDoc() {
         </p>
 
         <div className="space-y-2">
-          <div className="flex items-start space-x-3 p-3 rounded-md border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30">
+          <div className="flex items-start space-x-3 p-3 rounded-xl border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30">
             <code className="shrink-0 px-2 py-0.5 rounded bg-synthwave-bg-primary border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-ai text-sm">
               /log-workout
             </code>
@@ -191,7 +191,7 @@ function CoachConversationsDoc() {
               your training history.
             </p>
           </div>
-          <div className="flex items-start space-x-3 p-3 rounded-md border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30">
+          <div className="flex items-start space-x-3 p-3 rounded-xl border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30">
             <code className="shrink-0 px-2 py-0.5 rounded bg-synthwave-bg-primary border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-ai text-sm">
               /save-memory
             </code>

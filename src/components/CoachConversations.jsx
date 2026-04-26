@@ -989,7 +989,7 @@ function CoachConversations() {
                       >
                         {i % 2 === 1 ? (
                           /* User message: keep bubble container */
-                          <div className="rounded-md px-4 py-3 bg-synthwave-text-muted/20 animate-pulse w-full min-h-[100px]">
+                          <div className="rounded-xl px-4 py-3 bg-synthwave-text-muted/20 animate-pulse w-full min-h-[100px]">
                             <div className="space-y-1">
                               <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>
                               <div className="h-4 bg-synthwave-text-muted/30 animate-pulse w-full"></div>

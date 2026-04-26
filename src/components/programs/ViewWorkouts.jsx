@@ -1489,7 +1489,7 @@ General thoughts: `;
                               attachPhotoDisabled={selectedImages.length >= 5}
                               attachPhotoCount={selectedImages.length}
                               variant="pink"
-                              className="tiptap-editor-pink w-full rounded-t-md text-sm"
+                              className="tiptap-editor-pink w-full rounded-t-xl text-sm"
                               contentClassName="px-4 py-3"
                               placeholder="Edit to record what you actually did..."
                               mode="rich"
@@ -2393,7 +2393,7 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
               e.stopPropagation();
               onClose();
             }}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-colors cursor-pointer"
             aria-label="Close explanation"
           >
             <XIcon className="w-5 h-5" />

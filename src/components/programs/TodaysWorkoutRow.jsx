@@ -52,7 +52,7 @@ function TodaysWorkoutRow({
               <div className="space-y-1.5 pt-1">
                 {[1].map((j) => (
                   <div key={j} className="flex items-center gap-2">
-                    <div className="w-5 h-5 min-w-[20px] rounded-md bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
+                    <div className="w-5 h-5 min-w-[20px] rounded-xl bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                     <div className="h-3.5 flex-1 min-w-0 bg-synthwave-text-muted/20 animate-pulse"></div>
                     <div className="h-3 w-8 bg-synthwave-text-muted/20 animate-pulse shrink-0"></div>
                   </div>
@@ -74,7 +74,7 @@ function TodaysWorkoutRow({
   if (activePrograms.length === 0) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div className="rounded-md bg-synthwave-bg-card/20 backdrop-blur-sm border border-dashed border-synthwave-neon-cyan/30 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/50 hover:shadow-sm hover:shadow-synthwave-neon-cyan/20 px-5 py-4 flex items-center justify-between gap-4">
+        <div className="rounded-xl bg-synthwave-bg-card/20 backdrop-blur-sm border border-dashed border-synthwave-neon-cyan/30 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/50 hover:shadow-sm hover:shadow-synthwave-neon-cyan/20 px-5 py-4 flex items-center justify-between gap-4">
           <SectionEmptyState
             message="No active programs yet."
             actionLabel="Start designing"
@@ -171,7 +171,7 @@ function TodaysWorkoutRow({
                       onCompleteRestDay(program);
                     }}
                     disabled={isCompletingRestDay}
-                    className="w-full py-3.5 border border-synthwave-neon-cyan/30 rounded-md bg-transparent text-synthwave-neon-cyan font-body font-bold text-sm tracking-[1.5px] uppercase cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3.5 border border-synthwave-neon-cyan/30 rounded-xl bg-transparent text-synthwave-neon-cyan font-body font-bold text-sm tracking-[1.5px] uppercase cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCompletingRestDay
                       ? "Completing..."

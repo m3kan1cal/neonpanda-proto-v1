@@ -140,7 +140,7 @@ const MarkdownRendererComponent = ({ content, className = "" }) => {
 
             // Inline code
             return (
-              <code className="bg-synthwave-dark-purple/50 text-synthwave-neon-pink px-1 py-0.5 rounded-md text-sm">
+              <code className="bg-synthwave-dark-purple/50 text-synthwave-neon-pink px-1 py-0.5 rounded-xl text-sm">
                 {children}
               </code>
             );

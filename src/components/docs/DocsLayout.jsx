@@ -61,7 +61,7 @@ function DocsSidebar({ isOpen, onClose }) {
                         <Link
                           to={item.path}
                           onClick={onClose}
-                          className={`block px-3 py-2 rounded-md font-body text-sm transition-all duration-200 ${
+                          className={`block px-3 py-2 rounded-xl font-body text-sm transition-all duration-200 ${
                             isActive
                               ? "bg-synthwave-neon-pink/15 text-synthwave-neon-pink border-l-2 border-synthwave-neon-pink"
                               : "text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5"
@@ -87,7 +87,7 @@ function DocsSidebar({ isOpen, onClose }) {
                 <Link
                   to="/faqs"
                   onClick={onClose}
-                  className="block px-3 py-2 rounded-md font-body text-sm text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200"
+                  className="block px-3 py-2 rounded-xl font-body text-sm text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200"
                 >
                   FAQs
                 </Link>
@@ -96,7 +96,7 @@ function DocsSidebar({ isOpen, onClose }) {
                 <Link
                   to="/contact?type=support"
                   onClick={onClose}
-                  className="block px-3 py-2 rounded-md font-body text-sm text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200"
+                  className="block px-3 py-2 rounded-xl font-body text-sm text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200"
                 >
                   Support
                 </Link>
@@ -105,7 +105,7 @@ function DocsSidebar({ isOpen, onClose }) {
                 <Link
                   to="/blog"
                   onClick={onClose}
-                  className="block px-3 py-2 rounded-md font-body text-sm text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200"
+                  className="block px-3 py-2 rounded-xl font-body text-sm text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/5 transition-all duration-200"
                 >
                   Blog
                 </Link>

@@ -1025,7 +1025,7 @@ function ManagePrograms() {
                 openMenuId === program.programId ? null : program.programId,
               );
             }}
-            className={`p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
+            className={`p-2 rounded-xl transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
               openMenuId === program.programId
                 ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                 : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
@@ -1040,7 +1040,7 @@ function ManagePrograms() {
 
           {/* Dropdown Menu */}
           {openMenuId === program.programId && (
-            <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+            <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-xl shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1339,12 +1339,12 @@ function ManagePrograms() {
             {/* Left: Title + Coach Card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Title skeleton */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-20"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-20"></div>
               </div>
             </div>
 
@@ -1358,10 +1358,10 @@ function ManagePrograms() {
             <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
               <div className="text-center h-full flex flex-col justify-between">
                 <div className="flex-1 flex flex-col justify-center items-center">
-                  <div className="w-8 h-8 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-md mb-2 md:mb-3"></div>
-                  <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-40 md:w-48 mb-2 md:mb-3"></div>
-                  <div className="h-3 md:h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 md:w-56 mb-3 md:mb-4"></div>
-                  <div className="hidden md:block h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32 mb-3"></div>
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-xl mb-2 md:mb-3"></div>
+                  <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40 md:w-48 mb-2 md:mb-3"></div>
+                  <div className="h-3 md:h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 md:w-56 mb-3 md:mb-4"></div>
+                  <div className="hidden md:block h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-32 mb-3"></div>
                 </div>
                 {/* Bottom features skeleton — desktop only, mirrors loaded card */}
                 <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3">
@@ -1371,8 +1371,8 @@ function ManagePrograms() {
                         key={i}
                         className="flex items-center justify-center space-x-2"
                       >
-                        <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                        <div className="h-4 w-40 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
+                        <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                        <div className="h-4 w-40 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
                       </div>
                     ))}
                   </div>
@@ -1391,34 +1391,34 @@ function ManagePrograms() {
                   <div className="flex items-start space-x-3 mb-4 pr-10">
                     <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2"></div>
                     <div className="flex-1">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 mb-2"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2"></div>
                     </div>
                   </div>
 
                   {/* Description skeleton */}
                   <div className="hidden sm:block">
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-3/4 mb-4"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-full mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-3/4 mb-4"></div>
                   </div>
 
                   {/* Program details skeleton */}
                   <div className="space-y-3">
                     {/* Workout stats */}
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48"></div>
                     </div>
                     {/* Progress */}
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-40"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40"></div>
                     </div>
                     {/* Progress bar */}
                     <div className="h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
                     {/* Created date */}
                     <div className="hidden sm:flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-32"></div>
                     </div>
                   </div>
                 </div>
@@ -1438,9 +1438,9 @@ function ManagePrograms() {
           {/* In-Progress Sessions skeleton */}
           <div className="mt-16">
             <div className="text-center mb-12">
-              <div className="h-7 bg-synthwave-text-muted/20 animate-pulse rounded-md w-80 mx-auto mb-4"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full max-w-2xl mx-auto mb-2"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full max-w-xl mx-auto"></div>
+              <div className="h-7 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-full max-w-xl mx-auto"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -1452,21 +1452,21 @@ function ManagePrograms() {
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full shrink-0 mt-2"></div>
                     <div className="flex-1">
-                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48"></div>
                     </div>
                   </div>
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-32"></div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-40"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40"></div>
                     </div>
                   </div>
                   <div className="pt-4">
-                    <div className="h-4 bg-synthwave-neon-cyan/30 animate-pulse rounded-md w-36"></div>
+                    <div className="h-4 bg-synthwave-neon-cyan/30 animate-pulse rounded-xl w-36"></div>
                   </div>
                 </div>
               ))}
@@ -1476,9 +1476,9 @@ function ManagePrograms() {
           {/* Paused Programs Section Skeleton */}
           <div className="mt-16">
             <div className="text-center mb-12">
-              <div className="h-7 bg-synthwave-text-muted/20 animate-pulse rounded-md w-80 mx-auto mb-4"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full max-w-2xl mx-auto mb-2"></div>
-              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full max-w-xl mx-auto"></div>
+              <div className="h-7 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-full max-w-xl mx-auto"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -1492,34 +1492,34 @@ function ManagePrograms() {
                     <div className="flex items-start space-x-3 mb-4 pr-10">
                       <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2"></div>
                       <div className="flex-1">
-                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48 mb-2"></div>
+                        <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2"></div>
                       </div>
                     </div>
 
                     {/* Description skeleton */}
                     <div className="hidden sm:block">
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-full mb-2"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-3/4 mb-4"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-full mb-2"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-3/4 mb-4"></div>
                     </div>
 
                     {/* Program details skeleton */}
                     <div className="space-y-3">
                       {/* Workout stats */}
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-48"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48"></div>
                       </div>
                       {/* Progress */}
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-40"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40"></div>
                       </div>
                       {/* Progress bar */}
                       <div className="h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
                       {/* Created date */}
                       <div className="hidden sm:flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-md animate-pulse"></div>
-                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-md w-32"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-xl animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-32"></div>
                       </div>
                     </div>
                   </div>
@@ -1965,7 +1965,7 @@ function ManagePrograms() {
 
                       {/* Error message for failed builds */}
                       {isFailed && session.programGeneration?.error && (
-                        <div className="rounded-md bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 p-3 mt-3">
+                        <div className="rounded-xl bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 p-3 mt-3">
                           <p className="font-body text-xs text-synthwave-neon-pink">
                             {session.programGeneration.error}
                           </p>
@@ -1977,7 +1977,7 @@ function ManagePrograms() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1986,7 +1986,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1999,7 +1999,7 @@ function ManagePrograms() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -2025,7 +2025,7 @@ function ManagePrograms() {
                               e.stopPropagation();
                               handleDeleteSession(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>

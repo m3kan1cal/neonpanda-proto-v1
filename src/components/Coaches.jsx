@@ -920,7 +920,7 @@ function Coaches() {
                               : coach.coach_id,
                           );
                         }}
-                        className={`cursor-pointer p-2 rounded-md transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
+                        className={`cursor-pointer p-2 rounded-xl transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
                           openMenuId === coach.coach_id
                             ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                             : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
@@ -935,7 +935,7 @@ function Coaches() {
 
                       {/* Dropdown Menu */}
                       {openMenuId === coach.coach_id && (
-                        <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-md shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+                        <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-xl shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1403,7 +1403,7 @@ function Coaches() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -1412,7 +1412,7 @@ function Coaches() {
                               e.stopPropagation(); // Prevent card click
                               handleDeleteClick(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>
@@ -1425,7 +1425,7 @@ function Coaches() {
                               handleRetryBuild(session);
                             }}
                             disabled={retryingSessionId === session.sessionId}
-                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-cyan/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
                               className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
@@ -1451,7 +1451,7 @@ function Coaches() {
                               e.stopPropagation(); // Prevent card click
                               handleDeleteClick(session);
                             }}
-                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-md hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 rounded-full hover:text-white hover:bg-synthwave-neon-pink/10 transition-all duration-200 font-body font-medium uppercase tracking-wide hover:cursor-pointer"
                           >
                             Delete
                           </button>

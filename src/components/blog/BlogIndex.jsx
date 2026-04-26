@@ -322,7 +322,7 @@ function BlogIndex() {
                               {post.topics.map((topic, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-xs font-body text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-md"
+                                  className="text-xs font-body text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-xl"
                                 >
                                   {topic}
                                 </span>
@@ -417,7 +417,7 @@ function BlogIndex() {
                               {post.topics.map((topic, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-xs font-body text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-md"
+                                  className="text-xs font-body text-synthwave-text-muted bg-synthwave-bg-primary/30 px-2 py-1 rounded-xl"
                                 >
                                   {topic}
                                 </span>

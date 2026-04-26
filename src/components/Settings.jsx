@@ -803,9 +803,9 @@ function Settings() {
         >
           {/* Header Skeleton */}
           <div className="mb-12 text-center">
-            <div className="h-12 w-80 bg-synthwave-text-muted/10 rounded-md animate-pulse mx-auto mb-4"></div>
-            <div className="h-4 w-[32rem] bg-synthwave-text-muted/10 rounded-md animate-pulse mx-auto mb-2"></div>
-            <div className="h-4 w-[28rem] bg-synthwave-text-muted/10 rounded-md animate-pulse mx-auto"></div>
+            <div className="h-12 w-80 bg-synthwave-text-muted/10 rounded-xl animate-pulse mx-auto mb-4"></div>
+            <div className="h-4 w-[32rem] bg-synthwave-text-muted/10 rounded-xl animate-pulse mx-auto mb-2"></div>
+            <div className="h-4 w-[28rem] bg-synthwave-text-muted/10 rounded-xl animate-pulse mx-auto"></div>
           </div>
 
           {/* Main Content Skeleton */}
@@ -818,18 +818,18 @@ function Settings() {
                 <div className={containerPatterns.collapsibleSection}>
                   <div className={containerPatterns.collapsibleHeader}>
                     <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
-                      <div className="h-4 w-48 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
+                      <div className="h-4 w-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                     </div>
                   </div>
                   <div className={containerPatterns.collapsibleContent}>
                     <div className="space-y-6 pb-4">
-                      <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded-md animate-pulse mb-4"></div>
+                      <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded-xl animate-pulse mb-4"></div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="h-48 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
-                        <div className="h-48 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                        <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
+                        <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                       </div>
-                      <div className="h-12 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                      <div className="h-12 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                     </div>
                   </div>
                 </div>
@@ -845,12 +845,12 @@ function Settings() {
                   <div key={i} className={containerPatterns.collapsibleSection}>
                     <div className={containerPatterns.collapsibleHeader}>
                       <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                         <div
-                          className={`h-7 ${section.w} bg-synthwave-text-muted/10 rounded-md animate-pulse`}
+                          className={`h-7 ${section.w} bg-synthwave-text-muted/10 rounded-xl animate-pulse`}
                         ></div>
                       </div>
-                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                     </div>
                   </div>
                 ))}
@@ -905,12 +905,12 @@ function Settings() {
                 {isLoadingSubscription ? (
                   // Loading skeleton
                   <div className="space-y-6 pb-4">
-                    <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded-md animate-pulse mb-4"></div>
+                    <div className="h-6 w-32 bg-synthwave-text-muted/10 rounded-xl animate-pulse mb-4"></div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="h-48 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
-                      <div className="h-48 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                      <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
+                      <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                     </div>
-                    <div className="h-12 bg-synthwave-text-muted/10 rounded-md animate-pulse"></div>
+                    <div className="h-12 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                   </div>
                 ) : (
                   <div className="space-y-6 pb-4">
@@ -923,7 +923,7 @@ function Settings() {
                         {/* EarlyPanda Column */}
                         <div className={containerPatterns.mediumGlass}>
                           <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-16 h-16 rounded-md bg-synthwave-neon-cyan/20 flex items-center justify-center text-synthwave-neon-cyan">
+                            <div className="shrink-0 w-16 h-16 rounded-xl bg-synthwave-neon-cyan/20 flex items-center justify-center text-synthwave-neon-cyan">
                               <ClockIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1015,9 +1015,9 @@ function Settings() {
                         </div>
 
                         {/* ElectricPanda Column */}
-                        <div className="rounded-md bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 p-6 shadow-xl shadow-synthwave-neon-purple/20">
+                        <div className="rounded-xl bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 p-6 shadow-xl shadow-synthwave-neon-purple/20">
                           <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-16 h-16 rounded-md bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple flex items-center justify-center text-white">
+                            <div className="shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple flex items-center justify-center text-white">
                               <LightningIcon />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1358,15 +1358,15 @@ function Settings() {
               >
                 {isLoadingProviders ? (
                   <div className="space-y-3 pb-4">
-                    <div className="h-16 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
-                    <div className="h-16 bg-synthwave-text-muted/10 rounded-md animate-pulse" />
+                    <div className="h-16 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
+                    <div className="h-16 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
                   </div>
                 ) : (
                   <div className="space-y-4 pb-4">
                     {/* Email & Password provider row */}
-                    <div className="flex items-center justify-between p-4 rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/10">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/10">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-md bg-synthwave-neon-cyan/20 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-synthwave-neon-cyan/20 flex items-center justify-center">
                           <span className="text-synthwave-neon-cyan text-sm font-medium">
                             @
                           </span>
@@ -1388,9 +1388,9 @@ function Settings() {
                     </div>
 
                     {/* Google provider row */}
-                    <div className="flex items-center justify-between p-4 rounded-md bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/10">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/10">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-md bg-white flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center">
                           <GoogleIcon />
                         </div>
                         <div>
@@ -1430,7 +1430,7 @@ function Settings() {
 
                     {/* Set Password form — shown only for Google-only users */}
                     {!providerData.hasPassword && (
-                      <div className="mt-2 p-4 border border-synthwave-neon-cyan/20 rounded-md">
+                      <div className="mt-2 p-4 border border-synthwave-neon-cyan/20 rounded-xl">
                         <h4 className="font-body font-medium text-white text-sm mb-1">
                           Set a Password
                         </h4>
@@ -2028,7 +2028,7 @@ function Settings() {
                 icon={<DangerIcon />}
                 defaultOpen={false}
               >
-                <div className="space-y-6 border-2 border-red-500/30 rounded-md p-6 bg-red-500/5">
+                <div className="space-y-6 border-2 border-red-500/30 rounded-xl p-6 bg-red-500/5">
                   <div>
                     <h4 className="font-body font-bold text-red-400 text-lg mb-2">
                       Delete Account
@@ -2041,7 +2041,7 @@ function Settings() {
                     </p>
                     <button
                       onClick={handleDeleteAccount}
-                      className="bg-red-500 text-black px-6 py-3 rounded-md font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
+                      className="bg-red-500 text-black px-6 py-3 rounded-xl font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
                     >
                       Delete Account
                     </button>

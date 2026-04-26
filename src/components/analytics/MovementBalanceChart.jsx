@@ -137,7 +137,7 @@ export default function MovementBalanceChart({
         {imbalanceFlags.map((flag, i) => (
           <div
             key={i}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/20"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/20"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-synthwave-neon-pink shrink-0" />
             <span className="font-body text-xs text-synthwave-neon-pink">
@@ -183,7 +183,7 @@ function BalanceTooltip({ active, payload, label }) {
 
   return (
     <div
-      className="rounded-md px-3 py-2.5 shadow-lg border backdrop-blur-sm"
+      className="rounded-xl px-3 py-2.5 shadow-lg border backdrop-blur-sm"
       style={{
         background: chartColors.tooltipBg,
         borderColor: chartColors.tooltipBorder,

@@ -526,7 +526,7 @@ export const CyclingSection = ({
       <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
         <div
           className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-            collapsedSections.has(detailsId) ? "rounded-md" : "rounded-t-md"
+            collapsedSections.has(detailsId) ? "rounded-xl" : "rounded-t-xl"
           }`}
           onClick={() => toggleCollapse(detailsId)}
         >
@@ -565,7 +565,7 @@ export const CyclingSection = ({
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
             className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
-              collapsedSections.has(segmentsId) ? "rounded-md" : "rounded-t-md"
+              collapsedSections.has(segmentsId) ? "rounded-xl" : "rounded-t-xl"
             }`}
             onClick={() => toggleCollapse(segmentsId)}
           >
