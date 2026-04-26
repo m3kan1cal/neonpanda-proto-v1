@@ -60,6 +60,7 @@ export class ProgramAgent {
       isLoggingWorkout: false,
       error: null,
       lastCheckTime: null,
+      pollingStatus: {}, // templateId -> "polling" | "timeout"
     };
 
     // Add alias for backward compatibility
@@ -268,20 +269,19 @@ export class ProgramAgent {
         options,
       );
 
-      // If loading today's workout, update the todaysWorkout state
-      if (options.today) {
-        this._updateState({
-          todaysWorkout:
-            response.todaysWorkoutTemplates ||
-            response.workoutTemplates ||
-            null,
-          isLoadingTodaysWorkout: false,
-        });
-      } else {
-        this._updateState({
-          isLoadingTodaysWorkout: false,
-        });
-      }
+      // Always push fresh templates into agent state. ViewWorkouts renders
+      // one day's templates at a time and reads from todaysWorkout regardless
+      // of whether the user is viewing today or a specific day. Without this,
+      // polling for linkedWorkoutId on a non-today day would never propagate
+      // the updated template into UI state, leaving the button stuck on
+      // "Processing Workout..." even after the build-workout Lambda finished.
+      this._updateState({
+        todaysWorkout:
+          response.todaysWorkoutTemplates ||
+          response.workoutTemplates ||
+          null,
+        isLoadingTodaysWorkout: false,
+      });
 
       return response;
     } catch (error) {
@@ -480,72 +480,76 @@ export class ProgramAgent {
    */
   async _startPollingForLinkedWorkout(programId, templateId, options = {}) {
     let pollCount = 0;
-    const maxPolls = 60; // Max 3 minutes (60 * 3 seconds)
+    // Max 6 minutes (120 * 3 seconds). The build-workout Lambda regularly
+    // takes 100s+ for complex workouts with extended thinking; a single
+    // Bedrock retry can push past 3 minutes. Polling is a cheap S3 + DDB read.
+    const maxPolls = 120;
+
+    // Mark this template as actively polling so the UI can render the
+    // correct in-progress / timeout / refresh state.
+    this._updateState({
+      pollingStatus: {
+        ...this.programState.pollingStatus,
+        [templateId]: "polling",
+      },
+    });
+
+    const stopPolling = (reason) => {
+      clearInterval(pollInterval);
+      this.pollingIntervals.delete(templateId);
+
+      const nextStatus = { ...this.programState.pollingStatus };
+      if (reason === "timeout") {
+        nextStatus[templateId] = "timeout";
+      } else {
+        delete nextStatus[templateId];
+      }
+      this._updateState({ pollingStatus: nextStatus });
+    };
 
     const pollInterval = setInterval(async () => {
       pollCount++;
 
       try {
-        // Reload workout templates silently
         const freshData = await this.loadWorkoutTemplates(programId, options);
 
-        // If freshData is null, it's a rest day - stop polling
         if (freshData === null) {
           logger.info(
             "⏹️ Rest day detected after logging workout - stopping polling for template:",
             templateId,
           );
-          clearInterval(pollInterval);
-          this.pollingIntervals.delete(templateId);
+          stopPolling("restDay");
           return;
         }
 
-        if (freshData && freshData.templates) {
-          const updatedTemplate = freshData.templates.find(
+        const templates =
+          freshData?.templates ||
+          freshData?.todaysWorkoutTemplates?.templates;
+
+        if (templates) {
+          const updatedTemplate = templates.find(
             (t) => t.templateId === templateId,
           );
 
-          // If linkedWorkoutId is now available, stop polling
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
             logger.info(
               "✅ linkedWorkoutId found:",
               updatedTemplate.linkedWorkoutId,
             );
-            clearInterval(pollInterval);
-            this.pollingIntervals.delete(templateId);
-          }
-        } else if (
-          freshData &&
-          freshData.todaysWorkoutTemplates &&
-          freshData.todaysWorkoutTemplates.templates
-        ) {
-          const updatedTemplate =
-            freshData.todaysWorkoutTemplates.templates.find(
-              (t) => t.templateId === templateId,
-            );
-
-          if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            logger.info(
-              "✅ linkedWorkoutId found:",
-              updatedTemplate.linkedWorkoutId,
-            );
-            clearInterval(pollInterval);
-            this.pollingIntervals.delete(templateId);
+            stopPolling("found");
+            return;
           }
         }
 
-        // Stop polling after max attempts
         if (pollCount >= maxPolls) {
           logger.warn(
             "⏱️ Max polling attempts reached for template:",
             templateId,
           );
-          clearInterval(pollInterval);
-          this.pollingIntervals.delete(templateId);
+          stopPolling("timeout");
         }
       } catch (err) {
         logger.error("Error polling for linkedWorkoutId:", err);
-        // Stop polling if we've moved to a rest day (no templates found)
         if (
           err.message === "No templates found for today" ||
           err.message?.includes("No templates found")
@@ -554,8 +558,7 @@ export class ProgramAgent {
             "⏹️ Rest day detected - stopping polling for template:",
             templateId,
           );
-          clearInterval(pollInterval);
-          this.pollingIntervals.delete(templateId);
+          stopPolling("restDay");
         }
         // Continue polling for other errors
       }
@@ -563,6 +566,18 @@ export class ProgramAgent {
 
     // Store interval ID for cleanup
     this.pollingIntervals.set(templateId, pollInterval);
+  }
+
+  /**
+   * Clear the polling status entry for a template. Used when the user
+   * manually refreshes after a polling timeout so the UI can return to a
+   * neutral state (and a future timeout for the same template can re-toast).
+   */
+  clearPollingStatus(templateId) {
+    if (!this.programState.pollingStatus[templateId]) return;
+    const nextStatus = { ...this.programState.pollingStatus };
+    delete nextStatus[templateId];
+    this._updateState({ pollingStatus: nextStatus });
   }
 
   /**
