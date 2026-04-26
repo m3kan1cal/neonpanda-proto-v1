@@ -1865,21 +1865,39 @@ General thoughts: `;
                                   refreshOptions.day = parseInt(dayParam);
                                 }
                                 try {
-                                  await programAgentRef.current?.loadWorkoutTemplates(
-                                    programId,
-                                    refreshOptions,
+                                  const result =
+                                    await programAgentRef.current?.loadWorkoutTemplates(
+                                      programId,
+                                      refreshOptions,
+                                    );
+                                  // Only clear the timeout state when the
+                                  // refreshed template actually has a
+                                  // linkedWorkoutId — i.e. build-workout
+                                  // finished. If the workout is still
+                                  // building, leave pollingStatus as
+                                  // "timeout" so the button stays visible
+                                  // for another retry; otherwise the render
+                                  // falls through to the disabled
+                                  // "Processing..." spinner with no recovery.
+                                  const refreshedTemplates =
+                                    result?.templates ||
+                                    result?.todaysWorkoutTemplates?.templates;
+                                  const refreshed = refreshedTemplates?.find(
+                                    (t) =>
+                                      t.templateId === template.templateId,
                                   );
-                                  // Only clear the timeout state on success.
-                                  // If the refresh fails, leave pollingStatus
-                                  // as "timeout" so the button stays visible
-                                  // and the user can retry instead of being
-                                  // stuck on the disabled "Processing..." spinner.
-                                  seenTimeoutsRef.current.delete(
-                                    template.templateId,
-                                  );
-                                  programAgentRef.current?.clearPollingStatus(
-                                    template.templateId,
-                                  );
+                                  if (refreshed?.linkedWorkoutId) {
+                                    seenTimeoutsRef.current.delete(
+                                      template.templateId,
+                                    );
+                                    programAgentRef.current?.clearPollingStatus(
+                                      template.templateId,
+                                    );
+                                  } else {
+                                    showError(
+                                      "Workout still processing. Try again in a moment.",
+                                    );
+                                  }
                                 } catch (err) {
                                   logger.error(
                                     "Manual refresh failed:",
