@@ -791,8 +791,8 @@ function ViewReports() {
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-xl animate-pulse" />
-                <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse rounded" />
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-full animate-pulse" />
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 animate-pulse rounded-lg" />
               </div>
             ))}
           </div>
