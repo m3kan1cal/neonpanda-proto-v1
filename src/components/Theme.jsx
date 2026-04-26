@@ -148,10 +148,10 @@ function Theme() {
 
         {/* Category Navigation */}
         <div className="flex justify-center mb-6">
-          <div className="flex bg-synthwave-bg-card/50 rounded-md p-1 border border-synthwave-neon-purple/30">
+          <div className="flex bg-synthwave-bg-card/50 rounded-full p-1 border border-synthwave-neon-purple/30">
             <button
               onClick={() => setActiveCategory("buttons")}
-              className={`px-6 py-3 rounded-md font-body font-semibold transition-all duration-300 ${
+              className={`px-6 py-3 rounded-full font-body font-semibold transition-all duration-300 ${
                 activeCategory === "buttons"
                   ? "bg-synthwave-neon-purple text-white"
                   : "text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
@@ -161,7 +161,7 @@ function Theme() {
             </button>
             <button
               onClick={() => setActiveCategory("containers")}
-              className={`px-6 py-3 rounded-md font-body font-semibold transition-all duration-300 ${
+              className={`px-6 py-3 rounded-full font-body font-semibold transition-all duration-300 ${
                 activeCategory === "containers"
                   ? "bg-synthwave-neon-purple text-white"
                   : "text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
@@ -171,7 +171,7 @@ function Theme() {
             </button>
             <button
               onClick={() => setActiveCategory("patterns")}
-              className={`px-6 py-3 rounded-md font-body font-semibold transition-all duration-300 ${
+              className={`px-6 py-3 rounded-full font-body font-semibold transition-all duration-300 ${
                 activeCategory === "patterns"
                   ? "bg-synthwave-neon-purple text-white"
                   : "text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
@@ -185,10 +185,10 @@ function Theme() {
         {/* Sub-Navigation Tabs */}
         {activeCategory === "buttons" && (
           <div className="flex justify-center mb-8">
-            <div className="flex bg-synthwave-bg-card/50 rounded-md p-1 border border-synthwave-neon-pink/30">
+            <div className="flex bg-synthwave-bg-card/50 rounded-full p-1 border border-synthwave-neon-pink/30">
               <button
                 onClick={() => setActiveSection("existing")}
-                className={`px-6 py-3 rounded-md font-body font-semibold transition-all duration-300 ${
+                className={`px-6 py-3 rounded-full font-body font-semibold transition-all duration-300 ${
                   activeSection === "existing"
                     ? "bg-synthwave-neon-pink text-synthwave-bg-primary"
                     : "text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
@@ -198,7 +198,7 @@ function Theme() {
               </button>
               <button
                 onClick={() => setActiveSection("proposed")}
-                className={`px-6 py-3 rounded-md font-body font-semibold transition-all duration-300 ${
+                className={`px-6 py-3 rounded-full font-body font-semibold transition-all duration-300 ${
                   activeSection === "proposed"
                     ? "bg-synthwave-neon-cyan text-synthwave-bg-primary"
                     : "text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
@@ -212,10 +212,10 @@ function Theme() {
 
         {activeCategory === "containers" && (
           <div className="flex justify-center mb-8">
-            <div className="flex bg-synthwave-bg-card/50 rounded-md p-1 border border-synthwave-neon-cyan/30">
+            <div className="flex bg-synthwave-bg-card/50 rounded-full p-1 border border-synthwave-neon-cyan/30">
               <button
                 onClick={() => setActiveSection("existing")}
-                className={`px-6 py-3 rounded-md font-body font-semibold transition-all duration-300 ${
+                className={`px-6 py-3 rounded-full font-body font-semibold transition-all duration-300 ${
                   activeSection === "existing"
                     ? "bg-synthwave-neon-cyan text-synthwave-bg-primary"
                     : "text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
@@ -225,7 +225,7 @@ function Theme() {
               </button>
               <button
                 onClick={() => setActiveSection("proposed")}
-                className={`px-6 py-3 rounded-md font-body font-semibold transition-all duration-300 ${
+                className={`px-6 py-3 rounded-full font-body font-semibold transition-all duration-300 ${
                   activeSection === "proposed"
                     ? "bg-synthwave-neon-pink text-synthwave-bg-primary"
                     : "text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
@@ -1274,10 +1274,10 @@ function Theme() {
                           Tab Switcher (ViewReports.jsx)
                         </h4>
                         <div className="flex items-center justify-center gap-2 p-4 bg-synthwave-bg-card/30 rounded-md">
-                          <button className="px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
+                          <button className="px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
                             Active Tab
                           </button>
-                          <button className="px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10">
+                          <button className="px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10">
                             Inactive Tab
                           </button>
                         </div>
@@ -1298,7 +1298,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-body text-xs w-16">
                               Active:
                             </span>
-                            <button className="px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
+                            <button className="px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
                               Tab
                             </button>
                           </div>
@@ -1306,7 +1306,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-body text-xs w-16">
                               Inactive:
                             </span>
-                            <button className="px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent">
+                            <button className="px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent">
                               Tab
                             </button>
                           </div>
@@ -1314,7 +1314,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-body text-xs w-16">
                               Hover:
                             </span>
-                            <button className="px-4 py-2 rounded-md font-body font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/20">
+                            <button className="px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/20">
                               Tab
                             </button>
                           </div>
