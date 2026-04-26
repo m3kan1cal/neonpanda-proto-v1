@@ -277,14 +277,24 @@ export class ProgramAgent {
       // todaysWorkout — ProgramDashboard fires those in parallel with a
       // today=true query, and clobbering the slot would surface the full
       // template list in TodaysWorkoutCard.
+      //
+      // Response shape differs by query:
+      //   today=true → { todaysWorkoutTemplates: { templates, dayNumber, ... }, ... }
+      //   day=N      → { templates, dayNumber, phaseName, ... } at top level
+      // ViewWorkouts' workoutData consumer expects { templates, dayNumber, ... },
+      // so unwrap todaysWorkoutTemplates for the today path and use the
+      // response directly for the day path.
       const isSingleDayQuery =
         options.today === true || options.day !== undefined;
       if (isSingleDayQuery) {
+        const todaysWorkout =
+          options.today === true
+            ? response.todaysWorkoutTemplates ||
+              response.workoutTemplates ||
+              null
+            : response;
         this._updateState({
-          todaysWorkout:
-            response.todaysWorkoutTemplates ||
-            response.workoutTemplates ||
-            null,
+          todaysWorkout,
           isLoadingTodaysWorkout: false,
         });
       } else {

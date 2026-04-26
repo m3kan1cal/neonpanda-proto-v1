@@ -152,6 +152,11 @@ function ViewWorkouts() {
   // Prevents stale data from overwriting local optimistic updates during polling
   const prevTodaysWorkoutRef = useRef(null);
 
+  // Ref to track ProgramAgent's pollingStatus reference, mirroring the
+  // todaysWorkout pattern so we only forward changes (the agent
+  // initializes pollingStatus to {} so a truthy guard is always true).
+  const prevPollingStatusRef = useRef(null);
+
   // Ref to track current explanation request (for cancellation)
   const explanationAbortControllerRef = useRef(null);
 
@@ -205,7 +210,11 @@ function ViewWorkouts() {
               prevTodaysWorkoutRef.current = newState.todaysWorkout;
               setWorkoutData(newState.todaysWorkout);
             }
-            if (newState.pollingStatus) {
+            if (
+              newState.pollingStatus &&
+              newState.pollingStatus !== prevPollingStatusRef.current
+            ) {
+              prevPollingStatusRef.current = newState.pollingStatus;
               setPollingStatus(newState.pollingStatus);
             }
           },
