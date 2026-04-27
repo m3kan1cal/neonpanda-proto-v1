@@ -2,8 +2,8 @@ import React from "react";
 import {
   containerPatterns,
   typographyPatterns,
-  messagePatterns,
 } from "../../utils/ui/uiPatterns";
+import { SectionHeader, MetricsIcon } from "../themes/SynthwaveComponents";
 
 export default function ProgressOverview({ program }) {
   const totalDays = program.totalDays || program.duration || 1;
@@ -71,14 +71,9 @@ export default function ProgressOverview({ program }) {
 
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
-      <div className="flex items-start space-x-3 mb-4">
-        <div
-          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
-        ></div>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Progress Overview
-        </h3>
-      </div>
+      <SectionHeader icon={MetricsIcon} color="cyan" className="mb-4">
+        Progress Overview
+      </SectionHeader>
 
       {/* Progress info */}
       <div className="font-body text-sm text-synthwave-text-secondary mb-2">

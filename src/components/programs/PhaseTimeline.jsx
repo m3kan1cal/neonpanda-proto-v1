@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import {
   containerPatterns,
   badgePatterns,
-  messagePatterns,
 } from "../../utils/ui/uiPatterns";
+import { SectionHeader, CalendarIcon } from "../themes/SynthwaveComponents";
 
 // Map phase color index to calendar-style count badge color variant
 const PHASE_COUNT_BADGE_COLORS = [
@@ -98,14 +98,9 @@ export default function PhaseTimeline({ program }) {
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
-      <div className="flex items-start space-x-3 mb-6">
-        <div
-          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
-        ></div>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Phase Timeline
-        </h3>
-      </div>
+      <SectionHeader icon={CalendarIcon} color="cyan" className="mb-6">
+        Phase Timeline
+      </SectionHeader>
 
       {/* Phase Timeline */}
       <div className="mb-4">

@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../../auth/contexts/AuthContext";
 import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
@@ -24,6 +31,10 @@ import {
   XIcon,
   HomeIcon,
   WorkoutIconSmall,
+  MetricsIcon,
+  NotesIcon,
+  TargetIcon,
+  CameraIcon,
 } from "../themes/SynthwaveComponents";
 import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import CoachAgent from "../../utils/agents/CoachAgent";
@@ -33,6 +44,12 @@ import { explainTerm } from "../../utils/apis/explainApi";
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import TiptapEditor from "../shared/TiptapEditor";
 import AppFooter from "../shared/AppFooter";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
+import {
+  getViewWorkoutsInlineTag,
+  getViewWorkoutsInlineSessionKey,
+} from "../../constants/contextualChat";
 import { logger } from "../../utils/logger";
 import { useWorkoutDraft } from "../../hooks/useWorkoutDraft";
 import { useImageUpload } from "../../hooks/useImageUpload";
@@ -68,9 +85,15 @@ function ViewWorkouts() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { success: showSuccess, error: showError } = useToast();
+  const { user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
 
-  // Get global CommandPalette state from NavigationContext
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  // Get global CommandPalette + inline coach drawer state from NavigationContext
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
 
   // State
   const [program, setProgram] = useState(null);
@@ -79,6 +102,19 @@ function ViewWorkouts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingWorkoutId, setProcessingWorkoutId] = useState(null);
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+
+  // Mirror drawer-open state to the global flag so App.jsx hides mobile
+  // chrome (bottom nav, status chrome) while the drawer is up — same
+  // pattern used by Training Grounds and Program Dashboard.
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
   // templateId -> "polling" | "timeout"; mirrored from ProgramAgent state so
   // the UI can render an actionable "Refresh to check" button when the
   // build-workout Lambda runs longer than the polling budget.
@@ -164,6 +200,39 @@ function ViewWorkouts() {
   // Templates we've already toasted about for a polling timeout, so we don't
   // re-toast on every render while the "Refresh to check" button is visible.
   const seenTimeoutsRef = useRef(new Set());
+
+  // ContextualChatDrawer wiring: per-program inline chat scoped distinctly
+  // from the Program Dashboard's home thread. dayNumber is forwarded via
+  // streamClientContext so the agent always knows which day's templates the
+  // user is currently looking at, even on `?day=N` views.
+  const newChatThreadTitle = useMemo(() => {
+    const name = program?.name?.trim();
+    if (!name) return isViewingToday ? "Today's Workouts" : "View Workouts";
+    return isViewingToday
+      ? `Today's Workouts — ${name}`
+      : `Day ${dayParam} — ${name}`;
+  }, [program?.name, isViewingToday, dayParam]);
+
+  const streamClientContext = useMemo(() => {
+    if (!programId) return null;
+    const dayNumber = workoutData?.dayNumber;
+    return {
+      surface: "view_workouts",
+      programId,
+      ...(dayNumber ? { dayNumber } : {}),
+      isViewingToday,
+    };
+  }, [programId, workoutData?.dayNumber, isViewingToday]);
+
+  const inlineConversationTag = useMemo(() => {
+    if (!programId) return null;
+    return getViewWorkoutsInlineTag(programId);
+  }, [programId]);
+
+  const inlineSessionKey = useMemo(() => {
+    if (!userId || !coachId || !programId) return null;
+    return getViewWorkoutsInlineSessionKey(userId, coachId, programId);
+  }, [userId, coachId, programId]);
 
   // Toast once when a template's polling status flips to "timeout".
   useEffect(() => {
@@ -1402,6 +1471,7 @@ General thoughts: `;
                       {template.description && (
                         <CollapsibleSubCard
                           title="Prescribed Workout"
+                          icon={WorkoutIconSmall}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "prescribed",
@@ -1424,6 +1494,7 @@ General thoughts: `;
                           id={`workout-form-${template.templateId}`}
                           wrapperClassName="animate-slideDown"
                           title="What You Did"
+                          icon={MetricsIcon}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "what-you-did",
@@ -1649,6 +1720,7 @@ General thoughts: `;
                       {template.notes && (
                         <CollapsibleSubCard
                           title="Coach Notes"
+                          icon={NotesIcon}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "coach-notes",
@@ -1671,6 +1743,7 @@ General thoughts: `;
                           template.metadata.focusAreas.length > 0)) && (
                         <CollapsibleSubCard
                           title="The Setup"
+                          icon={TargetIcon}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "details",
@@ -1833,6 +1906,7 @@ General thoughts: `;
                         template.imageS3Keys.length > 0 && (
                           <CollapsibleSubCard
                             title="Workout Photos"
+                            icon={CameraIcon}
                             isCollapsed={isSubCardCollapsed(
                               template.templateId,
                               "photos",
@@ -2049,6 +2123,33 @@ General thoughts: `;
         </div>
         <AppFooter />
       </div>
+
+      {/* Inline coach chat (mirrors Program Dashboard wiring) */}
+      {coachData && programId && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel={
+              isViewingToday ? "Today's Workouts" : `Day ${dayParam}`
+            }
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
 
       {/* CommandPalette removed - using global CommandPalette from App.jsx */}
 
@@ -2320,6 +2421,8 @@ General thoughts: `;
  */
 function CollapsibleSubCard({
   title,
+  icon: Icon,
+  iconColor = "cyan",
   isCollapsed,
   onToggle,
   headerRight,
@@ -2339,9 +2442,17 @@ function CollapsibleSubCard({
         className="w-full flex items-center justify-between px-6 pt-5 pb-2 hover:bg-synthwave-bg-card/40 transition-colors cursor-pointer"
       >
         <div className="flex items-start gap-3">
-          <div
-            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
-          />
+          {Icon ? (
+            <span
+              className={`shrink-0 mt-1 text-synthwave-neon-${iconColor}`}
+            >
+              <Icon />
+            </span>
+          ) : (
+            <div
+              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
+            />
+          )}
           <h4 className="font-header font-bold text-white text-lg uppercase">
             {title}
           </h4>

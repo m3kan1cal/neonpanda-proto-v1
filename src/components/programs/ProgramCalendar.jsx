@@ -2,8 +2,8 @@ import React, { useState, useMemo } from "react";
 import {
   containerPatterns,
   buttonPatterns,
-  messagePatterns,
 } from "../../utils/ui/uiPatterns";
+import { SectionHeader, CalendarIcon } from "../themes/SynthwaveComponents";
 import CalendarDayCell from "./CalendarDayCell";
 
 export default function ProgramCalendar({
@@ -109,14 +109,9 @@ export default function ProgramCalendar({
   if (!program || calendarDays.length === 0) {
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
-        <div className="flex items-start space-x-3 mb-4">
-          <div
-            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
-          ></div>
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Training Calendar
-          </h3>
-        </div>
+        <SectionHeader icon={CalendarIcon} color="purple" className="mb-4">
+          Training Calendar
+        </SectionHeader>
         <p className="text-center text-synthwave-text-muted py-8 font-body">
           Loading calendar...
         </p>
@@ -127,14 +122,9 @@ export default function ProgramCalendar({
   return (
     <div className={`${containerPatterns.cardMedium} p-4 md:p-6`}>
       {/* Section Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <div
-          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
-        ></div>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Training Calendar
-        </h3>
-      </div>
+      <SectionHeader icon={CalendarIcon} color="purple" className="mb-4">
+        Training Calendar
+      </SectionHeader>
 
       {/* Controls - stack on mobile to avoid cramping */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">

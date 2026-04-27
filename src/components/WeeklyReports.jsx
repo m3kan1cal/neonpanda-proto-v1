@@ -428,12 +428,12 @@ function WeeklyReports() {
   );
 }
 
-// Skeleton card header — dot + title bar + chevron
+// Skeleton card header — icon-shaped placeholder + title bar + chevron
 function SkeletonCardHeader({ titleWidth = "w-48" }) {
   return (
     <div className="flex items-start justify-between p-6">
       <div className="flex items-start gap-3 flex-1">
-        <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse shrink-0 mt-2" />
+        <div className="w-5 h-5 bg-synthwave-neon-pink/30 rounded animate-pulse shrink-0 mt-1" />
         <div
           className={`h-6 bg-synthwave-text-muted/20 animate-pulse rounded ${titleWidth}`}
         />

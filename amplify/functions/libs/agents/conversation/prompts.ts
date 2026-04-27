@@ -53,10 +53,26 @@ export function buildConversationAgentPrompt(
       completedWorkouts: number;
       totalWorkouts: number;
     } | null;
-    /** User opened chat from a specific program screen (e.g. dashboard). */
+    /** User opened chat from a specific program screen (e.g. dashboard, view workouts). */
     sessionProgramContext?: {
       programId: string;
       programName: string;
+      /**
+       * Which UI surface the inline chat was opened from. Defaults to
+       * "program_dashboard" to preserve existing framing for callers that
+       * don't supply a surface.
+       */
+      surface?: "program_dashboard" | "view_workouts";
+      /**
+       * Day the user is currently looking at on the View Workouts page.
+       * Only meaningful when surface === "view_workouts".
+       */
+      dayNumber?: number;
+      /**
+       * True when the View Workouts page is showing today (no `?day=N`).
+       * Only meaningful when surface === "view_workouts".
+       */
+      isViewingToday?: boolean;
     };
     coachCreatorSessionSummary?: string;
     conversationSummaryContext?: string;
@@ -356,12 +372,32 @@ ${toolNote}`);
     const sp = options.sessionProgramContext;
     const safeId = sanitizeUserContent(sp.programId, 200);
     const safeName = sanitizeUserContent(sp.programName, 200);
+    const surface = sp.surface || "program_dashboard";
+
+    let surfaceFraming: string;
+    if (surface === "view_workouts") {
+      // View Workouts page: user is looking at the workout templates for a
+      // specific day in this program. Prefer get_todays_workout when isViewingToday
+      // is true; otherwise the agent should reference the explicit dayNumber.
+      const dayLine =
+        sp.dayNumber != null
+          ? sp.isViewingToday
+            ? `The user is currently viewing **today's** workouts (Day ${sp.dayNumber}) for this program.`
+            : `The user is currently viewing **Day ${sp.dayNumber}** of this program (not today). Frame answers in terms of that day's prescribed templates, not today's.`
+          : sp.isViewingToday
+            ? "The user is currently viewing today's workouts for this program."
+            : "The user is currently viewing a specific day's workouts for this program.";
+      surfaceFraming = `The user opened this chat from the **View Workouts** page for the program below — they're focused on the prescribed workout(s) for the day shown on screen. ${dayLine} Prioritize answers about substitutions, scaling, RPE/tempo, equipment, and questions about the prescribed templates. Use the get_todays_workout tool to retrieve template details for today; for other days, work from the program-details section above and the program's prescribed structure.`;
+    } else {
+      surfaceFraming = `The user opened this chat from the **Program Dashboard** for the program below. Prioritize answering in terms of this program (phases, calendar, prescribed days) even if they have other programs. The program-details section above reflects this program's live stats — check its Status line to know whether this program is currently active, paused, or completed before suggesting actions.`;
+    }
+
     dynamicSections.push(`## SESSION UI CONTEXT
 
-The user opened this chat from the **Program Dashboard** for the program below. Prioritize answering in terms of this program (phases, calendar, prescribed days) even if they have other programs. The program-details section above reflects this program's live stats — check its Status line to know whether this program is currently active, paused, or completed before suggesting actions.
+${surfaceFraming}
 
 - Program ID: ${safeId}
-- Program name: ${safeName}`);
+- Program name: ${safeName}${sp.dayNumber != null ? `\n- Day in focus: ${sp.dayNumber}` : ""}`);
   }
 
   // Section 6: Emotional Context (conditional — dynamic, changes each session)

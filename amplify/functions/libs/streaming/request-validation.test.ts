@@ -58,6 +58,60 @@ describe("validateConversationClientContext", () => {
       }),
     ).toThrow(/not allowed for training_grounds/);
   });
+
+  it("accepts view_workouts with programId only", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "view_workouts",
+        programId: "program_u_1_abc",
+      }),
+    ).toEqual({
+      surface: "view_workouts",
+      programId: "program_u_1_abc",
+    });
+  });
+
+  it("accepts view_workouts with dayNumber and isViewingToday", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "view_workouts",
+        programId: "pid",
+        dayNumber: 5,
+        isViewingToday: false,
+      }),
+    ).toEqual({
+      surface: "view_workouts",
+      programId: "pid",
+      dayNumber: 5,
+      isViewingToday: false,
+    });
+  });
+
+  it("rejects view_workouts without programId", () => {
+    expect(() =>
+      validateConversationClientContext({ surface: "view_workouts" }),
+    ).toThrow(/programId is required for view_workouts/);
+  });
+
+  it("rejects view_workouts with non-numeric dayNumber", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "view_workouts",
+        programId: "pid",
+        dayNumber: "five",
+      }),
+    ).toThrow(/dayNumber must be a positive number/);
+  });
+
+  it("rejects view_workouts with non-boolean isViewingToday", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "view_workouts",
+        programId: "pid",
+        isViewingToday: "yes",
+      }),
+    ).toThrow(/isViewingToday must be a boolean/);
+  });
 });
 
 describe("validateStreamingRequestBody clientContext", () => {

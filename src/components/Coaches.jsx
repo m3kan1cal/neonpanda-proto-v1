@@ -30,6 +30,8 @@ import {
   PlayIcon,
   ArrowRightIcon,
   HomeIcon,
+  CoachIconSmall,
+  SectionHeader,
 } from "./themes/SynthwaveComponents";
 
 // Three-dot vertical menu icon
@@ -641,8 +643,10 @@ function Coaches() {
                   key={i}
                   className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}
                 >
-                  <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full shrink-0 mt-2"></div>
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className="shrink-0 mt-1 text-synthwave-neon-cyan/30 animate-pulse">
+                      <SparkleIcon />
+                    </span>
                     <div className="flex-1">
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
@@ -999,8 +1003,10 @@ function Coaches() {
 
                   <div className="flex-1">
                     {/* Coach Name - Either editable or static */}
-                    <div className="flex items-start space-x-3 mb-2">
-                      <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
+                    <div className="flex items-start gap-3 mb-2">
+                      <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
+                        <CoachIconSmall />
+                      </span>
                       {editingCoachId === coach.coach_id ? (
                         <InlineEditField
                           value={agentRef.current?.formatCoachName(
@@ -1229,21 +1235,18 @@ function Coaches() {
                 const isIncomplete = !session.isComplete;
 
                 // Get card styling based on status - all driven by uiPatterns.js for consistency
-                let cardClass, dotColor, statusColor;
+                let cardClass, statusColor;
                 if (isFailed) {
                   // Failed state: Pink theme with bold borders for emphasis
                   cardClass = `${containerPatterns.dashedCardPinkBold} p-6 group`;
-                  dotColor = "bg-synthwave-neon-pink";
                   statusColor = "text-synthwave-neon-pink";
                 } else if (isBuilding) {
                   // Building state: Cyan theme for in-progress indication
                   cardClass = `${containerPatterns.dashedCardCyan} p-6`;
-                  dotColor = "bg-synthwave-neon-cyan";
                   statusColor = "text-synthwave-neon-cyan";
                 } else {
                   // Incomplete state: Cyan theme with full interactivity
                   cardClass = `${containerPatterns.dashedCardCyan} p-6 group cursor-pointer`;
-                  dotColor = "bg-synthwave-neon-cyan";
                   statusColor = "text-synthwave-neon-cyan";
                 }
 
@@ -1267,10 +1270,10 @@ function Coaches() {
                     className={cardClass}
                   >
                     {/* Session Header */}
-                    <div className="flex items-start space-x-3 mb-4">
-                      <div
-                        className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
-                      ></div>
+                    <div className="flex items-start gap-3 mb-4">
+                      <span className={`shrink-0 mt-1 ${statusColor}`}>
+                        <SparkleIcon />
+                      </span>
                       <div className="flex-1">
                         <h3 className="font-header font-bold text-white text-lg uppercase">
                           Coach Creator Session
@@ -1526,12 +1529,13 @@ function Coaches() {
                       )}
 
                       {/* Template Name */}
-                      <div className="flex items-start space-x-3 mb-3">
-                        <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2"></div>
-                        <h3 className="font-header font-bold text-white text-lg uppercase">
-                          {template.template_name}
-                        </h3>
-                      </div>
+                      <SectionHeader
+                        icon={CoachIconSmall}
+                        color="pink"
+                        className="mb-3"
+                      >
+                        {template.template_name}
+                      </SectionHeader>
 
                       {/* Template Description */}
                       <p className="font-body text-synthwave-text-secondary text-sm mb-4 leading-relaxed">

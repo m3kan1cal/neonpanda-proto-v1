@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   containerPatterns,
-  messagePatterns,
   typographyPatterns,
   badgePatterns,
   buttonPatterns,
@@ -10,6 +9,8 @@ import {
   PauseIcon,
   CheckIcon,
   ArrowRightIcon,
+  SectionHeader,
+  SummaryIcon,
 } from "../themes/SynthwaveComponents";
 import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
@@ -161,14 +162,9 @@ export default function ProgramOverview({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
-      <div className="flex items-start gap-3 mb-4">
-        <div
-          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
-        ></div>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Program Overview
-        </h3>
-      </div>
+      <SectionHeader icon={SummaryIcon} color="pink" className="mb-4">
+        Program Overview
+      </SectionHeader>
 
       {/* Program Name with Status Badge */}
       <div className="mb-4 flex items-start gap-3 min-w-0">
