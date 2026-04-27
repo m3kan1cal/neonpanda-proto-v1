@@ -1,6 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { containerPatterns, badgePatterns } from "../../utils/ui/uiPatterns";
+import {
+  SectionHeader,
+  WorkoutIconSmall,
+} from "../themes/SynthwaveComponents";
 
 /**
  * ActiveProgramSummary - Displays a summary of the user's active training program
@@ -18,8 +22,10 @@ function ActiveProgramSummary({
   if (isLoading) {
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
-        <div className="flex items-start space-x-3 mb-4">
-          <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2 animate-pulse"></div>
+        <div className="flex items-start gap-3 mb-4">
+          <span className="shrink-0 mt-1 text-synthwave-neon-cyan/30 animate-pulse">
+            <WorkoutIconSmall />
+          </span>
           <h3 className="font-header font-bold text-white text-lg uppercase">
             Training Programs
           </h3>
@@ -57,8 +63,10 @@ function ActiveProgramSummary({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
+      <div className="flex items-start gap-3 mb-4">
+        <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
+          <WorkoutIconSmall />
+        </span>
         <h3 className="font-header font-bold text-white text-lg uppercase">
           Training Programs
         </h3>

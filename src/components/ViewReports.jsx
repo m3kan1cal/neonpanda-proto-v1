@@ -10,7 +10,12 @@ import {
   layoutPatterns,
   tooltipPatterns,
 } from "../utils/ui/uiPatterns";
-import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
+import {
+  NeonBorder,
+  NewBadge,
+  ReportIconSmall,
+  SectionHeader,
+} from "./themes/SynthwaveComponents";
 import {
   isCurrentWeekReport,
   getWeekDateRange,
@@ -426,13 +431,10 @@ function ViewReports() {
         {/* NEW badge for current month reports */}
         {isCurrentMonth && <NewBadge />}
 
-        {/* Header with purple dot */}
-        <div className="flex items-start gap-3 mb-2">
-          <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            {formattedMonth}
-          </h3>
-        </div>
+        {/* Header */}
+        <SectionHeader icon={ReportIconSmall} color="purple" className="mb-2">
+          {formattedMonth}
+        </SectionHeader>
 
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-3 mb-3">
@@ -595,13 +597,10 @@ function ViewReports() {
         {/* NEW badge for current week reports */}
         {isNew && <NewBadge />}
 
-        {/* Header with pink dot */}
-        <div className="flex items-start gap-3 mb-2">
-          <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full shrink-0 mt-2" />
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Weekly Report: Week {report.weekId}
-          </h3>
-        </div>
+        {/* Header */}
+        <SectionHeader icon={ReportIconSmall} color="pink" className="mb-2">
+          Weekly Report: Week {report.weekId}
+        </SectionHeader>
 
         {/* Metadata Row */}
         <div className="flex items-center flex-wrap gap-3 mb-3">

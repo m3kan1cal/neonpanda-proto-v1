@@ -24,6 +24,10 @@ import {
   XIcon,
   HomeIcon,
   WorkoutIconSmall,
+  MetricsIcon,
+  NotesIcon,
+  TargetIcon,
+  CameraIcon,
 } from "../themes/SynthwaveComponents";
 import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import CoachAgent from "../../utils/agents/CoachAgent";
@@ -1402,6 +1406,7 @@ General thoughts: `;
                       {template.description && (
                         <CollapsibleSubCard
                           title="Prescribed Workout"
+                          icon={WorkoutIconSmall}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "prescribed",
@@ -1424,6 +1429,7 @@ General thoughts: `;
                           id={`workout-form-${template.templateId}`}
                           wrapperClassName="animate-slideDown"
                           title="What You Did"
+                          icon={MetricsIcon}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "what-you-did",
@@ -1649,6 +1655,7 @@ General thoughts: `;
                       {template.notes && (
                         <CollapsibleSubCard
                           title="Coach Notes"
+                          icon={NotesIcon}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "coach-notes",
@@ -1671,6 +1678,7 @@ General thoughts: `;
                           template.metadata.focusAreas.length > 0)) && (
                         <CollapsibleSubCard
                           title="The Setup"
+                          icon={TargetIcon}
                           isCollapsed={isSubCardCollapsed(
                             template.templateId,
                             "details",
@@ -1833,6 +1841,7 @@ General thoughts: `;
                         template.imageS3Keys.length > 0 && (
                           <CollapsibleSubCard
                             title="Workout Photos"
+                            icon={CameraIcon}
                             isCollapsed={isSubCardCollapsed(
                               template.templateId,
                               "photos",
@@ -2320,6 +2329,8 @@ General thoughts: `;
  */
 function CollapsibleSubCard({
   title,
+  icon: Icon,
+  iconColor = "cyan",
   isCollapsed,
   onToggle,
   headerRight,
@@ -2339,9 +2350,17 @@ function CollapsibleSubCard({
         className="w-full flex items-center justify-between px-6 pt-5 pb-2 hover:bg-synthwave-bg-card/40 transition-colors cursor-pointer"
       >
         <div className="flex items-start gap-3">
-          <div
-            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
-          />
+          {Icon ? (
+            <span
+              className={`shrink-0 mt-1 text-synthwave-neon-${iconColor}`}
+            >
+              <Icon />
+            </span>
+          ) : (
+            <div
+              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
+            />
+          )}
           <h4 className="font-header font-bold text-white text-lg uppercase">
             {title}
           </h4>
