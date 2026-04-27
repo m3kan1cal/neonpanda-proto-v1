@@ -79,6 +79,14 @@ export function buildConversationAgentPrompt(
     emotionalContext?: string;
     livingProfileContext?: string;
     prospectiveContext?: string;
+    /**
+     * Pre-formatted weekly or monthly report highlights, when the user opened
+     * the chat from a report viewer. Already coaching-oriented — appended to
+     * the dynamic prompt verbatim. Produced by
+     * `formatWeeklyReportForPrompt` / `formatMonthlyReportForPrompt` in
+     * `libs/analytics/format-for-prompt.ts`.
+     */
+    reportContext?: string;
     editContext?: {
       entityType: string;
       entityId: string;
@@ -409,6 +417,13 @@ ${surfaceFraming}
     dynamicSections.push(
       wrapUserContent(sanitizedEmotionalContext, "emotional_context"),
     );
+  }
+
+  // Section 6.5: Report Context (conditional — only when the chat was opened
+  // from a weekly or monthly report viewer). Already coaching-oriented and
+  // self-framing; trusted formatter output, not raw user content.
+  if (options.reportContext) {
+    dynamicSections.push(options.reportContext);
   }
 
   // Section 7: Prospective Follow-Up Items (conditional — active commitments and events)
