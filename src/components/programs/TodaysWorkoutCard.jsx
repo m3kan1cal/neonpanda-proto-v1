@@ -5,7 +5,10 @@ import {
   buttonPatterns,
   badgePatterns,
 } from "../../utils/ui/uiPatterns";
-import { WorkoutIconSmall } from "../themes/SynthwaveComponents";
+import {
+  WorkoutIconSmall,
+  SectionHeader,
+} from "../themes/SynthwaveComponents";
 import { EmptyState, InlineError } from "../shared/ErrorStates";
 
 /**
@@ -29,8 +32,10 @@ function TodaysWorkoutCard({
   if (isLoading) {
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
-        <div className="flex items-start space-x-3 mb-4">
-          <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2 animate-pulse"></div>
+        <div className="flex items-start gap-3 mb-4">
+          <span className="shrink-0 mt-1 text-synthwave-neon-cyan/30 animate-pulse">
+            <WorkoutIconSmall />
+          </span>
           <h3 className="font-header font-bold text-white text-lg uppercase">
             Today's Workout
           </h3>
@@ -47,12 +52,13 @@ function TodaysWorkoutCard({
   if (error) {
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
-        <div className="flex items-start space-x-3 mb-4">
-          <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Today's Workout
-          </h3>
-        </div>
+        <SectionHeader
+          icon={WorkoutIconSmall}
+          color="cyan"
+          className="mb-4"
+        >
+          Today's Workout
+        </SectionHeader>
         <InlineError
           title="Error loading today's workout"
           message={error}
@@ -73,12 +79,9 @@ function TodaysWorkoutCard({
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         {/* Header */}
-        <div className="flex items-start space-x-3 mb-4">
-          <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Today's Workout
-          </h3>
-        </div>
+        <SectionHeader icon={WorkoutIconSmall} color="cyan" className="mb-4">
+          Today's Workout
+        </SectionHeader>
 
         {/* Program name */}
         {program && (
@@ -164,12 +167,9 @@ function TodaysWorkoutCard({
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
         {/* Header */}
-        <div className="flex items-start space-x-3 mb-4">
-          <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Today's Workout
-          </h3>
-        </div>
+        <SectionHeader icon={WorkoutIconSmall} color="cyan" className="mb-4">
+          Today's Workout
+        </SectionHeader>
 
         {/* Day info */}
         <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
@@ -264,8 +264,10 @@ function TodaysWorkoutCard({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full shrink-0 mt-2"></div>
+      <div className="flex items-start gap-3 mb-4">
+        <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
+          <WorkoutIconSmall />
+        </span>
         <h3 className="font-header font-bold text-white text-lg uppercase">
           Today's Workout
         </h3>

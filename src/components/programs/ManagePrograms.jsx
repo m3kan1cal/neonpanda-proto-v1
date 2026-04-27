@@ -8,7 +8,6 @@ import {
   layoutPatterns,
   tooltipPatterns,
   typographyPatterns,
-  messagePatterns,
   iconButtonPatterns,
   formPatterns,
   inputPatterns,
@@ -1106,10 +1105,10 @@ function ManagePrograms() {
 
         <div className="flex-1">
           {/* Program Name */}
-          <div className="flex items-start space-x-3 mb-4 pr-10">
-            <div
-              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
-            ></div>
+          <div className="flex items-start gap-3 mb-4 pr-10">
+            <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
+              <WorkoutIconSmall />
+            </span>
             <h3
               className="font-header font-bold text-white text-lg md:text-xl uppercase line-clamp-2"
               data-tooltip-id="program-name-tooltip"
@@ -1388,8 +1387,10 @@ function ManagePrograms() {
               >
                 <div className="flex-1">
                   {/* Program name skeleton with pink dot */}
-                  <div className="flex items-start space-x-3 mb-4 pr-10">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2"></div>
+                  <div className="flex items-start gap-3 mb-4 pr-10">
+                    <span className="shrink-0 mt-1 text-synthwave-neon-pink/30 animate-pulse">
+                      <WorkoutIconSmall />
+                    </span>
                     <div className="flex-1">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2"></div>
                     </div>
@@ -1449,8 +1450,10 @@ function ManagePrograms() {
                   key={i}
                   className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}
                 >
-                  <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full shrink-0 mt-2"></div>
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className="shrink-0 mt-1 text-synthwave-neon-cyan/30 animate-pulse">
+                      <SparkleIcon />
+                    </span>
                     <div className="flex-1">
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48"></div>
                     </div>
@@ -1489,8 +1492,10 @@ function ManagePrograms() {
                 >
                   <div className="flex-1">
                     {/* Program name skeleton with pink dot */}
-                    <div className="flex items-start space-x-3 mb-4 pr-10">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full shrink-0 mt-2"></div>
+                    <div className="flex items-start gap-3 mb-4 pr-10">
+                      <span className="shrink-0 mt-1 text-synthwave-neon-pink/30 animate-pulse">
+                        <WorkoutIconSmall />
+                      </span>
                       <div className="flex-1">
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2"></div>
                       </div>
@@ -1791,18 +1796,15 @@ function ManagePrograms() {
                 const isIncomplete = !session.isComplete;
 
                 // Card styling based on status
-                let cardClass, dotColor, statusColor;
+                let cardClass, statusColor;
                 if (isFailed) {
                   cardClass = `${containerPatterns.dashedCardPinkBold} p-6 group`;
-                  dotColor = "bg-synthwave-neon-pink";
                   statusColor = "text-synthwave-neon-pink";
                 } else if (isBuilding) {
                   cardClass = `${containerPatterns.dashedCardCyan} p-6`;
-                  dotColor = "bg-synthwave-neon-cyan";
                   statusColor = "text-synthwave-neon-cyan";
                 } else {
                   cardClass = `${containerPatterns.dashedCardCyan} p-6 group cursor-pointer`;
-                  dotColor = "bg-synthwave-neon-cyan";
                   statusColor = "text-synthwave-neon-cyan";
                 }
 
@@ -1817,10 +1819,10 @@ function ManagePrograms() {
                     className={cardClass}
                   >
                     {/* Session Header */}
-                    <div className="flex items-start space-x-3 mb-4">
-                      <div
-                        className={`w-3 h-3 ${dotColor} rounded-full shrink-0 mt-2`}
-                      ></div>
+                    <div className="flex items-start gap-3 mb-4">
+                      <span className={`shrink-0 mt-1 ${statusColor}`}>
+                        <SparkleIcon />
+                      </span>
                       <div className="flex-1">
                         <h3 className="font-header font-bold text-white text-lg uppercase">
                           Program Design Session

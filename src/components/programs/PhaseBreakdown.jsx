@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import {
   containerPatterns,
   badgePatterns,
-  messagePatterns,
 } from "../../utils/ui/uiPatterns";
+import { SectionHeader, TargetIcon } from "../themes/SynthwaveComponents";
 
 export default function PhaseBreakdown({ program }) {
   const [isPhaseFocusExpanded, setIsPhaseFocusExpanded] = useState(false);
@@ -35,14 +35,9 @@ export default function PhaseBreakdown({ program }) {
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <div
-          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPurple} shrink-0 mt-2`}
-        ></div>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Current Phase
-        </h3>
-      </div>
+      <SectionHeader icon={TargetIcon} color="purple" className="mb-4">
+        Current Phase
+      </SectionHeader>
 
       {/* Phase Name */}
       <div className="mb-4">

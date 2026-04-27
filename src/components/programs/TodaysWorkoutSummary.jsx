@@ -5,9 +5,12 @@ import {
   buttonPatterns,
   badgePatterns,
   typographyPatterns,
-  messagePatterns,
 } from "../../utils/ui/uiPatterns";
-import { ClockIcon } from "../themes/SynthwaveComponents";
+import {
+  ClockIcon,
+  SectionHeader,
+  WorkoutIconSmall,
+} from "../themes/SynthwaveComponents";
 
 export default function TodaysWorkoutSummary({
   workout,
@@ -55,14 +58,13 @@ export default function TodaysWorkoutSummary({
   if (workoutTemplates.length === 0) {
     return (
       <div className={`${containerPatterns.cardMedium} p-6`}>
-        <div className="flex items-start space-x-3 mb-4">
-          <div
-            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
-          ></div>
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Today's Workout
-          </h3>
-        </div>
+        <SectionHeader
+          icon={WorkoutIconSmall}
+          color="pink"
+          className="mb-4"
+        >
+          Today's Workout
+        </SectionHeader>
         <p className="font-body text-synthwave-text-secondary text-sm mb-6">
           Your scheduled workout for today. Log your performance to track
           progress.
@@ -83,10 +85,10 @@ export default function TodaysWorkoutSummary({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-start space-x-3">
-          <div
-            className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} shrink-0 mt-2`}
-          ></div>
+        <div className="flex items-start gap-3">
+          <span className="shrink-0 mt-1 text-synthwave-neon-pink">
+            <WorkoutIconSmall />
+          </span>
           <div>
             <h3 className="font-header font-bold text-white text-lg uppercase">
               Today's Workout
