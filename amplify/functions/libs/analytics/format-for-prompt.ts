@@ -127,26 +127,23 @@ function buildHighlightsBullets(
 }
 
 /**
- * Format a weekly analytics row for injection into the coach's system prompt.
- * Highlights only — capped at roughly 600 tokens including the optional
- * human summary.
+ * Shared body-section assembler used by both the weekly and monthly formatters.
+ * Takes a pre-built header section and appends the highlights / top movements
+ * / records / coach's-eye summary, each conditional on having data to show.
+ *
+ * Kept private — the public entry points are `formatWeeklyReportForPrompt`
+ * and `formatMonthlyReportForPrompt`, which differ only in their header.
  */
-export function formatWeeklyReportForPrompt(report: WeeklyAnalytics): string {
+function assembleReportPrompt(
+  report: WeeklyAnalytics | MonthlyAnalytics,
+  header: string,
+): string {
   const structured = getStructured(report);
-  const sections: string[] = [];
-
-  sections.push(
-    `# WEEKLY REPORT IN FOCUS
-The user opened this chat from the **Weekly Report viewer**. Frame coaching answers around this week's data; if you need anything that isn't in the highlights below, use your tools to look up the underlying workouts.
-
-- Week ID: ${report.weekId}${report.weekStart ? `\n- Week of: ${report.weekStart}${report.weekEnd ? ` → ${report.weekEnd}` : ""}` : ""}`,
-  );
+  const sections: string[] = [header];
 
   const bullets = buildHighlightsBullets(structured);
   if (bullets.length > 0) {
-    sections.push(
-      `## Highlights\n${bullets.map((b) => `- ${b}`).join("\n")}`,
-    );
+    sections.push(`## Highlights\n${bullets.map((b) => `- ${b}`).join("\n")}`);
   }
 
   const movements = topMovements(structured);
@@ -158,9 +155,7 @@ The user opened this chat from the **Weekly Report viewer**. Frame coaching answ
 
   const recs = records(structured);
   if (recs.length > 0) {
-    sections.push(
-      `## Records Set\n${recs.map((r) => `- ${r}`).join("\n")}`,
-    );
+    sections.push(`## Records Set\n${recs.map((r) => `- ${r}`).join("\n")}`);
   }
 
   const human = getHumanSummary(report);
@@ -172,6 +167,19 @@ The user opened this chat from the **Weekly Report viewer**. Frame coaching answ
 }
 
 /**
+ * Format a weekly analytics row for injection into the coach's system prompt.
+ * Highlights only — capped at roughly 600 tokens including the optional
+ * human summary.
+ */
+export function formatWeeklyReportForPrompt(report: WeeklyAnalytics): string {
+  const header = `# WEEKLY REPORT IN FOCUS
+The user opened this chat from the **Weekly Report viewer**. Frame coaching answers around this week's data; if you need anything that isn't in the highlights below, use your tools to look up the underlying workouts.
+
+- Week ID: ${report.weekId}${report.weekStart ? `\n- Week of: ${report.weekStart}${report.weekEnd ? ` → ${report.weekEnd}` : ""}` : ""}`;
+  return assembleReportPrompt(report, header);
+}
+
+/**
  * Format a monthly analytics row for injection into the coach's system prompt.
  * Same shape as the weekly formatter — used when (a future) monthly viewer
  * page opens the inline coach chat with surface === "monthly_report".
@@ -179,41 +187,9 @@ The user opened this chat from the **Weekly Report viewer**. Frame coaching answ
 export function formatMonthlyReportForPrompt(
   report: MonthlyAnalytics,
 ): string {
-  const structured = getStructured(report);
-  const sections: string[] = [];
-
-  sections.push(
-    `# MONTHLY REPORT IN FOCUS
+  const header = `# MONTHLY REPORT IN FOCUS
 The user opened this chat from the **Monthly Report viewer**. Frame coaching answers around this month's aggregated data; if you need anything that isn't in the highlights below, use your tools to look up the underlying workouts or weekly reports.
 
-- Month ID: ${report.monthId}${report.monthStart ? `\n- Month of: ${report.monthStart}${report.monthEnd ? ` → ${report.monthEnd}` : ""}` : ""}`,
-  );
-
-  const bullets = buildHighlightsBullets(structured);
-  if (bullets.length > 0) {
-    sections.push(
-      `## Highlights\n${bullets.map((b) => `- ${b}`).join("\n")}`,
-    );
-  }
-
-  const movements = topMovements(structured);
-  if (movements.length > 0) {
-    sections.push(
-      `## Top Movements (by volume)\n${movements.map((m) => `- ${m}`).join("\n")}`,
-    );
-  }
-
-  const recs = records(structured);
-  if (recs.length > 0) {
-    sections.push(
-      `## Records Set\n${recs.map((r) => `- ${r}`).join("\n")}`,
-    );
-  }
-
-  const human = getHumanSummary(report);
-  if (human) {
-    sections.push(`## Coach's-Eye Summary\n${human}`);
-  }
-
-  return sections.join("\n\n");
+- Month ID: ${report.monthId}${report.monthStart ? `\n- Month of: ${report.monthStart}${report.monthEnd ? ` → ${report.monthEnd}` : ""}` : ""}`;
+  return assembleReportPrompt(report, header);
 }

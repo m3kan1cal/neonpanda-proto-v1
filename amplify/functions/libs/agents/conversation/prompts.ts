@@ -420,10 +420,20 @@ ${surfaceFraming}
   }
 
   // Section 6.5: Report Context (conditional — only when the chat was opened
-  // from a weekly or monthly report viewer). Already coaching-oriented and
-  // self-framing; trusted formatter output, not raw user content.
+  // from a weekly or monthly report viewer). The formatted block is largely
+  // structural (numbers, headers we authored), but it embeds user-influenced
+  // strings (movement names, record exercise names, the report's
+  // `human_summary` AI-generated narrative). Sanitize and wrap as DATA so it
+  // matches every other dynamic section and closes the indirect-injection
+  // vector flagged in PR review.
   if (options.reportContext) {
-    dynamicSections.push(options.reportContext);
+    const sanitizedReportContext = sanitizeUserContent(
+      options.reportContext,
+      3500,
+    );
+    dynamicSections.push(
+      wrapUserContent(sanitizedReportContext, "report_context"),
+    );
   }
 
   // Section 7: Prospective Follow-Up Items (conditional — active commitments and events)
