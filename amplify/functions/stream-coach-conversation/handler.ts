@@ -199,8 +199,13 @@ async function* createCoachConversationEventStreamV2(
       editEntityType: editContext?.entityType,
       clientContextSurface: clientContext?.surface,
       clientContextProgramId:
-        clientContext?.surface === "program_dashboard"
+        clientContext?.surface === "program_dashboard" ||
+        clientContext?.surface === "view_workouts"
           ? clientContext.programId
+          : undefined,
+      clientContextDayNumber:
+        clientContext?.surface === "view_workouts"
+          ? clientContext.dayNumber
           : undefined,
     });
 
@@ -254,7 +259,10 @@ async function* createCoachConversationEventStreamV2(
     //     active program, reuse that row (has full stats, no extra DDB call).
     //   - Otherwise: fetch the viewed program fresh so stats are correct.
     let programForClientContext: any = null;
-    if (clientContext?.surface === "program_dashboard") {
+    const isProgramScopedSurface =
+      clientContext?.surface === "program_dashboard" ||
+      clientContext?.surface === "view_workouts";
+    if (isProgramScopedSurface) {
       const cachedContext = (existingConversation.metadata as any)
         ?.sessionProgramContext;
       const activeProgramCandidate = activeProgramResult[0] || null;
@@ -264,12 +272,12 @@ async function* createCoachConversationEventStreamV2(
         activeProgramCandidate.programId === clientContext.programId
       ) {
         logger.info(
-          "✅ V2: Dashboard program matches active program — reusing queried row",
+          `✅ V2: ${clientContext.surface} program matches active program — reusing queried row`,
         );
         programForClientContext = activeProgramCandidate;
       } else {
         logger.info(
-          "🔎 V2: Loading dashboard program fresh (not the active program)",
+          `🔎 V2: Loading ${clientContext.surface} program fresh (not the active program)`,
         );
         programForClientContext = await getProgram(
           userId,
@@ -329,13 +337,16 @@ async function* createCoachConversationEventStreamV2(
 
     let activeProgramForAgent = activeProgramFromQuery;
     let sessionProgramContext:
-      | { programId: string; programName: string }
+      | {
+          programId: string;
+          programName: string;
+          surface?: "program_dashboard" | "view_workouts";
+          dayNumber?: number;
+          isViewingToday?: boolean;
+        }
       | undefined;
 
-    if (
-      clientContext?.surface === "program_dashboard" &&
-      programForClientContext
-    ) {
+    if (isProgramScopedSurface && programForClientContext) {
       // programForClientContext is always a full Program row here (either the
       // reused active-program row or a fresh getProgram() result), so stats
       // come straight off `p`. When activeProgramFromQuery is null (user has
@@ -352,13 +363,21 @@ async function* createCoachConversationEventStreamV2(
       sessionProgramContext = {
         programId: p.programId,
         programName,
+        surface: clientContext!.surface as
+          | "program_dashboard"
+          | "view_workouts",
+        ...(clientContext?.surface === "view_workouts" &&
+        typeof clientContext.dayNumber === "number"
+          ? { dayNumber: clientContext.dayNumber }
+          : {}),
+        ...(clientContext?.surface === "view_workouts" &&
+        typeof clientContext.isViewingToday === "boolean"
+          ? { isViewingToday: clientContext.isViewingToday }
+          : {}),
       };
-    } else if (
-      clientContext?.surface === "program_dashboard" &&
-      !programForClientContext
-    ) {
+    } else if (isProgramScopedSurface && !programForClientContext) {
       logger.warn(
-        "V2: clientContext program_dashboard but program not loaded — using query active program",
+        `V2: clientContext ${clientContext?.surface} but program not loaded — using query active program`,
       );
     }
 

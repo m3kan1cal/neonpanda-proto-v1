@@ -8,7 +8,15 @@ import { SUPPORTED_DOCUMENT_EXTENSIONS } from "../document-types";
 /** Optional UI origin hints for coach conversation streaming (non-edit modes). */
 export type ConversationClientContext =
   | { surface: "program_dashboard"; programId: string }
-  | { surface: "training_grounds" };
+  | { surface: "training_grounds" }
+  | {
+      surface: "view_workouts";
+      programId: string;
+      /** Day the user is currently viewing on the View Workouts page. */
+      dayNumber?: number;
+      /** True when the page is showing today (no `?day=N` in URL). */
+      isViewingToday?: boolean;
+    };
 
 /**
  * Parse and validate request body from streaming event.
@@ -63,6 +71,7 @@ export function parseRequestBody(
 const ALLOWED_CLIENT_CONTEXT_SURFACES = [
   "program_dashboard",
   "training_grounds",
+  "view_workouts",
 ] as const;
 
 /**
@@ -84,7 +93,11 @@ export function validateConversationClientContext(
     return undefined;
   }
   const surface = raw.surface;
-  if (surface !== "program_dashboard" && surface !== "training_grounds") {
+  if (
+    surface !== "program_dashboard" &&
+    surface !== "training_grounds" &&
+    surface !== "view_workouts"
+  ) {
     throw new Error(
       `clientContext.surface must be one of: ${ALLOWED_CLIENT_CONTEXT_SURFACES.join(", ")}`,
     );
@@ -100,10 +113,38 @@ export function validateConversationClientContext(
   const programId = raw.programId;
   if (typeof programId !== "string" || !programId.trim()) {
     throw new Error(
-      "clientContext.programId is required for program_dashboard surface",
+      `clientContext.programId is required for ${surface} surface`,
     );
   }
-  return { surface: "program_dashboard", programId: programId.trim() };
+  if (surface === "program_dashboard") {
+    return { surface: "program_dashboard", programId: programId.trim() };
+  }
+  // surface === "view_workouts"
+  const out: ConversationClientContext = {
+    surface: "view_workouts",
+    programId: programId.trim(),
+  };
+  if (raw.dayNumber !== undefined) {
+    if (
+      typeof raw.dayNumber !== "number" ||
+      !Number.isFinite(raw.dayNumber) ||
+      raw.dayNumber < 1
+    ) {
+      throw new Error(
+        "clientContext.dayNumber must be a positive number for view_workouts surface",
+      );
+    }
+    out.dayNumber = raw.dayNumber;
+  }
+  if (raw.isViewingToday !== undefined) {
+    if (typeof raw.isViewingToday !== "boolean") {
+      throw new Error(
+        "clientContext.isViewingToday must be a boolean for view_workouts surface",
+      );
+    }
+    out.isViewingToday = raw.isViewingToday;
+  }
+  return out;
 }
 
 /**
