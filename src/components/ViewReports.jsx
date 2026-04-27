@@ -1,8 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../auth/contexts/AuthContext";
 import { AccessDenied } from "./shared/AccessDenied";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
+import {
+  INLINE_VIEW_REPORTS_TAG,
+  getViewReportsInlineSessionKey,
+} from "../constants/contextualChat";
 import {
   containerPatterns,
   badgePatterns,
@@ -91,10 +104,29 @@ function ViewReports() {
 
   // Command palette state
   // Global Command Palette state
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
 
   // Coach data state (for FloatingMenuManager)
   const [coachData, setCoachData] = useState(null);
+
+  const { user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
+
+  // Inline coach chat drawer state. One home thread per (userId, coachId);
+  // active tab (weekly | monthly) is forwarded as runtime context so the
+  // agent always knows which list the user is browsing.
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   const reportAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -166,6 +198,23 @@ function ViewReports() {
 
   // Tab state
   const [activeTab, setActiveTab] = useState("weekly"); // 'weekly' or 'monthly'
+
+  // Inline drawer scoping: one home thread per (userId, coachId). The active
+  // tab is forwarded each turn so the agent knows whether the user is looking
+  // at the weekly or monthly list.
+  const inlineConversationTag = INLINE_VIEW_REPORTS_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getViewReportsInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Reports";
+  const streamClientContext = useMemo(
+    () => ({ surface: "reports_list", reportType: activeTab }),
+    [activeTab],
+  );
 
   // Initialize collapsed summaries when reports load (collapsed by default)
   useEffect(() => {
@@ -1231,6 +1280,31 @@ function ViewReports() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Inline coach chat (mirrors Program Dashboard / View Workouts wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Reports"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </>
   );
 }

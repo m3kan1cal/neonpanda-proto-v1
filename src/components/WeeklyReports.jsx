@@ -1,8 +1,21 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../auth/contexts/AuthContext";
 import { AccessDenied } from "./shared/AccessDenied";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
+import {
+  getWeeklyReportInlineTag,
+  getWeeklyReportInlineSessionKey,
+} from "../constants/contextualChat";
 import {
   containerPatterns,
   layoutPatterns,
@@ -54,11 +67,52 @@ function WeeklyReports() {
   const [report, setReport] = useState(null);
   const [viewMode, setViewMode] = useState("formatted");
 
-  // Command palette state
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  // Command palette state + global inline-coach-drawer flag
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
 
   // Coach data state
   const [coachData, setCoachData] = useState(null);
+
+  const { user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
+
+  // Inline coach chat drawer state, scoped per weekId. Each report week is its
+  // own conversation, mirroring the Program Dashboard's per-program scoping.
+  // Drawer is hidden until the report has loaded so the agent's first turn has
+  // a stable weekId to forward via streamClientContext.
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const inlineConversationTag = useMemo(
+    () => (weekId ? getWeeklyReportInlineTag(weekId) : null),
+    [weekId],
+  );
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId && weekId
+        ? getWeeklyReportInlineSessionKey(userId, coachId, weekId)
+        : null,
+    [userId, coachId, weekId],
+  );
+  const newChatThreadTitle = useMemo(() => {
+    const start =
+      report?.weekStart || report?.weekStartDate || report?.startDate;
+    return start ? `Weekly Report — ${start}` : "Weekly Report";
+  }, [report]);
+  const streamClientContext = useMemo(
+    () => (weekId ? { surface: "weekly_report", weekId } : null),
+    [weekId],
+  );
 
   // Initialize workout agent
   useEffect(() => {
@@ -424,6 +478,31 @@ function WeeklyReports() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Inline coach chat (mirrors Program Dashboard / View Workouts wiring) */}
+      {coachData && weekId && report && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Weekly Report"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </div>
   );
 }

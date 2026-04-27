@@ -29,6 +29,14 @@ import {
 } from "../libs/coach-conversation/types";
 import { getProgram, queryPrograms } from "../../dynamodb/program";
 import {
+  getWeeklyAnalytics,
+  getMonthlyAnalytics,
+} from "../../dynamodb/analytics";
+import {
+  formatWeeklyReportForPrompt,
+  formatMonthlyReportForPrompt,
+} from "../libs/analytics/format-for-prompt";
+import {
   queryMemories as queryMemoriesFromDb,
   queryEmotionalSnapshots,
   getLatestEmotionalTrend,
@@ -207,6 +215,26 @@ async function* createCoachConversationEventStreamV2(
         clientContext?.surface === "view_workouts"
           ? clientContext.dayNumber
           : undefined,
+      clientContextTimeRange:
+        clientContext?.surface === "training_pulse"
+          ? clientContext.timeRange
+          : undefined,
+      clientContextExerciseName:
+        clientContext?.surface === "training_pulse"
+          ? clientContext.exerciseName
+          : undefined,
+      clientContextReportType:
+        clientContext?.surface === "reports_list"
+          ? clientContext.reportType
+          : undefined,
+      clientContextWeekId:
+        clientContext?.surface === "weekly_report"
+          ? clientContext.weekId
+          : undefined,
+      clientContextMonthId:
+        clientContext?.surface === "monthly_report"
+          ? clientContext.monthId
+          : undefined,
     });
 
     const timings: Record<string, number> = {};
@@ -300,6 +328,49 @@ async function* createCoachConversationEventStreamV2(
       }
     } else if (clientContext?.surface === "training_grounds") {
       // Telemetry-only surface: `clientContextSurface` logged above; no program priming.
+    }
+
+    // Load weekly/monthly report context when the user opened the chat from a
+    // report viewer. Highlights only — the formatted block is appended to the
+    // dynamic prompt (see `reportContext` option on buildConversationAgentPrompt).
+    // Telemetry-only surfaces (training_pulse, reports_list) intentionally do
+    // not fetch anything here.
+    let reportContext: string | undefined;
+    if (clientContext?.surface === "weekly_report") {
+      try {
+        const weekly = await getWeeklyAnalytics(userId, clientContext.weekId);
+        if (weekly) {
+          reportContext = formatWeeklyReportForPrompt(weekly);
+        } else {
+          logger.warn(
+            `V2: weekly_report clientContext referenced unknown weekId=${clientContext.weekId}; proceeding without priming`,
+          );
+        }
+      } catch (err) {
+        logger.warn(
+          "V2: failed to load weekly report for clientContext priming:",
+          err,
+        );
+      }
+    } else if (clientContext?.surface === "monthly_report") {
+      try {
+        const monthly = await getMonthlyAnalytics(
+          userId,
+          clientContext.monthId,
+        );
+        if (monthly) {
+          reportContext = formatMonthlyReportForPrompt(monthly);
+        } else {
+          logger.warn(
+            `V2: monthly_report clientContext referenced unknown monthId=${clientContext.monthId}; proceeding without priming`,
+          );
+        }
+      } catch (err) {
+        logger.warn(
+          "V2: failed to load monthly report for clientContext priming:",
+          err,
+        );
+      }
     }
 
     // 4. Build agent context
@@ -557,6 +628,7 @@ async function* createCoachConversationEventStreamV2(
         emotionalContext: emotionalContext || undefined,
         livingProfileContext,
         prospectiveContext,
+        reportContext,
         lastInteractionAt,
         ...(isEditMode && { editContext: agentContext.editContext }),
       },

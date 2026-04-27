@@ -112,6 +112,164 @@ describe("validateConversationClientContext", () => {
       }),
     ).toThrow(/isViewingToday must be a boolean/);
   });
+
+  // training_pulse ----------------------------------------------------------
+
+  it("accepts training_pulse with timeRange only", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "training_pulse",
+        timeRange: "8w",
+      }),
+    ).toEqual({ surface: "training_pulse", timeRange: "8w" });
+  });
+
+  it("accepts training_pulse with timeRange and exerciseName", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "training_pulse",
+        timeRange: "12w",
+        exerciseName: "  back squat  ",
+      }),
+    ).toEqual({
+      surface: "training_pulse",
+      timeRange: "12w",
+      exerciseName: "back squat",
+    });
+  });
+
+  it("rejects training_pulse without timeRange", () => {
+    expect(() =>
+      validateConversationClientContext({ surface: "training_pulse" }),
+    ).toThrow(/timeRange must be one of/);
+  });
+
+  it("rejects training_pulse with invalid timeRange", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "training_pulse",
+        timeRange: "2y",
+      }),
+    ).toThrow(/timeRange must be one of/);
+  });
+
+  it("rejects training_pulse with empty exerciseName", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "training_pulse",
+        timeRange: "4w",
+        exerciseName: "   ",
+      }),
+    ).toThrow(/exerciseName must be a non-empty string/);
+  });
+
+  it("rejects training_pulse with programId", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "training_pulse",
+        timeRange: "4w",
+        programId: "pid",
+      }),
+    ).toThrow(/programId is not allowed for training_pulse/);
+  });
+
+  // reports_list ------------------------------------------------------------
+
+  it("accepts reports_list with reportType=weekly", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "reports_list",
+        reportType: "weekly",
+      }),
+    ).toEqual({ surface: "reports_list", reportType: "weekly" });
+  });
+
+  it("accepts reports_list with reportType=monthly", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "reports_list",
+        reportType: "monthly",
+      }),
+    ).toEqual({ surface: "reports_list", reportType: "monthly" });
+  });
+
+  it("rejects reports_list without reportType", () => {
+    expect(() =>
+      validateConversationClientContext({ surface: "reports_list" }),
+    ).toThrow(/reportType must be one of/);
+  });
+
+  it("rejects reports_list with invalid reportType", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "reports_list",
+        reportType: "yearly",
+      }),
+    ).toThrow(/reportType must be one of/);
+  });
+
+  it("rejects reports_list with programId", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "reports_list",
+        reportType: "weekly",
+        programId: "pid",
+      }),
+    ).toThrow(/programId is not allowed for reports_list/);
+  });
+
+  // weekly_report -----------------------------------------------------------
+
+  it("accepts weekly_report with weekId", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "weekly_report",
+        weekId: "  2025-W32  ",
+      }),
+    ).toEqual({ surface: "weekly_report", weekId: "2025-W32" });
+  });
+
+  it("rejects weekly_report without weekId", () => {
+    expect(() =>
+      validateConversationClientContext({ surface: "weekly_report" }),
+    ).toThrow(/weekId is required for weekly_report/);
+  });
+
+  it("rejects weekly_report with empty weekId", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "weekly_report",
+        weekId: "   ",
+      }),
+    ).toThrow(/weekId is required for weekly_report/);
+  });
+
+  // monthly_report ----------------------------------------------------------
+
+  it("accepts monthly_report with monthId", () => {
+    expect(
+      validateConversationClientContext({
+        surface: "monthly_report",
+        monthId: "2025-10",
+      }),
+    ).toEqual({ surface: "monthly_report", monthId: "2025-10" });
+  });
+
+  it("rejects monthly_report without monthId", () => {
+    expect(() =>
+      validateConversationClientContext({ surface: "monthly_report" }),
+    ).toThrow(/monthId is required for monthly_report/);
+  });
+
+  it("rejects monthly_report with programId", () => {
+    expect(() =>
+      validateConversationClientContext({
+        surface: "monthly_report",
+        monthId: "2025-10",
+        programId: "pid",
+      }),
+    ).toThrow(/programId is not allowed for monthly_report/);
+  });
 });
 
 describe("validateStreamingRequestBody clientContext", () => {

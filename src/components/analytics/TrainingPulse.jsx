@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import {
@@ -9,12 +15,19 @@ import {
   badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../../auth/contexts/AuthContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { BarChartIcon } from "../themes/SynthwaveComponents";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import AppFooter from "../shared/AppFooter";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
+import {
+  INLINE_TRAINING_PULSE_TAG,
+  getTrainingPulseInlineSessionKey,
+} from "../../constants/contextualChat";
 import TimeRangeSelector, { TIME_RANGES } from "./TimeRangeSelector";
 import VolumeTrendChart from "./VolumeTrendChart";
 import FrequencyChart from "./FrequencyChart";
@@ -43,8 +56,14 @@ export default function Analytics() {
   const coachId = searchParams.get("coachId");
   const { isValid: isAuthorized, isValidating: isAuthLoading } =
     useAuthorizeUser(userId);
+  const { user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
 
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
 
   const handleCoachCardClick = () => {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
@@ -52,6 +71,19 @@ export default function Analytics() {
 
   // Time range state
   const [timeRange, setTimeRange] = useState("8w");
+
+  // Inline coach chat drawer state. Mirrors ProgramDashboard / ViewWorkouts
+  // wiring — one home thread per (userId, coachId); the active timeRange and
+  // any selected exercise are forwarded as runtime context each turn so the
+  // agent always sees the lens the user is currently looking at.
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   // Coach data
   const coachAgentRef = useRef(null);
@@ -75,6 +107,30 @@ export default function Analytics() {
     aggregations: null,
     isLoading: false,
   });
+
+  // Inline drawer scoping: one home thread per (userId, coachId). The active
+  // timeRange and any selected exercise are forwarded as runtime context — they
+  // do NOT fragment the home thread. Resolved exerciseDisplayName is preferred
+  // over the raw normalized key so the agent gets the user-friendly label.
+  const inlineConversationTag = INLINE_TRAINING_PULSE_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getTrainingPulseInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Training Pulse";
+  const streamClientContext = useMemo(() => {
+    const ctx = { surface: "training_pulse", timeRange };
+    if (selectedExercise) {
+      const display = exerciseNames.find(
+        (ex) => ex.exerciseName === selectedExercise,
+      )?.displayName;
+      ctx.exerciseName = display || selectedExercise;
+    }
+    return ctx;
+  }, [timeRange, selectedExercise, exerciseNames]);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -433,6 +489,31 @@ export default function Analytics() {
         place="bottom"
         className="max-w-xs"
       />
+
+      {/* Inline coach chat (mirrors Program Dashboard / View Workouts wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Training Pulse"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </div>
   );
 }

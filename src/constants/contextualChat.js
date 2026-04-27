@@ -38,6 +38,66 @@ export function getTrainingGroundsInlineSessionKey(userId, coachId) {
 }
 
 /**
+ * Metadata tag for the Training Pulse inline chat "home" thread. The pulse page
+ * exposes a TimeRangeSelector but we intentionally use ONE home thread per
+ * (user, coach) — the time range is forwarded each turn via streamClientContext
+ * rather than fragmenting conversations across ranges.
+ */
+export const INLINE_TRAINING_PULSE_TAG = "training_pulse_inline";
+
+/** sessionStorage key for last conversation opened from the Training Pulse inline drawer. */
+export function getTrainingPulseInlineSessionKey(userId, coachId) {
+  return `neonpanda-tp-inline-chat:${userId}:${coachId}`;
+}
+
+/**
+ * Metadata tag for the Reports list (View Reports) inline chat "home" thread.
+ * One thread per (user, coach); the active tab (weekly | monthly) is forwarded
+ * each turn via streamClientContext.reportType.
+ */
+export const INLINE_VIEW_REPORTS_TAG = "view_reports_inline";
+
+/** sessionStorage key for last conversation opened from the Reports list inline drawer. */
+export function getViewReportsInlineSessionKey(userId, coachId) {
+  return `neonpanda-vr-inline-chat:${userId}:${coachId}`;
+}
+
+/**
+ * Metadata tag prefix for the Weekly Report viewer inline chat "home" thread.
+ * Scoped per weekId — each report week is its own conversation, mirroring the
+ * Program Dashboard's per-program scoping.
+ */
+export const INLINE_WEEKLY_REPORT_TAG_PREFIX = "weekly_report_inline";
+
+/** Per-week tag used by the Weekly Report viewer inline drawer. */
+export function getWeeklyReportInlineTag(weekId) {
+  return `${INLINE_WEEKLY_REPORT_TAG_PREFIX}:${weekId}`;
+}
+
+/** sessionStorage key for last conversation opened from the Weekly Report inline drawer. */
+export function getWeeklyReportInlineSessionKey(userId, coachId, weekId) {
+  return `neonpanda-wr-inline-chat:${userId}:${coachId}:${weekId}`;
+}
+
+/**
+ * Metadata tag prefix for the Monthly Report viewer inline chat "home" thread.
+ * Reserved for a future standalone monthly viewer page. The streaming validator
+ * accepts `surface: "monthly_report"` today so the page can ship in a single
+ * frontend PR without a coordinated Lambda redeploy.
+ */
+export const INLINE_MONTHLY_REPORT_TAG_PREFIX = "monthly_report_inline";
+
+/** Per-month tag (reserved for a future monthly report viewer page). */
+export function getMonthlyReportInlineTag(monthId) {
+  return `${INLINE_MONTHLY_REPORT_TAG_PREFIX}:${monthId}`;
+}
+
+/** sessionStorage key (reserved for a future monthly report viewer page). */
+export function getMonthlyReportInlineSessionKey(userId, coachId, monthId) {
+  return `neonpanda-mr-inline-chat:${userId}:${coachId}:${monthId}`;
+}
+
+/**
  * sessionStorage key for last conversation opened from the Program Dashboard
  * inline drawer. Scoped by programId so each program has its own "home" chat.
  */
