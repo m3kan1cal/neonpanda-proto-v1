@@ -29,7 +29,9 @@ function getStructured(report: WeeklyAnalytics | MonthlyAnalytics): any {
 }
 
 function getHumanSummary(report: WeeklyAnalytics | MonthlyAnalytics): string {
-  const summary = (report as any).analyticsData?.human_summary;
+  const summary =
+    (report as any).analyticsData?.human_summary ??
+    (report as any).human_summary;
   if (typeof summary !== "string" || !summary.trim()) return "";
   const trimmed = summary.trim();
   return trimmed.length > HUMAN_SUMMARY_MAX_CHARS

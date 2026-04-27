@@ -131,6 +131,22 @@ describe("formatWeeklyReportForPrompt", () => {
     expect(out).not.toContain("Sessions completed");
     expect(out).not.toContain("Top Movements");
   });
+
+  it("falls back to legacy flat shape for both structured data and human summary", () => {
+    const legacy = {
+      userId: "u_1",
+      weekId: "2025-W32",
+      weekStart: "2025-08-04",
+      weekEnd: "2025-08-10",
+      structured_analytics: baseStructured,
+      human_summary:
+        "Legacy-shape week — sessions held intent through Friday.",
+    } as unknown as WeeklyAnalytics;
+    const out = formatWeeklyReportForPrompt(legacy);
+    expect(out).toContain("Sessions completed: 5");
+    expect(out).toContain("Coach's-Eye Summary");
+    expect(out).toContain("Legacy-shape week");
+  });
 });
 
 describe("formatMonthlyReportForPrompt", () => {
