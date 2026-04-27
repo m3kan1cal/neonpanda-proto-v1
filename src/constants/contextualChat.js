@@ -18,6 +18,20 @@ export function getProgramDashboardInlineTag(programId) {
   return `${INLINE_PROGRAM_DASHBOARD_TAG_PREFIX}:${programId}`;
 }
 
+/**
+ * Metadata tag prefix for the View Workouts inline chat "home" thread.
+ * Scoped per program so different programs (and the Program Dashboard's
+ * own home thread) don't share a chat. Day-N views reuse the same per-
+ * program thread; the active dayNumber is forwarded via streamClientContext
+ * so the agent always knows which day the user is currently viewing.
+ */
+export const INLINE_VIEW_WORKOUTS_TAG_PREFIX = "view_workouts_inline";
+
+/** Per-program tag used by the View Workouts inline drawer. */
+export function getViewWorkoutsInlineTag(programId) {
+  return `${INLINE_VIEW_WORKOUTS_TAG_PREFIX}:${programId}`;
+}
+
 /** sessionStorage key for last conversation opened from the inline Training Grounds drawer picker */
 export function getTrainingGroundsInlineSessionKey(userId, coachId) {
   return `neonpanda-tg-inline-chat:${userId}:${coachId}`;
@@ -33,6 +47,15 @@ export function getProgramDashboardInlineSessionKey(
   programId,
 ) {
   return `neonpanda-pd-inline-chat:${userId}:${coachId}:${programId}`;
+}
+
+/**
+ * sessionStorage key for last conversation opened from the View Workouts
+ * inline drawer. Scoped by programId so each program has its own home chat,
+ * matching the Program Dashboard pattern.
+ */
+export function getViewWorkoutsInlineSessionKey(userId, coachId, programId) {
+  return `neonpanda-vw-inline-chat:${userId}:${coachId}:${programId}`;
 }
 
 /** ~10 recent chats in drawer picker */

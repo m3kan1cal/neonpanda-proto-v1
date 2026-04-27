@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../../auth/contexts/AuthContext";
 import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
@@ -33,6 +40,12 @@ import { explainTerm } from "../../utils/apis/explainApi";
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 import TiptapEditor from "../shared/TiptapEditor";
 import AppFooter from "../shared/AppFooter";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
+import {
+  getViewWorkoutsInlineTag,
+  getViewWorkoutsInlineSessionKey,
+} from "../../constants/contextualChat";
 import { logger } from "../../utils/logger";
 import { useWorkoutDraft } from "../../hooks/useWorkoutDraft";
 import { useImageUpload } from "../../hooks/useImageUpload";
@@ -68,9 +81,15 @@ function ViewWorkouts() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { success: showSuccess, error: showError } = useToast();
+  const { user } = useAuth();
+  const userInitial =
+    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
+    user?.username?.charAt(0).toUpperCase() ||
+    "U";
 
-  // Get global CommandPalette state from NavigationContext
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  // Get global CommandPalette + inline coach drawer state from NavigationContext
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
 
   // State
   const [program, setProgram] = useState(null);
@@ -79,6 +98,19 @@ function ViewWorkouts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingWorkoutId, setProcessingWorkoutId] = useState(null);
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+
+  // Mirror drawer-open state to the global flag so App.jsx hides mobile
+  // chrome (bottom nav, status chrome) while the drawer is up — same
+  // pattern used by Training Grounds and Program Dashboard.
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
   // templateId -> "polling" | "timeout"; mirrored from ProgramAgent state so
   // the UI can render an actionable "Refresh to check" button when the
   // build-workout Lambda runs longer than the polling budget.
@@ -164,6 +196,39 @@ function ViewWorkouts() {
   // Templates we've already toasted about for a polling timeout, so we don't
   // re-toast on every render while the "Refresh to check" button is visible.
   const seenTimeoutsRef = useRef(new Set());
+
+  // ContextualChatDrawer wiring: per-program inline chat scoped distinctly
+  // from the Program Dashboard's home thread. dayNumber is forwarded via
+  // streamClientContext so the agent always knows which day's templates the
+  // user is currently looking at, even on `?day=N` views.
+  const newChatThreadTitle = useMemo(() => {
+    const name = program?.name?.trim();
+    if (!name) return isViewingToday ? "Today's Workouts" : "View Workouts";
+    return isViewingToday
+      ? `Today's Workouts — ${name}`
+      : `Day ${dayParam} — ${name}`;
+  }, [program?.name, isViewingToday, dayParam]);
+
+  const streamClientContext = useMemo(() => {
+    if (!programId) return null;
+    const dayNumber = workoutData?.dayNumber;
+    return {
+      surface: "view_workouts",
+      programId,
+      ...(dayNumber ? { dayNumber } : {}),
+      isViewingToday,
+    };
+  }, [programId, workoutData?.dayNumber, isViewingToday]);
+
+  const inlineConversationTag = useMemo(() => {
+    if (!programId) return null;
+    return getViewWorkoutsInlineTag(programId);
+  }, [programId]);
+
+  const inlineSessionKey = useMemo(() => {
+    if (!userId || !coachId || !programId) return null;
+    return getViewWorkoutsInlineSessionKey(userId, coachId, programId);
+  }, [userId, coachId, programId]);
 
   // Toast once when a template's polling status flips to "timeout".
   useEffect(() => {
@@ -2049,6 +2114,33 @@ General thoughts: `;
         </div>
         <AppFooter />
       </div>
+
+      {/* Inline coach chat (mirrors Program Dashboard wiring) */}
+      {coachData && programId && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel={
+              isViewingToday ? "Today's Workouts" : `Day ${dayParam}`
+            }
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
 
       {/* CommandPalette removed - using global CommandPalette from App.jsx */}
 
