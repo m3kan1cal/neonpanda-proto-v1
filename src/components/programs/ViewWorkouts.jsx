@@ -2500,27 +2500,25 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
       }}
     >
       <div className={containerPatterns.explanationPopupInner}>
-        <div className="flex items-center justify-end mb-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="w-8 h-8 flex items-center justify-center rounded-xl text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-colors cursor-pointer"
-            aria-label="Close explanation"
-          >
-            <XIcon className="w-5 h-5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-xl text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-colors cursor-pointer"
+          aria-label="Close explanation"
+        >
+          <XIcon className="w-6 h-6" />
+        </button>
         {isLoading ? (
-          <div className="space-y-2 pt-1">
+          <div className="space-y-2 pt-1 pr-10">
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
           </div>
         ) : (
-          <div className={containerPatterns.aiResponseContent}>
+          <div className={`${containerPatterns.aiResponseContent} pr-10`}>
             <MarkdownRenderer content={explanation} />
           </div>
         )}
