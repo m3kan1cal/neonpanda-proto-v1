@@ -2518,7 +2518,7 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
           </div>
         ) : (
-          <div className={`${containerPatterns.aiResponseContent} pr-10`}>
+          <div className={containerPatterns.aiResponseContent}>
             <MarkdownRenderer content={explanation} />
           </div>
         )}
