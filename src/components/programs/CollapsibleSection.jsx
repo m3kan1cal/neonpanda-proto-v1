@@ -11,6 +11,7 @@ export default function CollapsibleSection({
   title,
   icon: Icon,
   iconColor = "pink",
+  iconClassName = "",
   defaultCollapsed = false,
   headerExtras,
   id,
@@ -48,7 +49,7 @@ export default function CollapsibleSection({
       >
         <div className="flex items-start gap-3 flex-1 min-w-0">
           {Icon && (
-            <span className={`shrink-0 mt-1 ${iconColorClass}`}>
+            <span className={`shrink-0 mt-1 ${iconColorClass} ${iconClassName}`}>
               <Icon className="w-5 h-5" />
             </span>
           )}

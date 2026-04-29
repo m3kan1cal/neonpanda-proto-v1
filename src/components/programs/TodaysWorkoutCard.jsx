@@ -32,6 +32,7 @@ function TodaysWorkoutCard({
         title="Today's Workout"
         icon={WorkoutIconSmall}
         iconColor="cyan"
+        iconClassName="opacity-30 animate-pulse"
         id="todays-workout"
       >
         <div className="space-y-3">
