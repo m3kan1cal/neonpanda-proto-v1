@@ -111,6 +111,8 @@ export default function ProgramCalendar({
         icon={CalendarIcon}
         iconColor="purple"
         id="training-calendar"
+        headerClassName="p-4 md:p-6"
+        bodyClassName="px-4 pb-4 md:px-6 md:pb-6"
       >
         <p className="text-center text-synthwave-text-muted py-8 font-body">
           Loading calendar...
@@ -125,6 +127,8 @@ export default function ProgramCalendar({
       icon={CalendarIcon}
       iconColor="purple"
       id="training-calendar"
+      headerClassName="p-4 md:p-6"
+      bodyClassName="px-4 pb-4 md:px-6 md:pb-6"
     >
       {/* Controls - stack on mobile to avoid cramping */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">

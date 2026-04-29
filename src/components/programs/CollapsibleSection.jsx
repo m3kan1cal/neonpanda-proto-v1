@@ -67,7 +67,7 @@ export default function CollapsibleSection({
         </div>
         <svg
           className={`w-5 h-5 shrink-0 text-synthwave-neon-cyan transition-transform duration-200 ${
-            collapsed ? "rotate-180" : ""
+            collapsed ? "" : "rotate-180"
           }`}
           fill="none"
           stroke="currentColor"
