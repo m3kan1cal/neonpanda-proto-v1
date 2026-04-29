@@ -1466,9 +1466,17 @@ General thoughts: `;
                     </div>
                   </div>
 
-                  {/* Collapsible Card Content - Modular Sub-Cards */}
-                  {!isCollapsed && (
-                    <div className="space-y-3">
+                  {/*
+                    Sub-cards render unconditionally — each CollapsibleSubCard
+                    has its own chevron and per-section state
+                    (collapsedSubCards / toggleSubCard) so users can collapse
+                    them individually. The top template chevron
+                    (toggleCardCollapse) is intentionally scoped to hide only
+                    the metrics row above; it must NOT gate this section.
+                    Do not re-add a `{!isCollapsed && (...)}` guard here —
+                    that defeats the per-section collapse UX. See PR #402.
+                  */}
+                  <div className="space-y-3">
                       {/* Prescribed Workout - Read-only */}
                       {template.description && (
                         <CollapsibleSubCard
@@ -2118,7 +2126,6 @@ General thoughts: `;
                         )}
                       </div>
                     </div>
-                  )}
                 </div>
               );
             })}
