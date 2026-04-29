@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import {
-  containerPatterns,
-  badgePatterns,
-} from "../../utils/ui/uiPatterns";
-import { SectionHeader, CalendarIcon } from "../themes/SynthwaveComponents";
+import { containerPatterns, badgePatterns } from "../../utils/ui/uiPatterns";
+import { CalendarIcon } from "../themes/SynthwaveComponents";
+import CollapsibleSection from "./CollapsibleSection";
 
 // Map phase color index to calendar-style count badge color variant
 const PHASE_COUNT_BADGE_COLORS = [
@@ -96,12 +94,12 @@ export default function PhaseTimeline({ program }) {
   };
 
   return (
-    <div className={`${containerPatterns.cardMedium} p-6`}>
-      {/* Section Header */}
-      <SectionHeader icon={CalendarIcon} color="cyan" className="mb-6">
-        Phase Timeline
-      </SectionHeader>
-
+    <CollapsibleSection
+      title="Phase Timeline"
+      icon={CalendarIcon}
+      iconColor="cyan"
+      id="phase-timeline"
+    >
       {/* Phase Timeline */}
       <div className="mb-4">
         {/* Visual progress bar - wrapper for positioning current day badge */}
@@ -284,6 +282,6 @@ export default function PhaseTimeline({ program }) {
           );
         })}
       </div>
-    </div>
+    </CollapsibleSection>
   );
 }

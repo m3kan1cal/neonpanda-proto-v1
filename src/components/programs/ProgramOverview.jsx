@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   containerPatterns,
-  typographyPatterns,
   badgePatterns,
   buttonPatterns,
 } from "../../utils/ui/uiPatterns";
@@ -9,9 +8,9 @@ import {
   PauseIcon,
   CheckIcon,
   ArrowRightIcon,
-  SectionHeader,
   SummaryIcon,
 } from "../themes/SynthwaveComponents";
+import CollapsibleSection from "./CollapsibleSection";
 import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
 import { logger } from "../../utils/logger";
@@ -160,12 +159,12 @@ export default function ProgramOverview({
   const expectedCompletion = calculateExpectedCompletion();
 
   return (
-    <div className={`${containerPatterns.cardMedium} p-6`}>
-      {/* Section Header */}
-      <SectionHeader icon={SummaryIcon} color="pink" className="mb-4">
-        Program Overview
-      </SectionHeader>
-
+    <CollapsibleSection
+      title="Program Overview"
+      icon={SummaryIcon}
+      iconColor="pink"
+      id="program-overview"
+    >
       {/* Program Name with Status Badge */}
       <div className="mb-4 flex items-start gap-3 min-w-0">
         <div
@@ -490,6 +489,6 @@ export default function ProgramOverview({
           </button>
         )}
       </div>
-    </div>
+    </CollapsibleSection>
   );
 }

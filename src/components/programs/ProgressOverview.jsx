@@ -1,9 +1,6 @@
 import React from "react";
-import {
-  containerPatterns,
-  typographyPatterns,
-} from "../../utils/ui/uiPatterns";
-import { SectionHeader, MetricsIcon } from "../themes/SynthwaveComponents";
+import { MetricsIcon } from "../themes/SynthwaveComponents";
+import CollapsibleSection from "./CollapsibleSection";
 
 export default function ProgressOverview({ program }) {
   const totalDays = program.totalDays || program.duration || 1;
@@ -70,11 +67,12 @@ export default function ProgressOverview({ program }) {
   const currentPhase = getCurrentPhase();
 
   return (
-    <div className={`${containerPatterns.cardMedium} p-6`}>
-      <SectionHeader icon={MetricsIcon} color="cyan" className="mb-4">
-        Progress Overview
-      </SectionHeader>
-
+    <CollapsibleSection
+      title="Progress Overview"
+      icon={MetricsIcon}
+      iconColor="cyan"
+      id="progress-overview"
+    >
       {/* Progress info */}
       <div className="font-body text-sm text-synthwave-text-secondary mb-2">
         Day {program.currentDay} of {totalDays} • {progressPercentage}% Complete
@@ -171,6 +169,6 @@ export default function ProgressOverview({ program }) {
           </div>
         </div>
       </div>
-    </div>
+    </CollapsibleSection>
   );
 }
