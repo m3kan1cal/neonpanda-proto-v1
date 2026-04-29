@@ -1,10 +1,8 @@
 import React, { useState, useMemo } from "react";
-import {
-  containerPatterns,
-  buttonPatterns,
-} from "../../utils/ui/uiPatterns";
-import { SectionHeader, CalendarIcon } from "../themes/SynthwaveComponents";
+import { buttonPatterns } from "../../utils/ui/uiPatterns";
+import { CalendarIcon } from "../themes/SynthwaveComponents";
 import CalendarDayCell from "./CalendarDayCell";
+import CollapsibleSection from "./CollapsibleSection";
 
 export default function ProgramCalendar({
   program,
@@ -108,24 +106,30 @@ export default function ProgramCalendar({
 
   if (!program || calendarDays.length === 0) {
     return (
-      <div className={`${containerPatterns.cardMedium} p-6`}>
-        <SectionHeader icon={CalendarIcon} color="purple" className="mb-4">
-          Training Calendar
-        </SectionHeader>
+      <CollapsibleSection
+        title="Training Calendar"
+        icon={CalendarIcon}
+        iconColor="purple"
+        id="training-calendar"
+        headerClassName="p-4 md:p-6"
+        bodyClassName="px-4 pb-4 md:px-6 md:pb-6"
+      >
         <p className="text-center text-synthwave-text-muted py-8 font-body">
           Loading calendar...
         </p>
-      </div>
+      </CollapsibleSection>
     );
   }
 
   return (
-    <div className={`${containerPatterns.cardMedium} p-4 md:p-6`}>
-      {/* Section Header */}
-      <SectionHeader icon={CalendarIcon} color="purple" className="mb-4">
-        Training Calendar
-      </SectionHeader>
-
+    <CollapsibleSection
+      title="Training Calendar"
+      icon={CalendarIcon}
+      iconColor="purple"
+      id="training-calendar"
+      headerClassName="p-4 md:p-6"
+      bodyClassName="px-4 pb-4 md:px-6 md:pb-6"
+    >
       {/* Controls - stack on mobile to avoid cramping */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         {/* Legend */}
@@ -236,6 +240,6 @@ export default function ProgramCalendar({
           Viewing {visibleWeeks.length} of {weeks.length} weeks
         </div>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }

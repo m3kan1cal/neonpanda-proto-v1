@@ -1384,64 +1384,66 @@ General thoughts: `;
                           </div>
                         )}
 
-                        <div className="flex items-center flex-wrap gap-4">
-                          {template.estimatedDuration && (
-                            <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
-                              <svg
-                                className="w-4 h-4 shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                              </svg>
-                              <span>{template.estimatedDuration} min</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-muted">
-                              Time Cap:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium">
-                              {template.timeCap
-                                ? `${template.timeCap} min`
-                                : "None"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 font-body text-sm">
-                            <span className="text-synthwave-text-muted">
-                              Rest After:
-                            </span>
-                            <span className="text-synthwave-neon-cyan font-medium">
-                              {formatRestAfter(template.restAfter)}
-                            </span>
-                          </div>
-                          {template.type && (
+                        {!isCollapsed && (
+                          <div className="flex items-center flex-wrap gap-4">
+                            {template.estimatedDuration && (
+                              <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
+                                <svg
+                                  className="w-4 h-4 shrink-0"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                                <span>{template.estimatedDuration} min</span>
+                              </div>
+                            )}
                             <div className="flex items-center gap-1.5 font-body text-sm">
                               <span className="text-synthwave-text-muted">
-                                Type:
-                              </span>
-                              <span className="text-synthwave-neon-cyan font-medium capitalize">
-                                {template.type}
-                              </span>
-                            </div>
-                          )}
-                          {template.scoringType && (
-                            <div className="flex items-center gap-1.5 font-body text-sm">
-                              <span className="text-synthwave-text-muted">
-                                Scoring:
+                                Time Cap:
                               </span>
                               <span className="text-synthwave-neon-cyan font-medium">
-                                {formatScoringType(template.scoringType)}
+                                {template.timeCap
+                                  ? `${template.timeCap} min`
+                                  : "None"}
                               </span>
                             </div>
-                          )}
-                        </div>
+                            <div className="flex items-center gap-1.5 font-body text-sm">
+                              <span className="text-synthwave-text-muted">
+                                Rest After:
+                              </span>
+                              <span className="text-synthwave-neon-cyan font-medium">
+                                {formatRestAfter(template.restAfter)}
+                              </span>
+                            </div>
+                            {template.type && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-muted">
+                                  Type:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium capitalize">
+                                  {template.type}
+                                </span>
+                              </div>
+                            )}
+                            {template.scoringType && (
+                              <div className="flex items-center gap-1.5 font-body text-sm">
+                                <span className="text-synthwave-text-muted">
+                                  Scoring:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {formatScoringType(template.scoringType)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-3">
                         {/* Collapse/Expand Icon */}
@@ -2439,7 +2441,9 @@ function CollapsibleSubCard({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-6 pt-5 pb-2 hover:bg-synthwave-bg-card/40 transition-colors cursor-pointer"
+        className={`w-full flex items-center justify-between px-6 ${
+          isCollapsed ? "py-5" : "pt-5 pb-2"
+        } hover:bg-synthwave-bg-card/40 transition-colors cursor-pointer`}
       >
         <div className="flex items-start gap-3">
           {Icon ? (
@@ -2500,21 +2504,19 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
       }}
     >
       <div className={containerPatterns.explanationPopupInner}>
-        <div className="flex items-center justify-end mb-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="w-8 h-8 flex items-center justify-center rounded-xl text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-colors cursor-pointer"
-            aria-label="Close explanation"
-          >
-            <XIcon className="w-5 h-5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-xl text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-colors cursor-pointer"
+          aria-label="Close explanation"
+        >
+          <XIcon className="w-6 h-6" />
+        </button>
         {isLoading ? (
-          <div className="space-y-2 pt-1">
+          <div className="space-y-2 pt-1 pr-10">
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
             <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>

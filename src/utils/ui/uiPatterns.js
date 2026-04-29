@@ -604,16 +604,16 @@ export const containerPatterns = {
   // AI Explanation Popup - Gradient border wrapper (outer shell)
   // Note: also apply inline style: backgroundSize "200% 200%", animation "slideDown 0.3s ease-out forwards, gradient-flow 3s ease infinite"
   explanationPopupWrapper:
-    "mt-3 relative rounded-xl bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px]",
+    "mt-2 relative rounded-xl bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px]",
 
   // AI Explanation Popup - Inner card (always paired with explanationPopupWrapper)
   explanationPopupInner:
-    "rounded-xl bg-synthwave-bg-card px-4 pb-4 pt-2 h-full",
+    "relative rounded-xl bg-synthwave-bg-card px-4 pb-4 pt-2 h-full",
 
   // Scrollable AI response content area - for explanation popups, AI text blocks with overflow
   // Pink scrollbar, 300px max height, standard body text sizing
   aiResponseContent:
-    "font-ai text-sm text-synthwave-text-secondary leading-relaxed max-h-[300px] overflow-y-auto synthwave-scrollbar pr-1 [&>*:first-child]:mt-0",
+    "font-ai text-sm text-synthwave-text-secondary leading-relaxed max-h-[300px] overflow-y-auto synthwave-scrollbar pr-10 [&>*:first-child]:mt-0",
 
   // Card action dropdown menu container
   actionDropdown:
