@@ -131,7 +131,8 @@ function AppContent() {
     location.pathname === "/training-grounds" ||
     location.pathname === "/training-grounds/workouts" ||
     location.pathname === "/training-grounds/programs/workouts" ||
-    location.pathname.startsWith("/training-grounds/programs/dashboard");
+    location.pathname.startsWith("/training-grounds/programs/dashboard") ||
+    /^\/training-grounds\/programs\/[^/]+\/day\/\d+$/.test(location.pathname);
 
   // Workout agent for command palette
   const workoutAgentRef = useRef(null);
