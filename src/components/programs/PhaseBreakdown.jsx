@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import {
-  containerPatterns,
-  badgePatterns,
-} from "../../utils/ui/uiPatterns";
-import { SectionHeader, TargetIcon } from "../themes/SynthwaveComponents";
+import { containerPatterns } from "../../utils/ui/uiPatterns";
+import { TargetIcon } from "../themes/SynthwaveComponents";
+import CollapsibleSection from "./CollapsibleSection";
 
 export default function PhaseBreakdown({ program }) {
   const [isPhaseFocusExpanded, setIsPhaseFocusExpanded] = useState(false);
@@ -33,12 +31,12 @@ export default function PhaseBreakdown({ program }) {
   );
 
   return (
-    <div className={`${containerPatterns.cardMedium} p-6`}>
-      {/* Section Header */}
-      <SectionHeader icon={TargetIcon} color="purple" className="mb-4">
-        Current Phase
-      </SectionHeader>
-
+    <CollapsibleSection
+      title="Current Phase"
+      icon={TargetIcon}
+      iconColor="purple"
+      id="current-phase"
+    >
       {/* Phase Name */}
       <div className="mb-4">
         <div className="font-body text-lg text-white">
@@ -203,6 +201,6 @@ export default function PhaseBreakdown({ program }) {
           </div>
         </div>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }

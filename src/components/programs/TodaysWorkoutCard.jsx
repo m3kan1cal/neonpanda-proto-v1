@@ -1,15 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  containerPatterns,
   buttonPatterns,
   badgePatterns,
 } from "../../utils/ui/uiPatterns";
-import {
-  WorkoutIconSmall,
-  SectionHeader,
-} from "../themes/SynthwaveComponents";
-import { EmptyState, InlineError } from "../shared/ErrorStates";
+import { WorkoutIconSmall } from "../themes/SynthwaveComponents";
+import { InlineError } from "../shared/ErrorStates";
+import CollapsibleSection from "./CollapsibleSection";
 
 /**
  * TodaysWorkoutCard - Displays today's workout from the active training program
@@ -31,43 +28,49 @@ function TodaysWorkoutCard({
 
   if (isLoading) {
     return (
-      <div className={`${containerPatterns.cardMedium} p-6`}>
-        <div className="flex items-start gap-3 mb-4">
-          <span className="shrink-0 mt-1 text-synthwave-neon-cyan/30 animate-pulse">
-            <WorkoutIconSmall />
-          </span>
-          <h3 className="font-header font-bold text-white text-lg uppercase">
-            Today's Workout
-          </h3>
-        </div>
+      <CollapsibleSection
+        title="Today's Workout"
+        icon={WorkoutIconSmall}
+        iconColor="cyan"
+        id="todays-workout"
+      >
         <div className="space-y-3">
           <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
           <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-3/4"></div>
           <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-1/2"></div>
         </div>
-      </div>
+      </CollapsibleSection>
     );
   }
 
   if (error) {
     return (
-      <div className={`${containerPatterns.cardMedium} p-6`}>
-        <SectionHeader
-          icon={WorkoutIconSmall}
-          color="cyan"
-          className="mb-4"
-        >
-          Today's Workout
-        </SectionHeader>
+      <CollapsibleSection
+        title="Today's Workout"
+        icon={WorkoutIconSmall}
+        iconColor="cyan"
+        id="todays-workout"
+      >
         <InlineError
           title="Error loading today's workout"
           message={error}
           variant="error"
           size="medium"
         />
-      </div>
+      </CollapsibleSection>
     );
   }
+
+  // Beta badge shown in the collapsible header
+  const betaBadge = (
+    <div
+      className={`${badgePatterns.beta} cursor-help`}
+      data-tooltip-id="beta-badge-todays-workout"
+      data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+    >
+      Beta
+    </div>
+  );
 
   // Show rest day card if no workout data
   if (
@@ -77,19 +80,18 @@ function TodaysWorkoutCard({
     todaysWorkout.templates.length === 0
   ) {
     return (
-      <div className={`${containerPatterns.cardMedium} p-6`}>
-        {/* Header */}
-        <SectionHeader icon={WorkoutIconSmall} color="cyan" className="mb-4">
-          Today's Workout
-        </SectionHeader>
-
+      <CollapsibleSection
+        title="Today's Workout"
+        icon={WorkoutIconSmall}
+        iconColor="cyan"
+        id="todays-workout"
+        headerExtras={program ? betaBadge : null}
+      >
         {/* Program name */}
         {program && (
-          <>
-            <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
-              {program.name}
-            </div>
-          </>
+          <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+            {program.name}
+          </div>
         )}
 
         {/* Rest day message */}
@@ -150,7 +152,7 @@ function TodaysWorkoutCard({
             View Training Program
           </button>
         )}
-      </div>
+      </CollapsibleSection>
     );
   }
 
@@ -165,12 +167,13 @@ function TodaysWorkoutCard({
   if (!primaryTemplate) {
     // No primary template - show rest day
     return (
-      <div className={`${containerPatterns.cardMedium} p-6`}>
-        {/* Header */}
-        <SectionHeader icon={WorkoutIconSmall} color="cyan" className="mb-4">
-          Today's Workout
-        </SectionHeader>
-
+      <CollapsibleSection
+        title="Today's Workout"
+        icon={WorkoutIconSmall}
+        iconColor="cyan"
+        id="todays-workout"
+        headerExtras={betaBadge}
+      >
         {/* Day info */}
         <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
           Day {dayNumber} of {program.totalDays}
@@ -246,7 +249,7 @@ function TodaysWorkoutCard({
             View Training Program
           </button>
         )}
-      </div>
+      </CollapsibleSection>
     );
   }
 
@@ -262,24 +265,13 @@ function TodaysWorkoutCard({
   };
 
   return (
-    <div className={`${containerPatterns.cardMedium} p-6`}>
-      {/* Header */}
-      <div className="flex items-start gap-3 mb-4">
-        <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
-          <WorkoutIconSmall />
-        </span>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Today's Workout
-        </h3>
-        <div
-          className={`${badgePatterns.beta} cursor-help`}
-          data-tooltip-id="beta-badge-todays-workout"
-          data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
-        >
-          Beta
-        </div>
-      </div>
-
+    <CollapsibleSection
+      title="Today's Workout"
+      icon={WorkoutIconSmall}
+      iconColor="cyan"
+      id="todays-workout"
+      headerExtras={betaBadge}
+    >
       {/* Program name - clickable */}
       <button
         onClick={handleViewWorkout}
@@ -338,7 +330,7 @@ function TodaysWorkoutCard({
       >
         {templates.length > 1 ? "View Workouts" : "View Workout"}
       </button>
-    </div>
+    </CollapsibleSection>
   );
 }
 
