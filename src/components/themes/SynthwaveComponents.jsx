@@ -1054,9 +1054,9 @@ export const CoachIconSmall = () => (
   </svg>
 );
 
-export const CalendarIcon = () => (
+export const CalendarIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -1190,9 +1190,9 @@ export const TrophySolidIcon = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
-export const SummaryIcon = () => (
+export const SummaryIcon = ({ className = "w-5 h-5" } = {}) => (
   <svg
-    className="w-5 h-5"
+    className={className}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"

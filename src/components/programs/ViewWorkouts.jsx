@@ -1466,8 +1466,9 @@ General thoughts: `;
                     </div>
                   </div>
 
-                  {/* Modular Sub-Cards - always visible; each card collapses individually */}
-                  <div className="space-y-3">
+                  {/* Collapsible Card Content - Modular Sub-Cards */}
+                  {!isCollapsed && (
+                    <div className="space-y-3">
                       {/* Prescribed Workout - Read-only */}
                       {template.description && (
                         <CollapsibleSubCard
@@ -2117,6 +2118,7 @@ General thoughts: `;
                         )}
                       </div>
                     </div>
+                  )}
                 </div>
               );
             })}
