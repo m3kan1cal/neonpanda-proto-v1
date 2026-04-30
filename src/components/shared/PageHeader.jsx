@@ -99,8 +99,6 @@ const PageHeader = ({
               onClick={onCoachClick}
               className="sm:hidden relative shrink-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary rounded-full"
               aria-label={coachTooltipContent}
-              data-tooltip-id="page-header-coach-avatar"
-              data-tooltip-content={coachTooltipContent}
             >
               <div className={avatarPatterns.coachCompact}>
                 {getFirstChar(coachData.name)}
