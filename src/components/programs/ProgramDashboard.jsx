@@ -11,8 +11,8 @@ import { CoachAgent } from "../../utils/agents/CoachAgent";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../../auth/contexts/AuthContext";
-import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
+import PageHeader from "../shared/PageHeader";
 import QuickStats from "../shared/QuickStats";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import AppFooter from "../shared/AppFooter";
@@ -28,7 +28,6 @@ import {
   containerPatterns,
   layoutPatterns,
   tooltipPatterns,
-  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import {
   CalendarIcon,
@@ -353,53 +352,23 @@ export default function ProgramDashboard() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Training Program Dashboard Header"
-        >
-          {/* Left section: Title + Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title */}
-            <div className="flex items-center gap-3">
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="program-dashboard-info"
-                data-tooltip-content={`${program.name} - Day ${program.currentDay} of ${program.totalDays || program.duration}`}
-              >
-                Program Dashboard
-              </h1>
-              <div
-                className={`${badgePatterns.beta} cursor-help`}
-                data-tooltip-id="beta-badge"
-                data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
-              >
-                Beta
-              </div>
-            </div>
-
-            {/* Compact Coach Card */}
-            {coachData && (
-              <CompactCoachCard
-                coachData={coachData}
-                isOnline={true}
-                onClick={() =>
-                  navigate(
-                    `/training-grounds?userId=${userId}&coachId=${coachId}`,
-                  )
-                }
-                tooltipContent="Go to the Training Grounds"
-              />
-            )}
-          </div>
-
-          {/* Right section: Command Palette Button */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Program Dashboard"
+          titleTooltipId="program-dashboard-info"
+          titleTooltipContent={`${program.name} - Day ${program.currentDay} of ${program.totalDays || program.duration}`}
+          beta
+          betaTooltipId="beta-badge"
+          betaTooltipContent="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+          coachData={coachData}
+          onCoachClick={() =>
+            navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`)
+          }
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Quick Stats */}
         <QuickStats

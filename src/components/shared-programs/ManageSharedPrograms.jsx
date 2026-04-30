@@ -10,7 +10,7 @@ import { AccessDenied, LoadingScreen } from "../shared/AccessDenied";
 import { useToast } from "../../contexts/ToastContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
-import CompactCoachCard from "../shared/CompactCoachCard";
+import PageHeader from "../shared/PageHeader";
 import CoachAgent from "../../utils/agents/CoachAgent";
 import QuickStats from "../shared/QuickStats";
 import AppFooter from "../shared/AppFooter";
@@ -726,38 +726,18 @@ function ManageSharedPrograms() {
     <>
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header */}
-          <header
-            className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-            aria-label="Manage Shared Programs Header"
-          >
-            {/* Left section: Title */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="shared-programs-info"
-                data-tooltip-content="Manage programs you've shared with others. Copy links, view previews, or unshare programs."
-              >
-                Shared Programs
-              </h1>
-
-              {/* Compact Coach Card */}
-              {coachData && (
-                <CompactCoachCard
-                  coachData={coachData}
-                  isOnline={true}
-                  onClick={handleCoachCardClick}
-                />
-              )}
-            </div>
-
-            {/* Right section: Command Palette Button */}
-            <div className="flex items-center gap-3">
+          <PageHeader
+            title="Shared Programs"
+            titleTooltipId="shared-programs-info"
+            titleTooltipContent="Manage programs you've shared with others. Copy links, view previews, or unshare programs."
+            coachData={coachData}
+            onCoachClick={handleCoachCardClick}
+            rightSlot={
               <CommandPaletteButton
                 onClick={() => setIsCommandPaletteOpen(true)}
               />
-            </div>
-          </header>
+            }
+          />
 
           {/* Quick Stats */}
           <QuickStats

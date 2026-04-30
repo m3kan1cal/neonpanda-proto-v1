@@ -11,11 +11,10 @@ import {
   iconButtonPatterns,
   formPatterns,
   inputPatterns,
-  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import { Tooltip } from "react-tooltip";
-import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
+import PageHeader from "../shared/PageHeader";
 import AppFooter from "../shared/AppFooter";
 import TiptapEditor from "../shared/TiptapEditor";
 import { useNavigationContext } from "../../contexts/NavigationContext";
@@ -1564,53 +1563,23 @@ function ManagePrograms() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Training Programs Header"
-        >
-          {/* Left section: Title + Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Hover Tooltip */}
-            <div className="flex items-center gap-3">
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="programs-info"
-                data-tooltip-content="Manage all your training programs. View progress, pause, resume, or complete programs across all your coaches."
-              >
-                Your Programs
-              </h1>
-              <div
-                className={`${badgePatterns.beta} cursor-help`}
-                data-tooltip-id="beta-badge"
-                data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
-              >
-                Beta
-              </div>
-            </div>
-
-            {/* Compact Coach Card */}
-            {coachData && (
-              <CompactCoachCard
-                coachData={coachData}
-                isOnline={true}
-                onClick={() =>
-                  navigate(
-                    `/training-grounds?userId=${userId}&coachId=${coachId}`,
-                  )
-                }
-                tooltipContent="Go to the Training Grounds"
-              />
-            )}
-          </div>
-
-          {/* Right section: Command Palette Button */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Your Programs"
+          titleTooltipId="programs-info"
+          titleTooltipContent="Manage all your training programs. View progress, pause, resume, or complete programs across all your coaches."
+          beta
+          betaTooltipId="beta-badge"
+          betaTooltipContent="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+          coachData={coachData}
+          onCoachClick={() =>
+            navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`)
+          }
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Error State */}
         {programState.error && (

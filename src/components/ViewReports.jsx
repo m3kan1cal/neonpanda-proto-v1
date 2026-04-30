@@ -39,8 +39,8 @@ import ReportAgent from "../utils/agents/ReportAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachHeader from "./shared/CoachHeader";
-import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import PageHeader from "./shared/PageHeader";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
@@ -889,39 +889,18 @@ function ViewReports() {
     <>
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header */}
-          <header
-            className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-            aria-label="Reports Header"
-          >
-            {/* Left section: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-              {/* Page Title with Hover Tooltip */}
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="reports-info"
-                data-tooltip-content="Comprehensive weekly analytics and insights from your training journey. Review performance trends and coaching analysis."
-              >
-                Your Reports
-              </h1>
-
-              {/* Compact Coach Card */}
-              {coachData && (
-                <CompactCoachCard
-                  coachData={coachData}
-                  isOnline={true}
-                  onClick={handleCoachCardClick}
-                />
-              )}
-            </div>
-
-            {/* Right section: Command Palette Button */}
-            <div className="flex items-center gap-3">
+          <PageHeader
+            title="Your Reports"
+            titleTooltipId="reports-info"
+            titleTooltipContent="Comprehensive weekly analytics and insights from your training journey. Review performance trends and coaching analysis."
+            coachData={coachData}
+            onCoachClick={handleCoachCardClick}
+            rightSlot={
               <CommandPaletteButton
                 onClick={() => setIsCommandPaletteOpen(true)}
               />
-            </div>
-          </header>
+            }
+          />
 
           {/* Quick Stats */}
           <QuickStats

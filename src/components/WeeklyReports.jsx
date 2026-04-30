@@ -20,11 +20,10 @@ import {
   containerPatterns,
   layoutPatterns,
   tooltipPatterns,
-  badgePatterns,
 } from "../utils/ui/uiPatterns";
 import { CenteredErrorState } from "./shared/ErrorStates";
-import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import PageHeader from "./shared/PageHeader";
 import QuickStats from "./shared/QuickStats";
 import AppFooter from "./shared/AppFooter";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -387,49 +386,21 @@ function WeeklyReports() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Weekly Report Header"
-        >
-          {/* Left section: Title + Beta Badge + Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Beta Badge */}
-            <div className="flex items-center gap-3">
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="weekly-report-info"
-                data-tooltip-content="Comprehensive analysis of your weekly training performance including volume, progression, and insights."
-              >
-                Weekly Report
-              </h1>
-              <div
-                className={`${badgePatterns.beta} cursor-help`}
-                data-tooltip-id="beta-badge"
-                data-tooltip-content="Weekly reports v2 are in beta. You may experience pre-release behavior. We appreciate your feedback!"
-              >
-                Beta
-              </div>
-            </div>
-
-            {/* Compact Coach Card */}
-            {coachData && (
-              <CompactCoachCard
-                coachData={coachData}
-                isOnline={true}
-                onClick={handleCoachCardClick}
-                tooltipContent="Go to the Training Grounds"
-              />
-            )}
-          </div>
-
-          {/* Right section: Command Palette Button */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Weekly Report"
+          titleTooltipId="weekly-report-info"
+          titleTooltipContent="Comprehensive analysis of your weekly training performance including volume, progression, and insights."
+          beta
+          betaTooltipId="beta-badge"
+          betaTooltipContent="Weekly reports v2 are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+          coachData={coachData}
+          onCoachClick={handleCoachCardClick}
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Quick Stats */}
         {report && <QuickStats stats={getQuickStatsData()} />}

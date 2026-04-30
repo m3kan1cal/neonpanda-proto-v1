@@ -12,15 +12,14 @@ import {
   containerPatterns,
   typographyPatterns,
   tooltipPatterns,
-  badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../../auth/contexts/AuthContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { BarChartIcon } from "../themes/SynthwaveComponents";
 import { CenteredErrorState } from "../shared/ErrorStates";
-import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
+import PageHeader from "../shared/PageHeader";
 import AppFooter from "../shared/AppFooter";
 import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import EntityChatFAB from "../shared/EntityChatFAB";
@@ -285,42 +284,22 @@ export default function Analytics() {
         {/* ---------------------------------------------------------------- */}
         {/* HEADER                                                           */}
         {/* ---------------------------------------------------------------- */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Analytics Header"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            <div className="flex items-center gap-3">
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="training-pulse-info"
-                data-tooltip-content="Track your training trends, exercise progression, and movement balance."
-              >
-                Training Pulse
-              </h1>
-              <div
-                className={`${badgePatterns.beta} cursor-help`}
-                data-tooltip-id="beta-badge"
-                data-tooltip-content="Training Pulse is in beta. You may experience pre-release behavior. We appreciate your feedback!"
-              >
-                Beta
-              </div>
-            </div>
-            {coachData && (
-              <CompactCoachCard
-                coachData={coachData}
-                isOnline={true}
-                onClick={handleCoachCardClick}
-                tooltipContent="Back to Training Grounds"
-              />
-            )}
-          </div>
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Training Pulse"
+          titleTooltipId="training-pulse-info"
+          titleTooltipContent="Track your training trends, exercise progression, and movement balance."
+          beta
+          betaTooltipId="beta-badge"
+          betaTooltipContent="Training Pulse is in beta. You may experience pre-release behavior. We appreciate your feedback!"
+          coachData={coachData}
+          onCoachClick={handleCoachCardClick}
+          coachTooltipContent="Back to Training Grounds"
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* ---------------------------------------------------------------- */}
         {/* ERROR STATE                                                      */}
