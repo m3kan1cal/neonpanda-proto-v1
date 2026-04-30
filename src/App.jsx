@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   useLocation,
+  useMatch,
   useNavigate,
 } from "react-router-dom";
 
@@ -127,12 +128,23 @@ function AppContent() {
 
   const hideMobileImmersiveChrome = isChatPage || isInlineCoachDrawerOpen;
 
-  const hideQuickFabOnEntityCoachMobile =
-    location.pathname === "/training-grounds" ||
-    location.pathname === "/training-grounds/workouts" ||
-    location.pathname === "/training-grounds/programs/workouts" ||
-    location.pathname.startsWith("/training-grounds/programs/dashboard") ||
-    /^\/training-grounds\/programs\/[^/]+\/day\/\d+$/.test(location.pathname);
+  const matchTrainingHome = useMatch("/training-grounds");
+  const matchTodayWorkout = useMatch("/training-grounds/workouts");
+  const matchProgramWorkouts = useMatch("/training-grounds/programs/workouts");
+  const matchProgramDashboard = useMatch(
+    "/training-grounds/programs/dashboard",
+  );
+  const matchProgramDayDetail = useMatch(
+    "/training-grounds/programs/:programId/day/:dayNumber",
+  );
+
+  const hideQuickFabOnEntityCoachMobile = Boolean(
+    matchTrainingHome ||
+      matchTodayWorkout ||
+      matchProgramWorkouts ||
+      matchProgramDashboard ||
+      matchProgramDayDetail,
+  );
 
   // Workout agent for command palette
   const workoutAgentRef = useRef(null);

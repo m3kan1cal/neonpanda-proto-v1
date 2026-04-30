@@ -711,7 +711,7 @@ export const layoutPatterns = {
 
   // Content wrappers
   contentWrapper:
-    "max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex-1 flex flex-col w-full",
+    "max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex-1 flex flex-col w-full",
 
   // Grid layouts
   cardGrid:
@@ -1131,7 +1131,7 @@ export const quickStatsPatterns = {
   // Negative margin pulls stats closer to header for tighter spacing.
   // Mobile: tighter gap and keep on a single line so we never wrap into two rows.
   container:
-    "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-6 -mt-4",
+    "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-4 sm:mb-5 md:mb-6 -mt-2 sm:-mt-3 md:-mt-4",
 
   // Individual stat item - icon + number grouping.
   // NOTE: The display class ("flex" vs "hidden sm:flex") is intentionally
@@ -1143,10 +1143,10 @@ export const quickStatsPatterns = {
 
   // Icon containers with color variants (matches existing neon colors)
   iconContainer: {
-    pink: "p-1 md:p-1.5 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200",
-    cyan: "p-1 md:p-1.5 rounded-full bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200",
+    pink: "p-0.5 sm:p-1 md:p-1.5 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200",
+    cyan: "p-0.5 sm:p-1 md:p-1.5 rounded-full bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200",
     purple:
-      "p-1 md:p-1.5 rounded-full bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 transition-all duration-200",
+      "p-0.5 sm:p-1 md:p-1.5 rounded-full bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 transition-all duration-200",
   },
 
   // Icon size (14px mobile / 16px desktop for visibility and hierarchy)
@@ -1154,12 +1154,12 @@ export const quickStatsPatterns = {
 
   // Value display - compact on mobile, large on desktop
   value:
-    "text-sm md:text-xl font-body font-semibold md:font-bold text-white group-hover:scale-105 transition-transform duration-200",
+    "text-xs sm:text-sm md:text-xl font-body font-semibold md:font-bold text-white group-hover:scale-105 transition-transform duration-200",
 
   // Skeleton loading states (matches optimized sizing: 16px icons, 6px padding, -16px margin)
   skeleton: {
     container:
-      "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-6 -mt-4",
+      "flex flex-nowrap md:flex-wrap items-center gap-1.5 sm:gap-2 md:gap-4 mb-4 sm:mb-5 md:mb-6 -mt-2 sm:-mt-3 md:-mt-4",
     // Display class ("flex" vs "hidden sm:flex") is composed by QuickStats.jsx
     // based on the stat's priority; see the note on `item` above.
     item: "items-center gap-1.5 md:gap-2",

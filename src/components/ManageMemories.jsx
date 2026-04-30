@@ -12,8 +12,8 @@ import {
   inputPatterns,
   typographyPatterns,
 } from "../utils/ui/uiPatterns";
-import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import PageHeader from "./shared/PageHeader";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import { isNewWorkout } from "../utils/dateUtils";
@@ -991,39 +991,18 @@ function ManageMemories() {
     <>
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header */}
-          <header
-            className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-            aria-label="Manage Memories Header"
-          >
-            {/* Left section: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-              {/* Page Title with Hover Tooltip */}
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="manage-memories-info"
-                data-tooltip-content="Review and manage your stored memories and preferences. Track important information your coaches remember about your goals and fitness journey."
-              >
-                Your Memories
-              </h1>
-
-              {/* Compact Coach Card */}
-              {coachData && (
-                <CompactCoachCard
-                  coachData={coachData}
-                  isOnline={true}
-                  onClick={handleCoachCardClick}
-                />
-              )}
-            </div>
-
-            {/* Right section: Command Palette Button */}
-            <div className="flex items-center gap-3">
+          <PageHeader
+            title="Your Memories"
+            titleTooltipId="manage-memories-info"
+            titleTooltipContent="Review and manage your stored memories and preferences. Track important information your coaches remember about your goals and fitness journey."
+            coachData={coachData}
+            onCoachClick={handleCoachCardClick}
+            rightSlot={
               <CommandPaletteButton
                 onClick={() => setIsCommandPaletteOpen(true)}
               />
-            </div>
-          </header>
+            }
+          />
 
           {/* Quick Stats */}
           <QuickStats
