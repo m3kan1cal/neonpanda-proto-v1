@@ -21,8 +21,8 @@ import {
   messagePatterns,
 } from "../../utils/ui/uiPatterns";
 import { Tooltip } from "react-tooltip";
-import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
+import PageHeader from "../shared/PageHeader";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import {
   CalendarIcon,
@@ -1083,50 +1083,23 @@ General thoughts: `;
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Workouts Header"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            <div className="flex items-center gap-3">
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="workouts-info"
-                data-tooltip-content={tooltipContent}
-              >
-                {pageTitle}
-              </h1>
-              <div
-                className={`${badgePatterns.beta} cursor-help`}
-                data-tooltip-id="beta-badge"
-                data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
-              >
-                Beta
-              </div>
-            </div>
-
-            {coachData && (
-              <CompactCoachCard
-                coachData={coachData}
-                isOnline={true}
-                onClick={() =>
-                  navigate(
-                    `/training-grounds?userId=${userId}&coachId=${coachId}`,
-                  )
-                }
-                tooltipContent="Go to the Training Grounds"
-              />
-            )}
-          </div>
-
-          {/* Command Palette Button - triggers global CommandPalette from App.jsx */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title={pageTitle}
+          titleTooltipId="workouts-info"
+          titleTooltipContent={tooltipContent}
+          beta
+          betaTooltipId="beta-badge"
+          betaTooltipContent="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+          coachData={coachData}
+          onCoachClick={() =>
+            navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`)
+          }
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Program Context */}
         <div className="mb-4">

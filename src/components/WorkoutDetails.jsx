@@ -9,10 +9,9 @@ import {
   containerPatterns,
   layoutPatterns,
   tooltipPatterns,
-  badgePatterns,
 } from "../utils/ui/uiPatterns";
-import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import PageHeader from "./shared/PageHeader";
 import QuickStats from "./shared/QuickStats";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
@@ -428,50 +427,30 @@ function WorkoutDetails() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Workout Details Header"
-        >
-          {/* Left section: Title + Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title */}
-            <h1
-              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-              data-tooltip-id="workout-details-info"
-              data-tooltip-content="View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics."
-            >
-              Workout Details
-            </h1>
-
-            {/* Compact Coach Card */}
-            {coachData && (
-              <CompactCoachCard
-                coachData={coachData}
-                isOnline={true}
-                onClick={handleCoachCardClick}
-                tooltipContent="Go to the Training Grounds"
+        <PageHeader
+          title="Workout Details"
+          titleTooltipId="workout-details-info"
+          titleTooltipContent="View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics."
+          coachData={coachData}
+          onCoachClick={handleCoachCardClick}
+          rightSlot={
+            <>
+              {workout && (
+                <IconButton
+                  onClick={() => setShowShareModal(true)}
+                  tooltip="Share workout"
+                  aria-label="Share workout"
+                  className="cursor-pointer"
+                >
+                  <ShareCardIcon />
+                </IconButton>
+              )}
+              <CommandPaletteButton
+                onClick={() => setIsCommandPaletteOpen(true)}
               />
-            )}
-          </div>
-
-          {/* Right section: Share + Command Palette */}
-          <div className="flex items-center gap-3">
-            {workout && (
-              <IconButton
-                onClick={() => setShowShareModal(true)}
-                tooltip="Share workout"
-                aria-label="Share workout"
-                className="cursor-pointer"
-              >
-                <ShareCardIcon />
-              </IconButton>
-            )}
-            <CommandPaletteButton
-              onClick={() => setIsCommandPaletteOpen(true)}
-            />
-          </div>
-        </header>
+            </>
+          }
+        />
 
         {/* Quick Stats */}
         {workoutMetrics && (

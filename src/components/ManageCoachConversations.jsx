@@ -19,8 +19,8 @@ import { LIST_PAGE_SIZE } from "../constants/pagination";
 import LoadMoreButton from "./shared/LoadMoreButton";
 import { notifyLoadMoreError } from "../utils/loadMoreErrors";
 import { CONVERSATION_MODES } from "../constants/conversationModes";
-import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import PageHeader from "./shared/PageHeader";
 import EmptyStateCard from "./shared/EmptyStateCard";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { createCoachConversation } from "../utils/apis/coachConversationApi";
@@ -1181,39 +1181,18 @@ function ManageCoachConversations() {
     <>
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header */}
-          <header
-            className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-            aria-label="Conversations Header"
-          >
-            {/* Left section: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-              {/* Page Title with Hover Tooltip */}
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="conversations-info"
-                data-tooltip-content="Review, organize, and manage all your conversations with your coach. Access detailed conversation history and track your coaching progress."
-              >
-                Your Conversations
-              </h1>
-
-              {/* Compact Coach Card */}
-              {conversationAgentState.coaches[0] && (
-                <CompactCoachCard
-                  coachData={conversationAgentState.coaches[0]}
-                  isOnline={true}
-                  onClick={handleCoachCardClick}
-                />
-              )}
-            </div>
-
-            {/* Right section: Command Palette Button */}
-            <div className="flex items-center gap-3">
+          <PageHeader
+            title="Your Conversations"
+            titleTooltipId="conversations-info"
+            titleTooltipContent="Review, organize, and manage all your conversations with your coach. Access detailed conversation history and track your coaching progress."
+            coachData={conversationAgentState.coaches[0]}
+            onCoachClick={handleCoachCardClick}
+            rightSlot={
               <CommandPaletteButton
                 onClick={() => setIsCommandPaletteOpen(true)}
               />
-            </div>
-          </header>
+            }
+          />
 
           {/* Quick Stats */}
           <QuickStats

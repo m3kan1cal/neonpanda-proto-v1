@@ -27,8 +27,8 @@ import { LIST_PAGE_SIZE } from "../constants/pagination";
 import LoadMoreButton from "./shared/LoadMoreButton";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
-import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import PageHeader from "./shared/PageHeader";
 import EmptyStateCard from "./shared/EmptyStateCard";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
@@ -1013,39 +1013,18 @@ function ManageWorkouts() {
     <>
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header */}
-          <header
-            className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-            aria-label="Workouts Header"
-          >
-            {/* Left section: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-              {/* Page Title with Hover Tooltip */}
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="workouts-info"
-                data-tooltip-content="Review, organize, and analyze your complete workout history. Track your fitness journey and monitor your progress over time."
-              >
-                Your Workouts
-              </h1>
-
-              {/* Compact Coach Card */}
-              {coachData && (
-                <CompactCoachCard
-                  coachData={coachData}
-                  isOnline={true}
-                  onClick={handleCoachCardClick}
-                />
-              )}
-            </div>
-
-            {/* Right section: Command Palette Button */}
-            <div className="flex items-center gap-3">
+          <PageHeader
+            title="Your Workouts"
+            titleTooltipId="workouts-info"
+            titleTooltipContent="Review, organize, and analyze your complete workout history. Track your fitness journey and monitor your progress over time."
+            coachData={coachData}
+            onCoachClick={handleCoachCardClick}
+            rightSlot={
               <CommandPaletteButton
                 onClick={() => setIsCommandPaletteOpen(true)}
               />
-            </div>
-          </header>
+            }
+          />
 
           {/* Quick Stats */}
           <QuickStats

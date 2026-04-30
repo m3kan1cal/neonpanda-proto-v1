@@ -11,7 +11,7 @@ import {
   iconButtonPatterns,
 } from "../utils/ui/uiPatterns";
 import { Tooltip } from "react-tooltip";
-import CompactCoachCard from "./shared/CompactCoachCard";
+import PageHeader from "./shared/PageHeader";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import EmptyStateCard from "./shared/EmptyStateCard";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -731,38 +731,19 @@ function Coaches() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Coaches Header"
-        >
-          {/* Left section: Title + Vesper Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Hover Tooltip */}
-            <h1
-              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-              data-tooltip-id="coaches-info"
-              data-tooltip-content="Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective over time."
-            >
-              Your Coaches
-            </h1>
-
-            {/* Compact Vesper Coach Card */}
-            <CompactCoachCard
-              coachData={vesperCoachData}
-              isOnline={true}
-              onClick={() => navigate(`/coaches?userId=${userId}`)}
-              tooltipContent="Go to Your Coaches"
-            />
-          </div>
-
-          {/* Right section: Command Palette Button */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Your Coaches"
+          titleTooltipId="coaches-info"
+          titleTooltipContent="Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective over time."
+          coachData={vesperCoachData}
+          onCoachClick={() => navigate(`/coaches?userId=${userId}`)}
+          coachTooltipContent="Go to Your Coaches"
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Error State */}
         {agentState.error && (
