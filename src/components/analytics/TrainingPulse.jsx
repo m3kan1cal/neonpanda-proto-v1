@@ -20,6 +20,7 @@ import { BarChartIcon } from "../themes/SynthwaveComponents";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import PageHeader from "../shared/PageHeader";
+import PageHeaderSkeleton from "../shared/PageHeaderSkeleton";
 import AppFooter from "../shared/AppFooter";
 import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import EntityChatFAB from "../shared/EntityChatFAB";
@@ -519,17 +520,7 @@ function AnalyticsSkeleton() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Header: h1 + beta badge + coach pill + command palette button */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-44 bg-synthwave-text-muted/20 animate-pulse" />
-              <div className="h-6 w-12 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/20 animate-pulse rounded-sm" />
-            </div>
-            <div className="h-8 w-32 bg-synthwave-text-muted/10 animate-pulse rounded-full" />
-          </div>
-          <div className="h-8 w-8 bg-synthwave-text-muted/10 animate-pulse rounded-xl" />
-        </div>
+        <PageHeaderSkeleton showBeta showCoach showRightSlot />
 
         {/* Performance Overview section header + time range selector */}
         <div className="flex items-center gap-3 mb-4">

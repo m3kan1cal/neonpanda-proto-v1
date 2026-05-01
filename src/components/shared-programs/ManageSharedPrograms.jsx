@@ -11,6 +11,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import PageHeader from "../shared/PageHeader";
+import PageHeaderSkeleton from "../shared/PageHeaderSkeleton";
 import CoachAgent from "../../utils/agents/CoachAgent";
 import QuickStats from "../shared/QuickStats";
 import AppFooter from "../shared/AppFooter";
@@ -592,11 +593,7 @@ function ManageSharedPrograms() {
     return (
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Header skeleton */}
-          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-            <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-80"></div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-          </header>
+          <PageHeaderSkeleton showCoach showRightSlot />
 
           {/* Quick Stats skeleton */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
