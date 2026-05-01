@@ -709,6 +709,10 @@ export class ProgramAgent {
       // mark the program as completed, the template fetch will fail.  Don't let
       // that failure propagate — the skip itself succeeded and the UI will handle
       // navigation to the program dashboard on completion.
+      // Silent so the reload doesn't push fresh server state into todaysWorkout
+      // before ViewWorkouts' optimistic updater runs — that race made
+      // setWorkoutData((prevData) => ...) see next-day templates after the
+      // backend rolled over, breaking the "all complete" celebration + redirect.
       const reloadOptions = {};
       if (options.today) {
         reloadOptions.today = true;
@@ -717,7 +721,9 @@ export class ProgramAgent {
       }
 
       try {
-        await this.loadWorkoutTemplates(programId, reloadOptions);
+        await this.loadWorkoutTemplates(programId, reloadOptions, {
+          silent: true,
+        });
       } catch (reloadError) {
         logger.info(
           "ProgramAgent.skipWorkoutTemplate: Template reload after skip failed (program may be completed):",
@@ -785,7 +791,9 @@ export class ProgramAgent {
         isUpdating: false,
       });
 
-      // Reload workout templates to reflect the unskip
+      // Reload workout templates to reflect the unskip. Silent so the
+      // agent doesn't push reloaded server state into the component before
+      // the component's optimistic updater runs (matches skipWorkoutTemplate).
       const reloadOptions = {};
       if (options.today) {
         reloadOptions.today = true;
@@ -793,7 +801,9 @@ export class ProgramAgent {
         reloadOptions.day = options.day;
       }
 
-      await this.loadWorkoutTemplates(programId, reloadOptions);
+      await this.loadWorkoutTemplates(programId, reloadOptions, {
+        silent: true,
+      });
 
       return response;
     } catch (error) {
