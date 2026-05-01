@@ -481,6 +481,16 @@ export class ProgramAgent {
         workoutData,
       );
 
+      // Optimistically mark this template completed in agent state so it
+      // mirrors the component's optimistic update. Without this, a later
+      // _patchTemplate from polling for a different template would rebuild
+      // todaysWorkout from a stale baseline and revert sibling optimistic
+      // statuses (e.g. a skipped sibling) when pushed via onStateChange.
+      this._patchTemplate(templateId, {
+        status: "completed",
+        completedAt: new Date().toISOString(),
+      });
+
       this._updateState({
         isLoggingWorkout: false,
       });
@@ -614,20 +624,21 @@ export class ProgramAgent {
   }
 
   /**
-   * Merge a fresh template from the API into the current todaysWorkout
-   * state. Used by polling so we don't overwrite the whole slot with a
-   * possibly-stale day's data when the user has navigated away. No-op
-   * if the template isn't in the current state (the user has moved to a
-   * different day; they'll pick up the updated state next time
-   * loadWorkoutTemplates runs for that day).
+   * Merge a partial template patch into the current todaysWorkout state.
+   * Used by:
+   *   - log/skip/unskipWorkoutTemplate to optimistically mirror the user
+   *     action in agent state, so onStateChange pushes consistent data to
+   *     the component (no flicker / revert when a concurrent _patchTemplate
+   *     call from polling rebuilds todaysWorkout from this baseline).
+   *   - background polling (_startPollingForLinkedWorkout) once the
+   *     build-workout Lambda has completed, to merge in linkedWorkoutId,
+   *     server-canonical status, summary, and other fields written during
+   *     build. Polling passes the full fresh template so the merge picks
+   *     up everything the Lambda wrote.
    *
-   * The full fresh template is merged (not just linkedWorkoutId) because
-   * the agent's stored template still has the pre-log status="pending"
-   * — only the component's local workoutData carries the optimistic
-   * "completed" update. When this patch fires it forces the component
-   * to mirror agent state via onStateChange, so the merged template
-   * must already include the server-side status="completed" and any
-   * other fields the build-workout Lambda wrote (summary, etc.).
+   * No-op if the template isn't in the current state (e.g. the user
+   * navigated to a different day; they'll pick up the updated state next
+   * time loadWorkoutTemplates runs for that day).
    * @private
    */
   _patchTemplate(templateId, templatePatch) {
@@ -699,6 +710,17 @@ export class ProgramAgent {
           action: "skip",
         },
       );
+
+      // Optimistically mark this template skipped in agent state so it mirrors
+      // the component's optimistic update. Without this, a later _patchTemplate
+      // from polling for a different (previously logged) template would rebuild
+      // todaysWorkout from a stale baseline (this template still "pending") and
+      // revert the skip when pushed via onStateChange — reproducing the
+      // original no-celebration/no-redirect bug through a different path.
+      this._patchTemplate(templateId, {
+        status: "skipped",
+        completedAt: new Date().toISOString(),
+      });
 
       this._updateState({
         isUpdating: false,
@@ -786,6 +808,13 @@ export class ProgramAgent {
           action: "unskip",
         },
       );
+
+      // Optimistically revert this template to pending in agent state so it
+      // mirrors the component's optimistic update (matches skipWorkoutTemplate).
+      this._patchTemplate(templateId, {
+        status: "pending",
+        completedAt: null,
+      });
 
       this._updateState({
         isUpdating: false,
