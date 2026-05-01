@@ -534,30 +534,41 @@ General thoughts: `;
       clearImages();
 
       // Update local state to mark template as completed.
-      // Side effects (toast, celebration, navigate) live outside the updater
-      // because StrictMode double-invokes updater functions in dev — running
-      // them inside would fire two toasts and two scheduled navigates.
+      // The setWorkoutData call uses a functional updater so any concurrent
+      // _patchTemplate update from background polling (e.g. for a previously
+      // logged workout's linkedWorkoutId) is preserved instead of clobbered
+      // by a stale closure copy. Side effects (toast, celebration, navigate)
+      // live outside the updater because StrictMode double-invokes updater
+      // functions in dev — running them inside would fire two toasts and
+      // two scheduled navigates.
       if (workoutData?.templates) {
-        const updatedTemplates = workoutData.templates.map((t) =>
-          t.templateId === template.templateId
-            ? {
-                ...t,
-                status: "completed",
-                completedAt: new Date().toISOString(),
-              }
-            : t,
+        const allComplete = workoutData.templates.every(
+          (t) =>
+            t.templateId === template.templateId ||
+            t.status === "completed" ||
+            t.status === "skipped",
         );
 
-        const allComplete = updatedTemplates.every(
-          (t) => t.status === "completed" || t.status === "skipped",
-        );
-
-        setWorkoutData({ ...workoutData, templates: updatedTemplates });
+        setWorkoutData((prevData) => {
+          if (!prevData?.templates) return prevData;
+          return {
+            ...prevData,
+            templates: prevData.templates.map((t) =>
+              t.templateId === template.templateId
+                ? {
+                    ...t,
+                    status: "completed",
+                    completedAt: new Date().toISOString(),
+                  }
+                : t,
+            ),
+          };
+        });
 
         if (allComplete) {
           setShowCelebration(true);
           showSuccess(
-            `🎉 Day ${workoutData.dayNumber} Complete! All ${updatedTemplates.length} workout${updatedTemplates.length > 1 ? "s" : ""} crushed!`,
+            `🎉 Day ${workoutData.dayNumber} Complete! All ${workoutData.templates.length} workout${workoutData.templates.length > 1 ? "s" : ""} crushed!`,
           );
 
           // Auto-hide celebration after animation (3 seconds)
@@ -628,26 +639,41 @@ General thoughts: `;
       clearDraft(template.templateId);
 
       // Update local state to mark template as skipped.
-      // Side effects (toast, celebration, navigate) live outside the updater
-      // because StrictMode double-invokes updater functions in dev — running
-      // them inside would fire two toasts and two scheduled navigates.
+      // The setWorkoutData call uses a functional updater so any concurrent
+      // _patchTemplate update from background polling (e.g. for a previously
+      // logged workout's linkedWorkoutId) is preserved instead of clobbered
+      // by a stale closure copy. Side effects (toast, celebration, navigate)
+      // live outside the updater because StrictMode double-invokes updater
+      // functions in dev — running them inside would fire two toasts and
+      // two scheduled navigates.
       if (workoutData?.templates) {
-        const updatedTemplates = workoutData.templates.map((t) =>
-          t.templateId === template.templateId
-            ? { ...t, status: "skipped", completedAt: new Date().toISOString() }
-            : t,
+        const allComplete = workoutData.templates.every(
+          (t) =>
+            t.templateId === template.templateId ||
+            t.status === "completed" ||
+            t.status === "skipped",
         );
 
-        const allComplete = updatedTemplates.every(
-          (t) => t.status === "completed" || t.status === "skipped",
-        );
-
-        setWorkoutData({ ...workoutData, templates: updatedTemplates });
+        setWorkoutData((prevData) => {
+          if (!prevData?.templates) return prevData;
+          return {
+            ...prevData,
+            templates: prevData.templates.map((t) =>
+              t.templateId === template.templateId
+                ? {
+                    ...t,
+                    status: "skipped",
+                    completedAt: new Date().toISOString(),
+                  }
+                : t,
+            ),
+          };
+        });
 
         if (allComplete) {
           setShowCelebration(true);
           showSuccess(
-            `🎉 Day ${workoutData.dayNumber} Complete! All ${updatedTemplates.length} workout${updatedTemplates.length > 1 ? "s" : ""} accounted for!`,
+            `🎉 Day ${workoutData.dayNumber} Complete! All ${workoutData.templates.length} workout${workoutData.templates.length > 1 ? "s" : ""} accounted for!`,
           );
 
           // Auto-hide celebration after animation (3 seconds)
