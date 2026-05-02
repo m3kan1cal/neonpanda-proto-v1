@@ -830,9 +830,16 @@ export class ProgramAgent {
         reloadOptions.day = options.day;
       }
 
-      await this.loadWorkoutTemplates(programId, reloadOptions, {
-        silent: true,
-      });
+      try {
+        await this.loadWorkoutTemplates(programId, reloadOptions, {
+          silent: true,
+        });
+      } catch (reloadError) {
+        logger.info(
+          "ProgramAgent.unskipWorkoutTemplate: Template reload after unskip failed (program may be completed):",
+          reloadError.message,
+        );
+      }
 
       return response;
     } catch (error) {
