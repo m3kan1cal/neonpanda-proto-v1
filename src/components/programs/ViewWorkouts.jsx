@@ -496,8 +496,8 @@ General thoughts: `;
       // Collect any uploaded photo S3 keys
       const imageS3Keys = await uploadImages();
 
-      // Prepare workout data for logging
-      const workoutData = {
+      // Prepare workout payload for logging
+      const workoutPayload = {
         userPerformance: editedPerformance,
         ...(imageS3Keys.length > 0 && { imageS3Keys }),
       };
@@ -514,7 +514,7 @@ General thoughts: `;
       await programAgentRef.current.logWorkoutFromTemplate(
         programId,
         template.templateId,
-        workoutData,
+        workoutPayload,
         options,
       );
 
@@ -533,30 +533,42 @@ General thoughts: `;
       setEditedPerformance("");
       clearImages();
 
-      // Update local state to mark template as completed
-      setWorkoutData((prevData) => {
-        if (!prevData || !prevData.templates) return prevData;
-
-        const updatedTemplates = prevData.templates.map((t) =>
-          t.templateId === template.templateId
-            ? {
-                ...t,
-                status: "completed",
-                completedAt: new Date().toISOString(),
-              }
-            : t,
+      // Update local state to mark template as completed.
+      // The setWorkoutData call uses a functional updater so any concurrent
+      // _patchTemplate update from background polling (e.g. for a previously
+      // logged workout's linkedWorkoutId) is preserved instead of clobbered
+      // by a stale closure copy. Side effects (toast, celebration, navigate)
+      // live outside the updater because StrictMode double-invokes updater
+      // functions in dev — running them inside would fire two toasts and
+      // two scheduled navigates.
+      if (workoutData?.templates) {
+        const allComplete = workoutData.templates.every(
+          (t) =>
+            t.templateId === template.templateId ||
+            t.status === "completed" ||
+            t.status === "skipped",
         );
 
-        // Check if ALL workouts for the day are now complete
-        const allComplete = updatedTemplates.every(
-          (t) => t.status === "completed" || t.status === "skipped",
-        );
+        setWorkoutData((prevData) => {
+          if (!prevData?.templates) return prevData;
+          return {
+            ...prevData,
+            templates: prevData.templates.map((t) =>
+              t.templateId === template.templateId
+                ? {
+                    ...t,
+                    status: "completed",
+                    completedAt: new Date().toISOString(),
+                  }
+                : t,
+            ),
+          };
+        });
 
-        // Trigger celebration if this was the last workout
         if (allComplete) {
           setShowCelebration(true);
           showSuccess(
-            `🎉 Day ${prevData.dayNumber} Complete! All ${updatedTemplates.length} workout${updatedTemplates.length > 1 ? "s" : ""} crushed!`,
+            `🎉 Day ${workoutData.dayNumber} Complete! All ${workoutData.templates.length} workout${workoutData.templates.length > 1 ? "s" : ""} crushed!`,
           );
 
           // Auto-hide celebration after animation (3 seconds)
@@ -575,12 +587,7 @@ General thoughts: `;
             }, 3500);
           }
         }
-
-        return {
-          ...prevData,
-          templates: updatedTemplates,
-        };
-      });
+      }
     } catch (err) {
       logger.error("Error logging workout:", err);
 
@@ -631,26 +638,42 @@ General thoughts: `;
       // Clear any draft for this workout since it's been skipped
       clearDraft(template.templateId);
 
-      // Update local state to mark template as skipped
-      setWorkoutData((prevData) => {
-        if (!prevData || !prevData.templates) return prevData;
-
-        const updatedTemplates = prevData.templates.map((t) =>
-          t.templateId === template.templateId
-            ? { ...t, status: "skipped", completedAt: new Date().toISOString() }
-            : t,
+      // Update local state to mark template as skipped.
+      // The setWorkoutData call uses a functional updater so any concurrent
+      // _patchTemplate update from background polling (e.g. for a previously
+      // logged workout's linkedWorkoutId) is preserved instead of clobbered
+      // by a stale closure copy. Side effects (toast, celebration, navigate)
+      // live outside the updater because StrictMode double-invokes updater
+      // functions in dev — running them inside would fire two toasts and
+      // two scheduled navigates.
+      if (workoutData?.templates) {
+        const allComplete = workoutData.templates.every(
+          (t) =>
+            t.templateId === template.templateId ||
+            t.status === "completed" ||
+            t.status === "skipped",
         );
 
-        // Check if ALL workouts for the day are now complete/skipped
-        const allComplete = updatedTemplates.every(
-          (t) => t.status === "completed" || t.status === "skipped",
-        );
+        setWorkoutData((prevData) => {
+          if (!prevData?.templates) return prevData;
+          return {
+            ...prevData,
+            templates: prevData.templates.map((t) =>
+              t.templateId === template.templateId
+                ? {
+                    ...t,
+                    status: "skipped",
+                    completedAt: new Date().toISOString(),
+                  }
+                : t,
+            ),
+          };
+        });
 
-        // Trigger celebration if this was the last workout
         if (allComplete) {
           setShowCelebration(true);
           showSuccess(
-            `🎉 Day ${prevData.dayNumber} Complete! All ${updatedTemplates.length} workout${updatedTemplates.length > 1 ? "s" : ""} accounted for!`,
+            `🎉 Day ${workoutData.dayNumber} Complete! All ${workoutData.templates.length} workout${workoutData.templates.length > 1 ? "s" : ""} accounted for!`,
           );
 
           // Auto-hide celebration after animation (3 seconds)
@@ -669,12 +692,7 @@ General thoughts: `;
             }, 3500);
           }
         }
-
-        return {
-          ...prevData,
-          templates: updatedTemplates,
-        };
-      });
+      }
     } catch (err) {
       logger.error("Error skipping workout:", err);
 
