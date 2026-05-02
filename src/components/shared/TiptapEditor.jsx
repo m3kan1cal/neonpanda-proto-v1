@@ -511,20 +511,20 @@ const TiptapEditor = forwardRef(
 
           {createPortal(
             <>
-              {/* Backdrop */}
+              {/* Backdrop — tap to dismiss */}
               <div
-                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-fade-in"
+                className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-fade-in"
                 onClick={() => setIsFullscreen(false)}
               />
 
-              {/* Fullscreen editor container */}
-              <div
-                className="fixed inset-0 z-50 p-3 sm:p-4 md:p-6 flex flex-col animate-fade-in"
-                onClick={() => setIsFullscreen(false)}
-              >
+              {/* Fullscreen editor container — outer layer has pointer-events:
+                  none so taps in any padding gap pass through to the backdrop.
+                  The inner card re-enables pointer events. This avoids touch
+                  events on the outer container dismissing fullscreen
+                  mid-interaction. */}
+              <div className="fixed inset-0 z-[61] p-3 sm:p-4 md:p-6 flex flex-col animate-fade-in pointer-events-none">
                 <div
-                  className={`tiptap-fullscreen tiptap-editor-wrapper${isPink ? " tiptap-editor-pink" : ""} flex-1 flex flex-col w-full max-w-4xl mx-auto rounded-xl bg-synthwave-bg-card/95 backdrop-blur-xl border ${isPink ? "border-synthwave-neon-pink/20" : "border-synthwave-neon-cyan/20"} shadow-lg overflow-hidden text-synthwave-text-secondary`}
-                  onClick={(e) => e.stopPropagation()}
+                  className={`tiptap-fullscreen tiptap-editor-wrapper${isPink ? " tiptap-editor-pink" : ""} flex-1 flex flex-col w-full max-w-4xl mx-auto rounded-xl bg-synthwave-bg-card/95 backdrop-blur-xl border ${isPink ? "border-synthwave-neon-pink/20" : "border-synthwave-neon-cyan/20"} shadow-lg overflow-hidden text-synthwave-text-secondary pointer-events-auto`}
                 >
                   {toolbar}
                   <div className="tiptap-fullscreen-content px-4 py-4 flex-1 overflow-y-auto">

@@ -889,11 +889,11 @@ export const navigationPatterns = {
   moreMenu: {
     // Backdrop overlay - darkens background
     backdrop:
-      "fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden animate-fade-in",
+      "fixed inset-0 z-[57] bg-black/60 backdrop-blur-sm md:hidden animate-fade-in",
 
     // Menu container - slide-up bottom sheet
     container:
-      "fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] overflow-y-auto md:hidden rounded-t-xl bg-synthwave-bg-card/95 backdrop-blur-xl border-t-2 border-synthwave-neon-cyan/30 shadow-[0_-8px_32px_rgba(0,255,255,0.2)] animate-slide-up synthwave-scrollbar-cyan",
+      "fixed bottom-0 left-0 right-0 z-[58] max-h-[85vh] overflow-y-auto md:hidden rounded-t-xl bg-synthwave-bg-card/95 backdrop-blur-xl border-t-2 border-synthwave-neon-cyan/30 shadow-[0_-8px_32px_rgba(0,255,255,0.2)] animate-slide-up synthwave-scrollbar-cyan",
 
     // Handle bar - visual affordance for dragging
     handleBar: "w-12 h-1.5 bg-synthwave-text-muted/30 rounded-full",
@@ -1023,7 +1023,7 @@ export const navigationPatterns = {
     // Main FAB button - bottom-right floating button (Hero gradient + FAB structure from Theme.jsx)
     // Position: 64px bottom nav + 16px gap + safe area = calc(80px + env(safe-area-inset-bottom))
     // Using calc() with safe-area-inset-bottom keeps FAB stable when mobile browser chrome hides/shows
-    container: "fixed right-6 z-50 md:hidden",
+    container: "fixed right-6 z-[55] md:hidden",
     containerStyle: { bottom: "calc(80px + env(safe-area-inset-bottom))" }, // Inline style for calc() support
     button:
       "w-14 h-14 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full shadow-sm shadow-synthwave-neon-pink/30 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary cursor-pointer",
@@ -1049,7 +1049,7 @@ export const navigationPatterns = {
 
     // Backdrop when speed dial is open
     backdrop:
-      "fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden animate-fade-in",
+      "fixed inset-0 z-[54] bg-black/25 backdrop-blur-sm md:hidden animate-fade-in",
   },
 
   // Entity Chat FAB — floating panda-head chat button (Training Grounds, WorkoutDetails).
@@ -1059,7 +1059,7 @@ export const navigationPatterns = {
     // Mobile: 80px from viewport bottom + safe-area — matches QuickActionsFAB
     // positioning (right-6, 64px bottom nav + 16px gap) so the coach chat toggle
     // lands in the exact same bottom-right anchor across pages.
-    container: "fixed right-6 z-50 md:[--entity-fab-bottom:32px]",
+    container: "fixed right-6 z-[55] md:[--entity-fab-bottom:32px]",
     containerStyle: {
       bottom:
         "calc(var(--entity-fab-bottom, 80px) + env(safe-area-inset-bottom))",
@@ -1261,8 +1261,8 @@ export const scrollbarPatterns = {
 // Desktop (lg+): right-side slide-over, ~420px wide, overlays content with backdrop
 // Mobile (<lg): full-screen takeover, slides up from bottom
 export const contextualDrawerPatterns = {
-  // Backdrop overlay — desktop; z above mobile bottom nav (50) but below panel (70)
-  backdrop: "fixed inset-0 z-[60] bg-black/20 transition-opacity duration-300",
+  // Backdrop overlay — desktop; sits above TipTap fullscreen overlay (z-[61]) but below panel (z-[70])
+  backdrop: "fixed inset-0 z-[68] bg-black/20 transition-opacity duration-300",
 
   panelDesktop:
     "fixed top-0 right-0 h-full w-[420px] z-[70] flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",

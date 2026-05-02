@@ -71,24 +71,14 @@ const PageHeader = ({
             </h1>
 
             {beta && (
-              <>
-                <span
-                  className={`${badgePatterns.betaSmall} text-[10px] shrink-0 sm:hidden ${
-                    betaTooltipId ? "cursor-help" : ""
-                  }`}
-                  {...betaTooltipProps}
-                >
-                  Beta
-                </span>
-                <span
-                  className={`${badgePatterns.beta} hidden sm:inline-flex shrink-0 ${
-                    betaTooltipId ? "cursor-help" : ""
-                  }`}
-                  {...betaTooltipProps}
-                >
-                  Beta
-                </span>
-              </>
+              <span
+                className={`${badgePatterns.betaSmall} text-[10px] sm:text-xs shrink-0 ${
+                  betaTooltipId ? "cursor-help" : ""
+                }`}
+                {...betaTooltipProps}
+              >
+                Beta
+              </span>
             )}
           </div>
 

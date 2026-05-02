@@ -15,6 +15,7 @@ import {
 import { Tooltip } from "react-tooltip";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import PageHeader from "../shared/PageHeader";
+import PageHeaderSkeleton from "../shared/PageHeaderSkeleton";
 import AppFooter from "../shared/AppFooter";
 import TiptapEditor from "../shared/TiptapEditor";
 import { useNavigationContext } from "../../contexts/NavigationContext";
@@ -1332,23 +1333,7 @@ function ManagePrograms() {
     return (
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header Skeleton */}
-          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-            {/* Left: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-              {/* Title skeleton */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48"></div>
-
-              {/* Compact coach card skeleton - horizontal pill */}
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
-                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-20"></div>
-              </div>
-            </div>
-
-            {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-          </header>
+          <PageHeaderSkeleton showBeta showCoach showRightSlot />
 
           {/* Programs grid skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
