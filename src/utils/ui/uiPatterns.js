@@ -285,7 +285,7 @@ export const inputPatterns = {
 
   // Chat input editor area - no border (border lives on chatInputWrapper), no padding reservations for buttons
   chatInput:
-    "w-full px-4 pt-3 pb-2 text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
+    "w-full px-4 pt-3 pb-2 text-sm text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
 
   // Command palette input field - same styling but without right padding
   commandInput:

@@ -14,7 +14,7 @@ import {
   tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useAuth } from "../../auth/contexts/AuthContext";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { BarChartIcon } from "../themes/SynthwaveComponents";
 import { CenteredErrorState } from "../shared/ErrorStates";
@@ -56,11 +56,7 @@ export default function Analytics() {
   const coachId = searchParams.get("coachId");
   const { isValid: isAuthorized, isValidating: isAuthLoading } =
     useAuthorizeUser(userId);
-  const { user } = useAuth();
-  const userInitial =
-    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
-    user?.username?.charAt(0).toUpperCase() ||
-    "U";
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
     useNavigationContext();
@@ -489,6 +485,8 @@ export default function Analytics() {
             coachId={coachId}
             coachData={coachData}
             userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
             newConversationTitle={newChatThreadTitle}
             streamClientContext={streamClientContext}
           />

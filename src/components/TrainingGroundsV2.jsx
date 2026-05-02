@@ -9,6 +9,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../auth/contexts/AuthContext";
+import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
 import { useToast } from "../contexts/ToastContext";
 import {
   containerPatterns,
@@ -143,11 +144,8 @@ function TrainingGroundsV2() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { userProfile, user } = useAuth();
-  const userInitial =
-    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
-    user?.username?.charAt(0).toUpperCase() ||
-    "U";
+  const { userProfile } = useAuth();
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
   const { success: showSuccess, error: showError } = useToast();
 
   // Derive unit system from user profile preferences (default: imperial)
@@ -1724,6 +1722,8 @@ function TrainingGroundsV2() {
             coachId={coachId}
             coachData={coachData}
             userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
             newConversationTitle="Training Grounds"
             streamClientContext={streamClientContext}
           />

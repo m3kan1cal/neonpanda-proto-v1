@@ -39,6 +39,7 @@ import {
   badgePatterns,
 } from "../../utils/ui/uiPatterns";
 import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
+import UserAvatar from "./UserAvatar";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
 import {
   INLINE_TRAINING_GROUNDS_TAG,
@@ -265,6 +266,8 @@ export default function ContextualChatDrawer({
   coachData,
   onEntityUpdated,
   userInitial = "U",
+  userEmail,
+  userDisplayName,
   newConversationTitle,
   streamClientContext = null,
   inlineConversationTag,
@@ -963,6 +966,8 @@ export default function ContextualChatDrawer({
           coachData={coachData}
           coachInitial={coachInitial}
           userInitial={userInitial}
+          userEmail={userEmail}
+          userDisplayName={userDisplayName}
           onClose={onClose}
           requestClose={requestClose}
           mobileTrainingSheetChrome={false}
@@ -1001,6 +1006,8 @@ export default function ContextualChatDrawer({
           coachData={coachData}
           coachInitial={coachInitial}
           userInitial={userInitial}
+          userEmail={userEmail}
+          userDisplayName={userDisplayName}
           onClose={onClose}
           requestClose={requestClose}
           mobileTrainingSheetChrome={isTrainingInlineChat}
@@ -1141,6 +1148,8 @@ function PanelContent({
   coachData,
   coachInitial,
   userInitial,
+  userEmail,
+  userDisplayName,
   onClose,
   requestClose,
   mobileTrainingSheetChrome = false,
@@ -1394,6 +1403,8 @@ function PanelContent({
               message={message}
               coachInitial={coachInitial}
               userInitial={userInitial}
+              userEmail={userEmail}
+              userDisplayName={userDisplayName}
               userId={userId}
             />
           ))}
@@ -1506,7 +1517,14 @@ function formatDrawerTime(timestamp) {
 // ──────────────────────────────────────────────────────────────────────────────
 // Individual message bubble
 // ──────────────────────────────────────────────────────────────────────────────
-function MessageBubble({ message, coachInitial, userInitial, userId }) {
+function MessageBubble({
+  message,
+  coachInitial,
+  userInitial,
+  userEmail,
+  userDisplayName,
+  userId,
+}) {
   const isUser = message.type === "user" || message.role === "user";
   const content =
     message.content || message.displayContent || message.streamingContent || "";
@@ -1551,8 +1569,12 @@ function MessageBubble({ message, coachInitial, userInitial, userId }) {
               {formatDrawerTime(message.timestamp)}
             </span>
           )}
-          <div className={`${avatarPatterns.userXSmall} shrink-0`}>
-            {userInitial}
+          <div className="shrink-0">
+            <UserAvatar
+              email={userEmail}
+              username={userDisplayName || userInitial}
+              size={24}
+            />
           </div>
         </div>
       </div>
