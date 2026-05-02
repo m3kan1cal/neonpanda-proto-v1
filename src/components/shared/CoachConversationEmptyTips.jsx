@@ -18,19 +18,19 @@ export default function CoachConversationEmptyTips({ variant = "page" }) {
           <h3 className="font-header text-sm text-white uppercase tracking-wider">
             Ready to chat?
           </h3>
-          <p className="font-body text-xs text-synthwave-text-secondary leading-snug">
+          <p className="font-body text-sm text-synthwave-text-secondary leading-snug">
             A few ways to get started from here.
           </p>
         </div>
 
         <div className="flex flex-col gap-2 w-full">
           <div
-            className={`${containerPatterns.emptyStateTipCard} !py-2.5 !px-3`}
+            className={`${containerPatterns.emptyStateTipCard} !py-3 !px-3.5`}
           >
-            <h3 className="font-semibold text-sm text-white mb-1">
-              Show Me Your Work
-            </h3>
-            <p className="text-xs text-synthwave-text-secondary leading-snug">
+            <p className="text-sm text-synthwave-text-secondary leading-snug">
+              <span className="font-semibold text-white">
+                Show me your work.
+              </span>{" "}
               Hit the{" "}
               <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-0.5">
                 <CameraIcon />
@@ -40,38 +40,32 @@ export default function CoachConversationEmptyTips({ variant = "page" }) {
           </div>
 
           <div
-            className={`${containerPatterns.emptyStateTipCard} !py-2.5 !px-3`}
+            className={`${containerPatterns.emptyStateTipCard} !py-3 !px-3.5`}
           >
-            <h3 className="font-semibold text-sm text-white mb-1">
-              Ask Me Anything
-            </h3>
-            <p className="text-xs text-synthwave-text-secondary leading-snug">
+            <p className="text-sm text-synthwave-text-secondary leading-snug">
+              <span className="font-semibold text-white">Ask me anything.</span>{" "}
               Form checks, programming, recovery, or a pep talk—I&apos;m here
               for it.
             </p>
           </div>
 
           <div
-            className={`${containerPatterns.emptyStateTipCard} !py-2.5 !px-3`}
+            className={`${containerPatterns.emptyStateTipCard} !py-3 !px-3.5`}
           >
-            <h3 className="font-semibold text-sm text-white mb-1">
-              Log a result
-            </h3>
-            <p className="text-xs text-synthwave-text-secondary leading-snug mb-2">
+            <p className="text-sm text-synthwave-text-secondary leading-snug mb-2">
+              <span className="font-semibold text-white">Log a result.</span>{" "}
               Drop a quick result so we can celebrate and track your gains.
             </p>
-            <code className={`${typographyPatterns.inlineCode} !text-[10px]`}>
+            <code className={`${typographyPatterns.inlineCode} !text-xs`}>
               /log-workout Fran 8:57
             </code>
           </div>
 
           <div
-            className={`${containerPatterns.emptyStateTipCard} !py-2.5 !px-3`}
+            className={`${containerPatterns.emptyStateTipCard} !py-3 !px-3.5`}
           >
-            <h3 className="font-semibold text-sm text-white mb-1">
-              Just Talk to Me
-            </h3>
-            <p className="text-xs text-synthwave-text-secondary leading-snug">
+            <p className="text-sm text-synthwave-text-secondary leading-snug">
+              <span className="font-semibold text-white">Just talk to me.</span>{" "}
               Tell me what you want in plain language—I&apos;ll help you build
               from there.
             </p>
@@ -79,7 +73,7 @@ export default function CoachConversationEmptyTips({ variant = "page" }) {
         </div>
 
         <p
-          className={`${typographyPatterns.emptyStateProTip} !text-xs text-center px-1`}
+          className={`${typographyPatterns.emptyStateProTip} !text-sm text-center px-1`}
         >
           Pro tip: On the full chat page, hit{" "}
           <span className="text-synthwave-neon-cyan font-mono">/</span> to see

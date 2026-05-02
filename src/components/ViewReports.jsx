@@ -9,6 +9,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../auth/contexts/AuthContext";
+import { getUserDisplayName } from "../auth/utils/authHelpers";
 import { AccessDenied } from "./shared/AccessDenied";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import EntityChatFAB from "./shared/EntityChatFAB";
@@ -111,11 +112,17 @@ function ViewReports() {
   // Coach data state (for FloatingMenuManager)
   const [coachData, setCoachData] = useState(null);
 
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const userInitial =
     user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
     user?.username?.charAt(0).toUpperCase() ||
     "U";
+  const userEmail = user?.attributes?.email;
+  const userDisplayName =
+    userProfile?.displayName ||
+    (user?.attributes
+      ? getUserDisplayName({ attributes: user.attributes })
+      : "User");
 
   // Inline coach chat drawer state. One home thread per (userId, coachId);
   // active tab (weekly | monthly) is forwarded as runtime context so the
@@ -1270,6 +1277,8 @@ function ViewReports() {
             coachId={coachId}
             coachData={coachData}
             userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
             newConversationTitle={newChatThreadTitle}
             streamClientContext={streamClientContext}
           />

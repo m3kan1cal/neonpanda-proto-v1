@@ -11,6 +11,7 @@ import { CoachAgent } from "../../utils/agents/CoachAgent";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../../auth/contexts/AuthContext";
+import { getUserDisplayName } from "../../auth/utils/authHelpers";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import PageHeader from "../shared/PageHeader";
 import PageHeaderSkeleton from "../shared/PageHeaderSkeleton";
@@ -62,11 +63,17 @@ export default function ProgramDashboard() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const userInitial =
     user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
     user?.username?.charAt(0).toUpperCase() ||
     "U";
+  const userEmail = user?.attributes?.email;
+  const userDisplayName =
+    userProfile?.displayName ||
+    (user?.attributes
+      ? getUserDisplayName({ attributes: user.attributes })
+      : "User");
 
   const [program, setProgram] = useState(null);
   const [programDetails, setProgramDetails] = useState(null);
@@ -591,6 +598,8 @@ export default function ProgramDashboard() {
             coachId={coachId}
             coachData={coachData}
             userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
             newConversationTitle={newChatThreadTitle}
             streamClientContext={streamClientContext}
           />
