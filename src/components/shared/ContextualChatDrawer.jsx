@@ -162,12 +162,12 @@ function TrainingGroundsConversationPicker({
         }}
       >
         <div className="absolute left-2 top-1/2 -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
-          <span className="inline-flex w-3.5 h-3.5 items-center justify-center [&_svg]:!w-3.5 [&_svg]:!h-3.5">
+          <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
             <ChatIconSmall />
           </span>
         </div>
-        <div className="flex-1 min-w-0 pl-8 pr-9 py-2 min-h-9 flex items-center">
-          <span className="font-body text-sm md:text-xs text-white truncate w-full">
+        <div className="flex-1 min-w-0 pl-8 pr-9 py-2.5 min-h-10 flex items-center">
+          <span className="font-body text-sm text-white truncate w-full">
             {displayLabel}
           </span>
         </div>
@@ -196,7 +196,7 @@ function TrainingGroundsConversationPicker({
           className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-xl bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan"
         >
           {options.length === 0 ? (
-            <div className="px-3 py-3 text-center font-body text-xs text-synthwave-text-muted">
+            <div className="px-3 py-3 text-center font-body text-sm text-synthwave-text-muted">
               No conversations yet.
             </div>
           ) : (
@@ -217,7 +217,7 @@ function TrainingGroundsConversationPicker({
                     onSelect(c.conversationId);
                     setMenuOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-1.5 font-body text-sm md:text-xs transition-colors duration-150 cursor-pointer ${
+                  className={`w-full text-left px-3 py-2 font-body text-sm transition-colors duration-150 cursor-pointer ${
                     isSelected
                       ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink"
                       : "text-white hover:bg-synthwave-neon-cyan/10"
@@ -1253,14 +1253,14 @@ function PanelContent({
 
             {/* Section header icon */}
             <span className="shrink-0 text-synthwave-neon-pink">
-              <ChatIconSmall />
+              <ChatIconSmall className="w-4 h-4" />
             </span>
 
             {/* Entity label */}
             <div className="flex-1 min-w-0">
               <div
                 id={headingId}
-                className={`${contextualDrawerPatterns.headerLabel} text-sm`}
+                className={`${contextualDrawerPatterns.headerLabel} text-base`}
               >
                 {entityLabel ||
                   (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
