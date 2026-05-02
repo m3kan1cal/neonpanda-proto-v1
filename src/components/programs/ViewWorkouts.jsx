@@ -7,8 +7,7 @@ import React, {
 } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useAuth } from "../../auth/contexts/AuthContext";
-import { getUserDisplayName } from "../../auth/utils/authHelpers";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
 import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
@@ -87,17 +86,7 @@ function ViewWorkouts() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { success: showSuccess, error: showError } = useToast();
-  const { user, userProfile } = useAuth();
-  const userInitial =
-    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
-    user?.username?.charAt(0).toUpperCase() ||
-    "U";
-  const userEmail = user?.attributes?.email;
-  const userDisplayName =
-    userProfile?.displayName ||
-    (user?.attributes
-      ? getUserDisplayName({ attributes: user.attributes })
-      : "User");
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   // Get global CommandPalette + inline coach drawer state from NavigationContext
   const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =

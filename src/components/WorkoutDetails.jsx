@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../auth/contexts/AuthContext";
-import { getUserDisplayName } from "../auth/utils/authHelpers";
+import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
 import { AccessDenied } from "./shared/AccessDenied";
 import {
   buttonPatterns,
@@ -96,17 +96,8 @@ function WorkoutDetails() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { userProfile, user } = useAuth();
-  const userInitial =
-    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
-    user?.username?.charAt(0).toUpperCase() ||
-    "U";
-  const userEmail = user?.attributes?.email;
-  const userDisplayName =
-    userProfile?.displayName ||
-    (user?.attributes
-      ? getUserDisplayName({ attributes: user.attributes })
-      : "User");
+  const { userProfile } = useAuth();
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   // Derive unit system from user profile preferences (default: imperial)
   const unitSystem = userProfile?.preferences?.unitSystem || "imperial";

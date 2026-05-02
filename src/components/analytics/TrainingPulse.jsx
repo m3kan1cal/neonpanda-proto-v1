@@ -14,8 +14,7 @@ import {
   tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useAuth } from "../../auth/contexts/AuthContext";
-import { getUserDisplayName } from "../../auth/utils/authHelpers";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { BarChartIcon } from "../themes/SynthwaveComponents";
 import { CenteredErrorState } from "../shared/ErrorStates";
@@ -57,17 +56,7 @@ export default function Analytics() {
   const coachId = searchParams.get("coachId");
   const { isValid: isAuthorized, isValidating: isAuthLoading } =
     useAuthorizeUser(userId);
-  const { user, userProfile } = useAuth();
-  const userInitial =
-    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
-    user?.username?.charAt(0).toUpperCase() ||
-    "U";
-  const userEmail = user?.attributes?.email;
-  const userDisplayName =
-    userProfile?.displayName ||
-    (user?.attributes
-      ? getUserDisplayName({ attributes: user.attributes })
-      : "User");
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
     useNavigationContext();

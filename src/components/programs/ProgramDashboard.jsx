@@ -10,8 +10,7 @@ import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import { CoachAgent } from "../../utils/agents/CoachAgent";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useAuth } from "../../auth/contexts/AuthContext";
-import { getUserDisplayName } from "../../auth/utils/authHelpers";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import PageHeader from "../shared/PageHeader";
 import PageHeaderSkeleton from "../shared/PageHeaderSkeleton";
@@ -63,17 +62,7 @@ export default function ProgramDashboard() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { user, userProfile } = useAuth();
-  const userInitial =
-    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
-    user?.username?.charAt(0).toUpperCase() ||
-    "U";
-  const userEmail = user?.attributes?.email;
-  const userDisplayName =
-    userProfile?.displayName ||
-    (user?.attributes
-      ? getUserDisplayName({ attributes: user.attributes })
-      : "User");
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   const [program, setProgram] = useState(null);
   const [programDetails, setProgramDetails] = useState(null);
