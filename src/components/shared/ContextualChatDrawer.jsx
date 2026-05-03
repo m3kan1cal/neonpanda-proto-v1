@@ -753,15 +753,22 @@ export default function ContextualChatDrawer({
         logger.error("ContextualChatDrawer session agent error:", err);
       };
 
+      // Build the agent in a local until init succeeds. Only then commit it
+      // to `agentRef.current`. If a session create/load fails, agentRef stays
+      // whatever it was (typically null after the close-cleanup effect),
+      // which keeps `handleSend`'s `if (!agentRef.current) return` guard
+      // honest — without this the catch path would leave a half-initialized
+      // agent (no sessionId) wired up and every send would 4xx.
+      let agent = null;
+
       try {
         if (isCoachCreatorSession) {
-          const agent = new CoachCreatorAgent({
+          agent = new CoachCreatorAgent({
             userId,
             sessionId: existingSessionId || null,
             onStateChange: handleStateChange,
             onError: handleError,
           });
-          agentRef.current = agent;
 
           if (existingSessionId) {
             await agent.loadExistingSession(userId, existingSessionId);
@@ -770,14 +777,13 @@ export default function ContextualChatDrawer({
           }
         } else {
           // programDesignerSession
-          const agent = new ProgramDesignerAgent({
+          agent = new ProgramDesignerAgent({
             userId,
             coachId,
             sessionId: existingSessionId || null,
             onStateChange: handleStateChange,
             onError: handleError,
           });
-          agentRef.current = agent;
 
           // Always load coach details so the drawer header avatar/label match
           // the user's selected coach (mirrors the full ProgramDesigner page).
@@ -808,13 +814,17 @@ export default function ContextualChatDrawer({
               : "Failed to open program designer. Please try again.",
             "error",
           );
+          // Don't commit a partially-initialized agent — keep agentRef in
+          // whatever state it was so handleSend's guard keeps the input inert.
+          agent = null;
         }
         return;
       } finally {
         if (!cancelled) setIsInitializing(false);
       }
 
-      if (!cancelled) {
+      if (!cancelled && agent) {
+        agentRef.current = agent;
         loadedSessionIdRef.current = `${variant}:${sessionKey}`;
       }
     }

@@ -170,7 +170,6 @@ function Coaches() {
   const [retryingSessionId, setRetryingSessionId] = useState(null);
 
   // Local loading states for button feedback
-  const [isCreatingCustomCoach, setIsCreatingCustomCoach] = useState(false);
   const [creatingTemplateId, setCreatingTemplateId] = useState(null);
 
   // Actions menu state
@@ -773,65 +772,52 @@ function Coaches() {
         {/* Coaches Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr animate-fadeIn">
           {/* Add New Coach Card */}
+          {/* Add New Coach Card — opens the contextual chat drawer instantly,
+              so there's no in-flight loading state to show on the card. */}
           <div
-            onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
-            className={`${containerPatterns.dashedCard} p-6 group ${
-              isCreatingCustomCoach
-                ? "opacity-75 cursor-not-allowed"
-                : "cursor-pointer"
-            }`}
+            onClick={handleCreateCoach}
+            className={`${containerPatterns.dashedCard} p-6 group cursor-pointer`}
           >
             <div className="text-center h-full flex flex-col justify-between min-h-[200px] md:min-h-[400px]">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
-                {/* Plus Icon or Spinner */}
+                {/* Plus Icon */}
                 <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
-                  {isCreatingCustomCoach ? (
-                    <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <svg
-                      className="w-12 h-12"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                  )}
+                  <svg
+                    className="w-12 h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
                 </div>
 
                 {/* Title */}
                 <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
-                  {isCreatingCustomCoach
-                    ? "Creating Coach..."
-                    : "Create Custom Coach"}
+                  Create Custom Coach
                 </h3>
 
                 {/* Description */}
                 <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
-                  {isCreatingCustomCoach
-                    ? "Setting up your personalized coach"
-                    : "Design your perfect coach through our guided process"}
+                  Design your perfect coach through our guided process
                 </p>
 
                 {/* Time Estimate */}
-                {!isCreatingCustomCoach && (
-                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
-                    <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
-                      Takes 25-30 minutes
-                    </p>
-                  </div>
-                )}
+                <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
+                  <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
+                    Takes 25-30 minutes
+                  </p>
+                </div>
               </div>
 
-              {/* Bottom Features - Only show when not creating */}
-              {!isCreatingCustomCoach && (
-                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
+              {/* Bottom Features */}
+              <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
                   <div className="grid grid-cols-1 gap-2">
                     <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
                       <svg
@@ -889,7 +875,6 @@ function Coaches() {
                     </div>
                   </div>
                 </div>
-              )}
             </div>
           </div>
 
