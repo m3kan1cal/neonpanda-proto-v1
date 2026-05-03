@@ -419,8 +419,10 @@ export default function ContextualChatDrawer({
   }, [onClose]);
 
   const requestClose = useCallback(() => {
+    // Synthetic-history pop applies on every mobile open of any variant —
+    // the entry only exists when we pushed it, so the state check alone
+    // is enough to gate this path.
     if (
-      isTrainingInlineChat &&
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 1023px)").matches &&
       window.history.state?.npeInlineCoachChat
@@ -429,7 +431,7 @@ export default function ContextualChatDrawer({
     } else {
       onCloseRef.current();
     }
-  }, [isTrainingInlineChat]);
+  }, []);
 
   const editContext = useMemo(
     () =>
@@ -477,11 +479,13 @@ export default function ContextualChatDrawer({
     refreshTrainingPicker();
   }, [isOpen, userId, coachId, isTrainingInlineChat, refreshTrainingPicker]);
 
-  // Mobile Training Grounds: history entry so Android back closes the drawer first.
-  // Do not depend on `onClose` identity (use onCloseRef) or each parent re-render re-pushes state.
+  // Mobile drawer history entry so Android back closes the drawer first.
+  // Applies to every variant on mobile — drag-down and hardware-back gestures
+  // are universal UX, not training-specific. Do not depend on `onClose`
+  // identity (use onCloseRef) or each parent re-render re-pushes state.
   const mobileHistoryActiveRef = useRef(false);
   useEffect(() => {
-    if (!isOpen || !isTrainingInlineChat) return;
+    if (!isOpen) return;
     if (typeof window === "undefined") return;
     if (window.matchMedia("(min-width: 1024px)").matches) return;
 
@@ -503,7 +507,7 @@ export default function ContextualChatDrawer({
         window.history.back();
       }
     };
-  }, [isOpen, isTrainingInlineChat]);
+  }, [isOpen]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Agent lifecycle — workout edit variant
@@ -1362,7 +1366,7 @@ export default function ContextualChatDrawer({
           userDisplayName={userDisplayName}
           onClose={onClose}
           requestClose={requestClose}
-          mobileTrainingSheetChrome={isTrainingInlineChat}
+          mobileTrainingSheetChrome={true}
           mobileSheetRef={mobileSheetRef}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}

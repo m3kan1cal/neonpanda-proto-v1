@@ -74,6 +74,7 @@ import { OnboardingPrompt, UpgradePrompt } from "./subscription";
 import CoachDetailsModal from "./coaches/CoachDetailsModal";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
+import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
 
 // Vesper coach data - static coach for coach creator
 const vesperCoachData = {
@@ -134,6 +135,7 @@ function Coaches() {
   const navigate = useNavigate();
   const userId = searchParams.get("userId");
   const toast = useToast();
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   // Authorize that URL userId matches authenticated user
   const {
@@ -1757,6 +1759,9 @@ function Coaches() {
         onClose={handleCoachCreatorDrawerClose}
         variant="coachCreatorSession"
         userId={userId}
+        userInitial={userInitial}
+        userEmail={userEmail}
+        userDisplayName={userDisplayName}
         coachData={vesperCoachData}
         entityLabel="Coach Creator"
         existingSessionId={drawerSessionId}

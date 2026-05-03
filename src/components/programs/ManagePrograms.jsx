@@ -79,6 +79,7 @@ import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import { LIST_PAGE_SIZE } from "../../constants/pagination";
 import LoadMoreButton from "../shared/LoadMoreButton";
 import { notifyLoadMoreError } from "../../utils/loadMoreErrors";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
 
 // Helper function to check if a program is new (created within last 7 days)
 const isNewProgram = (createdDate, programId) => {
@@ -165,6 +166,7 @@ function ManagePrograms() {
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId"); // Add coachId from URL
   const toast = useToast();
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   // Authorize that URL userId matches authenticated user
   const {
@@ -2359,6 +2361,9 @@ function ManagePrograms() {
         onClose={handleProgramDesignerDrawerClose}
         variant="programDesignerSession"
         userId={userId}
+        userInitial={userInitial}
+        userEmail={userEmail}
+        userDisplayName={userDisplayName}
         coachId={programDesignerDrawerCoachId}
         coachData={coachData}
         entityLabel="Program Designer"
