@@ -354,6 +354,12 @@ export default function ContextualChatDrawer({
   const isProgramDesignerSession = variant === "programDesignerSession";
   const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
   const sessionCompleteFiredRef = useRef(false);
+  // Tracks whether the session was ALREADY complete when the drawer opened.
+  // We use this to suppress `onSessionComplete` for sessions that were
+  // resumed in a finished state — those completions happened before this
+  // drawer instance, so re-firing would cause the parent to refresh on
+  // every reopen of a stale-but-already-built session.
+  const sessionInitiallyCompleteRef = useRef(null);
 
   // For programDesignerSession the agent loads its own coach details, so use
   // that as the primary source for the header avatar/name when available;
@@ -794,6 +800,7 @@ export default function ContextualChatDrawer({
             await agent.loadSession(userId, existingSessionId);
           } else {
             const result = await createProgramDesignerSession(userId, coachId);
+            if (cancelled) return;
             const newSessionId = result.sessionId;
             agent.sessionId = newSessionId;
             // Load the freshly created session so the backend-generated
@@ -824,6 +831,13 @@ export default function ContextualChatDrawer({
       }
 
       if (!cancelled && agent) {
+        // Capture whether the session was already complete at load time so
+        // the fire effect can distinguish "completed during this open" (we
+        // want to fire onSessionComplete, e.g. parent should refresh its
+        // list) from "already complete on open" (don't re-fire — the parent
+        // would have already learned about completion through its own
+        // polling).
+        sessionInitiallyCompleteRef.current = !!agent.state?.isComplete;
         agentRef.current = agent;
         loadedSessionIdRef.current = `${variant}:${sessionKey}`;
       }
@@ -855,14 +869,22 @@ export default function ContextualChatDrawer({
     agentRef.current = null;
     loadedSessionIdRef.current = null;
     sessionCompleteFiredRef.current = false;
+    sessionInitiallyCompleteRef.current = null;
     setAgentState(null);
   }, [isOpen, isSessionVariant]);
 
-  // Fire onSessionComplete once when the agent reports completion. Parents use
-  // this to refresh their lists / in-progress cards.
+  // Fire onSessionComplete once when the agent reports completion *during*
+  // this drawer instance — i.e. only when the session transitions from
+  // not-complete-on-open to complete. Sessions that were already complete
+  // when the drawer opened (e.g. a stale in-progress card whose backend
+  // record finished building between list load and click) are skipped to
+  // avoid the parent re-fetching its list every time a completed session is
+  // reopened.
   useEffect(() => {
     if (!isSessionVariant) return;
     if (!agentState?.isComplete) return;
+    if (sessionInitiallyCompleteRef.current === null) return; // not initialized yet
+    if (sessionInitiallyCompleteRef.current === true) return; // resumed already-complete session
     if (sessionCompleteFiredRef.current) return;
     sessionCompleteFiredRef.current = true;
     if (typeof onSessionComplete === "function") {
