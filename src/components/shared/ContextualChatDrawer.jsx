@@ -1548,68 +1548,24 @@ function DrawerResizeHandle({
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mobile sheet drag handle — swipe down to close when the message list is at top.
-// Drag-to-follow: we mutate the sheet's transform directly on touchmove so the
-// panel tracks the finger; on touchend we snap back or dismiss at a 64px threshold.
+// Uses Pointer Events with setPointerCapture (mirrors DrawerResizeHandle) so the
+// gesture survives even if the finger drifts off the handle. Drag-to-follow:
+// we mutate the sheet's transform directly so the panel tracks the finger;
+// on release we snap back or dismiss at a 64px threshold.
 // ──────────────────────────────────────────────────────────────────────────────
 function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
-  const touchStartY = useRef(null);
+  const startY = useRef(null);
   const activeRef = useRef(false);
-  const handleRef = useRef(null);
   const [dragging, setDragging] = useState(false);
-
-  const resetSheet = () => {
-    const el = sheetRef?.current;
-    if (!el) return;
-    el.style.transform = "";
-    el.style.transition = "";
-  };
-
-  const onTouchStart = (e) => {
-    // Only start a pull when the list is basically at the top (small fudge).
-    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
-    if (scrollTop > 4) return;
-    touchStartY.current = e.touches[0].clientY;
-    activeRef.current = true;
-    setDragging(true);
-    const el = sheetRef?.current;
-    if (el) {
-      // Disable transition so the sheet tracks the finger 1:1.
-      el.style.transition = "none";
-    }
-  };
-
-  // Non-passive touchmove listener so we can preventDefault() once a vertical
-  // pull is detected — blocks iOS Safari URL-bar reveal and Android pull-to-refresh.
-  useEffect(() => {
-    const node = handleRef.current;
-    if (!node) return;
-
-    const handleTouchMove = (e) => {
-      if (!activeRef.current || touchStartY.current == null) return;
-      const delta = e.touches[0].clientY - touchStartY.current;
-      if (delta > 6) e.preventDefault();
-      const el = sheetRef?.current;
-      if (!el) return;
-      if (delta <= 0) {
-        el.style.transform = "";
-        return;
-      }
-      el.style.transform = `translateY(${delta}px)`;
-    };
-
-    node.addEventListener("touchmove", handleTouchMove, { passive: false });
-    return () => node.removeEventListener("touchmove", handleTouchMove);
-  }, [sheetRef]);
 
   const finishDrag = (delta) => {
     const el = sheetRef?.current;
     const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
     activeRef.current = false;
-    touchStartY.current = null;
+    startY.current = null;
     setDragging(false);
 
     if (delta > 64 && scrollTop <= 4) {
-      // Let the class-based translate-y-full animation finish the exit.
       if (el) {
         el.style.transform = "";
         el.style.transition = "";
@@ -1619,7 +1575,6 @@ function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
     }
 
     if (el) {
-      // Snap back with a short ease-out so the panel feels springy.
       el.style.transition = "transform 200ms ease-out";
       el.style.transform = "";
       const clear = () => {
@@ -1630,34 +1585,56 @@ function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
     }
   };
 
-  const onTouchEnd = (e) => {
-    if (!activeRef.current || touchStartY.current == null) {
-      resetSheet();
-      return;
+  const onPointerDown = (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
+    if (scrollTop > 4) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Capture can fail in rare browser states; the handler still works without it.
     }
-    const endY = e.changedTouches[0].clientY;
-    finishDrag(endY - touchStartY.current);
+    startY.current = e.clientY;
+    activeRef.current = true;
+    setDragging(true);
+    const el = sheetRef?.current;
+    if (el) el.style.transition = "none";
   };
 
-  const onTouchCancel = () => {
+  const onPointerMove = (e) => {
+    if (!activeRef.current || startY.current == null) return;
+    const delta = e.clientY - startY.current;
+    const el = sheetRef?.current;
+    if (!el) return;
+    el.style.transform = delta > 0 ? `translateY(${delta}px)` : "";
+  };
+
+  const onPointerUp = (e) => {
+    if (!activeRef.current || startY.current == null) return;
+    finishDrag(e.clientY - startY.current);
+  };
+
+  const onPointerCancel = () => {
     if (!activeRef.current) return;
     finishDrag(0);
   };
 
   return (
     <div
-      ref={handleRef}
       role="button"
       aria-label="Drag down to close"
       tabIndex={0}
-      className="relative flex justify-center pt-4 pb-4 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing before:absolute before:inset-x-0 before:-top-3 before:h-3 before:content-['']"
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-      onTouchCancel={onTouchCancel}
+      className="relative flex justify-center pt-2.5 pb-2 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing before:absolute before:inset-x-0 before:-top-4 before:h-6 before:content-[''] after:absolute after:inset-x-0 after:-bottom-3 after:h-3 after:content-['']"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       <div
-        className={`w-12 h-1.5 rounded-full transition-colors duration-150 ${
-          dragging ? "bg-synthwave-neon-cyan/70" : "bg-synthwave-text-muted/60"
+        className={`h-1.5 rounded-full transition-all duration-150 ${
+          dragging
+            ? "w-16 bg-synthwave-neon-cyan/80 shadow-[0_0_8px_rgba(34,211,238,0.55)]"
+            : "w-12 bg-synthwave-text-muted/70"
         }`}
         aria-hidden
       />
