@@ -73,9 +73,9 @@ import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import CoachAgent from "../../utils/agents/CoachAgent";
 import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
-import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
 import { getAllPrograms } from "../../utils/apis/programApi";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import { LIST_PAGE_SIZE } from "../../constants/pagination";
 import LoadMoreButton from "../shared/LoadMoreButton";
 import { notifyLoadMoreError } from "../../utils/loadMoreErrors";
@@ -238,6 +238,18 @@ function ManagePrograms() {
   const [showDeleteSessionModal, setShowDeleteSessionModal] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const previousBuildingSessionsRef = useRef(new Set()); // Track previous building sessions
+
+  // Contextual chat drawer state — hosts the program designer session inline.
+  // `programDesignerDrawerSessionId === null` means "start a new session";
+  // a non-null value resumes an existing in-progress session.
+  const [
+    isProgramDesignerDrawerOpen,
+    setIsProgramDesignerDrawerOpen,
+  ] = useState(false);
+  const [programDesignerDrawerSessionId, setProgramDesignerDrawerSessionId] =
+    useState(null);
+  const [programDesignerDrawerCoachId, setProgramDesignerDrawerCoachId] =
+    useState(null);
 
   // Auto-scroll to top when component mounts
   useEffect(() => {
@@ -947,11 +959,19 @@ function ManagePrograms() {
   };
 
   const handleContinueSession = (session) => {
-    // Navigate to program designer with existing session
-    // Use session.coachId instead of URL param to ensure correct coach
-    navigate(
-      `/training-grounds/program-designer?userId=${userId}&coachId=${session.coachId || coachId}&programDesignerSessionId=${session.sessionId}`,
-    );
+    // Resume the in-progress session inline via the contextual chat drawer.
+    // The `coachId` from the session itself (not URL params) is what owns the
+    // session, so the drawer must use it even when the URL carries a
+    // different coachId.
+    if (!session?.sessionId) return;
+    const sessionCoachId = session.coachId || coachId;
+    if (!sessionCoachId) {
+      toast.error("This session is missing a coach. Please try again.");
+      return;
+    }
+    setProgramDesignerDrawerSessionId(session.sessionId);
+    setProgramDesignerDrawerCoachId(sessionCoachId);
+    setIsProgramDesignerDrawerOpen(true);
   };
 
   // Handle view program
@@ -963,8 +983,11 @@ function ManagePrograms() {
     );
   };
 
-  // Handle create new program - create session then navigate
-  const handleCreateProgram = async () => {
+  // Handle create new program — open the contextual chat drawer with no
+  // session id. The drawer creates a fresh program designer session via
+  // ProgramDesignerAgent. Users without a coach are routed to /coaches first
+  // so they can pick one.
+  const handleCreateProgram = () => {
     if (!userId) {
       navigate(`/coaches?userId=${userId || ""}`);
       return;
@@ -976,20 +999,23 @@ function ManagePrograms() {
       return;
     }
 
-    setIsCreatingProgram(true);
-    try {
-      // Create a new program designer session (mirrors CoachCreator flow)
-      const result = await createProgramDesignerSession(userId, coachId);
-      const { sessionId } = result;
+    setProgramDesignerDrawerSessionId(null);
+    setProgramDesignerDrawerCoachId(coachId);
+    setIsProgramDesignerDrawerOpen(true);
+  };
 
-      // Navigate to program designer with the session ID
-      navigate(
-        `/training-grounds/program-designer?userId=${userId}&coachId=${coachId}&programDesignerSessionId=${sessionId}`,
-      );
-    } catch (error) {
-      logger.error("Error creating program designer session:", error);
-      toast.error("Failed to create program design session");
-      setIsCreatingProgram(false);
+  const handleProgramDesignerDrawerClose = () => {
+    setIsProgramDesignerDrawerOpen(false);
+    setProgramDesignerDrawerSessionId(null);
+    setProgramDesignerDrawerCoachId(null);
+  };
+
+  const handleProgramDesignerSessionComplete = () => {
+    // Refresh in-progress sessions strip and program buckets so the building
+    // program shows up immediately.
+    loadInProgressSessions();
+    if (typeof reloadCoachesAndProgramsRef.current === "function") {
+      reloadCoachesAndProgramsRef.current();
     }
   };
 
@@ -2338,6 +2364,22 @@ function ManagePrograms() {
         id="command-palette-button"
         {...tooltipPatterns.standard}
         place="bottom"
+      />
+
+      {/* Program Designer drawer — replaces the full-page program designer
+          flow for users who land here via "Design New Program" or an
+          in-progress session card. The dedicated /training-grounds/program-
+          designer route still works for deep links / refreshes. */}
+      <ContextualChatDrawer
+        isOpen={isProgramDesignerDrawerOpen}
+        onClose={handleProgramDesignerDrawerClose}
+        variant="programDesignerSession"
+        userId={userId}
+        coachId={programDesignerDrawerCoachId}
+        coachData={coachData}
+        entityLabel="Program Designer"
+        existingSessionId={programDesignerDrawerSessionId}
+        onSessionComplete={handleProgramDesignerSessionComplete}
       />
 
       {/* Custom animations */}

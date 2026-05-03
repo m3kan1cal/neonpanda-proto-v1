@@ -72,6 +72,7 @@ import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
 import { OnboardingPrompt, UpgradePrompt } from "./subscription";
 import CoachDetailsModal from "./coaches/CoachDetailsModal";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 
 // Vesper coach data - static coach for coach creator
@@ -181,6 +182,13 @@ function Coaches() {
 
   // Onboarding modal state
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Contextual chat drawer state — hosts the coach creator session inline.
+  // `drawerSessionId === null` means "start a new session"; a non-null value
+  // resumes an existing in-progress session.
+  const [isCoachCreatorDrawerOpen, setIsCoachCreatorDrawerOpen] =
+    useState(false);
+  const [drawerSessionId, setDrawerSessionId] = useState(null);
 
   // Upgrade prompts hook - tracks user activity for contextual upgrade prompts
   const {
@@ -463,17 +471,36 @@ function Coaches() {
     };
   }, [userId]);
 
-  const handleCreateCoach = async () => {
-    if (!agentRef.current) return;
+  const handleCreateCoach = () => {
+    if (!userId) return;
+    // Open the contextual chat drawer with no session id — the drawer creates
+    // a fresh coach creator session via CoachCreatorAgent. The session-id
+    // round-trip that the standalone /coach-creator page relies on is
+    // unnecessary here because the drawer manages session lifecycle itself.
+    setDrawerSessionId(null);
+    setIsCoachCreatorDrawerOpen(true);
+  };
 
-    setIsCreatingCustomCoach(true);
-    try {
-      await agentRef.current.createNewCoach(userId);
-    } catch (error) {
-      // Error handling is managed by the agent via onError callback
-    } finally {
-      setIsCreatingCustomCoach(false);
+  const handleResumeCoachSession = (sessionId) => {
+    if (!sessionId) return;
+    setDrawerSessionId(sessionId);
+    setIsCoachCreatorDrawerOpen(true);
+  };
+
+  const handleCoachCreatorDrawerClose = () => {
+    setIsCoachCreatorDrawerOpen(false);
+    setDrawerSessionId(null);
+  };
+
+  const handleCoachCreatorSessionComplete = () => {
+    // Refresh both the coach list and the in-progress sessions strip so the
+    // newly building coach + remaining in-progress sessions reflect reality.
+    if (agentRef.current) {
+      agentRef.current.refresh().catch((err) => {
+        logger.error("Error refreshing coaches after session complete:", err);
+      });
     }
+    loadInProgressSessions();
   };
 
   const handleRefresh = async () => {
@@ -1220,17 +1247,10 @@ function Coaches() {
                   <div
                     key={session.sessionId}
                     onClick={() => {
-                      // Only allow clicking for incomplete sessions
+                      // Only allow clicking for incomplete sessions; resumes
+                      // the session inline via the contextual chat drawer.
                       if (isIncomplete && !isBuilding && !isFailed) {
-                        const newSearchParams = new URLSearchParams();
-                        newSearchParams.set("userId", userId);
-                        newSearchParams.set(
-                          "coachCreatorSessionId",
-                          session.sessionId,
-                        );
-                        navigate(
-                          `/coach-creator?${newSearchParams.toString()}`,
-                        );
+                        handleResumeCoachSession(session.sessionId);
                       }
                     }}
                     className={cardClass}
@@ -1742,6 +1762,21 @@ function Coaches() {
           trigger={upgradeTrigger}
         />
       )}
+
+      {/* Coach Creator drawer — replaces the full-page coach creator flow for
+          users who land here via "Create Custom Coach" or an in-progress
+          session card. The dedicated /coach-creator route still works for
+          deep links / refreshes. */}
+      <ContextualChatDrawer
+        isOpen={isCoachCreatorDrawerOpen}
+        onClose={handleCoachCreatorDrawerClose}
+        variant="coachCreatorSession"
+        userId={userId}
+        coachData={vesperCoachData}
+        entityLabel="Coach Creator"
+        existingSessionId={drawerSessionId}
+        onSessionComplete={handleCoachCreatorSessionComplete}
+      />
 
       {/* Custom animations */}
       <style>{`

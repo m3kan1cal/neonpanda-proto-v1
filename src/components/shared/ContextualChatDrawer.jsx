@@ -20,6 +20,9 @@ import React, {
 } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
+import CoachCreatorAgent from "../../utils/agents/CoachCreatorAgent";
+import ProgramDesignerAgent from "../../utils/agents/ProgramDesignerAgent";
+import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
 import {
   getCoachConversation,
   getCoachConversations,
@@ -37,6 +40,8 @@ import {
   iconButtonPatterns,
   tooltipPatterns,
   badgePatterns,
+  buttonPatterns,
+  containerPatterns,
 } from "../../utils/ui/uiPatterns";
 import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import UserAvatar from "./UserAvatar";
@@ -111,7 +116,7 @@ const DEFAULT_INLINE_CONVERSATION_TAG = INLINE_TRAINING_GROUNDS_TAG;
 const defaultInlineSessionKey = (userId, coachId) =>
   getTrainingGroundsInlineSessionKey(userId, coachId);
 
-/** @typedef {"workoutEdit" | "trainingGroundsInlineChat"} ContextualChatDrawerVariant */
+/** @typedef {"workoutEdit" | "trainingGroundsInlineChat" | "coachCreatorSession" | "programDesignerSession"} ContextualChatDrawerVariant */
 
 function OpenFullPageIcon({ className = "w-4 h-4" }) {
   return (
@@ -296,6 +301,8 @@ function TrainingGroundsConversationPicker({
  *        | null} [streamClientContext] - Optional per-turn API context (telemetry / priming)
  * @param {string} [inlineConversationTag] - Metadata tag applied to the inline "home" conversation. Required for any inline surface other than Training Grounds; each surface MUST pass its own tag so conversations don't cross-wire between surfaces (e.g. TG vs. Program Dashboard). Defaults to the Training Grounds tag for back-compat.
  * @param {string} [inlineSessionKey] - sessionStorage key used to remember the most recently opened inline conversation. Must be unique per logical surface (and scope — e.g. per `programId` for the Program Dashboard) to prevent cross-surface hijacking of the stored conversationId. Defaults to the Training Grounds key for back-compat.
+ * @param {string} [existingSessionId] - For `coachCreatorSession` / `programDesignerSession` variants only. When provided, the drawer resumes that session instead of creating a new one. When absent, the drawer creates a fresh session on open.
+ * @param {Function} [onSessionComplete] - For `coachCreatorSession` / `programDesignerSession` variants only. Fired once when the underlying session completes (coach config / program build kicked off). Parents typically refresh their list and/or in-progress sessions in response.
  */
 export default function ContextualChatDrawer({
   isOpen,
@@ -315,6 +322,8 @@ export default function ContextualChatDrawer({
   streamClientContext = null,
   inlineConversationTag,
   inlineSessionKey,
+  existingSessionId,
+  onSessionComplete,
 }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -335,13 +344,25 @@ export default function ContextualChatDrawer({
   const closeTriggerRef = useRef(null);
   const lastEditMessageIdRef = useRef(null);
   const loadedEntityIdRef = useRef(null);
+  const loadedSessionIdRef = useRef(null);
 
   const [trainingPickerOptions, setTrainingPickerOptions] = useState([]);
   const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
 
-  const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
-
   const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+  const isCoachCreatorSession = variant === "coachCreatorSession";
+  const isProgramDesignerSession = variant === "programDesignerSession";
+  const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
+  const sessionCompleteFiredRef = useRef(false);
+
+  // For programDesignerSession the agent loads its own coach details, so use
+  // that as the primary source for the header avatar/name when available;
+  // fall back to the `coachData` prop otherwise.
+  const effectiveCoachName =
+    (isProgramDesignerSession && agentState?.coach?.name) ||
+    coachData?.name ||
+    null;
+  const coachInitial = effectiveCoachName?.[0]?.toUpperCase() || "C";
 
   // Effective inline tag + session key. Each inline surface (Training Grounds,
   // Program Dashboard, etc.) MUST pass its own scoped values — sharing these
@@ -691,6 +712,164 @@ export default function ContextualChatDrawer({
     showToast,
   ]);
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // Agent lifecycle — Coach Creator / Program Designer session variants.
+  // The drawer hosts the dedicated session agent (CoachCreatorAgent or
+  // ProgramDesignerAgent). When `existingSessionId` is provided we resume
+  // that session; otherwise we create a fresh one on open.
+  // ──────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isSessionVariant) return;
+    if (!isOpen || !userId) return;
+    if (isProgramDesignerSession && !coachId) return;
+
+    const sessionKey = existingSessionId || "__new__";
+
+    let cancelled = false;
+
+    if (
+      agentRef.current &&
+      loadedSessionIdRef.current === `${variant}:${sessionKey}`
+    ) {
+      agentRef.current.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      if (agentRef.current.state) {
+        setAgentState({ ...agentRef.current.state });
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    async function initSession() {
+      setIsInitializing(true);
+      sessionCompleteFiredRef.current = false;
+
+      const handleStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      const handleError = (err) => {
+        logger.error("ContextualChatDrawer session agent error:", err);
+      };
+
+      try {
+        if (isCoachCreatorSession) {
+          const agent = new CoachCreatorAgent({
+            userId,
+            sessionId: existingSessionId || null,
+            onStateChange: handleStateChange,
+            onError: handleError,
+          });
+          agentRef.current = agent;
+
+          if (existingSessionId) {
+            await agent.loadExistingSession(userId, existingSessionId);
+          } else {
+            await agent.createSession(userId);
+          }
+        } else {
+          // programDesignerSession
+          const agent = new ProgramDesignerAgent({
+            userId,
+            coachId,
+            sessionId: existingSessionId || null,
+            onStateChange: handleStateChange,
+            onError: handleError,
+          });
+          agentRef.current = agent;
+
+          // Always load coach details so the drawer header avatar/label match
+          // the user's selected coach (mirrors the full ProgramDesigner page).
+          await agent.loadCoachDetails(userId, coachId);
+          if (cancelled) return;
+
+          if (existingSessionId) {
+            await agent.loadSession(userId, existingSessionId);
+          } else {
+            const result = await createProgramDesignerSession(userId, coachId);
+            const newSessionId = result.sessionId;
+            agent.sessionId = newSessionId;
+            // Load the freshly created session so the backend-generated
+            // initial AI message is hydrated into the agent state. Mirrors
+            // what the standalone /program-designer page does.
+            await agent.loadSession(userId, newSessionId);
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          logger.error(
+            "ContextualChatDrawer: failed to initialize session:",
+            err,
+          );
+          showToast(
+            isCoachCreatorSession
+              ? "Failed to open coach creator. Please try again."
+              : "Failed to open program designer. Please try again.",
+            "error",
+          );
+        }
+        return;
+      } finally {
+        if (!cancelled) setIsInitializing(false);
+      }
+
+      if (!cancelled) {
+        loadedSessionIdRef.current = `${variant}:${sessionKey}`;
+      }
+    }
+
+    initSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isOpen,
+    userId,
+    coachId,
+    variant,
+    isSessionVariant,
+    isCoachCreatorSession,
+    isProgramDesignerSession,
+    existingSessionId,
+    showToast,
+  ]);
+
+  // Reset session-variant agent state when the drawer closes so the next open
+  // (e.g. clicking a different in-progress card, or "New" after a completion)
+  // starts from a clean slate.
+  useEffect(() => {
+    if (isOpen) return;
+    if (!isSessionVariant) return;
+    agentRef.current = null;
+    loadedSessionIdRef.current = null;
+    sessionCompleteFiredRef.current = false;
+    setAgentState(null);
+  }, [isOpen, isSessionVariant]);
+
+  // Fire onSessionComplete once when the agent reports completion. Parents use
+  // this to refresh their lists / in-progress cards.
+  useEffect(() => {
+    if (!isSessionVariant) return;
+    if (!agentState?.isComplete) return;
+    if (sessionCompleteFiredRef.current) return;
+    sessionCompleteFiredRef.current = true;
+    if (typeof onSessionComplete === "function") {
+      onSessionComplete({
+        userId,
+        sessionId: agentRef.current?.sessionId || null,
+        coachId: agentRef.current?.coachId || coachId || null,
+      });
+    }
+  }, [
+    isSessionVariant,
+    agentState?.isComplete,
+    onSessionComplete,
+    userId,
+    coachId,
+  ]);
+
   const handleTrainingPickerChange = useCallback(
     async (conversationId) => {
       const agent = agentRef.current;
@@ -910,18 +1089,23 @@ export default function ContextualChatDrawer({
       setInputMessage("");
 
       try {
-        await agentRef.current.sendMessageStream(
-          text,
-          imageS3Keys,
-          editContext,
-          documentS3Keys,
-          isTrainingInlineChat ? streamClientContext : null,
-        );
+        if (isSessionVariant) {
+          // CoachCreatorAgent and ProgramDesignerAgent take only (text, imageS3Keys).
+          await agentRef.current.sendMessageStream(text, imageS3Keys);
+        } else {
+          await agentRef.current.sendMessageStream(
+            text,
+            imageS3Keys,
+            editContext,
+            documentS3Keys,
+            isTrainingInlineChat ? streamClientContext : null,
+          );
+        }
       } catch (err) {
         logger.error("ContextualChatDrawer: sendMessageStream failed:", err);
       }
     },
-    [editContext, isTrainingInlineChat, streamClientContext],
+    [editContext, isTrainingInlineChat, streamClientContext, isSessionVariant],
   );
 
   const persistDrawerWidth = useCallback((w) => {
@@ -1008,9 +1192,13 @@ export default function ContextualChatDrawer({
     agentState?.conversation?.title,
   ]);
 
-  const dialogAriaLabel = isTrainingInlineChat
-    ? `Chat with ${entityLabel || "coach"}`
-    : `Edit ${entityLabel || entityType} with AI coach`;
+  const dialogAriaLabel = isCoachCreatorSession
+    ? "Create a new AI coach"
+    : isProgramDesignerSession
+      ? "Design a new training program"
+      : isTrainingInlineChat
+        ? `Chat with ${entityLabel || "coach"}`
+        : `Edit ${entityLabel || entityType} with AI coach`;
 
   // Drives the toggle button's icon (<<  vs  >>) and aria-label.
   const isDrawerExpanded =
@@ -1029,6 +1217,16 @@ export default function ContextualChatDrawer({
     userId,
     coachId,
     streamBusy,
+    isSessionComplete: isSessionVariant && !!agentState?.isComplete,
+    sessionProgress:
+      isSessionVariant && agentState?.progress ? agentState.progress : null,
+    // The completion-banner "Done" button just closes the drawer. The
+    // `onSessionComplete` callback already fired automatically when the agent
+    // reported completion (see effect above), so the parent has already
+    // refreshed; calling it again here would double-fetch.
+    onSessionDone: () => {
+      onClose();
+    },
   };
 
   return (
@@ -1450,12 +1648,18 @@ function PanelContent({
   onOpenFullPageChat,
   coachId,
   streamBusy = false,
+  isSessionComplete = false,
+  sessionProgress = null,
+  onSessionDone,
 }) {
   const trainingSelectId = useId();
   const tipNewChatId = useId();
   const tipOpenFullId = useId();
   const tipViewAllId = useId();
   const isTraining = variant === "trainingGroundsInlineChat";
+  const isCoachCreatorSession = variant === "coachCreatorSession";
+  const isProgramDesignerSession = variant === "programDesignerSession";
+  const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
   const exit = requestClose ?? onClose;
   const viewAllUrl =
     userId && coachId
@@ -1464,11 +1668,23 @@ function PanelContent({
 
   const inputPlaceholder = isTraining
     ? "Message your coach…"
-    : "Describe what you'd like to correct…";
-  const emptySessionMessage = "Starting edit session…";
+    : isCoachCreatorSession
+      ? "Tell me about your fitness goals…"
+      : isProgramDesignerSession
+        ? "What do you want to build?"
+        : "Describe what you'd like to correct…";
+  const emptySessionMessage = isCoachCreatorSession
+    ? "Starting your coach creation session…"
+    : isProgramDesignerSession
+      ? "Starting your program design session…"
+      : "Starting edit session…";
 
-  const showMessageList = !(isTraining && isInitializing);
-  const suppressTrainingOverlay = isTraining && isInitializing;
+  const showMessageList = !(
+    (isTraining || isSessionVariant) &&
+    isInitializing
+  );
+  const suppressTrainingOverlay =
+    (isTraining || isSessionVariant) && isInitializing;
 
   return (
     <>
@@ -1500,7 +1716,13 @@ function PanelContent({
                 className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
               >
                 {entityLabel ||
-                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+                  (isTraining
+                    ? "Training Grounds"
+                    : isCoachCreatorSession
+                      ? "New Coach"
+                      : isProgramDesignerSession
+                        ? "New Program"
+                        : `Editing ${entityType}`)}
               </div>
               <span className={`${badgePatterns.betaSmall} text-xs shrink-0`}>
                 Beta
@@ -1538,7 +1760,13 @@ function PanelContent({
                 className={`${contextualDrawerPatterns.headerLabel} text-base`}
               >
                 {entityLabel ||
-                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+                  (isTraining
+                    ? "Training Grounds"
+                    : isCoachCreatorSession
+                      ? "New Coach"
+                      : isProgramDesignerSession
+                        ? "New Program"
+                        : `Editing ${entityType}`)}
               </div>
             </div>
 
@@ -1552,7 +1780,13 @@ function PanelContent({
               type="button"
               className={contextualDrawerPatterns.closeButton}
               onClick={onClose}
-              aria-label={isTraining ? "Close chat" : "Close edit session"}
+              aria-label={
+                isTraining
+                  ? "Close chat"
+                  : isSessionVariant
+                    ? "Close session"
+                    : "Close edit session"
+              }
             >
               <CloseIcon />
             </button>
@@ -1644,12 +1878,13 @@ function PanelContent({
         aria-live="polite"
         aria-label="Conversation messages"
       >
-        {/* Skeleton: training whenever loading; workout edit on first load with no messages yet */}
-        {isInitializing && (isTraining || messages.length === 0) && (
-          <DrawerSkeleton />
-        )}
+        {/* Skeleton: training/session whenever loading; workout edit on first load with no messages yet */}
+        {isInitializing &&
+          (isTraining || isSessionVariant || messages.length === 0) && (
+            <DrawerSkeleton />
+          )}
 
-        {/* Empty state — workout edit */}
+        {/* Empty state — workout edit / session variants */}
         {!isTraining &&
           messages.length === 0 &&
           !isStreaming &&
@@ -1694,33 +1929,116 @@ function PanelContent({
         )}
       </div>
 
-      {/* Pinned input area */}
-      <div className={contextualDrawerPatterns.inputArea}>
-        <div className="contextual-drawer-input">
-          <ChatInput
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            onSubmit={handleSend}
-            isTyping={isStreaming}
-            placeholder={inputPlaceholder}
-            userId={userId}
-            coachName={coachData?.name || "Coach"}
-            context="coaching"
-            enableRecording={false}
-            enablePhotoAttachment={true}
-            enableFileAttachment={true}
-            enableQuickPrompts={false}
-            showTipsButton={false}
-            showDeleteButton={false}
-            enableSlashCommands={false}
-            textareaRef={inputFocusRef}
-            editorMinHeight="44px"
-            editorMaxHeight="120px"
-            compact={true}
-          />
+      {/* Pinned input area — replaced by completion banner for finished sessions */}
+      {isSessionVariant && isSessionComplete ? (
+        <SessionCompletionBanner
+          variant={variant}
+          onDone={onSessionDone}
+        />
+      ) : (
+        <div className={contextualDrawerPatterns.inputArea}>
+          <div className="contextual-drawer-input">
+            <ChatInput
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              onSubmit={handleSend}
+              isTyping={isStreaming}
+              placeholder={inputPlaceholder}
+              userId={userId}
+              coachName={coachData?.name || "Coach"}
+              context={
+                isCoachCreatorSession
+                  ? "creation"
+                  : isProgramDesignerSession
+                    ? "program-design"
+                    : "coaching"
+              }
+              enableRecording={false}
+              enablePhotoAttachment={!isSessionVariant}
+              enableFileAttachment={!isSessionVariant}
+              enableQuickPrompts={false}
+              showTipsButton={false}
+              showDeleteButton={false}
+              enableSlashCommands={false}
+              textareaRef={inputFocusRef}
+              editorMinHeight="44px"
+              editorMaxHeight="120px"
+              compact={true}
+              progressData={sessionProgress}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Completion banner shown inside the drawer when a coach creator / program
+// designer session finishes. Mirrors the inline banner on the standalone
+// CoachCreator / ProgramDesigner pages so the visual language stays consistent.
+// ──────────────────────────────────────────────────────────────────────────────
+function SessionCompletionBanner({ variant, onDone }) {
+  const isProgram = variant === "programDesignerSession";
+  const accentClass = isProgram
+    ? "border-synthwave-neon-purple bg-synthwave-neon-purple/10"
+    : "border-synthwave-neon-cyan bg-synthwave-neon-cyan/10";
+  const accentText = isProgram
+    ? "text-synthwave-neon-purple"
+    : "text-synthwave-neon-cyan";
+  const heading = isProgram
+    ? "Program Design Complete"
+    : "Session Complete";
+  const subheading = isProgram
+    ? "Your program is being built (2-3 minutes)."
+    : "Your coach is being built (2-3 minutes).";
+  const doneLabel = isProgram ? "View Programs" : "View Coaches";
+
+  return (
+    <div
+      className={`${contextualDrawerPatterns.inputArea} !p-3`}
+      role="status"
+    >
+      <div className={`${containerPatterns.coachNotesSection} w-full`}>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div
+              className={`w-9 h-9 rounded-full border-2 ${accentClass} flex items-center justify-center shrink-0`}
+            >
+              <svg
+                className={`w-4 h-4 ${accentText}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-header text-sm text-white uppercase tracking-wider">
+                {heading}
+              </h3>
+              <p className="font-body text-xs text-synthwave-text-secondary mt-0.5">
+                {subheading}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onDone}
+            className={`${buttonPatterns.secondarySmall} w-full sm:w-auto shrink-0`}
+          >
+            {doneLabel}
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
