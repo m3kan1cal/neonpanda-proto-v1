@@ -45,7 +45,7 @@ const PageHeaderSkeleton = ({
 
     {/* Right section */}
     {showRightSlot && (
-      <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+      <div className="hidden md:flex items-center gap-3 shrink-0 self-end sm:self-auto">
         <div
           className={`h-10 ${rightSlotWidth} bg-synthwave-text-muted/20 rounded-full animate-pulse`}
         />
