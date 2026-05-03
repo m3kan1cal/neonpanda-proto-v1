@@ -20,6 +20,9 @@ import React, {
 } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
+import CoachCreatorAgent from "../../utils/agents/CoachCreatorAgent";
+import ProgramDesignerAgent from "../../utils/agents/ProgramDesignerAgent";
+import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
 import {
   getCoachConversation,
   getCoachConversations,
@@ -37,8 +40,11 @@ import {
   iconButtonPatterns,
   tooltipPatterns,
   badgePatterns,
+  buttonPatterns,
+  containerPatterns,
 } from "../../utils/ui/uiPatterns";
 import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
+import UserAvatar from "./UserAvatar";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
 import {
   INLINE_TRAINING_GROUNDS_TAG,
@@ -58,6 +64,49 @@ import { logger } from "../../utils/logger";
 const INITIAL_PROMPT =
   "Please load my workout details so we can get started. I have some corrections to make.";
 
+// Desktop drawer width bounds (px). The panel is fixed to the right edge and
+// resizable from its left edge. Toggle button snaps between DEFAULT and EXPANDED.
+const DRAWER_MIN_WIDTH = 360;
+const DRAWER_DEFAULT_WIDTH = 420;
+const DRAWER_EXPANDED_WIDTH = 620;
+const DRAWER_ABS_MAX_WIDTH = 900;
+const DRAWER_WIDTH_STORAGE_KEY = "neonpanda-chat-drawer-width";
+const DRAWER_LEGACY_EXPANDED_KEY = "neonpanda-chat-drawer-expanded";
+
+const getDrawerMaxWidth = () => {
+  if (typeof window === "undefined") return DRAWER_ABS_MAX_WIDTH;
+  return Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH);
+};
+
+const clampDrawerWidth = (w) => {
+  const max = getDrawerMaxWidth();
+  if (typeof w !== "number" || Number.isNaN(w)) return DRAWER_DEFAULT_WIDTH;
+  return Math.max(DRAWER_MIN_WIDTH, Math.min(max, w));
+};
+
+const readInitialDrawerWidth = () => {
+  if (typeof window === "undefined") return DRAWER_DEFAULT_WIDTH;
+  try {
+    const stored = localStorage.getItem(DRAWER_WIDTH_STORAGE_KEY);
+    if (stored != null) {
+      const parsed = parseInt(stored, 10);
+      if (!Number.isNaN(parsed)) return clampDrawerWidth(parsed);
+    }
+    // One-time migration from the legacy boolean key
+    const legacy = localStorage.getItem(DRAWER_LEGACY_EXPANDED_KEY);
+    if (legacy != null) {
+      const migrated =
+        legacy === "true" ? DRAWER_EXPANDED_WIDTH : DRAWER_DEFAULT_WIDTH;
+      localStorage.setItem(DRAWER_WIDTH_STORAGE_KEY, String(migrated));
+      localStorage.removeItem(DRAWER_LEGACY_EXPANDED_KEY);
+      return clampDrawerWidth(migrated);
+    }
+  } catch {
+    // localStorage unavailable — fall through to default
+  }
+  return DRAWER_DEFAULT_WIDTH;
+};
+
 // Fallbacks used when a caller forgets to pass the inline tag/session key
 // props. Kept in sync with the Training Grounds constants so existing
 // wiring keeps working, but new inline surfaces (e.g. Program Dashboard)
@@ -67,7 +116,7 @@ const DEFAULT_INLINE_CONVERSATION_TAG = INLINE_TRAINING_GROUNDS_TAG;
 const defaultInlineSessionKey = (userId, coachId) =>
   getTrainingGroundsInlineSessionKey(userId, coachId);
 
-/** @typedef {"workoutEdit" | "trainingGroundsInlineChat"} ContextualChatDrawerVariant */
+/** @typedef {"workoutEdit" | "trainingGroundsInlineChat" | "coachCreatorSession" | "programDesignerSession"} ContextualChatDrawerVariant */
 
 function OpenFullPageIcon({ className = "w-4 h-4" }) {
   return (
@@ -161,12 +210,12 @@ function TrainingGroundsConversationPicker({
         }}
       >
         <div className="absolute left-2 top-1/2 -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
-          <span className="inline-flex w-3.5 h-3.5 items-center justify-center [&_svg]:!w-3.5 [&_svg]:!h-3.5">
+          <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
             <ChatIconSmall />
           </span>
         </div>
-        <div className="flex-1 min-w-0 pl-8 pr-9 py-2 min-h-9 flex items-center">
-          <span className="font-body text-sm md:text-xs text-white truncate w-full">
+        <div className="flex-1 min-w-0 pl-8 pr-9 py-2.5 min-h-10 flex items-center">
+          <span className="font-body text-sm text-white truncate w-full">
             {displayLabel}
           </span>
         </div>
@@ -195,7 +244,7 @@ function TrainingGroundsConversationPicker({
           className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-xl bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 shadow-lg backdrop-blur-sm synthwave-scrollbar-cyan"
         >
           {options.length === 0 ? (
-            <div className="px-3 py-3 text-center font-body text-xs text-synthwave-text-muted">
+            <div className="px-3 py-3 text-center font-body text-sm text-synthwave-text-muted">
               No conversations yet.
             </div>
           ) : (
@@ -216,7 +265,7 @@ function TrainingGroundsConversationPicker({
                     onSelect(c.conversationId);
                     setMenuOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-1.5 font-body text-sm md:text-xs transition-colors duration-150 cursor-pointer ${
+                  className={`w-full text-left px-3 py-2 font-body text-sm transition-colors duration-150 cursor-pointer ${
                     isSelected
                       ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink"
                       : "text-white hover:bg-synthwave-neon-cyan/10"
@@ -252,6 +301,8 @@ function TrainingGroundsConversationPicker({
  *        | null} [streamClientContext] - Optional per-turn API context (telemetry / priming)
  * @param {string} [inlineConversationTag] - Metadata tag applied to the inline "home" conversation. Required for any inline surface other than Training Grounds; each surface MUST pass its own tag so conversations don't cross-wire between surfaces (e.g. TG vs. Program Dashboard). Defaults to the Training Grounds tag for back-compat.
  * @param {string} [inlineSessionKey] - sessionStorage key used to remember the most recently opened inline conversation. Must be unique per logical surface (and scope — e.g. per `programId` for the Program Dashboard) to prevent cross-surface hijacking of the stored conversationId. Defaults to the Training Grounds key for back-compat.
+ * @param {string} [existingSessionId] - For `coachCreatorSession` / `programDesignerSession` variants only. When provided, the drawer resumes that session instead of creating a new one. When absent, the drawer creates a fresh session on open.
+ * @param {Function} [onSessionComplete] - For `coachCreatorSession` / `programDesignerSession` variants only. Fired once when the underlying session completes (coach config / program build kicked off). Parents typically refresh their list and/or in-progress sessions in response.
  */
 export default function ContextualChatDrawer({
   isOpen,
@@ -265,10 +316,14 @@ export default function ContextualChatDrawer({
   coachData,
   onEntityUpdated,
   userInitial = "U",
+  userEmail,
+  userDisplayName,
   newConversationTitle,
   streamClientContext = null,
   inlineConversationTag,
   inlineSessionKey,
+  existingSessionId,
+  onSessionComplete,
 }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -277,9 +332,8 @@ export default function ContextualChatDrawer({
   const [agentState, setAgentState] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(
-    () => localStorage.getItem("neonpanda-chat-drawer-expanded") === "true",
-  );
+  const [drawerWidth, setDrawerWidth] = useState(readInitialDrawerWidth);
+  const [isResizing, setIsResizing] = useState(false);
 
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
@@ -290,13 +344,45 @@ export default function ContextualChatDrawer({
   const closeTriggerRef = useRef(null);
   const lastEditMessageIdRef = useRef(null);
   const loadedEntityIdRef = useRef(null);
+  const loadedSessionIdRef = useRef(null);
 
   const [trainingPickerOptions, setTrainingPickerOptions] = useState([]);
   const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
 
-  const coachInitial = coachData?.name?.[0]?.toUpperCase() || "C";
-
   const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+  const isCoachCreatorSession = variant === "coachCreatorSession";
+  const isProgramDesignerSession = variant === "programDesignerSession";
+  const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
+  const sessionCompleteFiredRef = useRef(false);
+  // Tracks whether the session was ALREADY complete when the drawer opened.
+  // We use this to suppress `onSessionComplete` for sessions that were
+  // resumed in a finished state — those completions happened before this
+  // drawer instance, so re-firing would cause the parent to refresh on
+  // every reopen of a stale-but-already-built session.
+  const sessionInitiallyCompleteRef = useRef(null);
+
+  // For programDesignerSession the agent loads its own coach details, so use
+  // that as the primary source for the header avatar/name when available;
+  // fall back to the `coachData` prop otherwise.
+  const effectiveCoachName =
+    (isProgramDesignerSession && agentState?.coach?.name) ||
+    coachData?.name ||
+    null;
+  const coachInitial = effectiveCoachName?.[0]?.toUpperCase() || "C";
+  // Effective coachData passed through to PanelContent. When resuming a
+  // program-designer session for a different coach than the URL coach, the
+  // agent's loaded coach.name is the source of truth — using it here keeps
+  // ChatInput's `coachName` consistent with the header avatar/initial.
+  const effectiveCoachData = useMemo(() => {
+    if (
+      isProgramDesignerSession &&
+      agentState?.coach?.name &&
+      agentState.coach.name !== coachData?.name
+    ) {
+      return { ...(coachData || {}), name: agentState.coach.name };
+    }
+    return coachData;
+  }, [isProgramDesignerSession, agentState?.coach?.name, coachData]);
 
   // Effective inline tag + session key. Each inline surface (Training Grounds,
   // Program Dashboard, etc.) MUST pass its own scoped values — sharing these
@@ -333,8 +419,10 @@ export default function ContextualChatDrawer({
   }, [onClose]);
 
   const requestClose = useCallback(() => {
+    // Synthetic-history pop applies on every mobile open of any variant —
+    // the entry only exists when we pushed it, so the state check alone
+    // is enough to gate this path.
     if (
-      isTrainingInlineChat &&
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 1023px)").matches &&
       window.history.state?.npeInlineCoachChat
@@ -343,7 +431,7 @@ export default function ContextualChatDrawer({
     } else {
       onCloseRef.current();
     }
-  }, [isTrainingInlineChat]);
+  }, []);
 
   const editContext = useMemo(
     () =>
@@ -391,11 +479,13 @@ export default function ContextualChatDrawer({
     refreshTrainingPicker();
   }, [isOpen, userId, coachId, isTrainingInlineChat, refreshTrainingPicker]);
 
-  // Mobile Training Grounds: history entry so Android back closes the drawer first.
-  // Do not depend on `onClose` identity (use onCloseRef) or each parent re-render re-pushes state.
+  // Mobile drawer history entry so Android back closes the drawer first.
+  // Applies to every variant on mobile — drag-down and hardware-back gestures
+  // are universal UX, not training-specific. Do not depend on `onClose`
+  // identity (use onCloseRef) or each parent re-render re-pushes state.
   const mobileHistoryActiveRef = useRef(false);
   useEffect(() => {
-    if (!isOpen || !isTrainingInlineChat) return;
+    if (!isOpen) return;
     if (typeof window === "undefined") return;
     if (window.matchMedia("(min-width: 1024px)").matches) return;
 
@@ -417,7 +507,7 @@ export default function ContextualChatDrawer({
         window.history.back();
       }
     };
-  }, [isOpen, isTrainingInlineChat]);
+  }, [isOpen]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Agent lifecycle — workout edit variant
@@ -646,6 +736,194 @@ export default function ContextualChatDrawer({
     showToast,
   ]);
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // Agent lifecycle — Coach Creator / Program Designer session variants.
+  // The drawer hosts the dedicated session agent (CoachCreatorAgent or
+  // ProgramDesignerAgent). When `existingSessionId` is provided we resume
+  // that session; otherwise we create a fresh one on open.
+  // ──────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isSessionVariant) return;
+    if (!isOpen || !userId) return;
+    if (isProgramDesignerSession && !coachId) return;
+
+    const sessionKey = existingSessionId || "__new__";
+
+    let cancelled = false;
+
+    if (
+      agentRef.current &&
+      loadedSessionIdRef.current === `${variant}:${sessionKey}`
+    ) {
+      agentRef.current.onStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      if (agentRef.current.state) {
+        setAgentState({ ...agentRef.current.state });
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    async function initSession() {
+      setIsInitializing(true);
+      sessionCompleteFiredRef.current = false;
+
+      const handleStateChange = (state) => {
+        if (!cancelled) setAgentState({ ...state });
+      };
+      const handleError = (err) => {
+        logger.error("ContextualChatDrawer session agent error:", err);
+      };
+
+      // Build the agent in a local until init succeeds. Only then commit it
+      // to `agentRef.current`. If a session create/load fails, agentRef stays
+      // whatever it was (typically null after the close-cleanup effect),
+      // which keeps `handleSend`'s `if (!agentRef.current) return` guard
+      // honest — without this the catch path would leave a half-initialized
+      // agent (no sessionId) wired up and every send would 4xx.
+      let agent = null;
+
+      try {
+        if (isCoachCreatorSession) {
+          agent = new CoachCreatorAgent({
+            userId,
+            sessionId: existingSessionId || null,
+            onStateChange: handleStateChange,
+            onError: handleError,
+          });
+
+          if (existingSessionId) {
+            await agent.loadExistingSession(userId, existingSessionId);
+            if (cancelled) return;
+          } else {
+            await agent.createSession(userId);
+            if (cancelled) return;
+          }
+        } else {
+          // programDesignerSession
+          agent = new ProgramDesignerAgent({
+            userId,
+            coachId,
+            sessionId: existingSessionId || null,
+            onStateChange: handleStateChange,
+            onError: handleError,
+          });
+
+          // Always load coach details so the drawer header avatar/label match
+          // the user's selected coach (mirrors the full ProgramDesigner page).
+          await agent.loadCoachDetails(userId, coachId);
+          if (cancelled) return;
+
+          if (existingSessionId) {
+            await agent.loadSession(userId, existingSessionId);
+            if (cancelled) return;
+          } else {
+            const result = await createProgramDesignerSession(userId, coachId);
+            if (cancelled) return;
+            const newSessionId = result.sessionId;
+            agent.sessionId = newSessionId;
+            // Load the freshly created session so the backend-generated
+            // initial AI message is hydrated into the agent state. Mirrors
+            // what the standalone /program-designer page does.
+            await agent.loadSession(userId, newSessionId);
+            if (cancelled) return;
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          logger.error(
+            "ContextualChatDrawer: failed to initialize session:",
+            err,
+          );
+          showToast(
+            isCoachCreatorSession
+              ? "Failed to open coach creator. Please try again."
+              : "Failed to open program designer. Please try again.",
+            "error",
+          );
+          // Don't commit a partially-initialized agent — keep agentRef in
+          // whatever state it was so handleSend's guard keeps the input inert.
+          agent = null;
+        }
+        return;
+      } finally {
+        if (!cancelled) setIsInitializing(false);
+      }
+
+      if (!cancelled && agent) {
+        // Capture whether the session was already complete at load time so
+        // the fire effect can distinguish "completed during this open" (we
+        // want to fire onSessionComplete, e.g. parent should refresh its
+        // list) from "already complete on open" (don't re-fire — the parent
+        // would have already learned about completion through its own
+        // polling).
+        sessionInitiallyCompleteRef.current = !!agent.state?.isComplete;
+        agentRef.current = agent;
+        loadedSessionIdRef.current = `${variant}:${sessionKey}`;
+      }
+    }
+
+    initSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isOpen,
+    userId,
+    coachId,
+    variant,
+    isSessionVariant,
+    isCoachCreatorSession,
+    isProgramDesignerSession,
+    existingSessionId,
+    showToast,
+  ]);
+
+  // Reset session-variant agent state when the drawer closes so the next open
+  // (e.g. clicking a different in-progress card, or "New" after a completion)
+  // starts from a clean slate.
+  useEffect(() => {
+    if (isOpen) return;
+    if (!isSessionVariant) return;
+    agentRef.current = null;
+    loadedSessionIdRef.current = null;
+    sessionCompleteFiredRef.current = false;
+    sessionInitiallyCompleteRef.current = null;
+    setAgentState(null);
+  }, [isOpen, isSessionVariant]);
+
+  // Fire onSessionComplete once when the agent reports completion *during*
+  // this drawer instance — i.e. only when the session transitions from
+  // not-complete-on-open to complete. Sessions that were already complete
+  // when the drawer opened (e.g. a stale in-progress card whose backend
+  // record finished building between list load and click) are skipped to
+  // avoid the parent re-fetching its list every time a completed session is
+  // reopened.
+  useEffect(() => {
+    if (!isSessionVariant) return;
+    if (!agentState?.isComplete) return;
+    if (sessionInitiallyCompleteRef.current === null) return; // not initialized yet
+    if (sessionInitiallyCompleteRef.current === true) return; // resumed already-complete session
+    if (sessionCompleteFiredRef.current) return;
+    sessionCompleteFiredRef.current = true;
+    if (typeof onSessionComplete === "function") {
+      onSessionComplete({
+        userId,
+        sessionId: agentRef.current?.sessionId || null,
+        coachId: agentRef.current?.coachId || coachId || null,
+      });
+    }
+  }, [
+    isSessionVariant,
+    agentState?.isComplete,
+    onSessionComplete,
+    userId,
+    coachId,
+  ]);
+
   const handleTrainingPickerChange = useCallback(
     async (conversationId) => {
       const agent = agentRef.current;
@@ -865,27 +1143,81 @@ export default function ContextualChatDrawer({
       setInputMessage("");
 
       try {
-        await agentRef.current.sendMessageStream(
-          text,
-          imageS3Keys,
-          editContext,
-          documentS3Keys,
-          isTrainingInlineChat ? streamClientContext : null,
-        );
+        if (isSessionVariant) {
+          // CoachCreatorAgent and ProgramDesignerAgent take only (text, imageS3Keys).
+          await agentRef.current.sendMessageStream(text, imageS3Keys);
+        } else {
+          await agentRef.current.sendMessageStream(
+            text,
+            imageS3Keys,
+            editContext,
+            documentS3Keys,
+            isTrainingInlineChat ? streamClientContext : null,
+          );
+        }
       } catch (err) {
         logger.error("ContextualChatDrawer: sendMessageStream failed:", err);
       }
     },
-    [editContext, isTrainingInlineChat, streamClientContext],
+    [editContext, isTrainingInlineChat, streamClientContext, isSessionVariant],
   );
 
-  const handleToggleExpand = useCallback(() => {
-    setIsExpanded((prev) => {
-      const next = !prev;
-      localStorage.setItem("neonpanda-chat-drawer-expanded", String(next));
-      return next;
-    });
+  const persistDrawerWidth = useCallback((w) => {
+    try {
+      localStorage.setItem(
+        DRAWER_WIDTH_STORAGE_KEY,
+        String(Math.round(clampDrawerWidth(w))),
+      );
+    } catch {
+      // ignore — storage may be disabled in some browsers
+    }
   }, []);
+
+  // Update drawer width without touching localStorage. Used on every animation
+  // frame during a drag — persisting per-frame would mean ~60 synchronous
+  // localStorage writes per second on the main thread for no benefit.
+  const handleDrawerWidthChange = useCallback((next) => {
+    setDrawerWidth(clampDrawerWidth(next));
+  }, []);
+
+  // Commit a width: update state AND persist. Used on drag-release, keyboard
+  // nudges, and any other user gesture that produces a stable final value.
+  const handleDrawerWidthCommit = useCallback(
+    (next) => {
+      const clamped = clampDrawerWidth(next);
+      setDrawerWidth(clamped);
+      persistDrawerWidth(clamped);
+    },
+    [persistDrawerWidth],
+  );
+
+  // Mirror the latest width into a ref so callers (toggle button, resize
+  // listener) can read it without putting side effects inside a setState
+  // updater (StrictMode would double-fire those).
+  const drawerWidthRef = useRef(drawerWidth);
+  useEffect(() => {
+    drawerWidthRef.current = drawerWidth;
+  }, [drawerWidth]);
+
+  const handleToggleExpand = useCallback(() => {
+    const midpoint = (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
+    const next =
+      drawerWidthRef.current >= midpoint
+        ? DRAWER_DEFAULT_WIDTH
+        : DRAWER_EXPANDED_WIDTH;
+    handleDrawerWidthCommit(next);
+  }, [handleDrawerWidthCommit]);
+
+  // Re-clamp width if the viewport shrinks below the saved value.
+  useEffect(() => {
+    const onResize = () => {
+      const current = drawerWidthRef.current;
+      const clamped = clampDrawerWidth(current);
+      if (clamped !== current) handleDrawerWidthCommit(clamped);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [handleDrawerWidthCommit]);
 
   const isStreaming =
     agentState?.isStreaming || agentState?.isTyping || isInitializing;
@@ -914,9 +1246,17 @@ export default function ContextualChatDrawer({
     agentState?.conversation?.title,
   ]);
 
-  const dialogAriaLabel = isTrainingInlineChat
-    ? `Chat with ${entityLabel || "coach"}`
-    : `Edit ${entityLabel || entityType} with AI coach`;
+  const dialogAriaLabel = isCoachCreatorSession
+    ? "Create a new AI coach"
+    : isProgramDesignerSession
+      ? "Design a new training program"
+      : isTrainingInlineChat
+        ? `Chat with ${entityLabel || "coach"}`
+        : `Edit ${entityLabel || entityType} with AI coach`;
+
+  // Drives the toggle button's icon (<<  vs  >>) and aria-label.
+  const isDrawerExpanded =
+    drawerWidth >= (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
 
   if (!isOpen) return null;
 
@@ -931,6 +1271,16 @@ export default function ContextualChatDrawer({
     userId,
     coachId,
     streamBusy,
+    isSessionComplete: isSessionVariant && !!agentState?.isComplete,
+    sessionProgress:
+      isSessionVariant && agentState?.progress ? agentState.progress : null,
+    // The completion-banner "Done" button just closes the drawer. The
+    // `onSessionComplete` callback already fired automatically when the agent
+    // reported completion (see effect above), so the parent has already
+    // refreshed; calling it again here would double-fetch.
+    onSessionDone: () => {
+      onClose();
+    },
   };
 
   return (
@@ -954,15 +1304,26 @@ export default function ContextualChatDrawer({
           // Slide-in animation
           isOpen ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
-        style={{ width: isExpanded ? "620px" : "420px" }}
+        style={{
+          width: `${drawerWidth}px`,
+          ...(isResizing ? { transition: "none" } : null),
+        }}
       >
+        <DrawerResizeHandle
+          width={drawerWidth}
+          onWidthChange={handleDrawerWidthChange}
+          onWidthCommit={handleDrawerWidthCommit}
+          onResizingChange={setIsResizing}
+        />
         <PanelContent
           headingId={headingId}
           entityLabel={entityLabel}
           entityType={entityType}
-          coachData={coachData}
+          coachData={effectiveCoachData}
           coachInitial={coachInitial}
           userInitial={userInitial}
+          userEmail={userEmail}
+          userDisplayName={userDisplayName}
           onClose={onClose}
           requestClose={requestClose}
           mobileTrainingSheetChrome={false}
@@ -976,7 +1337,7 @@ export default function ContextualChatDrawer({
           handleSend={handleSend}
           inputFocusRef={desktopInputFocusRef}
           userId={userId}
-          isExpanded={isExpanded}
+          isExpanded={isDrawerExpanded}
           onToggleExpand={handleToggleExpand}
           {...panelExtras}
         />
@@ -998,12 +1359,14 @@ export default function ContextualChatDrawer({
           headingId={`${headingId}-mobile`}
           entityLabel={entityLabel}
           entityType={entityType}
-          coachData={coachData}
+          coachData={effectiveCoachData}
           coachInitial={coachInitial}
           userInitial={userInitial}
+          userEmail={userEmail}
+          userDisplayName={userDisplayName}
           onClose={onClose}
           requestClose={requestClose}
-          mobileTrainingSheetChrome={isTrainingInlineChat}
+          mobileTrainingSheetChrome={true}
           mobileSheetRef={mobileSheetRef}
           messageAreaRef={mobileMessageAreaRef}
           messages={messages}
@@ -1015,12 +1378,171 @@ export default function ContextualChatDrawer({
           handleSend={handleSend}
           inputFocusRef={mobileInputFocusRef}
           userId={userId}
-          isExpanded={isExpanded}
+          isExpanded={isDrawerExpanded}
           onToggleExpand={handleToggleExpand}
           {...panelExtras}
         />
       </div>
     </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Desktop drawer resize handle — sits on the panel's left edge. Drag to resize
+// continuously between DRAWER_MIN_WIDTH and viewport-clamped max. ArrowLeft /
+// ArrowRight nudge by 20px; Home / End jump to max / min. The handle's hit area
+// straddles the panel's left edge (6px inside / 6px outside) and the visible
+// 1px rule sits exactly on the edge.
+// ──────────────────────────────────────────────────────────────────────────────
+function DrawerResizeHandle({
+  width,
+  onWidthChange,
+  onWidthCommit,
+  onResizingChange,
+}) {
+  const dragRef = useRef(null);
+  const rafRef = useRef(null);
+  const endDragRafRef = useRef(null);
+  const [isHover, setIsHover] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const restoreBodyStyles = useCallback(() => {
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+  }, []);
+
+  const handlePointerDown = (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    // Cancel any pending end-of-drag transition re-enable from a previous drag.
+    if (endDragRafRef.current != null) {
+      cancelAnimationFrame(endDragRafRef.current);
+      endDragRafRef.current = null;
+    }
+    dragRef.current = {
+      startX: e.clientX,
+      startWidth: width,
+      lastWidth: width,
+    };
+    setIsDragging(true);
+    onResizingChange?.(true);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "ew-resize";
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    // Panel is anchored to the right edge — moving the cursor left grows width.
+    dragRef.current.lastWidth = dragRef.current.startWidth - dx;
+    if (rafRef.current == null) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (dragRef.current) onWidthChange(dragRef.current.lastWidth);
+      });
+    }
+  };
+
+  const endDrag = (e) => {
+    if (!dragRef.current) return;
+    const finalWidth = dragRef.current.lastWidth;
+    dragRef.current = null;
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    restoreBodyStyles();
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    // Phase 1 (sync): commit the final width while isResizing is still true,
+    // so the panel renders with inline `transition: "none"` and snaps to the
+    // exact final value with no animation.
+    onWidthCommit(finalWidth);
+    // Phase 2 (next frame): re-enable the CSS transition. Width is already
+    // settled, so toggling transition back on doesn't animate the small delta
+    // between the last RAF-rendered value and the true final pointer position.
+    endDragRafRef.current = requestAnimationFrame(() => {
+      endDragRafRef.current = null;
+      // If a new drag started in the meantime, leave its state alone.
+      if (dragRef.current) return;
+      setIsDragging(false);
+      onResizingChange?.(false);
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      if (endDragRafRef.current != null)
+        cancelAnimationFrame(endDragRafRef.current);
+      restoreBodyStyles();
+      // If we unmount mid-drag (e.g., parent flips isOpen to false), make sure
+      // the parent's isResizing flag doesn't get stuck and suppress the next
+      // slide-in animation.
+      onResizingChange?.(false);
+    };
+  }, [restoreBodyStyles, onResizingChange]);
+
+  const handleKeyDown = (e) => {
+    const STEP = 20;
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      onWidthCommit(width + STEP);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      onWidthCommit(width - STEP);
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      onWidthCommit(DRAWER_ABS_MAX_WIDTH);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      onWidthCommit(DRAWER_MIN_WIDTH);
+    }
+  };
+
+  const isActive = isHover || isDragging;
+  const ariaMax = Math.round(
+    typeof window !== "undefined"
+      ? Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH)
+      : DRAWER_ABS_MAX_WIDTH,
+  );
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize chat drawer"
+      aria-valuenow={Math.round(width)}
+      aria-valuemin={DRAWER_MIN_WIDTH}
+      aria-valuemax={ariaMax}
+      tabIndex={0}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onPointerEnter={() => setIsHover(true)}
+      onPointerLeave={() => setIsHover(false)}
+      onKeyDown={handleKeyDown}
+      className={contextualDrawerPatterns.resizeHandle}
+    >
+      <div
+        aria-hidden="true"
+        className={[
+          contextualDrawerPatterns.resizeHandleBar,
+          isActive
+            ? "bg-synthwave-neon-cyan/70 shadow-[0_0_8px_rgba(34,211,238,0.45)]"
+            : "bg-synthwave-neon-cyan/20",
+        ].join(" ")}
+      />
+    </div>
   );
 }
 
@@ -1032,6 +1554,7 @@ export default function ContextualChatDrawer({
 function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
   const touchStartY = useRef(null);
   const activeRef = useRef(false);
+  const handleRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
   const resetSheet = () => {
@@ -1055,17 +1578,28 @@ function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
     }
   };
 
-  const onTouchMove = (e) => {
-    if (!activeRef.current || touchStartY.current == null) return;
-    const delta = e.touches[0].clientY - touchStartY.current;
-    const el = sheetRef?.current;
-    if (!el) return;
-    if (delta <= 0) {
-      el.style.transform = "";
-      return;
-    }
-    el.style.transform = `translateY(${delta}px)`;
-  };
+  // Non-passive touchmove listener so we can preventDefault() once a vertical
+  // pull is detected — blocks iOS Safari URL-bar reveal and Android pull-to-refresh.
+  useEffect(() => {
+    const node = handleRef.current;
+    if (!node) return;
+
+    const handleTouchMove = (e) => {
+      if (!activeRef.current || touchStartY.current == null) return;
+      const delta = e.touches[0].clientY - touchStartY.current;
+      if (delta > 6) e.preventDefault();
+      const el = sheetRef?.current;
+      if (!el) return;
+      if (delta <= 0) {
+        el.style.transform = "";
+        return;
+      }
+      el.style.transform = `translateY(${delta}px)`;
+    };
+
+    node.addEventListener("touchmove", handleTouchMove, { passive: false });
+    return () => node.removeEventListener("touchmove", handleTouchMove);
+  }, [sheetRef]);
 
   const finishDrag = (delta) => {
     const el = sheetRef?.current;
@@ -1112,12 +1646,12 @@ function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
 
   return (
     <div
+      ref={handleRef}
       role="button"
       aria-label="Drag down to close"
       tabIndex={0}
-      className="flex justify-center pt-3 pb-2 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
+      className="relative flex justify-center pt-4 pb-4 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing before:absolute before:inset-x-0 before:-top-3 before:h-3 before:content-['']"
       onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchCancel}
     >
@@ -1141,6 +1675,8 @@ function PanelContent({
   coachData,
   coachInitial,
   userInitial,
+  userEmail,
+  userDisplayName,
   onClose,
   requestClose,
   mobileTrainingSheetChrome = false,
@@ -1166,12 +1702,18 @@ function PanelContent({
   onOpenFullPageChat,
   coachId,
   streamBusy = false,
+  isSessionComplete = false,
+  sessionProgress = null,
+  onSessionDone,
 }) {
   const trainingSelectId = useId();
   const tipNewChatId = useId();
   const tipOpenFullId = useId();
   const tipViewAllId = useId();
   const isTraining = variant === "trainingGroundsInlineChat";
+  const isCoachCreatorSession = variant === "coachCreatorSession";
+  const isProgramDesignerSession = variant === "programDesignerSession";
+  const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
   const exit = requestClose ?? onClose;
   const viewAllUrl =
     userId && coachId
@@ -1180,11 +1722,23 @@ function PanelContent({
 
   const inputPlaceholder = isTraining
     ? "Message your coach…"
-    : "Describe what you'd like to correct…";
-  const emptySessionMessage = "Starting edit session…";
+    : isCoachCreatorSession
+      ? "Tell me about your fitness goals…"
+      : isProgramDesignerSession
+        ? "What do you want to build?"
+        : "Describe what you'd like to correct…";
+  const emptySessionMessage = isCoachCreatorSession
+    ? "Starting your coach creation session…"
+    : isProgramDesignerSession
+      ? "Starting your program design session…"
+      : "Starting edit session…";
 
-  const showMessageList = !(isTraining && isInitializing);
-  const suppressTrainingOverlay = isTraining && isInitializing;
+  const showMessageList = !(
+    (isTraining || isSessionVariant) &&
+    isInitializing
+  );
+  const suppressTrainingOverlay =
+    (isTraining || isSessionVariant) && isInitializing;
 
   return (
     <>
@@ -1216,7 +1770,13 @@ function PanelContent({
                 className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
               >
                 {entityLabel ||
-                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+                  (isTraining
+                    ? "Training Grounds"
+                    : isCoachCreatorSession
+                      ? "New Coach"
+                      : isProgramDesignerSession
+                        ? "New Program"
+                        : `Editing ${entityType}`)}
               </div>
               <span className={`${badgePatterns.betaSmall} text-xs shrink-0`}>
                 Beta
@@ -1244,17 +1804,23 @@ function PanelContent({
 
             {/* Section header icon */}
             <span className="shrink-0 text-synthwave-neon-pink">
-              <ChatIconSmall />
+              <ChatIconSmall className="w-4 h-4" />
             </span>
 
             {/* Entity label */}
             <div className="flex-1 min-w-0">
               <div
                 id={headingId}
-                className={`${contextualDrawerPatterns.headerLabel} text-sm`}
+                className={`${contextualDrawerPatterns.headerLabel} text-base`}
               >
                 {entityLabel ||
-                  (isTraining ? "Training Grounds" : `Editing ${entityType}`)}
+                  (isTraining
+                    ? "Training Grounds"
+                    : isCoachCreatorSession
+                      ? "New Coach"
+                      : isProgramDesignerSession
+                        ? "New Program"
+                        : `Editing ${entityType}`)}
               </div>
             </div>
 
@@ -1268,7 +1834,13 @@ function PanelContent({
               type="button"
               className={contextualDrawerPatterns.closeButton}
               onClick={onClose}
-              aria-label={isTraining ? "Close chat" : "Close edit session"}
+              aria-label={
+                isTraining
+                  ? "Close chat"
+                  : isSessionVariant
+                    ? "Close session"
+                    : "Close edit session"
+              }
             >
               <CloseIcon />
             </button>
@@ -1360,12 +1932,13 @@ function PanelContent({
         aria-live="polite"
         aria-label="Conversation messages"
       >
-        {/* Skeleton: training whenever loading; workout edit on first load with no messages yet */}
-        {isInitializing && (isTraining || messages.length === 0) && (
-          <DrawerSkeleton />
-        )}
+        {/* Skeleton: training/session whenever loading; workout edit on first load with no messages yet */}
+        {isInitializing &&
+          (isTraining || isSessionVariant || messages.length === 0) && (
+            <DrawerSkeleton />
+          )}
 
-        {/* Empty state — workout edit */}
+        {/* Empty state — workout edit / session variants */}
         {!isTraining &&
           messages.length === 0 &&
           !isStreaming &&
@@ -1394,6 +1967,8 @@ function PanelContent({
               message={message}
               coachInitial={coachInitial}
               userInitial={userInitial}
+              userEmail={userEmail}
+              userDisplayName={userDisplayName}
               userId={userId}
             />
           ))}
@@ -1408,33 +1983,116 @@ function PanelContent({
         )}
       </div>
 
-      {/* Pinned input area */}
-      <div className={contextualDrawerPatterns.inputArea}>
-        <div className="contextual-drawer-input">
-          <ChatInput
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            onSubmit={handleSend}
-            isTyping={isStreaming}
-            placeholder={inputPlaceholder}
-            userId={userId}
-            coachName={coachData?.name || "Coach"}
-            context="coaching"
-            enableRecording={false}
-            enablePhotoAttachment={true}
-            enableFileAttachment={true}
-            enableQuickPrompts={false}
-            showTipsButton={false}
-            showDeleteButton={false}
-            enableSlashCommands={false}
-            textareaRef={inputFocusRef}
-            editorMinHeight="44px"
-            editorMaxHeight="120px"
-            compact={true}
-          />
+      {/* Pinned input area — replaced by completion banner for finished sessions */}
+      {isSessionVariant && isSessionComplete ? (
+        <SessionCompletionBanner
+          variant={variant}
+          onDone={onSessionDone}
+        />
+      ) : (
+        <div className={contextualDrawerPatterns.inputArea}>
+          <div className="contextual-drawer-input">
+            <ChatInput
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              onSubmit={handleSend}
+              isTyping={isStreaming}
+              placeholder={inputPlaceholder}
+              userId={userId}
+              coachName={coachData?.name || "Coach"}
+              context={
+                isCoachCreatorSession
+                  ? "creation"
+                  : isProgramDesignerSession
+                    ? "program-design"
+                    : "coaching"
+              }
+              enableRecording={false}
+              enablePhotoAttachment={!isSessionVariant}
+              enableFileAttachment={!isSessionVariant}
+              enableQuickPrompts={false}
+              showTipsButton={false}
+              showDeleteButton={false}
+              enableSlashCommands={false}
+              textareaRef={inputFocusRef}
+              editorMinHeight="44px"
+              editorMaxHeight="120px"
+              compact={true}
+              progressData={sessionProgress}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Completion banner shown inside the drawer when a coach creator / program
+// designer session finishes. Mirrors the inline banner on the standalone
+// CoachCreator / ProgramDesigner pages so the visual language stays consistent.
+// ──────────────────────────────────────────────────────────────────────────────
+function SessionCompletionBanner({ variant, onDone }) {
+  const isProgram = variant === "programDesignerSession";
+  const accentClass = isProgram
+    ? "border-synthwave-neon-purple bg-synthwave-neon-purple/10"
+    : "border-synthwave-neon-cyan bg-synthwave-neon-cyan/10";
+  const accentText = isProgram
+    ? "text-synthwave-neon-purple"
+    : "text-synthwave-neon-cyan";
+  const heading = isProgram
+    ? "Program Design Complete"
+    : "Session Complete";
+  const subheading = isProgram
+    ? "Your program is being built (2-3 minutes)."
+    : "Your coach is being built (2-3 minutes).";
+  const doneLabel = isProgram ? "View Programs" : "View Coaches";
+
+  return (
+    <div
+      className={`${contextualDrawerPatterns.inputArea} !p-3`}
+      role="status"
+    >
+      <div className={`${containerPatterns.coachNotesSection} w-full`}>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div
+              className={`w-9 h-9 rounded-full border-2 ${accentClass} flex items-center justify-center shrink-0`}
+            >
+              <svg
+                className={`w-4 h-4 ${accentText}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-header text-sm text-white uppercase tracking-wider">
+                {heading}
+              </h3>
+              <p className="font-body text-xs text-synthwave-text-secondary mt-0.5">
+                {subheading}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onDone}
+            className={`${buttonPatterns.secondarySmall} w-full sm:w-auto shrink-0`}
+          >
+            {doneLabel}
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -1506,7 +2164,14 @@ function formatDrawerTime(timestamp) {
 // ──────────────────────────────────────────────────────────────────────────────
 // Individual message bubble
 // ──────────────────────────────────────────────────────────────────────────────
-function MessageBubble({ message, coachInitial, userInitial, userId }) {
+function MessageBubble({
+  message,
+  coachInitial,
+  userInitial,
+  userEmail,
+  userDisplayName,
+  userId,
+}) {
   const isUser = message.type === "user" || message.role === "user";
   const content =
     message.content || message.displayContent || message.streamingContent || "";
@@ -1551,8 +2216,12 @@ function MessageBubble({ message, coachInitial, userInitial, userId }) {
               {formatDrawerTime(message.timestamp)}
             </span>
           )}
-          <div className={`${avatarPatterns.userXSmall} shrink-0`}>
-            {userInitial}
+          <div className="shrink-0">
+            <UserAvatar
+              email={userEmail}
+              username={userDisplayName || userInitial}
+              size={24}
+            />
           </div>
         </div>
       </div>

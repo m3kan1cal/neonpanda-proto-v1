@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useAuth } from "../../auth/contexts/AuthContext";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
 import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
@@ -86,11 +86,7 @@ function ViewWorkouts() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { success: showSuccess, error: showError } = useToast();
-  const { user } = useAuth();
-  const userInitial =
-    user?.attributes?.preferred_username?.charAt(0).toUpperCase() ||
-    user?.username?.charAt(0).toUpperCase() ||
-    "U";
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   // Get global CommandPalette + inline coach drawer state from NavigationContext
   const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
@@ -2136,6 +2132,8 @@ General thoughts: `;
             coachId={coachId}
             coachData={coachData}
             userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
             newConversationTitle={newChatThreadTitle}
             streamClientContext={streamClientContext}
           />

@@ -72,7 +72,9 @@ import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
 import { OnboardingPrompt, UpgradePrompt } from "./subscription";
 import CoachDetailsModal from "./coaches/CoachDetailsModal";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
+import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
 
 // Vesper coach data - static coach for coach creator
 const vesperCoachData = {
@@ -133,6 +135,7 @@ function Coaches() {
   const navigate = useNavigate();
   const userId = searchParams.get("userId");
   const toast = useToast();
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   // Authorize that URL userId matches authenticated user
   const {
@@ -169,7 +172,6 @@ function Coaches() {
   const [retryingSessionId, setRetryingSessionId] = useState(null);
 
   // Local loading states for button feedback
-  const [isCreatingCustomCoach, setIsCreatingCustomCoach] = useState(false);
   const [creatingTemplateId, setCreatingTemplateId] = useState(null);
 
   // Actions menu state
@@ -181,6 +183,13 @@ function Coaches() {
 
   // Onboarding modal state
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Contextual chat drawer state — hosts the coach creator session inline.
+  // `drawerSessionId === null` means "start a new session"; a non-null value
+  // resumes an existing in-progress session.
+  const [isCoachCreatorDrawerOpen, setIsCoachCreatorDrawerOpen] =
+    useState(false);
+  const [drawerSessionId, setDrawerSessionId] = useState(null);
 
   // Upgrade prompts hook - tracks user activity for contextual upgrade prompts
   const {
@@ -463,17 +472,36 @@ function Coaches() {
     };
   }, [userId]);
 
-  const handleCreateCoach = async () => {
-    if (!agentRef.current) return;
+  const handleCreateCoach = () => {
+    if (!userId) return;
+    // Open the contextual chat drawer with no session id — the drawer creates
+    // a fresh coach creator session via CoachCreatorAgent. The session-id
+    // round-trip that the standalone /coach-creator page relies on is
+    // unnecessary here because the drawer manages session lifecycle itself.
+    setDrawerSessionId(null);
+    setIsCoachCreatorDrawerOpen(true);
+  };
 
-    setIsCreatingCustomCoach(true);
-    try {
-      await agentRef.current.createNewCoach(userId);
-    } catch (error) {
-      // Error handling is managed by the agent via onError callback
-    } finally {
-      setIsCreatingCustomCoach(false);
+  const handleResumeCoachSession = (sessionId) => {
+    if (!sessionId) return;
+    setDrawerSessionId(sessionId);
+    setIsCoachCreatorDrawerOpen(true);
+  };
+
+  const handleCoachCreatorDrawerClose = () => {
+    setIsCoachCreatorDrawerOpen(false);
+    setDrawerSessionId(null);
+  };
+
+  const handleCoachCreatorSessionComplete = () => {
+    // Refresh both the coach list and the in-progress sessions strip so the
+    // newly building coach + remaining in-progress sessions reflect reality.
+    if (agentRef.current) {
+      agentRef.current.refresh().catch((err) => {
+        logger.error("Error refreshing coaches after session complete:", err);
+      });
     }
+    loadInProgressSessions();
   };
 
   const handleRefresh = async () => {
@@ -746,65 +774,52 @@ function Coaches() {
         {/* Coaches Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr animate-fadeIn">
           {/* Add New Coach Card */}
+          {/* Add New Coach Card — opens the contextual chat drawer instantly,
+              so there's no in-flight loading state to show on the card. */}
           <div
-            onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
-            className={`${containerPatterns.dashedCard} p-6 group ${
-              isCreatingCustomCoach
-                ? "opacity-75 cursor-not-allowed"
-                : "cursor-pointer"
-            }`}
+            onClick={handleCreateCoach}
+            className={`${containerPatterns.dashedCard} p-6 group cursor-pointer`}
           >
             <div className="text-center h-full flex flex-col justify-between min-h-[200px] md:min-h-[400px]">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
-                {/* Plus Icon or Spinner */}
+                {/* Plus Icon */}
                 <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
-                  {isCreatingCustomCoach ? (
-                    <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <svg
-                      className="w-12 h-12"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                  )}
+                  <svg
+                    className="w-12 h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
                 </div>
 
                 {/* Title */}
                 <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
-                  {isCreatingCustomCoach
-                    ? "Creating Coach..."
-                    : "Create Custom Coach"}
+                  Create Custom Coach
                 </h3>
 
                 {/* Description */}
                 <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
-                  {isCreatingCustomCoach
-                    ? "Setting up your personalized coach"
-                    : "Design your perfect coach through our guided process"}
+                  Design your perfect coach through our guided process
                 </p>
 
                 {/* Time Estimate */}
-                {!isCreatingCustomCoach && (
-                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
-                    <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
-                      Takes 25-30 minutes
-                    </p>
-                  </div>
-                )}
+                <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
+                  <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
+                    Takes 25-30 minutes
+                  </p>
+                </div>
               </div>
 
-              {/* Bottom Features - Only show when not creating */}
-              {!isCreatingCustomCoach && (
-                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
+              {/* Bottom Features */}
+              <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
                   <div className="grid grid-cols-1 gap-2">
                     <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
                       <svg
@@ -862,7 +877,6 @@ function Coaches() {
                     </div>
                   </div>
                 </div>
-              )}
             </div>
           </div>
 
@@ -1220,17 +1234,10 @@ function Coaches() {
                   <div
                     key={session.sessionId}
                     onClick={() => {
-                      // Only allow clicking for incomplete sessions
+                      // Only allow clicking for incomplete sessions; resumes
+                      // the session inline via the contextual chat drawer.
                       if (isIncomplete && !isBuilding && !isFailed) {
-                        const newSearchParams = new URLSearchParams();
-                        newSearchParams.set("userId", userId);
-                        newSearchParams.set(
-                          "coachCreatorSessionId",
-                          session.sessionId,
-                        );
-                        navigate(
-                          `/coach-creator?${newSearchParams.toString()}`,
-                        );
+                        handleResumeCoachSession(session.sessionId);
                       }
                     }}
                     className={cardClass}
@@ -1742,6 +1749,24 @@ function Coaches() {
           trigger={upgradeTrigger}
         />
       )}
+
+      {/* Coach Creator drawer — replaces the full-page coach creator flow for
+          users who land here via "Create Custom Coach" or an in-progress
+          session card. The dedicated /coach-creator route still works for
+          deep links / refreshes. */}
+      <ContextualChatDrawer
+        isOpen={isCoachCreatorDrawerOpen}
+        onClose={handleCoachCreatorDrawerClose}
+        variant="coachCreatorSession"
+        userId={userId}
+        userInitial={userInitial}
+        userEmail={userEmail}
+        userDisplayName={userDisplayName}
+        coachData={vesperCoachData}
+        entityLabel="Coach Creator"
+        existingSessionId={drawerSessionId}
+        onSessionComplete={handleCoachCreatorSessionComplete}
+      />
 
       {/* Custom animations */}
       <style>{`

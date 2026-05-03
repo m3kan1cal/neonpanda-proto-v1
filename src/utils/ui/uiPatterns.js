@@ -285,7 +285,7 @@ export const inputPatterns = {
 
   // Chat input editor area - no border (border lives on chatInputWrapper), no padding reservations for buttons
   chatInput:
-    "w-full px-4 pt-3 pb-2 text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
+    "w-full px-4 pt-3 pb-2 text-base md:text-sm text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
 
   // Command palette input field - same styling but without right padding
   commandInput:
@@ -1268,7 +1268,7 @@ export const contextualDrawerPatterns = {
     "fixed top-0 right-0 h-full w-[420px] z-[70] flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
 
   panelMobile:
-    "fixed inset-0 z-[70] flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out",
+    "fixed inset-0 z-[70] flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out pt-[env(safe-area-inset-top)] overscroll-contain",
 
   // Panel header — entity name, edit badge, close button
   header:
@@ -1280,7 +1280,7 @@ export const contextualDrawerPatterns = {
 
   // Scrollable message area
   messageArea:
-    "flex-1 overflow-y-auto px-6 pt-3 pb-64 space-y-4 custom-scrollbar-cyan",
+    "flex-1 overflow-y-auto overscroll-contain px-6 pt-3 pb-64 space-y-4 custom-scrollbar-cyan",
 
   // Pinned input area at bottom
   inputArea:
@@ -1297,6 +1297,14 @@ export const contextualDrawerPatterns = {
   // Close button (icon button style)
   closeButton:
     "shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-synthwave-text-muted hover:text-synthwave-text-primary hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+
+  // Resize handle — vertical drag affordance on the panel's left edge (desktop only)
+  // 12px hit area centered on the edge (6px inside / 6px outside)
+  resizeHandle:
+    "absolute top-0 left-0 h-full w-3 -translate-x-1/2 z-10 cursor-ew-resize touch-none flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-synthwave-neon-cyan/60 focus-visible:ring-inset",
+
+  // Visible 1px rule sitting exactly on the panel's left edge
+  resizeHandleBar: "h-full w-px transition-colors duration-150",
 };
 
 // Changelog List Patterns - Text-based information display in lists
