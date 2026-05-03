@@ -42,6 +42,7 @@ import { quickStatsPatterns, tooltipPatterns } from "../../utils/ui/uiPatterns";
  */
 function QuickStatItem({ stat, index }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const Icon = stat.icon;
   const iconColor = stat.color || "cyan";
   const tooltipId = stat.id || `quick-stat-${index}`;
@@ -68,8 +69,8 @@ function QuickStatItem({ stat, index }) {
         className={`${displayClass} ${quickStatsPatterns.item}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onFocus={() => setIsHovered(true)}
-        onBlur={() => setIsHovered(false)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         tabIndex={0}
         aria-label={
           stat.ariaLabel || `${stat.value} ${stat.tooltip?.title || "items"}`
@@ -107,7 +108,7 @@ function QuickStatItem({ stat, index }) {
         {...tooltipPatterns.standard}
         id={tooltipId}
         anchorSelect={`#${iconAnchorId}`}
-        isOpen={isHovered}
+        isOpen={isHovered || isFocused}
       >
         <strong>{stat.tooltip?.title || ""}</strong>
         <br />
