@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { quickStatsPatterns, tooltipPatterns } from "../../utils/ui/uiPatterns";
 
@@ -40,6 +40,83 @@ import { quickStatsPatterns, tooltipPatterns } from "../../utils/ui/uiPatterns";
  *   ]}
  * />
  */
+function QuickStatItem({ stat, index }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const Icon = stat.icon;
+  const iconColor = stat.color || "cyan";
+  const tooltipId = stat.id || `quick-stat-${index}`;
+  const iconAnchorId = `${tooltipId}-icon-anchor`;
+  const isSecondary = stat.priority === "secondary";
+  // Secondary stats are hidden below sm so mobile stays on one line.
+  // The base patterns in `quickStatsPatterns.item` / `.skeleton.item`
+  // are intentionally display-class-free (see uiPatterns.js); we own
+  // the display class here so "flex" and "hidden sm:flex" don't fight.
+  const displayClass = isSecondary ? "hidden sm:flex" : "flex";
+
+  if (stat.isLoading) {
+    return (
+      <div className={`${displayClass} ${quickStatsPatterns.skeleton.item}`}>
+        <div className={quickStatsPatterns.skeleton.icon} />
+        <div className={quickStatsPatterns.skeleton.value} />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div
+        className={`${displayClass} ${quickStatsPatterns.item}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onFocus={() => setIsHovered(true)}
+        onBlur={() => setIsHovered(false)}
+        tabIndex={0}
+        aria-label={
+          stat.ariaLabel || `${stat.value} ${stat.tooltip?.title || "items"}`
+        }
+        role="status"
+        aria-live="polite"
+      >
+        {/* Icon Container — also serves as the tooltip anchor so the arrow centers on the icon */}
+        <div
+          id={iconAnchorId}
+          className={quickStatsPatterns.iconContainer[iconColor]}
+        >
+          {Icon && (
+            <div
+              className={quickStatsPatterns.icon}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon style={{ width: "100%", height: "100%" }} />
+            </div>
+          )}
+        </div>
+
+        {/* Value */}
+        <div className={quickStatsPatterns.value}>
+          {stat.value !== undefined && stat.value !== null ? stat.value : 0}
+        </div>
+      </div>
+
+      {/* Tooltip — anchored to the icon, opened by hover/focus on the whole row */}
+      <Tooltip
+        id={tooltipId}
+        anchorSelect={`#${iconAnchorId}`}
+        isOpen={isHovered}
+        {...tooltipPatterns.standard}
+      >
+        <strong>{stat.tooltip?.title || ""}</strong>
+        <br />
+        {stat.tooltip?.description || ""}
+      </Tooltip>
+    </>
+  );
+}
+
 function QuickStats({ stats = [] }) {
   if (!stats || stats.length === 0) {
     return null;
@@ -47,69 +124,13 @@ function QuickStats({ stats = [] }) {
 
   return (
     <div className={quickStatsPatterns.container}>
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
-        const iconColor = stat.color || "cyan";
-        const tooltipId = stat.id || `quick-stat-${index}`;
-        const isSecondary = stat.priority === "secondary";
-        // Secondary stats are hidden below sm so mobile stays on one line.
-        // The base patterns in `quickStatsPatterns.item` / `.skeleton.item`
-        // are intentionally display-class-free (see uiPatterns.js); we own
-        // the display class here so "flex" and "hidden sm:flex" don't fight.
-        const displayClass = isSecondary ? "hidden sm:flex" : "flex";
-
-        // If loading, show skeleton
-        if (stat.isLoading) {
-          return (
-            <div
-              key={`skeleton-${index}`}
-              className={`${displayClass} ${quickStatsPatterns.skeleton.item}`}
-            >
-              <div className={quickStatsPatterns.skeleton.icon} />
-              <div className={quickStatsPatterns.skeleton.value} />
-            </div>
-          );
-        }
-
-        return (
-          <div
-            key={stat.id || `stat-${index}`}
-            className={`${displayClass} ${quickStatsPatterns.item}`}
-            data-tooltip-id={tooltipId}
-            data-tooltip-html={`<strong>${stat.tooltip?.title || ""}</strong><br/>${stat.tooltip?.description || ""}`}
-            aria-label={
-              stat.ariaLabel ||
-              `${stat.value} ${stat.tooltip?.title || "items"}`
-            }
-            role="status"
-            aria-live="polite"
-          >
-            {/* Icon Container */}
-            <div className={quickStatsPatterns.iconContainer[iconColor]}>
-              {Icon && (
-                <div
-                  className={quickStatsPatterns.icon}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon style={{ width: "100%", height: "100%" }} />
-                </div>
-              )}
-            </div>
-
-            {/* Value */}
-            <div className={quickStatsPatterns.value}>
-              {stat.value !== undefined && stat.value !== null ? stat.value : 0}
-            </div>
-
-            {/* Tooltip */}
-            <Tooltip id={tooltipId} {...tooltipPatterns.standard} />
-          </div>
-        );
-      })}
+      {stats.map((stat, index) => (
+        <QuickStatItem
+          key={stat.id || `stat-${index}`}
+          stat={stat}
+          index={index}
+        />
+      ))}
     </div>
   );
 }
