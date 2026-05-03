@@ -1268,7 +1268,7 @@ export const contextualDrawerPatterns = {
     "fixed top-0 right-0 h-full w-[420px] z-[70] flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
 
   panelMobile:
-    "fixed inset-0 z-[70] flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out",
+    "fixed inset-0 z-[70] flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out pt-[env(safe-area-inset-top)] overscroll-contain",
 
   // Panel header — entity name, edit badge, close button
   header:
@@ -1280,7 +1280,7 @@ export const contextualDrawerPatterns = {
 
   // Scrollable message area
   messageArea:
-    "flex-1 overflow-y-auto px-6 pt-3 pb-64 space-y-4 custom-scrollbar-cyan",
+    "flex-1 overflow-y-auto overscroll-contain px-6 pt-3 pb-64 space-y-4 custom-scrollbar-cyan",
 
   // Pinned input area at bottom
   inputArea:

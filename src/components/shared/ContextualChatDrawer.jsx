@@ -1302,6 +1302,7 @@ function DrawerResizeHandle({
 function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
   const touchStartY = useRef(null);
   const activeRef = useRef(false);
+  const handleRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
   const resetSheet = () => {
@@ -1325,17 +1326,28 @@ function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
     }
   };
 
-  const onTouchMove = (e) => {
-    if (!activeRef.current || touchStartY.current == null) return;
-    const delta = e.touches[0].clientY - touchStartY.current;
-    const el = sheetRef?.current;
-    if (!el) return;
-    if (delta <= 0) {
-      el.style.transform = "";
-      return;
-    }
-    el.style.transform = `translateY(${delta}px)`;
-  };
+  // Non-passive touchmove listener so we can preventDefault() once a vertical
+  // pull is detected — blocks iOS Safari URL-bar reveal and Android pull-to-refresh.
+  useEffect(() => {
+    const node = handleRef.current;
+    if (!node) return;
+
+    const handleTouchMove = (e) => {
+      if (!activeRef.current || touchStartY.current == null) return;
+      const delta = e.touches[0].clientY - touchStartY.current;
+      if (delta > 6) e.preventDefault();
+      const el = sheetRef?.current;
+      if (!el) return;
+      if (delta <= 0) {
+        el.style.transform = "";
+        return;
+      }
+      el.style.transform = `translateY(${delta}px)`;
+    };
+
+    node.addEventListener("touchmove", handleTouchMove, { passive: false });
+    return () => node.removeEventListener("touchmove", handleTouchMove);
+  }, [sheetRef]);
 
   const finishDrag = (delta) => {
     const el = sheetRef?.current;
@@ -1382,12 +1394,12 @@ function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
 
   return (
     <div
+      ref={handleRef}
       role="button"
       aria-label="Drag down to close"
       tabIndex={0}
-      className="flex justify-center pt-3 pb-2 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
+      className="relative flex justify-center pt-4 pb-4 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing before:absolute before:inset-x-0 before:-top-3 before:h-3 before:content-['']"
       onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchCancel}
     >
