@@ -1194,8 +1194,12 @@ function DrawerResizeHandle({ width, onWidthChange, onResizingChange }) {
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       restoreBodyStyles();
+      // If we unmount mid-drag (e.g., parent flips isOpen to false), make sure
+      // the parent's isResizing flag doesn't get stuck and suppress the next
+      // slide-in animation.
+      onResizingChange?.(false);
     };
-  }, [restoreBodyStyles]);
+  }, [restoreBodyStyles, onResizingChange]);
 
   const handleKeyDown = (e) => {
     const STEP = 20;
