@@ -953,29 +953,33 @@ export default function ContextualChatDrawer({
     [persistDrawerWidth],
   );
 
+  // Mirror the latest width into a ref so callers (toggle button, resize
+  // listener) can read it without putting side effects inside a setState
+  // updater (StrictMode would double-fire those).
+  const drawerWidthRef = useRef(drawerWidth);
+  useEffect(() => {
+    drawerWidthRef.current = drawerWidth;
+  }, [drawerWidth]);
+
   const handleToggleExpand = useCallback(() => {
-    setDrawerWidth((current) => {
-      const midpoint = (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
-      const next =
-        current >= midpoint ? DRAWER_DEFAULT_WIDTH : DRAWER_EXPANDED_WIDTH;
-      const clamped = clampDrawerWidth(next);
-      persistDrawerWidth(clamped);
-      return clamped;
-    });
-  }, [persistDrawerWidth]);
+    const midpoint = (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
+    const next =
+      drawerWidthRef.current >= midpoint
+        ? DRAWER_DEFAULT_WIDTH
+        : DRAWER_EXPANDED_WIDTH;
+    handleDrawerWidthCommit(next);
+  }, [handleDrawerWidthCommit]);
 
   // Re-clamp width if the viewport shrinks below the saved value.
   useEffect(() => {
     const onResize = () => {
-      setDrawerWidth((current) => {
-        const clamped = clampDrawerWidth(current);
-        if (clamped !== current) persistDrawerWidth(clamped);
-        return clamped;
-      });
+      const current = drawerWidthRef.current;
+      const clamped = clampDrawerWidth(current);
+      if (clamped !== current) handleDrawerWidthCommit(clamped);
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [persistDrawerWidth]);
+  }, [handleDrawerWidthCommit]);
 
   const isStreaming =
     agentState?.isStreaming || agentState?.isTyping || isInitializing;
@@ -1146,6 +1150,7 @@ function DrawerResizeHandle({
 }) {
   const dragRef = useRef(null);
   const rafRef = useRef(null);
+  const endDragRafRef = useRef(null);
   const [isHover, setIsHover] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -1161,6 +1166,11 @@ function DrawerResizeHandle({
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
       // ignore
+    }
+    // Cancel any pending end-of-drag transition re-enable from a previous drag.
+    if (endDragRafRef.current != null) {
+      cancelAnimationFrame(endDragRafRef.current);
+      endDragRafRef.current = null;
     }
     dragRef.current = {
       startX: e.clientX,
@@ -1194,20 +1204,33 @@ function DrawerResizeHandle({
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
-    setIsDragging(false);
-    onResizingChange?.(false);
     restoreBodyStyles();
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {
       // ignore
     }
+    // Phase 1 (sync): commit the final width while isResizing is still true,
+    // so the panel renders with inline `transition: "none"` and snaps to the
+    // exact final value with no animation.
     onWidthCommit(finalWidth);
+    // Phase 2 (next frame): re-enable the CSS transition. Width is already
+    // settled, so toggling transition back on doesn't animate the small delta
+    // between the last RAF-rendered value and the true final pointer position.
+    endDragRafRef.current = requestAnimationFrame(() => {
+      endDragRafRef.current = null;
+      // If a new drag started in the meantime, leave its state alone.
+      if (dragRef.current) return;
+      setIsDragging(false);
+      onResizingChange?.(false);
+    });
   };
 
   useEffect(() => {
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      if (endDragRafRef.current != null)
+        cancelAnimationFrame(endDragRafRef.current);
       restoreBodyStyles();
       // If we unmount mid-drag (e.g., parent flips isOpen to false), make sure
       // the parent's isResizing flag doesn't get stuck and suppress the next
