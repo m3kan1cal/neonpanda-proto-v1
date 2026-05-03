@@ -935,7 +935,16 @@ export default function ContextualChatDrawer({
     }
   }, []);
 
-  const handleDrawerWidthChange = useCallback(
+  // Update drawer width without touching localStorage. Used on every animation
+  // frame during a drag — persisting per-frame would mean ~60 synchronous
+  // localStorage writes per second on the main thread for no benefit.
+  const handleDrawerWidthChange = useCallback((next) => {
+    setDrawerWidth(clampDrawerWidth(next));
+  }, []);
+
+  // Commit a width: update state AND persist. Used on drag-release, keyboard
+  // nudges, and any other user gesture that produces a stable final value.
+  const handleDrawerWidthCommit = useCallback(
     (next) => {
       const clamped = clampDrawerWidth(next);
       setDrawerWidth(clamped);
@@ -1047,6 +1056,7 @@ export default function ContextualChatDrawer({
         <DrawerResizeHandle
           width={drawerWidth}
           onWidthChange={handleDrawerWidthChange}
+          onWidthCommit={handleDrawerWidthCommit}
           onResizingChange={setIsResizing}
         />
         <PanelContent
@@ -1128,7 +1138,12 @@ export default function ContextualChatDrawer({
 // straddles the panel's left edge (6px inside / 6px outside) and the visible
 // 1px rule sits exactly on the edge.
 // ──────────────────────────────────────────────────────────────────────────────
-function DrawerResizeHandle({ width, onWidthChange, onResizingChange }) {
+function DrawerResizeHandle({
+  width,
+  onWidthChange,
+  onWidthCommit,
+  onResizingChange,
+}) {
   const dragRef = useRef(null);
   const rafRef = useRef(null);
   const [isHover, setIsHover] = useState(false);
@@ -1187,7 +1202,7 @@ function DrawerResizeHandle({ width, onWidthChange, onResizingChange }) {
     } catch {
       // ignore
     }
-    onWidthChange(finalWidth);
+    onWidthCommit(finalWidth);
   };
 
   useEffect(() => {
@@ -1205,16 +1220,16 @@ function DrawerResizeHandle({ width, onWidthChange, onResizingChange }) {
     const STEP = 20;
     if (e.key === "ArrowLeft") {
       e.preventDefault();
-      onWidthChange(width + STEP);
+      onWidthCommit(width + STEP);
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      onWidthChange(width - STEP);
+      onWidthCommit(width - STEP);
     } else if (e.key === "Home") {
       e.preventDefault();
-      onWidthChange(DRAWER_ABS_MAX_WIDTH);
+      onWidthCommit(DRAWER_ABS_MAX_WIDTH);
     } else if (e.key === "End") {
       e.preventDefault();
-      onWidthChange(DRAWER_MIN_WIDTH);
+      onWidthCommit(DRAWER_MIN_WIDTH);
     }
   };
 
