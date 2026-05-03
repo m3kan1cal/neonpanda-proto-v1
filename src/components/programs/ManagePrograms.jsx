@@ -73,12 +73,13 @@ import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import CoachAgent from "../../utils/agents/CoachAgent";
 import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
-import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
 import { getAllPrograms } from "../../utils/apis/programApi";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import { LIST_PAGE_SIZE } from "../../constants/pagination";
 import LoadMoreButton from "../shared/LoadMoreButton";
 import { notifyLoadMoreError } from "../../utils/loadMoreErrors";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
 
 // Helper function to check if a program is new (created within last 7 days)
 const isNewProgram = (createdDate, programId) => {
@@ -165,6 +166,7 @@ function ManagePrograms() {
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId"); // Add coachId from URL
   const toast = useToast();
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
   // Authorize that URL userId matches authenticated user
   const {
@@ -211,7 +213,6 @@ function ManagePrograms() {
     programId: null,
     action: null,
   });
-  const [isCreatingProgram, setIsCreatingProgram] = useState(false);
 
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -238,6 +239,18 @@ function ManagePrograms() {
   const [showDeleteSessionModal, setShowDeleteSessionModal] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const previousBuildingSessionsRef = useRef(new Set()); // Track previous building sessions
+
+  // Contextual chat drawer state — hosts the program designer session inline.
+  // `programDesignerDrawerSessionId === null` means "start a new session";
+  // a non-null value resumes an existing in-progress session.
+  const [
+    isProgramDesignerDrawerOpen,
+    setIsProgramDesignerDrawerOpen,
+  ] = useState(false);
+  const [programDesignerDrawerSessionId, setProgramDesignerDrawerSessionId] =
+    useState(null);
+  const [programDesignerDrawerCoachId, setProgramDesignerDrawerCoachId] =
+    useState(null);
 
   // Auto-scroll to top when component mounts
   useEffect(() => {
@@ -947,11 +960,19 @@ function ManagePrograms() {
   };
 
   const handleContinueSession = (session) => {
-    // Navigate to program designer with existing session
-    // Use session.coachId instead of URL param to ensure correct coach
-    navigate(
-      `/training-grounds/program-designer?userId=${userId}&coachId=${session.coachId || coachId}&programDesignerSessionId=${session.sessionId}`,
-    );
+    // Resume the in-progress session inline via the contextual chat drawer.
+    // The `coachId` from the session itself (not URL params) is what owns the
+    // session, so the drawer must use it even when the URL carries a
+    // different coachId.
+    if (!session?.sessionId) return;
+    const sessionCoachId = session.coachId || coachId;
+    if (!sessionCoachId) {
+      toast.error("This session is missing a coach. Please try again.");
+      return;
+    }
+    setProgramDesignerDrawerSessionId(session.sessionId);
+    setProgramDesignerDrawerCoachId(sessionCoachId);
+    setIsProgramDesignerDrawerOpen(true);
   };
 
   // Handle view program
@@ -963,8 +984,11 @@ function ManagePrograms() {
     );
   };
 
-  // Handle create new program - create session then navigate
-  const handleCreateProgram = async () => {
+  // Handle create new program — open the contextual chat drawer with no
+  // session id. The drawer creates a fresh program designer session via
+  // ProgramDesignerAgent. Users without a coach are routed to /coaches first
+  // so they can pick one.
+  const handleCreateProgram = () => {
     if (!userId) {
       navigate(`/coaches?userId=${userId || ""}`);
       return;
@@ -976,20 +1000,23 @@ function ManagePrograms() {
       return;
     }
 
-    setIsCreatingProgram(true);
-    try {
-      // Create a new program designer session (mirrors CoachCreator flow)
-      const result = await createProgramDesignerSession(userId, coachId);
-      const { sessionId } = result;
+    setProgramDesignerDrawerSessionId(null);
+    setProgramDesignerDrawerCoachId(coachId);
+    setIsProgramDesignerDrawerOpen(true);
+  };
 
-      // Navigate to program designer with the session ID
-      navigate(
-        `/training-grounds/program-designer?userId=${userId}&coachId=${coachId}&programDesignerSessionId=${sessionId}`,
-      );
-    } catch (error) {
-      logger.error("Error creating program designer session:", error);
-      toast.error("Failed to create program design session");
-      setIsCreatingProgram(false);
+  const handleProgramDesignerDrawerClose = () => {
+    setIsProgramDesignerDrawerOpen(false);
+    setProgramDesignerDrawerSessionId(null);
+    setProgramDesignerDrawerCoachId(null);
+  };
+
+  const handleProgramDesignerSessionComplete = () => {
+    // Refresh in-progress sessions strip and program buckets so the building
+    // program shows up immediately.
+    loadInProgressSessions();
+    if (typeof reloadCoachesAndProgramsRef.current === "function") {
+      reloadCoachesAndProgramsRef.current();
     }
   };
 
@@ -1577,68 +1604,54 @@ function ManagePrograms() {
 
         {/* Active Programs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr animate-fadeIn">
-          {/* Create New Program Card */}
+          {/* Create New Program Card — opens the contextual chat drawer
+              instantly, so there's no in-flight loading state on the card. */}
           <div
-            onClick={isCreatingProgram ? undefined : handleCreateProgram}
-            className={`${containerPatterns.dashedCard} p-4 md:p-6 group ${
-              isCreatingProgram
-                ? "opacity-75 cursor-not-allowed"
-                : "cursor-pointer"
-            }`}
+            onClick={handleCreateProgram}
+            className={`${containerPatterns.dashedCard} p-4 md:p-6 group cursor-pointer`}
           >
             <div className="text-center h-full flex flex-col justify-between">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
-                {/* Plus Icon or Spinner */}
+                {/* Plus Icon */}
                 <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-1 md:mb-3">
-                  {isCreatingProgram ? (
-                    <div className="w-8 h-8 md:w-12 md:h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <svg
-                      className="w-8 h-8 md:w-12 md:h-12"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                  )}
+                  <svg
+                    className="w-8 h-8 md:w-12 md:h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
                 </div>
 
                 {/* Title */}
                 <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-base md:text-lg uppercase mb-1 md:mb-3 transition-colors duration-300">
-                  {isCreatingProgram
-                    ? "Creating Session..."
-                    : "Design New Program"}
+                  Design New Program
                 </h3>
 
                 {/* Description */}
                 <p
                   className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-xs md:text-sm transition-colors duration-300 text-center mb-0 md:mb-4 max-w-xs mx-auto`}
                 >
-                  {isCreatingProgram
-                    ? "Setting up your program design session"
-                    : "Chat with your coach to design a personalized training program"}
+                  Chat with your coach to design a personalized training program
                 </p>
 
                 {/* Info Badge - hidden on mobile to reduce card height */}
-                {!isCreatingProgram && (
-                  <div className="hidden md:block bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-3">
-                    <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
-                      5-10 minute guided conversation
-                    </p>
-                  </div>
-                )}
+                <div className="hidden md:block bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-3">
+                  <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
+                    5-10 minute guided conversation
+                  </p>
+                </div>
               </div>
 
               {/* Bottom Features - desktop only; mobile keeps the card compact */}
-              {!isCreatingProgram && (
-                <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3">
+              <div className="hidden md:block border-t border-synthwave-neon-pink/20 pt-3 mt-3">
                   <div className="grid grid-cols-1 gap-2">
                     <div
                       className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
@@ -1696,7 +1709,6 @@ function ManagePrograms() {
                     </div>
                   </div>
                 </div>
-              )}
             </div>
           </div>
 
@@ -2338,6 +2350,25 @@ function ManagePrograms() {
         id="command-palette-button"
         {...tooltipPatterns.standard}
         place="bottom"
+      />
+
+      {/* Program Designer drawer — replaces the full-page program designer
+          flow for users who land here via "Design New Program" or an
+          in-progress session card. The dedicated /training-grounds/program-
+          designer route still works for deep links / refreshes. */}
+      <ContextualChatDrawer
+        isOpen={isProgramDesignerDrawerOpen}
+        onClose={handleProgramDesignerDrawerClose}
+        variant="programDesignerSession"
+        userId={userId}
+        userInitial={userInitial}
+        userEmail={userEmail}
+        userDisplayName={userDisplayName}
+        coachId={programDesignerDrawerCoachId}
+        coachData={coachData}
+        entityLabel="Program Designer"
+        existingSessionId={programDesignerDrawerSessionId}
+        onSessionComplete={handleProgramDesignerSessionComplete}
       />
 
       {/* Custom animations */}
