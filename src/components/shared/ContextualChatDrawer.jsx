@@ -369,6 +369,20 @@ export default function ContextualChatDrawer({
     coachData?.name ||
     null;
   const coachInitial = effectiveCoachName?.[0]?.toUpperCase() || "C";
+  // Effective coachData passed through to PanelContent. When resuming a
+  // program-designer session for a different coach than the URL coach, the
+  // agent's loaded coach.name is the source of truth — using it here keeps
+  // ChatInput's `coachName` consistent with the header avatar/initial.
+  const effectiveCoachData = useMemo(() => {
+    if (
+      isProgramDesignerSession &&
+      agentState?.coach?.name &&
+      agentState.coach.name !== coachData?.name
+    ) {
+      return { ...(coachData || {}), name: agentState.coach.name };
+    }
+    return coachData;
+  }, [isProgramDesignerSession, agentState?.coach?.name, coachData]);
 
   // Effective inline tag + session key. Each inline surface (Training Grounds,
   // Program Dashboard, etc.) MUST pass its own scoped values — sharing these
@@ -778,8 +792,10 @@ export default function ContextualChatDrawer({
 
           if (existingSessionId) {
             await agent.loadExistingSession(userId, existingSessionId);
+            if (cancelled) return;
           } else {
             await agent.createSession(userId);
+            if (cancelled) return;
           }
         } else {
           // programDesignerSession
@@ -1297,7 +1313,7 @@ export default function ContextualChatDrawer({
           headingId={headingId}
           entityLabel={entityLabel}
           entityType={entityType}
-          coachData={coachData}
+          coachData={effectiveCoachData}
           coachInitial={coachInitial}
           userInitial={userInitial}
           userEmail={userEmail}
@@ -1337,7 +1353,7 @@ export default function ContextualChatDrawer({
           headingId={`${headingId}-mobile`}
           entityLabel={entityLabel}
           entityType={entityType}
-          coachData={coachData}
+          coachData={effectiveCoachData}
           coachInitial={coachInitial}
           userInitial={userInitial}
           userEmail={userEmail}
