@@ -104,10 +104,10 @@ function QuickStatItem({ stat, index }) {
 
       {/* Tooltip — anchored to the icon, opened by hover/focus on the whole row */}
       <Tooltip
+        {...tooltipPatterns.standard}
         id={tooltipId}
         anchorSelect={`#${iconAnchorId}`}
         isOpen={isHovered}
-        {...tooltipPatterns.standard}
       >
         <strong>{stat.tooltip?.title || ""}</strong>
         <br />
