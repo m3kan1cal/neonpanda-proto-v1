@@ -59,6 +59,49 @@ import { logger } from "../../utils/logger";
 const INITIAL_PROMPT =
   "Please load my workout details so we can get started. I have some corrections to make.";
 
+// Desktop drawer width bounds (px). The panel is fixed to the right edge and
+// resizable from its left edge. Toggle button snaps between DEFAULT and EXPANDED.
+const DRAWER_MIN_WIDTH = 360;
+const DRAWER_DEFAULT_WIDTH = 420;
+const DRAWER_EXPANDED_WIDTH = 620;
+const DRAWER_ABS_MAX_WIDTH = 900;
+const DRAWER_WIDTH_STORAGE_KEY = "neonpanda-chat-drawer-width";
+const DRAWER_LEGACY_EXPANDED_KEY = "neonpanda-chat-drawer-expanded";
+
+const getDrawerMaxWidth = () => {
+  if (typeof window === "undefined") return DRAWER_ABS_MAX_WIDTH;
+  return Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH);
+};
+
+const clampDrawerWidth = (w) => {
+  const max = getDrawerMaxWidth();
+  if (typeof w !== "number" || Number.isNaN(w)) return DRAWER_DEFAULT_WIDTH;
+  return Math.max(DRAWER_MIN_WIDTH, Math.min(max, w));
+};
+
+const readInitialDrawerWidth = () => {
+  if (typeof window === "undefined") return DRAWER_DEFAULT_WIDTH;
+  try {
+    const stored = localStorage.getItem(DRAWER_WIDTH_STORAGE_KEY);
+    if (stored != null) {
+      const parsed = parseInt(stored, 10);
+      if (!Number.isNaN(parsed)) return clampDrawerWidth(parsed);
+    }
+    // One-time migration from the legacy boolean key
+    const legacy = localStorage.getItem(DRAWER_LEGACY_EXPANDED_KEY);
+    if (legacy != null) {
+      const migrated =
+        legacy === "true" ? DRAWER_EXPANDED_WIDTH : DRAWER_DEFAULT_WIDTH;
+      localStorage.setItem(DRAWER_WIDTH_STORAGE_KEY, String(migrated));
+      localStorage.removeItem(DRAWER_LEGACY_EXPANDED_KEY);
+      return clampDrawerWidth(migrated);
+    }
+  } catch {
+    // localStorage unavailable — fall through to default
+  }
+  return DRAWER_DEFAULT_WIDTH;
+};
+
 // Fallbacks used when a caller forgets to pass the inline tag/session key
 // props. Kept in sync with the Training Grounds constants so existing
 // wiring keeps working, but new inline surfaces (e.g. Program Dashboard)
@@ -280,9 +323,8 @@ export default function ContextualChatDrawer({
   const [agentState, setAgentState] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(
-    () => localStorage.getItem("neonpanda-chat-drawer-expanded") === "true",
-  );
+  const [drawerWidth, setDrawerWidth] = useState(readInitialDrawerWidth);
+  const [isResizing, setIsResizing] = useState(false);
 
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
@@ -882,13 +924,62 @@ export default function ContextualChatDrawer({
     [editContext, isTrainingInlineChat, streamClientContext],
   );
 
-  const handleToggleExpand = useCallback(() => {
-    setIsExpanded((prev) => {
-      const next = !prev;
-      localStorage.setItem("neonpanda-chat-drawer-expanded", String(next));
-      return next;
-    });
+  const persistDrawerWidth = useCallback((w) => {
+    try {
+      localStorage.setItem(
+        DRAWER_WIDTH_STORAGE_KEY,
+        String(Math.round(clampDrawerWidth(w))),
+      );
+    } catch {
+      // ignore — storage may be disabled in some browsers
+    }
   }, []);
+
+  // Update drawer width without touching localStorage. Used on every animation
+  // frame during a drag — persisting per-frame would mean ~60 synchronous
+  // localStorage writes per second on the main thread for no benefit.
+  const handleDrawerWidthChange = useCallback((next) => {
+    setDrawerWidth(clampDrawerWidth(next));
+  }, []);
+
+  // Commit a width: update state AND persist. Used on drag-release, keyboard
+  // nudges, and any other user gesture that produces a stable final value.
+  const handleDrawerWidthCommit = useCallback(
+    (next) => {
+      const clamped = clampDrawerWidth(next);
+      setDrawerWidth(clamped);
+      persistDrawerWidth(clamped);
+    },
+    [persistDrawerWidth],
+  );
+
+  // Mirror the latest width into a ref so callers (toggle button, resize
+  // listener) can read it without putting side effects inside a setState
+  // updater (StrictMode would double-fire those).
+  const drawerWidthRef = useRef(drawerWidth);
+  useEffect(() => {
+    drawerWidthRef.current = drawerWidth;
+  }, [drawerWidth]);
+
+  const handleToggleExpand = useCallback(() => {
+    const midpoint = (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
+    const next =
+      drawerWidthRef.current >= midpoint
+        ? DRAWER_DEFAULT_WIDTH
+        : DRAWER_EXPANDED_WIDTH;
+    handleDrawerWidthCommit(next);
+  }, [handleDrawerWidthCommit]);
+
+  // Re-clamp width if the viewport shrinks below the saved value.
+  useEffect(() => {
+    const onResize = () => {
+      const current = drawerWidthRef.current;
+      const clamped = clampDrawerWidth(current);
+      if (clamped !== current) handleDrawerWidthCommit(clamped);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [handleDrawerWidthCommit]);
 
   const isStreaming =
     agentState?.isStreaming || agentState?.isTyping || isInitializing;
@@ -920,6 +1011,10 @@ export default function ContextualChatDrawer({
   const dialogAriaLabel = isTrainingInlineChat
     ? `Chat with ${entityLabel || "coach"}`
     : `Edit ${entityLabel || entityType} with AI coach`;
+
+  // Drives the toggle button's icon (<<  vs  >>) and aria-label.
+  const isDrawerExpanded =
+    drawerWidth >= (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
 
   if (!isOpen) return null;
 
@@ -957,8 +1052,17 @@ export default function ContextualChatDrawer({
           // Slide-in animation
           isOpen ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
-        style={{ width: isExpanded ? "620px" : "420px" }}
+        style={{
+          width: `${drawerWidth}px`,
+          ...(isResizing ? { transition: "none" } : null),
+        }}
       >
+        <DrawerResizeHandle
+          width={drawerWidth}
+          onWidthChange={handleDrawerWidthChange}
+          onWidthCommit={handleDrawerWidthCommit}
+          onResizingChange={setIsResizing}
+        />
         <PanelContent
           headingId={headingId}
           entityLabel={entityLabel}
@@ -981,7 +1085,7 @@ export default function ContextualChatDrawer({
           handleSend={handleSend}
           inputFocusRef={desktopInputFocusRef}
           userId={userId}
-          isExpanded={isExpanded}
+          isExpanded={isDrawerExpanded}
           onToggleExpand={handleToggleExpand}
           {...panelExtras}
         />
@@ -1022,12 +1126,171 @@ export default function ContextualChatDrawer({
           handleSend={handleSend}
           inputFocusRef={mobileInputFocusRef}
           userId={userId}
-          isExpanded={isExpanded}
+          isExpanded={isDrawerExpanded}
           onToggleExpand={handleToggleExpand}
           {...panelExtras}
         />
       </div>
     </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Desktop drawer resize handle — sits on the panel's left edge. Drag to resize
+// continuously between DRAWER_MIN_WIDTH and viewport-clamped max. ArrowLeft /
+// ArrowRight nudge by 20px; Home / End jump to max / min. The handle's hit area
+// straddles the panel's left edge (6px inside / 6px outside) and the visible
+// 1px rule sits exactly on the edge.
+// ──────────────────────────────────────────────────────────────────────────────
+function DrawerResizeHandle({
+  width,
+  onWidthChange,
+  onWidthCommit,
+  onResizingChange,
+}) {
+  const dragRef = useRef(null);
+  const rafRef = useRef(null);
+  const endDragRafRef = useRef(null);
+  const [isHover, setIsHover] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const restoreBodyStyles = useCallback(() => {
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+  }, []);
+
+  const handlePointerDown = (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    // Cancel any pending end-of-drag transition re-enable from a previous drag.
+    if (endDragRafRef.current != null) {
+      cancelAnimationFrame(endDragRafRef.current);
+      endDragRafRef.current = null;
+    }
+    dragRef.current = {
+      startX: e.clientX,
+      startWidth: width,
+      lastWidth: width,
+    };
+    setIsDragging(true);
+    onResizingChange?.(true);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "ew-resize";
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    // Panel is anchored to the right edge — moving the cursor left grows width.
+    dragRef.current.lastWidth = dragRef.current.startWidth - dx;
+    if (rafRef.current == null) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (dragRef.current) onWidthChange(dragRef.current.lastWidth);
+      });
+    }
+  };
+
+  const endDrag = (e) => {
+    if (!dragRef.current) return;
+    const finalWidth = dragRef.current.lastWidth;
+    dragRef.current = null;
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    restoreBodyStyles();
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    // Phase 1 (sync): commit the final width while isResizing is still true,
+    // so the panel renders with inline `transition: "none"` and snaps to the
+    // exact final value with no animation.
+    onWidthCommit(finalWidth);
+    // Phase 2 (next frame): re-enable the CSS transition. Width is already
+    // settled, so toggling transition back on doesn't animate the small delta
+    // between the last RAF-rendered value and the true final pointer position.
+    endDragRafRef.current = requestAnimationFrame(() => {
+      endDragRafRef.current = null;
+      // If a new drag started in the meantime, leave its state alone.
+      if (dragRef.current) return;
+      setIsDragging(false);
+      onResizingChange?.(false);
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      if (endDragRafRef.current != null)
+        cancelAnimationFrame(endDragRafRef.current);
+      restoreBodyStyles();
+      // If we unmount mid-drag (e.g., parent flips isOpen to false), make sure
+      // the parent's isResizing flag doesn't get stuck and suppress the next
+      // slide-in animation.
+      onResizingChange?.(false);
+    };
+  }, [restoreBodyStyles, onResizingChange]);
+
+  const handleKeyDown = (e) => {
+    const STEP = 20;
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      onWidthCommit(width + STEP);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      onWidthCommit(width - STEP);
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      onWidthCommit(DRAWER_ABS_MAX_WIDTH);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      onWidthCommit(DRAWER_MIN_WIDTH);
+    }
+  };
+
+  const isActive = isHover || isDragging;
+  const ariaMax = Math.round(
+    typeof window !== "undefined"
+      ? Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH)
+      : DRAWER_ABS_MAX_WIDTH,
+  );
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize chat drawer"
+      aria-valuenow={Math.round(width)}
+      aria-valuemin={DRAWER_MIN_WIDTH}
+      aria-valuemax={ariaMax}
+      tabIndex={0}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onPointerEnter={() => setIsHover(true)}
+      onPointerLeave={() => setIsHover(false)}
+      onKeyDown={handleKeyDown}
+      className={contextualDrawerPatterns.resizeHandle}
+    >
+      <div
+        aria-hidden="true"
+        className={[
+          contextualDrawerPatterns.resizeHandleBar,
+          isActive
+            ? "bg-synthwave-neon-cyan/70 shadow-[0_0_8px_rgba(34,211,238,0.45)]"
+            : "bg-synthwave-neon-cyan/20",
+        ].join(" ")}
+      />
+    </div>
   );
 }
 

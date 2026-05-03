@@ -1297,6 +1297,14 @@ export const contextualDrawerPatterns = {
   // Close button (icon button style)
   closeButton:
     "shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-synthwave-text-muted hover:text-synthwave-text-primary hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+
+  // Resize handle — vertical drag affordance on the panel's left edge (desktop only)
+  // 12px hit area centered on the edge (6px inside / 6px outside)
+  resizeHandle:
+    "absolute top-0 left-0 h-full w-3 -translate-x-1/2 z-10 cursor-ew-resize touch-none flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-synthwave-neon-cyan/60 focus-visible:ring-inset",
+
+  // Visible 1px rule sitting exactly on the panel's left edge
+  resizeHandleBar: "h-full w-px transition-colors duration-150",
 };
 
 // Changelog List Patterns - Text-based information display in lists
