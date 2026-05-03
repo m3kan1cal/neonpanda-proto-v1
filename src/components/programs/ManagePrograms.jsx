@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "../shared/AccessDenied";
@@ -76,6 +76,7 @@ import { PROGRAM_STATUS } from "../../constants/conversationModes";
 import { getAllPrograms } from "../../utils/apis/programApi";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
 import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
 import { LIST_PAGE_SIZE } from "../../constants/pagination";
 import LoadMoreButton from "../shared/LoadMoreButton";
 import { notifyLoadMoreError } from "../../utils/loadMoreErrors";
@@ -240,7 +241,9 @@ function ManagePrograms() {
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const previousBuildingSessionsRef = useRef(new Set()); // Track previous building sessions
 
-  // Contextual chat drawer state — hosts the program designer session inline.
+  // Contextual chat drawer state — FAB-only entry point. The drawer hosts
+  // a program designer session and exposes an in-drawer picker so users
+  // can switch between in-progress sessions without leaving the page.
   // `programDesignerDrawerSessionId === null` means "start a new session";
   // a non-null value resumes an existing in-progress session.
   const [
@@ -251,6 +254,26 @@ function ManagePrograms() {
     useState(null);
   const [programDesignerDrawerCoachId, setProgramDesignerDrawerCoachId] =
     useState(null);
+
+  // Picker options for the in-drawer session switcher. Only resumable
+  // sessions appear (incomplete and not currently building/failed) — those
+  // are the ones users can meaningfully re-enter.
+  const programDesignerSessionPickerOptions = useMemo(() => {
+    return (inProgressSessions || [])
+      .filter((s) => {
+        if (!s?.sessionId) return false;
+        if (s.isComplete) return false;
+        const status = s.programGeneration?.status;
+        return status !== "IN_PROGRESS" && status !== "FAILED";
+      })
+      .map((s) => ({
+        sessionId: s.sessionId,
+        coachId: s.coachId,
+        title: s.coachName
+          ? `Program Design — ${s.coachName}`
+          : "Program Design Session",
+      }));
+  }, [inProgressSessions]);
 
   // Auto-scroll to top when component mounts
   useEffect(() => {
@@ -960,19 +983,18 @@ function ManagePrograms() {
   };
 
   const handleContinueSession = (session) => {
-    // Resume the in-progress session inline via the contextual chat drawer.
-    // The `coachId` from the session itself (not URL params) is what owns the
-    // session, so the drawer must use it even when the URL carries a
-    // different coachId.
+    // Resume the in-progress session in the dedicated full-page program
+    // designer route. The session's own `coachId` (not URL params) is what
+    // owns the session, so deep-link with that.
     if (!session?.sessionId) return;
     const sessionCoachId = session.coachId || coachId;
     if (!sessionCoachId) {
       toast.error("This session is missing a coach. Please try again.");
       return;
     }
-    setProgramDesignerDrawerSessionId(session.sessionId);
-    setProgramDesignerDrawerCoachId(sessionCoachId);
-    setIsProgramDesignerDrawerOpen(true);
+    navigate(
+      `/training-grounds/program-designer?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(sessionCoachId)}&programDesignerSessionId=${encodeURIComponent(session.sessionId)}`,
+    );
   };
 
   // Handle view program
@@ -984,10 +1006,10 @@ function ManagePrograms() {
     );
   };
 
-  // Handle create new program — open the contextual chat drawer with no
-  // session id. The drawer creates a fresh program designer session via
-  // ProgramDesignerAgent. Users without a coach are routed to /coaches first
-  // so they can pick one.
+  // Handle create new program — navigate to the dedicated full-page program
+  // designer experience. The contextual chat drawer is reserved for the FAB
+  // entry point; the empty card on this page always takes users to the full
+  // immersive route. Users without a coach are routed to /coaches first.
   const handleCreateProgram = () => {
     if (!userId) {
       navigate(`/coaches?userId=${userId || ""}`);
@@ -1000,9 +1022,48 @@ function ManagePrograms() {
       return;
     }
 
+    navigate(
+      `/training-grounds/program-designer?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`,
+    );
+  };
+
+  // FAB-only entry point for the contextual chat drawer. Always opens a
+  // fresh program designer session; the in-drawer picker lets users switch
+  // to an in-progress session without leaving the page.
+  const handleOpenProgramDesignerDrawer = () => {
+    if (!coachId) return;
     setProgramDesignerDrawerSessionId(null);
     setProgramDesignerDrawerCoachId(coachId);
     setIsProgramDesignerDrawerOpen(true);
+  };
+
+  // Picker bridge: parent owns the session id state, so swapping it here
+  // makes the drawer's session-init effect re-run for the chosen session.
+  const handleProgramDesignerPickerSelect = (sessionId) => {
+    if (!sessionId) return;
+    const session = inProgressSessions.find((s) => s.sessionId === sessionId);
+    const sessionCoachId = session?.coachId || coachId;
+    if (!sessionCoachId) return;
+    setProgramDesignerDrawerSessionId(sessionId);
+    setProgramDesignerDrawerCoachId(sessionCoachId);
+  };
+
+  const handleProgramDesignerPickerNew = () => {
+    setProgramDesignerDrawerSessionId(null);
+    setProgramDesignerDrawerCoachId(coachId);
+  };
+
+  const handleProgramDesignerOpenFullPage = () => {
+    if (!programDesignerDrawerCoachId) return;
+    if (programDesignerDrawerSessionId) {
+      navigate(
+        `/training-grounds/program-designer?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(programDesignerDrawerCoachId)}&programDesignerSessionId=${encodeURIComponent(programDesignerDrawerSessionId)}`,
+      );
+    } else {
+      navigate(
+        `/training-grounds/program-designer?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(programDesignerDrawerCoachId)}`,
+      );
+    }
   };
 
   const handleProgramDesignerDrawerClose = () => {
@@ -2352,10 +2413,19 @@ function ManagePrograms() {
         place="bottom"
       />
 
-      {/* Program Designer drawer — replaces the full-page program designer
-          flow for users who land here via "Design New Program" or an
-          in-progress session card. The dedicated /training-grounds/program-
-          designer route still works for deep links / refreshes. */}
+      {/* Program Designer drawer — FAB-only entry point. The "Design New
+          Program" card and in-progress session cards on this page navigate
+          to the dedicated /training-grounds/program-designer route for the
+          full immersive experience. The drawer is for users who want to
+          design without leaving the management view; the picker lets them
+          switch to an in-progress session inline. */}
+      {coachData && coachId && (
+        <EntityChatFAB
+          onClick={handleOpenProgramDesignerDrawer}
+          isOpen={isProgramDesignerDrawerOpen}
+          tooltip="Design a new program"
+        />
+      )}
       <ContextualChatDrawer
         isOpen={isProgramDesignerDrawerOpen}
         onClose={handleProgramDesignerDrawerClose}
@@ -2369,6 +2439,11 @@ function ManagePrograms() {
         entityLabel="Program Designer"
         existingSessionId={programDesignerDrawerSessionId}
         onSessionComplete={handleProgramDesignerSessionComplete}
+        sessionPickerOptions={programDesignerSessionPickerOptions}
+        isLoadingSessionPicker={sessionsLoading}
+        onSessionPickerSelect={handleProgramDesignerPickerSelect}
+        onSessionPickerNew={handleProgramDesignerPickerNew}
+        onOpenSessionFullPage={handleProgramDesignerOpenFullPage}
       />
 
       {/* Custom animations */}

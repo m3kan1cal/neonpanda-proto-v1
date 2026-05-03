@@ -66,22 +66,31 @@ const INITIAL_PROMPT =
 
 // Desktop drawer width bounds (px). The panel is fixed to the right edge and
 // resizable from its left edge. Toggle button snaps between DEFAULT and EXPANDED.
+// Max drag is 75% of the viewport; expanded snap is the larger of 620px or
+// half the viewport (clamped to the drag max). Both are functions, not
+// constants, so they track live viewport resizes.
 const DRAWER_MIN_WIDTH = 360;
 const DRAWER_DEFAULT_WIDTH = 420;
-const DRAWER_EXPANDED_WIDTH = 620;
-const DRAWER_ABS_MAX_WIDTH = 900;
+const DRAWER_EXPANDED_FLOOR = 620;
 const DRAWER_WIDTH_STORAGE_KEY = "neonpanda-chat-drawer-width";
 const DRAWER_LEGACY_EXPANDED_KEY = "neonpanda-chat-drawer-expanded";
 
 const getDrawerMaxWidth = () => {
-  if (typeof window === "undefined") return DRAWER_ABS_MAX_WIDTH;
-  return Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH);
+  if (typeof window === "undefined") return DRAWER_EXPANDED_FLOOR;
+  return Math.max(DRAWER_MIN_WIDTH, window.innerWidth * 0.75);
 };
 
 const clampDrawerWidth = (w) => {
   const max = getDrawerMaxWidth();
   if (typeof w !== "number" || Number.isNaN(w)) return DRAWER_DEFAULT_WIDTH;
   return Math.max(DRAWER_MIN_WIDTH, Math.min(max, w));
+};
+
+const getDrawerExpandedWidth = () => {
+  if (typeof window === "undefined") return DRAWER_EXPANDED_FLOOR;
+  return clampDrawerWidth(
+    Math.max(DRAWER_EXPANDED_FLOOR, window.innerWidth * 0.5),
+  );
 };
 
 const readInitialDrawerWidth = () => {
@@ -96,7 +105,7 @@ const readInitialDrawerWidth = () => {
     const legacy = localStorage.getItem(DRAWER_LEGACY_EXPANDED_KEY);
     if (legacy != null) {
       const migrated =
-        legacy === "true" ? DRAWER_EXPANDED_WIDTH : DRAWER_DEFAULT_WIDTH;
+        legacy === "true" ? getDrawerExpandedWidth() : DRAWER_DEFAULT_WIDTH;
       localStorage.setItem(DRAWER_WIDTH_STORAGE_KEY, String(migrated));
       localStorage.removeItem(DRAWER_LEGACY_EXPANDED_KEY);
       return clampDrawerWidth(migrated);
@@ -324,6 +333,14 @@ export default function ContextualChatDrawer({
   inlineSessionKey,
   existingSessionId,
   onSessionComplete,
+  // Session-picker bridge — only honored for session variants
+  // (programDesignerSession / coachCreatorSession). The parent owns the
+  // in-progress sessions list and the navigation callbacks.
+  sessionPickerOptions = [],
+  isLoadingSessionPicker = false,
+  onSessionPickerSelect,
+  onSessionPickerNew,
+  onOpenSessionFullPage,
 }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -1199,18 +1216,25 @@ export default function ContextualChatDrawer({
     drawerWidthRef.current = drawerWidth;
   }, [drawerWidth]);
 
+  // Track the viewport width so derived values (expanded snap, "is expanded"
+  // boolean) recompute when the user resizes the window with the drawer open.
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerWidth,
+  );
+
   const handleToggleExpand = useCallback(() => {
-    const midpoint = (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
+    const expanded = getDrawerExpandedWidth();
+    const midpoint = (DRAWER_DEFAULT_WIDTH + expanded) / 2;
     const next =
-      drawerWidthRef.current >= midpoint
-        ? DRAWER_DEFAULT_WIDTH
-        : DRAWER_EXPANDED_WIDTH;
+      drawerWidthRef.current >= midpoint ? DRAWER_DEFAULT_WIDTH : expanded;
     handleDrawerWidthCommit(next);
   }, [handleDrawerWidthCommit]);
 
-  // Re-clamp width if the viewport shrinks below the saved value.
+  // Re-clamp width if the viewport shrinks below the saved value, and keep
+  // viewportWidth in sync so derived snap/expanded values track resizes.
   useEffect(() => {
     const onResize = () => {
+      setViewportWidth(window.innerWidth);
       const current = drawerWidthRef.current;
       const clamped = clampDrawerWidth(current);
       if (clamped !== current) handleDrawerWidthCommit(clamped);
@@ -1246,6 +1270,24 @@ export default function ContextualChatDrawer({
     agentState?.conversation?.title,
   ]);
 
+  // Map parent-supplied in-progress sessions onto the picker's option shape
+  // ({ conversationId, title }) so the existing TrainingGroundsConversationPicker
+  // and picker-bar buttons render unchanged for the session variants.
+  const sessionPickerEffective = useMemo(() => {
+    if (!isSessionVariant) return [];
+    return (sessionPickerOptions || [])
+      .filter((s) => s && s.sessionId)
+      .map((s) => ({
+        conversationId: s.sessionId,
+        title:
+          s.title ||
+          s.label ||
+          (isCoachCreatorSession
+            ? "Coach creator session"
+            : "Program designer session"),
+      }));
+  }, [isSessionVariant, isCoachCreatorSession, sessionPickerOptions]);
+
   const dialogAriaLabel = isCoachCreatorSession
     ? "Create a new AI coach"
     : isProgramDesignerSession
@@ -1254,20 +1296,46 @@ export default function ContextualChatDrawer({
         ? `Chat with ${entityLabel || "coach"}`
         : `Edit ${entityLabel || entityType} with AI coach`;
 
-  // Drives the toggle button's icon (<<  vs  >>) and aria-label.
-  const isDrawerExpanded =
-    drawerWidth >= (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
+  // Drives the toggle button's icon (<<  vs  >>) and aria-label. Recomputes on
+  // viewport resize because getDrawerExpandedWidth depends on window.innerWidth.
+  const isDrawerExpanded = useMemo(() => {
+    void viewportWidth;
+    return drawerWidth >= (DRAWER_DEFAULT_WIDTH + getDrawerExpandedWidth()) / 2;
+  }, [drawerWidth, viewportWidth]);
 
   if (!isOpen) return null;
 
+  // For session variants, the picker reflects in-progress sessions and the
+  // bridge callbacks come from the parent (which owns the sessionId state).
+  // For all other variants, the picker bar is either training-grounds-driven
+  // (handled by internal handlers) or absent.
+  const pickerOptionsForPanel = isSessionVariant
+    ? sessionPickerEffective
+    : trainingPickerEffective;
+  const pickerCurrentIdForPanel = isSessionVariant
+    ? existingSessionId || ""
+    : currentConversationId;
+  const onPickerChangeForPanel = isSessionVariant
+    ? onSessionPickerSelect
+    : handleTrainingPickerChange;
+  const onPickerNewForPanel = isSessionVariant
+    ? onSessionPickerNew
+    : handleTrainingNewConversation;
+  const onPickerOpenFullPageForPanel = isSessionVariant
+    ? onOpenSessionFullPage
+    : handleOpenFullPageChat;
+  const isLoadingPickerForPanel = isSessionVariant
+    ? isLoadingSessionPicker
+    : isLoadingTrainingPicker;
+
   const panelExtras = {
     variant,
-    trainingPickerOptions: trainingPickerEffective,
-    isLoadingTrainingPicker,
-    currentConversationId,
-    onTrainingPickerChange: handleTrainingPickerChange,
-    onTrainingNewConversation: handleTrainingNewConversation,
-    onOpenFullPageChat: handleOpenFullPageChat,
+    trainingPickerOptions: pickerOptionsForPanel,
+    isLoadingTrainingPicker: isLoadingPickerForPanel,
+    currentConversationId: pickerCurrentIdForPanel,
+    onTrainingPickerChange: onPickerChangeForPanel,
+    onTrainingNewConversation: onPickerNewForPanel,
+    onOpenFullPageChat: onPickerOpenFullPageForPanel,
     userId,
     coachId,
     streamBusy,
@@ -1501,7 +1569,7 @@ function DrawerResizeHandle({
       onWidthCommit(width - STEP);
     } else if (e.key === "Home") {
       e.preventDefault();
-      onWidthCommit(DRAWER_ABS_MAX_WIDTH);
+      onWidthCommit(getDrawerMaxWidth());
     } else if (e.key === "End") {
       e.preventDefault();
       onWidthCommit(DRAWER_MIN_WIDTH);
@@ -1509,11 +1577,7 @@ function DrawerResizeHandle({
   };
 
   const isActive = isHover || isDragging;
-  const ariaMax = Math.round(
-    typeof window !== "undefined"
-      ? Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH)
-      : DRAWER_ABS_MAX_WIDTH,
-  );
+  const ariaMax = Math.round(getDrawerMaxWidth());
 
   return (
     <div
@@ -1825,10 +1889,10 @@ function PanelContent({
         )}
       </div>
 
-      {isTraining && (
-        <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/40">
+      {(isTraining || (isSessionVariant && trainingPickerOptions.length > 0)) && (
+        <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/20">
           <span id={trainingSelectId} className="sr-only">
-            Conversation
+            {isSessionVariant ? "Session" : "Conversation"}
           </span>
           <div className="flex-1 min-w-0">
             <TrainingGroundsConversationPicker
@@ -1852,9 +1916,21 @@ function PanelContent({
                 streamBusy || isInitializing || !onTrainingNewConversation
               }
               data-tooltip-id={tipNewChatId}
-              data-tooltip-content="New chat"
+              data-tooltip-content={
+                isCoachCreatorSession
+                  ? "New coach"
+                  : isProgramDesignerSession
+                    ? "New program"
+                    : "New chat"
+              }
               data-tooltip-place="bottom"
-              aria-label="New chat"
+              aria-label={
+                isCoachCreatorSession
+                  ? "Start a new coach"
+                  : isProgramDesignerSession
+                    ? "Start a new program"
+                    : "New chat"
+              }
               className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               <PlusIcon />
@@ -1871,18 +1947,20 @@ function PanelContent({
             >
               <OpenFullPageIcon />
             </button>
-            <Link
-              to={viewAllUrl}
-              data-tooltip-id={tipViewAllId}
-              data-tooltip-content="View all"
-              data-tooltip-place="bottom"
-              aria-label="View all conversations"
-              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-purple hover:!text-synthwave-neon-purple hover:!bg-synthwave-neon-purple/10 inline-flex items-center justify-center cursor-pointer`}
-            >
-              <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
-                <ChatIconSmall />
-              </span>
-            </Link>
+            {isTraining && (
+              <Link
+                to={viewAllUrl}
+                data-tooltip-id={tipViewAllId}
+                data-tooltip-content="View all"
+                data-tooltip-place="bottom"
+                aria-label="View all conversations"
+                className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-purple hover:!text-synthwave-neon-purple hover:!bg-synthwave-neon-purple/10 inline-flex items-center justify-center cursor-pointer`}
+              >
+                <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
+                  <ChatIconSmall />
+                </span>
+              </Link>
+            )}
           </div>
           <Tooltip
             id={tipNewChatId}
