@@ -544,12 +544,6 @@ export default function ProgramDashboard() {
         className="max-w-xs"
       />
       <Tooltip
-        id="beta-badge-todays-workout"
-        {...tooltipPatterns.standard}
-        place="bottom"
-        className="max-w-xs"
-      />
-      <Tooltip
         id="coach-card-tooltip"
         {...tooltipPatterns.standard}
         place="bottom"

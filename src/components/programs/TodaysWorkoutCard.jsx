@@ -1,9 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  buttonPatterns,
-  badgePatterns,
-} from "../../utils/ui/uiPatterns";
+import { buttonPatterns } from "../../utils/ui/uiPatterns";
 import { WorkoutIconSmall } from "../themes/SynthwaveComponents";
 import { InlineError } from "../shared/ErrorStates";
 import CollapsibleSection from "./CollapsibleSection";
@@ -62,17 +59,6 @@ function TodaysWorkoutCard({
     );
   }
 
-  // Beta badge shown in the collapsible header
-  const betaBadge = (
-    <div
-      className={`${badgePatterns.beta} cursor-help`}
-      data-tooltip-id="beta-badge-todays-workout"
-      data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
-    >
-      Beta
-    </div>
-  );
-
   // Show rest day card if no workout data
   if (
     !todaysWorkout ||
@@ -86,7 +72,6 @@ function TodaysWorkoutCard({
         icon={WorkoutIconSmall}
         iconColor="cyan"
         id="todays-workout"
-        headerExtras={program ? betaBadge : null}
       >
         {/* Program name */}
         {program && (
@@ -173,7 +158,6 @@ function TodaysWorkoutCard({
         icon={WorkoutIconSmall}
         iconColor="cyan"
         id="todays-workout"
-        headerExtras={betaBadge}
       >
         {/* Day info */}
         <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
@@ -271,7 +255,6 @@ function TodaysWorkoutCard({
       icon={WorkoutIconSmall}
       iconColor="cyan"
       id="todays-workout"
-      headerExtras={betaBadge}
     >
       {/* Program name - clickable */}
       <button
