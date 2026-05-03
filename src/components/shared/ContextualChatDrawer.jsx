@@ -814,6 +814,7 @@ export default function ContextualChatDrawer({
 
           if (existingSessionId) {
             await agent.loadSession(userId, existingSessionId);
+            if (cancelled) return;
           } else {
             const result = await createProgramDesignerSession(userId, coachId);
             if (cancelled) return;
@@ -823,6 +824,7 @@ export default function ContextualChatDrawer({
             // initial AI message is hydrated into the agent state. Mirrors
             // what the standalone /program-designer page does.
             await agent.loadSession(userId, newSessionId);
+            if (cancelled) return;
           }
         }
       } catch (err) {
