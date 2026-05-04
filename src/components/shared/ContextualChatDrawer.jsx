@@ -75,8 +75,13 @@ const DRAWER_EXPANDED_FLOOR = 620;
 const DRAWER_WIDTH_STORAGE_KEY = "neonpanda-chat-drawer-width";
 const DRAWER_LEGACY_EXPANDED_KEY = "neonpanda-chat-drawer-expanded";
 
+// SSR-safe fallback. The app is a Vite SPA so this branch effectively never
+// executes, but we keep a generous default so any persisted width up to 900px
+// survives a hypothetical window-less render without being silently shrunk.
+const DRAWER_SSR_FALLBACK_MAX = 900;
+
 const getDrawerMaxWidth = () => {
-  if (typeof window === "undefined") return DRAWER_EXPANDED_FLOOR;
+  if (typeof window === "undefined") return DRAWER_SSR_FALLBACK_MAX;
   return Math.max(DRAWER_MIN_WIDTH, window.innerWidth * 0.75);
 };
 
@@ -1232,9 +1237,18 @@ export default function ContextualChatDrawer({
 
   // Re-clamp width if the viewport shrinks below the saved value, and keep
   // viewportWidth in sync so derived snap/expanded values track resizes.
+  // The viewportWidth state update is gated on isOpen because the component
+  // stays mounted on its host pages and only the snap/expanded math depends
+  // on viewportWidth — there's no point in churning state and re-rendering
+  // while the drawer is hidden. The clamp side runs unconditionally so a
+  // shrink-while-closed still trims a too-wide persisted width.
+  const isOpenRef = useRef(isOpen);
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
   useEffect(() => {
     const onResize = () => {
-      setViewportWidth(window.innerWidth);
+      if (isOpenRef.current) setViewportWidth(window.innerWidth);
       const current = drawerWidthRef.current;
       const clamped = clampDrawerWidth(current);
       if (clamped !== current) handleDrawerWidthCommit(clamped);
