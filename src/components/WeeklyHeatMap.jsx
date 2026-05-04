@@ -260,21 +260,10 @@ const WeeklyHeatMapV2 = ({
         {/* Tooltip */}
         <Tooltip
           id="heat-map-tooltip"
+          {...tooltipPatterns.standard}
           offset={24}
-          delayShow={0}
           place="top"
-          style={{
-            backgroundColor: "#000",
-            color: "#fff",
-            borderRadius: "8px",
-            fontFamily: "Rajdhani",
-            fontSize: "14px",
-            padding: "8px 12px",
-            zIndex: 99999,
-            maxWidth: "150px",
-            whiteSpace: "normal",
-            wordWrap: "break-word",
-          }}
+          className="max-w-xs"
         />
       </div>
     </div>
