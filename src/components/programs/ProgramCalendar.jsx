@@ -161,7 +161,7 @@ export default function ProgramCalendar({
           {!showAllWeeks && currentWeekIndex > 1 && (
             <button
               onClick={handleJumpToToday}
-              className={buttonPatterns.tabToggleInactive}
+              className={buttonPatterns.tabToggleInactiveSmall}
             >
               Jump to Today
             </button>
@@ -171,8 +171,8 @@ export default function ProgramCalendar({
             onClick={() => setShowAllWeeks(false)}
             className={
               !showAllWeeks
-                ? buttonPatterns.tabToggleActive
-                : buttonPatterns.tabToggleInactive
+                ? buttonPatterns.tabToggleActiveSmall
+                : buttonPatterns.tabToggleInactiveSmall
             }
           >
             Current
@@ -181,8 +181,8 @@ export default function ProgramCalendar({
             onClick={() => setShowAllWeeks(true)}
             className={
               showAllWeeks
-                ? buttonPatterns.tabToggleActive
-                : buttonPatterns.tabToggleInactive
+                ? buttonPatterns.tabToggleActiveSmall
+                : buttonPatterns.tabToggleInactiveSmall
             }
           >
             All Weeks

@@ -99,6 +99,10 @@ export const buttonPatterns = {
     "cursor-pointer px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
   tabToggleInactive:
     "cursor-pointer px-4 py-2 rounded-full font-body font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
+  tabToggleActiveSmall:
+    "cursor-pointer px-3 py-1 rounded-full font-body font-bold text-xs uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/40",
+  tabToggleInactiveSmall:
+    "cursor-pointer px-3 py-1 rounded-full font-body font-bold text-xs uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
 
   // Square icon-only send button (48×48px) - chat input send action with purple→pink gradient
   sendSquare:
