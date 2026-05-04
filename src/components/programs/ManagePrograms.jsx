@@ -1058,7 +1058,7 @@ function ManagePrograms() {
   // state stays null in that flow because the drawer creates the session
   // internally.
   const handleProgramDesignerOpenFullPage = (sessionIdFromDrawer) => {
-    if (!programDesignerDrawerCoachId) return;
+    if (!userId || !programDesignerDrawerCoachId) return;
     const effectiveSessionId =
       sessionIdFromDrawer || programDesignerDrawerSessionId;
     if (effectiveSessionId) {
