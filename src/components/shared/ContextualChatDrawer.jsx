@@ -1988,7 +1988,10 @@ function PanelContent({
             <button
               type="button"
               onClick={() => onOpenFullPageChat?.()}
-              disabled={!currentConversationId || !onOpenFullPageChat}
+              disabled={
+                !onOpenFullPageChat ||
+                (!currentConversationId && !isSessionVariant)
+              }
               data-tooltip-id={tipOpenFullId}
               data-tooltip-content="Open in full page"
               data-tooltip-place="bottom"
