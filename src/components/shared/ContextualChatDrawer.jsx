@@ -371,6 +371,15 @@ export default function ContextualChatDrawer({
   const [trainingPickerOptions, setTrainingPickerOptions] = useState([]);
   const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
 
+  // Bump-counter that the picker bar's "+ new" button (session variants only)
+  // increments to force the session-init effect to discard the current agent
+  // and create a fresh session. Plain `setExistingSessionId(null)` from the
+  // parent is a no-op when sessionId is already null — which happens whenever
+  // the user opened the drawer via the FAB. The tick gives us a real
+  // dependency change to drive the effect, plus participates in the loaded-
+  // session guard key so the early-return doesn't short-circuit.
+  const [sessionResetTick, setSessionResetTick] = useState(0);
+
   const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
   const isCoachCreatorSession = variant === "coachCreatorSession";
   const isProgramDesignerSession = variant === "programDesignerSession";
@@ -769,7 +778,12 @@ export default function ContextualChatDrawer({
     if (!isOpen || !userId) return;
     if (isProgramDesignerSession && !coachId) return;
 
-    const sessionKey = existingSessionId || "__new__";
+    // Include sessionResetTick in the key so a "+ new" while existingSessionId
+    // is already null (e.g., FAB-opened fresh session, then "+ new" again)
+    // produces a different key and bypasses the loaded-session shortcut.
+    const sessionKey = existingSessionId
+      ? existingSessionId
+      : `__new__#${sessionResetTick}`;
 
     let cancelled = false;
 
@@ -901,6 +915,7 @@ export default function ContextualChatDrawer({
     isCoachCreatorSession,
     isProgramDesignerSession,
     existingSessionId,
+    sessionResetTick,
     showToast,
   ]);
 
@@ -1246,6 +1261,17 @@ export default function ContextualChatDrawer({
   useEffect(() => {
     isOpenRef.current = isOpen;
   }, [isOpen]);
+
+  // Sync viewportWidth to the live window dimension whenever the drawer
+  // opens. Resize events while the drawer was closed don't update the state
+  // (we deliberately skip them to avoid pointless renders), so without this
+  // the isDrawerExpanded memo could read a stale viewportWidth and show
+  // the wrong toggle icon on the next open.
+  useEffect(() => {
+    if (isOpen && typeof window !== "undefined") {
+      setViewportWidth(window.innerWidth);
+    }
+  }, [isOpen]);
   useEffect(() => {
     const onResize = () => {
       if (isOpenRef.current) setViewportWidth(window.innerWidth);
@@ -1317,6 +1343,16 @@ export default function ContextualChatDrawer({
     return drawerWidth >= (DRAWER_DEFAULT_WIDTH + getDrawerExpandedWidth()) / 2;
   }, [drawerWidth, viewportWidth]);
 
+  // Session-variant "+ new" wrapper: bump the reset tick so the init effect
+  // re-runs and creates a fresh session even when existingSessionId is
+  // already null (which is the case after a FAB open). Notify the parent
+  // too — it normalizes its own picker-selected state to null.
+  // Declared before the early return below so hook order stays stable.
+  const handleSessionPickerNewWrapped = useCallback(() => {
+    setSessionResetTick((n) => n + 1);
+    onSessionPickerNew?.();
+  }, [onSessionPickerNew]);
+
   if (!isOpen) return null;
 
   // For session variants, the picker reflects in-progress sessions and the
@@ -1333,7 +1369,7 @@ export default function ContextualChatDrawer({
     ? onSessionPickerSelect
     : handleTrainingPickerChange;
   const onPickerNewForPanel = isSessionVariant
-    ? onSessionPickerNew
+    ? handleSessionPickerNewWrapped
     : handleTrainingNewConversation;
   const onPickerOpenFullPageForPanel = isSessionVariant
     ? onOpenSessionFullPage
