@@ -1939,7 +1939,7 @@ function PanelContent({
         )}
       </div>
 
-      {(isTraining || (isSessionVariant && trainingPickerOptions.length > 0)) && (
+      {(isTraining || isSessionVariant) && (
         <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/20">
           <span id={trainingSelectId} className="sr-only">
             {isSessionVariant ? "Session" : "Conversation"}
