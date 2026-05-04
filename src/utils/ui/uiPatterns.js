@@ -1273,14 +1273,14 @@ export const contextualDrawerPatterns = {
   backdrop: "fixed inset-0 z-[68] bg-black/20 transition-opacity duration-300",
 
   panelDesktop:
-    "fixed top-0 right-0 h-full w-[420px] z-[70] flex flex-col bg-synthwave-bg-card/95 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
+    "fixed top-0 right-0 h-full w-[420px] z-[70] flex flex-col bg-synthwave-gradient backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,transform] duration-300 ease-out",
 
   panelMobile:
-    "fixed inset-0 z-[70] flex flex-col bg-synthwave-bg-card transition-transform duration-300 ease-out pt-[env(safe-area-inset-top)] overscroll-contain",
+    "fixed inset-0 z-[70] flex flex-col bg-synthwave-gradient transition-transform duration-300 ease-out pt-[env(safe-area-inset-top)] overscroll-contain",
 
   // Panel header — entity name, edit badge, close button
   header:
-    "flex items-center gap-3 px-3 py-3 border-b border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/50 shrink-0",
+    "flex items-center gap-3 px-3 py-3 border-b border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/20 shrink-0",
 
   // Header entity label
   headerLabel:

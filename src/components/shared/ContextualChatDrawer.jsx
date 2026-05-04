@@ -66,22 +66,36 @@ const INITIAL_PROMPT =
 
 // Desktop drawer width bounds (px). The panel is fixed to the right edge and
 // resizable from its left edge. Toggle button snaps between DEFAULT and EXPANDED.
+// Max drag is 75% of the viewport; expanded snap is the larger of 620px or
+// half the viewport (clamped to the drag max). Both are functions, not
+// constants, so they track live viewport resizes.
 const DRAWER_MIN_WIDTH = 360;
 const DRAWER_DEFAULT_WIDTH = 420;
-const DRAWER_EXPANDED_WIDTH = 620;
-const DRAWER_ABS_MAX_WIDTH = 900;
+const DRAWER_EXPANDED_FLOOR = 620;
 const DRAWER_WIDTH_STORAGE_KEY = "neonpanda-chat-drawer-width";
 const DRAWER_LEGACY_EXPANDED_KEY = "neonpanda-chat-drawer-expanded";
 
+// SSR-safe fallback. The app is a Vite SPA so this branch effectively never
+// executes, but we keep a generous default so any persisted width up to 900px
+// survives a hypothetical window-less render without being silently shrunk.
+const DRAWER_SSR_FALLBACK_MAX = 900;
+
 const getDrawerMaxWidth = () => {
-  if (typeof window === "undefined") return DRAWER_ABS_MAX_WIDTH;
-  return Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH);
+  if (typeof window === "undefined") return DRAWER_SSR_FALLBACK_MAX;
+  return Math.max(DRAWER_MIN_WIDTH, window.innerWidth * 0.75);
 };
 
 const clampDrawerWidth = (w) => {
   const max = getDrawerMaxWidth();
   if (typeof w !== "number" || Number.isNaN(w)) return DRAWER_DEFAULT_WIDTH;
   return Math.max(DRAWER_MIN_WIDTH, Math.min(max, w));
+};
+
+const getDrawerExpandedWidth = () => {
+  if (typeof window === "undefined") return DRAWER_EXPANDED_FLOOR;
+  return clampDrawerWidth(
+    Math.max(DRAWER_EXPANDED_FLOOR, window.innerWidth * 0.5),
+  );
 };
 
 const readInitialDrawerWidth = () => {
@@ -96,7 +110,7 @@ const readInitialDrawerWidth = () => {
     const legacy = localStorage.getItem(DRAWER_LEGACY_EXPANDED_KEY);
     if (legacy != null) {
       const migrated =
-        legacy === "true" ? DRAWER_EXPANDED_WIDTH : DRAWER_DEFAULT_WIDTH;
+        legacy === "true" ? getDrawerExpandedWidth() : DRAWER_DEFAULT_WIDTH;
       localStorage.setItem(DRAWER_WIDTH_STORAGE_KEY, String(migrated));
       localStorage.removeItem(DRAWER_LEGACY_EXPANDED_KEY);
       return clampDrawerWidth(migrated);
@@ -324,6 +338,14 @@ export default function ContextualChatDrawer({
   inlineSessionKey,
   existingSessionId,
   onSessionComplete,
+  // Session-picker bridge — only honored for session variants
+  // (programDesignerSession / coachCreatorSession). The parent owns the
+  // in-progress sessions list and the navigation callbacks.
+  sessionPickerOptions = [],
+  isLoadingSessionPicker = false,
+  onSessionPickerSelect,
+  onSessionPickerNew,
+  onOpenSessionFullPage,
 }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -348,6 +370,15 @@ export default function ContextualChatDrawer({
 
   const [trainingPickerOptions, setTrainingPickerOptions] = useState([]);
   const [isLoadingTrainingPicker, setIsLoadingTrainingPicker] = useState(false);
+
+  // Bump-counter that the picker bar's "+ new" button (session variants only)
+  // increments to force the session-init effect to discard the current agent
+  // and create a fresh session. Plain `setExistingSessionId(null)` from the
+  // parent is a no-op when sessionId is already null — which happens whenever
+  // the user opened the drawer via the FAB. The tick gives us a real
+  // dependency change to drive the effect, plus participates in the loaded-
+  // session guard key so the early-return doesn't short-circuit.
+  const [sessionResetTick, setSessionResetTick] = useState(0);
 
   const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
   const isCoachCreatorSession = variant === "coachCreatorSession";
@@ -747,7 +778,12 @@ export default function ContextualChatDrawer({
     if (!isOpen || !userId) return;
     if (isProgramDesignerSession && !coachId) return;
 
-    const sessionKey = existingSessionId || "__new__";
+    // Include sessionResetTick in the key so a "+ new" while existingSessionId
+    // is already null (e.g., FAB-opened fresh session, then "+ new" again)
+    // produces a different key and bypasses the loaded-session shortcut.
+    const sessionKey = existingSessionId
+      ? existingSessionId
+      : `__new__#${sessionResetTick}`;
 
     let cancelled = false;
 
@@ -879,6 +915,7 @@ export default function ContextualChatDrawer({
     isCoachCreatorSession,
     isProgramDesignerSession,
     existingSessionId,
+    sessionResetTick,
     showToast,
   ]);
 
@@ -1199,18 +1236,45 @@ export default function ContextualChatDrawer({
     drawerWidthRef.current = drawerWidth;
   }, [drawerWidth]);
 
+  // Track the viewport width so derived values (expanded snap, "is expanded"
+  // boolean) recompute when the user resizes the window with the drawer open.
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerWidth,
+  );
+
   const handleToggleExpand = useCallback(() => {
-    const midpoint = (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
+    const expanded = getDrawerExpandedWidth();
+    const midpoint = (DRAWER_DEFAULT_WIDTH + expanded) / 2;
     const next =
-      drawerWidthRef.current >= midpoint
-        ? DRAWER_DEFAULT_WIDTH
-        : DRAWER_EXPANDED_WIDTH;
+      drawerWidthRef.current >= midpoint ? DRAWER_DEFAULT_WIDTH : expanded;
     handleDrawerWidthCommit(next);
   }, [handleDrawerWidthCommit]);
 
-  // Re-clamp width if the viewport shrinks below the saved value.
+  // Re-clamp width if the viewport shrinks below the saved value, and keep
+  // viewportWidth in sync so derived snap/expanded values track resizes.
+  // The viewportWidth state update is gated on isOpen because the component
+  // stays mounted on its host pages and only the snap/expanded math depends
+  // on viewportWidth — there's no point in churning state and re-rendering
+  // while the drawer is hidden. The clamp side runs unconditionally so a
+  // shrink-while-closed still trims a too-wide persisted width.
+  const isOpenRef = useRef(isOpen);
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  // Sync viewportWidth to the live window dimension whenever the drawer
+  // opens. Resize events while the drawer was closed don't update the state
+  // (we deliberately skip them to avoid pointless renders), so without this
+  // the isDrawerExpanded memo could read a stale viewportWidth and show
+  // the wrong toggle icon on the next open.
+  useEffect(() => {
+    if (isOpen && typeof window !== "undefined") {
+      setViewportWidth(window.innerWidth);
+    }
+  }, [isOpen]);
   useEffect(() => {
     const onResize = () => {
+      if (isOpenRef.current) setViewportWidth(window.innerWidth);
       const current = drawerWidthRef.current;
       const clamped = clampDrawerWidth(current);
       if (clamped !== current) handleDrawerWidthCommit(clamped);
@@ -1246,6 +1310,24 @@ export default function ContextualChatDrawer({
     agentState?.conversation?.title,
   ]);
 
+  // Map parent-supplied in-progress sessions onto the picker's option shape
+  // ({ conversationId, title }) so the existing TrainingGroundsConversationPicker
+  // and picker-bar buttons render unchanged for the session variants.
+  const sessionPickerEffective = useMemo(() => {
+    if (!isSessionVariant) return [];
+    return (sessionPickerOptions || [])
+      .filter((s) => s && s.sessionId)
+      .map((s) => ({
+        conversationId: s.sessionId,
+        title:
+          s.title ||
+          s.label ||
+          (isCoachCreatorSession
+            ? "Coach creator session"
+            : "Program designer session"),
+      }));
+  }, [isSessionVariant, isCoachCreatorSession, sessionPickerOptions]);
+
   const dialogAriaLabel = isCoachCreatorSession
     ? "Create a new AI coach"
     : isProgramDesignerSession
@@ -1254,20 +1336,68 @@ export default function ContextualChatDrawer({
         ? `Chat with ${entityLabel || "coach"}`
         : `Edit ${entityLabel || entityType} with AI coach`;
 
-  // Drives the toggle button's icon (<<  vs  >>) and aria-label.
-  const isDrawerExpanded =
-    drawerWidth >= (DRAWER_DEFAULT_WIDTH + DRAWER_EXPANDED_WIDTH) / 2;
+  // Drives the toggle button's icon (<<  vs  >>) and aria-label. Recomputes on
+  // viewport resize because getDrawerExpandedWidth depends on window.innerWidth.
+  const isDrawerExpanded = useMemo(() => {
+    void viewportWidth;
+    return drawerWidth >= (DRAWER_DEFAULT_WIDTH + getDrawerExpandedWidth()) / 2;
+  }, [drawerWidth, viewportWidth]);
+
+  // Session-variant picker-bar wrappers. Both must be declared before the
+  // early return below so hook order stays stable on opens/closes.
+  // - "+ new": bump the reset tick so the init effect re-runs and creates
+  //   a fresh session even when existingSessionId is already null (which
+  //   is the case after a FAB open). Notify the parent too.
+  // - "Open in full page": the drawer creates the session internally and
+  //   the parent's `existingSessionId` stays null for FAB-opened sessions.
+  //   Prefer the parent-controlled id so a picker switch (which updates
+  //   existingSessionId immediately while the agent re-init is still in
+  //   flight) navigates to the just-picked session, not the old agent's.
+  //   Fall back to the agent's id for the FAB flow where existingSessionId
+  //   stays null for the entire drawer lifetime.
+  const handleSessionPickerNewWrapped = useCallback(() => {
+    setSessionResetTick((n) => n + 1);
+    onSessionPickerNew?.();
+  }, [onSessionPickerNew]);
+  const handleSessionOpenFullPageWrapped = useCallback(() => {
+    const liveSessionId =
+      existingSessionId || agentRef.current?.sessionId || null;
+    onOpenSessionFullPage?.(liveSessionId);
+  }, [onOpenSessionFullPage, existingSessionId]);
 
   if (!isOpen) return null;
 
+  // For session variants, the picker reflects in-progress sessions and the
+  // bridge callbacks come from the parent (which owns the sessionId state).
+  // For all other variants, the picker bar is either training-grounds-driven
+  // (handled by internal handlers) or absent.
+  const pickerOptionsForPanel = isSessionVariant
+    ? sessionPickerEffective
+    : trainingPickerEffective;
+  const pickerCurrentIdForPanel = isSessionVariant
+    ? existingSessionId || ""
+    : currentConversationId;
+  const onPickerChangeForPanel = isSessionVariant
+    ? onSessionPickerSelect
+    : handleTrainingPickerChange;
+  const onPickerNewForPanel = isSessionVariant
+    ? handleSessionPickerNewWrapped
+    : handleTrainingNewConversation;
+  const onPickerOpenFullPageForPanel = isSessionVariant
+    ? handleSessionOpenFullPageWrapped
+    : handleOpenFullPageChat;
+  const isLoadingPickerForPanel = isSessionVariant
+    ? isLoadingSessionPicker
+    : isLoadingTrainingPicker;
+
   const panelExtras = {
     variant,
-    trainingPickerOptions: trainingPickerEffective,
-    isLoadingTrainingPicker,
-    currentConversationId,
-    onTrainingPickerChange: handleTrainingPickerChange,
-    onTrainingNewConversation: handleTrainingNewConversation,
-    onOpenFullPageChat: handleOpenFullPageChat,
+    trainingPickerOptions: pickerOptionsForPanel,
+    isLoadingTrainingPicker: isLoadingPickerForPanel,
+    currentConversationId: pickerCurrentIdForPanel,
+    onTrainingPickerChange: onPickerChangeForPanel,
+    onTrainingNewConversation: onPickerNewForPanel,
+    onOpenFullPageChat: onPickerOpenFullPageForPanel,
     userId,
     coachId,
     streamBusy,
@@ -1501,7 +1631,7 @@ function DrawerResizeHandle({
       onWidthCommit(width - STEP);
     } else if (e.key === "Home") {
       e.preventDefault();
-      onWidthCommit(DRAWER_ABS_MAX_WIDTH);
+      onWidthCommit(getDrawerMaxWidth());
     } else if (e.key === "End") {
       e.preventDefault();
       onWidthCommit(DRAWER_MIN_WIDTH);
@@ -1509,11 +1639,7 @@ function DrawerResizeHandle({
   };
 
   const isActive = isHover || isDragging;
-  const ariaMax = Math.round(
-    typeof window !== "undefined"
-      ? Math.min(window.innerWidth * 0.8, DRAWER_ABS_MAX_WIDTH)
-      : DRAWER_ABS_MAX_WIDTH,
-  );
+  const ariaMax = Math.round(getDrawerMaxWidth());
 
   return (
     <div
@@ -1825,10 +1951,10 @@ function PanelContent({
         )}
       </div>
 
-      {isTraining && (
-        <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/40">
+      {(isTraining || isSessionVariant) && (
+        <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/20">
           <span id={trainingSelectId} className="sr-only">
-            Conversation
+            {isSessionVariant ? "Session" : "Conversation"}
           </span>
           <div className="flex-1 min-w-0">
             <TrainingGroundsConversationPicker
@@ -1852,9 +1978,21 @@ function PanelContent({
                 streamBusy || isInitializing || !onTrainingNewConversation
               }
               data-tooltip-id={tipNewChatId}
-              data-tooltip-content="New chat"
+              data-tooltip-content={
+                isCoachCreatorSession
+                  ? "New coach"
+                  : isProgramDesignerSession
+                    ? "New program"
+                    : "New chat"
+              }
               data-tooltip-place="bottom"
-              aria-label="New chat"
+              aria-label={
+                isCoachCreatorSession
+                  ? "Start a new coach"
+                  : isProgramDesignerSession
+                    ? "Start a new program"
+                    : "New chat"
+              }
               className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               <PlusIcon />
@@ -1862,7 +2000,10 @@ function PanelContent({
             <button
               type="button"
               onClick={() => onOpenFullPageChat?.()}
-              disabled={!currentConversationId || !onOpenFullPageChat}
+              disabled={
+                !onOpenFullPageChat ||
+                (!currentConversationId && !isSessionVariant)
+              }
               data-tooltip-id={tipOpenFullId}
               data-tooltip-content="Open in full page"
               data-tooltip-place="bottom"
@@ -1871,18 +2012,20 @@ function PanelContent({
             >
               <OpenFullPageIcon />
             </button>
-            <Link
-              to={viewAllUrl}
-              data-tooltip-id={tipViewAllId}
-              data-tooltip-content="View all"
-              data-tooltip-place="bottom"
-              aria-label="View all conversations"
-              className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-purple hover:!text-synthwave-neon-purple hover:!bg-synthwave-neon-purple/10 inline-flex items-center justify-center cursor-pointer`}
-            >
-              <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
-                <ChatIconSmall />
-              </span>
-            </Link>
+            {isTraining && (
+              <Link
+                to={viewAllUrl}
+                data-tooltip-id={tipViewAllId}
+                data-tooltip-content="View all"
+                data-tooltip-place="bottom"
+                aria-label="View all conversations"
+                className={`${iconButtonPatterns.minimal} !p-1.5 !min-h-0 !min-w-0 shrink-0 !text-synthwave-neon-purple hover:!text-synthwave-neon-purple hover:!bg-synthwave-neon-purple/10 inline-flex items-center justify-center cursor-pointer`}
+              >
+                <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
+                  <ChatIconSmall />
+                </span>
+              </Link>
+            )}
           </div>
           <Tooltip
             id={tipNewChatId}

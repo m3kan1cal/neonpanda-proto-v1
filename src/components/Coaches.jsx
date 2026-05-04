@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
@@ -73,6 +73,7 @@ import { useToast } from "../contexts/ToastContext";
 import { OnboardingPrompt, UpgradePrompt } from "./subscription";
 import CoachDetailsModal from "./coaches/CoachDetailsModal";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
 
@@ -184,12 +185,30 @@ function Coaches() {
   // Onboarding modal state
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Contextual chat drawer state — hosts the coach creator session inline.
-  // `drawerSessionId === null` means "start a new session"; a non-null value
-  // resumes an existing in-progress session.
+  // Contextual chat drawer state — FAB-only entry point. The drawer hosts
+  // a coach creator session with Vesper and exposes an in-drawer picker so
+  // users can switch between in-progress sessions without leaving the page.
+  // `drawerSessionId === null` means "start a new session"; a non-null
+  // value resumes an existing in-progress session.
   const [isCoachCreatorDrawerOpen, setIsCoachCreatorDrawerOpen] =
     useState(false);
   const [drawerSessionId, setDrawerSessionId] = useState(null);
+
+  // Picker options for the in-drawer session switcher. Only resumable
+  // sessions appear (incomplete and not currently building/failed).
+  const coachCreatorSessionPickerOptions = useMemo(() => {
+    return (inProgressSessions || [])
+      .filter((s) => {
+        if (!s?.sessionId) return false;
+        if (s.isComplete) return false;
+        const status = s.configGeneration?.status;
+        return status !== "IN_PROGRESS" && status !== "FAILED";
+      })
+      .map((s) => ({
+        sessionId: s.sessionId,
+        title: "Coach Creator Session",
+      }));
+  }, [inProgressSessions]);
 
   // Upgrade prompts hook - tracks user activity for contextual upgrade prompts
   const {
@@ -474,23 +493,59 @@ function Coaches() {
 
   const handleCreateCoach = () => {
     if (!userId) return;
-    // Open the contextual chat drawer with no session id — the drawer creates
-    // a fresh coach creator session via CoachCreatorAgent. The session-id
-    // round-trip that the standalone /coach-creator page relies on is
-    // unnecessary here because the drawer manages session lifecycle itself.
-    setDrawerSessionId(null);
-    setIsCoachCreatorDrawerOpen(true);
+    // Navigate to the dedicated full-page coach creator route. The empty
+    // "Create Custom Coach" card always opens the immersive experience;
+    // the contextual chat drawer is reserved for the FAB entry point.
+    navigate(`/coach-creator?userId=${encodeURIComponent(userId)}`);
   };
 
   const handleResumeCoachSession = (sessionId) => {
-    if (!sessionId) return;
-    setDrawerSessionId(sessionId);
-    setIsCoachCreatorDrawerOpen(true);
+    if (!sessionId || !userId) return;
+    // Resuming an in-progress creator session opens the dedicated full-page
+    // route too, so the user gets the same immersive experience whether
+    // they're starting fresh or continuing.
+    navigate(
+      `/coach-creator?userId=${encodeURIComponent(userId)}&coachCreatorSessionId=${encodeURIComponent(sessionId)}`,
+    );
   };
 
   const handleCoachCreatorDrawerClose = () => {
     setIsCoachCreatorDrawerOpen(false);
     setDrawerSessionId(null);
+  };
+
+  // FAB-only entry point for the contextual chat drawer. Always opens a
+  // fresh coach creator session with Vesper; the in-drawer picker lets
+  // users switch to an in-progress session without leaving the page.
+  const handleOpenCoachCreatorDrawer = () => {
+    if (!userId) return;
+    setDrawerSessionId(null);
+    setIsCoachCreatorDrawerOpen(true);
+  };
+
+  const handleCoachCreatorPickerSelect = (sessionId) => {
+    if (!sessionId) return;
+    setDrawerSessionId(sessionId);
+  };
+
+  const handleCoachCreatorPickerNew = () => {
+    setDrawerSessionId(null);
+  };
+
+  // The drawer passes its live session id (read from the agent it owns) so
+  // FAB-opened sessions don't get abandoned — the parent's drawerSessionId
+  // state stays null in that flow because the drawer creates the session
+  // internally.
+  const handleCoachCreatorOpenFullPage = (sessionIdFromDrawer) => {
+    if (!userId) return;
+    const effectiveSessionId = sessionIdFromDrawer || drawerSessionId;
+    if (effectiveSessionId) {
+      navigate(
+        `/coach-creator?userId=${encodeURIComponent(userId)}&coachCreatorSessionId=${encodeURIComponent(effectiveSessionId)}`,
+      );
+    } else {
+      navigate(`/coach-creator?userId=${encodeURIComponent(userId)}`);
+    }
   };
 
   const handleCoachCreatorSessionComplete = () => {
@@ -1750,10 +1805,18 @@ function Coaches() {
         />
       )}
 
-      {/* Coach Creator drawer — replaces the full-page coach creator flow for
-          users who land here via "Create Custom Coach" or an in-progress
-          session card. The dedicated /coach-creator route still works for
-          deep links / refreshes. */}
+      {/* Coach Creator drawer — FAB-only entry point. The "Create Custom
+          Coach" card and in-progress session cards on this page navigate
+          to the dedicated /coach-creator route for the full immersive
+          experience. The drawer is a quick-access alternative; the picker
+          lets users switch to an in-progress session inline. */}
+      {vesperCoachData && (
+        <EntityChatFAB
+          onClick={handleOpenCoachCreatorDrawer}
+          isOpen={isCoachCreatorDrawerOpen}
+          tooltip="Create a new coach"
+        />
+      )}
       <ContextualChatDrawer
         isOpen={isCoachCreatorDrawerOpen}
         onClose={handleCoachCreatorDrawerClose}
@@ -1766,6 +1829,11 @@ function Coaches() {
         entityLabel="Coach Creator"
         existingSessionId={drawerSessionId}
         onSessionComplete={handleCoachCreatorSessionComplete}
+        sessionPickerOptions={coachCreatorSessionPickerOptions}
+        isLoadingSessionPicker={sessionsLoading}
+        onSessionPickerSelect={handleCoachCreatorPickerSelect}
+        onSessionPickerNew={handleCoachCreatorPickerNew}
+        onOpenSessionFullPage={handleCoachCreatorOpenFullPage}
       />
 
       {/* Custom animations */}
