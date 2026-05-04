@@ -1350,15 +1350,18 @@ export default function ContextualChatDrawer({
   //   is the case after a FAB open). Notify the parent too.
   // - "Open in full page": the drawer creates the session internally and
   //   the parent's `existingSessionId` stays null for FAB-opened sessions.
-  //   Pass the live session id from the agent so the parent navigates to
-  //   the actual in-progress session, not a fresh one.
+  //   Prefer the parent-controlled id so a picker switch (which updates
+  //   existingSessionId immediately while the agent re-init is still in
+  //   flight) navigates to the just-picked session, not the old agent's.
+  //   Fall back to the agent's id for the FAB flow where existingSessionId
+  //   stays null for the entire drawer lifetime.
   const handleSessionPickerNewWrapped = useCallback(() => {
     setSessionResetTick((n) => n + 1);
     onSessionPickerNew?.();
   }, [onSessionPickerNew]);
   const handleSessionOpenFullPageWrapped = useCallback(() => {
     const liveSessionId =
-      agentRef.current?.sessionId || existingSessionId || null;
+      existingSessionId || agentRef.current?.sessionId || null;
     onOpenSessionFullPage?.(liveSessionId);
   }, [onOpenSessionFullPage, existingSessionId]);
 
