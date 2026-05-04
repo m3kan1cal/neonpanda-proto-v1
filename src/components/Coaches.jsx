@@ -532,11 +532,16 @@ function Coaches() {
     setDrawerSessionId(null);
   };
 
-  const handleCoachCreatorOpenFullPage = () => {
+  // The drawer passes its live session id (read from the agent it owns) so
+  // FAB-opened sessions don't get abandoned — the parent's drawerSessionId
+  // state stays null in that flow because the drawer creates the session
+  // internally.
+  const handleCoachCreatorOpenFullPage = (sessionIdFromDrawer) => {
     if (!userId) return;
-    if (drawerSessionId) {
+    const effectiveSessionId = sessionIdFromDrawer || drawerSessionId;
+    if (effectiveSessionId) {
       navigate(
-        `/coach-creator?userId=${encodeURIComponent(userId)}&coachCreatorSessionId=${encodeURIComponent(drawerSessionId)}`,
+        `/coach-creator?userId=${encodeURIComponent(userId)}&coachCreatorSessionId=${encodeURIComponent(effectiveSessionId)}`,
       );
     } else {
       navigate(`/coach-creator?userId=${encodeURIComponent(userId)}`);

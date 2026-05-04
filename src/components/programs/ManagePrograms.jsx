@@ -1053,11 +1053,17 @@ function ManagePrograms() {
     setProgramDesignerDrawerCoachId(coachId);
   };
 
-  const handleProgramDesignerOpenFullPage = () => {
+  // The drawer passes its live session id (read from the agent it owns) so
+  // FAB-opened sessions don't get abandoned — the parent's drawer-session
+  // state stays null in that flow because the drawer creates the session
+  // internally.
+  const handleProgramDesignerOpenFullPage = (sessionIdFromDrawer) => {
     if (!programDesignerDrawerCoachId) return;
-    if (programDesignerDrawerSessionId) {
+    const effectiveSessionId =
+      sessionIdFromDrawer || programDesignerDrawerSessionId;
+    if (effectiveSessionId) {
       navigate(
-        `/training-grounds/program-designer?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(programDesignerDrawerCoachId)}&programDesignerSessionId=${encodeURIComponent(programDesignerDrawerSessionId)}`,
+        `/training-grounds/program-designer?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(programDesignerDrawerCoachId)}&programDesignerSessionId=${encodeURIComponent(effectiveSessionId)}`,
       );
     } else {
       navigate(

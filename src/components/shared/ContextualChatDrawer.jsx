@@ -1343,15 +1343,24 @@ export default function ContextualChatDrawer({
     return drawerWidth >= (DRAWER_DEFAULT_WIDTH + getDrawerExpandedWidth()) / 2;
   }, [drawerWidth, viewportWidth]);
 
-  // Session-variant "+ new" wrapper: bump the reset tick so the init effect
-  // re-runs and creates a fresh session even when existingSessionId is
-  // already null (which is the case after a FAB open). Notify the parent
-  // too — it normalizes its own picker-selected state to null.
-  // Declared before the early return below so hook order stays stable.
+  // Session-variant picker-bar wrappers. Both must be declared before the
+  // early return below so hook order stays stable on opens/closes.
+  // - "+ new": bump the reset tick so the init effect re-runs and creates
+  //   a fresh session even when existingSessionId is already null (which
+  //   is the case after a FAB open). Notify the parent too.
+  // - "Open in full page": the drawer creates the session internally and
+  //   the parent's `existingSessionId` stays null for FAB-opened sessions.
+  //   Pass the live session id from the agent so the parent navigates to
+  //   the actual in-progress session, not a fresh one.
   const handleSessionPickerNewWrapped = useCallback(() => {
     setSessionResetTick((n) => n + 1);
     onSessionPickerNew?.();
   }, [onSessionPickerNew]);
+  const handleSessionOpenFullPageWrapped = useCallback(() => {
+    const liveSessionId =
+      agentRef.current?.sessionId || existingSessionId || null;
+    onOpenSessionFullPage?.(liveSessionId);
+  }, [onOpenSessionFullPage, existingSessionId]);
 
   if (!isOpen) return null;
 
@@ -1372,7 +1381,7 @@ export default function ContextualChatDrawer({
     ? handleSessionPickerNewWrapped
     : handleTrainingNewConversation;
   const onPickerOpenFullPageForPanel = isSessionVariant
-    ? onOpenSessionFullPage
+    ? handleSessionOpenFullPageWrapped
     : handleOpenFullPageChat;
   const isLoadingPickerForPanel = isSessionVariant
     ? isLoadingSessionPicker
