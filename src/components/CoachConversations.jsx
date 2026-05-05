@@ -24,7 +24,7 @@ import {
 } from "../utils/ui/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
-import CompactCoachCard from "./shared/CompactCoachCard";
+import PageHeader from "./shared/PageHeader";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { InlineEditField } from "./shared/InlineEditField.jsx";
@@ -1071,39 +1071,19 @@ function CoachConversations() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6`}>
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Coach Conversation Header"
-        >
-          {/* Left section: Title + Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Hover Tooltip */}
-            <h1
-              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-              data-tooltip-id="coach-conversation-info"
-              data-tooltip-content="Get personalized coaching, workout advice, and motivation from your AI coach. The more you share, the more your coach learns."
-            >
-              Conversation Details
-            </h1>
-
-            {/* Compact Coach Card */}
-            {coachConversationAgentState.coach && (
-              <CompactCoachCard
-                coachData={coachConversationAgentState.coach}
-                isOnline={isOnline}
-                onClick={handleCoachCardClick}
-              />
-            )}
-          </div>
-
-          {/* Right section: Command Palette Button */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Conversation Details"
+          titleTooltipId="coach-conversation-info"
+          titleTooltipContent="Get personalized coaching, workout advice, and motivation from your AI coach. The more you share, the more your coach learns."
+          coachData={coachConversationAgentState.coach}
+          coachOnline={isOnline}
+          onCoachClick={handleCoachCardClick}
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Conversation Title - styled to match ViewWorkouts metadata section */}
         {coachConversationAgentState.conversation &&
