@@ -56,9 +56,13 @@ export interface DynamoDBSaveResult {
 
 /**
  * Generic helper function to recursively convert all Date objects to ISO strings
- * and remove undefined values for DynamoDB storage
+ * and remove undefined values for DynamoDB storage.
+ *
+ * `path` is appended to internally on recursion so that the noisy "undefined
+ * values" warning includes a JSONPath-like crumb (e.g. `$.metrics`) to make
+ * triage easier when warnings fire from deep inside an item.
  */
-export function serializeForDynamoDB(obj: any): any {
+export function serializeForDynamoDB(obj: any, path: string = "$"): any {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -68,7 +72,7 @@ export function serializeForDynamoDB(obj: any): any {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => serializeForDynamoDB(item));
+    return obj.map((item, i) => serializeForDynamoDB(item, `${path}[${i}]`));
   }
 
   if (typeof obj === "object") {
@@ -77,7 +81,7 @@ export function serializeForDynamoDB(obj: any): any {
 
     for (const [key, value] of Object.entries(obj)) {
       if (value !== undefined) {
-        serialized[key] = serializeForDynamoDB(value);
+        serialized[key] = serializeForDynamoDB(value, `${path}.${key}`);
       } else {
         undefinedKeys.push(key);
       }
@@ -91,6 +95,7 @@ export function serializeForDynamoDB(obj: any): any {
         undefinedKeys: undefinedKeys.slice(0, 5), // Only log first 5 to avoid noise
         objectType: obj.constructor?.name || "Object",
         totalKeys: Object.keys(obj).length,
+        path,
       });
     }
 
@@ -158,7 +163,7 @@ export async function saveToDynamoDB<T>(
 
     try {
       // Serialize the entire item to handle any Date objects anywhere in the structure
-      serializedItem = serializeForDynamoDB(item);
+      serializedItem = serializeForDynamoDB(item, `$.${item.entityType}`);
 
       // Check item size before saving (DynamoDB has 400KB limit)
       itemSizeBytes = JSON.stringify(serializedItem).length;

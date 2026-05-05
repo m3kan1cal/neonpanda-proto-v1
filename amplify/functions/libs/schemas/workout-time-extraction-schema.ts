@@ -7,10 +7,14 @@
  * duration/result notation ("23:47", "3:45", "1:02:14" in MM:SS or H:MM:SS).
  *
  * Field ordering follows reasoning-first pattern: reasoning before completedAt and confidence.
+ *
+ * Only `reasoning` is required. `confidence` is informational and the upstream
+ * model (Nova-2-Lite) intermittently omits it; the consumer defaults to 0.5
+ * when missing rather than failing the whole extraction.
  */
 export const WORKOUT_TIME_EXTRACTION_SCHEMA = {
   type: "object",
-  required: ["reasoning", "confidence"],
+  required: ["reasoning"],
   additionalProperties: false,
   properties: {
     reasoning: {
@@ -25,7 +29,8 @@ export const WORKOUT_TIME_EXTRACTION_SCHEMA = {
     },
     confidence: {
       type: "number",
-      description: "Confidence score from 0.0 to 1.0",
+      description:
+        "Confidence score from 0.0 to 1.0 (optional, consumer defaults to 0.5 when omitted)",
     },
   },
 };
@@ -36,5 +41,5 @@ export const WORKOUT_TIME_EXTRACTION_SCHEMA = {
 export interface WorkoutTimeExtractionResult {
   reasoning: string;
   completedAt?: string | null;
-  confidence: number;
+  confidence?: number;
 }

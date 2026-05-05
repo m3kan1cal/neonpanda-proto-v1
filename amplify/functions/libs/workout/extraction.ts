@@ -1250,11 +1250,15 @@ EXAMPLES:
     }
 
     const result = response.input as WorkoutTimeExtractionResult;
+    // Nova-2-Lite intermittently omits the optional confidence field; default
+    // to 0.5 so logging and downstream consumers always have a numeric value.
+    const confidence = result.confidence ?? 0.5;
 
     logger.info("AI time extraction result:", {
       userMessage: userMessage.substring(0, 100),
       extractedTime: result.completedAt,
-      confidence: result.confidence,
+      confidence,
+      confidenceProvided: result.confidence !== undefined,
       reasoning: result.reasoning,
     });
 
