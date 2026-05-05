@@ -22,11 +22,10 @@ import {
   tooltipPatterns,
   messagePatterns,
   typographyPatterns,
-  badgePatterns,
 } from "../utils/ui/uiPatterns";
 // messagePatterns used for aiDotColorClass/userDotColorClass props passed to MessageFooter
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
-import CompactCoachCard from "./shared/CompactCoachCard";
+import PageHeader from "./shared/PageHeader";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import ChatInput from "./shared/ChatInput";
@@ -925,48 +924,22 @@ function ProgramDesigner() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6`}>
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Coach Conversation Header"
-        >
-          {/* Left section: Title + Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Hover Tooltip */}
-            <div className="flex items-center gap-3">
-              <h1
-                className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-                data-tooltip-id="program-designer-info"
-                data-tooltip-content="Design a structured training program with your AI coach through guided conversation"
-              >
-                Program Designer
-              </h1>
-              <div
-                className={`${badgePatterns.beta} cursor-help`}
-                data-tooltip-id="beta-badge"
-                data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
-              >
-                Beta
-              </div>
-            </div>
-
-            {/* Compact Coach Card */}
-            {agentState.coach && (
-              <CompactCoachCard
-                coachData={agentState.coach}
-                isOnline={isOnline}
-                onClick={handleCoachCardClick}
-              />
-            )}
-          </div>
-
-          {/* Right section: Command Palette Button */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Program Designer"
+          titleTooltipId="program-designer-info"
+          titleTooltipContent="Design a structured training program with your AI coach through guided conversation"
+          beta
+          betaTooltipId="beta-badge"
+          betaTooltipContent="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+          coachData={agentState.coach}
+          coachOnline={isOnline}
+          onCoachClick={handleCoachCardClick}
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">

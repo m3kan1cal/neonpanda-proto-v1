@@ -27,7 +27,7 @@ import {
 import ChatInput from "./shared/ChatInput";
 import ProgressIndicator from "./shared/ProgressIndicator";
 import UserAvatar from "./shared/UserAvatar";
-import CompactCoachCard from "./shared/CompactCoachCard";
+import PageHeader from "./shared/PageHeader";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -699,38 +699,20 @@ function CoachCreator() {
       <div
         className={`${layoutPatterns.contentWrapper} !px-4 sm:!px-6 min-h-[calc(100vh-5rem)] flex flex-col`}
       >
-        {/* Compact Horizontal Header */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
-          aria-label="Coach Creator Header"
-        >
-          {/* Left section: Title + Vesper Coach Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Hover Tooltip */}
-            <h1
-              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-              data-tooltip-id="coach-creator-info"
-              data-tooltip-content="Create your personalized AI coach through an interactive conversation. Vesper will guide you through the process."
-            >
-              Create Your Coach
-            </h1>
-
-            {/* Compact Vesper Coach Card */}
-            <CompactCoachCard
-              coachData={vesperCoachData}
-              isOnline={true}
-              onClick={() => navigate(`/coaches?userId=${userId}`)}
-              tooltipContent="Go to Your Coaches"
-            />
-          </div>
-
-          {/* Right section: Command Palette Button */}
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Create Your Coach"
+          titleTooltipId="coach-creator-info"
+          titleTooltipContent="Create your personalized AI coach through an interactive conversation. Vesper will guide you through the process."
+          coachData={vesperCoachData}
+          coachOnline={true}
+          coachTooltipContent="Go to Your Coaches"
+          onCoachClick={() => navigate(`/coaches?userId=${userId}`)}
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+        />
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
