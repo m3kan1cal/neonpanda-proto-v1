@@ -21,8 +21,8 @@ const PageHeaderSkeleton = ({
       {/* Title row (mobile: title + beta + avatar circle) */}
       <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          {/* Title placeholder — heights track text-xl / text-2xl / text-3xl */}
-          <div className="h-6 sm:h-7 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-40 sm:w-56 md:w-72" />
+          {/* Title placeholder — heights track text-xl / text-2xl / text-3xl line-heights (28/32/36px) */}
+          <div className="h-7 sm:h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-40 sm:w-56 md:w-72" />
           {showBeta && (
             <div className="h-4 sm:h-5 w-10 sm:w-12 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/20 rounded-full animate-pulse shrink-0" />
           )}

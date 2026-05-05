@@ -890,11 +890,13 @@ General thoughts: `;
 
           {/* Program Context Skeleton */}
           <div className="mb-4">
-            <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-3/4 max-w-xs sm:w-80 mb-2"></div>
-            <div className="flex items-center gap-3 sm:gap-4 text-sm">
-              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32 max-w-[40%]"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20 max-w-[30%]"></div>
-              <div className="hidden sm:block h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3 mb-1 min-w-0">
+              <div className="h-7 bg-synthwave-text-muted/20 animate-pulse w-3/4 max-w-xs sm:w-80"></div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-sm pb-1 min-w-0">
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32 max-w-[40%]"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-20 max-w-[30%]"></div>
+              <div className="hidden sm:block h-5 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
             </div>
           </div>
 
