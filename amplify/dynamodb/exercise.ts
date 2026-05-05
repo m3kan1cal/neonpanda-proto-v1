@@ -109,11 +109,14 @@ export async function saveExercises(
 
       return {
         PutRequest: {
-          Item: serializeForDynamoDB({
-            ...item,
-            gsi1pk,
-            gsi1sk,
-          }),
+          Item: serializeForDynamoDB(
+            {
+              ...item,
+              gsi1pk,
+              gsi1sk,
+            },
+            `$.exercise[${exercise.exerciseName}]`,
+          ),
         },
       };
     });

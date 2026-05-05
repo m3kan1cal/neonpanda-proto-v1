@@ -52,7 +52,8 @@ import {
   SectionEmptyState,
 } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
-import CompactCoachCard from "./shared/CompactCoachCard";
+import PageHeader from "./shared/PageHeader";
+import PageHeaderSkeleton from "./shared/PageHeaderSkeleton";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import QuickStats from "./shared/QuickStats";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -645,16 +646,7 @@ function TrainingGroundsV2() {
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
           {/* Header skeleton */}
-          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-2">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 animate-pulse w-72"></div>
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
-                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
-              </div>
-            </div>
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-          </header>
+          <PageHeaderSkeleton showCoach showRightSlot className="!mb-2" />
 
           {/* AI Greeting skeleton */}
           <div className="mb-4 max-w-4xl">
@@ -680,7 +672,7 @@ function TrainingGroundsV2() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-xl animate-pulse"
+                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-full animate-pulse"
                 ></div>
               ))}
             </div>
@@ -739,7 +731,7 @@ function TrainingGroundsV2() {
                       ))}
                     </div>
                     <div className="flex-1 min-h-[4px]"></div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
+                    <div className="h-10 bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
                   </div>
                 </div>
               ))}
@@ -1308,32 +1300,20 @@ function TrainingGroundsV2() {
         {/* ---------------------------------------------------------------- */}
         {/* HEADER                                                           */}
         {/* ---------------------------------------------------------------- */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-2"
-          aria-label="Training Grounds Header"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            <h1
-              className="font-header font-bold text-2xl md:text-3xl text-gradient-neon uppercase tracking-wider cursor-help"
-              data-tooltip-id="training-grounds-info"
-              data-tooltip-content="Your central hub to track progress, access resources, chat with your coach, and manage your complete fitness journey."
-            >
-              Training Grounds
-            </h1>
-            {coachData && (
-              <CompactCoachCard
-                coachData={coachData}
-                isOnline={true}
-                onClick={handleCoachCardClick}
-              />
-            )}
-          </div>
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Training Grounds"
+          titleTooltipId="training-grounds-info"
+          titleTooltipContent="Your central hub to track progress, access resources, chat with your coach, and manage your complete fitness journey."
+          coachData={coachData}
+          coachOnline={true}
+          onCoachClick={handleCoachCardClick}
+          rightSlot={
             <CommandPaletteButton
               onClick={() => setIsCommandPaletteOpen(true)}
             />
-          </div>
-        </header>
+          }
+          className="!mb-2"
+        />
 
         {/* ---------------------------------------------------------------- */}
         {/* CONTEXTUAL GREETING                                              */}

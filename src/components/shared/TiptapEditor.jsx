@@ -45,6 +45,10 @@ const TiptapEditor = forwardRef(
       // When true, shows an expand/fullscreen button in the toolbar.
       // Only effective when showToolbar is true and mode is "rich".
       allowFullscreen = false,
+      // When true, automatically opens the editor in fullscreen on mobile
+      // viewports (max-width: 767px) on mount. Desktop behavior is unchanged.
+      // Requires allowFullscreen so the user can exit back to inline.
+      autoFullscreenOnMobile = false,
       // Accent color for toolbar borders and active button states.
       // "cyan" (default) suits chat inputs; "pink" suits form inputs.
       variant = "cyan",
@@ -60,7 +64,14 @@ const TiptapEditor = forwardRef(
     // sync effect can skip re-setting the editor when the parent simply
     // bounces that content back as a prop (avoiding the scroll/space bug).
     const lastUserContent = useRef(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    // Lazy initializer so mobile auto-fullscreen takes effect on the first
+    // render — using a useEffect would let the inline layout paint first and
+    // flash before flipping to the fullscreen portal.
+    const [isFullscreen, setIsFullscreen] = useState(() => {
+      if (!autoFullscreenOnMobile || !allowFullscreen) return false;
+      if (typeof window === "undefined" || !window.matchMedia) return false;
+      return window.matchMedia("(max-width: 767px)").matches;
+    });
 
     const extensions = [
       StarterKit.configure({
