@@ -64,7 +64,14 @@ const TiptapEditor = forwardRef(
     // sync effect can skip re-setting the editor when the parent simply
     // bounces that content back as a prop (avoiding the scroll/space bug).
     const lastUserContent = useRef(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    // Lazy initializer so mobile auto-fullscreen takes effect on the first
+    // render — using a useEffect would let the inline layout paint first and
+    // flash before flipping to the fullscreen portal.
+    const [isFullscreen, setIsFullscreen] = useState(() => {
+      if (!autoFullscreenOnMobile) return false;
+      if (typeof window === "undefined" || !window.matchMedia) return false;
+      return window.matchMedia("(max-width: 767px)").matches;
+    });
 
     const extensions = [
       StarterKit.configure({
@@ -233,18 +240,6 @@ const TiptapEditor = forwardRef(
         });
       }
     }, [isFullscreen, editor]);
-
-    // Auto-open fullscreen on mobile when the editor mounts. Fires once per
-    // mount; if the user closes fullscreen we don't re-open it (re-mounting,
-    // e.g. logging a different workout, will trigger it again).
-    useEffect(() => {
-      if (!autoFullscreenOnMobile) return;
-      if (typeof window === "undefined" || !window.matchMedia) return;
-      if (window.matchMedia("(max-width: 767px)").matches) {
-        setIsFullscreen(true);
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     // Expose methods via ref
     useImperativeHandle(
