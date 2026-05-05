@@ -834,8 +834,8 @@ function ViewReports() {
 
           {/* Tab Switcher skeleton */}
           <div className="flex items-center justify-center gap-2 mb-6 -mt-2">
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-xl animate-pulse" />
-            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-xl animate-pulse" />
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-full animate-pulse" />
+            <div className="h-10 w-36 bg-synthwave-text-muted/20 rounded-full animate-pulse" />
           </div>
 
           {/* Report cards skeleton — single column mobile, two columns desktop */}
