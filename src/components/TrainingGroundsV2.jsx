@@ -646,7 +646,7 @@ function TrainingGroundsV2() {
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
           {/* Header skeleton */}
-          <PageHeaderSkeleton showCoach showRightSlot className="mb-2" />
+          <PageHeaderSkeleton showCoach showRightSlot className="!mb-2" />
 
           {/* AI Greeting skeleton */}
           <div className="mb-4 max-w-4xl">
@@ -1312,7 +1312,7 @@ function TrainingGroundsV2() {
               onClick={() => setIsCommandPaletteOpen(true)}
             />
           }
-          className="mb-2"
+          className="!mb-2"
         />
 
         {/* ---------------------------------------------------------------- */}
