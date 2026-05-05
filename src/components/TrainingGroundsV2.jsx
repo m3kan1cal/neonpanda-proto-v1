@@ -680,7 +680,7 @@ function TrainingGroundsV2() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-xl animate-pulse"
+                  className="h-8 w-28 bg-synthwave-text-muted/10 border border-synthwave-text-muted/20 rounded-full animate-pulse"
                 ></div>
               ))}
             </div>
@@ -739,7 +739,7 @@ function TrainingGroundsV2() {
                       ))}
                     </div>
                     <div className="flex-1 min-h-[4px]"></div>
-                    <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
+                    <div className="h-10 bg-synthwave-text-muted/20 rounded-full animate-pulse w-full"></div>
                   </div>
                 </div>
               ))}

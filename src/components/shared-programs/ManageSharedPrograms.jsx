@@ -626,8 +626,8 @@ function ManageSharedPrograms() {
                   </div>
                   <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
                   <div className="flex items-center gap-3 mt-4">
-                    <div className="h-8 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-32"></div>
-                    <div className="h-8 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-36"></div>
+                    <div className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-32"></div>
+                    <div className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-36"></div>
                   </div>
                 </div>
               ))}
@@ -652,8 +652,8 @@ function ManageSharedPrograms() {
                     </div>
                     <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
                     <div className="flex items-center gap-3 mt-4">
-                      <div className="h-8 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-32"></div>
-                      <div className="h-8 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-36"></div>
+                      <div className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-32"></div>
+                      <div className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-36"></div>
                     </div>
                   </div>
                 ))}
@@ -676,8 +676,8 @@ function ManageSharedPrograms() {
                     </div>
                     <div className="h-12 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-full"></div>
                     <div className="flex items-center gap-3 mt-4">
-                      <div className="h-8 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-32"></div>
-                      <div className="h-8 bg-synthwave-text-muted/20 rounded-xl animate-pulse w-36"></div>
+                      <div className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-32"></div>
+                      <div className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-36"></div>
                     </div>
                   </div>
                 ))}
