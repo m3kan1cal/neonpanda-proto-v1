@@ -187,33 +187,30 @@ function extractCrossFitExercises(
 }
 
 function extractCrossFitMetrics(exercise: CrossFitExercise): ExerciseMetrics {
+  const repsCompleted =
+    exercise.reps && typeof exercise.reps.completed === "number"
+      ? exercise.reps.completed
+      : undefined;
+
+  // Conditional spread keeps optional fields out of the object entirely when
+  // not present, avoiding the "Found many undefined values in DynamoDB
+  // serialization" warning. Mirrors the pattern in extractPowerliftingExercises.
+  // rxStatus is intentionally omitted here — it is tracked at the workout level.
   const metrics: ExerciseMetrics = {
     movementType: exercise.movement_type,
-    variation: exercise.variation,
+    ...(exercise.variation && { variation: exercise.variation }),
+    ...(exercise.weight?.value !== undefined && {
+      weight: exercise.weight.value,
+    }),
+    ...(exercise.weight?.unit && { weightUnit: exercise.weight.unit }),
+    ...(exercise.weight?.percentage_1rm !== undefined && {
+      percentage1rm: exercise.weight.percentage_1rm,
+    }),
+    ...(repsCompleted !== undefined && { reps: repsCompleted }),
+    ...(exercise.distance && { distance: exercise.distance }),
+    ...(exercise.time && { time: exercise.time }),
+    ...(exercise.calories && { calories: exercise.calories }),
   };
-
-  // Weight
-  if (exercise.weight) {
-    metrics.weight = exercise.weight.value;
-    metrics.weightUnit = exercise.weight.unit;
-    metrics.percentage1rm = exercise.weight.percentage_1rm;
-  }
-
-  // Reps
-  if (exercise.reps) {
-    metrics.reps =
-      typeof exercise.reps.completed === "number"
-        ? exercise.reps.completed
-        : undefined;
-  }
-
-  // Distance/time/calories for cardio movements
-  if (exercise.distance) metrics.distance = exercise.distance;
-  if (exercise.time) metrics.time = exercise.time;
-  if (exercise.calories) metrics.calories = exercise.calories;
-
-  // RX status from parent
-  metrics.rxStatus = undefined; // Set at workout level, not exercise
 
   return metrics;
 }
