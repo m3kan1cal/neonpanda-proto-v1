@@ -1559,6 +1559,7 @@ General thoughts: `;
                               minHeight="60px"
                               maxHeight="260px"
                               allowFullscreen={true}
+                              autoFullscreenOnMobile={true}
                             />
 
                             {/* Photo thumbnails strip */}

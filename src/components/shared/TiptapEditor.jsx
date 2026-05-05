@@ -45,6 +45,10 @@ const TiptapEditor = forwardRef(
       // When true, shows an expand/fullscreen button in the toolbar.
       // Only effective when showToolbar is true and mode is "rich".
       allowFullscreen = false,
+      // When true, automatically opens the editor in fullscreen on mobile
+      // viewports (max-width: 767px) on mount. Desktop behavior is unchanged.
+      // Requires allowFullscreen so the user can exit back to inline.
+      autoFullscreenOnMobile = false,
       // Accent color for toolbar borders and active button states.
       // "cyan" (default) suits chat inputs; "pink" suits form inputs.
       variant = "cyan",
@@ -229,6 +233,18 @@ const TiptapEditor = forwardRef(
         });
       }
     }, [isFullscreen, editor]);
+
+    // Auto-open fullscreen on mobile when the editor mounts. Fires once per
+    // mount; if the user closes fullscreen we don't re-open it (re-mounting,
+    // e.g. logging a different workout, will trigger it again).
+    useEffect(() => {
+      if (!autoFullscreenOnMobile) return;
+      if (typeof window === "undefined" || !window.matchMedia) return;
+      if (window.matchMedia("(max-width: 767px)").matches) {
+        setIsFullscreen(true);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Expose methods via ref
     useImperativeHandle(
