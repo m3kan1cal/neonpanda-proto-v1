@@ -68,7 +68,7 @@ const TiptapEditor = forwardRef(
     // render — using a useEffect would let the inline layout paint first and
     // flash before flipping to the fullscreen portal.
     const [isFullscreen, setIsFullscreen] = useState(() => {
-      if (!autoFullscreenOnMobile) return false;
+      if (!autoFullscreenOnMobile || !allowFullscreen) return false;
       if (typeof window === "undefined" || !window.matchMedia) return false;
       return window.matchMedia("(max-width: 767px)").matches;
     });
