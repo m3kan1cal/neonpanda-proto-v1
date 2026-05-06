@@ -505,6 +505,7 @@ export default function ProgramDashboard() {
             userId={userId}
             coachId={coachId}
             programId={programId}
+            variant="mobile"
           />
           <PhaseTimeline program={program} />
           <ProgressOverview program={program} />
@@ -534,6 +535,7 @@ export default function ProgramDashboard() {
               userId={userId}
               coachId={coachId}
               programId={programId}
+              variant="desktop"
             />
             <PhaseTimeline program={program} />
           </div>

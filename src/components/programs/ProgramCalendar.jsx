@@ -10,6 +10,7 @@ export default function ProgramCalendar({
   userId,
   coachId,
   programId,
+  variant = "default",
 }) {
   const [showAllWeeks, setShowAllWeeks] = useState(false);
 
@@ -93,7 +94,7 @@ export default function ProgramCalendar({
     // Scroll current week into view
     setTimeout(() => {
       const currentWeekElement = document.getElementById(
-        `week-${currentWeekIndex}`,
+        `week-${currentWeekIndex}-${variant}`,
       );
       if (currentWeekElement) {
         currentWeekElement.scrollIntoView({
@@ -194,7 +195,7 @@ export default function ProgramCalendar({
           const isCurrentWeek = weekIndex === currentWeekIndex;
 
           return (
-            <div key={weekIndex} id={`week-${weekIndex}`}>
+            <div key={weekIndex} id={`week-${weekIndex}-${variant}`}>
               {/* Week header */}
               <div className="flex items-center justify-between mb-2">
                 <h4
