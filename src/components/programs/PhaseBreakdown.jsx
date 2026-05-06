@@ -35,7 +35,6 @@ export default function PhaseBreakdown({ program }) {
       title="Current Phase"
       icon={TargetIcon}
       iconColor="purple"
-      id="current-phase"
     >
       {/* Phase Name */}
       <div className="mb-4">
