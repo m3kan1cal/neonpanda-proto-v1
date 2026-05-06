@@ -110,7 +110,6 @@ export default function ProgramCalendar({
         title="Training Calendar"
         icon={CalendarIcon}
         iconColor="purple"
-        id="training-calendar"
         headerClassName="p-4 md:p-6"
         bodyClassName="px-4 pb-4 md:px-6 md:pb-6"
       >
@@ -126,7 +125,6 @@ export default function ProgramCalendar({
       title="Training Calendar"
       icon={CalendarIcon}
       iconColor="purple"
-      id="training-calendar"
       headerClassName="p-4 md:p-6"
       bodyClassName="px-4 pb-4 md:px-6 md:pb-6"
     >
