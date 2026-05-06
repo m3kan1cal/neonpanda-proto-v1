@@ -477,12 +477,11 @@ export default function ProgramDashboard() {
           ]}
         />
 
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Main content - 60% (3 of 5 columns) */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Today's Workout - Only show for active/paused programs */}
-            {(program.status === "active" || program.status === "paused") && (
+        {/* Flat grid: DOM order = mobile order; explicit lg:col-start/row-start preserves desktop 3+2 layout */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          {/* 1. Today's Workout — desktop main col row 1, mobile 1st */}
+          {(program.status === "active" || program.status === "paused") && (
+            <div className="lg:col-span-3 lg:col-start-1 lg:row-start-1">
               <TodaysWorkoutCard
                 todaysWorkout={todaysWorkout}
                 program={program}
@@ -494,24 +493,11 @@ export default function ProgramDashboard() {
                 isCompletingRestDay={isCompletingRestDay}
                 showViewProgramButton={false} // Hide button since user is already on program dashboard
               />
-            )}
+            </div>
+          )}
 
-            {/* Calendar */}
-            <ProgramCalendar
-              program={program}
-              programDetails={programDetails}
-              userId={userId}
-              coachId={coachId}
-              programId={programId}
-            />
-
-            {/* Phase Timeline */}
-            <PhaseTimeline program={program} />
-          </div>
-
-          {/* Sidebar - 40% (2 of 5 columns) */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Program Overview */}
+          {/* 2. Program Overview — desktop sidebar row 1, mobile 2nd */}
+          <div className="lg:col-span-2 lg:col-start-4 lg:row-start-1">
             <ProgramOverview
               program={program}
               programAgentRef={programAgentRef}
@@ -519,11 +505,31 @@ export default function ProgramDashboard() {
               userId={userId}
               onShareClick={handleShareClick}
             />
+          </div>
 
-            {/* Progress Overview */}
+          {/* 3. Training Calendar — desktop main col row 2, mobile 3rd */}
+          <div className="lg:col-span-3 lg:col-start-1 lg:row-start-2">
+            <ProgramCalendar
+              program={program}
+              programDetails={programDetails}
+              userId={userId}
+              coachId={coachId}
+              programId={programId}
+            />
+          </div>
+
+          {/* 4. Phase Timeline — desktop main col row 3, mobile 4th */}
+          <div className="lg:col-span-3 lg:col-start-1 lg:row-start-3">
+            <PhaseTimeline program={program} />
+          </div>
+
+          {/* 5. Progress Overview — desktop sidebar row 2, mobile 5th */}
+          <div className="lg:col-span-2 lg:col-start-4 lg:row-start-2">
             <ProgressOverview program={program} />
+          </div>
 
-            {/* Phase Breakdown */}
+          {/* 6. Phase Breakdown — desktop sidebar row 3, mobile 6th */}
+          <div className="lg:col-span-2 lg:col-start-4 lg:row-start-3">
             <PhaseBreakdown program={program} />
           </div>
         </div>

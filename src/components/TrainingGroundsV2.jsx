@@ -1545,67 +1545,10 @@ function TrainingGroundsV2() {
             <div className={typographyPatterns.sectionDividerLine}></div>
           </div>
 
-          {/* Mobile: Single column */}
-          <div className="md:hidden space-y-6 animate-fade-in-up">
-            {/* Reports & Insights */}
-            {renderReportsCard()}
-
-            {/* Active Programs */}
-            <div className={`${containerPatterns.cardMedium} p-6`}>
-              <div className="flex items-start space-x-3 mb-4">
-                <svg
-                  className="w-5 h-5 text-synthwave-neon-cyan shrink-0 mt-1.5"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
-                </svg>
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  Active Programs
-                </h3>
-              </div>
-              <ProgramList
-                programs={programs}
-                isLoading={isLoadingPrograms}
-                userId={userId}
-                coachId={coachId}
-                maxItems={PAGINATION_LIMIT}
-                showAll={showAllPrograms}
-                onToggleShowAll={() => setShowAllPrograms((prev) => !prev)}
-                onDesignProgram={handleDesignProgram}
-              />
-            </div>
-
-            {/* Training Volume */}
-            {renderTrainingLoadCard()}
-
-            {/* Streak */}
-            {renderStreakCard()}
-
-            {/* Recent PRs */}
-            {renderRecentPRsCard()}
-
-            {/* Top Exercises */}
-            {renderTopExercisesCard()}
-
-            {/* Workout History */}
-            {renderWorkoutHistoryCard()}
-
-            {/* Recent Conversations */}
-            {renderConversationsCard()}
-          </div>
-
-          {/* Desktop: Two columns with alternating distribution (masonry) */}
-          <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:items-start">
-            {/* Left Column -- Reports + Programs + Workout History + Conversations */}
-            <div
-              className="space-y-6 animate-fade-in-up"
-              style={{ animationDelay: "0ms" }}
-            >
-              {renderReportsCard()}
-
+          {/* Flat grid: DOM order = mobile order; explicit md:col-start/row-start preserves desktop two-column masonry */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-x-6 md:items-start animate-fade-in-up">
+            {/* 1. Active Programs — desktop col 1 row 2, mobile 1st */}
+            <div className="md:col-start-1 md:row-start-2">
               <div className={`${containerPatterns.cardMedium} p-6`}>
                 <div className="flex items-start space-x-3 mb-4">
                   <svg
@@ -1632,19 +1575,40 @@ function TrainingGroundsV2() {
                   onDesignProgram={handleDesignProgram}
                 />
               </div>
+            </div>
 
-              {renderWorkoutHistoryCard()}
+            {/* 2. Recent Conversations — desktop col 1 row 4, mobile 2nd */}
+            <div className="md:col-start-1 md:row-start-4">
               {renderConversationsCard()}
             </div>
 
-            {/* Right Column -- Training Volume + Streak + Recent PRs + Top Exercises */}
-            <div
-              className="space-y-6 animate-fade-in-up"
-              style={{ animationDelay: "80ms" }}
-            >
-              {renderTrainingLoadCard()}
+            {/* 3. Workout History — desktop col 1 row 3, mobile 3rd */}
+            <div className="md:col-start-1 md:row-start-3">
+              {renderWorkoutHistoryCard()}
+            </div>
+
+            {/* 4. Reports & Insights — desktop col 1 row 1, mobile 4th */}
+            <div className="md:col-start-1 md:row-start-1">
+              {renderReportsCard()}
+            </div>
+
+            {/* 5. Streak — desktop col 2 row 2, mobile 5th */}
+            <div className="md:col-start-2 md:row-start-2">
               {renderStreakCard()}
+            </div>
+
+            {/* 6. Training Volume — desktop col 2 row 1, mobile 6th */}
+            <div className="md:col-start-2 md:row-start-1">
+              {renderTrainingLoadCard()}
+            </div>
+
+            {/* 7. Recent PRs — desktop col 2 row 3, mobile 7th (conditional null) */}
+            <div className="md:col-start-2 md:row-start-3">
               {renderRecentPRsCard()}
+            </div>
+
+            {/* 8. Top Exercises — desktop col 2 row 4, mobile 8th (conditional null) */}
+            <div className="md:col-start-2 md:row-start-4">
               {renderTopExercisesCard()}
             </div>
           </div>
