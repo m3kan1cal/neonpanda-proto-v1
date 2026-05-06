@@ -477,11 +477,45 @@ export default function ProgramDashboard() {
           ]}
         />
 
-        {/* Flat grid: DOM order = mobile order; explicit lg:col-start/row-start preserves desktop 3+2 layout */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          {/* 1. Today's Workout — desktop main col row 1, mobile 1st */}
+        {/* Mobile: action-first single column (Today's → Overview → Calendar → Timeline → Progress → Phase) */}
+        <div className="lg:hidden space-y-6">
           {(program.status === "active" || program.status === "paused") && (
-            <div className="lg:col-span-3 lg:col-start-1 lg:row-start-1">
+            <TodaysWorkoutCard
+              todaysWorkout={todaysWorkout}
+              program={program}
+              isLoading={false}
+              error={null}
+              userId={userId}
+              coachId={coachId}
+              onCompleteRestDay={handleCompleteRestDay}
+              isCompletingRestDay={isCompletingRestDay}
+              showViewProgramButton={false}
+            />
+          )}
+          <ProgramOverview
+            program={program}
+            programAgentRef={programAgentRef}
+            onProgramUpdate={handleProgramUpdate}
+            userId={userId}
+            onShareClick={handleShareClick}
+          />
+          <ProgramCalendar
+            program={program}
+            programDetails={programDetails}
+            userId={userId}
+            coachId={coachId}
+            programId={programId}
+          />
+          <PhaseTimeline program={program} />
+          <ProgressOverview program={program} />
+          <PhaseBreakdown program={program} />
+        </div>
+
+        {/* Desktop: original two-column layout with independent stacking */}
+        <div className="hidden lg:grid lg:grid-cols-5 gap-6">
+          {/* Main content - 60% (3 of 5 columns) */}
+          <div className="lg:col-span-3 space-y-6">
+            {(program.status === "active" || program.status === "paused") && (
               <TodaysWorkoutCard
                 todaysWorkout={todaysWorkout}
                 program={program}
@@ -491,24 +525,9 @@ export default function ProgramDashboard() {
                 coachId={coachId}
                 onCompleteRestDay={handleCompleteRestDay}
                 isCompletingRestDay={isCompletingRestDay}
-                showViewProgramButton={false} // Hide button since user is already on program dashboard
+                showViewProgramButton={false}
               />
-            </div>
-          )}
-
-          {/* 2. Program Overview — desktop sidebar row 1, mobile 2nd */}
-          <div className="lg:col-span-2 lg:col-start-4 lg:row-start-1">
-            <ProgramOverview
-              program={program}
-              programAgentRef={programAgentRef}
-              onProgramUpdate={handleProgramUpdate}
-              userId={userId}
-              onShareClick={handleShareClick}
-            />
-          </div>
-
-          {/* 3. Training Calendar — desktop main col row 2, mobile 3rd */}
-          <div className="lg:col-span-3 lg:col-start-1 lg:row-start-2">
+            )}
             <ProgramCalendar
               program={program}
               programDetails={programDetails}
@@ -516,20 +535,19 @@ export default function ProgramDashboard() {
               coachId={coachId}
               programId={programId}
             />
-          </div>
-
-          {/* 4. Phase Timeline — desktop main col row 3, mobile 4th */}
-          <div className="lg:col-span-3 lg:col-start-1 lg:row-start-3">
             <PhaseTimeline program={program} />
           </div>
 
-          {/* 5. Progress Overview — desktop sidebar row 2, mobile 5th */}
-          <div className="lg:col-span-2 lg:col-start-4 lg:row-start-2">
+          {/* Sidebar - 40% (2 of 5 columns) */}
+          <div className="lg:col-span-2 space-y-6">
+            <ProgramOverview
+              program={program}
+              programAgentRef={programAgentRef}
+              onProgramUpdate={handleProgramUpdate}
+              userId={userId}
+              onShareClick={handleShareClick}
+            />
             <ProgressOverview program={program} />
-          </div>
-
-          {/* 6. Phase Breakdown — desktop sidebar row 3, mobile 6th */}
-          <div className="lg:col-span-2 lg:col-start-4 lg:row-start-3">
             <PhaseBreakdown program={program} />
           </div>
         </div>
