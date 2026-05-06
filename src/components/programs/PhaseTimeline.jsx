@@ -98,7 +98,6 @@ export default function PhaseTimeline({ program }) {
       title="Phase Timeline"
       icon={CalendarIcon}
       iconColor="cyan"
-      id="phase-timeline"
     >
       {/* Phase Timeline */}
       <div className="mb-4">

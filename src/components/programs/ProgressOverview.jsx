@@ -71,7 +71,6 @@ export default function ProgressOverview({ program }) {
       title="Progress Overview"
       icon={MetricsIcon}
       iconColor="cyan"
-      id="progress-overview"
     >
       {/* Progress info */}
       <div className="font-body text-sm text-synthwave-text-secondary mb-2">

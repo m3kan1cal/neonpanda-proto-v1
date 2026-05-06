@@ -1545,11 +1545,8 @@ function TrainingGroundsV2() {
             <div className={typographyPatterns.sectionDividerLine}></div>
           </div>
 
-          {/* Mobile: Single column */}
+          {/* Mobile: action-first single column */}
           <div className="md:hidden space-y-6 animate-fade-in-up">
-            {/* Reports & Insights */}
-            {renderReportsCard()}
-
             {/* Active Programs */}
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
@@ -1578,28 +1575,18 @@ function TrainingGroundsV2() {
               />
             </div>
 
-            {/* Training Volume */}
-            {renderTrainingLoadCard()}
-
-            {/* Streak */}
-            {renderStreakCard()}
-
-            {/* Recent PRs */}
-            {renderRecentPRsCard()}
-
-            {/* Top Exercises */}
-            {renderTopExercisesCard()}
-
-            {/* Workout History */}
-            {renderWorkoutHistoryCard()}
-
-            {/* Recent Conversations */}
             {renderConversationsCard()}
+            {renderWorkoutHistoryCard()}
+            {renderReportsCard()}
+            {renderStreakCard()}
+            {renderTrainingLoadCard()}
+            {renderRecentPRsCard()}
+            {renderTopExercisesCard()}
           </div>
 
-          {/* Desktop: Two columns with alternating distribution (masonry) */}
+          {/* Desktop: original two-column masonry with independent stacking */}
           <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:items-start">
-            {/* Left Column -- Reports + Programs + Workout History + Conversations */}
+            {/* Left Column — Reports + Programs + Workout History + Conversations */}
             <div
               className="space-y-6 animate-fade-in-up"
               style={{ animationDelay: "0ms" }}
@@ -1637,7 +1624,7 @@ function TrainingGroundsV2() {
               {renderConversationsCard()}
             </div>
 
-            {/* Right Column -- Training Volume + Streak + Recent PRs + Top Exercises */}
+            {/* Right Column — Training Volume + Streak + Recent PRs + Top Exercises */}
             <div
               className="space-y-6 animate-fade-in-up"
               style={{ animationDelay: "80ms" }}

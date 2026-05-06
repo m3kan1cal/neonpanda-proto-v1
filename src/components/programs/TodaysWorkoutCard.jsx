@@ -30,7 +30,6 @@ function TodaysWorkoutCard({
         icon={WorkoutIconSmall}
         iconColor="cyan"
         iconClassName="opacity-30 animate-pulse"
-        id="todays-workout"
       >
         <div className="space-y-3">
           <div className="h-4 bg-synthwave-text-muted/20 animate-pulse"></div>
@@ -47,7 +46,6 @@ function TodaysWorkoutCard({
         title="Today's Workout"
         icon={WorkoutIconSmall}
         iconColor="cyan"
-        id="todays-workout"
       >
         <InlineError
           title="Error loading today's workout"
@@ -71,7 +69,6 @@ function TodaysWorkoutCard({
         title="Today's Workout"
         icon={WorkoutIconSmall}
         iconColor="cyan"
-        id="todays-workout"
       >
         {/* Program name */}
         {program && (
@@ -157,7 +154,6 @@ function TodaysWorkoutCard({
         title="Today's Workout"
         icon={WorkoutIconSmall}
         iconColor="cyan"
-        id="todays-workout"
       >
         {/* Day info */}
         <div className="font-body text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
@@ -254,7 +250,6 @@ function TodaysWorkoutCard({
       title="Today's Workout"
       icon={WorkoutIconSmall}
       iconColor="cyan"
-      id="todays-workout"
     >
       {/* Program name - clickable */}
       <button

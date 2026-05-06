@@ -163,7 +163,6 @@ export default function ProgramOverview({
       title="Program Overview"
       icon={SummaryIcon}
       iconColor="pink"
-      id="program-overview"
     >
       {/* Program Name with Status Badge */}
       <div className="mb-4 flex items-start gap-3 min-w-0">

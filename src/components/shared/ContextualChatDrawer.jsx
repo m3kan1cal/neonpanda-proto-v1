@@ -1082,7 +1082,7 @@ export default function ContextualChatDrawer({
   // Auto-scroll message area to bottom on new messages (target visible panel)
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!agentState?.messages) return;
+    if (!agentState?.messages || agentState.messages.length === 0) return;
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
     const ref = isDesktop ? desktopMessageAreaRef : mobileMessageAreaRef;
     const el = ref.current;
@@ -1673,25 +1673,24 @@ function DrawerResizeHandle({
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Mobile sheet drag handle — swipe down to close when the message list is at top.
+// Mobile sheet drag handle — swipe down to close.
 // Uses Pointer Events with setPointerCapture (mirrors DrawerResizeHandle) so the
 // gesture survives even if the finger drifts off the handle. Drag-to-follow:
 // we mutate the sheet's transform directly so the panel tracks the finger;
 // on release we snap back or dismiss at a 64px threshold.
 // ──────────────────────────────────────────────────────────────────────────────
-function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
+function MobileTrainingDragHandle({ sheetRef, requestClose }) {
   const startY = useRef(null);
   const activeRef = useRef(false);
   const [dragging, setDragging] = useState(false);
 
   const finishDrag = (delta) => {
     const el = sheetRef?.current;
-    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
     activeRef.current = false;
     startY.current = null;
     setDragging(false);
 
-    if (delta > 64 && scrollTop <= 4) {
+    if (delta > 64) {
       if (el) {
         el.style.transform = "";
         el.style.transition = "";
@@ -1713,8 +1712,6 @@ function MobileTrainingDragHandle({ messageAreaRef, sheetRef, requestClose }) {
 
   const onPointerDown = (e) => {
     if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
-    const scrollTop = messageAreaRef.current?.scrollTop ?? 0;
-    if (scrollTop > 4) return;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -1847,7 +1844,6 @@ function PanelContent({
     <>
       {mobileTrainingSheetChrome && (
         <MobileTrainingDragHandle
-          messageAreaRef={messageAreaRef}
           sheetRef={mobileSheetRef}
           requestClose={exit}
         />

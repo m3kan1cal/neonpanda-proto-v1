@@ -477,11 +477,45 @@ export default function ProgramDashboard() {
           ]}
         />
 
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Mobile: action-first single column (Today's → Overview → Calendar → Timeline → Progress → Phase) */}
+        <div className="lg:hidden space-y-6">
+          {(program.status === "active" || program.status === "paused") && (
+            <TodaysWorkoutCard
+              todaysWorkout={todaysWorkout}
+              program={program}
+              isLoading={false}
+              error={null}
+              userId={userId}
+              coachId={coachId}
+              onCompleteRestDay={handleCompleteRestDay}
+              isCompletingRestDay={isCompletingRestDay}
+              showViewProgramButton={false}
+            />
+          )}
+          <ProgramOverview
+            program={program}
+            programAgentRef={programAgentRef}
+            onProgramUpdate={handleProgramUpdate}
+            userId={userId}
+            onShareClick={handleShareClick}
+          />
+          <ProgramCalendar
+            program={program}
+            programDetails={programDetails}
+            userId={userId}
+            coachId={coachId}
+            programId={programId}
+            variant="mobile"
+          />
+          <PhaseTimeline program={program} />
+          <ProgressOverview program={program} />
+          <PhaseBreakdown program={program} />
+        </div>
+
+        {/* Desktop: original two-column layout with independent stacking */}
+        <div className="hidden lg:grid lg:grid-cols-5 gap-6">
           {/* Main content - 60% (3 of 5 columns) */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Today's Workout - Only show for active/paused programs */}
             {(program.status === "active" || program.status === "paused") && (
               <TodaysWorkoutCard
                 todaysWorkout={todaysWorkout}
@@ -492,26 +526,22 @@ export default function ProgramDashboard() {
                 coachId={coachId}
                 onCompleteRestDay={handleCompleteRestDay}
                 isCompletingRestDay={isCompletingRestDay}
-                showViewProgramButton={false} // Hide button since user is already on program dashboard
+                showViewProgramButton={false}
               />
             )}
-
-            {/* Calendar */}
             <ProgramCalendar
               program={program}
               programDetails={programDetails}
               userId={userId}
               coachId={coachId}
               programId={programId}
+              variant="desktop"
             />
-
-            {/* Phase Timeline */}
             <PhaseTimeline program={program} />
           </div>
 
           {/* Sidebar - 40% (2 of 5 columns) */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Program Overview */}
             <ProgramOverview
               program={program}
               programAgentRef={programAgentRef}
@@ -519,11 +549,7 @@ export default function ProgramDashboard() {
               userId={userId}
               onShareClick={handleShareClick}
             />
-
-            {/* Progress Overview */}
             <ProgressOverview program={program} />
-
-            {/* Phase Breakdown */}
             <PhaseBreakdown program={program} />
           </div>
         </div>
