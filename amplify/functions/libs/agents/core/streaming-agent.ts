@@ -289,18 +289,6 @@ export class StreamingConversationAgent<
       let stopReason = "";
       let iterationUsage = { inputTokens: 0, outputTokens: 0 };
 
-      // ─── Pre-tool preamble buffering ────────────────────────────────────
-      // Text deltas are buffered in this iteration instead of streaming to
-      // the client immediately. We only know whether the buffered text is a
-      // "preamble before a tool" or "the actual answer" once the iteration's
-      // stop reason is known. On stopReason === "tool_use" we DROP the
-      // buffered text from the user-visible stream (and from history) so the
-      // next iteration's reply doesn't echo the preamble. On end_turn we
-      // flush the buffer normally.
-      let iterationTextBuffer = "";
-      const pendingChunkEvents: string[] = [];
-      let preambleStripped = "";
-
       const streamEvents = callBedrockApiStreamForAgent(
         this.config.staticPrompt + "\n\n" + this.config.dynamicPrompt,
         this.conversationHistory,
@@ -337,32 +325,19 @@ export class StreamingConversationAgent<
           if (opts.markFirstTextToken) {
             firstTokenSeen = true;
           }
-          // Buffer instead of streaming. We commit to fullResponseText and
-          // yield the chunk events only when we know the iteration stopped
-          // with end_turn (real answer) and not tool_use (preamble to drop).
-          // The needsSeparator handling stays here so the queued separator
-          // chunk and text chunk are both held atomically.
           if (needsSeparator) {
-            iterationTextBuffer += "\n\n";
-            pendingChunkEvents.push(formatChunkEvent("\n\n"));
+            fullResponseText += "\n\n";
+            agent._fullResponseText += "\n\n";
+            yield formatChunkEvent("\n\n");
             needsSeparator = false;
           }
-          iterationTextBuffer += event.text;
-          pendingChunkEvents.push(formatChunkEvent(event.text));
+          fullResponseText += event.text;
+          agent._fullResponseText += event.text;
+          yield formatChunkEvent(event.text);
         } else if (event.type === "tool_use_start") {
           currentToolUseId = event.toolUseId;
           currentToolName = event.toolName;
           toolInputFragments.set(event.toolUseId, []);
-
-          // The iteration is now committed to a tool_use stop reason — drop
-          // the buffered preamble from the user-visible stream and remember
-          // it so we can also strip it from assistantContent before pushing
-          // to history (next iteration won't echo the same sentiment).
-          if (iterationTextBuffer.trim().length > 0) {
-            preambleStripped += iterationTextBuffer;
-            iterationTextBuffer = "";
-            pendingChunkEvents.length = 0;
-          }
 
           // Surface the tool call to the UI as a "running" block. The tool's
           // existing contextualMessage (yielded later in the tool loop) still
@@ -432,25 +407,6 @@ export class StreamingConversationAgent<
           stopReason = event.stopReason;
           iterationUsage = event.usage;
 
-          // Flush the buffered text on any non-tool_use stop reason. Only
-          // tool_use means "the buffered text was preamble — drop it";
-          // end_turn / max_tokens / stop_sequence / content_filtered all
-          // mean "this was the final (or final-so-far) answer". The buffer
-          // was already cleared at tool_use_start, so this branch only
-          // fires for the answer-bearing stop reasons.
-          if (
-            event.stopReason !== "tool_use" &&
-            iterationTextBuffer.length > 0
-          ) {
-            fullResponseText += iterationTextBuffer;
-            agent._fullResponseText += iterationTextBuffer;
-            for (const chunk of pendingChunkEvents) {
-              yield chunk;
-            }
-            iterationTextBuffer = "";
-            pendingChunkEvents.length = 0;
-          }
-
           agent.totalInputTokens += iterationUsage.inputTokens;
           agent.totalOutputTokens += iterationUsage.outputTokens;
 
@@ -460,7 +416,6 @@ export class StreamingConversationAgent<
             toolsUsed: toolUseBlocks.length,
             inputTokens: iterationUsage.inputTokens,
             outputTokens: iterationUsage.outputTokens,
-            preambleStrippedChars: preambleStripped.length,
           });
         }
       };
@@ -562,9 +517,8 @@ export class StreamingConversationAgent<
       // Append assistant message to conversation history. For tool_use
       // iterations we strip the leading preamble text blocks so the next
       // iteration can't re-state the same sentiment in its post-tool reply.
-      // (See `stripLeadingTextBlocks` and the buffer logic above.)
       const recordedAssistantContent =
-        stopReason === "tool_use" && preambleStripped.length > 0
+        stopReason === "tool_use"
           ? stripLeadingTextBlocks(assistantContent)
           : assistantContent;
       this.conversationHistory.push({

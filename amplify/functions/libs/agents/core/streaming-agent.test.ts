@@ -281,9 +281,9 @@ describe("StreamingConversationAgent.converseStream", () => {
     expect(agent.getFullResponseText()).toBe("Hello world");
   });
 
-  // ─── Pre-tool preamble buffering ──────────────────────────────────────────
+  // ─── Pre-tool preamble: streams live to user, stripped from history ───────
 
-  it("DROPS pre-tool preamble text from chunk events when iteration ends in tool_use", async () => {
+  it("streams pre-tool preamble live AND strips it from conversationHistory", async () => {
     const preambleStream: MockStreamEvent[] = [
       { type: "text_delta", text: "Let me pull your history…" },
       { type: "tool_use_start", toolUseId: "use-1", toolName: "search_tool" },
@@ -314,25 +314,29 @@ describe("StreamingConversationAgent.converseStream", () => {
     const agent = makeAgent([tool]);
     const { yielded, result } = await collectStream(agent, "ask");
 
-    // The preamble must NOT appear in any chunk event
+    // 1. The preamble DOES appear in chunk events (streamed live to the user)
     const chunkEvents = yielded.filter((e) => e.includes('"type":"chunk"'));
-    expect(chunkEvents.join("")).not.toContain("Let me pull your history");
-    // The actual answer should be in chunk events
+    expect(chunkEvents.join("")).toContain("Let me pull your history");
     expect(chunkEvents.join("")).toContain("Final answer");
-    // Final response text only includes the post-tool reply
-    expect(result.fullResponseText).toBe("Final answer");
-  });
 
-  it("FLUSHES buffered text as chunks when iteration ends in end_turn (no tool)", async () => {
-    vi.mocked(callBedrockApiStreamForAgent).mockReturnValue(
-      makeStream(makeEndTurnStream("Hi there")),
+    // 2. The preamble is stripped from the assistant message in history before
+    // the next Bedrock call (so the model can't restate it)
+    const secondCallMessages = vi.mocked(callBedrockApiStreamForAgent).mock
+      .calls[1][1];
+    const assistantMessage = secondCallMessages.find(
+      (m: any) =>
+        m.role === "assistant" &&
+        m.content?.some((c: any) => c.toolUse?.toolUseId === "use-1"),
     );
-    const agent = makeAgent();
-    const { yielded, result } = await collectStream(agent, "hi");
+    expect(assistantMessage).toBeDefined();
+    const hasLeadingTextBlock =
+      assistantMessage.content[0] &&
+      typeof assistantMessage.content[0].text === "string";
+    expect(hasLeadingTextBlock).toBe(false);
 
-    const chunkEvents = yielded.filter((e) => e.includes('"type":"chunk"'));
-    expect(chunkEvents.join("")).toContain("Hi there");
-    expect(result.fullResponseText).toBe("Hi there");
+    // 3. Final response text includes both preamble and post-tool answer
+    expect(result.fullResponseText).toContain("Let me pull your history");
+    expect(result.fullResponseText).toContain("Final answer");
   });
 
   // ─── tool_call SSE events ────────────────────────────────────────────────
