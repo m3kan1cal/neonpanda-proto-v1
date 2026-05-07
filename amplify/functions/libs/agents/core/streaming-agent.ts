@@ -343,6 +343,7 @@ export class StreamingConversationAgent<
           // The needsSeparator handling stays here so the queued separator
           // chunk and text chunk are both held atomically.
           if (needsSeparator) {
+            iterationTextBuffer += "\n\n";
             pendingChunkEvents.push(formatChunkEvent("\n\n"));
             needsSeparator = false;
           }
