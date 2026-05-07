@@ -719,6 +719,12 @@ The tool automatically normalizes exercise names (e.g., "Back Squat" → "back_s
           volume: ex.metrics.totalVolume,
           discipline: ex.discipline,
           notes: ex.metadata.notes,
+          // Provenance — only present on rows logged after this field was
+          // added; absence means "unknown source, do not assume". Lets the
+          // agent distinguish program-prescribed work (templateId present)
+          // from ad-hoc logs without a second tool call.
+          ...(ex.templateId && { templateId: ex.templateId }),
+          ...(ex.loggedVia && { loggedVia: ex.loggedVia }),
         }));
 
         console.info("✅ Exercise history retrieved:", {

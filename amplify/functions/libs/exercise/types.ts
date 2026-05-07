@@ -196,6 +196,14 @@ export interface Exercise {
   // Metadata
   metadata: ExerciseMetadata;
 
+  // === Parent-workout provenance (optional, populated by build-exercise) ===
+  // Surfaced in query_exercise_history results so the conversation agent can
+  // distinguish program-prescribed work from ad-hoc logs without a second
+  // tool call. Both fields are optional for backwards-compat — older rows
+  // saved before this change simply omit them and the projection skips them.
+  templateId?: string; // From parent workout.templateId or workout.programContext.templateId
+  loggedVia?: string; // From parent workout.workoutData.metadata.logged_via (e.g. "chat", "slash_command", "workout_editor")
+
   // DynamoDB timestamps
   createdAt?: Date;
   updatedAt?: Date;
@@ -212,6 +220,12 @@ export interface BuildExerciseEvent {
   workoutData: UniversalWorkoutSchema;
   completedAt: string; // ISO date string
   isEdit?: boolean; // When true, delete stale exercise records before extracting new ones
+
+  // Optional provenance the caller can pass through so each Exercise row knows
+  // which prescribed template it came from (if any) and how the parent workout
+  // was logged. Read by the agent's query_exercise_history projection.
+  templateId?: string; // From parent workout.templateId or workout.programContext.templateId
+  loggedVia?: string; // From parent workout.workoutData.metadata.logged_via
 }
 
 /**

@@ -1356,6 +1356,16 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
           workoutId: workout.workoutId,
           workoutData: workoutData,
           completedAt: completedAtDate.toISOString(),
+          // Provenance forwarded so each Exercise row knows which prescribed
+          // template it came from (if any) and how the parent was logged.
+          // Surfaced in query_exercise_history so the agent can distinguish
+          // program-prescribed exercises from ad-hoc logs.
+          ...(context.templateContext?.templateId && {
+            templateId: context.templateContext.templateId,
+          }),
+          ...(workoutData?.metadata?.logged_via && {
+            loggedVia: workoutData.metadata.logged_via,
+          }),
         },
         "exercise log extraction",
       ).catch((error) => {
