@@ -1547,6 +1547,43 @@ export const streamingPatterns = {
 
   // Avatar row below contextual update or typing indicator
   avatarRow: "flex items-start gap-2 mt-2",
+
+  // Tool call block — faint, persistent indicator of a tool the agent ran
+  // during this turn. Stays visible after streaming ends so the user can see
+  // what the coach actually did. Variant colors:
+  //   - running:  cyan accent, animated pulse
+  //   - complete: cyan accent, no animation, duration shown
+  //   - error:    pink/red accent, error message shown
+  toolCallBlock: {
+    container:
+      "rounded-md border bg-synthwave-bg-card/30 px-3 py-2 text-xs font-body w-full",
+    containerRunning:
+      "border-synthwave-neon-cyan/30 text-synthwave-text-secondary/80",
+    containerComplete:
+      "border-synthwave-neon-cyan/20 text-synthwave-text-secondary/70",
+    containerError:
+      "border-synthwave-neon-pink/40 text-synthwave-text-secondary/80",
+    headerRow: "flex items-center gap-2 min-w-0",
+    statusDotRunning:
+      "w-1.5 h-1.5 bg-synthwave-neon-cyan rounded-full animate-typing-dot shrink-0",
+    statusDotComplete:
+      "w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full shrink-0",
+    statusDotError:
+      "w-1.5 h-1.5 bg-synthwave-neon-pink rounded-full shrink-0",
+    toolNameLabel:
+      "font-mono text-xs text-synthwave-text-secondary shrink-0",
+    toolName:
+      "font-mono text-xs text-synthwave-neon-cyan/90 truncate min-w-0",
+    toolNameError:
+      "font-mono text-xs text-synthwave-neon-pink truncate min-w-0",
+    metaText: "ml-auto text-xs text-synthwave-text-muted font-mono shrink-0",
+    errorMessage:
+      "mt-1 text-xs text-synthwave-neon-pink/90 break-words font-body",
+    inputDisclosureSummary:
+      "mt-1 text-xs text-synthwave-text-muted/80 cursor-pointer hover:text-synthwave-text-secondary/80 select-none",
+    inputDisclosurePre:
+      "mt-1 px-2 py-1.5 rounded bg-synthwave-bg-card/60 text-xs text-synthwave-text-secondary/80 font-mono whitespace-pre-wrap break-words max-h-48 overflow-auto",
+  },
 };
 
 // Skeleton Loading Patterns - Centralized border-radius and appearance for all skeleton elements

@@ -29,6 +29,18 @@ export type SseEvent =
   | { type: "start"; status: "initialized" }
   | { type: "chunk"; content: string }
   | { type: "contextual"; content: string; stage?: string } // Ephemeral UX feedback (not saved to conversation)
+  | {
+      // Streaming tool-call event — emitted at tool_use_start (running) and
+      // again post-execute (complete/error). Frontend upserts on toolUseId
+      // so each tool call renders as a single faint block in the AI bubble.
+      type: "tool_call";
+      toolUseId: string;
+      toolName: string;
+      status: "running" | "complete" | "error";
+      durationMs?: number;
+      errorMessage?: string;
+      toolInput?: any;
+    }
   | { type: "metadata"; mode?: string; [key: string]: any } // Early metadata for UI configuration (sent after detection, before AI streaming)
   | {
       type: "suggestion";

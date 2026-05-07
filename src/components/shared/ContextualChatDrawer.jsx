@@ -31,7 +31,10 @@ import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
 import DocumentThumbnail from "./DocumentThumbnail";
-import { ContextualUpdateIndicator } from "../../utils/ui/streamingUiHelper.jsx";
+import {
+  ContextualUpdateIndicator,
+  ToolCallList,
+} from "../../utils/ui/streamingUiHelper.jsx";
 import { Tooltip } from "react-tooltip";
 import {
   contextualDrawerPatterns,
@@ -2349,6 +2352,11 @@ function MessageBubble({
       <div className={contextualDrawerPatterns.aiMessage}>
         <MarkdownRenderer content={content} />
       </div>
+      {/* Tool-call blocks (Claude-Code-style faint indicators). Reads live
+          `toolCalls` during streaming and falls back to persisted
+          `metadata.agent.toolCalls` after reload. Returns null when the
+          message has no tool calls so the slot is invisible by default. */}
+      <ToolCallList message={message} />
       <div className="flex items-center gap-2 mt-1">
         <div className={`${avatarPatterns.aiXSmall} shrink-0`}>
           {coachInitial}

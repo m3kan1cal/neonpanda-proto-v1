@@ -281,6 +281,157 @@ describe("StreamingConversationAgent.converseStream", () => {
     expect(agent.getFullResponseText()).toBe("Hello world");
   });
 
+  // ─── Pre-tool preamble: streams live to user, stripped from history ───────
+
+  it("streams pre-tool preamble live AND strips it from conversationHistory", async () => {
+    const preambleStream: MockStreamEvent[] = [
+      { type: "text_delta", text: "Let me pull your history…" },
+      { type: "tool_use_start", toolUseId: "use-1", toolName: "search_tool" },
+      {
+        type: "tool_use_delta",
+        toolUseId: "use-1",
+        inputFragment: '{"q":"x"}',
+      },
+      { type: "tool_use_stop", toolUseId: "use-1" },
+      {
+        type: "message_complete",
+        stopReason: "tool_use",
+        assistantContent: [
+          { text: "Let me pull your history…" },
+          {
+            toolUse: { toolUseId: "use-1", name: "search_tool", input: { q: "x" } },
+          },
+        ],
+        usage: { inputTokens: 10, outputTokens: 5 },
+      },
+    ];
+
+    const tool = makeMockTool("search_tool", { ok: true });
+    vi.mocked(callBedrockApiStreamForAgent)
+      .mockReturnValueOnce(makeStream(preambleStream))
+      .mockReturnValueOnce(makeStream(makeEndTurnStream("Final answer")));
+
+    const agent = makeAgent([tool]);
+    const { yielded, result } = await collectStream(agent, "ask");
+
+    // 1. The preamble DOES appear in chunk events (streamed live to the user)
+    const chunkEvents = yielded.filter((e) => e.includes('"type":"chunk"'));
+    expect(chunkEvents.join("")).toContain("Let me pull your history");
+    expect(chunkEvents.join("")).toContain("Final answer");
+
+    // 2. The preamble is stripped from the assistant message in history before
+    // the next Bedrock call (so the model can't restate it)
+    const secondCallMessages = vi.mocked(callBedrockApiStreamForAgent).mock
+      .calls[1][1];
+    const assistantMessage = secondCallMessages.find(
+      (m: any) =>
+        m.role === "assistant" &&
+        m.content?.some((c: any) => c.toolUse?.toolUseId === "use-1"),
+    );
+    expect(assistantMessage).toBeDefined();
+    const hasLeadingTextBlock =
+      assistantMessage.content[0] &&
+      typeof assistantMessage.content[0].text === "string";
+    expect(hasLeadingTextBlock).toBe(false);
+
+    // 3. Final response text includes both preamble and post-tool answer
+    expect(result.fullResponseText).toContain("Let me pull your history");
+    expect(result.fullResponseText).toContain("Final answer");
+  });
+
+  // ─── tool_call SSE events ────────────────────────────────────────────────
+
+  it("emits tool_call running event at tool_use_start and complete after execute", async () => {
+    const tool = makeMockTool("search_tool", { hits: 3 });
+    vi.mocked(callBedrockApiStreamForAgent)
+      .mockReturnValueOnce(
+        makeStream(makeToolUseStream("use-1", "search_tool", { q: "x" })),
+      )
+      .mockReturnValueOnce(makeStream(makeEndTurnStream("Done")));
+
+    const agent = makeAgent([tool]);
+    const { yielded, result } = await collectStream(agent, "go");
+
+    const toolCallEvents = yielded.filter((e) =>
+      e.includes('"type":"tool_call"'),
+    );
+    expect(toolCallEvents.length).toBe(2);
+    expect(toolCallEvents[0]).toContain('"status":"running"');
+    expect(toolCallEvents[0]).toContain('"toolName":"search_tool"');
+    expect(toolCallEvents[1]).toContain('"status":"complete"');
+    expect(toolCallEvents[1]).toContain('"durationMs"');
+    // Result should also carry the structured tool call record
+    expect(result.toolCalls).toHaveLength(1);
+    expect(result.toolCalls[0]).toMatchObject({
+      toolName: "search_tool",
+      status: "complete",
+    });
+  });
+
+  it("omits toolInput from tool_call event and record when redactInput is true", async () => {
+    const sensitiveTool: Tool<TestContext> = {
+      id: "save_memory",
+      description: "Save something private",
+      inputSchema: { type: "object" },
+      redactInput: true,
+      execute: vi.fn().mockResolvedValue({ ok: true }),
+    };
+
+    vi.mocked(callBedrockApiStreamForAgent)
+      .mockReturnValueOnce(
+        makeStream(
+          makeToolUseStream("use-1", "save_memory", { content: "PII here" }),
+        ),
+      )
+      .mockReturnValueOnce(makeStream(makeEndTurnStream("Saved")));
+
+    const agent = makeAgent([sensitiveTool]);
+    const { yielded, result } = await collectStream(agent, "remember this");
+
+    const toolCallEvents = yielded.filter((e) =>
+      e.includes('"type":"tool_call"'),
+    );
+    // Neither event should include the toolInput
+    for (const evt of toolCallEvents) {
+      expect(evt).not.toContain("PII here");
+      expect(evt).not.toContain('"toolInput"');
+    }
+    // The persisted record also omits toolInput
+    expect(result.toolCalls).toHaveLength(1);
+    expect("toolInput" in result.toolCalls[0]).toBe(false);
+  });
+
+  it("emits a tool_call error event when tool.execute throws", async () => {
+    const failTool: Tool<TestContext> = {
+      id: "fail_tool",
+      description: "Always fails",
+      inputSchema: {},
+      execute: vi.fn().mockRejectedValue(new Error("Boom")),
+    };
+
+    vi.mocked(callBedrockApiStreamForAgent)
+      .mockReturnValueOnce(
+        makeStream(makeToolUseStream("use-fail", "fail_tool", {})),
+      )
+      .mockReturnValueOnce(makeStream(makeEndTurnStream("Recovered")));
+
+    const agent = makeAgent([failTool]);
+    const { yielded, result } = await collectStream(agent, "go");
+
+    const toolCallEvents = yielded.filter((e) =>
+      e.includes('"type":"tool_call"'),
+    );
+    expect(toolCallEvents.length).toBe(2);
+    expect(toolCallEvents[1]).toContain('"status":"error"');
+    expect(toolCallEvents[1]).toContain("Boom");
+    expect(result.toolCalls).toHaveLength(1);
+    expect(result.toolCalls[0]).toMatchObject({
+      toolName: "fail_tool",
+      status: "error",
+      errorMessage: "Boom",
+    });
+  });
+
   // ─── max_tokens stop ──────────────────────────────────────────────────────
 
   it("stops cleanly on max_tokens stop reason", async () => {

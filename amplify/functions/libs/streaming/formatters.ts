@@ -53,6 +53,41 @@ export function formatContextualEvent(content: string, stage?: string): string {
 }
 
 /**
+ * Creates a formatted SSE tool_call event for the streaming tool-call blocks
+ * shown in the conversation UI.
+ *
+ * Emitted twice per tool call:
+ *   - status === "running" at tool_use_start so the UI can render a placeholder
+ *     block immediately (no toolInput available yet — input is still streaming)
+ *   - status === "complete" or "error" after tool.execute resolves, with
+ *     durationMs, optional errorMessage, and optional toolInput (omitted when
+ *     the tool is flagged redactInput)
+ *
+ * The frontend upserts on `toolUseId` so a single tool call is rendered as
+ * one block that transitions from running → complete/error in place.
+ */
+export function formatToolCallEvent(payload: {
+  toolUseId: string;
+  toolName: string;
+  status: "running" | "complete" | "error";
+  durationMs?: number;
+  errorMessage?: string;
+  toolInput?: any;
+}): string {
+  return formatSseEvent({
+    type: "tool_call",
+    toolUseId: payload.toolUseId,
+    toolName: payload.toolName,
+    status: payload.status,
+    ...(typeof payload.durationMs === "number" && {
+      durationMs: payload.durationMs,
+    }),
+    ...(payload.errorMessage && { errorMessage: payload.errorMessage }),
+    ...(payload.toolInput !== undefined && { toolInput: payload.toolInput }),
+  });
+}
+
+/**
  * Creates a formatted SSE metadata event for early UI configuration
  * Sent after processing (e.g., workout detection) but before AI streaming
  * to inform UI about message mode/type so badges can show during streaming

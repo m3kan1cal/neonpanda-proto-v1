@@ -18,6 +18,7 @@ import { callBedrockApiStreamForAgent } from "../../api-helpers";
 import {
   formatChunkEvent,
   formatContextualEvent,
+  formatToolCallEvent,
 } from "../../streaming/formatters";
 import { buildMultimodalContent } from "../../streaming/multimodal-helpers";
 import {
@@ -35,6 +36,7 @@ import type {
   BaseStreamingAgentContext,
   ConversationAgentResult,
   StreamAgentEvent,
+  ToolCallRecord,
 } from "./types";
 
 const MAX_ITERATIONS = 15; // Safety limit for ReAct loop
@@ -88,6 +90,28 @@ function buildUserToolResultMessage(toolResults: any[]): any {
 }
 
 /**
+ * Strip leading text blocks from an assistantContent array. Used when an
+ * iteration ends in `tool_use` so the model's pre-tool preamble (e.g.
+ * "Let me pull your power clean history…") is NOT re-fed into history,
+ * which prevents the next iteration from echoing the same sentiment in
+ * its post-tool reply. The trailing tool_use blocks are preserved.
+ *
+ * Bedrock requires non-empty content; tool_use iterations always have at
+ * least one tool_use block so filtering text-only leading blocks is safe.
+ */
+function stripLeadingTextBlocks(content: any[]): any[] {
+  if (!Array.isArray(content) || content.length === 0) return content;
+  let firstNonText = 0;
+  while (
+    firstNonText < content.length &&
+    typeof content[firstNonText]?.text === "string"
+  ) {
+    firstNonText++;
+  }
+  return firstNonText === 0 ? content : content.slice(firstNonText);
+}
+
+/**
  * Generic Streaming Conversation Agent
  *
  * Yields SSE-formatted events (chunk, contextual) that can be piped directly
@@ -109,6 +133,12 @@ export class StreamingConversationAgent<
   };
   private conversationHistory: any[];
   private toolsUsed: string[] = [];
+  /**
+   * Per-call tool record kept parallel to `toolsUsed`. Carries the data the
+   * UI needs to render running/complete/error tool blocks (and the input
+   * disclosure when the tool isn't flagged redactInput).
+   */
+  private toolCalls: ToolCallRecord[] = [];
   private totalInputTokens = 0;
   private totalOutputTokens = 0;
   private _fullResponseText = "";
@@ -308,6 +338,17 @@ export class StreamingConversationAgent<
           currentToolUseId = event.toolUseId;
           currentToolName = event.toolName;
           toolInputFragments.set(event.toolUseId, []);
+
+          // Surface the tool call to the UI as a "running" block. The tool's
+          // existing contextualMessage (yielded later in the tool loop) still
+          // shows in addition — they're complementary: contextual is a friendly
+          // human line, tool_call is a structured block the user can identify.
+          yield formatToolCallEvent({
+            toolUseId: event.toolUseId,
+            toolName: event.toolName,
+            status: "running",
+          });
+
           console.info(
             `🔧 Tool use started: ${event.toolName} (${event.toolUseId})`,
           );
@@ -473,10 +514,16 @@ export class StreamingConversationAgent<
         yield* dispatchStreamEvent(event, { markFirstTextToken: true });
       }
 
-      // Append assistant message to conversation history
+      // Append assistant message to conversation history. For tool_use
+      // iterations we strip the leading preamble text blocks so the next
+      // iteration can't re-state the same sentiment in its post-tool reply.
+      const recordedAssistantContent =
+        stopReason === "tool_use"
+          ? stripLeadingTextBlocks(assistantContent)
+          : assistantContent;
       this.conversationHistory.push({
         role: "assistant",
-        content: assistantContent,
+        content: recordedAssistantContent,
       });
 
       if (stopReason === "end_turn") {
@@ -510,6 +557,15 @@ export class StreamingConversationAgent<
                 "error",
               ),
             );
+            const errorRecord: ToolCallRecord = {
+              toolUseId: toolUse.toolUseId,
+              toolName: toolUse.toolName,
+              status: "error",
+              durationMs: 0,
+              errorMessage: "Tool input was malformed or empty.",
+            };
+            this.toolCalls.push(errorRecord);
+            yield formatToolCallEvent(errorRecord);
             continue;
           }
 
@@ -526,6 +582,15 @@ export class StreamingConversationAgent<
                 "error",
               ),
             );
+            const errorRecord: ToolCallRecord = {
+              toolUseId: toolUse.toolUseId,
+              toolName: toolUse.toolName,
+              status: "error",
+              durationMs: 0,
+              errorMessage: `Tool ${toolUse.toolName} not found`,
+            };
+            this.toolCalls.push(errorRecord);
+            yield formatToolCallEvent(errorRecord);
             continue;
           }
 
@@ -556,8 +621,24 @@ export class StreamingConversationAgent<
               formatToolResult(toolUse.toolUseId, result, "success"),
             );
             this.toolsUsed.push(tool.id);
+            // Record + emit a complete tool_call event. toolInput is omitted
+            // for tools flagged redactInput so personal content (e.g. memory
+            // bodies) doesn't get echoed back unprompted.
+            const completedRecord: ToolCallRecord = {
+              toolUseId: toolUse.toolUseId,
+              toolName: tool.id,
+              status: "complete",
+              durationMs: toolTime,
+              ...(!tool.redactInput && { toolInput: toolUse.toolInput }),
+            };
+            this.toolCalls.push(completedRecord);
+            yield formatToolCallEvent(completedRecord);
           } catch (toolError) {
             const toolTime = Date.now() - toolStartTime;
+            const errorMessage =
+              toolError instanceof Error
+                ? toolError.message
+                : "Tool execution failed";
             console.error(
               `❌ Tool execution failed: ${tool.id} (${toolTime}ms)`,
               toolError,
@@ -566,14 +647,21 @@ export class StreamingConversationAgent<
               formatToolResult(
                 toolUse.toolUseId,
                 {
-                  error:
-                    toolError instanceof Error
-                      ? toolError.message
-                      : "Tool execution failed",
+                  error: errorMessage,
                 },
                 "error",
               ),
             );
+            const errorRecord: ToolCallRecord = {
+              toolUseId: toolUse.toolUseId,
+              toolName: tool.id,
+              status: "error",
+              durationMs: toolTime,
+              errorMessage,
+              ...(!tool.redactInput && { toolInput: toolUse.toolInput }),
+            };
+            this.toolCalls.push(errorRecord);
+            yield formatToolCallEvent(errorRecord);
           }
         }
 
@@ -619,6 +707,7 @@ export class StreamingConversationAgent<
     return {
       fullResponseText,
       toolsUsed: this.toolsUsed,
+      toolCalls: this.toolCalls,
       modelId: this.config.modelId,
       totalInputTokens: this.totalInputTokens,
       totalOutputTokens: this.totalOutputTokens,
@@ -633,5 +722,23 @@ export class StreamingConversationAgent<
    */
   getFullResponseText(): string {
     return this._fullResponseText;
+  }
+
+  /**
+   * Returns the tools used so far (legacy string[] form). Companion to
+   * `getFullResponseText` for the guardrail-interruption recovery path.
+   */
+  getToolsUsed(): string[] {
+    return this.toolsUsed;
+  }
+
+  /**
+   * Returns the per-call tool records accumulated so far. Companion to
+   * `getFullResponseText` for the guardrail-interruption recovery path —
+   * without this, persisted `metadata.agent.toolCalls` would be empty and
+   * the UI's tool-call blocks would vanish on reload.
+   */
+  getToolCalls(): ToolCallRecord[] {
+    return this.toolCalls;
   }
 }

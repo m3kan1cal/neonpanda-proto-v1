@@ -49,6 +49,7 @@ import {
   handleStreamingError,
   ContextualUpdateIndicator,
   MessageFooter,
+  ToolCallList,
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
 import CoachConversationEmptyTips from "./shared/CoachConversationEmptyTips";
@@ -223,6 +224,12 @@ const MessageItem = memo(
             </div>
           </div>
 
+          {/* Tool-call blocks (Claude-Code-style faint indicators). Reads
+              live `toolCalls` during streaming and falls back to persisted
+              `metadata.agent.toolCalls` after reload. Returns null when the
+              message has no tool calls so the slot is invisible by default. */}
+          <ToolCallList message={message} />
+
           <MessageFooter
             isCurrentlyStreaming={isCurrentlyStreaming}
             timestamp={message.timestamp}
@@ -235,10 +242,16 @@ const MessageItem = memo(
     );
   },
   (prevProps, nextProps) => {
+    // toolCalls is upserted live during streaming via upsertToolCallOnMessage
+    // (a new array is assigned on every event), so a referential check picks
+    // up both the running→complete transition and any new tool calls.
+    const toolCallsChanged =
+      prevProps.message.toolCalls !== nextProps.message.toolCalls;
     const messageChanged =
       prevProps.message.id !== nextProps.message.id ||
       prevProps.message.content !== nextProps.message.content ||
-      prevProps.message.metadata !== nextProps.message.metadata;
+      prevProps.message.metadata !== nextProps.message.metadata ||
+      toolCallsChanged;
 
     const streamingStateChanged =
       prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||

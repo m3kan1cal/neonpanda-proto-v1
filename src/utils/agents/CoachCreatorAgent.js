@@ -318,6 +318,12 @@ export class CoachCreatorAgent {
             });
           },
 
+          onToolCall: async (toolCallEvent) => {
+            // Upsert into the streaming message so the UI can render a
+            // running → complete/error block in place.
+            streamingMsg.upsertToolCall(toolCallEvent);
+          },
+
           onChunk: async (content) => {
             // Clear contextual update when real AI response starts
             if (this.state.contextualUpdate) {

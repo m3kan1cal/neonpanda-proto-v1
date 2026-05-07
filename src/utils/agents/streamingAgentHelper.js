@@ -35,6 +35,7 @@ export function getRandomThinkingPhrase() {
  * @param {Function} onMetadata - Called for early metadata (chunk) - optional
  * @param {Function} onSuggestion - Called for suggestion events (chunk) - optional
  * @param {Function} onGuardrailWarning - Called when a guardrail_warning event is received (message) - optional
+ * @param {Function} onToolCall - Called for tool_call SSE events (event) - optional. Event shape: { toolUseId, toolName, status: 'running'|'complete'|'error', durationMs?, errorMessage?, toolInput? }
  * @param {Function} onComplete - Called when streaming completes (chunk)
  * @param {Function} onFallback - Called for fallback response (data)
  * @param {Function} onError - Called for errors (errorMessage)
@@ -48,6 +49,7 @@ export async function processStreamingChunks(
     onMetadata,
     onSuggestion,
     onGuardrailWarning,
+    onToolCall,
     onComplete,
     onFallback,
     onError,
@@ -85,6 +87,15 @@ export async function processStreamingChunks(
         // ASYNC guardrail intervention — content already streamed; flag the message for display
         if (onGuardrailWarning) {
           await onGuardrailWarning(chunk.message);
+        }
+      } else if (chunk.type === "tool_call") {
+        // Streaming tool-call event. Backend emits twice per tool call:
+        //   - status: "running"  at tool_use_start (no toolInput / durationMs)
+        //   - status: "complete" or "error" after tool.execute (durationMs set, optional toolInput unless redacted)
+        // Frontend upserts on toolUseId so each call renders as a single
+        // block that transitions from running to complete/error in place.
+        if (onToolCall) {
+          await onToolCall(chunk);
         }
       } else if (chunk.type === "complete") {
         return await onComplete(chunk);
@@ -136,11 +147,46 @@ export function createStreamingMessage(agent, metadata = {}) {
       // Update only metadata without changing content (for early metadata events)
       agent._updateMessageMetadata(messageId, metadata);
     },
+    upsertToolCall: (toolCallEvent) => {
+      // Append or merge a tool_call SSE event into the streaming message's
+      // `toolCalls` array. Keyed by toolUseId so the running → complete/error
+      // transition shows as a single block in the UI.
+      upsertToolCallOnMessage(agent, messageId, toolCallEvent);
+    },
     remove: () => {
       logger.info("🗑️ StreamingMessage.remove:", { messageId });
       agent._removeMessage(messageId);
     },
   };
+}
+
+/**
+ * Append or merge a tool_call SSE event into a streaming message's
+ * `toolCalls` array, keyed by `toolUseId`. The backend emits two events per
+ * call (running → complete/error); we shallow-merge so each call renders as
+ * a single block that transitions in place. `toolInput` may legitimately
+ * arrive only on the second event, hence the merge rather than replace.
+ *
+ * @param {Object} agent - Agent instance (must expose `state.messages` and `_updateState`)
+ * @param {string} messageId - The streaming message ID
+ * @param {Object} toolCallEvent - { toolUseId, toolName, status, durationMs?, errorMessage?, toolInput? }
+ */
+export function upsertToolCallOnMessage(agent, messageId, toolCallEvent) {
+  const messages = agent.state.messages.map((msg) => {
+    if (msg.id !== messageId) return msg;
+    const existing = Array.isArray(msg.toolCalls) ? msg.toolCalls : [];
+    const idx = existing.findIndex(
+      (tc) => tc.toolUseId === toolCallEvent.toolUseId,
+    );
+    const next = [...existing];
+    if (idx === -1) {
+      next.push(toolCallEvent);
+    } else {
+      next[idx] = { ...next[idx], ...toolCallEvent };
+    }
+    return { ...msg, toolCalls: next };
+  });
+  agent._updateState({ messages, _lastUpdate: Date.now() });
 }
 
 /**

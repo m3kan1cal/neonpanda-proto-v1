@@ -734,6 +734,7 @@ async function* createCoachConversationEventStreamV2(
 
     let fullResponseText = "";
     let toolsUsed: string[] = [];
+    let toolCalls: ConversationAgentResult["toolCalls"] = [];
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let iterationCount = 0;
@@ -757,6 +758,7 @@ async function* createCoachConversationEventStreamV2(
       const agentResult: ConversationAgentResult = result.value;
       fullResponseText = agentResult.fullResponseText;
       toolsUsed = agentResult.toolsUsed;
+      toolCalls = agentResult.toolCalls;
       totalInputTokens = agentResult.totalInputTokens;
       totalOutputTokens = agentResult.totalOutputTokens;
       iterationCount = agentResult.iterationCount;
@@ -775,11 +777,15 @@ async function* createCoachConversationEventStreamV2(
       if (agentError instanceof GuardrailInterventionError) {
         // Content already streamed in ASYNC mode — emit a warning event and continue
         // saving the response so the conversation is preserved alongside the warning.
+        // Recover toolsUsed/toolCalls too so persisted metadata matches what was
+        // streamed; otherwise tool-call blocks vanish on page reload.
         logger.warn(
           "🛡️ V2: Guardrail intervened (ASYNC) — emitting warning event",
         );
         guardrailWarning = true;
         fullResponseText = agent.getFullResponseText();
+        toolsUsed = agent.getToolsUsed();
+        toolCalls = agent.getToolCalls();
         yield formatGuardrailWarningEvent();
       } else {
         logger.error("❌ V2: Agent stream error:", agentError);
@@ -823,9 +829,14 @@ async function* createCoachConversationEventStreamV2(
       preview: fullResponseText.slice(0, 200),
     });
 
-    // Add agent-specific metadata separately
+    // Add agent-specific metadata separately. `toolsUsed` is the legacy
+    // string[] kept for back-compat with older message metadata; `toolCalls`
+    // is the richer per-call record (id, name, status, durationMs, optional
+    // input) used to render the streaming tool-call blocks in the UI even
+    // after a page reload.
     (newAiMessage.metadata as any).agent = {
       toolsUsed,
+      toolCalls,
       totalInputTokens,
       totalOutputTokens,
       iterationCount,

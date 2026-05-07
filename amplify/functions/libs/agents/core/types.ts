@@ -54,6 +54,24 @@ export type StreamAgentEvent =
     };
 
 /**
+ * Single tool call observed during one converseStream invocation. Captured by
+ * the streaming agent so the handler can persist a richer per-call record on
+ * the assistant message metadata (`metadata.agent.toolCalls`) and the UI can
+ * render faint Claude-Code-style blocks in the message bubble.
+ *
+ * `toolInput` is omitted when the corresponding `Tool.redactInput === true`
+ * (e.g. save_memory, where the content can be deeply personal).
+ */
+export interface ToolCallRecord {
+  toolUseId: string;
+  toolName: string;
+  status: "complete" | "error";
+  durationMs: number;
+  errorMessage?: string;
+  toolInput?: any;
+}
+
+/**
  * Result returned by StreamingConversationAgent.converseStream()
  * after the generator is fully consumed.
  * Re-exported here so role-specific handler files can import from the core module.
@@ -61,6 +79,12 @@ export type StreamAgentEvent =
 export interface ConversationAgentResult {
   fullResponseText: string;
   toolsUsed: string[];
+  /**
+   * Richer per-call tool record. Parallel to `toolsUsed` (kept for back-compat
+   * with persisted message metadata), but carries the data needed to render
+   * the streaming tool-call blocks in the UI even after page reload.
+   */
+  toolCalls: ToolCallRecord[];
   modelId: string;
   totalInputTokens: number;
   totalOutputTokens: number;
@@ -79,6 +103,14 @@ export interface Tool<TContext extends AgentContext = AgentContext> {
   inputSchema: any; // JSON Schema for Bedrock toolConfig
   outputSchema?: any; // Optional validation schema
   execute: (input: any, context: TContext) => Promise<any>;
+  /**
+   * When true, the tool's `toolInput` is omitted from the SSE `tool_call`
+   * event and from the persisted `metadata.agent.toolCalls` record. Use for
+   * tools whose input can contain user-sensitive content (e.g. save_memory).
+   * The tool name and timing are still surfaced so the UI can render a block —
+   * just without an expandable disclosure of the input.
+   */
+  redactInput?: boolean;
 }
 
 /**
