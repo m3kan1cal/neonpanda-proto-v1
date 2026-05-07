@@ -308,6 +308,8 @@ async function* createCoachCreatorEventStreamV2(
         );
         guardrailWarning = true;
         fullResponseText = agent.getFullResponseText();
+        toolsUsed = agent.getToolsUsed();
+        toolCalls = agent.getToolCalls();
         yield formatGuardrailWarningEvent();
       } else {
         logger.error("❌ V2: Agent stream error:", agentError);
