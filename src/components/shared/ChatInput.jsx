@@ -903,7 +903,7 @@ function ChatInput({
               </span>
               <button
                 onClick={handleStopRecording}
-                className="ml-2 hover:bg-red-600 rounded-full p-1 transition-colors cursor-pointer"
+                className="ml-2 hover:bg-red-600 rounded-full p-1 transition-all duration-200 active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
               >
                 <XIcon />
               </button>

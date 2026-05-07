@@ -123,7 +123,7 @@ const ImageWithPresignedUrl = ({
             />
             <button
               onClick={() => setIsOpen(false)}
-              className="absolute -top-2 -right-2 w-8 h-8 bg-synthwave-neon-pink rounded-full flex items-center justify-center text-white hover:bg-synthwave-neon-pink/80 transition-colors duration-200"
+              className="absolute -top-2 -right-2 w-8 h-8 bg-synthwave-neon-pink rounded-full flex items-center justify-center text-white hover:bg-synthwave-neon-pink/80 transition-all duration-200 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]"
               aria-label="Close image"
             >
               <svg
