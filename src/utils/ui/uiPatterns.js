@@ -225,7 +225,11 @@ export const iconButtonPatterns = {
     "p-3 rounded-full bg-synthwave-bg-card/80 backdrop-blur-sm border border-synthwave-neon-pink/20 text-synthwave-neon-pink hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Glow Effect - Animated glow (Cyan)
-  glow: "p-3 rounded-full bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] animate-pulse-glow",
+  // No active:shadow-* here — animate-pulse-glow continuously animates
+  // box-shadow, and CSS animation origin beats author styles on the same
+  // property, so any press-state shadow would be dead code. The continuous
+  // pulse already provides emphasis; active:scale-[0.97] alone signals press.
+  glow: "p-3 rounded-full bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent] animate-pulse-glow",
 
   // Small Action Buttons - Modern versions of chat action buttons with dark background by default (like microphone button)
   // Icons should be w-5 h-5 (20px) for consistent sizing across all action buttons
