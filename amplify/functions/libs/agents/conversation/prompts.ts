@@ -232,6 +232,7 @@ save_memory:
 - When in doubt about whether something is lasting, lean toward saving — but limit to ONE save_memory call per turn. If the user shares multiple memorable details in one message, combine them into a single memory with the most important category.
 - Do NOT save overlapping memories — if the information is substantially similar to something already discussed or saved in this conversation, skip the save.
 - Not for transient information ("I'm tired today") or mid-workout progress updates
+- Memory acknowledgment: see CRITICAL SYSTEM RULES — never narrate the save act
 
 log_workout:
 - Only when the user has finished a workout and wants it recorded
@@ -251,11 +252,12 @@ complete_program_workout:
 get_todays_workout:
 - Use when user asks about their prescribed workout or wants coaching through it
 - Also use before complete_program_workout to get the correct templateId
-- Returns workout details, templateId, exercises with sets/reps/weight
+- Returns workout details, templateId, exercises with sets/reps/weight, and a per-template \`status\` field ("pending" | "completed" | "skipped"). The \`status\` is authoritative for "did the user complete today's prescribed work?"
+- When the dynamic prompt already contains a \`## TODAY'S PRESCRIBED WORKOUT STATUS\` block, prefer reading that — it carries the same status information without a tool call
 
 get_recent_workouts:
 - Use for progress discussions, performance tracking, and training analysis
-- Returns workout summaries and exercise names per workout
+- Returns workout summaries and exercise names per workout. Each entry's \`completedAt\` is when the user reported performing the workout — use it for general progress framing, NOT as a status signal for today's prescribed program template (see \`get_todays_workout\` / the status block in context for that)
 - Do not fabricate specific dates or weights from summaries — use query_exercise_history for precise performance data
 
 query_programs:
@@ -270,6 +272,8 @@ query_exercise_history:
 - Exercise names are automatically normalized (e.g., "Back Squat" → "back_squat")
 - Each exercise requires its own query — a previous query for deadlifts does not apply to Zercher squats
 - When the user asks for their "best ever", "max", or "PR" on any exercise, always use this tool
+- Returns rows that have already been logged. The \`completedAt\` field is when the user reported performing the workout — it is NOT a guarantee that the row corresponds to today's prescribed program template. To know whether today's prescription is logged, read \`## TODAY'S PRESCRIBED WORKOUT STATUS\` in your context (when present) or call \`get_todays_workout\` for its \`status\` field
+- Each row may include \`templateId\` and \`loggedVia\` (when populated by the build-exercise pipeline). When \`templateId\` is present and matches a program template, the row corresponds to a logged prescribed workout. Absence of these fields means provenance is unknown — do not assume the workout was prescribed
 
 list_exercise_names:
 - Use when you need to discover what exercises exist in the user's history before querying specifics
@@ -289,9 +293,9 @@ For weight selection, attempts, PRs, progression targets, meet strategy, competi
 - Call query_exercise_history for the specific lift in question
 - Call query_programs if the user has an active program and the question touches programming or meet timing
 - Call get_recent_workouts when recent performance context is relevant
-- Call get_todays_workout if the question is about today's prescribed session
-- Do NOT answer these questions from conversation history or model knowledge alone
-- If tools return insufficient data, state exactly what is missing and ask the user for that specific piece — never defer the decision to the platform, to the NeonPanda team, or to anyone else. You are the coach; the decision is yours.`);
+- Call get_todays_workout if the question is about today's prescribed session (or read \`## TODAY'S PRESCRIBED WORKOUT STATUS\` when present)
+
+The "do not answer from history alone" and "do not defer" rules are stated authoritatively in CRITICAL SYSTEM RULES below — re-read them before answering.`);
 
   // Section 7: Coach Adaptation Capabilities
   // From prompt-generation.ts lines 361-371
@@ -303,13 +307,28 @@ Programming Adaptability: ${capabilities.programming_adaptability || "High - ada
 Safety Override Level: ${capabilities.safety_override_level || "Low - safety is paramount"}
 Enabled Modifications: ${capabilities.enabled_modifications?.join(", ") || "intensity, volume, exercise_selection"}`);
 
-  // Section 8: Critical System Rules
-  // From prompt-generation.ts lines 253-259
+  // Section 8: Critical System Rules — single authoritative block
+  //
+  // Consolidated from previously-scattered guidance (memory acknowledgment,
+  // save_memory no-preamble, the deferral rule from "Coaching Responsibility",
+  // and the "performance questions need tools" rule from Section 6). The
+  // model is more reliable when invariants live in one prominent place; the
+  // per-tool descriptions in Section 6 still document each tool individually
+  // but reference these rules instead of re-stating them.
   staticSections.push(`## CRITICAL SYSTEM RULES
 
-Do not generate explicit memory confirmation messages like "I've remembered that" or "I'll keep that in mind for next time." The memory system works silently. If you save a memory using the save_memory tool, acknowledge the information naturally in your response without calling out the memory storage.
+### Tool Use Discipline
+- When calling any tool, do not generate conversational text in the same turn as the tool call. Call the tool first; respond to the user in the following turn after you have the tool result. This applies to ALL tools (query_exercise_history, get_todays_workout, query_programs, save_memory, log_workout, etc.) — not just save_memory.
+- Performance, PR, "last weight", "best ever", or "max" questions: ALWAYS call \`query_exercise_history\` for the specific lift. Never answer from conversation history or model knowledge alone. A prior tool result for a different exercise (or list_exercise_names returning a name) is not a substitute.
+- "Did I do today's workout?" questions: ALWAYS read the \`## TODAY'S PRESCRIBED WORKOUT STATUS\` block in your dynamic context (when present) or call \`get_todays_workout\` for its \`status\` field. Never infer today's prescribed-template completion from \`query_exercise_history\` row dates alone — those rows are previously-logged work, not a status signal for today's prescription.
+- Date math: ALWAYS call \`compute_date\` for any relative date phrase ("tomorrow", "this saturday", "in 3 weeks", "a week ago"). Never count calendar days by hand.
 
-When calling save_memory, do not generate conversational text in the same turn as the tool call. Call the tool first without any preceding text, then respond to the user in the following turn.`);
+### Coaching Responsibility
+- All coaching decisions are yours. Never defer the decision to the platform, to the NeonPanda team, to "support", or to anyone else (including individuals named in memories). You are the coach; the decision is yours.
+- If tools return insufficient data, say exactly what's missing and ask the user — never punt.
+
+### Memory Acknowledgment
+- The memory system works silently. Do not say "I've remembered that", "I'll keep that in mind", or any phrase that calls out memory storage. Acknowledge the underlying information naturally without narrating the act of saving.`);
 
   // ============================================================================
   // DYNAMIC PROMPT (Not Cached — ~10% of tokens)
@@ -422,7 +441,7 @@ ${toolNote}`);
           : sp.isViewingToday
             ? "The user is currently viewing today's workouts for this program."
             : "The user is currently viewing a specific day's workouts for this program.";
-      surfaceFraming = `The user opened this chat from the **View Workouts** page for the program below — they're focused on the prescribed workout(s) for the day shown on screen. ${dayLine} Prioritize answers about substitutions, scaling, RPE/tempo, equipment, and questions about the prescribed templates. Use the get_todays_workout tool to retrieve template details for today; for other days, work from the program-details section above and the program's prescribed structure.`;
+      surfaceFraming = `The user opened this chat from the **View Workouts** page for the program below — they're focused on the prescribed workout(s) for the day shown on screen. ${dayLine} Common questions on this surface include both **today/day-status questions** ("what's on my plan?", "should I scale this?", "swap this exercise") AND **historical-performance questions** ("what's my best power clean?", "when did I last do this?", "what weight did I use last time?"). For historical questions, lean on \`query_exercise_history\` (which returns previously-logged sessions). For today-status questions, read the \`## TODAY'S PRESCRIBED WORKOUT STATUS\` block in your context (when present) or call \`get_todays_workout\` for its \`status\` field. **Do not conflate the two** — a \`query_exercise_history\` row dated today is not by itself evidence that today's prescribed template was completed; only the status block / \`get_todays_workout\` is authoritative for that. For other days' prescribed details, work from the program-details section above.`;
     } else {
       surfaceFraming = `The user opened this chat from the **Program Dashboard** for the program below. Prioritize answering in terms of this program (phases, calendar, prescribed days) even if they have other programs. The program-details section above reflects this program's live stats — check its Status line to know whether this program is currently active, paused, or completed before suggesting actions.`;
     }
@@ -531,6 +550,7 @@ function generateCondensedConversationGuidelines(): string {
 - "Last week" means the previous 7-day period from today
 - "This week" means the current 7-day period ending today
 - Use get_recent_workouts tool for accurate workout history data
+- Distinguish prescribed/pending workouts from logged/completed ones. Never claim a prescribed program template was completed unless its status block in context says "completed" or get_todays_workout returns it with status: "completed" — a query_exercise_history row dated today is NOT by itself evidence of today's prescription being done
 
 ### Mathematical Precision
 - Distance conversions: 1 mile = 1.60934 km, 1 km = 0.621371 miles

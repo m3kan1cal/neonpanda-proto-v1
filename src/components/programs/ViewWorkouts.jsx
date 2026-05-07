@@ -202,13 +202,16 @@ function ViewWorkouts() {
   // from the Program Dashboard's home thread. dayNumber is forwarded via
   // streamClientContext so the agent always knows which day's templates the
   // user is currently looking at, even on `?day=N` views.
+  // Title is intentionally short. The program is implied by the surface (chat
+  // is opened from inside that program's ViewWorkouts page) and the dynamic
+  // prompt already injects sessionProgramContext.programName server-side, so
+  // the agent always knows the program. The title's job is to let the user
+  // disambiguate threads in the picker dropdown — "Today's Workouts" /
+  // "Day N" are unambiguous within a program's context and avoid the
+  // CSS-truncated "Today's Workouts — FCT…" / "Day 17 — FCT…" collisions.
   const newChatThreadTitle = useMemo(() => {
-    const name = program?.name?.trim();
-    if (!name) return isViewingToday ? "Today's Workouts" : "View Workouts";
-    return isViewingToday
-      ? `Today's Workouts — ${name}`
-      : `Day ${dayParam} — ${name}`;
-  }, [program?.name, isViewingToday, dayParam]);
+    return isViewingToday ? "Today's Workouts" : `Day ${dayParam}`;
+  }, [isViewingToday, dayParam]);
 
   const streamClientContext = useMemo(() => {
     if (!programId) return null;

@@ -265,6 +265,17 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
                   ? updatedWorkout.completedAt.toISOString()
                   : updatedWorkout.completedAt,
               isEdit: true,
+              // Forward provenance from the parent workout so rebuilt exercise
+              // rows preserve their template/source attribution after an edit.
+              ...((updatedWorkout.templateId ||
+                updatedWorkout.programContext?.templateId) && {
+                templateId:
+                  updatedWorkout.templateId ||
+                  updatedWorkout.programContext?.templateId,
+              }),
+              ...(updatedWorkout.workoutData?.metadata?.logged_via && {
+                loggedVia: updatedWorkout.workoutData.metadata.logged_via,
+              }),
             },
             "exercise catalog (post-edit)",
           ).catch((err) => {

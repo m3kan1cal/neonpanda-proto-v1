@@ -1884,7 +1884,7 @@ function PanelContent({
             <button
               type="button"
               onClick={exit}
-              className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer"
+              className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
             >
               Done
             </button>
