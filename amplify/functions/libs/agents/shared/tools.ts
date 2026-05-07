@@ -371,6 +371,10 @@ NOT for:
 - Mid-workout progress: "I just finished set 3"
 - Information you'll use immediately but won't need later`,
     inputSchema: SAVE_MEMORY_SCHEMA,
+    // Memory content can be deeply personal (injuries, goals, preferences).
+    // Show that save_memory ran and how long it took, but don't echo the
+    // input back to the UI or persist it on the streaming tool_call record.
+    redactInput: true,
     async execute(input, context) {
       const coachId = getCoachId(context);
       console.info("💾 Executing save_memory:", {

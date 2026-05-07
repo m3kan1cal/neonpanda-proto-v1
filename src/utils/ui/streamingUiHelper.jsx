@@ -2,7 +2,7 @@
  * Small, focused UI helpers for streaming message interactions
  * Each function handles a specific aspect of streaming UI without complex state management
  */
-import { memo } from "react";
+import { memo, useState } from "react";
 import { avatarPatterns, messagePatterns, streamingPatterns } from "./uiPatterns";
 import CopyButton from "../../components/shared/CopyButton";
 import { logger } from "../logger";
@@ -228,6 +228,141 @@ export function ContextualUpdateIndicator({
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Faint, persistent block that surfaces a single agent tool call in the AI
+ * message bubble — Claude-Code-style.
+ *
+ * Reads one element of `toolCalls` (either upserted live during streaming or
+ * persisted in `metadata.agent.toolCalls` after reload) and renders:
+ *   - status: "running"  → cyan-accented row with animated dot
+ *   - status: "complete" → cyan-accented row with duration
+ *   - status: "error"    → pink/red-accented row with error message
+ *
+ * When `toolInput` is present (i.e. the tool wasn't flagged `redactInput`
+ * server-side), an expandable disclosure shows the input as pretty-printed
+ * JSON. Collapsed by default to keep the bubble visually quiet.
+ *
+ * @param {Object} toolCall - { toolUseId, toolName, status, durationMs?, errorMessage?, toolInput? }
+ */
+export const ToolCallBlock = memo(function ToolCallBlock({ toolCall }) {
+  const [inputExpanded, setInputExpanded] = useState(false);
+
+  if (!toolCall || !toolCall.toolName) return null;
+
+  const status = toolCall.status || "running";
+  const containerVariant =
+    status === "error"
+      ? streamingPatterns.toolCallBlock.containerError
+      : status === "complete"
+        ? streamingPatterns.toolCallBlock.containerComplete
+        : streamingPatterns.toolCallBlock.containerRunning;
+  const dotVariant =
+    status === "error"
+      ? streamingPatterns.toolCallBlock.statusDotError
+      : status === "complete"
+        ? streamingPatterns.toolCallBlock.statusDotComplete
+        : streamingPatterns.toolCallBlock.statusDotRunning;
+  const nameVariant =
+    status === "error"
+      ? streamingPatterns.toolCallBlock.toolNameError
+      : streamingPatterns.toolCallBlock.toolName;
+
+  const hasInputDisclosure =
+    toolCall.toolInput !== undefined && toolCall.toolInput !== null;
+  const inputJson = hasInputDisclosure
+    ? safeStringifyToolInput(toolCall.toolInput)
+    : null;
+
+  return (
+    <div
+      className={`${streamingPatterns.toolCallBlock.container} ${containerVariant}`}
+    >
+      <div className={streamingPatterns.toolCallBlock.headerRow}>
+        <span className={dotVariant} />
+        <span className={streamingPatterns.toolCallBlock.toolNameLabel}>
+          tool
+        </span>
+        <span className={nameVariant}>{toolCall.toolName}</span>
+        <span className={streamingPatterns.toolCallBlock.metaText}>
+          {status === "running"
+            ? "running…"
+            : typeof toolCall.durationMs === "number"
+              ? `${formatToolDuration(toolCall.durationMs)} · ${status}`
+              : status}
+        </span>
+      </div>
+      {status === "error" && toolCall.errorMessage && (
+        <div className={streamingPatterns.toolCallBlock.errorMessage}>
+          {toolCall.errorMessage}
+        </div>
+      )}
+      {hasInputDisclosure && inputJson && (
+        <details
+          open={inputExpanded}
+          onToggle={(e) => setInputExpanded(e.currentTarget.open)}
+        >
+          <summary
+            className={streamingPatterns.toolCallBlock.inputDisclosureSummary}
+          >
+            {inputExpanded ? "hide input" : "show input"}
+          </summary>
+          <pre className={streamingPatterns.toolCallBlock.inputDisclosurePre}>
+            {inputJson}
+          </pre>
+        </details>
+      )}
+    </div>
+  );
+});
+
+function formatToolDuration(ms) {
+  if (typeof ms !== "number" || !isFinite(ms)) return "";
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(ms < 10000 ? 2 : 1)}s`;
+}
+
+function safeStringifyToolInput(input) {
+  try {
+    const json = JSON.stringify(input, null, 2);
+    if (typeof json !== "string") return null;
+    // Cap to keep the disclosure pane manageable. The full payload is in the
+    // persisted message metadata for power users; the UI just shows a digest.
+    return json.length > 4000 ? json.slice(0, 4000) + "\n…(truncated)" : json;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Renders a list of ToolCallBlock children for a message. Reads from the
+ * streaming `message.toolCalls` array first (populated mid-stream by the
+ * `tool_call` SSE handler) and falls back to `message.metadata.agent.toolCalls`
+ * for rehydrated messages. Returns null when there's nothing to show so
+ * callers can render the slot unconditionally.
+ *
+ * @param {Object} message - The message object from agent state or DB
+ */
+export function ToolCallList({ message }) {
+  if (!message) return null;
+  const live = Array.isArray(message.toolCalls) ? message.toolCalls : null;
+  const persisted = Array.isArray(message?.metadata?.agent?.toolCalls)
+    ? message.metadata.agent.toolCalls
+    : null;
+  const calls = live && live.length > 0 ? live : persisted;
+  if (!calls || calls.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-1.5 mt-2 w-full">
+      {calls.map((tc, i) => (
+        <ToolCallBlock
+          key={tc.toolUseId || `${tc.toolName}-${i}`}
+          toolCall={tc}
+        />
+      ))}
     </div>
   );
 }

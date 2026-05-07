@@ -701,6 +701,7 @@ async function* createCoachConversationEventStreamV2(
 
     let fullResponseText = "";
     let toolsUsed: string[] = [];
+    let toolCalls: ConversationAgentResult["toolCalls"] = [];
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let iterationCount = 0;
@@ -724,6 +725,7 @@ async function* createCoachConversationEventStreamV2(
       const agentResult: ConversationAgentResult = result.value;
       fullResponseText = agentResult.fullResponseText;
       toolsUsed = agentResult.toolsUsed;
+      toolCalls = agentResult.toolCalls;
       totalInputTokens = agentResult.totalInputTokens;
       totalOutputTokens = agentResult.totalOutputTokens;
       iterationCount = agentResult.iterationCount;
@@ -790,9 +792,14 @@ async function* createCoachConversationEventStreamV2(
       preview: fullResponseText.slice(0, 200),
     });
 
-    // Add agent-specific metadata separately
+    // Add agent-specific metadata separately. `toolsUsed` is the legacy
+    // string[] kept for back-compat with older message metadata; `toolCalls`
+    // is the richer per-call record (id, name, status, durationMs, optional
+    // input) used to render the streaming tool-call blocks in the UI even
+    // after a page reload.
     (newAiMessage.metadata as any).agent = {
       toolsUsed,
+      toolCalls,
       totalInputTokens,
       totalOutputTokens,
       iterationCount,
