@@ -19,6 +19,7 @@
 import { getProgramDetailsFromS3 } from "./s3-utils";
 import type { WorkoutTemplate } from "./types";
 import { logger } from "../logger";
+import { sanitizeUserContent } from "../security/prompt-sanitizer";
 
 export interface TodayWorkoutStatusEntry {
   templateId: string;
@@ -133,7 +134,8 @@ ad-hoc session.`;
           : t.status === "regenerated"
             ? "regenerated (replaced — treat as pending)"
             : "pending (not yet logged)";
-    return `- "${t.name}" — ${statusLabel}`;
+    const safeName = sanitizeUserContent(t.name, 200);
+    return `- "${safeName}" — ${statusLabel}`;
   });
 
   return `${header}
