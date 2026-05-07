@@ -744,11 +744,15 @@ async function* createCoachConversationEventStreamV2(
       if (agentError instanceof GuardrailInterventionError) {
         // Content already streamed in ASYNC mode — emit a warning event and continue
         // saving the response so the conversation is preserved alongside the warning.
+        // Recover toolsUsed/toolCalls too so persisted metadata matches what was
+        // streamed; otherwise tool-call blocks vanish on page reload.
         logger.warn(
           "🛡️ V2: Guardrail intervened (ASYNC) — emitting warning event",
         );
         guardrailWarning = true;
         fullResponseText = agent.getFullResponseText();
+        toolsUsed = agent.getToolsUsed();
+        toolCalls = agent.getToolCalls();
         yield formatGuardrailWarningEvent();
       } else {
         logger.error("❌ V2: Agent stream error:", agentError);

@@ -723,4 +723,22 @@ export class StreamingConversationAgent<
   getFullResponseText(): string {
     return this._fullResponseText;
   }
+
+  /**
+   * Returns the tools used so far (legacy string[] form). Companion to
+   * `getFullResponseText` for the guardrail-interruption recovery path.
+   */
+  getToolsUsed(): string[] {
+    return this.toolsUsed;
+  }
+
+  /**
+   * Returns the per-call tool records accumulated so far. Companion to
+   * `getFullResponseText` for the guardrail-interruption recovery path —
+   * without this, persisted `metadata.agent.toolCalls` would be empty and
+   * the UI's tool-call blocks would vanish on reload.
+   */
+  getToolCalls(): ToolCallRecord[] {
+    return this.toolCalls;
+  }
 }
