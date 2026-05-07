@@ -242,9 +242,9 @@ const MessageItem = memo(
     );
   },
   (prevProps, nextProps) => {
-    // toolCalls is upserted live during streaming via _upsertToolCall (a new
-    // array is assigned on every event), so a referential check picks up
-    // both the running→complete transition and any new tool calls.
+    // toolCalls is upserted live during streaming via upsertToolCallOnMessage
+    // (a new array is assigned on every event), so a referential check picks
+    // up both the running→complete transition and any new tool calls.
     const toolCallsChanged =
       prevProps.message.toolCalls !== nextProps.message.toolCalls;
     const messageChanged =

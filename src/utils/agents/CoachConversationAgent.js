@@ -896,38 +896,6 @@ export class CoachConversationAgent {
   }
 
   /**
-   * Upserts a tool_call event onto a streaming message's `toolCalls` array.
-   *
-   * The backend emits two SSE events per tool call (running → complete/error)
-   * and the frontend keys them by `toolUseId` so each call renders as a
-   * single block that transitions visually in place.
-   *
-   * @param {string} messageId - The streaming message ID
-   * @param {Object} toolCallEvent - { toolUseId, toolName, status, durationMs?, errorMessage?, toolInput? }
-   */
-  _upsertToolCall(messageId, toolCallEvent) {
-    const messages = this.state.messages.map((msg) => {
-      if (msg.id !== messageId) return msg;
-      const existing = Array.isArray(msg.toolCalls) ? msg.toolCalls : [];
-      const idx = existing.findIndex(
-        (tc) => tc.toolUseId === toolCallEvent.toolUseId,
-      );
-      const next = [...existing];
-      if (idx === -1) {
-        next.push(toolCallEvent);
-      } else {
-        // Preserve any fields from the running event (e.g. toolName) and
-        // overlay the complete/error fields. Use a shallow merge — toolInput
-        // may legitimately arrive only on the second event.
-        next[idx] = { ...next[idx], ...toolCallEvent };
-      }
-      return { ...msg, toolCalls: next };
-    });
-
-    this._updateState({ messages, _lastUpdate: Date.now() });
-  }
-
-  /**
    * Updates only the metadata of a message without changing content
    * Used for early metadata events during streaming (e.g., mode badge)
    * @param {string} messageId - The message ID to update
