@@ -603,6 +603,15 @@ export class StreamingConversationAgent<
                 "error",
               ),
             );
+            const errorRecord: ToolCallRecord = {
+              toolUseId: toolUse.toolUseId,
+              toolName: toolUse.toolName,
+              status: "error",
+              durationMs: 0,
+              errorMessage: "Tool input was malformed or empty.",
+            };
+            this.toolCalls.push(errorRecord);
+            yield formatToolCallEvent(errorRecord);
             continue;
           }
 
@@ -619,6 +628,15 @@ export class StreamingConversationAgent<
                 "error",
               ),
             );
+            const errorRecord: ToolCallRecord = {
+              toolUseId: toolUse.toolUseId,
+              toolName: toolUse.toolName,
+              status: "error",
+              durationMs: 0,
+              errorMessage: `Tool ${toolUse.toolName} not found`,
+            };
+            this.toolCalls.push(errorRecord);
+            yield formatToolCallEvent(errorRecord);
             continue;
           }
 
