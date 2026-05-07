@@ -185,3 +185,99 @@ describe("buildConversationAgentPrompt — structural ordering", () => {
     expect(responsibilityIdx).toBeLessThan(toolGuidelinesIdx);
   });
 });
+
+describe("buildConversationAgentPrompt — today's workout status injection", () => {
+  it("omits the TODAY'S PRESCRIBED WORKOUT STATUS section when not provided", () => {
+    const { dynamicPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+    });
+
+    expect(dynamicPrompt).not.toContain("## TODAY'S PRESCRIBED WORKOUT STATUS");
+  });
+
+  it("renders the section with pending/completed labels when templates are provided", () => {
+    const { dynamicPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+      todayWorkoutStatus: {
+        dayNumber: 17,
+        restDay: false,
+        templates: [
+          {
+            templateId: "t_pc",
+            name: "Power Clean Escalation",
+            status: "pending",
+          },
+          {
+            templateId: "t_acc",
+            name: "Upper Accessory",
+            status: "completed",
+            completedAt: "2026-05-06T18:30:00.000Z",
+          },
+        ],
+      },
+    });
+
+    expect(dynamicPrompt).toContain(
+      "## TODAY'S PRESCRIBED WORKOUT STATUS (Day 17)",
+    );
+    expect(dynamicPrompt).toContain('"Power Clean Escalation" — pending');
+    expect(dynamicPrompt).toContain('"Upper Accessory" — completed');
+    expect(dynamicPrompt).toContain("query_exercise_history");
+  });
+
+  it("renders the rest-day variant when restDay is true", () => {
+    const { dynamicPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+      todayWorkoutStatus: {
+        dayNumber: 7,
+        restDay: true,
+        templates: [],
+      },
+    });
+
+    expect(dynamicPrompt).toContain(
+      "## TODAY'S PRESCRIBED WORKOUT STATUS (Day 7)",
+    );
+    expect(dynamicPrompt).toContain("rest day");
+  });
+
+  it("places the status block after Program Summary but before Session UI Context", () => {
+    const { dynamicPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+      activeProgram: {
+        programName: "Test Program",
+        currentDay: 5,
+        totalDays: 28,
+        status: "active",
+        completedWorkouts: 4,
+        totalWorkouts: 24,
+      },
+      sessionProgramContext: {
+        programId: "p_test",
+        programName: "Test Program",
+        surface: "view_workouts",
+        dayNumber: 5,
+        isViewingToday: true,
+      },
+      todayWorkoutStatus: {
+        dayNumber: 5,
+        restDay: false,
+        templates: [{ templateId: "t", name: "Squat", status: "pending" }],
+      },
+    });
+
+    const programSummaryIdx = dynamicPrompt.indexOf(
+      "## ACTIVE TRAINING PROGRAM",
+    );
+    const todayStatusIdx = dynamicPrompt.indexOf(
+      "## TODAY'S PRESCRIBED WORKOUT STATUS",
+    );
+    const sessionUiIdx = dynamicPrompt.indexOf("## SESSION UI CONTEXT");
+
+    expect(programSummaryIdx).toBeGreaterThanOrEqual(0);
+    expect(todayStatusIdx).toBeGreaterThanOrEqual(0);
+    expect(sessionUiIdx).toBeGreaterThanOrEqual(0);
+    expect(programSummaryIdx).toBeLessThan(todayStatusIdx);
+    expect(todayStatusIdx).toBeLessThan(sessionUiIdx);
+  });
+});
