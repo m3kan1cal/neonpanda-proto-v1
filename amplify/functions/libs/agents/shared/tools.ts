@@ -459,6 +459,8 @@ from workout history context.
 The tool returns workout summaries with completion dates, disciplines, and names.
 Limit defaults to 10, max 20 to avoid overwhelming the context.
 
+Each entry's \`completedAt\` is when the user reported performing the workout. Use it for general progress framing — NOT as a status signal for whether today's prescribed program template was completed. For that, read "## TODAY'S PRESCRIBED WORKOUT STATUS" in context or call get_todays_workout for its \`status\` field.
+
 Example use cases:
 - User asks "How has my training been going?"
 - User asks "What was my last leg workout?"
@@ -643,6 +645,13 @@ Use when the user asks about:
 - Comparison across sessions
 
 Returns exercise sessions with sets, reps, weights, and aggregated statistics like PRs, average performance, and total volume.
+
+Returned rows represent work the user has ALREADY logged. Each row's \`completedAt\` field is when the user reported performing the exercise (the "logged for" date) — it is NOT a guarantee that the row corresponds to today's prescribed program template, and it is NOT a status signal for whether today's prescription was completed. To answer "did the user complete today's prescribed work?", read the "## TODAY'S PRESCRIBED WORKOUT STATUS" block in your dynamic context (when present), or call \`get_todays_workout\` and read its \`status\` field. Never narrate a row as "completed today as part of your program" based on \`completedAt\` alone.
+
+Each row may include optional provenance fields populated by the build-exercise pipeline:
+- \`templateId\` — present when the parent workout was logged against a program template; matching it to a known template confirms prescribed-program origin
+- \`loggedVia\` — how the parent workout was logged ("chat", "slash_command", "workout_editor", etc.)
+Absence of these fields means provenance is unknown — do not assume the row was prescribed.
 
 The tool automatically normalizes exercise names (e.g., "Back Squat" → "back_squat") to match stored format. If you're unsure of the exact exercise name, use list_exercise_names first.`,
     inputSchema: QUERY_EXERCISE_HISTORY_SCHEMA,

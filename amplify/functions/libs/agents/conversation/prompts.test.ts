@@ -156,8 +156,12 @@ describe("buildConversationAgentPrompt — required tool-use for coaching questi
     expect(staticPrompt).toContain("query_exercise_history");
     expect(staticPrompt).toContain("query_programs");
     expect(staticPrompt).toContain("get_recent_workouts");
+    // The hard "no defer" rule moved to CRITICAL SYSTEM RULES (consolidated
+    // in PR 5). The phrasing is now slightly different — it lists "support"
+    // as an explicit prohibited deferral target. See the dedicated
+    // "consolidated CRITICAL SYSTEM RULES" describe block below.
     expect(staticPrompt).toMatch(
-      /never defer the decision to the platform, to the NeonPanda team, or to anyone else/i,
+      /Never defer the decision to the platform, to the NeonPanda team/i,
     );
   });
 });
@@ -183,5 +187,106 @@ describe("buildConversationAgentPrompt — structural ordering", () => {
     expect(platformIdentityIdx).toBeLessThan(personalityIdx);
     expect(personalityIdx).toBeLessThan(responsibilityIdx);
     expect(responsibilityIdx).toBeLessThan(toolGuidelinesIdx);
+  });
+});
+
+describe("buildConversationAgentPrompt — consolidated CRITICAL SYSTEM RULES", () => {
+  it("includes a single CRITICAL SYSTEM RULES block with the four subsections", () => {
+    const { staticPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+    });
+
+    expect(staticPrompt).toContain("## CRITICAL SYSTEM RULES");
+    expect(staticPrompt).toContain("### Tool Use Discipline");
+    expect(staticPrompt).toContain("### Coaching Responsibility");
+    expect(staticPrompt).toContain("### Memory Acknowledgment");
+    // The block is consolidated — there should only be one occurrence of the
+    // "## CRITICAL SYSTEM RULES" header in the static prompt
+    const occurrences = staticPrompt.match(/## CRITICAL SYSTEM RULES/g) || [];
+    expect(occurrences.length).toBe(1);
+  });
+
+  it("generalizes the no-preamble rule to ALL tools (not just save_memory)", () => {
+    const { staticPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+    });
+
+    expect(staticPrompt).toMatch(
+      /When calling any tool, do not generate conversational text in the same turn/i,
+    );
+    expect(staticPrompt).toMatch(/applies to ALL tools/i);
+  });
+
+  it("instructs the agent to consult TODAY'S PRESCRIBED WORKOUT STATUS for today-completion questions", () => {
+    const { staticPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+    });
+
+    expect(staticPrompt).toContain("## TODAY'S PRESCRIBED WORKOUT STATUS");
+    expect(staticPrompt).toMatch(/Did I do today's workout/i);
+  });
+
+  it("preserves the no-deferral rule inside CRITICAL SYSTEM RULES", () => {
+    const { staticPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+    });
+
+    expect(staticPrompt).toMatch(/Never defer the decision to/i);
+    expect(staticPrompt).toMatch(/the platform.*the NeonPanda team/i);
+  });
+
+  it("preserves the silent-memory rule inside CRITICAL SYSTEM RULES", () => {
+    const { staticPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+    });
+
+    expect(staticPrompt).toMatch(
+      /memory system works silently|never narrate the act of saving/i,
+    );
+  });
+
+  it("forbids inferring today's prescription completion from query_exercise_history dates alone", () => {
+    const { staticPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+    });
+
+    expect(staticPrompt).toMatch(
+      /Never infer today's prescribed-template completion from .*query_exercise_history.* row dates alone/i,
+    );
+  });
+});
+
+describe("buildConversationAgentPrompt — view_workouts surface framing", () => {
+  it("disambiguates historical-performance from today-status questions on view_workouts", () => {
+    const { dynamicPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+      sessionProgramContext: {
+        programId: "p_test",
+        programName: "Test Program",
+        surface: "view_workouts",
+        dayNumber: 5,
+        isViewingToday: true,
+      },
+    });
+
+    expect(dynamicPrompt).toMatch(/historical-performance questions/i);
+    expect(dynamicPrompt).toMatch(/today.?(status|day-status) questions/i);
+    expect(dynamicPrompt).toMatch(/Do not conflate/i);
+    expect(dynamicPrompt).toContain("query_exercise_history");
+    expect(dynamicPrompt).toContain("get_todays_workout");
+    expect(dynamicPrompt).toContain("## TODAY'S PRESCRIBED WORKOUT STATUS");
+  });
+
+  it("does not apply the view_workouts disambiguation to program_dashboard surface", () => {
+    const { dynamicPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+      sessionProgramContext: {
+        programId: "p_test",
+        programName: "Test Program",
+        surface: "program_dashboard",
+      },
+    });
+
+    expect(dynamicPrompt).not.toMatch(/historical-performance questions/i);
   });
 });
