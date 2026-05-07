@@ -182,4 +182,41 @@ describe("build-exercise handler", () => {
       expect.any(Object),
     );
   });
+
+  // ─── Provenance fields (templateId, loggedVia) ────────────────────────────
+
+  it("includes templateId on saved exercises when present in event", async () => {
+    await handler(
+      makeEvent({ templateId: "template_abc", loggedVia: "chat" }) as any,
+    );
+
+    expect(saveExercises).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          templateId: "template_abc",
+          loggedVia: "chat",
+        }),
+      ]),
+    );
+  });
+
+  it("omits templateId entirely when not provided (no undefined keys)", async () => {
+    await handler(makeEvent() as any);
+
+    const savedExercises = vi.mocked(saveExercises).mock.calls[0][0];
+    for (const ex of savedExercises) {
+      expect("templateId" in ex).toBe(false);
+      expect("loggedVia" in ex).toBe(false);
+    }
+  });
+
+  it("includes only loggedVia when templateId is missing", async () => {
+    await handler(makeEvent({ loggedVia: "slash_command" }) as any);
+
+    const savedExercises = vi.mocked(saveExercises).mock.calls[0][0];
+    for (const ex of savedExercises) {
+      expect((ex as any).loggedVia).toBe("slash_command");
+      expect("templateId" in ex).toBe(false);
+    }
+  });
 });

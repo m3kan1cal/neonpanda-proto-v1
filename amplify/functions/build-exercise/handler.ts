@@ -168,6 +168,10 @@ export const handler = async (event: BuildExerciseEvent) => {
             sequence,
             metrics: extracted.metrics,
             metadata,
+            // Conditional spreads keep undefined values out of the persisted
+            // record so DynamoDB serialization warnings don't fire.
+            ...(event.templateId && { templateId: event.templateId }),
+            ...(event.loggedVia && { loggedVia: event.loggedVia }),
           };
 
           exercises.push(exercise);
