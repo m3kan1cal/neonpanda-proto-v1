@@ -27,6 +27,10 @@ import {
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
 import { NEONPANDA_PLATFORM_IDENTITY } from "../../prompts/platform-identity";
+import {
+  formatTodayWorkoutStatusForPrompt,
+  type TodayWorkoutStatus,
+} from "../../program/today-status";
 
 /**
  * Build system prompt for the streaming conversation agent
@@ -53,6 +57,17 @@ export function buildConversationAgentPrompt(
       completedWorkouts: number;
       totalWorkouts: number;
     } | null;
+    /**
+     * Pre-fetched status of the prescribed workout templates for the day the
+     * user is currently focused on (today, or the `?day=N` they're viewing on
+     * View Workouts). Injected into the dynamic prompt so the agent has a
+     * deterministic "did the user complete today's prescription?" signal
+     * without needing to call `get_todays_workout`. Built by
+     * `loadTodayWorkoutStatus` in `libs/program/today-status.ts`. Pass `null`
+     * (or omit) when the surface isn't program-scoped or the data couldn't
+     * be loaded — the section will simply be skipped.
+     */
+    todayWorkoutStatus?: TodayWorkoutStatus | null;
     /** User opened chat from a specific program screen (e.g. dashboard, view workouts). */
     sessionProgramContext?: {
       programId: string;
@@ -393,6 +408,18 @@ ${preamble}
 - Status: ${ap.status}
 
 ${toolNote}`);
+  }
+
+  // Section 5.5: Today's Prescribed Workout Status (conditional)
+  // Pre-fetched server-side from S3 and rendered as authoritative fact so the
+  // agent never has to call `get_todays_workout` just to answer "did I do
+  // today's workout?". This is the deterministic backstop for the historical
+  // bug where the agent narrated previously-logged exercise rows as
+  // "just completed today" without verifying status.
+  if (options.todayWorkoutStatus) {
+    dynamicSections.push(
+      formatTodayWorkoutStatusForPrompt(options.todayWorkoutStatus),
+    );
   }
 
   if (options.sessionProgramContext) {

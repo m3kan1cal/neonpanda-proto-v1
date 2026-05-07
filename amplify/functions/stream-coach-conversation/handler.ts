@@ -43,6 +43,7 @@ import {
 } from "../../dynamodb/memory";
 import { formatEmotionalContextForPrompt } from "../libs/memory/emotional";
 import { formatLivingProfileForPrompt } from "../libs/user/living-profile";
+import { loadTodayWorkoutStatus } from "../libs/program/today-status";
 import {
   filterActiveProspectiveMemories,
   formatProspectiveMemoriesForPrompt,
@@ -614,6 +615,37 @@ async function* createCoachConversationEventStreamV2(
           ).timestamp ?? null)
         : null;
 
+    // Pre-fetch today's prescribed workout status from S3 so the agent has a
+    // deterministic "is today's prescription completed?" signal without
+    // needing to call get_todays_workout. Eliminates the historical bug
+    // where the agent narrated previously-logged exercise rows as
+    // "just completed today" without verifying status. Scoped to program
+    // surfaces — other surfaces don't need this overhead.
+    let todayWorkoutStatus = null;
+    if (isProgramScopedSurface && agentContext.activeProgram) {
+      const requestedDay =
+        clientContext?.surface === "view_workouts" &&
+        typeof clientContext.dayNumber === "number"
+          ? clientContext.dayNumber
+          : undefined;
+      todayWorkoutStatus = await loadTodayWorkoutStatus(
+        {
+          s3DetailKey: agentContext.activeProgram.s3DetailKey,
+          currentDay: agentContext.activeProgram.currentDay,
+          totalDays: agentContext.activeProgram.totalDays,
+        },
+        requestedDay,
+      );
+      if (todayWorkoutStatus) {
+        logger.info("✅ V2: Today's workout status loaded for prompt:", {
+          dayNumber: todayWorkoutStatus.dayNumber,
+          restDay: todayWorkoutStatus.restDay,
+          templateCount: todayWorkoutStatus.templates.length,
+          statuses: todayWorkoutStatus.templates.map((t) => t.status),
+        });
+      }
+    }
+
     const { staticPrompt, dynamicPrompt } = buildConversationAgentPrompt(
       coachConfig,
       {
@@ -622,6 +654,7 @@ async function* createCoachConversationEventStreamV2(
         criticalTrainingDirective: criticalDirective,
         activeProgram: agentContext.activeProgram,
         sessionProgramContext,
+        todayWorkoutStatus,
         coachCreatorSessionSummary:
           coachConfig.metadata?.coach_creator_session_summary,
         conversationSummaryContext,
