@@ -45,7 +45,7 @@ export const buttonPatterns = {
 
   // Hero CTA (56px height) - Premium gradient button for landing pages and major CTAs
   heroCTA:
-    "px-8 py-4 rounded-full bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-all duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[56px] flex items-center justify-center cursor-pointer",
+    "px-8 py-4 rounded-full bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-[transform,scale,box-shadow] duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[56px] flex items-center justify-center cursor-pointer",
 
   // Loading state variants - For buttons showing loading spinners
   primaryMediumLoading:
@@ -114,15 +114,15 @@ export const buttonPatterns = {
 
   // Square icon-only send button (48×48px) - chat input send action with purple→pink gradient
   sendSquare:
-    "w-12 h-12 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0",
+    "w-12 h-12 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 active:scale-[0.97] active:shadow-2xl active:shadow-synthwave-neon-purple/50 touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0",
 
   // Inline circular send button - positioned inside chat input next to emoji button
   sendInline:
-    "w-7 h-7 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-md shadow-synthwave-neon-purple/30 hover:shadow-lg hover:shadow-synthwave-neon-purple/40 transition-all duration-300 active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer",
+    "w-7 h-7 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-md shadow-synthwave-neon-purple/30 hover:shadow-lg hover:shadow-synthwave-neon-purple/40 transition-all duration-300 active:scale-[0.97] active:shadow-xl active:shadow-synthwave-neon-purple/50 touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer",
 
   // Compact variant for narrow contexts (e.g. contextual chat drawer)
   sendInlineCompact:
-    "w-6 h-6 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-sm shadow-synthwave-neon-purple/30 hover:shadow-md hover:shadow-synthwave-neon-purple/40 transition-all duration-300 active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer",
+    "w-6 h-6 rounded-full bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white shadow-sm shadow-synthwave-neon-purple/30 hover:shadow-md hover:shadow-synthwave-neon-purple/40 transition-all duration-300 active:scale-[0.97] active:shadow-lg active:shadow-synthwave-neon-purple/50 touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer",
 };
 
 // Badge Patterns - Reusable badge/tag components (matches ManageMemories.jsx styling)
@@ -230,10 +230,10 @@ export const iconButtonPatterns = {
   // Small Action Buttons - Modern versions of chat action buttons with dark background by default (like microphone button)
   // Icons should be w-5 h-5 (20px) for consistent sizing across all action buttons
   actionSmallBlue:
-    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 active:scale-[0.97] active:shadow-[0_0_10px_rgba(96,165,250,0.4)] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallGreen:
-    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-green-400 hover:bg-green-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400/50 active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-green-400 hover:bg-green-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400/50 active:scale-[0.97] active:shadow-[0_0_10px_rgba(74,222,128,0.4)] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallPurple:
     "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-purple-400 hover:bg-purple-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400/50 active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
