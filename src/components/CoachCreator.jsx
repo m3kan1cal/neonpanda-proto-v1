@@ -47,6 +47,7 @@ import {
   handleStreamingError,
   ContextualUpdateIndicator,
   MessageFooter,
+  ToolCallList,
 } from "../utils/ui/streamingUiHelper.jsx";
 
 // Vesper coach data - static coach for coach creator
@@ -205,6 +206,8 @@ const MessageItem = memo(
             </div>
           </div>
 
+          <ToolCallList message={message} />
+
           <MessageFooter
             isCurrentlyStreaming={isCurrentlyStreaming}
             timestamp={message.timestamp}
@@ -217,9 +220,13 @@ const MessageItem = memo(
     );
   },
   (prevProps, nextProps) => {
+    const toolCallsChanged =
+      prevProps.message.toolCalls !== nextProps.message.toolCalls;
     const messageChanged =
       prevProps.message.id !== nextProps.message.id ||
-      prevProps.message.content !== nextProps.message.content;
+      prevProps.message.content !== nextProps.message.content ||
+      prevProps.message.metadata !== nextProps.message.metadata ||
+      toolCallsChanged;
 
     const streamingStateChanged =
       prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||

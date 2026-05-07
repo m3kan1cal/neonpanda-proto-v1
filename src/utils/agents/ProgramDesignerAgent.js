@@ -557,6 +557,12 @@ export class ProgramDesignerAgent {
             }
           },
 
+          onToolCall: async (toolCallEvent) => {
+            // Upsert into the streaming message so the UI can render a
+            // running → complete/error block in place.
+            streamingMsg.upsertToolCall(toolCallEvent);
+          },
+
           onChunk: async (content) => {
             // Clear contextual update when real AI response starts
             if (this.state.contextualUpdate) {
@@ -833,6 +839,30 @@ export class ProgramDesignerAgent {
     });
 
     this._updateState({ messages });
+  }
+
+  /**
+   * Upsert a tool_call SSE event into the streaming message's `toolCalls`
+   * array, keyed by toolUseId. The backend emits two events per call
+   * (running → complete/error); we merge them so each call renders as a
+   * single block that transitions in place.
+   */
+  _upsertToolCall(messageId, toolCallEvent) {
+    const messages = this.state.messages.map((msg) => {
+      if (msg.id !== messageId) return msg;
+      const existing = Array.isArray(msg.toolCalls) ? msg.toolCalls : [];
+      const idx = existing.findIndex(
+        (tc) => tc.toolUseId === toolCallEvent.toolUseId,
+      );
+      const next = [...existing];
+      if (idx === -1) {
+        next.push(toolCallEvent);
+      } else {
+        next[idx] = { ...next[idx], ...toolCallEvent };
+      }
+      return { ...msg, toolCalls: next };
+    });
+    this._updateState({ messages, _lastUpdate: Date.now() });
   }
 
   /**
