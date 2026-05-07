@@ -1,14 +1,13 @@
 // UI Pattern Constants - Strategy-Compliant Design System
 // Based on UI_UX_THEME_STRATEGY.md guidelines
-
-// Press/tap feedback applied to interactive pill buttons.
-// active:scale-[0.97] gives a subtle press-in haptic on click and tap.
-// touch-manipulation removes the legacy iOS 300ms tap delay.
-// [-webkit-tap-highlight-color:transparent] suppresses the off-brand
-// gray/orange mobile tap flash so our intentional feedback is the only signal.
-// Pair with an active:shadow-neon-{pink|cyan|purple} per variant for the glow.
-export const interactivePressBase =
-  "active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent]";
+//
+// Pill buttons share a uniform press signal applied inline on each variant:
+//   active:scale-[0.97] — subtle press-in haptic on click and tap
+//   active:shadow-neon-{pink|cyan|purple} — brief brand-glow on press
+//   touch-manipulation — removes the legacy iOS 300ms tap delay
+//   [-webkit-tap-highlight-color:transparent] — suppresses the off-brand
+//     mobile tap flash so our intentional feedback is the only signal
+// Loading and disabled variants intentionally omit press feedback.
 
 export const buttonPatterns = {
   // Primary Actions (Pink) - High-impact actions that create, save, or commit changes
@@ -46,7 +45,7 @@ export const buttonPatterns = {
 
   // Hero CTA (56px height) - Premium gradient button for landing pages and major CTAs
   heroCTA:
-    "px-8 py-4 rounded-full bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-[transform,box-shadow] duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[56px] flex items-center justify-center cursor-pointer",
+    "px-8 py-4 rounded-full bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-all duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[56px] flex items-center justify-center cursor-pointer",
 
   // Loading state variants - For buttons showing loading spinners
   primaryMediumLoading:
