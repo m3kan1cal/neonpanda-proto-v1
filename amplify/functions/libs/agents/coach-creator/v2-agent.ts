@@ -176,7 +176,10 @@ export class CoachCreatorAgentV2 {
     const requirements = store.get<any>("requirements");
     const personalitySelection = store.get<any>("personality_selection");
     const methodologySelection = store.get<any>("methodology_selection");
-    const validation = store.get<any>("validation");
+    // Normalise v2 failure envelopes (`{ ok: false, code, message }`) back
+    // to the v1 shape so the `isValid: false` branch below also fires when
+    // the validate tool *threw* rather than returned a structured failure.
+    const validation = normaliseValidationResult(store.get<any>("validation")) as any;
     const save = store.get<any>("save");
 
     if (save?.success && save?.coachConfigId) {
@@ -267,20 +270,24 @@ Now create the coach using your tools.`;
 }
 
 /**
- * v1 `enforceValidationBlocking` reads `.error` and `.isValid`. v2's
+ * v1 `enforceValidationBlocking` reads `.error` and `.isValid`. v1
+ * `buildResultFromToolData` reads `.isValid` and `.validationIssues`. v2's
  * adaptLegacyTool stores failures as `{ ok: false, code, message, ... }`.
- * Translate the v2 envelope back to v1's shape so the helper keeps
- * blocking on both validation-said-no and validation-threw paths.
+ * Normalise the v2 envelope so both call sites — the blocking helper and
+ * the result builder — see the v1 shape they expect.
  */
 function normaliseValidationResult(raw: unknown): unknown {
   if (!raw || typeof raw !== "object") return raw;
   const r = raw as Record<string, unknown>;
   if (r.ok === false) {
+    const message =
+      typeof r.message === "string" && r.message
+        ? r.message
+        : "validate_coach_config failed";
     return {
-      error:
-        typeof r.message === "string" && r.message
-          ? r.message
-          : "validate_coach_config failed",
+      isValid: false,
+      validationIssues: [message],
+      error: message,
     };
   }
   return raw;

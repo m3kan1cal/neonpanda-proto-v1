@@ -203,6 +203,38 @@ describe("Agent v2", () => {
     expect(result.iterations).toBe(3);
   });
 
+  it("strips leading text blocks from tool_use iterations in the sync path too", async () => {
+    // Regression for Bugbot finding e470f264: streaming runLoop strips, sync
+    // runLoop didn't, leaving the model to repeat preambles on subsequent
+    // turns and inflating the final fullResponseText with leftover text.
+    const search = defineTool<TestCtx, z.ZodObject<{}>>({
+      id: "search",
+      description: "...",
+      input: z.object({}),
+      execute: async () => ({ ok: true, data: 1 }),
+    });
+    const runtime = new MockRuntime([
+      // Iteration 1: model says "Sure thing!" then calls a tool
+      toolUseTurn(
+        [{ toolUseId: "u1", name: "search", input: {} }],
+        "Sure thing!",
+      ),
+      // Iteration 2: terminal text-only turn
+      textTurn("Done."),
+    ]);
+    const agent = new Agent<TestCtx>(baseConfig({ tools: [search], runtime }));
+    const result = await agent.run({ userMessage: "go" });
+    const history = agent.getHistory();
+    // user message, assistant (toolUse only — preamble stripped),
+    // user (toolResult), assistant (final text)
+    const firstAssistant = history[1];
+    expect(firstAssistant.role).toBe("assistant");
+    expect(firstAssistant.content).toHaveLength(1);
+    expect(firstAssistant.content[0]).toHaveProperty("toolUse");
+    // Final response should not include the stripped preamble
+    expect(result.finalResponseText).toBe("Done.");
+  });
+
   it("stops at maxIterations", async () => {
     const t1 = defineTool<TestCtx, z.ZodObject<{}>>({
       id: "t1",

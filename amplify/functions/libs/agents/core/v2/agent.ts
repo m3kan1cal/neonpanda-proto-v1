@@ -235,7 +235,14 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       this.outputTokens += turn.usage.outputTokens;
       this.cacheReadInputTokens += turn.usage.cacheReadInputTokens ?? 0;
 
-      this.appendAssistantContent(turn.assistantContent);
+      // Same preamble handling as the streaming path: on tool_use turns,
+      // strip leading text blocks before pushing to history so the model
+      // doesn't repeat the preamble after the tool result lands.
+      const isToolUse = turn.stopReason === "tool_use";
+      const contentToAppend = isToolUse
+        ? stripLeadingTextBlocks(turn.assistantContent)
+        : turn.assistantContent;
+      this.appendAssistantContent(contentToAppend);
 
       if (turn.stopReason === "tool_use") {
         await this.dispatchTools(turn.assistantContent);

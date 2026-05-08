@@ -246,6 +246,35 @@ describe("CoachCreatorAgentV2", () => {
     expect(result.success).toBe(false);
   });
 
+  it("when validate throws, returns the specific 'Coach validation failed' reason (not a generic skip)", async () => {
+    // Regression for Bugbot finding f4d484d9: buildResultFromToolData reads
+    // `validation.isValid === false`, but adaptLegacyTool stores thrown
+    // failures as v2 envelopes that lack `isValid`. Without normalisation
+    // we'd return a generic "Workflow incomplete" reason.
+    (validateCoachConfigTool.execute as any).mockRejectedValue(
+      new Error("validation lambda 502"),
+    );
+
+    const turns = [
+      turn([toolUseBlock("u1", "validate_coach_config", {})], "tool_use"),
+      turn([{ text: "Validation failed." }], "end_turn"),
+    ];
+    const agent = new CoachCreatorAgentV2(baseContext);
+    const runtimeInstance = (SyncRuntime as any).mock.instances.at(-1);
+    runtimeInstance.invokeTurn = vi.fn(async () => {
+      const next = turns.shift();
+      if (!next) throw new Error("no more turns");
+      return next;
+    });
+
+    const result = await agent.createCoach();
+    expect(result.success).toBe(false);
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toMatch(/Coach validation failed/i);
+    expect(result.reason).toMatch(/validation lambda 502/);
+    expect(result.validationIssues).toEqual(["validation lambda 502"]);
+  });
+
   it("returns skipped result with the agent response when no tools are called", async () => {
     const turns = [
       turn(
