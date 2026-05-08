@@ -233,7 +233,14 @@ export class CoachCreatorAgentV2 {
   ): string {
     const has = (key: string) => {
       const r = resultStore.get<any>(key);
-      return r && typeof r === "object" && !("error" in r);
+      if (!r || typeof r !== "object") return false;
+      // v1 stored failures as `{ error: msg }`; v2's adaptLegacyTool stores
+      // them as `{ ok: false, code, message }`. Treat both as "not done"
+      // so the retry prompt re-instructs failed tools instead of marking
+      // them ✓ ALREADY DONE and tempting the model to skip the retry.
+      if ("error" in r) return false;
+      if (r.ok === false) return false;
+      return true;
     };
     return `CRITICAL OVERRIDE: You did not complete the coach creation workflow.
 
