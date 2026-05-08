@@ -203,10 +203,12 @@ describe("Agent v2", () => {
     expect(result.iterations).toBe(3);
   });
 
-  it("strips leading text blocks from tool_use iterations in the sync path too", async () => {
+  it("strips leading text blocks from tool_use iterations in the sync path too (history only)", async () => {
     // Regression for Bugbot finding e470f264: streaming runLoop strips, sync
-    // runLoop didn't, leaving the model to repeat preambles on subsequent
-    // turns and inflating the final fullResponseText with leftover text.
+    // runLoop didn't. After the fix, sync history matches streaming history
+    // (preamble stripped from the assistant turn that called a tool), but
+    // finalResponseText still includes the preamble — same contract as the
+    // streaming delta accumulator, so contentOffset alignment holds.
     const search = defineTool<TestCtx, z.ZodObject<{}>>({
       id: "search",
       description: "...",
@@ -225,14 +227,40 @@ describe("Agent v2", () => {
     const agent = new Agent<TestCtx>(baseConfig({ tools: [search], runtime }));
     const result = await agent.run({ userMessage: "go" });
     const history = agent.getHistory();
-    // user message, assistant (toolUse only — preamble stripped),
-    // user (toolResult), assistant (final text)
     const firstAssistant = history[1];
     expect(firstAssistant.role).toBe("assistant");
+    // History on a tool_use iteration drops leading text — only the toolUse
+    // block remains, so the model doesn't repeat the preamble post-tool.
     expect(firstAssistant.content).toHaveLength(1);
     expect(firstAssistant.content[0]).toHaveProperty("toolUse");
-    // Final response should not include the stripped preamble
-    expect(result.finalResponseText).toBe("Done.");
+    // finalResponseText accumulates everything the user-facing layer would
+    // have seen, including the stripped preamble. Matches the streaming
+    // path so contentOffset values align across runtimes.
+    expect(result.finalResponseText).toBe("Sure thing!Done.");
+  });
+
+  it("anchors sync contentOffset to text emitted before the tool call (matches streaming path)", async () => {
+    // Regression for Bugbot finding 41c5db82: pre-fix, sync recordToolCall
+    // pulled the offset from collectAssistantText() which reads stripped
+    // history; streaming reads from the delta accumulator. This test locks
+    // in the sync path matching streaming: contentOffset includes the
+    // preamble text the tool was anchored after.
+    const search = defineTool<TestCtx, z.ZodObject<{}>>({
+      id: "search",
+      description: "...",
+      input: z.object({}),
+      execute: async () => ({ ok: true, data: 1 }),
+    });
+    const runtime = new MockRuntime([
+      toolUseTurn(
+        [{ toolUseId: "u1", name: "search", input: {} }],
+        "Looking up.",
+      ),
+      textTurn("ok"),
+    ]);
+    const agent = new Agent<TestCtx>(baseConfig({ tools: [search], runtime }));
+    const result = await agent.run({ userMessage: "go" });
+    expect(result.toolCalls[0].contentOffset).toBe("Looking up.".length);
   });
 
   it("stops at maxIterations", async () => {

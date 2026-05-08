@@ -28,13 +28,19 @@ export class ToolResultStore implements ToolResultStoreLike {
   put(toolId: string, result: unknown, opts: PutOptions = {}): void {
     const baseKey = this.aliases[toolId] ?? toolId;
     const key = opts.uniqueKey ?? baseKey;
-    const existing = this.byKey.get(key) ?? [];
     if (opts.index !== undefined) {
+      // Positional / batched semantics (workout-logger). Preserve the array.
+      const existing = this.byKey.get(key) ?? [];
       existing[opts.index] = result;
-    } else {
-      existing.push(result);
+      this.byKey.set(key, existing);
+      return;
     }
-    this.byKey.set(key, existing);
+    // Single-value semantics (coach-creator aliases, program-designer phase
+    // keys). Replace, don't append — re-calling a tool during retry must
+    // not stack the stale failure alongside the new success in `getAll()`
+    // / `toFlatRecord()`. `get()` always returned the last value so most
+    // callers were correct, but this makes the contract consistent.
+    this.byKey.set(key, [result]);
   }
 
   /** Most-recent value by default; pass an explicit index for array semantics. */

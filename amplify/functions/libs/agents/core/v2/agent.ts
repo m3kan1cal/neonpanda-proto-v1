@@ -235,6 +235,13 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       this.outputTokens += turn.usage.outputTokens;
       this.cacheReadInputTokens += turn.usage.cacheReadInputTokens ?? 0;
 
+      // Accumulate text BEFORE stripping so contentOffset on tool-call
+      // records reflects everything the user-facing layer would have seen
+      // (matches the streaming path's delta accumulator). On the streaming
+      // path this happens incrementally in streamTurn; here we accumulate
+      // the whole turn's text in one shot.
+      this.fullResponseText += extractTextFromContent(turn.assistantContent);
+
       // Same preamble handling as the streaming path: on tool_use turns,
       // strip leading text blocks before pushing to history so the model
       // doesn't repeat the preamble after the tool result lands.
@@ -248,7 +255,6 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         await this.dispatchTools(turn.assistantContent);
         continue;
       }
-      this.fullResponseText = this.collectAssistantText();
       return turn.stopReason;
     }
     return null;
@@ -430,7 +436,11 @@ export class Agent<TContext extends AgentContext = AgentContext> {
   }
 
   protected fullResponseTextSoFar(): string {
-    return this.collectAssistantText();
+    // Use the live accumulator instead of recomputing from history. History
+    // has had `stripLeadingTextBlocks` applied on tool_use iterations, so
+    // collectAssistantText() under-counts; the accumulator mirrors what was
+    // actually streamed/produced in order.
+    return this.fullResponseText;
   }
 
   protected async buildUserContent(input: AgentRunInput): Promise<any> {
@@ -734,6 +744,16 @@ export function stripLeadingTextBlocks(content: any[]): any[] {
   let firstNonText = content.findIndex((b) => !(typeof b?.text === "string"));
   if (firstNonText <= 0) return content; // either all text (keep as-is) or already starts with non-text
   return content.slice(firstNonText);
+}
+
+/** Concatenate all text blocks from a Bedrock content array in order. */
+function extractTextFromContent(content: any[] | undefined): string {
+  if (!Array.isArray(content)) return "";
+  let buf = "";
+  for (const b of content) {
+    if (typeof b?.text === "string") buf += b.text;
+  }
+  return buf;
 }
 
 function errorPayloadFor(result: Exclude<ToolResult<unknown>, { ok: true }>): any {
