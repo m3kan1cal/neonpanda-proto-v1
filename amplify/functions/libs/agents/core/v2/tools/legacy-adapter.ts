@@ -61,12 +61,19 @@ export function adaptLegacyTool<TContext extends AgentContext>(
       };
       try {
         const data = await legacy.execute(input, augmentedContext as TContext);
-        if (data && typeof data === "object" && "error" in (data as any)) {
-          const errMsg = String((data as any).error ?? "Tool returned error");
+        // v1 tools signal failures by returning `{ error: <message> }`.
+        // Check `.error` truthiness (not just key presence) so success-shape
+        // objects that incidentally have `error: null` / `error: false`
+        // aren't miscategorised as failures.
+        const errorField =
+          data && typeof data === "object"
+            ? (data as Record<string, unknown>).error
+            : undefined;
+        if (errorField) {
           return {
             ok: false,
             code: "permanent",
-            message: errMsg,
+            message: String(errorField),
             retryable: false,
             details: data,
           };

@@ -580,11 +580,11 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       // would lose the preambles. As a fallback for runtimes that emit
       // assistantContent without text_delta events, pull text from the
       // final turn directly only when the accumulator is still empty.
+      // Use the same concatenation rule as the sync path's
+      // extractTextFromContent (no separator) so contentOffset values
+      // remain identical regardless of which path produced fullResponseText.
       if (!isToolUse && this.fullResponseText.length === 0) {
-        this.fullResponseText = (turn.assistantContent ?? [])
-          .filter((b: any) => typeof b?.text === "string")
-          .map((b: any) => b.text as string)
-          .join("\n");
+        this.fullResponseText = extractTextFromContent(turn.assistantContent);
       }
 
       if (turn.stopReason === "tool_use") {
