@@ -220,6 +220,9 @@ const MessageItem = memo(
             )}
           >
             <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
+              {/* Attachments render once above the interleaved body — segment
+                  mode (used inside MessageContentWithToolCalls) skips them. */}
+              {renderMessageContent(message, { attachmentsOnly: true })}
               {/* Interleaves text segments with tool-call blocks based on
                   each tool call's `contentOffset`. Falls back to a single
                   text render when a message has no tool calls — identical to
@@ -893,13 +896,42 @@ function CoachConversations() {
 
   // Helper function to render message content with line breaks and streaming support
   // Removed useCallback to prevent memoization issues during streaming
-  // When `options.textOverride` is provided, the function renders only that
-  // text slice (no attachments) — used by MessageContentWithToolCalls to
-  // render individual text segments interleaved with tool-call blocks. The
-  // `isLastText` flag scopes the streaming-cursor decoration to the final
-  // segment so earlier segments (already complete) don't blink.
+  // Three modes via `options`:
+  //   - default (no options): full render — attachments + text — used by user
+  //     messages where the bubble is one piece.
+  //   - `{ attachmentsOnly: true }`: render only the attachments row (or null
+  //     when there are none). Used by AI branches above the interleaved body.
+  //   - `{ textOverride, isLastText }`: render only the given text slice (no
+  //     attachments). Used by MessageContentWithToolCalls to render individual
+  //     text segments interleaved with tool-call blocks. The `isLastText` flag
+  //     scopes the streaming-cursor decoration to the final segment so earlier
+  //     segments (already complete) don't blink.
   const renderMessageContent = (message, options = {}) => {
-    const { textOverride, isLastText = true } = options;
+    const { textOverride, isLastText = true, attachmentsOnly = false } = options;
+
+    if (attachmentsOnly) {
+      const hasImages =
+        message.imageS3Keys && message.imageS3Keys.length > 0;
+      const hasDocuments =
+        message.documentS3Keys && message.documentS3Keys.length > 0;
+      if (!hasImages && !hasDocuments) return null;
+      return (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {message.imageS3Keys?.map((s3Key, index) => (
+            <ImageWithPresignedUrl
+              key={index}
+              s3Key={s3Key}
+              userId={userId}
+              index={index}
+            />
+          ))}
+          {message.documentS3Keys?.map((s3Key, index) => (
+            <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
+          ))}
+        </div>
+      );
+    }
+
     const isSegment = textOverride !== undefined;
     const displayContent = isSegment
       ? textOverride
@@ -908,9 +940,9 @@ function CoachConversations() {
 
     return (
       <>
-        {/* Render attachments — images and documents share one row.
-            Skipped when rendering an individual segment (segments are pure
-            text slices; attachments render once at the top of the message). */}
+        {/* Render attachments — only in full-render mode. Segment-mode skips
+            them (segments are pure text); the AI branch renders attachments
+            once above the interleaved body via { attachmentsOnly: true }. */}
         {!isSegment &&
           ((message.imageS3Keys && message.imageS3Keys.length > 0) ||
             (message.documentS3Keys && message.documentS3Keys.length > 0)) && (

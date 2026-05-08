@@ -202,6 +202,8 @@ const MessageItem = memo(
             )}
           >
             <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
+              {/* Attachments render once above the interleaved body. */}
+              {renderMessageContent(message, { attachmentsOnly: true })}
               {/* Interleaves text segments with tool-call blocks based on
                   each tool call's `contentOffset`. */}
               <MessageContentWithToolCalls
@@ -504,11 +506,38 @@ function CoachCreator() {
 
   // Helper function to render message content with line breaks and streaming support
   // Removed useCallback to prevent memoization issues during streaming
-  // When `options.textOverride` is provided, renders only that text slice
-  // (no attachments) — used by MessageContentWithToolCalls to render
-  // individual text segments interleaved with tool-call blocks.
+  // Three modes via `options`:
+  //   - default: full render — attachments + text — used by user messages.
+  //   - `{ attachmentsOnly: true }`: render only the attachments row (or null).
+  //     Used by AI branches above the interleaved body.
+  //   - `{ textOverride, isLastText }`: render only the given text slice (no
+  //     attachments). Used by MessageContentWithToolCalls.
   const renderMessageContent = (message, options = {}) => {
-    const { textOverride, isLastText = true } = options;
+    const { textOverride, isLastText = true, attachmentsOnly = false } = options;
+
+    if (attachmentsOnly) {
+      const hasImages =
+        message.imageS3Keys && message.imageS3Keys.length > 0;
+      const hasDocuments =
+        message.documentS3Keys && message.documentS3Keys.length > 0;
+      if (!hasImages && !hasDocuments) return null;
+      return (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {message.imageS3Keys?.map((s3Key, index) => (
+            <ImageWithPresignedUrl
+              key={index}
+              s3Key={s3Key}
+              userId={userId}
+              index={index}
+            />
+          ))}
+          {message.documentS3Keys?.map((s3Key, index) => (
+            <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
+          ))}
+        </div>
+      );
+    }
+
     const isSegment = textOverride !== undefined;
     const displayContent = isSegment
       ? textOverride
@@ -517,9 +546,7 @@ function CoachCreator() {
 
     return (
       <>
-        {/* Render attachments — images and documents share one row.
-            Skipped when rendering an individual segment (segments are pure
-            text slices; attachments render once at the top of the message). */}
+        {/* Render attachments — only in full-render mode. */}
         {!isSegment &&
           ((message.imageS3Keys && message.imageS3Keys.length > 0) ||
             (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
