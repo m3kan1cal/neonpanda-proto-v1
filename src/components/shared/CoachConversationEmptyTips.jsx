@@ -13,7 +13,7 @@ import { CameraIcon } from "../themes/SynthwaveComponents";
 export default function CoachConversationEmptyTips({ variant = "page" }) {
   if (variant === "drawer") {
     return (
-      <div className="flex flex-col items-stretch justify-start w-full py-2 px-1 space-y-3 overflow-y-auto synthwave-scrollbar-cyan">
+      <div className="flex flex-col items-stretch justify-start w-full max-w-xl mx-auto py-2 px-1 space-y-3 overflow-y-auto synthwave-scrollbar-cyan">
         <div className="text-center space-y-1 px-1">
           <h3 className="font-header text-sm text-white uppercase tracking-wider">
             Ready to chat?

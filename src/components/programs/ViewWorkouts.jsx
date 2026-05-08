@@ -197,6 +197,7 @@ function ViewWorkouts() {
   // Templates we've already toasted about for a polling timeout, so we don't
   // re-toast on every render while the "Refresh to check" button is visible.
   const seenTimeoutsRef = useRef(new Set());
+  const setupDefaultApplied = useRef(false);
 
   // ContextualChatDrawer wiring: per-program inline chat scoped distinctly
   // from the Program Dashboard's home thread. dayNumber is forwarded via
@@ -326,7 +327,17 @@ function ViewWorkouts() {
           },
         );
         if (todayData) {
-          setWorkoutData(todayData.todaysWorkoutTemplates || todayData);
+          const resolvedData = todayData.todaysWorkoutTemplates || todayData;
+          setWorkoutData(resolvedData);
+          if (!setupDefaultApplied.current) {
+            setupDefaultApplied.current = true;
+            const tmpl = resolvedData?.templates || [];
+            setCollapsedSubCards((prev) => {
+              const next = new Set(prev);
+              tmpl.forEach((t) => next.add(`${t.templateId}:details`));
+              return next;
+            });
+          }
         } else {
           // null response means rest day
           setWorkoutData(null);
@@ -341,6 +352,15 @@ function ViewWorkouts() {
         );
         if (dayData) {
           setWorkoutData(dayData);
+          if (!setupDefaultApplied.current) {
+            setupDefaultApplied.current = true;
+            const tmpl = dayData?.templates || [];
+            setCollapsedSubCards((prev) => {
+              const next = new Set(prev);
+              tmpl.forEach((t) => next.add(`${t.templateId}:details`));
+              return next;
+            });
+          }
         } else {
           // null response means rest day
           setWorkoutData(null);

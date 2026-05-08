@@ -193,6 +193,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Workout"
+          onDismiss={onClose}
           onClick={() => {
             onClose();
             navigate(
@@ -294,6 +295,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Full Report"
+          onDismiss={onClose}
           onClick={() => {
             onClose();
             navigate(
@@ -360,6 +362,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Full Report"
+          onDismiss={onClose}
           onClick={() => {
             onClose();
             navigate(
@@ -395,6 +398,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Workout"
+          onDismiss={onClose}
           onClick={() => {
             onClose();
             navigate(
@@ -480,15 +484,32 @@ function ModalHeader({ title, subtitle, accentColor = "cyan" }) {
   );
 }
 
-function ModalFooter({ label, onClick }) {
+function ModalFooter({ label, onClick, onDismiss }) {
   return (
     <div className="mt-6 pt-4 border-t border-synthwave-neon-cyan/10">
-      <button
-        onClick={onClick}
-        className={`${buttonPatterns.secondaryMedium} w-full`}
-      >
-        {label}
-      </button>
+      {onDismiss ? (
+        <div className="flex gap-3">
+          <button
+            onClick={onDismiss}
+            className={`${buttonPatterns.secondaryMedium} flex-1`}
+          >
+            Dismiss
+          </button>
+          <button
+            onClick={onClick}
+            className={`${buttonPatterns.secondaryMedium} flex-1`}
+          >
+            {label}
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={onClick}
+          className={`${buttonPatterns.secondaryMedium} w-full`}
+        >
+          {label}
+        </button>
+      )}
     </div>
   );
 }

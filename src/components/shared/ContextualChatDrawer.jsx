@@ -226,7 +226,7 @@ function TrainingGroundsConversationPicker({
           setMenuOpen((o) => !o);
         }}
       >
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
+        <div className="absolute left-2 top-[calc(50%+1px)] -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
           <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
             <ChatIconSmall />
           </span>
