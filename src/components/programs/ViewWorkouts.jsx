@@ -197,7 +197,10 @@ function ViewWorkouts() {
   // Templates we've already toasted about for a polling timeout, so we don't
   // re-toast on every render while the "Refresh to check" button is visible.
   const seenTimeoutsRef = useRef(new Set());
-  const setupDefaultApplied = useRef(false);
+  // Tracks the day key for which default collapse was last applied. Using
+  // a string sentinel rather than a boolean lets the guard reset correctly
+  // on day navigation without relying on effect ordering.
+  const setupDefaultApplied = useRef(null);
 
   // ContextualChatDrawer wiring: per-program inline chat scoped distinctly
   // from the Program Dashboard's home thread. dayNumber is forwarded via
@@ -318,9 +321,10 @@ function ViewWorkouts() {
 
       // Load workouts based on query params
       // Note: ProgramAgent returns null for rest days (doesn't throw error)
+      const dayKey = dayParam ?? "today";
       const applyDefaultCollapse = (data) => {
-        if (!setupDefaultApplied.current) {
-          setupDefaultApplied.current = true;
+        if (setupDefaultApplied.current !== dayKey) {
+          setupDefaultApplied.current = dayKey;
           const tmpl = data?.templates || [];
           setCollapsedSubCards((prev) => {
             const next = new Set(prev);
