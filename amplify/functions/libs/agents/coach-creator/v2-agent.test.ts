@@ -211,6 +211,41 @@ describe("CoachCreatorAgentV2", () => {
     expect(result.validationIssues).toEqual(["missing field"]);
   });
 
+  it("blocks save_coach_config_to_database when validate throws an exception (defense-in-depth)", async () => {
+    // adaptLegacyTool wraps thrown exceptions in a v2 ToolResult envelope
+    // (`{ ok: false, code: "permanent", message }`), which v1's
+    // enforceValidationBlocking can't read directly. The v2 agent must
+    // normalise back to v1's `{ error }` shape so the save still gets
+    // blocked. Regression test for Bugbot finding 1a120900.
+    (validateCoachConfigTool.execute as any).mockRejectedValue(
+      new Error("validation lambda timed out"),
+    );
+    (saveCoachConfigToDatabaseTool.execute as any).mockResolvedValue({
+      success: true,
+      coachConfigId: "should_not_save",
+    });
+
+    const turns = [
+      turn([toolUseBlock("u1", "validate_coach_config", {})], "tool_use"),
+      turn(
+        [toolUseBlock("u2", "save_coach_config_to_database", {})],
+        "tool_use",
+      ),
+      turn([{ text: "Validation threw." }], "end_turn"),
+    ];
+    const agent = new CoachCreatorAgentV2(baseContext);
+    const runtimeInstance = (SyncRuntime as any).mock.instances.at(-1);
+    runtimeInstance.invokeTurn = vi.fn(async () => {
+      const next = turns.shift();
+      if (!next) throw new Error("no more turns");
+      return next;
+    });
+
+    const result = await agent.createCoach();
+    expect(saveCoachConfigToDatabaseTool.execute).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+  });
+
   it("returns skipped result with the agent response when no tools are called", async () => {
     const turns = [
       turn(

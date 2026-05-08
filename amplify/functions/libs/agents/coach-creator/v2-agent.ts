@@ -90,7 +90,13 @@ export class CoachCreatorAgentV2 {
         blocking: (toolId, _input, store) => {
           // Validation result is stored under the alias `validation` because
           // STORAGE_KEY_MAP rewrites `validate_coach_config` -> `validation`.
-          const validation = store.get<any>("validation");
+          // adaptLegacyTool wraps thrown exceptions or `{ error }` returns
+          // in v2 ToolResult shape (`{ ok: false, code, message, ... }`),
+          // which `enforceValidationBlocking` doesn't recognize. Normalize
+          // back to v1's `{ error }` shape so the defense-in-depth block
+          // fires on validation failures *and* validation exceptions.
+          const raw = store.get<any>("validation");
+          const validation = normaliseValidationResult(raw);
           const decision = enforceValidationBlocking(toolId, validation);
           if (!decision) return null;
           return {
@@ -251,6 +257,26 @@ CRITICAL INSTRUCTIONS:
 
 Now create the coach using your tools.`;
   }
+}
+
+/**
+ * v1 `enforceValidationBlocking` reads `.error` and `.isValid`. v2's
+ * adaptLegacyTool stores failures as `{ ok: false, code, message, ... }`.
+ * Translate the v2 envelope back to v1's shape so the helper keeps
+ * blocking on both validation-said-no and validation-threw paths.
+ */
+function normaliseValidationResult(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const r = raw as Record<string, unknown>;
+  if (r.ok === false) {
+    return {
+      error:
+        typeof r.message === "string" && r.message
+          ? r.message
+          : "validate_coach_config failed",
+    };
+  }
+  return raw;
 }
 
 function countSuccessfulTools(

@@ -204,6 +204,45 @@ describe("Agent.runStream + StreamingRuntime", () => {
     expect(start.record.contentOffset).toBe("Looking up.".length);
   });
 
+  it("preserves multi-turn fullResponseText when stripLeadingTextBlocks elides preambles from history", async () => {
+    // Regression for Bugbot finding de5430fe: previously, end_turn called
+    // collectAssistantText() which pulled from history (already stripped),
+    // overwriting the longer delta accumulator and losing the preamble
+    // that the client had received.
+    const search = defineTool<TestCtx, z.ZodObject<{}>>({
+      id: "search",
+      description: "...",
+      input: z.object({}),
+      execute: async () => ({ ok: true, data: 1 }),
+    });
+    const runtime = new MockStreamingRuntime([
+      {
+        stream: [{ type: "text_delta", text: "Sure thing! " }],
+        result: {
+          stopReason: "tool_use",
+          assistantContent: [
+            { text: "Sure thing! " },
+            { toolUse: { toolUseId: "u1", name: "search", input: {} } },
+          ],
+          usage: { inputTokens: 1, outputTokens: 1 },
+          modelId: "test-planner",
+        },
+      },
+      {
+        stream: [{ type: "text_delta", text: "Done." }],
+        result: {
+          stopReason: "end_turn",
+          assistantContent: [{ text: "Done." }],
+          usage: { inputTokens: 1, outputTokens: 1 },
+          modelId: "test-planner",
+        },
+      },
+    ]);
+    const agent = new Agent<TestCtx>(baseConfig({ tools: [search], runtime }));
+    const { result } = await drain(agent.runStream({ userMessage: "go" }));
+    expect(result.finalResponseText).toBe("Sure thing! Done.");
+  });
+
   it("strips leading text blocks from tool_use iterations before pushing to history", async () => {
     const search = defineTool<TestCtx, z.ZodObject<{}>>({
       id: "search",

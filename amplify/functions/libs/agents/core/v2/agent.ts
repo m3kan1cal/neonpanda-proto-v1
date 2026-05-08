@@ -562,11 +562,18 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         ? stripLeadingTextBlocks(turn.assistantContent)
         : turn.assistantContent;
       this.history.push({ role: "assistant", content: contentToAppend });
-      // For non-tool-use terminal turns the streamTurn delta accumulator
-      // already mirrors fullResponseText, but we sync from history just in
-      // case a runtime emits a non-streaming end_turn without deltas.
-      if (!isToolUse) {
-        this.fullResponseText = this.collectAssistantText();
+      // The streamTurn delta accumulator has already appended every text
+      // chunk the client received (including preamble text from earlier
+      // tool_use turns). Don't resync from history — `stripLeadingTextBlocks`
+      // means history is shorter than what was streamed, and overwriting
+      // would lose the preambles. As a fallback for runtimes that emit
+      // assistantContent without text_delta events, pull text from the
+      // final turn directly only when the accumulator is still empty.
+      if (!isToolUse && this.fullResponseText.length === 0) {
+        this.fullResponseText = (turn.assistantContent ?? [])
+          .filter((b: any) => typeof b?.text === "string")
+          .map((b: any) => b.text as string)
+          .join("\n");
       }
 
       if (turn.stopReason === "tool_use") {
