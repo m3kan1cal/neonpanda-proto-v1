@@ -14,6 +14,7 @@ import {
 } from "../../dynamodb/operations";
 import { getUserProfile } from "../../dynamodb/operations";
 import { CoachCreatorAgent } from "../libs/agents/coach-creator/agent";
+import { CoachCreatorAgentV2 } from "../libs/agents/coach-creator/v2-agent";
 import type { CoachCreatorContext } from "../libs/agents/coach-creator/types";
 import { logger } from "../libs/logger";
 
@@ -95,11 +96,17 @@ export const handler: Handler<CoachConfigEvent> = async (
         userTimezone,
       };
 
-      // Step 6: Create CoachCreator agent and run workflow
+      // Step 6: Create CoachCreator agent and run workflow.
+      // Per the unified-agent-framework migration plan, v2 is gated behind
+      // a per-agent env flag so v1 stays as instant rollback. Flip
+      // AGENT_V2_COACH_CREATOR=true once the v2 path is verified end to end.
+      const useV2 = process.env.AGENT_V2_COACH_CREATOR === "true";
       logger.info(
-        "🤖 Step 6: Creating CoachCreator agent and starting workflow",
+        `🤖 Step 6: Creating CoachCreator agent and starting workflow (${useV2 ? "v2" : "v1"})`,
       );
-      const agent = new CoachCreatorAgent(agentContext);
+      const agent = useV2
+        ? new CoachCreatorAgentV2(agentContext)
+        : new CoachCreatorAgent(agentContext);
       const result = await agent.createCoach();
 
       logger.info("✅ Agent workflow completed:", {

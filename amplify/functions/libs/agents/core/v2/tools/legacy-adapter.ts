@@ -50,8 +50,17 @@ export function adaptLegacyTool<TContext extends AgentContext>(
       input: unknown,
       ctx: ToolExecutionContext<TContext>,
     ): Promise<ToolResult<unknown>> => {
+      // Inject `getToolResult(key)` into the v1 context so legacy tools
+      // (coach-creator, program-designer, workout-logger) that read prior
+      // tool outputs continue to work unchanged. Reads from the v2 result
+      // store with semantic-alias resolution.
+      const augmentedContext = {
+        ...ctx.agentContext,
+        getToolResult: <T = unknown>(key: string): T | undefined =>
+          ctx.resultStore.get<T>(key),
+      };
       try {
-        const data = await legacy.execute(input, ctx.agentContext);
+        const data = await legacy.execute(input, augmentedContext as TContext);
         if (data && typeof data === "object" && "error" in (data as any)) {
           const errMsg = String((data as any).error ?? "Tool returned error");
           return {
