@@ -1360,10 +1360,10 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
           // template it came from (if any) and how the parent was logged.
           // Surfaced in query_exercise_history so the agent can distinguish
           // program-prescribed exercises from ad-hoc logs.
-          ...(context.templateContext?.templateId && {
+          ...(context.templateContext?.templateId != null && {
             templateId: context.templateContext.templateId,
           }),
-          ...(workoutData?.metadata?.logged_via && {
+          ...(workoutData?.metadata?.logged_via != null && {
             loggedVia: workoutData.metadata.logged_via,
           }),
         },

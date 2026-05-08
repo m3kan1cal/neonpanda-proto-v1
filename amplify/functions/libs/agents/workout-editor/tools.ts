@@ -272,12 +272,12 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
               // Forward provenance from the parent workout so rebuilt exercise
               // rows preserve their template/source attribution after an edit.
               ...((updatedWorkout.templateId ||
-                updatedWorkout.programContext?.templateId) && {
+                updatedWorkout.programContext?.templateId) != null && {
                 templateId:
                   updatedWorkout.templateId ||
                   updatedWorkout.programContext?.templateId,
               }),
-              ...(updatedWorkout.workoutData?.metadata?.logged_via && {
+              ...(updatedWorkout.workoutData?.metadata?.logged_via != null && {
                 loggedVia: updatedWorkout.workoutData.metadata.logged_via,
               }),
             },

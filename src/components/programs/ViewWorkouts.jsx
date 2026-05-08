@@ -318,6 +318,18 @@ function ViewWorkouts() {
 
       // Load workouts based on query params
       // Note: ProgramAgent returns null for rest days (doesn't throw error)
+      const applyDefaultCollapse = (data) => {
+        if (!setupDefaultApplied.current) {
+          setupDefaultApplied.current = true;
+          const tmpl = data?.templates || [];
+          setCollapsedSubCards((prev) => {
+            const next = new Set(prev);
+            tmpl.forEach((t) => next.add(`${t.templateId}:details`));
+            return next;
+          });
+        }
+      };
+
       if (isViewingToday) {
         // Load today's workout
         const todayData = await programAgentRef.current.loadWorkoutTemplates(
@@ -329,15 +341,7 @@ function ViewWorkouts() {
         if (todayData) {
           const resolvedData = todayData.todaysWorkoutTemplates || todayData;
           setWorkoutData(resolvedData);
-          if (!setupDefaultApplied.current) {
-            setupDefaultApplied.current = true;
-            const tmpl = resolvedData?.templates || [];
-            setCollapsedSubCards((prev) => {
-              const next = new Set(prev);
-              tmpl.forEach((t) => next.add(`${t.templateId}:details`));
-              return next;
-            });
-          }
+          applyDefaultCollapse(resolvedData);
         } else {
           // null response means rest day
           setWorkoutData(null);
@@ -352,15 +356,7 @@ function ViewWorkouts() {
         );
         if (dayData) {
           setWorkoutData(dayData);
-          if (!setupDefaultApplied.current) {
-            setupDefaultApplied.current = true;
-            const tmpl = dayData?.templates || [];
-            setCollapsedSubCards((prev) => {
-              const next = new Set(prev);
-              tmpl.forEach((t) => next.add(`${t.templateId}:details`));
-              return next;
-            });
-          }
+          applyDefaultCollapse(dayData);
         } else {
           // null response means rest day
           setWorkoutData(null);
