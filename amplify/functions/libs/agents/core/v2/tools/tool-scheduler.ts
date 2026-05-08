@@ -173,16 +173,20 @@ export class ToolScheduler<TContext extends AgentContext> {
         if (blockingFn) {
           const decision = await blockingFn(tool.id, inputCheck.value, ctx);
           if (decision) {
+            const blockedResult: ToolResult<unknown> = {
+              ok: false as const,
+              code: "tool_blocked" as const,
+              message: decision.reason,
+              retryable: false,
+              details: decision.details,
+            };
+            // Persist the block to the store so downstream tools/policies
+            // can observe it. See "persist immediately" note below.
+            ctx.resultStore.put(tool.id, blockedResult);
             return {
               toolUseId: use.toolUseId,
               toolName: tool.id,
-              result: {
-                ok: false as const,
-                code: "tool_blocked" as const,
-                message: decision.reason,
-                retryable: false,
-                details: decision.details,
-              },
+              result: blockedResult,
               durationMs: Date.now() - startedAt,
             };
           }
@@ -220,6 +224,23 @@ export class ToolScheduler<TContext extends AgentContext> {
         const durationMs = Date.now() - startedAt;
         if (this.metrics) this.metrics.recordToolLatency(tool.id, durationMs);
 
+        // Persist immediately so subsequent tools in the same tool_use
+        // turn (e.g. a save tool blocked on a validate result emitted in
+        // the same turn) see this entry when their blocking callback
+        // runs. v1 wrote each result right after execute(); the v2
+        // contract must match for defense-in-depth correctness.
+        // Tools running concurrently in a parallelSafe group all write
+        // here too — the contract is that they're independent, so they
+        // don't read each other's results during their blocking checks.
+        if (result.ok) {
+          ctx.resultStore.put(tool.id, result.data, {
+            index: result.toolStoreIndex,
+            uniqueKey: result.toolStoreKey,
+          });
+        } else {
+          ctx.resultStore.put(tool.id, result);
+        }
+
         return {
           toolUseId: use.toolUseId,
           toolName: tool.id,
@@ -245,16 +266,21 @@ export class ToolScheduler<TContext extends AgentContext> {
         const durationMs = Date.now() - startedAt;
         if (this.metrics) this.metrics.recordToolLatency(tool.id, durationMs);
 
+        const failure: ToolResult<unknown> = {
+          ok: false as const,
+          code: isTimeout ? ("timeout" as const) : ("permanent" as const),
+          message: (error as any)?.message ?? String(error),
+          retryable: !isTimeout && tool.retryable,
+          details: { errorName: (error as any)?.name },
+        };
+        // Persist the failure for the same reason as the success path —
+        // downstream same-turn tools must observe this result via blocking.
+        ctx.resultStore.put(tool.id, failure);
+
         return {
           toolUseId: use.toolUseId,
           toolName: tool.id,
-          result: {
-            ok: false as const,
-            code: isTimeout ? ("timeout" as const) : ("permanent" as const),
-            message: (error as any)?.message ?? String(error),
-            retryable: !isTimeout && tool.retryable,
-            details: { errorName: (error as any)?.name },
-          },
+          result: failure,
           durationMs,
         };
       } finally {

@@ -341,15 +341,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
     for (const s of scheduled) {
       this.recordToolCall(s, uses);
-      if (s.result.ok) {
-        this.resultStore.put(s.toolName, s.result.data, {
-          index: s.result.toolStoreIndex,
-          uniqueKey: s.result.toolStoreKey,
-        });
-      } else {
-        // store failures too, so blocking middleware can read them
-        this.resultStore.put(s.toolName, s.result);
-      }
+      // resultStore writes happen inside the scheduler so blocking
+      // callbacks for later tools in the same tool_use turn observe
+      // earlier tools' results (defense-in-depth on validate+save).
       this.toolsUsed.push(s.toolName);
     }
   }
@@ -687,14 +681,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         yield { type: "tool_call_complete", record: { ...running } };
       }
 
-      if (s.result.ok) {
-        this.resultStore.put(s.toolName, s.result.data, {
-          index: s.result.toolStoreIndex,
-          uniqueKey: s.result.toolStoreKey,
-        });
-      } else {
-        this.resultStore.put(s.toolName, s.result);
-      }
+      // resultStore writes happen inside the scheduler so blocking
+      // callbacks for later tools in the same tool_use turn observe
+      // earlier tools' results (defense-in-depth on validate+save).
       this.toolsUsed.push(s.toolName);
     }
   }

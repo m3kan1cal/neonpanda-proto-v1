@@ -246,6 +246,46 @@ describe("CoachCreatorAgentV2", () => {
     expect(result.success).toBe(false);
   });
 
+  it("blocks save even when validate and save are emitted in the SAME tool_use turn", async () => {
+    // Regression for Bugbot finding e456032b: prior to the scheduler-side
+    // resultStore write, blocking ran from a stale store within a turn,
+    // so save's blocking callback couldn't see validate's just-completed
+    // failure. The model emitting [validate, save] in one tool_use turn
+    // (which Sonnet is fully capable of) bypassed defense-in-depth.
+    (validateCoachConfigTool.execute as any).mockResolvedValue({
+      isValid: false,
+      validationIssues: ["safety prompt missing"],
+    });
+    (saveCoachConfigToDatabaseTool.execute as any).mockResolvedValue({
+      success: true,
+      coachConfigId: "should_not_save",
+    });
+
+    const turns = [
+      // Single tool_use turn with BOTH tools — validate first, save second.
+      turn(
+        [
+          toolUseBlock("u1", "validate_coach_config", {}),
+          toolUseBlock("u2", "save_coach_config_to_database", {}),
+        ],
+        "tool_use",
+      ),
+      turn([{ text: "All done." }], "end_turn"),
+    ];
+    const agent = new CoachCreatorAgentV2(baseContext);
+    const runtimeInstance = (SyncRuntime as any).mock.instances.at(-1);
+    runtimeInstance.invokeTurn = vi.fn(async () => {
+      const next = turns.shift();
+      if (!next) throw new Error("no more turns");
+      return next;
+    });
+
+    const result = await agent.createCoach();
+    expect(saveCoachConfigToDatabaseTool.execute).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+    expect(result.skipped).toBe(true);
+  });
+
   it("when validate throws, returns the specific 'Coach validation failed' reason (not a generic skip)", async () => {
     // Regression for Bugbot finding f4d484d9: buildResultFromToolData reads
     // `validation.isValid === false`, but adaptLegacyTool stores thrown
