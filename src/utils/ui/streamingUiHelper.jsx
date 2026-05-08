@@ -338,36 +338,6 @@ function safeStringifyToolInput(input) {
 }
 
 /**
- * Renders a list of ToolCallBlock children for a message. Reads from the
- * streaming `message.toolCalls` array first (populated mid-stream by the
- * `tool_call` SSE handler) and falls back to `message.metadata.agent.toolCalls`
- * for rehydrated messages. Returns null when there's nothing to show so
- * callers can render the slot unconditionally.
- *
- * @param {Object} message - The message object from agent state or DB
- */
-export function ToolCallList({ message }) {
-  if (!message) return null;
-  const live = Array.isArray(message.toolCalls) ? message.toolCalls : null;
-  const persisted = Array.isArray(message?.metadata?.agent?.toolCalls)
-    ? message.metadata.agent.toolCalls
-    : null;
-  const calls = live && live.length > 0 ? live : persisted;
-  if (!calls || calls.length === 0) return null;
-
-  return (
-    <div className="flex flex-col gap-1.5 mt-2 w-full">
-      {calls.map((tc, i) => (
-        <ToolCallBlock
-          key={tc.toolUseId || `${tc.toolName}-${i}`}
-          toolCall={tc}
-        />
-      ))}
-    </div>
-  );
-}
-
-/**
  * Reads `toolCalls` (live first, persisted fallback) and returns a sorted list
  * of tool calls anchored to character offsets in `content`. Tools missing a
  * `contentOffset` (legacy persisted messages) fall through to end-of-text so
