@@ -43,6 +43,7 @@ import {
 } from "../../dynamodb/memory";
 import { formatEmotionalContextForPrompt } from "../libs/memory/emotional";
 import { formatLivingProfileForPrompt } from "../libs/user/living-profile";
+import { loadTodayWorkoutStatus } from "../libs/program/today-status";
 import {
   filterActiveProspectiveMemories,
   formatProspectiveMemoriesForPrompt,
@@ -614,6 +615,37 @@ async function* createCoachConversationEventStreamV2(
           ).timestamp ?? null)
         : null;
 
+    // Pre-fetch today's prescribed workout status from S3 so the agent has a
+    // deterministic "is today's prescription completed?" signal without
+    // needing to call get_todays_workout. Eliminates the historical bug
+    // where the agent narrated previously-logged exercise rows as
+    // "just completed today" without verifying status. Scoped to program
+    // surfaces — other surfaces don't need this overhead.
+    let todayWorkoutStatus = null;
+    if (isProgramScopedSurface && agentContext.activeProgram) {
+      const requestedDay =
+        clientContext?.surface === "view_workouts" &&
+        typeof clientContext.dayNumber === "number"
+          ? clientContext.dayNumber
+          : undefined;
+      todayWorkoutStatus = await loadTodayWorkoutStatus(
+        {
+          s3DetailKey: agentContext.activeProgram.s3DetailKey,
+          currentDay: agentContext.activeProgram.currentDay,
+          totalDays: agentContext.activeProgram.totalDays,
+        },
+        requestedDay,
+      );
+      if (todayWorkoutStatus) {
+        logger.info("✅ V2: Today's workout status loaded for prompt:", {
+          dayNumber: todayWorkoutStatus.dayNumber,
+          restDay: todayWorkoutStatus.restDay,
+          templateCount: todayWorkoutStatus.templates.length,
+          statuses: todayWorkoutStatus.templates.map((t) => t.status),
+        });
+      }
+    }
+
     const { staticPrompt, dynamicPrompt } = buildConversationAgentPrompt(
       coachConfig,
       {
@@ -622,6 +654,7 @@ async function* createCoachConversationEventStreamV2(
         criticalTrainingDirective: criticalDirective,
         activeProgram: agentContext.activeProgram,
         sessionProgramContext,
+        todayWorkoutStatus,
         coachCreatorSessionSummary:
           coachConfig.metadata?.coach_creator_session_summary,
         conversationSummaryContext,
@@ -701,6 +734,7 @@ async function* createCoachConversationEventStreamV2(
 
     let fullResponseText = "";
     let toolsUsed: string[] = [];
+    let toolCalls: ConversationAgentResult["toolCalls"] = [];
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let iterationCount = 0;
@@ -724,6 +758,7 @@ async function* createCoachConversationEventStreamV2(
       const agentResult: ConversationAgentResult = result.value;
       fullResponseText = agentResult.fullResponseText;
       toolsUsed = agentResult.toolsUsed;
+      toolCalls = agentResult.toolCalls;
       totalInputTokens = agentResult.totalInputTokens;
       totalOutputTokens = agentResult.totalOutputTokens;
       iterationCount = agentResult.iterationCount;
@@ -742,11 +777,15 @@ async function* createCoachConversationEventStreamV2(
       if (agentError instanceof GuardrailInterventionError) {
         // Content already streamed in ASYNC mode — emit a warning event and continue
         // saving the response so the conversation is preserved alongside the warning.
+        // Recover toolsUsed/toolCalls too so persisted metadata matches what was
+        // streamed; otherwise tool-call blocks vanish on page reload.
         logger.warn(
           "🛡️ V2: Guardrail intervened (ASYNC) — emitting warning event",
         );
         guardrailWarning = true;
         fullResponseText = agent.getFullResponseText();
+        toolsUsed = agent.getToolsUsed();
+        toolCalls = agent.getToolCalls();
         yield formatGuardrailWarningEvent();
       } else {
         logger.error("❌ V2: Agent stream error:", agentError);
@@ -790,9 +829,14 @@ async function* createCoachConversationEventStreamV2(
       preview: fullResponseText.slice(0, 200),
     });
 
-    // Add agent-specific metadata separately
+    // Add agent-specific metadata separately. `toolsUsed` is the legacy
+    // string[] kept for back-compat with older message metadata; `toolCalls`
+    // is the richer per-call record (id, name, status, durationMs, optional
+    // input) used to render the streaming tool-call blocks in the UI even
+    // after a page reload.
     (newAiMessage.metadata as any).agent = {
       toolsUsed,
+      toolCalls,
       totalInputTokens,
       totalOutputTokens,
       iterationCount,

@@ -197,18 +197,25 @@ function ViewWorkouts() {
   // Templates we've already toasted about for a polling timeout, so we don't
   // re-toast on every render while the "Refresh to check" button is visible.
   const seenTimeoutsRef = useRef(new Set());
+  // Tracks the day key for which default collapse was last applied. Using
+  // a string sentinel rather than a boolean lets the guard reset correctly
+  // on day navigation without relying on effect ordering.
+  const setupDefaultApplied = useRef(null);
 
   // ContextualChatDrawer wiring: per-program inline chat scoped distinctly
   // from the Program Dashboard's home thread. dayNumber is forwarded via
   // streamClientContext so the agent always knows which day's templates the
   // user is currently looking at, even on `?day=N` views.
+  // Title is intentionally short. The program is implied by the surface (chat
+  // is opened from inside that program's ViewWorkouts page) and the dynamic
+  // prompt already injects sessionProgramContext.programName server-side, so
+  // the agent always knows the program. The title's job is to let the user
+  // disambiguate threads in the picker dropdown — "Today's Workouts" /
+  // "Day N" are unambiguous within a program's context and avoid the
+  // CSS-truncated "Today's Workouts — FCT…" / "Day 17 — FCT…" collisions.
   const newChatThreadTitle = useMemo(() => {
-    const name = program?.name?.trim();
-    if (!name) return isViewingToday ? "Today's Workouts" : "View Workouts";
-    return isViewingToday
-      ? `Today's Workouts — ${name}`
-      : `Day ${dayParam} — ${name}`;
-  }, [program?.name, isViewingToday, dayParam]);
+    return isViewingToday ? "Today's Workouts" : `Day ${dayParam}`;
+  }, [isViewingToday, dayParam]);
 
   const streamClientContext = useMemo(() => {
     if (!programId) return null;
@@ -314,6 +321,19 @@ function ViewWorkouts() {
 
       // Load workouts based on query params
       // Note: ProgramAgent returns null for rest days (doesn't throw error)
+      const dayKey = dayParam ?? "today";
+      const applyDefaultCollapse = (data) => {
+        if (setupDefaultApplied.current !== dayKey) {
+          setupDefaultApplied.current = dayKey;
+          const tmpl = data?.templates || [];
+          setCollapsedSubCards((prev) => {
+            const next = new Set(prev);
+            tmpl.forEach((t) => next.add(`${t.templateId}:details`));
+            return next;
+          });
+        }
+      };
+
       if (isViewingToday) {
         // Load today's workout
         const todayData = await programAgentRef.current.loadWorkoutTemplates(
@@ -323,7 +343,9 @@ function ViewWorkouts() {
           },
         );
         if (todayData) {
-          setWorkoutData(todayData.todaysWorkoutTemplates || todayData);
+          const resolvedData = todayData.todaysWorkoutTemplates || todayData;
+          setWorkoutData(resolvedData);
+          applyDefaultCollapse(resolvedData);
         } else {
           // null response means rest day
           setWorkoutData(null);
@@ -338,6 +360,7 @@ function ViewWorkouts() {
         );
         if (dayData) {
           setWorkoutData(dayData);
+          applyDefaultCollapse(dayData);
         } else {
           // null response means rest day
           setWorkoutData(null);

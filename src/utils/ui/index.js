@@ -3,4 +3,4 @@
 
 export * from './uiPatterns';
 export * from './streamingUiHelper';
-
+export * from './messageContentRenderer';

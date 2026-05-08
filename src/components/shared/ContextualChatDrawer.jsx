@@ -31,7 +31,10 @@ import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
 import DocumentThumbnail from "./DocumentThumbnail";
-import { ContextualUpdateIndicator } from "../../utils/ui/streamingUiHelper.jsx";
+import {
+  ContextualUpdateIndicator,
+  MessageContentWithToolCalls,
+} from "../../utils/ui/streamingUiHelper.jsx";
 import { Tooltip } from "react-tooltip";
 import {
   contextualDrawerPatterns,
@@ -223,7 +226,7 @@ function TrainingGroundsConversationPicker({
           setMenuOpen((o) => !o);
         }}
       >
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
+        <div className="absolute left-2 top-[calc(50%+1px)] -translate-y-1/2 text-synthwave-text-muted pointer-events-none shrink-0">
           <span className="inline-flex w-4 h-4 items-center justify-center [&_svg]:!w-4 [&_svg]:!h-4">
             <ChatIconSmall />
           </span>
@@ -1884,7 +1887,7 @@ function PanelContent({
             <button
               type="button"
               onClick={exit}
-              className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer"
+              className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
             >
               Done
             </button>
@@ -2345,10 +2348,23 @@ function MessageBubble({
   }
 
   return (
-    <div className="flex flex-col">
-      <div className={contextualDrawerPatterns.aiMessage}>
-        <MarkdownRenderer content={content} />
-      </div>
+    <div className="flex flex-col gap-1.5">
+      {/* Interleaves text segments with Claude-Code-style tool-call blocks
+          based on each tool call's `contentOffset`. Falls back to a single
+          text bubble when there are no tool calls. Each text segment is
+          rendered inside the same aiMessage bubble so legacy single-bubble
+          messages look identical to before. */}
+      <MessageContentWithToolCalls
+        message={message}
+        content={content}
+        renderText={(text) =>
+          text ? (
+            <div className={contextualDrawerPatterns.aiMessage}>
+              <MarkdownRenderer content={text} />
+            </div>
+          ) : null
+        }
+      />
       <div className="flex items-center gap-2 mt-1">
         <div className={`${avatarPatterns.aiXSmall} shrink-0`}>
           {coachInitial}

@@ -103,6 +103,10 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
   description:
     "Apply confirmed edits to the workout. Only call this after the user has explicitly approved the proposed changes. Provide a partial Workout object with only the fields to update, plus a human-readable editSummary describing what changed.",
   inputSchema: APPLY_WORKOUT_EDITS_SCHEMA,
+  // The edits payload is a verbose internal patch (deeply nested workout
+  // structure) that isn't useful to surface in the streaming UI. Show that
+  // apply_workout_edits ran with timing, but skip the input disclosure.
+  redactInput: true,
   execute: async (
     input: { edits: Record<string, any>; editSummary: string },
     context: ConversationAgentContext,
@@ -265,6 +269,17 @@ export const applyWorkoutEditsTool: Tool<ConversationAgentContext> = {
                   ? updatedWorkout.completedAt.toISOString()
                   : updatedWorkout.completedAt,
               isEdit: true,
+              // Forward provenance from the parent workout so rebuilt exercise
+              // rows preserve their template/source attribution after an edit.
+              ...((updatedWorkout.templateId ||
+                updatedWorkout.programContext?.templateId) != null && {
+                templateId:
+                  updatedWorkout.templateId ||
+                  updatedWorkout.programContext?.templateId,
+              }),
+              ...(updatedWorkout.workoutData?.metadata?.logged_via != null && {
+                loggedVia: updatedWorkout.workoutData.metadata.logged_via,
+              }),
             },
             "exercise catalog (post-edit)",
           ).catch((err) => {

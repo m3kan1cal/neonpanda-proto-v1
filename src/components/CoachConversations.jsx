@@ -32,14 +32,11 @@ import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
-import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { useToast } from "../contexts/ToastContext";
 import { CONVERSATION_MODES } from "../constants/conversationModes";
-import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
-import DocumentThumbnail from "./shared/DocumentThumbnail";
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -49,7 +46,9 @@ import {
   handleStreamingError,
   ContextualUpdateIndicator,
   MessageFooter,
+  MessageContentWithToolCalls,
 } from "../utils/ui/streamingUiHelper.jsx";
+import { createMessageContentRenderer } from "../utils/ui/messageContentRenderer.jsx";
 import IconButton from "./shared/IconButton";
 import CoachConversationEmptyTips from "./shared/CoachConversationEmptyTips";
 import { logger } from "../utils/logger";
@@ -219,7 +218,23 @@ const MessageItem = memo(
             )}
           >
             <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
-              {renderMessageContent(message)}
+              {/* Attachments render once above the interleaved body — segment
+                  mode (used inside MessageContentWithToolCalls) skips them. */}
+              {renderMessageContent(message, { attachmentsOnly: true })}
+              {/* Interleaves text segments with tool-call blocks based on
+                  each tool call's `contentOffset`. Falls back to a single
+                  text render when a message has no tool calls — identical to
+                  the pre-interleaving layout for plain messages. */}
+              <MessageContentWithToolCalls
+                message={message}
+                content={getMessageDisplayContent(message, agentState)}
+                renderText={(text, opts) =>
+                  renderMessageContent(message, {
+                    textOverride: text,
+                    isLastText: opts.isLastText,
+                  })
+                }
+              />
             </div>
           </div>
 
@@ -235,10 +250,16 @@ const MessageItem = memo(
     );
   },
   (prevProps, nextProps) => {
+    // toolCalls is upserted live during streaming via upsertToolCallOnMessage
+    // (a new array is assigned on every event), so a referential check picks
+    // up both the running→complete transition and any new tool calls.
+    const toolCallsChanged =
+      prevProps.message.toolCalls !== nextProps.message.toolCalls;
     const messageChanged =
       prevProps.message.id !== nextProps.message.id ||
       prevProps.message.content !== nextProps.message.content ||
-      prevProps.message.metadata !== nextProps.message.metadata;
+      prevProps.message.metadata !== nextProps.message.metadata ||
+      toolCallsChanged;
 
     const streamingStateChanged =
       prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
@@ -871,56 +892,12 @@ function CoachConversations() {
 
   // Slash command parsing moved to ChatInput component
 
-  // Helper function to render message content with line breaks and streaming support
-  // Removed useCallback to prevent memoization issues during streaming
-  const renderMessageContent = (message) => {
-    // Get the appropriate content (streaming or final)
-    const displayContent = getMessageDisplayContent(
-      message,
-      coachConversationAgentState,
-    );
-    const streaming = isMessageStreaming(message, coachConversationAgentState);
-
-    return (
-      <>
-        {/* Render attachments — images and documents share one row */}
-        {((message.imageS3Keys && message.imageS3Keys.length > 0) ||
-          (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {message.imageS3Keys?.map((s3Key, index) => (
-              <ImageWithPresignedUrl
-                key={index}
-                s3Key={s3Key}
-                userId={userId}
-                index={index}
-              />
-            ))}
-            {message.documentS3Keys?.map((s3Key, index) => (
-              <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
-            ))}
-          </div>
-        )}
-
-        {/* Render text content */}
-        {displayContent &&
-          (message.type === "ai" ? (
-            // AI messages use full markdown parsing with streaming cursor
-            <MarkdownRenderer
-              content={displayContent}
-              className={streaming && displayContent ? "streaming-cursor" : ""}
-            />
-          ) : (
-            // User messages: simple line break rendering
-            displayContent.split("\n").map((line, index, array) => (
-              <span key={index}>
-                {line}
-                {index < array.length - 1 && <br />}
-              </span>
-            ))
-          ))}
-      </>
-    );
-  };
+  // Render the message body via the shared three-mode renderer (full,
+  // attachments-only, or text-segment). See createMessageContentRenderer.
+  const renderMessageContent = createMessageContentRenderer(
+    userId,
+    coachConversationAgentState,
+  );
 
   // Typing state without memoization to ensure real-time updates during streaming
   const typingState = getTypingState(coachConversationAgentState);

@@ -359,6 +359,7 @@ async function* createProgramDesignerEventStreamV2(
 
     let fullResponseText = "";
     let toolsUsed: string[] = [];
+    let toolCalls: ConversationAgentResult["toolCalls"] = [];
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let iterationCount = 0;
@@ -380,6 +381,7 @@ async function* createProgramDesignerEventStreamV2(
       const agentResult: ConversationAgentResult = result.value;
       fullResponseText = agentResult.fullResponseText;
       toolsUsed = agentResult.toolsUsed;
+      toolCalls = agentResult.toolCalls;
       totalInputTokens = agentResult.totalInputTokens;
       totalOutputTokens = agentResult.totalOutputTokens;
       iterationCount = agentResult.iterationCount;
@@ -398,6 +400,8 @@ async function* createProgramDesignerEventStreamV2(
         );
         guardrailWarning = true;
         fullResponseText = agent.getFullResponseText();
+        toolsUsed = agent.getToolsUsed();
+        toolCalls = agent.getToolCalls();
         yield formatGuardrailWarningEvent();
       } else {
         logger.error("❌ V2: Agent stream error:", agentError);
@@ -435,6 +439,7 @@ async function* createProgramDesignerEventStreamV2(
             : MODEL_IDS.EXECUTOR_MODEL_DISPLAY,
         agent: {
           toolsUsed,
+          toolCalls,
           totalInputTokens,
           totalOutputTokens,
           iterationCount,

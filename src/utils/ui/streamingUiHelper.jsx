@@ -2,7 +2,7 @@
  * Small, focused UI helpers for streaming message interactions
  * Each function handles a specific aspect of streaming UI without complex state management
  */
-import { memo } from "react";
+import { Fragment, memo, useState } from "react";
 import { avatarPatterns, messagePatterns, streamingPatterns } from "./uiPatterns";
 import CopyButton from "../../components/shared/CopyButton";
 import { logger } from "../logger";
@@ -229,6 +229,216 @@ export function ContextualUpdateIndicator({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Faint, persistent block that surfaces a single agent tool call in the AI
+ * message bubble — Claude-Code-style.
+ *
+ * Reads one element of `toolCalls` (either upserted live during streaming or
+ * persisted in `metadata.agent.toolCalls` after reload) and renders:
+ *   - status: "running"  → cyan-accented row with animated dot
+ *   - status: "complete" → cyan-accented row with duration
+ *   - status: "error"    → pink/red-accented row with error message
+ *
+ * When `toolInput` is present (i.e. the tool wasn't flagged `redactInput`
+ * server-side), an expandable disclosure shows the input as pretty-printed
+ * JSON. Collapsed by default to keep the bubble visually quiet.
+ *
+ * @param {Object} toolCall - { toolUseId, toolName, status, durationMs?, errorMessage?, toolInput? }
+ */
+export const ToolCallBlock = memo(function ToolCallBlock({ toolCall }) {
+  const [inputExpanded, setInputExpanded] = useState(false);
+
+  if (!toolCall || !toolCall.toolName) return null;
+
+  const status = toolCall.status || "running";
+  const containerVariant =
+    status === "error"
+      ? streamingPatterns.toolCallBlock.containerError
+      : status === "complete"
+        ? streamingPatterns.toolCallBlock.containerComplete
+        : streamingPatterns.toolCallBlock.containerRunning;
+  const dotVariant =
+    status === "error"
+      ? streamingPatterns.toolCallBlock.statusDotError
+      : status === "complete"
+        ? streamingPatterns.toolCallBlock.statusDotComplete
+        : streamingPatterns.toolCallBlock.statusDotRunning;
+  const nameVariant =
+    status === "error"
+      ? streamingPatterns.toolCallBlock.toolNameError
+      : streamingPatterns.toolCallBlock.toolName;
+
+  const hasInputDisclosure =
+    toolCall.toolInput !== undefined && toolCall.toolInput !== null;
+  const inputJson = hasInputDisclosure
+    ? safeStringifyToolInput(toolCall.toolInput)
+    : null;
+
+  return (
+    <div
+      className={`${streamingPatterns.toolCallBlock.container} ${containerVariant}`}
+    >
+      <div className={streamingPatterns.toolCallBlock.headerRow}>
+        <span className={dotVariant} />
+        <span className={streamingPatterns.toolCallBlock.toolNameLabel}>
+          tool
+        </span>
+        <span className={nameVariant}>{toolCall.toolName}</span>
+        <span className={streamingPatterns.toolCallBlock.metaText}>
+          {status === "running"
+            ? "running…"
+            : typeof toolCall.durationMs === "number"
+              ? `${formatToolDuration(toolCall.durationMs)} · ${status}`
+              : status}
+        </span>
+      </div>
+      {status === "error" && toolCall.errorMessage && (
+        <div className={streamingPatterns.toolCallBlock.errorMessage}>
+          {toolCall.errorMessage}
+        </div>
+      )}
+      {hasInputDisclosure && inputJson && (
+        <details
+          open={inputExpanded}
+          onToggle={(e) => setInputExpanded(e.currentTarget.open)}
+        >
+          <summary
+            className={streamingPatterns.toolCallBlock.inputDisclosureSummary}
+          >
+            {inputExpanded ? "hide input" : "show input"}
+          </summary>
+          <pre className={streamingPatterns.toolCallBlock.inputDisclosurePre}>
+            {inputJson}
+          </pre>
+        </details>
+      )}
+    </div>
+  );
+});
+
+function formatToolDuration(ms) {
+  if (typeof ms !== "number" || !isFinite(ms)) return "";
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(ms < 10000 ? 2 : 1)}s`;
+}
+
+function safeStringifyToolInput(input) {
+  try {
+    const json = JSON.stringify(input, null, 2);
+    if (typeof json !== "string") return null;
+    // Cap to keep the disclosure pane manageable. The full payload is in the
+    // persisted message metadata for power users; the UI just shows a digest.
+    return json.length > 4000 ? json.slice(0, 4000) + "\n…(truncated)" : json;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reads `toolCalls` (live first, persisted fallback) and returns a sorted list
+ * of tool calls anchored to character offsets in `content`. Tools missing a
+ * `contentOffset` (legacy persisted messages) fall through to end-of-text so
+ * they render below the text — matching the pre-interleaving behavior.
+ */
+function getOrderedToolCalls(message, content) {
+  const live = Array.isArray(message?.toolCalls) ? message.toolCalls : null;
+  const persisted = Array.isArray(message?.metadata?.agent?.toolCalls)
+    ? message.metadata.agent.toolCalls
+    : null;
+  const calls = live && live.length > 0 ? live : persisted;
+  if (!calls || calls.length === 0) return [];
+  const fallback = typeof content === "string" ? content.length : 0;
+  // Stable sort preserves emit order for tools that share an offset (e.g.
+  // multiple parallel tools fired in the same iteration with no intervening
+  // text). Modern V8 / SpiderMonkey sorts are stable, which we rely on here.
+  return [...calls].sort(
+    (a, b) =>
+      (a.contentOffset ?? fallback) - (b.contentOffset ?? fallback),
+  );
+}
+
+/**
+ * Interleaves a streaming AI message's text with its tool-call blocks based on
+ * each tool call's `contentOffset` (the character position in the cumulative
+ * response text where the tool fired). Without this, all tool cards stack
+ * below the message and "snowplow" downward as more text streams in.
+ *
+ * The caller supplies a `renderText(text, { isLastText })` adapter so each
+ * surface keeps its existing markdown / styling wrapper. `isLastText` is true
+ * for the final text segment (used to scope streaming-cursor decoration).
+ *
+ * @param {Object} props.message - Message object (reads `toolCalls` live or `metadata.agent.toolCalls`)
+ * @param {string} props.content - The cumulative response text to slice
+ * @param {(text: string, opts: { isLastText: boolean }) => JSX.Element} props.renderText - Renders a text slice
+ */
+export function MessageContentWithToolCalls({ message, content, renderText }) {
+  const text = typeof content === "string" ? content : "";
+  const sorted = getOrderedToolCalls(message, text);
+
+  if (sorted.length === 0) {
+    // No tool calls — preserve the single-bubble shape callers had before.
+    return renderText(text, { isLastText: true });
+  }
+
+  const segments = [];
+  let cursor = 0;
+  sorted.forEach((tc, i) => {
+    // Clamp the offset between the previous cursor and the end of text so a
+    // bogus or out-of-range offset can't reorder segments or slice past the
+    // string. Missing offsets land at end-of-text via the fallback in
+    // getOrderedToolCalls — preserves legacy render for old persisted tools.
+    const raw = tc.contentOffset ?? text.length;
+    const offset = Math.min(Math.max(raw, cursor), text.length);
+    if (offset > cursor) {
+      segments.push({
+        kind: "text",
+        key: `t-${cursor}-${offset}`,
+        text: text.slice(cursor, offset),
+      });
+    }
+    segments.push({
+      kind: "tool",
+      key: tc.toolUseId || `tc-${tc.toolName || "x"}-${i}`,
+      toolCall: tc,
+    });
+    cursor = offset;
+  });
+  if (cursor < text.length) {
+    segments.push({
+      kind: "text",
+      key: `t-${cursor}-end`,
+      text: text.slice(cursor),
+    });
+  }
+
+  // Find the index of the last text segment so we can flag it for the caller's
+  // streaming-cursor decoration. A message that ends with a tool call (no
+  // trailing text) won't have any flagged segment, which is correct — there's
+  // no live text to put a cursor on.
+  let lastTextIndex = -1;
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (segments[i].kind === "text") {
+      lastTextIndex = i;
+      break;
+    }
+  }
+
+  return segments.map((s, i) =>
+    s.kind === "text" ? (
+      <Fragment key={s.key}>
+        {renderText(s.text, { isLastText: i === lastTextIndex })}
+      </Fragment>
+    ) : (
+      // Wrap each tool block in a div with vertical margin so it visually
+      // separates from the surrounding text without requiring callers to wrap
+      // the whole interleaved render in a flex column.
+      <div key={s.key} className="my-2 w-full">
+        <ToolCallBlock toolCall={s.toolCall} />
+      </div>
+    ),
   );
 }
 

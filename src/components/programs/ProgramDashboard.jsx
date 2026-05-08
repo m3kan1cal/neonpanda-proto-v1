@@ -104,10 +104,13 @@ export default function ProgramDashboard() {
     workoutCount: program?.completedWorkouts ?? 0,
   });
 
+  // Title intentionally drops the program name. The program is implied by
+  // the surface (chat opened from inside that program's dashboard) and the
+  // agent gets the program name via sessionProgramContext server-side. Keeps
+  // the picker dropdown readable instead of "Program: <very long name>".
   const newChatThreadTitle = useMemo(() => {
-    const name = program?.name?.trim();
-    return name ? `Program: ${name}` : "Program Dashboard";
-  }, [program?.name]);
+    return "Program Dashboard";
+  }, []);
 
   const streamClientContext = useMemo(() => {
     if (!programId) return null;

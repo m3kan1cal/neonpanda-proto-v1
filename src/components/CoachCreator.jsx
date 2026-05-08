@@ -31,11 +31,8 @@ import PageHeader from "./shared/PageHeader";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
-import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
-import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
-import DocumentThumbnail from "./shared/DocumentThumbnail";
 import { logger } from "../utils/logger";
 import { useChatScroll } from "../hooks/useChatScroll";
 import {
@@ -47,7 +44,9 @@ import {
   handleStreamingError,
   ContextualUpdateIndicator,
   MessageFooter,
+  MessageContentWithToolCalls,
 } from "../utils/ui/streamingUiHelper.jsx";
+import { createMessageContentRenderer } from "../utils/ui/messageContentRenderer.jsx";
 
 // Vesper coach data - static coach for coach creator
 const vesperCoachData = {
@@ -201,7 +200,20 @@ const MessageItem = memo(
             )}
           >
             <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
-              {renderMessageContent(message)}
+              {/* Attachments render once above the interleaved body. */}
+              {renderMessageContent(message, { attachmentsOnly: true })}
+              {/* Interleaves text segments with tool-call blocks based on
+                  each tool call's `contentOffset`. */}
+              <MessageContentWithToolCalls
+                message={message}
+                content={getMessageDisplayContent(message, agentState)}
+                renderText={(text, opts) =>
+                  renderMessageContent(message, {
+                    textOverride: text,
+                    isLastText: opts.isLastText,
+                  })
+                }
+              />
             </div>
           </div>
 
@@ -217,9 +229,13 @@ const MessageItem = memo(
     );
   },
   (prevProps, nextProps) => {
+    const toolCallsChanged =
+      prevProps.message.toolCalls !== nextProps.message.toolCalls;
     const messageChanged =
       prevProps.message.id !== nextProps.message.id ||
-      prevProps.message.content !== nextProps.message.content;
+      prevProps.message.content !== nextProps.message.content ||
+      prevProps.message.metadata !== nextProps.message.metadata ||
+      toolCallsChanged;
 
     const streamingStateChanged =
       prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
@@ -486,53 +502,9 @@ function CoachCreator() {
     });
   };
 
-  // Helper function to render message content with line breaks and streaming support
-  // Removed useCallback to prevent memoization issues during streaming
-  const renderMessageContent = (message) => {
-    // Get the appropriate content (streaming or final)
-    const displayContent = getMessageDisplayContent(message, agentState);
-    const streaming = isMessageStreaming(message, agentState);
-
-    return (
-      <>
-        {/* Render attachments — images and documents share one row */}
-        {((message.imageS3Keys && message.imageS3Keys.length > 0) ||
-          (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {message.imageS3Keys?.map((s3Key, index) => (
-              <ImageWithPresignedUrl
-                key={index}
-                s3Key={s3Key}
-                userId={userId}
-                index={index}
-              />
-            ))}
-            {message.documentS3Keys?.map((s3Key, index) => (
-              <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
-            ))}
-          </div>
-        )}
-
-        {/* Render text content */}
-        {displayContent &&
-          (message.type === "ai" ? (
-            // AI messages use full markdown parsing with streaming cursor
-            <MarkdownRenderer
-              content={displayContent}
-              className={streaming && displayContent ? "streaming-cursor" : ""}
-            />
-          ) : (
-            // User messages: simple line break rendering
-            displayContent.split("\n").map((line, index, array) => (
-              <span key={index}>
-                {line}
-                {index < array.length - 1 && <br />}
-              </span>
-            ))
-          ))}
-      </>
-    );
-  };
+  // Render the message body via the shared three-mode renderer (full,
+  // attachments-only, or text-segment). See createMessageContentRenderer.
+  const renderMessageContent = createMessageContentRenderer(userId, agentState);
 
   // Delete handlers
   const handleDeleteClick = () => {

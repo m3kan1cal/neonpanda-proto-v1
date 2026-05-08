@@ -472,7 +472,27 @@ Use this when the user asks about today's workout, wants to be coached through i
 or references their prescribed plan. Also useful before complete_program_workout to
 get the correct templateId.
 
-Returns detailed workout information if found, or indicates no active program / rest day.
+Note: when the dynamic system prompt already includes a "## TODAY'S PRESCRIBED
+WORKOUT STATUS" block, the same per-template status is already in your context —
+prefer reading that section over invoking this tool when you only need the
+status (pending/completed/skipped) and not the full template content.
+
+Response shape (when hasWorkout: true):
+{
+  programId, programName, phaseName, dayNumber, restDay: false,
+  workouts: [
+    {
+      templateId, workoutName, workoutType,
+      status, // "pending" | "completed" | "skipped" — AUTHORITATIVE for "did the user complete today's prescribed work?"
+      description, prescribedExercises, estimatedDuration, notes
+    }
+  ]
+}
+
+Critical: the "status" field is authoritative. "pending" means the user has NOT
+logged this prescribed workout yet today; "completed" means it WAS logged and
+marked complete; "skipped" means the user explicitly skipped. Never narrate a
+workout as completed/done/finished unless its status here is "completed".
 
 Example use cases:
 - User asks "What's my workout today?"
@@ -480,9 +500,9 @@ Example use cases:
 - You need the templateId to call complete_program_workout
 - User references "the prescribed workout" and you need the details
 
-Returns null/empty if:
+Returns hasWorkout: false if:
 - No active program (context.activeProgram is null)
-- Today is a rest day
+- Today is a rest day (restDay: true)
 - Program data not found`,
   inputSchema: GET_TODAYS_WORKOUT_SCHEMA,
   async execute(input, context) {
