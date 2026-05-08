@@ -2,7 +2,7 @@
  * Small, focused UI helpers for streaming message interactions
  * Each function handles a specific aspect of streaming UI without complex state management
  */
-import { memo, useState } from "react";
+import { Fragment, memo, useState } from "react";
 import { avatarPatterns, messagePatterns, streamingPatterns } from "./uiPatterns";
 import CopyButton from "../../components/shared/CopyButton";
 import { logger } from "../logger";
@@ -338,32 +338,107 @@ function safeStringifyToolInput(input) {
 }
 
 /**
- * Renders a list of ToolCallBlock children for a message. Reads from the
- * streaming `message.toolCalls` array first (populated mid-stream by the
- * `tool_call` SSE handler) and falls back to `message.metadata.agent.toolCalls`
- * for rehydrated messages. Returns null when there's nothing to show so
- * callers can render the slot unconditionally.
- *
- * @param {Object} message - The message object from agent state or DB
+ * Reads `toolCalls` (live first, persisted fallback) and returns a sorted list
+ * of tool calls anchored to character offsets in `content`. Tools missing a
+ * `contentOffset` (legacy persisted messages) fall through to end-of-text so
+ * they render below the text — matching the pre-interleaving behavior.
  */
-export function ToolCallList({ message }) {
-  if (!message) return null;
-  const live = Array.isArray(message.toolCalls) ? message.toolCalls : null;
+function getOrderedToolCalls(message, content) {
+  const live = Array.isArray(message?.toolCalls) ? message.toolCalls : null;
   const persisted = Array.isArray(message?.metadata?.agent?.toolCalls)
     ? message.metadata.agent.toolCalls
     : null;
   const calls = live && live.length > 0 ? live : persisted;
-  if (!calls || calls.length === 0) return null;
+  if (!calls || calls.length === 0) return [];
+  const fallback = typeof content === "string" ? content.length : 0;
+  // Stable sort preserves emit order for tools that share an offset (e.g.
+  // multiple parallel tools fired in the same iteration with no intervening
+  // text). Modern V8 / SpiderMonkey sorts are stable, which we rely on here.
+  return [...calls].sort(
+    (a, b) =>
+      (a.contentOffset ?? fallback) - (b.contentOffset ?? fallback),
+  );
+}
 
-  return (
-    <div className="flex flex-col gap-1.5 mt-2 w-full">
-      {calls.map((tc, i) => (
-        <ToolCallBlock
-          key={tc.toolUseId || `${tc.toolName}-${i}`}
-          toolCall={tc}
-        />
-      ))}
-    </div>
+/**
+ * Interleaves a streaming AI message's text with its tool-call blocks based on
+ * each tool call's `contentOffset` (the character position in the cumulative
+ * response text where the tool fired). Without this, all tool cards stack
+ * below the message and "snowplow" downward as more text streams in.
+ *
+ * The caller supplies a `renderText(text, { isLastText })` adapter so each
+ * surface keeps its existing markdown / styling wrapper. `isLastText` is true
+ * for the final text segment (used to scope streaming-cursor decoration).
+ *
+ * @param {Object} props.message - Message object (reads `toolCalls` live or `metadata.agent.toolCalls`)
+ * @param {string} props.content - The cumulative response text to slice
+ * @param {(text: string, opts: { isLastText: boolean }) => JSX.Element} props.renderText - Renders a text slice
+ */
+export function MessageContentWithToolCalls({ message, content, renderText }) {
+  const text = typeof content === "string" ? content : "";
+  const sorted = getOrderedToolCalls(message, text);
+
+  if (sorted.length === 0) {
+    // No tool calls — preserve the single-bubble shape callers had before.
+    return renderText(text, { isLastText: true });
+  }
+
+  const segments = [];
+  let cursor = 0;
+  sorted.forEach((tc, i) => {
+    // Clamp the offset between the previous cursor and the end of text so a
+    // bogus or out-of-range offset can't reorder segments or slice past the
+    // string. Missing offsets land at end-of-text via the fallback in
+    // getOrderedToolCalls — preserves legacy render for old persisted tools.
+    const raw = tc.contentOffset ?? text.length;
+    const offset = Math.min(Math.max(raw, cursor), text.length);
+    if (offset > cursor) {
+      segments.push({
+        kind: "text",
+        key: `t-${cursor}-${offset}`,
+        text: text.slice(cursor, offset),
+      });
+    }
+    segments.push({
+      kind: "tool",
+      key: tc.toolUseId || `tc-${tc.toolName || "x"}-${i}`,
+      toolCall: tc,
+    });
+    cursor = offset;
+  });
+  if (cursor < text.length) {
+    segments.push({
+      kind: "text",
+      key: `t-${cursor}-end`,
+      text: text.slice(cursor),
+    });
+  }
+
+  // Find the index of the last text segment so we can flag it for the caller's
+  // streaming-cursor decoration. A message that ends with a tool call (no
+  // trailing text) won't have any flagged segment, which is correct — there's
+  // no live text to put a cursor on.
+  let lastTextIndex = -1;
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (segments[i].kind === "text") {
+      lastTextIndex = i;
+      break;
+    }
+  }
+
+  return segments.map((s, i) =>
+    s.kind === "text" ? (
+      <Fragment key={s.key}>
+        {renderText(s.text, { isLastText: i === lastTextIndex })}
+      </Fragment>
+    ) : (
+      // Wrap each tool block in a div with vertical margin so it visually
+      // separates from the surrounding text without requiring callers to wrap
+      // the whole interleaved render in a flex column.
+      <div key={s.key} className="my-2 w-full">
+        <ToolCallBlock toolCall={s.toolCall} />
+      </div>
+    ),
   );
 }
 

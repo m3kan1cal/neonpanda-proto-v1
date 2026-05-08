@@ -33,7 +33,7 @@ import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
 import DocumentThumbnail from "./DocumentThumbnail";
 import {
   ContextualUpdateIndicator,
-  ToolCallList,
+  MessageContentWithToolCalls,
 } from "../../utils/ui/streamingUiHelper.jsx";
 import { Tooltip } from "react-tooltip";
 import {
@@ -2348,15 +2348,23 @@ function MessageBubble({
   }
 
   return (
-    <div className="flex flex-col">
-      <div className={contextualDrawerPatterns.aiMessage}>
-        <MarkdownRenderer content={content} />
-      </div>
-      {/* Tool-call blocks (Claude-Code-style faint indicators). Reads live
-          `toolCalls` during streaming and falls back to persisted
-          `metadata.agent.toolCalls` after reload. Returns null when the
-          message has no tool calls so the slot is invisible by default. */}
-      <ToolCallList message={message} />
+    <div className="flex flex-col gap-1.5">
+      {/* Interleaves text segments with Claude-Code-style tool-call blocks
+          based on each tool call's `contentOffset`. Falls back to a single
+          text bubble when there are no tool calls. Each text segment is
+          rendered inside the same aiMessage bubble so legacy single-bubble
+          messages look identical to before. */}
+      <MessageContentWithToolCalls
+        message={message}
+        content={content}
+        renderText={(text) =>
+          text ? (
+            <div className={contextualDrawerPatterns.aiMessage}>
+              <MarkdownRenderer content={text} />
+            </div>
+          ) : null
+        }
+      />
       <div className="flex items-center gap-2 mt-1">
         <div className={`${avatarPatterns.aiXSmall} shrink-0`}>
           {coachInitial}

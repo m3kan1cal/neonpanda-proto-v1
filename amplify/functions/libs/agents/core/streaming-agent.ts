@@ -284,6 +284,10 @@ export class StreamingConversationAgent<
       let currentToolUseId: string | null = null;
       let currentToolName: string | null = null;
       const toolInputFragments: Map<string, string[]> = new Map();
+      // Captures `fullResponseText.length` at tool_use_start so the UI can
+      // render each tool call interleaved between the text segments that
+      // surrounded it, instead of stacking all calls below the message.
+      const toolContentOffsets: Map<string, number> = new Map();
 
       let assistantContent: any[] = [];
       let stopReason = "";
@@ -338,6 +342,11 @@ export class StreamingConversationAgent<
           currentToolUseId = event.toolUseId;
           currentToolName = event.toolName;
           toolInputFragments.set(event.toolUseId, []);
+          // Anchor this tool call to the current end-of-text. The UI uses this
+          // offset to slice `content` and place the tool block between the
+          // text segment that came before it and the segment that comes after.
+          const contentOffset = fullResponseText.length;
+          toolContentOffsets.set(event.toolUseId, contentOffset);
 
           // Surface the tool call to the UI as a "running" block. The tool's
           // existing contextualMessage (yielded later in the tool loop) still
@@ -347,6 +356,7 @@ export class StreamingConversationAgent<
             toolUseId: event.toolUseId,
             toolName: event.toolName,
             status: "running",
+            contentOffset,
           });
 
           console.info(
@@ -563,6 +573,7 @@ export class StreamingConversationAgent<
               status: "error",
               durationMs: 0,
               errorMessage: "Tool input was malformed or empty.",
+              contentOffset: toolContentOffsets.get(toolUse.toolUseId) ?? 0,
             };
             this.toolCalls.push(errorRecord);
             yield formatToolCallEvent(errorRecord);
@@ -588,6 +599,7 @@ export class StreamingConversationAgent<
               status: "error",
               durationMs: 0,
               errorMessage: `Tool ${toolUse.toolName} not found`,
+              contentOffset: toolContentOffsets.get(toolUse.toolUseId) ?? 0,
             };
             this.toolCalls.push(errorRecord);
             yield formatToolCallEvent(errorRecord);
@@ -630,6 +642,7 @@ export class StreamingConversationAgent<
               status: "complete",
               durationMs: toolTime,
               ...(!tool.redactInput && { toolInput: toolUse.toolInput }),
+              contentOffset: toolContentOffsets.get(toolUse.toolUseId) ?? 0,
             };
             this.toolCalls.push(completedRecord);
             yield formatToolCallEvent(completedRecord);
@@ -659,6 +672,7 @@ export class StreamingConversationAgent<
               durationMs: toolTime,
               errorMessage,
               ...(!tool.redactInput && { toolInput: toolUse.toolInput }),
+              contentOffset: toolContentOffsets.get(toolUse.toolUseId) ?? 0,
             };
             this.toolCalls.push(errorRecord);
             yield formatToolCallEvent(errorRecord);

@@ -401,6 +401,44 @@ describe("StreamingConversationAgent.converseStream", () => {
     expect("toolInput" in result.toolCalls[0]).toBe(false);
   });
 
+  it("captures contentOffset on tool calls so the UI can interleave them with surrounding text", async () => {
+    const tool = makeMockTool("search_tool", { hits: 1 });
+    // Iteration 1: stream text, then a tool call. The tool should record the
+    // length of the text emitted before it as `contentOffset` so the UI can
+    // place the tool block between the leading text and any following text.
+    const preambleText = "Looking up your history…"; // 24 chars
+    const interleavedStream: MockStreamEvent[] = [
+      { type: "text_delta", text: preambleText },
+      ...makeToolUseStream("use-interleaved", "search_tool", { q: "x" }),
+    ];
+    vi.mocked(callBedrockApiStreamForAgent)
+      .mockReturnValueOnce(makeStream(interleavedStream))
+      .mockReturnValueOnce(makeStream(makeEndTurnStream("Here it is")));
+
+    const agent = makeAgent([tool]);
+    const { yielded, result } = await collectStream(agent, "go");
+
+    const toolCallEvents = yielded.filter((e) =>
+      e.includes('"type":"tool_call"'),
+    );
+    // Both the running and complete events should carry the same contentOffset.
+    const expectedOffset = preambleText.length;
+    expect(toolCallEvents[0]).toContain('"status":"running"');
+    expect(toolCallEvents[0]).toContain(
+      `"contentOffset":${expectedOffset}`,
+    );
+    expect(toolCallEvents[1]).toContain('"status":"complete"');
+    expect(toolCallEvents[1]).toContain(
+      `"contentOffset":${expectedOffset}`,
+    );
+    // The persisted record (used to rehydrate after page reload) also carries it.
+    expect(result.toolCalls).toHaveLength(1);
+    expect(result.toolCalls[0]).toMatchObject({
+      toolName: "search_tool",
+      contentOffset: expectedOffset,
+    });
+  });
+
   it("emits a tool_call error event when tool.execute throws", async () => {
     const failTool: Tool<TestContext> = {
       id: "fail_tool",

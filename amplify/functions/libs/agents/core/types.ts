@@ -69,6 +69,14 @@ export interface ToolCallRecord {
   durationMs: number;
   errorMessage?: string;
   toolInput?: any;
+  /**
+   * Character offset into the assistant's cumulative response text at which
+   * this tool call fired. Used by the UI to interleave tool-call blocks with
+   * the surrounding text segments instead of stacking them after the message.
+   * Optional for backward compatibility with messages persisted before this
+   * field existed — renderers fall back to placing the call at end-of-text.
+   */
+  contentOffset?: number;
 }
 
 /**
