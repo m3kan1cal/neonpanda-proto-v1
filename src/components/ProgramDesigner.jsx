@@ -51,7 +51,7 @@ import {
   handleStreamingError,
   ContextualUpdateIndicator,
   MessageFooter,
-  ToolCallList,
+  MessageContentWithToolCalls,
 } from "../utils/ui/streamingUiHelper.jsx";
 import { BuildModeIconTiny } from "./themes/SynthwaveComponents";
 import { logger } from "../utils/logger";
@@ -206,11 +206,20 @@ const MessageItem = memo(
             )}
           >
             <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
-              {renderMessageContent(message)}
+              {/* Interleaves text segments with tool-call blocks based on
+                  each tool call's `contentOffset`. */}
+              <MessageContentWithToolCalls
+                message={message}
+                content={getMessageDisplayContent(message, agentState)}
+                renderText={(text, opts) =>
+                  renderMessageContent(message, {
+                    textOverride: text,
+                    isLastText: opts.isLastText,
+                  })
+                }
+              />
             </div>
           </div>
-
-          <ToolCallList message={message} />
 
           <MessageFooter
             isCurrentlyStreaming={isCurrentlyStreaming}
@@ -730,38 +739,53 @@ function ProgramDesigner() {
 
   // Helper function to render message content with line breaks and streaming support
   // Removed useCallback to prevent memoization issues during streaming
-  const renderMessageContent = (message) => {
-    // Get the appropriate content (streaming or final)
-    const displayContent = getMessageDisplayContent(message, agentState);
+  // When `options.textOverride` is provided, renders only that text slice
+  // (no attachments) — used by MessageContentWithToolCalls to render
+  // individual text segments interleaved with tool-call blocks.
+  const renderMessageContent = (message, options = {}) => {
+    const { textOverride, isLastText = true } = options;
+    const isSegment = textOverride !== undefined;
+    const displayContent = isSegment
+      ? textOverride
+      : getMessageDisplayContent(message, agentState);
     const streaming = isMessageStreaming(message, agentState);
 
     return (
       <>
-        {/* Render attachments — images and documents share one row */}
-        {((message.imageS3Keys && message.imageS3Keys.length > 0) ||
-          (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {message.imageS3Keys?.map((s3Key, index) => (
-              <ImageWithPresignedUrl
-                key={index}
-                s3Key={s3Key}
-                userId={userId}
-                index={index}
-              />
-            ))}
-            {message.documentS3Keys?.map((s3Key, index) => (
-              <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
-            ))}
-          </div>
-        )}
+        {/* Render attachments — images and documents share one row.
+            Skipped when rendering an individual segment (segments are pure
+            text slices; attachments render once at the top of the message). */}
+        {!isSegment &&
+          ((message.imageS3Keys && message.imageS3Keys.length > 0) ||
+            (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {message.imageS3Keys?.map((s3Key, index) => (
+                <ImageWithPresignedUrl
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  index={index}
+                />
+              ))}
+              {message.documentS3Keys?.map((s3Key, index) => (
+                <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
+              ))}
+            </div>
+          )}
 
         {/* Render text content */}
         {displayContent &&
           (message.type === "ai" ? (
-            // AI messages use full markdown parsing with streaming cursor
+            // AI messages use full markdown parsing with streaming cursor.
+            // Only the LAST text segment gets the cursor so earlier segments
+            // (already complete, before a tool call) don't keep blinking.
             <MarkdownRenderer
               content={displayContent}
-              className={streaming && displayContent ? "streaming-cursor" : ""}
+              className={
+                streaming && isLastText && displayContent
+                  ? "streaming-cursor"
+                  : ""
+              }
             />
           ) : (
             // User messages: simple line break rendering

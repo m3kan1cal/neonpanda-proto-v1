@@ -49,7 +49,7 @@ import {
   handleStreamingError,
   ContextualUpdateIndicator,
   MessageFooter,
-  ToolCallList,
+  MessageContentWithToolCalls,
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
 import CoachConversationEmptyTips from "./shared/CoachConversationEmptyTips";
@@ -220,15 +220,22 @@ const MessageItem = memo(
             )}
           >
             <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
-              {renderMessageContent(message)}
+              {/* Interleaves text segments with tool-call blocks based on
+                  each tool call's `contentOffset`. Falls back to a single
+                  text render when a message has no tool calls — identical to
+                  the pre-interleaving layout for plain messages. */}
+              <MessageContentWithToolCalls
+                message={message}
+                content={getMessageDisplayContent(message, agentState)}
+                renderText={(text, opts) =>
+                  renderMessageContent(message, {
+                    textOverride: text,
+                    isLastText: opts.isLastText,
+                  })
+                }
+              />
             </div>
           </div>
-
-          {/* Tool-call blocks (Claude-Code-style faint indicators). Reads
-              live `toolCalls` during streaming and falls back to persisted
-              `metadata.agent.toolCalls` after reload. Returns null when the
-              message has no tool calls so the slot is invisible by default. */}
-          <ToolCallList message={message} />
 
           <MessageFooter
             isCurrentlyStreaming={isCurrentlyStreaming}
@@ -886,41 +893,56 @@ function CoachConversations() {
 
   // Helper function to render message content with line breaks and streaming support
   // Removed useCallback to prevent memoization issues during streaming
-  const renderMessageContent = (message) => {
-    // Get the appropriate content (streaming or final)
-    const displayContent = getMessageDisplayContent(
-      message,
-      coachConversationAgentState,
-    );
+  // When `options.textOverride` is provided, the function renders only that
+  // text slice (no attachments) — used by MessageContentWithToolCalls to
+  // render individual text segments interleaved with tool-call blocks. The
+  // `isLastText` flag scopes the streaming-cursor decoration to the final
+  // segment so earlier segments (already complete) don't blink.
+  const renderMessageContent = (message, options = {}) => {
+    const { textOverride, isLastText = true } = options;
+    const isSegment = textOverride !== undefined;
+    const displayContent = isSegment
+      ? textOverride
+      : getMessageDisplayContent(message, coachConversationAgentState);
     const streaming = isMessageStreaming(message, coachConversationAgentState);
 
     return (
       <>
-        {/* Render attachments — images and documents share one row */}
-        {((message.imageS3Keys && message.imageS3Keys.length > 0) ||
-          (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {message.imageS3Keys?.map((s3Key, index) => (
-              <ImageWithPresignedUrl
-                key={index}
-                s3Key={s3Key}
-                userId={userId}
-                index={index}
-              />
-            ))}
-            {message.documentS3Keys?.map((s3Key, index) => (
-              <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
-            ))}
-          </div>
-        )}
+        {/* Render attachments — images and documents share one row.
+            Skipped when rendering an individual segment (segments are pure
+            text slices; attachments render once at the top of the message). */}
+        {!isSegment &&
+          ((message.imageS3Keys && message.imageS3Keys.length > 0) ||
+            (message.documentS3Keys && message.documentS3Keys.length > 0)) && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {message.imageS3Keys?.map((s3Key, index) => (
+                <ImageWithPresignedUrl
+                  key={index}
+                  s3Key={s3Key}
+                  userId={userId}
+                  index={index}
+                />
+              ))}
+              {message.documentS3Keys?.map((s3Key, index) => (
+                <DocumentThumbnail key={index} s3Key={s3Key} userId={userId} />
+              ))}
+            </div>
+          )}
 
         {/* Render text content */}
         {displayContent &&
           (message.type === "ai" ? (
-            // AI messages use full markdown parsing with streaming cursor
+            // AI messages use full markdown parsing with streaming cursor.
+            // Only the LAST text segment gets the streaming cursor, so a
+            // pre-tool-call segment doesn't keep blinking after the agent
+            // has moved on to a tool call and subsequent text.
             <MarkdownRenderer
               content={displayContent}
-              className={streaming && displayContent ? "streaming-cursor" : ""}
+              className={
+                streaming && isLastText && displayContent
+                  ? "streaming-cursor"
+                  : ""
+              }
             />
           ) : (
             // User messages: simple line break rendering

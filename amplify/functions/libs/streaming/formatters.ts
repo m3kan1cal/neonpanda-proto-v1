@@ -73,6 +73,7 @@ export function formatToolCallEvent(payload: {
   durationMs?: number;
   errorMessage?: string;
   toolInput?: any;
+  contentOffset?: number;
 }): string {
   return formatSseEvent({
     type: "tool_call",
@@ -84,6 +85,9 @@ export function formatToolCallEvent(payload: {
     }),
     ...(payload.errorMessage && { errorMessage: payload.errorMessage }),
     ...(payload.toolInput !== undefined && { toolInput: payload.toolInput }),
+    ...(typeof payload.contentOffset === "number" && {
+      contentOffset: payload.contentOffset,
+    }),
   });
 }
 
