@@ -200,8 +200,13 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     try {
       stopReason = await this.runLoop(max);
 
-      const retryStatus = await this.maybeRetry(stopReason, max);
-      if (retryStatus) stopReason = retryStatus;
+      // Discriminated return: undefined = no retry attempted (keep
+      // current stopReason); otherwise the retry's terminal stopReason
+      // (which may itself be null when the retry hit max-iter). The
+      // earlier `if (retryStatus)` check conflated the two and reported
+      // a max-iter retry as "ok".
+      const retryOutcome = await this.maybeRetry(stopReason, max);
+      if (retryOutcome !== undefined) stopReason = retryOutcome;
     } catch (error: any) {
       errorMessage = error?.message ?? String(error);
       logger.error("agent.run.error", { runId: this.runId, errorMessage });
@@ -260,17 +265,26 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     return null;
   }
 
+  /**
+   * Returns `undefined` when no retry was attempted (caller keeps the
+   * original stopReason). Returns the retry's terminal stopReason
+   * otherwise — which may be `null` if the retry hit `max` iterations.
+   * The `undefined` sentinel lets the caller distinguish "no retry
+   * needed" from "retry attempted and exhausted iterations" so the run
+   * status reports `max_iterations` correctly in the latter case.
+   */
   protected async maybeRetry(
     stopReason: ModelTurn["stopReason"] | null,
     max: number,
-  ): Promise<ModelTurn["stopReason"] | null> {
+  ): Promise<ModelTurn["stopReason"] | null | undefined> {
     const policy = this.config.policy;
-    if (!policy?.shouldRetry) return null;
-    if (stopReason !== "end_turn" && stopReason !== "stop_sequence") return null;
+    if (!policy?.shouldRetry) return undefined;
+    if (stopReason !== "end_turn" && stopReason !== "stop_sequence") return undefined;
 
     const cap = policy.maxRetries ?? 1;
     let retries = 0;
     let last: ModelTurn["stopReason"] | null = stopReason;
+    let ranAtLeastOneRetry = false;
 
     while (retries < cap && this.currentIteration < max) {
       const decision = policy.shouldRetry({
@@ -279,9 +293,10 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         finalText: this.fullResponseText,
         iterations: this.currentIteration,
       });
-      if (!decision) return last;
+      if (!decision) break;
 
       retries++;
+      ranAtLeastOneRetry = true;
       this.metrics.toolRetries++;
       logger.info("agent.run.retry", {
         runId: this.runId,
@@ -294,7 +309,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       });
       last = await this.runLoop(max);
     }
-    return last;
+    return ranAtLeastOneRetry ? last : undefined;
   }
 
   /* --------------------------- Helpers (loop) --------------------------- */
@@ -512,8 +527,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
     try {
       stopReason = yield* this.streamLoop(runtime, max);
-      const retryStatus = yield* this.maybeRetryStream(runtime, stopReason, max);
-      if (retryStatus) stopReason = retryStatus;
+      // Same discriminated-return contract as the sync path's maybeRetry.
+      const retryOutcome = yield* this.maybeRetryStream(runtime, stopReason, max);
+      if (retryOutcome !== undefined) stopReason = retryOutcome;
     } catch (error: any) {
       errorMessage = error?.message ?? String(error);
       logger.error("agent.runStream.error", { runId: this.runId, errorMessage });
@@ -688,18 +704,25 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     }
   }
 
+  /**
+   * Streaming counterpart to `maybeRetry`. Returns `undefined` if no
+   * retry was attempted; otherwise the retry's terminal stopReason
+   * (which may be `null` if the retry hit max iterations). See sync
+   * version for rationale.
+   */
   protected async *maybeRetryStream(
     runtime: StreamingRuntimeAdapter<TContext>,
     stopReason: ModelTurn["stopReason"] | null,
     max: number,
-  ): AsyncGenerator<AgentEvent, ModelTurn["stopReason"] | null, void> {
+  ): AsyncGenerator<AgentEvent, ModelTurn["stopReason"] | null | undefined, void> {
     const policy = this.config.policy;
-    if (!policy?.shouldRetry) return null;
-    if (stopReason !== "end_turn" && stopReason !== "stop_sequence") return null;
+    if (!policy?.shouldRetry) return undefined;
+    if (stopReason !== "end_turn" && stopReason !== "stop_sequence") return undefined;
 
     const cap = policy.maxRetries ?? 1;
     let retries = 0;
     let last: ModelTurn["stopReason"] | null = stopReason;
+    let ranAtLeastOneRetry = false;
     while (retries < cap && this.currentIteration < max) {
       const decision = policy.shouldRetry({
         toolsUsed: this.toolsUsed,
@@ -707,8 +730,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         finalText: this.fullResponseText,
         iterations: this.currentIteration,
       });
-      if (!decision) return last;
+      if (!decision) break;
       retries++;
+      ranAtLeastOneRetry = true;
       this.metrics.toolRetries++;
       this.history.push({
         role: "user",
@@ -716,7 +740,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       });
       last = yield* this.streamLoop(runtime, max);
     }
-    return last;
+    return ranAtLeastOneRetry ? last : undefined;
   }
 }
 

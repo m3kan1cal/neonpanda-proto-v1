@@ -263,6 +263,49 @@ describe("Agent v2", () => {
     expect(result.toolCalls[0].contentOffset).toBe("Looking up.".length);
   });
 
+  it("reports max_iterations (not ok) when a retry exhausts the iteration budget", async () => {
+    // Regression for Bugbot finding 834c03a2: previously, when a retry
+    // was triggered and its inner runLoop hit maxIterations, maybeRetry
+    // returned null which the caller treated as "no retry" and kept the
+    // pre-retry "end_turn" stopReason. Status incorrectly reported "ok".
+    const t1 = defineTool<TestCtx, z.ZodObject<{}>>({
+      id: "t1",
+      description: "...",
+      input: z.object({}),
+      execute: async () => ({ ok: true, data: 1 }),
+    });
+    // Iteration 1 (initial): model just talks, no tool. shouldRetry sees
+    // toolsUsed=[] and finalText with "?" -> returns retry prompt.
+    // Iteration 2 (retry): model emits tool_use again -> would need a
+    // third iteration to terminate, but maxIterations=2 cuts us off.
+    const runtime = new MockRuntime([
+      textTurn("would you like me to proceed?"),
+      toolUseTurn([{ toolUseId: "u1", name: "t1", input: {} }]),
+    ]);
+    const agent = new Agent<TestCtx>(
+      baseConfig({
+        tools: [t1],
+        runtime,
+        maxIterations: 2,
+        policy: {
+          maxRetries: 1,
+          shouldRetry: ({ toolsUsed, finalText }) => {
+            if (toolsUsed.length === 0 && /\?/.test(finalText)) {
+              return {
+                retryPrompt: "Use your tools.",
+                reason: "tool_not_called",
+              };
+            }
+            return null;
+          },
+        },
+      }),
+    );
+    const result = await agent.run({ userMessage: "go" });
+    expect(result.status).toBe("max_iterations");
+    expect(result.iterations).toBe(2);
+  });
+
   it("stops at maxIterations", async () => {
     const t1 = defineTool<TestCtx, z.ZodObject<{}>>({
       id: "t1",
