@@ -5,7 +5,7 @@
  *     "../libs/agents/core/v2";
  */
 
-export { Agent } from "./agent";
+export { Agent, stripLeadingTextBlocks } from "./agent";
 export type {
   AgentConfigV2,
   AgentRunInput,
@@ -49,6 +49,14 @@ export { ContextBuilder } from "./context/context-builder";
 export type { SectionName, SectionOptions } from "./context/context-builder";
 
 export { SyncRuntime } from "./runtime/sync-runtime";
+export {
+  StreamingRuntime,
+} from "./runtime/streaming-runtime";
+export type {
+  StreamingRuntimeAdapter,
+  TurnStreamEvent,
+} from "./runtime/streaming-runtime";
+export { formatAgentEventToSSE } from "./runtime/sse-formatter";
 export type {
   RuntimeAdapter,
   ModelTurn,

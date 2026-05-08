@@ -19,6 +19,11 @@ import {
 } from "./tools/tool-scheduler";
 import { ToolResultStore } from "./tools/tool-result-store";
 import type { RuntimeAdapter, ModelTurn } from "./runtime/runtime";
+import type {
+  StreamingRuntimeAdapter,
+  TurnStreamEvent,
+} from "./runtime/streaming-runtime";
+import type { AgentEvent } from "./events/events";
 import { RunMetrics } from "./observability/metrics";
 import {
   correlationStore,
@@ -133,6 +138,31 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       ...this.config.correlation,
     };
     return correlationStore.run(baseCorr, () => this.runInner(input));
+  }
+
+  /**
+   * Streaming run. Yields AgentEvent values as the model produces text and
+   * as tools execute; returns the final AgentRunResult once complete.
+   *
+   * Requires the configured runtime to implement `invokeTurnStream`. Use
+   * `formatAgentEventToSSE` (in `core/v2/runtime/sse-formatter`) to
+   * serialise events for an SSE response.
+   *
+   * Note: AsyncLocalStorage doesn't reliably propagate across `yield`
+   * boundaries in async generators, so streaming runs don't inject
+   * correlation IDs into nested log lines. The final `agent.run.completed`
+   * line still carries the run-level correlation via the metrics emitter.
+   */
+  async *runStream(
+    input: AgentRunInput,
+  ): AsyncGenerator<AgentEvent, AgentRunResult, void> {
+    const runtime = this.config.runtime as Partial<StreamingRuntimeAdapter<TContext>>;
+    if (typeof runtime.invokeTurnStream !== "function") {
+      throw new Error(
+        "Agent.runStream() requires a runtime that implements invokeTurnStream (use StreamingRuntime).",
+      );
+    }
+    return yield* this.streamInner(input, runtime as StreamingRuntimeAdapter<TContext>);
   }
 
   getRunId(): string {
@@ -450,6 +480,246 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       errorMessage,
     };
   }
+
+  /* --------------------------- Streaming run loop ------------------------- */
+
+  protected async *streamInner(
+    input: AgentRunInput,
+    runtime: StreamingRuntimeAdapter<TContext>,
+  ): AsyncGenerator<AgentEvent, AgentRunResult, void> {
+    yield {
+      type: "run_start",
+      runId: this.runId,
+      agentId: this.config.agentId,
+    };
+
+    const userContent = await this.buildUserContent(input);
+    this.history.push({ role: "user", content: userContent });
+    const max = this.config.maxIterations ?? DEFAULT_MAX_ITERATIONS;
+    let stopReason: ModelTurn["stopReason"] | null = null;
+    let errorMessage: string | undefined;
+
+    try {
+      stopReason = yield* this.streamLoop(runtime, max);
+      const retryStatus = yield* this.maybeRetryStream(runtime, stopReason, max);
+      if (retryStatus) stopReason = retryStatus;
+    } catch (error: any) {
+      errorMessage = error?.message ?? String(error);
+      logger.error("agent.runStream.error", { runId: this.runId, errorMessage });
+      this.emitMetrics({ status: "error" });
+      const result = this.buildResult("error", errorMessage);
+      yield {
+        type: "run_complete",
+        iterations: result.iterations,
+        toolsUsed: result.toolsUsed,
+        modelId: result.modelId,
+        inputTokens: result.inputTokens,
+        outputTokens: result.outputTokens,
+        cacheReadInputTokens: result.cacheReadInputTokens,
+        status: "error",
+      };
+      return result;
+    }
+
+    const status: AgentRunResult["status"] =
+      stopReason === "end_turn" || stopReason === "stop_sequence"
+        ? "ok"
+        : this.currentIteration >= max
+          ? "max_iterations"
+          : "stopped";
+    this.emitMetrics({ status });
+    const result = this.buildResult(status, errorMessage);
+    yield {
+      type: "run_complete",
+      iterations: result.iterations,
+      toolsUsed: result.toolsUsed,
+      modelId: result.modelId,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      cacheReadInputTokens: result.cacheReadInputTokens,
+      status,
+    };
+    return result;
+  }
+
+  protected async *streamLoop(
+    runtime: StreamingRuntimeAdapter<TContext>,
+    max: number,
+  ): AsyncGenerator<AgentEvent, ModelTurn["stopReason"] | null, void> {
+    while (this.currentIteration < max) {
+      this.currentIteration++;
+      this.metrics.iterations = this.currentIteration;
+      yield { type: "iteration_start", iteration: this.currentIteration };
+
+      const turn = yield* this.streamTurn(runtime);
+      this.modelId = turn.modelId;
+      this.inputTokens += turn.usage.inputTokens;
+      this.outputTokens += turn.usage.outputTokens;
+      this.cacheReadInputTokens += turn.usage.cacheReadInputTokens ?? 0;
+
+      const isToolUse = turn.stopReason === "tool_use";
+      const contentToAppend = isToolUse
+        ? stripLeadingTextBlocks(turn.assistantContent)
+        : turn.assistantContent;
+      this.history.push({ role: "assistant", content: contentToAppend });
+      // For non-tool-use terminal turns the streamTurn delta accumulator
+      // already mirrors fullResponseText, but we sync from history just in
+      // case a runtime emits a non-streaming end_turn without deltas.
+      if (!isToolUse) {
+        this.fullResponseText = this.collectAssistantText();
+      }
+
+      if (turn.stopReason === "tool_use") {
+        yield* this.streamDispatchTools(turn.assistantContent);
+        continue;
+      }
+      return turn.stopReason;
+    }
+    return null;
+  }
+
+  protected async *streamTurn(
+    runtime: StreamingRuntimeAdapter<TContext>,
+  ): AsyncGenerator<AgentEvent, ModelTurn, void> {
+    const turnGen = runtime.invokeTurnStream(this.invokeInput());
+    while (true) {
+      const { value, done } = await turnGen.next();
+      if (done) return value;
+      const ev = value as TurnStreamEvent;
+      if (ev.type === "text_delta") {
+        // Accumulate so contentOffset on subsequent tool calls reflects
+        // text the UI has already seen (history may strip leading text).
+        this.fullResponseText += ev.text;
+        yield { type: "chunk", text: ev.text };
+      }
+      // tool_use_start/_input_delta/_stop are surfaced as tool_call events
+      // _after_ the turn completes (we wait until we have the parsed input
+      // to emit the running record). They're not propagated upstream here.
+    }
+  }
+
+  protected async *streamDispatchTools(
+    assistantContent: any[],
+  ): AsyncGenerator<AgentEvent, void, void> {
+    const uses = this.extractToolUses(assistantContent);
+    if (uses.length === 0) return;
+
+    // Emit running records up front so the UI can render placeholder blocks
+    // while the scheduler executes.
+    const offsetSnapshot = this.fullResponseText.length;
+    const runningRecords = uses.map((use) => {
+      const tool = this.config.tools.find((t) => t.id === use.toolName);
+      const record: ToolCallRecord = {
+        toolUseId: use.toolUseId,
+        toolName: use.toolName,
+        status: "running",
+        iteration: this.currentIteration,
+        contentOffset: offsetSnapshot,
+        startedAtMs: Date.now(),
+        toolInput: tool?.redactInput ? undefined : use.input,
+      };
+      this.toolCalls.push(record);
+      return record;
+    });
+    for (const record of runningRecords) {
+      // Emit a snapshot so the consumer's view of "running" doesn't mutate
+      // when we update the same record on completion.
+      yield { type: "tool_call_start", record: { ...record } };
+    }
+
+    const policy = this.config.policy;
+    const blockingFn = policy?.blocking
+      ? (toolId: string, toolInput: unknown) =>
+          policy.blocking!(toolId, toolInput, this.resultStore, this.config.context)
+      : undefined;
+
+    const scheduled = await this.scheduler.execute(
+      uses,
+      (toolUseId, signal) => ({
+        agentContext: this.config.context,
+        resultStore: this.resultStore,
+        toolUseId,
+        signal,
+        iteration: this.currentIteration,
+      }),
+      blockingFn,
+    );
+
+    const toolResultBlocks = scheduled.map((s) => this.toResultBlock(s));
+    this.history.push({ role: "user", content: toolResultBlocks });
+
+    for (const s of scheduled) {
+      const running = runningRecords.find((r) => r.toolUseId === s.toolUseId);
+      if (running) {
+        running.status = s.result.ok ? "complete" : "error";
+        running.durationMs = s.durationMs;
+        running.resultSummary = s.result.ok ? s.result.summary : undefined;
+        running.errorMessage = !s.result.ok
+          ? s.result.code === "human_input_required"
+            ? s.result.prompt
+            : s.result.message
+          : undefined;
+        running.errorCode = !s.result.ok ? s.result.code : undefined;
+        yield { type: "tool_call_complete", record: { ...running } };
+      }
+
+      if (s.result.ok) {
+        this.resultStore.put(s.toolName, s.result.data, {
+          index: s.result.toolStoreIndex,
+          uniqueKey: s.result.toolStoreKey,
+        });
+      } else {
+        this.resultStore.put(s.toolName, s.result);
+      }
+      this.toolsUsed.push(s.toolName);
+    }
+  }
+
+  protected async *maybeRetryStream(
+    runtime: StreamingRuntimeAdapter<TContext>,
+    stopReason: ModelTurn["stopReason"] | null,
+    max: number,
+  ): AsyncGenerator<AgentEvent, ModelTurn["stopReason"] | null, void> {
+    const policy = this.config.policy;
+    if (!policy?.shouldRetry) return null;
+    if (stopReason !== "end_turn" && stopReason !== "stop_sequence") return null;
+
+    const cap = policy.maxRetries ?? 1;
+    let retries = 0;
+    let last: ModelTurn["stopReason"] | null = stopReason;
+    while (retries < cap && this.currentIteration < max) {
+      const decision = policy.shouldRetry({
+        toolsUsed: this.toolsUsed,
+        resultStore: this.resultStore,
+        finalText: this.fullResponseText,
+        iterations: this.currentIteration,
+      });
+      if (!decision) return last;
+      retries++;
+      this.metrics.toolRetries++;
+      this.history.push({
+        role: "user",
+        content: [{ text: decision.retryPrompt }],
+      });
+      last = yield* this.streamLoop(runtime, max);
+    }
+    return last;
+  }
+}
+
+/**
+ * On `tool_use` iterations, drop any leading text block(s) from the assistant
+ * content before pushing it to history. Without this, a model that says
+ * "Sure! I'll look that up for you." and then immediately calls a tool
+ * tends to repeat the same preamble in its post-tool reply.
+ *
+ * Phase 2 — see plan §1 (pre-existing behaviour to preserve).
+ */
+export function stripLeadingTextBlocks(content: any[]): any[] {
+  if (!Array.isArray(content) || content.length === 0) return content;
+  let firstNonText = content.findIndex((b) => !(typeof b?.text === "string"));
+  if (firstNonText <= 0) return content; // either all text (keep as-is) or already starts with non-text
+  return content.slice(firstNonText);
 }
 
 function errorPayloadFor(result: Exclude<ToolResult<unknown>, { ok: true }>): any {

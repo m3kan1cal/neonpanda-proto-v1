@@ -210,3 +210,30 @@ export function formatSuggestionEvent(
 export function createStreamTerminator(): null {
   return null;
 }
+
+/**
+ * Creates a formatted SSE tool-call event. Emitted twice per tool call by
+ * the v2 streaming runtime: once with status "running" when the tool starts,
+ * once with status "complete" or "error" when it finishes. Lets the
+ * frontend interleave tool-call blocks with assistant text via
+ * `contentOffset`. Sensitive tools omit `toolInput` (`redactInput: true`).
+ *
+ * Forward-compatible: existing v1 frontends ignore unknown event types.
+ */
+export interface ToolCallSseEvent {
+  type: "tool_call";
+  toolUseId: string;
+  toolName: string;
+  status: "running" | "complete" | "error";
+  iteration: number;
+  contentOffset: number;
+  durationMs?: number;
+  toolInput?: unknown;
+  resultSummary?: string;
+  errorMessage?: string;
+  errorCode?: string;
+}
+
+export function formatToolCallEvent(event: Omit<ToolCallSseEvent, "type">): string {
+  return formatSseEvent({ type: "tool_call", ...event } as any);
+}
