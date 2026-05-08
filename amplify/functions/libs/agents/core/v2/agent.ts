@@ -9,8 +9,12 @@
 
 import type { AgentContext, AgentMessage } from "../types";
 import { MESSAGE_TYPES } from "../../../coach-conversation/types";
-import type { Tool, ToolCallRecord } from "./tools/tool-types";
-import type { ToolResult } from "./tools/tool-types";
+import type {
+  Tool,
+  ToolCallRecord,
+  ToolExecutionContext,
+  ToolResult,
+} from "./tools/tool-types";
 import {
   ToolScheduler,
   type BlockingDecision,
@@ -334,9 +338,14 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     if (uses.length === 0) return;
 
     const policy = this.config.policy;
+    // Match the scheduler's BlockingFn signature `(toolId, toolInput, ctx)`
+    // exactly and source `resultStore` / `agentContext` from the
+    // ToolExecutionContext rather than capturing `this.*`. Functionally
+    // equivalent (the scheduler builds ctx from this same instance) but
+    // the type contract is now honoured end-to-end.
     const blockingFn = policy?.blocking
-      ? (toolId: string, toolInput: unknown) =>
-          policy.blocking!(toolId, toolInput, this.resultStore, this.config.context)
+      ? (toolId: string, toolInput: unknown, ctx: ToolExecutionContext<TContext>) =>
+          policy.blocking!(toolId, toolInput, ctx.resultStore as ToolResultStore, ctx.agentContext)
       : undefined;
 
     const scheduled = await this.scheduler.execute(
@@ -662,9 +671,14 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     }
 
     const policy = this.config.policy;
+    // Match the scheduler's BlockingFn signature `(toolId, toolInput, ctx)`
+    // exactly and source `resultStore` / `agentContext` from the
+    // ToolExecutionContext rather than capturing `this.*`. Functionally
+    // equivalent (the scheduler builds ctx from this same instance) but
+    // the type contract is now honoured end-to-end.
     const blockingFn = policy?.blocking
-      ? (toolId: string, toolInput: unknown) =>
-          policy.blocking!(toolId, toolInput, this.resultStore, this.config.context)
+      ? (toolId: string, toolInput: unknown, ctx: ToolExecutionContext<TContext>) =>
+          policy.blocking!(toolId, toolInput, ctx.resultStore as ToolResultStore, ctx.agentContext)
       : undefined;
 
     const scheduled = await this.scheduler.execute(

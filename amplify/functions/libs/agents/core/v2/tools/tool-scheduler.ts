@@ -198,9 +198,17 @@ export class ToolScheduler<TContext extends AgentContext> {
 
         const execPromise = tool.execute(inputCheck.value, ctx);
         const abortPromise = new Promise<never>((_, reject) => {
-          ctrl.signal.addEventListener("abort", () => {
-            reject(ctrl.signal.reason ?? new TimeoutError(tool.id, tool.timeoutMs));
-          });
+          // `{ once: true }` ensures the listener is removed after a
+          // single fire (or never, when the tool completes normally) so
+          // we don't retain an unsettled promise + listener until the
+          // AbortController is GC'd.
+          ctrl.signal.addEventListener(
+            "abort",
+            () => {
+              reject(ctrl.signal.reason ?? new TimeoutError(tool.id, tool.timeoutMs));
+            },
+            { once: true },
+          );
         });
 
         let result: ToolResult<unknown> = await Promise.race([execPromise, abortPromise]);
