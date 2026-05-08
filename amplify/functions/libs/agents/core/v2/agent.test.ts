@@ -263,6 +263,52 @@ describe("Agent v2", () => {
     expect(result.toolCalls[0].contentOffset).toBe("Looking up.".length);
   });
 
+  it("retry heuristic ignores preamble text from earlier tool_use turns (v1 parity)", async () => {
+    // Regression for Bugbot finding 3fec1de7. v1's shouldRetryWorkflow saw
+    // only the FINAL turn's text. Pre-fix, v2 fed the accumulator (every
+    // turn's text concatenated) into shouldRetry — a "?" anywhere in a
+    // preamble would trip looksIncomplete and fire an unnecessary retry.
+    // This test asserts shouldRetry sees an assertive last-turn text even
+    // when an earlier preamble contained a question mark.
+    const search = defineTool<TestCtx, z.ZodObject<{}>>({
+      id: "search",
+      description: "...",
+      input: z.object({}),
+      execute: async () => ({ ok: true, data: 1 }),
+    });
+    let observedFinalText: string | null = null;
+    const runtime = new MockRuntime([
+      // Iteration 1: tool_use turn whose preamble contains a "?"
+      toolUseTurn(
+        [{ toolUseId: "u1", name: "search", input: {} }],
+        "Should I check templates first?",
+      ),
+      // Iteration 2: terminal text turn — definitive, no question mark
+      textTurn("Templates checked. Coach saved."),
+    ]);
+    const agent = new Agent<TestCtx>(
+      baseConfig({
+        tools: [search],
+        runtime,
+        maxIterations: 5,
+        policy: {
+          maxRetries: 1,
+          shouldRetry: ({ finalText }) => {
+            observedFinalText = finalText;
+            // Replicate coach-creator's heuristic shape
+            if (/\?/.test(finalText)) {
+              return { retryPrompt: "redo", reason: "looks-incomplete" };
+            }
+            return null;
+          },
+        },
+      }),
+    );
+    const result = await agent.run({ userMessage: "go" });
+    expect(observedFinalText).toBe("Templates checked. Coach saved.");
+    expect(result.iterations).toBe(2);
+  });
+
   it("reports max_iterations (not ok) when a retry exhausts the iteration budget", async () => {
     // Regression for Bugbot finding 834c03a2: previously, when a retry
     // was triggered and its inner runLoop hit maxIterations, maybeRetry

@@ -119,6 +119,11 @@ export class Agent<TContext extends AgentContext = AgentContext> {
   protected readonly scheduler: ToolScheduler<TContext>;
   protected currentIteration = 0;
   protected fullResponseText = "";
+  /** Text emitted by the most recent terminal (non-tool_use) turn. v1's
+   *  shouldRetryWorkflow inspected only the final converse() return; the
+   *  accumulator above includes every turn's text including preambles, so
+   *  use this for v1-equivalent retry heuristics. */
+  protected lastTurnResponseText = "";
   protected inputTokens = 0;
   protected outputTokens = 0;
   protected cacheReadInputTokens = 0;
@@ -260,6 +265,16 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         : turn.assistantContent;
       this.appendAssistantContent(contentToAppend);
 
+      // Terminal turn: snapshot just this turn's text. Used by the retry
+      // policy to mirror v1's `shouldRetryWorkflow(result, response)`,
+      // which received only the final converse() return — not preamble
+      // text from earlier tool_use turns.
+      if (!isToolUse) {
+        this.lastTurnResponseText = extractTextFromContent(
+          turn.assistantContent,
+        );
+      }
+
       if (turn.stopReason === "tool_use") {
         await this.dispatchTools(turn.assistantContent);
         continue;
@@ -294,7 +309,11 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       const decision = policy.shouldRetry({
         toolsUsed: this.toolsUsed,
         resultStore: this.resultStore,
-        finalText: this.fullResponseText,
+        // v1 parity: only the most recent terminal turn's text, not the
+        // accumulator (which would include preambles from earlier
+        // tool_use turns and could spuriously trip the looksIncomplete
+        // heuristic).
+        finalText: this.lastTurnResponseText,
         iterations: this.currentIteration,
       });
       if (!decision) break;
@@ -611,6 +630,13 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       if (!isToolUse && this.fullResponseText.length === 0) {
         this.fullResponseText = extractTextFromContent(turn.assistantContent);
       }
+      // Terminal turn: snapshot just this turn's text for v1-parity
+      // shouldRetry heuristics (see sync path comment).
+      if (!isToolUse) {
+        this.lastTurnResponseText = extractTextFromContent(
+          turn.assistantContent,
+        );
+      }
 
       if (turn.stopReason === "tool_use") {
         yield* this.streamDispatchTools(turn.assistantContent);
@@ -741,7 +767,11 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       const decision = policy.shouldRetry({
         toolsUsed: this.toolsUsed,
         resultStore: this.resultStore,
-        finalText: this.fullResponseText,
+        // v1 parity: only the most recent terminal turn's text, not the
+        // accumulator (which would include preambles from earlier
+        // tool_use turns and could spuriously trip the looksIncomplete
+        // heuristic).
+        finalText: this.lastTurnResponseText,
         iterations: this.currentIteration,
       });
       if (!decision) break;
