@@ -123,10 +123,21 @@ function QuickWinPill({ text }) {
  *
  * @param {Object} props
  * @param {Object} props.source - The source object from selectBriefingSource()
- * @param {Function} props.onClose - Close handler
+ * @param {Function} props.onClose - Close handler (close modal only, no dismissal)
+ * @param {Function} [props.onDismiss] - Optional dismiss handler. When provided,
+ *   the footer's "Dismiss" button persists the dismissal (same as the X on the
+ *   Training Intel card) instead of merely closing the modal. Falls back to
+ *   `onClose` for safety if not provided.
  */
-export default function InsightsModal({ source, onClose, userId, coachId }) {
+export default function InsightsModal({
+  source,
+  onClose,
+  onDismiss,
+  userId,
+  coachId,
+}) {
   const navigate = useNavigate();
+  const handleDismiss = onDismiss || onClose;
 
   // Close on Escape key
   useEffect(() => {
@@ -193,7 +204,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Workout"
-          onDismiss={onClose}
+          onDismiss={handleDismiss}
           onClick={() => {
             onClose();
             navigate(
@@ -295,7 +306,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Full Report"
-          onDismiss={onClose}
+          onDismiss={handleDismiss}
           onClick={() => {
             onClose();
             navigate(
@@ -362,7 +373,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Full Report"
-          onDismiss={onClose}
+          onDismiss={handleDismiss}
           onClick={() => {
             onClose();
             navigate(
@@ -398,7 +409,7 @@ export default function InsightsModal({ source, onClose, userId, coachId }) {
 
         <ModalFooter
           label="View Workout"
-          onDismiss={onClose}
+          onDismiss={handleDismiss}
           onClick={() => {
             onClose();
             navigate(

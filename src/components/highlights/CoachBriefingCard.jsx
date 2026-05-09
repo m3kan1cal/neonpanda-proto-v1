@@ -224,6 +224,15 @@ export default function CoachBriefingCard({
     [userId, source],
   );
 
+  // Same dismissal as the X on the card, but invoked from inside the modal —
+  // closes the modal as well so the user lands back on a clean Training Intel
+  // row instead of a closed modal sitting on top of the still-visible card.
+  const handleDismissFromModal = useCallback(() => {
+    dismissSource(userId, source);
+    setDismissed(true);
+    setModalOpen(false);
+  }, [userId, source]);
+
   // ------ Loading skeleton ------
   if (isLoading) {
     return (
@@ -480,6 +489,7 @@ export default function CoachBriefingCard({
         <InsightsModal
           source={source}
           onClose={() => setModalOpen(false)}
+          onDismiss={handleDismissFromModal}
           userId={userId}
           coachId={coachId}
         />
