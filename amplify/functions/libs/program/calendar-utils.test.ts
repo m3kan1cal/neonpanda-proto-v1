@@ -12,6 +12,7 @@ import {
   formatDate,
   parseDate,
   getPhaseForDay,
+  buildProgramCalendarWindow,
 } from "./calendar-utils";
 import type { WorkoutTemplate } from "./types";
 import type { Program } from "./types";
@@ -320,5 +321,176 @@ describe("getWorkoutsForWeek", () => {
     ];
     const result = getWorkoutsForWeek(workouts, "2025-01-01", "2025-01-01", 0);
     expect(result).toHaveLength(2);
+  });
+});
+
+// ─── buildProgramCalendarWindow ─────────────────────────────────────────────
+
+describe("buildProgramCalendarWindow", () => {
+  it("centers the window on today and labels weekdays correctly (LA timezone)", () => {
+    // Program starts Tue 2026-04-21. "Now" is 2026-05-09 19:00 UTC = noon LA on Saturday.
+    // Saturday 2026-05-09 should be Day 19 (Day 1 = 2026-04-21 Tuesday).
+    const now = new Date("2026-05-09T19:00:00Z");
+    const window = buildProgramCalendarWindow(
+      { startDate: "2026-04-21", pausedDuration: 0, totalDays: 84 },
+      "America/Los_Angeles",
+      3,
+      5,
+      now,
+    );
+
+    expect(window.todayIsoDate).toBe("2026-05-09");
+    expect(window.todayDayNumber).toBe(19);
+
+    const day19 = window.rows.find((r) => r.dayNumber === 19);
+    expect(day19).toEqual({
+      dayNumber: 19,
+      isoDate: "2026-05-09",
+      dayOfWeek: "Saturday",
+      relative: "today",
+    });
+
+    const day24 = window.rows.find((r) => r.dayNumber === 24);
+    // Original screenshot bug: AI claimed Day 24 was "Monday May 13".
+    // The window must show Day 24 = Thursday 2026-05-14, in 5 days.
+    expect(day24).toEqual({
+      dayNumber: 24,
+      isoDate: "2026-05-14",
+      dayOfWeek: "Thursday",
+      relative: "in 5 days",
+    });
+
+    expect(window.rows.find((r) => r.dayNumber === 18)?.relative).toBe(
+      "yesterday",
+    );
+    expect(window.rows.find((r) => r.dayNumber === 20)?.relative).toBe(
+      "tomorrow",
+    );
+    expect(window.rows.find((r) => r.dayNumber === 17)?.relative).toBe(
+      "2 days ago",
+    );
+
+    // daysBefore=3, daysAfter=5 -> Day 16..Day 24
+    expect(window.rows[0].dayNumber).toBe(16);
+    expect(window.rows[window.rows.length - 1].dayNumber).toBe(24);
+  });
+
+  it("clamps to program range — never emits day < 1 or > totalDays", () => {
+    // Today is Day 2 of a 5-day program, daysBefore=3 would request Day -1.
+    const now = new Date("2026-04-22T19:00:00Z"); // Wednesday 2026-04-22
+    const window = buildProgramCalendarWindow(
+      { startDate: "2026-04-21", pausedDuration: 0, totalDays: 5 },
+      "America/Los_Angeles",
+      3,
+      10,
+      now,
+    );
+    expect(window.todayDayNumber).toBe(2);
+    expect(window.rows[0].dayNumber).toBe(1);
+    expect(window.rows[window.rows.length - 1].dayNumber).toBe(5);
+  });
+
+  it("returns null todayDayNumber when today is before program start", () => {
+    const now = new Date("2026-04-15T19:00:00Z"); // Wednesday, before start
+    const window = buildProgramCalendarWindow(
+      { startDate: "2026-04-21", pausedDuration: 0, totalDays: 28 },
+      "America/Los_Angeles",
+      3,
+      5,
+      now,
+    );
+    expect(window.todayDayNumber).toBeNull();
+    // Anchors on Day 1 when today is before the program.
+    expect(window.rows[0].dayNumber).toBe(1);
+    const day1 = window.rows.find((r) => r.dayNumber === 1);
+    expect(day1?.isoDate).toBe("2026-04-21");
+    expect(day1?.relative).toBe("in 6 days");
+  });
+
+  it("returns null todayDayNumber when today is after program end", () => {
+    const now = new Date("2026-06-01T19:00:00Z"); // After 28-day program from 2026-04-21
+    const window = buildProgramCalendarWindow(
+      { startDate: "2026-04-21", pausedDuration: 0, totalDays: 28 },
+      "America/Los_Angeles",
+      3,
+      5,
+      now,
+    );
+    expect(window.todayDayNumber).toBeNull();
+    // Anchors on the final day when today is after the program.
+    expect(window.rows[window.rows.length - 1].dayNumber).toBe(28);
+  });
+
+  it("shifts the calendar by pausedDuration (paused programs)", () => {
+    // Program started 2026-04-21 but was paused for 7 days. Today 2026-05-09
+    // should now correspond to Day 12 (not Day 19): 19 - 7 = 12.
+    const now = new Date("2026-05-09T19:00:00Z");
+    const window = buildProgramCalendarWindow(
+      { startDate: "2026-04-21", pausedDuration: 7, totalDays: 84 },
+      "America/Los_Angeles",
+      0,
+      0,
+      now,
+    );
+    expect(window.todayDayNumber).toBe(12);
+    expect(window.rows).toHaveLength(1);
+    expect(window.rows[0]).toEqual({
+      dayNumber: 12,
+      isoDate: "2026-05-09",
+      dayOfWeek: "Saturday",
+      relative: "today",
+    });
+  });
+
+  it("handles DST spring-forward correctly", () => {
+    // 2026-03-08 is DST spring-forward in LA. A program straddling it should
+    // still produce contiguous YYYY-MM-DD rows with no missing/duplicate days.
+    const now = new Date("2026-03-09T19:00:00Z"); // Monday after DST
+    const window = buildProgramCalendarWindow(
+      { startDate: "2026-03-06", pausedDuration: 0, totalDays: 14 },
+      "America/Los_Angeles",
+      3,
+      3,
+      now,
+    );
+    const dates = window.rows.map((r) => r.isoDate);
+    expect(dates).toEqual([
+      "2026-03-06",
+      "2026-03-07",
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+    ]);
+    expect(window.rows.find((r) => r.isoDate === "2026-03-08")?.dayOfWeek).toBe(
+      "Sunday",
+    );
+  });
+
+  it("respects user timezone for 'today' boundary", () => {
+    // 2026-05-10T03:00 UTC: still 2026-05-09 in LA (8pm Saturday) but already
+    // 2026-05-10 in Tokyo (noon Sunday). Same instant, different "today".
+    const now = new Date("2026-05-10T03:00:00Z");
+
+    const la = buildProgramCalendarWindow(
+      { startDate: "2026-04-21", pausedDuration: 0, totalDays: 84 },
+      "America/Los_Angeles",
+      0,
+      0,
+      now,
+    );
+    expect(la.todayIsoDate).toBe("2026-05-09");
+    expect(la.todayDayNumber).toBe(19);
+
+    const tokyo = buildProgramCalendarWindow(
+      { startDate: "2026-04-21", pausedDuration: 0, totalDays: 84 },
+      "Asia/Tokyo",
+      0,
+      0,
+      now,
+    );
+    expect(tokyo.todayIsoDate).toBe("2026-05-10");
+    expect(tokyo.todayDayNumber).toBe(20);
   });
 });

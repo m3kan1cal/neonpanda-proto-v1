@@ -21,7 +21,14 @@ import {
   buildCoachPersonalityPrompt,
   type FormatCoachPersonalityOptions,
 } from "../../coach-config/personality-utils";
-import { buildTemporalContext } from "../../analytics/temporal-context";
+import {
+  buildTemporalContext,
+  buildDateMathRuleBlock,
+} from "../../analytics/temporal-context";
+import {
+  formatProgramCalendarWindowForPrompt,
+  type ProgramCalendarWindow,
+} from "../../program/calendar-utils";
 import {
   sanitizeUserContent,
   wrapUserContent,
@@ -117,6 +124,13 @@ export function buildConversationAgentPrompt(
      * see in its temporal context (e.g. meet day, deload start).
      */
     upcomingAnchors?: Array<{ label: string; date: string }>;
+    /**
+     * Pre-computed program-day → calendar-date table centered on today, used
+     * to render the `## PROGRAM CALENDAR (AUTHORITATIVE)` section. Only set
+     * when the user has an active program. Built by
+     * `buildProgramCalendarWindow` in `libs/program/calendar-utils.ts`.
+     */
+    programCalendarWindow?: ProgramCalendarWindow | null;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -321,7 +335,7 @@ Enabled Modifications: ${capabilities.enabled_modifications?.join(", ") || "inte
 - When calling any tool, do not generate conversational text in the same turn as the tool call. Call the tool first; respond to the user in the following turn after you have the tool result. This applies to ALL tools (query_exercise_history, get_todays_workout, query_programs, save_memory, log_workout, etc.) — not just save_memory.
 - Performance, PR, "last weight", "best ever", or "max" questions: ALWAYS call \`query_exercise_history\` for the specific lift. Never answer from conversation history or model knowledge alone. A prior tool result for a different exercise (or list_exercise_names returning a name) is not a substitute.
 - "Did I do today's workout?" questions: ALWAYS read the \`## TODAY'S PRESCRIBED WORKOUT STATUS\` block in your dynamic context (when present) or call \`get_todays_workout\` for its \`status\` field. Never infer today's prescribed-template completion from \`query_exercise_history\` row dates alone — those rows are previously-logged work, not a status signal for today's prescription.
-- Date math: ALWAYS call \`compute_date\` for any relative date phrase ("tomorrow", "this saturday", "in 3 weeks", "a week ago"). Never count calendar days by hand.
+${buildDateMathRuleBlock({ hasProgramCalendar: true })}
 
 ### Coaching Responsibility
 - All coaching decisions are yours. Never defer the decision to the platform, to the NeonPanda team, to "support", or to anyone else (including individuals named in memories). You are the coach; the decision is yours.
@@ -408,6 +422,24 @@ ${preamble}
 - Status: ${ap.status}
 
 ${toolNote}`);
+  }
+
+  // Section 5.25: Program Calendar Window (conditional — only when active program + window provided)
+  //
+  // Pre-rendered table mapping program-day numbers to ISO dates and weekdays
+  // for a small window around today. Without this, the agent has only the
+  // bare `currentDay` integer and confabulates calendar dates / weekdays for
+  // any "when is Day N?" or "when is my next session?" question. With this,
+  // the answer is a row lookup. Only emitted for active programs.
+  if (
+    options.activeProgram &&
+    (options.activeProgram.status || "").toLowerCase() === "active" &&
+    options.programCalendarWindow &&
+    options.programCalendarWindow.rows.length > 0
+  ) {
+    dynamicSections.push(
+      formatProgramCalendarWindowForPrompt(options.programCalendarWindow),
+    );
   }
 
   // Section 5.5: Today's Prescribed Workout Status (conditional)

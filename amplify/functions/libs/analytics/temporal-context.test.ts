@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { buildTemporalContext } from "./temporal-context";
+import {
+  buildTemporalContext,
+  buildDateMathRuleBlock,
+} from "./temporal-context";
 
 describe("buildTemporalContext", () => {
   it("formats ISO date + weekday in the user's timezone", () => {
@@ -147,5 +150,35 @@ describe("buildTemporalContext", () => {
     });
     expect(ctx.upcomingAnchors).toHaveLength(1);
     expect(ctx.upcomingAnchors[0].label).toBe("Good");
+  });
+});
+
+describe("buildDateMathRuleBlock", () => {
+  it("includes the PROGRAM CALENDAR source when hasProgramCalendar is true", () => {
+    const block = buildDateMathRuleBlock({ hasProgramCalendar: true });
+    expect(block).toContain("CURRENT DATE & TIME");
+    expect(block).toContain("PROGRAM CALENDAR");
+    expect(block).toContain("compute_date");
+    expect(block).toContain("Cross-check rule");
+    // Worked example for the conversation-agent (Day N) failure mode.
+    expect(block).toContain("Day 24");
+    expect(block).toContain("2026-05-14");
+  });
+
+  it("omits PROGRAM CALENDAR when hasProgramCalendar is false", () => {
+    const block = buildDateMathRuleBlock({ hasProgramCalendar: false });
+    expect(block).toContain("CURRENT DATE & TIME");
+    expect(block).not.toContain("PROGRAM CALENDAR");
+    expect(block).toContain("compute_date");
+    // Worked example for the program-designer / coach-creator failure mode.
+    expect(block).toContain("compute_date(['may 23'])");
+  });
+
+  it("instructs the agent never to invent calendar arithmetic", () => {
+    const block = buildDateMathRuleBlock({ hasProgramCalendar: true });
+    expect(block).toContain("Never compute calendar arithmetic in your head");
+    expect(block).toContain(
+      "Never name a weekday for a date you have not seen",
+    );
   });
 });

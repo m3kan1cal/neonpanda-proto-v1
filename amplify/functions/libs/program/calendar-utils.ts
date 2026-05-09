@@ -7,6 +7,10 @@
 
 import { Program, WorkoutTemplate } from "./types";
 import { convertUtcToUserDate } from "../analytics/date-utils";
+import {
+  diffInCalendarDays,
+  weekdayLabelForIsoDate,
+} from "../analytics/date-math";
 
 /**
  * Calculate the end date of a training program based on start date and total days
@@ -270,6 +274,202 @@ export interface ProgramCalendarDay {
   isFuture: boolean;
   workout: WorkoutTemplate | null;
   isRestDay: boolean;
+}
+
+/**
+ * Compact calendar window mapping program-day numbers to ISO dates and
+ * weekdays, intended for direct injection into AI prompts.
+ *
+ * The conversation agent gives users the wrong date when asked "what day is
+ * next bench press?" because it has only the bare `currentDay` integer and
+ * no calendar mapping. Pre-computing this window server-side turns the
+ * question into a lookup the model can read instead of arithmetic it would
+ * have to invent.
+ */
+export interface ProgramCalendarWindowRow {
+  dayNumber: number;
+  isoDate: string;
+  dayOfWeek: string;
+  /**
+   * Human-readable relative phrase: "today" | "yesterday" | "tomorrow" |
+   * "in N days" | "N days ago".
+   */
+  relative: string;
+}
+
+export interface ProgramCalendarWindow {
+  /** The user's "today" expressed as a program-day number (null if today is outside the program range). */
+  todayDayNumber: number | null;
+  /** The user's "today" ISO date in their timezone (always present). */
+  todayIsoDate: string;
+  /** Rows ordered by `dayNumber`, ascending. */
+  rows: ProgramCalendarWindowRow[];
+}
+
+const formatRelative = (daysFromToday: number): string => {
+  if (daysFromToday === 0) return "today";
+  if (daysFromToday === 1) return "tomorrow";
+  if (daysFromToday === -1) return "yesterday";
+  if (daysFromToday > 0) return `in ${daysFromToday} days`;
+  return `${Math.abs(daysFromToday)} days ago`;
+};
+
+/**
+ * Build a small program-day calendar window centered on today.
+ *
+ * - Clamps to the program's range [1, totalDays].
+ * - Returns `todayDayNumber: null` if today falls before the program starts
+ *   or after it ends.
+ * - Reuses `calculateScheduledDate` (already DST-safe and pause-aware) and
+ *   `weekdayLabelForIsoDate` so we never invent date arithmetic here.
+ */
+export function buildProgramCalendarWindow(
+  program: {
+    startDate: string;
+    pausedDuration: number;
+    totalDays: number;
+  },
+  userTimezone: string,
+  daysBefore: number = 3,
+  daysAfter: number = 10,
+  now: Date = new Date(),
+): ProgramCalendarWindow {
+  const todayIsoDate = convertUtcToUserDate(now, userTimezone);
+
+  // Locate "today" as a program-day number. We do this by ISO-date diff
+  // rather than re-running `calculateCurrentDay` so the window stays
+  // consistent with `calculateScheduledDate`'s view of program days even
+  // when `pausedDuration` > 0.
+  const day1IsoDate = calculateScheduledDate(
+    program.startDate,
+    1,
+    program.pausedDuration,
+  );
+  const programEndIsoDate = calculateScheduledDate(
+    program.startDate,
+    program.totalDays,
+    program.pausedDuration,
+  );
+
+  const todayOffsetFromDay1 = diffInCalendarDays(day1IsoDate, todayIsoDate);
+  const todayDayNumberRaw = todayOffsetFromDay1 + 1;
+
+  const todayInsideProgram =
+    todayIsoDate >= day1IsoDate && todayIsoDate <= programEndIsoDate;
+  const todayDayNumber = todayInsideProgram ? todayDayNumberRaw : null;
+
+  // Anchor the window on today's program-day when inside the program;
+  // otherwise anchor on the closer endpoint (Day 1 if today is before the
+  // program, totalDays if today is after).
+  const anchorDayNumber = todayInsideProgram
+    ? todayDayNumberRaw
+    : todayIsoDate < day1IsoDate
+      ? 1
+      : program.totalDays;
+
+  const startDay = Math.max(1, anchorDayNumber - daysBefore);
+  const endDay = Math.min(program.totalDays, anchorDayNumber + daysAfter);
+
+  const rows: ProgramCalendarWindowRow[] = [];
+  for (let dayNumber = startDay; dayNumber <= endDay; dayNumber++) {
+    const isoDate = calculateScheduledDate(
+      program.startDate,
+      dayNumber,
+      program.pausedDuration,
+    );
+    const daysFromToday = diffInCalendarDays(todayIsoDate, isoDate);
+    rows.push({
+      dayNumber,
+      isoDate,
+      dayOfWeek: weekdayLabelForIsoDate(isoDate, userTimezone),
+      relative: formatRelative(daysFromToday),
+    });
+  }
+
+  return {
+    todayDayNumber,
+    todayIsoDate,
+    rows,
+  };
+}
+
+/**
+ * Build a small set of "upcoming program anchor" entries suitable for passing
+ * as `upcomingAnchors` to `buildTemporalContext`. Used so the model sees the
+ * next few prescribed workouts already resolved to ISO date + day-of-week +
+ * "days from today" inside the CURRENT DATE & TIME block.
+ *
+ * Templates with status `completed` or `skipped` are dropped. Day numbers
+ * <= todayDayNumber are dropped (the calendar window covers those). The
+ * remaining templates are sorted by dayNumber and the first `limit` are
+ * returned.
+ *
+ * The result is deliberately simple: one anchor per template, labeled
+ * "Day N: <template name>". We don't try to dedupe by primary lift — that's
+ * a guess that's better made by the model from the table.
+ */
+export function buildUpcomingProgramAnchors(
+  workoutTemplates: WorkoutTemplate[],
+  program: { startDate: string; pausedDuration: number },
+  todayDayNumber: number | null,
+  limit: number = 3,
+): Array<{ label: string; date: string }> {
+  if (!Array.isArray(workoutTemplates) || workoutTemplates.length === 0) {
+    return [];
+  }
+  const minDay = todayDayNumber === null ? 1 : todayDayNumber + 1;
+  return workoutTemplates
+    .filter(
+      (t) =>
+        t.dayNumber >= minDay &&
+        t.status !== "completed" &&
+        t.status !== "skipped",
+    )
+    .sort((a, b) => a.dayNumber - b.dayNumber)
+    .slice(0, limit)
+    .map((t) => ({
+      label: `Day ${t.dayNumber}: ${t.name || "Workout"}`,
+      date: calculateScheduledDate(
+        program.startDate,
+        t.dayNumber,
+        program.pausedDuration,
+      ),
+    }));
+}
+
+/**
+ * Format a program calendar window as a markdown block ready to embed in an
+ * AI agent's dynamic prompt section.
+ */
+export function formatProgramCalendarWindowForPrompt(
+  window: ProgramCalendarWindow,
+): string {
+  const lines: string[] = [];
+  lines.push("## PROGRAM CALENDAR (AUTHORITATIVE)");
+  lines.push("");
+  if (window.todayDayNumber !== null) {
+    lines.push(
+      `Today (${window.todayIsoDate}) is Day ${window.todayDayNumber} of this program.`,
+    );
+  } else {
+    lines.push(
+      `Today is ${window.todayIsoDate}. Today falls outside this program's active range.`,
+    );
+  }
+  lines.push("");
+  lines.push("| Day | Date       | Weekday   | Relative      |");
+  lines.push("| --- | ---------- | --------- | ------------- |");
+  for (const row of window.rows) {
+    const dayCol = String(row.dayNumber).padStart(3, " ");
+    const weekday = row.dayOfWeek.padEnd(9, " ");
+    const relative = row.relative.padEnd(13, " ");
+    lines.push(`| ${dayCol} | ${row.isoDate} | ${weekday} | ${relative} |`);
+  }
+  lines.push("");
+  lines.push(
+    "Read this table whenever the user asks about a specific program day, or whenever you would otherwise have to compute the calendar date or weekday for a program day. Do not infer dates or weekdays for any day shown above — quote the row. If a day falls outside this window, call `compute_date` rather than guessing.",
+  );
+  return lines.join("\n");
 }
 
 export function generateProgramCalendar(
