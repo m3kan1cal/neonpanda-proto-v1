@@ -38,6 +38,20 @@ vi.mock("../libs/program-designer/session-management", () => ({
       },
       lastActivity: new Date("2026-05-08T20:30:00.000Z"),
     })),
+  createProgramGenerationFailure: vi
+    .fn()
+    .mockImplementation((session: any, error: any) => ({
+      ...session,
+      programGeneration: {
+        status: "FAILED",
+        startedAt:
+          session.programGeneration?.startedAt ||
+          new Date("2026-05-08T20:30:00.000Z"),
+        failedAt: new Date("2026-05-08T20:31:00.000Z"),
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      lastActivity: new Date("2026-05-08T20:31:00.000Z"),
+    })),
 }));
 
 vi.mock("../libs/id-utils", () => ({
@@ -64,7 +78,10 @@ import {
   createErrorResponse,
   invokeAsyncLambda,
 } from "../libs/api-helpers";
-import { createProgramGenerationLock } from "../libs/program-designer/session-management";
+import {
+  createProgramGenerationLock,
+  createProgramGenerationFailure,
+} from "../libs/program-designer/session-management";
 import { generateProgramId } from "../libs/id-utils";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
@@ -132,6 +149,20 @@ describe("retry-program-build handler", () => {
       },
       lastActivity: new Date("2026-05-08T20:30:00.000Z"),
     }));
+    vi.mocked(createProgramGenerationFailure).mockImplementation(
+      (session: any, error: any) => ({
+        ...session,
+        programGeneration: {
+          status: "FAILED",
+          startedAt:
+            session.programGeneration?.startedAt ||
+            new Date("2026-05-08T20:30:00.000Z"),
+          failedAt: new Date("2026-05-08T20:31:00.000Z"),
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+        lastActivity: new Date("2026-05-08T20:31:00.000Z"),
+      }),
+    );
   });
 
   afterEach(() => {
@@ -232,7 +263,7 @@ describe("retry-program-build handler", () => {
     expect((payload as any).additionalConsiderations).toBe("none");
   });
 
-  it("returns 500 when BUILD_TRAINING_PROGRAM_FUNCTION_NAME env var is missing", async () => {
+  it("returns 500 when BUILD_TRAINING_PROGRAM_FUNCTION_NAME env var is missing — and does NOT lock the session", async () => {
     delete process.env.BUILD_TRAINING_PROGRAM_FUNCTION_NAME;
     vi.mocked(getProgramDesignerSession).mockResolvedValue(
       makeFailedSession() as any,
@@ -246,10 +277,15 @@ describe("retry-program-build handler", () => {
         "BUILD_TRAINING_PROGRAM_FUNCTION_NAME environment variable not set",
       ),
     );
+    // Env var is checked before the lock save, so the session must NOT be
+    // mutated and no Lambda may be triggered. This guarantees a misconfigured
+    // function name can't strand a session in IN_PROGRESS.
+    expect(createProgramGenerationLock).not.toHaveBeenCalled();
+    expect(saveProgramDesignerSession).not.toHaveBeenCalled();
     expect(invokeAsyncLambda).not.toHaveBeenCalled();
   });
 
-  it("returns 500 when invokeAsyncLambda throws", async () => {
+  it("rolls session back to FAILED when invokeAsyncLambda throws after locking", async () => {
     vi.mocked(getProgramDesignerSession).mockResolvedValue(
       makeFailedSession() as any,
     );
@@ -259,6 +295,38 @@ describe("retry-program-build handler", () => {
 
     await handler(makeEvent());
 
+    expect(createErrorResponse).toHaveBeenCalledWith(
+      500,
+      "Lambda invocation failed",
+    );
+
+    // Two saves: the IN_PROGRESS lock, then the FAILED rollback.
+    expect(saveProgramDesignerSession).toHaveBeenCalledTimes(2);
+    const firstSave = vi.mocked(saveProgramDesignerSession).mock.calls[0][0];
+    const secondSave = vi.mocked(saveProgramDesignerSession).mock.calls[1][0];
+    expect(firstSave.programGeneration?.status).toBe("IN_PROGRESS");
+    expect(secondSave.programGeneration?.status).toBe("FAILED");
+    expect(secondSave.programGeneration?.error).toBe("Lambda invocation failed");
+
+    // Rollback was constructed via the canonical helper.
+    expect(createProgramGenerationFailure).toHaveBeenCalledTimes(1);
+  });
+
+  it("still returns 500 if the rollback save itself fails (does not throw)", async () => {
+    vi.mocked(getProgramDesignerSession).mockResolvedValue(
+      makeFailedSession() as any,
+    );
+    vi.mocked(invokeAsyncLambda).mockRejectedValue(
+      new Error("Lambda invocation failed"),
+    );
+    // First save (lock) succeeds, second save (rollback) fails.
+    vi.mocked(saveProgramDesignerSession)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("DDB unavailable"));
+
+    await handler(makeEvent());
+
+    // Original error is what surfaces to the caller, not the rollback error.
     expect(createErrorResponse).toHaveBeenCalledWith(
       500,
       "Lambda invocation failed",

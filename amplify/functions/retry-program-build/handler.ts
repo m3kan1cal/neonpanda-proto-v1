@@ -9,7 +9,10 @@ import {
   getUserProfile,
 } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
-import { createProgramGenerationLock } from "../libs/program-designer/session-management";
+import {
+  createProgramGenerationLock,
+  createProgramGenerationFailure,
+} from "../libs/program-designer/session-management";
 import { generateProgramId } from "../libs/id-utils";
 import { getUserTimezone } from "../libs/user/timezone";
 import { logger } from "../libs/logger";
@@ -46,6 +49,15 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       );
     }
 
+    // Validate environment BEFORE locking the session so a misconfigured
+    // env var fails fast without leaving the session stuck in IN_PROGRESS.
+    const buildProgramFunction = process.env.BUILD_TRAINING_PROGRAM_FUNCTION_NAME;
+    if (!buildProgramFunction) {
+      throw new Error(
+        "BUILD_TRAINING_PROGRAM_FUNCTION_NAME environment variable not set",
+      );
+    }
+
     // Generate a fresh programId for this attempt — matches what
     // stream-program-designer-session does on the original build, so the
     // retry produces a brand-new program record rather than reusing any
@@ -63,34 +75,50 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       { sessionId, programId },
     );
 
-    const buildProgramFunction = process.env.BUILD_TRAINING_PROGRAM_FUNCTION_NAME;
-    if (!buildProgramFunction) {
-      throw new Error(
-        "BUILD_TRAINING_PROGRAM_FUNCTION_NAME environment variable not set",
+    // Anything after the lock save must roll back to FAILED on error so the
+    // session doesn't get stuck IN_PROGRESS with no build actually running.
+    // Mirrors the rollback path in saveSessionAndTriggerProgramGeneration.
+    try {
+      const conversationContext = (lockedSession.conversationHistory || [])
+        .map((m) => `${m.role}: ${m.content}`)
+        .join("\n\n");
+
+      const buildEvent: BuildProgramEvent = {
+        userId,
+        coachId: lockedSession.coachId,
+        programId,
+        sessionId,
+        todoList: lockedSession.todoList,
+        conversationContext,
+        additionalConsiderations:
+          lockedSession.additionalConsiderations || "none",
+        userTimezone: getUserTimezone(userProfile),
+      };
+
+      await invokeAsyncLambda(
+        buildProgramFunction,
+        buildEvent,
+        "program build retry",
       );
+    } catch (triggerError) {
+      logger.error(
+        "Failed to trigger program build after locking session, rolling back to FAILED:",
+        triggerError,
+      );
+
+      try {
+        await saveProgramDesignerSession(
+          createProgramGenerationFailure(lockedSession, triggerError),
+        );
+      } catch (rollbackError) {
+        logger.error(
+          "Failed to roll back session to FAILED status:",
+          rollbackError,
+        );
+      }
+
+      throw triggerError;
     }
-
-    const conversationContext = (lockedSession.conversationHistory || [])
-      .map((m) => `${m.role}: ${m.content}`)
-      .join("\n\n");
-
-    const buildEvent: BuildProgramEvent = {
-      userId,
-      coachId: lockedSession.coachId,
-      programId,
-      sessionId,
-      todoList: lockedSession.todoList,
-      conversationContext,
-      additionalConsiderations:
-        lockedSession.additionalConsiderations || "none",
-      userTimezone: getUserTimezone(userProfile),
-    };
-
-    await invokeAsyncLambda(
-      buildProgramFunction,
-      buildEvent,
-      "program build retry",
-    );
 
     logger.info("Successfully triggered program build retry");
 
