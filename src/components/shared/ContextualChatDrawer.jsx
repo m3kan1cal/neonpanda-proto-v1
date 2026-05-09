@@ -1820,7 +1820,7 @@ function PanelContent({
   const exit = requestClose ?? onClose;
   const viewAllUrl =
     userId && coachId
-      ? `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
+      ? `/training-grounds/manage-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
       : "#";
 
   const inputPlaceholder = isTraining
