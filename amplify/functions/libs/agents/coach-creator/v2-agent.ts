@@ -237,11 +237,13 @@ export class CoachCreatorAgentV2 {
     const has = (key: string) => {
       const r = resultStore.get<any>(key);
       if (!r || typeof r !== "object") return false;
-      // v1 stored failures as `{ error: msg }`; v2's adaptLegacyTool stores
-      // them as `{ ok: false, code, message }`. Treat both as "not done"
-      // so the retry prompt re-instructs failed tools instead of marking
-      // them ✓ ALREADY DONE and tempting the model to skip the retry.
-      if ("error" in r) return false;
+      // v1 stored failures as `{ error: <truthy msg> }`; v2's adaptLegacyTool
+      // stores them as `{ ok: false, code, message }`. Match the adapter's
+      // truthiness check (not key-presence) so success-shape objects that
+      // incidentally carry `error: null` / `error: false` (e.g. methodology
+      // lookups) aren't miscounted as failures and re-instructed to the
+      // model as "not done yet".
+      if (r.error) return false;
       if (r.ok === false) return false;
       return true;
     };
@@ -297,13 +299,16 @@ function countSuccessfulTools(
   resultStore: ReturnType<Agent<CoachCreatorContext>["getResultStore"]>,
 ): number {
   // The store mirrors v1's behavior: success values are the tool output
-  // objects (no `error` key); failures are stored as ToolResult-shaped
-  // objects (`ok: false, code, message`) or legacy `{ error: ... }` blobs.
+  // objects; failures are stored either as ToolResult-shaped objects
+  // (`ok: false, code, message`) or as legacy v1 blobs with a truthy
+  // `error` field. Match adaptLegacyTool's truthiness check so success
+  // objects that incidentally carry `error: null` / `error: false`
+  // (e.g. methodology lookups) aren't miscounted as failures.
   let count = 0;
   for (const key of Object.values(STORAGE_KEY_MAP)) {
     const r = resultStore.get<any>(key);
     if (!r || typeof r !== "object") continue;
-    if ("error" in r) continue;
+    if (r.error) continue;
     if (r.ok === false) continue;
     count++;
   }
