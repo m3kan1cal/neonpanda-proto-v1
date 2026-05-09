@@ -270,3 +270,66 @@ const formatPromptBlock = (input: FormatInput): string => {
 
   return lines.join("\n");
 };
+
+export interface DateMathRuleOptions {
+  /**
+   * If true, the agent's prompt also includes a `## PROGRAM CALENDAR
+   * (AUTHORITATIVE)` table mapping program-day numbers to ISO dates and
+   * weekdays. The rule then lists that table as a priority-1 source for
+   * any program-day → date claim.
+   */
+  hasProgramCalendar: boolean;
+}
+
+/**
+ * Canonical "do not invent dates" rule shared across every agent that talks
+ * about dates. Centralizing the wording keeps the conversation, program
+ * designer, and coach creator agents in lockstep — drift between agents was
+ * the original failure mode.
+ *
+ * The output is markdown bullets intended to be embedded inside a larger
+ * "CRITICAL SYSTEM RULES" block (no leading heading).
+ */
+export const buildDateMathRuleBlock = (
+  options: DateMathRuleOptions,
+): string => {
+  const sources: string[] = [];
+  sources.push(
+    "  1. The `## CURRENT DATE & TIME` block in your context (today, yesterday, tomorrow, and any upcoming dates listed there).",
+  );
+  if (options.hasProgramCalendar) {
+    sources.push(
+      "  2. The `## PROGRAM CALENDAR` table (any program-day → calendar-date claim — read the row, do not compute).",
+    );
+    sources.push(
+      "  3. The `compute_date` tool, for any other relative phrase or month-day reference (e.g. \"next saturday\", \"may 13\", \"in 3 weeks\", \"a week ago\").",
+    );
+  } else {
+    sources.push(
+      "  2. The `compute_date` tool, for any relative phrase or month-day reference (e.g. \"next saturday\", \"may 13\", \"in 3 weeks\", \"a week ago\").",
+    );
+  }
+
+  const lines: string[] = [];
+  lines.push(
+    "- Date math: any time you state a date, weekday, or \"in N days\" claim in your reply, it must come from one of these sources, in priority order:",
+  );
+  lines.push(...sources);
+  lines.push(
+    "  Never compute calendar arithmetic in your head. Never name a weekday for a date you have not seen in one of these sources.",
+  );
+  lines.push(
+    '- Cross-check rule: every future or past date you state in a reply must include the ISO date AND the day-of-week AND the day-count, e.g. "Day 24 (2026-05-14, Thursday — 5 days from today)". This makes any mismatch immediately visible and user-correctable.',
+  );
+  if (options.hasProgramCalendar) {
+    lines.push(
+      "- Wrong: \"Your next bench press session is Monday, May 13th (Day 24)\" — this asserts a weekday and date for a program day without reading the PROGRAM CALENDAR row. Right: read the row for Day 24, then say \"Day 24 (2026-05-14, Thursday — 5 days from today)\".",
+    );
+  } else {
+    lines.push(
+      "- Wrong: \"Your meet is on Saturday, May 23rd\" stated without first calling `compute_date`. Right: call `compute_date(['may 23'])`, then echo back its `isoDate` and `dayOfWeek` exactly.",
+    );
+  }
+
+  return lines.join("\n");
+};

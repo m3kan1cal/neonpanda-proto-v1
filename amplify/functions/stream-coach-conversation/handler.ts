@@ -45,6 +45,12 @@ import { formatEmotionalContextForPrompt } from "../libs/memory/emotional";
 import { formatLivingProfileForPrompt } from "../libs/user/living-profile";
 import { loadTodayWorkoutStatus } from "../libs/program/today-status";
 import {
+  buildProgramCalendarWindow,
+  buildUpcomingProgramAnchors,
+  type ProgramCalendarWindow,
+} from "../libs/program/calendar-utils";
+import { getProgramDetailsFromS3 } from "../libs/program/s3-utils";
+import {
   filterActiveProspectiveMemories,
   formatProspectiveMemoriesForPrompt,
 } from "../libs/memory/prospective";
@@ -646,6 +652,79 @@ async function* createCoachConversationEventStreamV2(
       }
     }
 
+    // Pre-compute a program-day -> calendar-date table and a small list of
+    // upcoming workout anchors. The agent uses the table to ground every
+    // "Day N" claim and the anchors to answer "when is my next session?"
+    // without having to do calendar math (which Haiku gets wrong — see the
+    // "Monday May 13" hallucination that prompted this fix).
+    //
+    // `promptNow` is captured once and passed to every temporal computation
+    // for this turn (the calendar window here, and `buildTemporalContext`
+    // inside the prompt builder below). Without a shared instant, the S3
+    // fetch on the next line could straddle midnight in the user's timezone
+    // and the calendar window would disagree with the temporal-context
+    // block on what "today" is.
+    const promptNow = new Date();
+    let programCalendarWindow: ProgramCalendarWindow | null = null;
+    let programUpcomingAnchors:
+      | Array<{ label: string; date: string }>
+      | undefined;
+    const apForCalendar = activeProgramForAgent as
+      | {
+          startDate?: string;
+          pausedDuration?: number;
+          totalDays?: number;
+          status?: string;
+          s3DetailKey?: string;
+        }
+      | null;
+    if (
+      apForCalendar &&
+      typeof apForCalendar.startDate === "string" &&
+      typeof apForCalendar.totalDays === "number" &&
+      (apForCalendar.status || "").toLowerCase() === "active"
+    ) {
+      try {
+        programCalendarWindow = buildProgramCalendarWindow(
+          {
+            startDate: apForCalendar.startDate,
+            pausedDuration: apForCalendar.pausedDuration ?? 0,
+            totalDays: apForCalendar.totalDays,
+          },
+          userTimezone,
+          undefined,
+          undefined,
+          promptNow,
+        );
+      } catch (err) {
+        logger.warn("V2: buildProgramCalendarWindow failed:", err);
+      }
+
+      if (apForCalendar.s3DetailKey) {
+        try {
+          const programDetails = await getProgramDetailsFromS3(
+            apForCalendar.s3DetailKey,
+          );
+          if (programDetails?.workoutTemplates) {
+            programUpcomingAnchors = buildUpcomingProgramAnchors(
+              programDetails.workoutTemplates,
+              {
+                startDate: apForCalendar.startDate,
+                pausedDuration: apForCalendar.pausedDuration ?? 0,
+              },
+              programCalendarWindow?.todayDayNumber ?? null,
+              3,
+            );
+          }
+        } catch (err) {
+          logger.warn(
+            "V2: buildUpcomingProgramAnchors program details fetch failed:",
+            err,
+          );
+        }
+      }
+    }
+
     const { staticPrompt, dynamicPrompt } = buildConversationAgentPrompt(
       coachConfig,
       {
@@ -663,6 +742,11 @@ async function* createCoachConversationEventStreamV2(
         prospectiveContext,
         reportContext,
         lastInteractionAt,
+        now: promptNow,
+        ...(programUpcomingAnchors && programUpcomingAnchors.length > 0
+          ? { upcomingAnchors: programUpcomingAnchors }
+          : {}),
+        ...(programCalendarWindow ? { programCalendarWindow } : {}),
         ...(isEditMode && { editContext: agentContext.editContext }),
       },
     );

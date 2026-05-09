@@ -21,7 +21,14 @@ import {
   buildCoachPersonalityPrompt,
   type FormatCoachPersonalityOptions,
 } from "../../coach-config/personality-utils";
-import { buildTemporalContext } from "../../analytics/temporal-context";
+import {
+  buildTemporalContext,
+  buildDateMathRuleBlock,
+} from "../../analytics/temporal-context";
+import {
+  formatProgramCalendarWindowForPrompt,
+  type ProgramCalendarWindow,
+} from "../../program/calendar-utils";
 import {
   sanitizeUserContent,
   wrapUserContent,
@@ -117,6 +124,22 @@ export function buildConversationAgentPrompt(
      * see in its temporal context (e.g. meet day, deload start).
      */
     upcomingAnchors?: Array<{ label: string; date: string }>;
+    /**
+     * Pre-computed program-day → calendar-date table centered on today, used
+     * to render the `## PROGRAM CALENDAR (AUTHORITATIVE)` section. Only set
+     * when the user has an active program. Built by
+     * `buildProgramCalendarWindow` in `libs/program/calendar-utils.ts`.
+     */
+    programCalendarWindow?: ProgramCalendarWindow | null;
+    /**
+     * Single shared "now" instant used by every temporal computation in this
+     * prompt build (and by anything else the caller derived from the same
+     * instant, e.g. the program calendar window). Passing one shared value
+     * prevents drift across awaits — without it, two `new Date()` calls
+     * separated by an S3 fetch can straddle midnight in the user's timezone
+     * and disagree on which day "today" is.
+     */
+    now?: Date;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -321,7 +344,7 @@ Enabled Modifications: ${capabilities.enabled_modifications?.join(", ") || "inte
 - When calling any tool, do not generate conversational text in the same turn as the tool call. Call the tool first; respond to the user in the following turn after you have the tool result. This applies to ALL tools (query_exercise_history, get_todays_workout, query_programs, save_memory, log_workout, etc.) — not just save_memory.
 - Performance, PR, "last weight", "best ever", or "max" questions: ALWAYS call \`query_exercise_history\` for the specific lift. Never answer from conversation history or model knowledge alone. A prior tool result for a different exercise (or list_exercise_names returning a name) is not a substitute.
 - "Did I do today's workout?" questions: ALWAYS read the \`## TODAY'S PRESCRIBED WORKOUT STATUS\` block in your dynamic context (when present) or call \`get_todays_workout\` for its \`status\` field. Never infer today's prescribed-template completion from \`query_exercise_history\` row dates alone — those rows are previously-logged work, not a status signal for today's prescription.
-- Date math: ALWAYS call \`compute_date\` for any relative date phrase ("tomorrow", "this saturday", "in 3 weeks", "a week ago"). Never count calendar days by hand.
+- Date math: see \`## DATE MATH DISCIPLINE\` in your dynamic context — it is authoritative for every date, weekday, or "in N days" claim you make.
 
 ### Coaching Responsibility
 - All coaching decisions are yours. Never defer the decision to the platform, to the NeonPanda team, to "support", or to anyone else (including individuals named in memories). You are the coach; the decision is yours.
@@ -343,8 +366,29 @@ Enabled Modifications: ${capabilities.enabled_modifications?.join(", ") || "inte
     userTimezone: options.userTimezone,
     lastInteractionAt: options.lastInteractionAt,
     upcomingAnchors: options.upcomingAnchors,
+    ...(options.now ? { now: options.now } : {}),
   });
   dynamicSections.push(temporal.promptBlock);
+
+  // Section 1b: Date-math discipline rule.
+  //
+  // Lives in the dynamic prompt (not the static block) because the rule's
+  // "use the PROGRAM CALENDAR table" branch is only valid when that table is
+  // actually rendered — which depends on whether the user has an active
+  // program with a populated calendar window. Hardcoding it static would
+  // tell users without an active program to consult a table that does not
+  // exist. The cache cost is trivial (a few hundred chars per turn).
+  const willRenderProgramCalendar = Boolean(
+    options.activeProgram &&
+      (options.activeProgram.status || "").toLowerCase() === "active" &&
+      options.programCalendarWindow &&
+      options.programCalendarWindow.rows.length > 0,
+  );
+  dynamicSections.push(
+    `## DATE MATH DISCIPLINE\n\n${buildDateMathRuleBlock({
+      hasProgramCalendar: willRenderProgramCalendar,
+    })}`,
+  );
 
   // Section 2: Living Profile (conditional — coach's mental model of the user)
   if (options.livingProfileContext) {
@@ -408,6 +452,22 @@ ${preamble}
 - Status: ${ap.status}
 
 ${toolNote}`);
+  }
+
+  // Section 5.25: Program Calendar Window (conditional — only when active program + window provided)
+  //
+  // Pre-rendered table mapping program-day numbers to ISO dates and weekdays
+  // for a small window around today. Without this, the agent has only the
+  // bare `currentDay` integer and confabulates calendar dates / weekdays for
+  // any "when is Day N?" or "when is my next session?" question. With this,
+  // the answer is a row lookup. The render guard (`willRenderProgramCalendar`)
+  // is shared with the date-math rule above so the rule's "use the PROGRAM
+  // CALENDAR table" branch is never out of sync with whether the table is
+  // actually present.
+  if (willRenderProgramCalendar && options.programCalendarWindow) {
+    dynamicSections.push(
+      formatProgramCalendarWindowForPrompt(options.programCalendarWindow),
+    );
   }
 
   // Section 5.5: Today's Prescribed Workout Status (conditional)

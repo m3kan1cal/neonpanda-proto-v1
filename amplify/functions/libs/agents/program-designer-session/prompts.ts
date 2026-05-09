@@ -29,7 +29,10 @@ import {
   wrapUserContent,
 } from "../../security/prompt-sanitizer";
 import { NEONPANDA_PLATFORM_IDENTITY } from "../../prompts/platform-identity";
-import { buildTemporalContext } from "../../analytics/temporal-context";
+import {
+  buildTemporalContext,
+  buildDateMathRuleBlock,
+} from "../../analytics/temporal-context";
 
 /**
  * Build system prompt for the program designer streaming agent.
@@ -287,7 +290,10 @@ in the same turn so you can include the result in your response:
 - Call whenever the user references a date ("my meet on may 3", "start next monday", "test out in 4 weeks", "last saturday")
 - Program phases, start dates, and meet dates are high-stakes — never estimate calendar days by hand. compute_date is the authoritative source
 - When the user gives a meet date, an event date, or a program start date, capture it via update_design_fields as an ISO YYYY-MM-DD after calling compute_date
-- If resolved=false, ask the user to clarify that date rather than guessing`);
+- If resolved=false, ask the user to clarify that date rather than guessing
+
+### Date discipline (applies to every reply, not just compute_date)
+${buildDateMathRuleBlock({ hasProgramCalendar: false })}`);
 
   // Section 4: Conversation flow guidance
   staticSections.push(`## CONVERSATION FLOW GUIDANCE
