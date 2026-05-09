@@ -1120,9 +1120,16 @@ function CoachConversations() {
                       coachConversationAgentState.streamingMessage &&
                       coachConversationAgentState.streamingMessage.trim()
                         .length > 0;
+                    const hasToolCalls =
+                      Array.isArray(message.toolCalls) &&
+                      message.toolCalls.length > 0;
 
-                    // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
-                    return hasContent || (streaming && hasStreamingContent);
+                    // Show message if: (1) it has content, OR (2) it's streaming and has
+                    // streaming content or tool calls (so tool blocks render live before text).
+                    return (
+                      hasContent ||
+                      (streaming && (hasStreamingContent || hasToolCalls))
+                    );
                   })
                   .map((message, index) => (
                     <React.Fragment key={message.id}>
