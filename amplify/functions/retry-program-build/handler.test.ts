@@ -52,6 +52,15 @@ vi.mock("../libs/program-designer/session-management", () => ({
       },
       lastActivity: new Date("2026-05-08T20:31:00.000Z"),
     })),
+  checkProgramGenerationIdempotency: vi.fn().mockReturnValue({
+    shouldProceed: true,
+    reason: "NOT_STARTED",
+  }),
+  IDEMPOTENCY_REASONS: {
+    NOT_STARTED: "NOT_STARTED",
+    ALREADY_COMPLETE: "ALREADY_COMPLETE",
+    ALREADY_IN_PROGRESS: "ALREADY_IN_PROGRESS",
+  },
 }));
 
 vi.mock("../libs/id-utils", () => ({
@@ -81,6 +90,7 @@ import {
 import {
   createProgramGenerationLock,
   createProgramGenerationFailure,
+  checkProgramGenerationIdempotency,
 } from "../libs/program-designer/session-management";
 import { generateProgramId } from "../libs/id-utils";
 
@@ -163,6 +173,10 @@ describe("retry-program-build handler", () => {
         lastActivity: new Date("2026-05-08T20:31:00.000Z"),
       }),
     );
+    vi.mocked(checkProgramGenerationIdempotency).mockReturnValue({
+      shouldProceed: true,
+      reason: "NOT_STARTED" as any,
+    });
   });
 
   afterEach(() => {
@@ -310,6 +324,64 @@ describe("retry-program-build handler", () => {
 
     // Rollback was constructed via the canonical helper.
     expect(createProgramGenerationFailure).toHaveBeenCalledTimes(1);
+  });
+
+  it("idempotency: returns existing programId without locking or invoking when status is COMPLETE", async () => {
+    vi.mocked(getProgramDesignerSession).mockResolvedValue(
+      makeFailedSession() as any,
+    );
+    vi.mocked(checkProgramGenerationIdempotency).mockReturnValue({
+      shouldProceed: false,
+      reason: "ALREADY_COMPLETE" as any,
+      programId: "program_existing_999",
+      status: "COMPLETE",
+      metadata: { completedAt: "2026-05-09T00:00:00.000Z" },
+    });
+
+    await handler(makeEvent());
+
+    expect(createOkResponse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        message: "Program already complete",
+        programId: "program_existing_999",
+        alreadyComplete: true,
+      }),
+    );
+    // No new program created, no lock applied, no Lambda triggered.
+    expect(generateProgramId).not.toHaveBeenCalled();
+    expect(createProgramGenerationLock).not.toHaveBeenCalled();
+    expect(saveProgramDesignerSession).not.toHaveBeenCalled();
+    expect(invokeAsyncLambda).not.toHaveBeenCalled();
+  });
+
+  it("idempotency: returns alreadyInProgress without re-locking or invoking when status is IN_PROGRESS", async () => {
+    vi.mocked(getProgramDesignerSession).mockResolvedValue(
+      makeFailedSession() as any,
+    );
+    vi.mocked(checkProgramGenerationIdempotency).mockReturnValue({
+      shouldProceed: false,
+      reason: "ALREADY_IN_PROGRESS" as any,
+      status: "IN_PROGRESS",
+      metadata: {
+        startedAt: "2026-05-09T00:30:00.000Z",
+        elapsedSeconds: 12,
+      },
+    });
+
+    await handler(makeEvent());
+
+    expect(createOkResponse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        message: "Program build already in progress",
+        alreadyInProgress: true,
+      }),
+    );
+    expect(generateProgramId).not.toHaveBeenCalled();
+    expect(createProgramGenerationLock).not.toHaveBeenCalled();
+    expect(saveProgramDesignerSession).not.toHaveBeenCalled();
+    expect(invokeAsyncLambda).not.toHaveBeenCalled();
   });
 
   it("still returns 500 if the rollback save itself fails (does not throw)", async () => {

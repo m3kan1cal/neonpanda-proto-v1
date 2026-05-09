@@ -12,6 +12,8 @@ import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import {
   createProgramGenerationLock,
   createProgramGenerationFailure,
+  checkProgramGenerationIdempotency,
+  IDEMPOTENCY_REASONS,
 } from "../libs/program-designer/session-management";
 import { generateProgramId } from "../libs/id-utils";
 import { getUserTimezone } from "../libs/user/timezone";
@@ -47,6 +49,51 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         400,
         "Session must be complete before building program",
       );
+    }
+
+    // Idempotency guard: if the session is already COMPLETE (program exists)
+    // or already IN_PROGRESS (e.g. two rapid retry clicks racing), skip the
+    // lock + Lambda trigger so we don't create a duplicate program or fire a
+    // concurrent build. Mirrors saveSessionAndTriggerProgramGeneration.
+    const idempotencyCheck = checkProgramGenerationIdempotency(session);
+    if (
+      idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_COMPLETE
+    ) {
+      logger.info(
+        "Skipping retry — program already COMPLETE for this session",
+        {
+          sessionId,
+          programId: idempotencyCheck.programId,
+          completedAt: idempotencyCheck.metadata?.completedAt,
+        },
+      );
+      return createOkResponse({
+        success: true,
+        message: "Program already complete",
+        sessionId,
+        userId,
+        programId: idempotencyCheck.programId,
+        alreadyComplete: true,
+      });
+    }
+    if (
+      idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_IN_PROGRESS
+    ) {
+      logger.info(
+        "Skipping retry — program generation already IN_PROGRESS for this session",
+        {
+          sessionId,
+          startedAt: idempotencyCheck.metadata?.startedAt,
+          elapsedSeconds: idempotencyCheck.metadata?.elapsedSeconds,
+        },
+      );
+      return createOkResponse({
+        success: true,
+        message: "Program build already in progress",
+        sessionId,
+        userId,
+        alreadyInProgress: true,
+      });
     }
 
     // Validate environment BEFORE locking the session so a misconfigured
