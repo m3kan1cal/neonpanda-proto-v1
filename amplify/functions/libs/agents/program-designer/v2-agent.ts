@@ -28,6 +28,10 @@ import type {
   ToolResultStoreLike,
 } from "../core/v2/tools/tool-types";
 import {
+  normaliseLegacyToolResult,
+  countSuccessfulToolResults,
+} from "../core/v2/legacy-result-helpers";
+import {
   loadProgramRequirementsTool,
   generatePhaseStructureTool,
   generatePhaseWorkoutsTool,
@@ -149,11 +153,11 @@ export class ProgramDesignerAgentV2 {
           // Normalise v2 ToolResult-shaped failures back to v1's
           // `{ error, isValid }` shape so enforceAllBlocking recognises
           // both validation-said-no and validation-threw paths.
-          const validation = normaliseResult(store.get<unknown>("validation"));
-          const normalization = normaliseResult(
+          const validation = normaliseLegacyToolResult(store.get<unknown>("validation"));
+          const normalization = normaliseLegacyToolResult(
             store.get<unknown>("normalization"),
           );
-          const pruning = normaliseResult(store.get<unknown>("pruning"));
+          const pruning = normaliseLegacyToolResult(store.get<unknown>("pruning"));
           const decision = enforceAllBlocking(
             toolId,
             validation,
@@ -183,7 +187,7 @@ export class ProgramDesignerAgentV2 {
           // checks — otherwise we'd burn an unnecessary retry that
           // clears the store and reruns the workflow into the same
           // failure.
-          const validation = normaliseResult(
+          const validation = normaliseLegacyToolResult(
             resultStore.get<unknown>("validation"),
           ) as any;
           if (
@@ -193,7 +197,7 @@ export class ProgramDesignerAgentV2 {
             return null;
           }
 
-          const successfulCount = countSuccessfulTools(resultStore);
+          const successfulCount = countSuccessfulToolResults(resultStore, Object.values(STORAGE_KEY_MAP));
           if (successfulCount >= MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW) {
             return null;
           }
@@ -277,9 +281,9 @@ export class ProgramDesignerAgentV2 {
     const store = this.agent.getResultStore();
     const requirements = store.get<any>("requirements");
     const phaseStructure = store.get<any>("phase_structure");
-    const validation = normaliseResult(store.get<unknown>("validation")) as any;
-    const pruning = normaliseResult(store.get<unknown>("pruning"));
-    const normalization = normaliseResult(
+    const validation = normaliseLegacyToolResult(store.get<unknown>("validation")) as any;
+    const pruning = normaliseLegacyToolResult(store.get<unknown>("pruning"));
+    const normalization = normaliseLegacyToolResult(
       store.get<unknown>("normalization"),
     ) as any;
     const summary = store.get<any>("summary");
@@ -412,43 +416,6 @@ Now design the complete program using your tools with CORRECT data passing.`;
   }
 }
 
-/**
- * v1 helpers (`enforceAllBlocking`, blocking checks in
- * `buildResultFromToolData`) read `.error` and `.isValid`. v2's
- * `adaptLegacyTool` stores failures as `{ ok: false, code, message, ... }`.
- * Translate the v2 envelope so both readers see the v1 shape they expect.
- * Mirrors coach-creator/v2-agent's `normaliseValidationResult`.
- */
-function normaliseResult(raw: unknown): unknown {
-  if (!raw || typeof raw !== "object") return raw;
-  const r = raw as Record<string, unknown>;
-  if (r.ok === false) {
-    const message =
-      typeof r.message === "string" && r.message
-        ? r.message
-        : "Tool failed";
-    return {
-      isValid: false,
-      validationIssues: [message],
-      error: message,
-    };
-  }
-  return raw;
-}
-
-/**
- * Count tools whose stored result represents a success. Mirrors v1's
- * `successfulToolCount` filter — exclude both v1 `{ error: ... }` shapes
- * and v2 `{ ok: false }` envelopes.
- */
-function countSuccessfulTools(resultStore: ToolResultStoreLike): number {
-  let count = 0;
-  for (const key of Object.values(STORAGE_KEY_MAP)) {
-    const r = resultStore.get<any>(key);
-    if (!r || typeof r !== "object") continue;
-    if (r.error) continue;
-    if (r.ok === false) continue;
-    count++;
-  }
-  return count;
-}
+// `normaliseLegacyToolResult` and `countSuccessfulToolResults` live in
+// core/v2/legacy-result-helpers.ts so coach-creator and program-designer
+// share the same translation logic — see imports at the top of this file.

@@ -19,6 +19,10 @@ import { Agent, type AgentConfigV2 } from "../core/v2/agent";
 import { adaptLegacyTool } from "../core/v2/tools/legacy-adapter";
 import { SyncRuntime } from "../core/v2/runtime/sync-runtime";
 import {
+  normaliseLegacyToolResult,
+  countSuccessfulToolResults,
+} from "../core/v2/legacy-result-helpers";
+import {
   loadSessionRequirementsTool,
   selectPersonalityTemplateTool,
   selectMethodologyTemplateTool,
@@ -111,7 +115,7 @@ export class CoachCreatorAgentV2 {
           // back to v1's `{ error }` shape so the defense-in-depth block
           // fires on validation failures *and* validation exceptions.
           const raw = store.get<any>("validation");
-          const validation = normaliseValidationResult(raw);
+          const validation = normaliseLegacyToolResult(raw);
           const decision = enforceValidationBlocking(toolId, validation);
           if (!decision) return null;
           return {
@@ -123,7 +127,7 @@ export class CoachCreatorAgentV2 {
         shouldRetry: ({ toolsUsed, resultStore, finalText }) => {
           // Mirror v1 logic: count successful tool results, retry if below
           // threshold AND the model's final text reads incomplete.
-          const successfulCount = countSuccessfulTools(resultStore);
+          const successfulCount = countSuccessfulToolResults(resultStore, Object.values(STORAGE_KEY_MAP));
           if (successfulCount >= MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW) {
             return null;
           }
@@ -194,7 +198,7 @@ export class CoachCreatorAgentV2 {
     // Normalise v2 failure envelopes (`{ ok: false, code, message }`) back
     // to the v1 shape so the `isValid: false` branch below also fires when
     // the validate tool *threw* rather than returned a structured failure.
-    const validation = normaliseValidationResult(store.get<any>("validation")) as any;
+    const validation = normaliseLegacyToolResult(store.get<any>("validation")) as any;
     const save = store.get<any>("save");
 
     if (save?.success && save?.coachConfigId) {
@@ -286,46 +290,6 @@ Now create the coach using your tools.`;
   }
 }
 
-/**
- * v1 `enforceValidationBlocking` reads `.error` and `.isValid`. v1
- * `buildResultFromToolData` reads `.isValid` and `.validationIssues`. v2's
- * adaptLegacyTool stores failures as `{ ok: false, code, message, ... }`.
- * Normalise the v2 envelope so both call sites — the blocking helper and
- * the result builder — see the v1 shape they expect.
- */
-function normaliseValidationResult(raw: unknown): unknown {
-  if (!raw || typeof raw !== "object") return raw;
-  const r = raw as Record<string, unknown>;
-  if (r.ok === false) {
-    const message =
-      typeof r.message === "string" && r.message
-        ? r.message
-        : "validate_coach_config failed";
-    return {
-      isValid: false,
-      validationIssues: [message],
-      error: message,
-    };
-  }
-  return raw;
-}
-
-function countSuccessfulTools(
-  resultStore: ReturnType<Agent<CoachCreatorContext>["getResultStore"]>,
-): number {
-  // The store mirrors v1's behavior: success values are the tool output
-  // objects; failures are stored either as ToolResult-shaped objects
-  // (`ok: false, code, message`) or as legacy v1 blobs with a truthy
-  // `error` field. Match adaptLegacyTool's truthiness check so success
-  // objects that incidentally carry `error: null` / `error: false`
-  // (e.g. methodology lookups) aren't miscounted as failures.
-  let count = 0;
-  for (const key of Object.values(STORAGE_KEY_MAP)) {
-    const r = resultStore.get<any>(key);
-    if (!r || typeof r !== "object") continue;
-    if (r.error) continue;
-    if (r.ok === false) continue;
-    count++;
-  }
-  return count;
-}
+// `normaliseLegacyToolResult` and `countSuccessfulToolResults` live in
+// core/v2/legacy-result-helpers.ts so coach-creator and program-designer
+// share the same translation logic — see imports at the top of this file.
