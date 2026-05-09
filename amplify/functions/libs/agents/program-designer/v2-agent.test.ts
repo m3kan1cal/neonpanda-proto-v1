@@ -331,6 +331,59 @@ describe("ProgramDesignerAgentV2", () => {
     expect(result.success).toBe(false);
   });
 
+  it("does not retry when validate throws (v2 envelope still satisfies the validation-failure guard)", async () => {
+    // Regression for Bugbot finding 6c089d33. When validate throws,
+    // adaptLegacyTool stores `{ ok: false, code, message }` which lacks
+    // `isValid` and `error`. The shouldRetry guard must normalise back
+    // to v1 shape so the "validation failed → don't retry" branch fires
+    // and we don't burn an unnecessary retry that clears the store and
+    // re-runs the entire workflow into the same failure.
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 4,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [{ phaseId: "phase_1" }],
+    });
+    (generatePhaseWorkoutsTool.execute as any).mockResolvedValue({
+      workoutTemplates: [],
+    });
+    (validateProgramStructureTool.execute as any).mockRejectedValue(
+      new Error("validation lambda 502"),
+    );
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_1" },
+          }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [toolUseBlock("u4", "validate_program_structure", {})],
+        "tool_use",
+      ),
+      turn([{ text: "Validation threw." }], "end_turn"),
+    ]);
+
+    const result = await agent.designProgram();
+    expect(result.success).toBe(false);
+    // shouldRetry must have early-returned, so validate was called once
+    // — not twice (which would indicate a retry round).
+    expect(validateProgramStructureTool.execute).toHaveBeenCalledTimes(1);
+    // load + phase_structure + phase_workouts each called exactly once
+    // for the same reason. If retry had fired, the store would have been
+    // cleared and these would each have been called twice.
+    expect(loadProgramRequirementsTool.execute).toHaveBeenCalledTimes(1);
+    expect(generatePhaseStructureTool.execute).toHaveBeenCalledTimes(1);
+    expect(generatePhaseWorkoutsTool.execute).toHaveBeenCalledTimes(1);
+  });
+
   it("returns skipped result with the agent response when no tools are called", async () => {
     const agent = new ProgramDesignerAgentV2(baseContext);
     wireRuntime([

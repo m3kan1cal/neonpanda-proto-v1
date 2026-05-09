@@ -177,8 +177,15 @@ export class ProgramDesignerAgentV2 {
 
           // Don't retry on explicit validation failure (structural).
           // enforceAllBlocking will have run and the result builder
-          // surfaces a "Program validation failed" reason.
-          const validation = resultStore.get<any>("validation");
+          // surfaces a "Program validation failed" reason. Normalise the
+          // store value so a thrown-validate (v2 `{ ok: false }` envelope)
+          // also matches the v1 `{ isValid, error }` shape this guard
+          // checks — otherwise we'd burn an unnecessary retry that
+          // clears the store and reruns the workflow into the same
+          // failure.
+          const validation = normaliseResult(
+            resultStore.get<unknown>("validation"),
+          ) as any;
           if (
             validation &&
             (validation.isValid === false || validation.error)
