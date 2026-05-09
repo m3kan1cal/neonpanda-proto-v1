@@ -131,6 +131,15 @@ export function buildConversationAgentPrompt(
      * `buildProgramCalendarWindow` in `libs/program/calendar-utils.ts`.
      */
     programCalendarWindow?: ProgramCalendarWindow | null;
+    /**
+     * Single shared "now" instant used by every temporal computation in this
+     * prompt build (and by anything else the caller derived from the same
+     * instant, e.g. the program calendar window). Passing one shared value
+     * prevents drift across awaits — without it, two `new Date()` calls
+     * separated by an S3 fetch can straddle midnight in the user's timezone
+     * and disagree on which day "today" is.
+     */
+    now?: Date;
   },
 ): { staticPrompt: string; dynamicPrompt: string } {
   const staticSections: string[] = [];
@@ -357,6 +366,7 @@ Enabled Modifications: ${capabilities.enabled_modifications?.join(", ") || "inte
     userTimezone: options.userTimezone,
     lastInteractionAt: options.lastInteractionAt,
     upcomingAnchors: options.upcomingAnchors,
+    ...(options.now ? { now: options.now } : {}),
   });
   dynamicSections.push(temporal.promptBlock);
 

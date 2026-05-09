@@ -657,6 +657,14 @@ async function* createCoachConversationEventStreamV2(
     // "Day N" claim and the anchors to answer "when is my next session?"
     // without having to do calendar math (which Haiku gets wrong — see the
     // "Monday May 13" hallucination that prompted this fix).
+    //
+    // `promptNow` is captured once and passed to every temporal computation
+    // for this turn (the calendar window here, and `buildTemporalContext`
+    // inside the prompt builder below). Without a shared instant, the S3
+    // fetch on the next line could straddle midnight in the user's timezone
+    // and the calendar window would disagree with the temporal-context
+    // block on what "today" is.
+    const promptNow = new Date();
     let programCalendarWindow: ProgramCalendarWindow | null = null;
     let programUpcomingAnchors:
       | Array<{ label: string; date: string }>
@@ -684,6 +692,9 @@ async function* createCoachConversationEventStreamV2(
             totalDays: apForCalendar.totalDays,
           },
           userTimezone,
+          undefined,
+          undefined,
+          promptNow,
         );
       } catch (err) {
         logger.warn("V2: buildProgramCalendarWindow failed:", err);
@@ -731,6 +742,7 @@ async function* createCoachConversationEventStreamV2(
         prospectiveContext,
         reportContext,
         lastInteractionAt,
+        now: promptNow,
         ...(programUpcomingAnchors && programUpcomingAnchors.length > 0
           ? { upcomingAnchors: programUpcomingAnchors }
           : {}),
