@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse, invokeAsyncLambda } from '../libs/api-helpers';
 import { getCoachCreatorSession, saveCoachCreatorSession } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { createCoachConfigGenerationLock } from '../libs/coach-creator/session-management';
 import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -26,16 +27,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(400, 'Session must be complete before building coach config');
     }
 
-    // Reset session status to IN_PROGRESS (whether it's FAILED or needs retry)
-    const updatedSession = {
-      ...session,
-      configGeneration: {
-        status: 'IN_PROGRESS' as const,
-        startedAt: new Date()
-      },
-      lastActivity: new Date()
-    };
-    await saveCoachCreatorSession(updatedSession);
+    // Reset session status to IN_PROGRESS via the canonical helper (whether
+    // it's FAILED or needs retry). Builds a fresh configGeneration object so
+    // any prior `error` and `failedAt` are dropped automatically.
+    const lockedSession = createCoachConfigGenerationLock(session);
+    await saveCoachCreatorSession(lockedSession);
 
     logger.info('Session status reset to IN_PROGRESS, triggering build-coach-config Lambda');
 

@@ -59,6 +59,7 @@ export function createCoreApi(
   getProgramDesignerSessionsLambda: lambda.IFunction,
   deleteProgramDesignerSessionLambda: lambda.IFunction,
   streamProgramDesignLambda: lambda.IFunction,
+  retryProgramBuildLambda: lambda.IFunction,
   createProgramLambda: lambda.IFunction,
   getProgramLambda: lambda.IFunction,
   getProgramsLambda: lambda.IFunction,
@@ -439,6 +440,12 @@ export function createCoreApi(
       streamProgramDesignLambda,
     );
 
+  const retryProgramBuildIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "RetryProgramBuildIntegration",
+      retryProgramBuildLambda,
+    );
+
   const checkUserAvailabilityIntegration =
     new apigatewayv2_integrations.HttpLambdaIntegration(
       "CheckUserAvailabilityIntegration",
@@ -637,6 +644,7 @@ export function createCoreApi(
     getProgramDesignerSessions: getProgramDesignerSessionsIntegration,
     deleteProgramDesignerSession: deleteProgramDesignerSessionIntegration,
     streamProgramDesign: streamProgramDesignIntegration,
+    retryProgramBuild: retryProgramBuildIntegration,
     createProgram: createProgramIntegration,
     getProgram: getProgramIntegration,
     getPrograms: getProgramsIntegration,
@@ -1206,6 +1214,14 @@ export function createCoreApi(
     path: "/users/{userId}/program-designer-sessions/{sessionId}/stream",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.streamProgramDesign,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Retry a failed program build (orchestrates async build-program Lambda)
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions/{sessionId}/retry",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.retryProgramBuild,
     authorizer: userPoolAuthorizer,
   });
 
