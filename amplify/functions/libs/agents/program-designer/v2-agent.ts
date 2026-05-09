@@ -282,7 +282,9 @@ export class ProgramDesignerAgentV2 {
     const requirements = store.get<any>("requirements");
     const phaseStructure = store.get<any>("phase_structure");
     const validation = normaliseLegacyToolResult(store.get<unknown>("validation")) as any;
-    const pruning = normaliseLegacyToolResult(store.get<unknown>("pruning"));
+    const pruning = normaliseLegacyToolResult(
+      store.get<unknown>("pruning"),
+    ) as any;
     const normalization = normaliseLegacyToolResult(
       store.get<unknown>("normalization"),
     ) as any;
@@ -322,7 +324,7 @@ export class ProgramDesignerAgentV2 {
         pineconeStored: !!save.pineconeRecordId,
         pineconeRecordId: save.pineconeRecordId,
         normalizationApplied: !!normalization && normalization.error == null,
-        pruningApplied: !!pruning,
+        pruningApplied: !!pruning && pruning.error == null,
         generationMethod: "agent_v2",
         s3DetailKey: save.s3Key,
       };
