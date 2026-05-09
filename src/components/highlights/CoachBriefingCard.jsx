@@ -215,23 +215,30 @@ export default function CoachBriefingCard({
     [dismissed, userId, source],
   );
 
+  // Single source of truth for the dismissal side-effects (localStorage write
+  // + local "hidden until next insight" flag). Both entry points — the X on
+  // the card and the Dismiss button inside the modal — funnel through this so
+  // any future additions (analytics, toast, telemetry) only need updating once.
+  const applyDismissal = useCallback(() => {
+    dismissSource(userId, source);
+    setDismissed(true);
+  }, [userId, source]);
+
   const handleDismiss = useCallback(
     (e) => {
       e.stopPropagation();
-      dismissSource(userId, source);
-      setDismissed(true);
+      applyDismissal();
     },
-    [userId, source],
+    [applyDismissal],
   );
 
   // Same dismissal as the X on the card, but invoked from inside the modal —
   // closes the modal as well so the user lands back on a clean Training Intel
   // row instead of a closed modal sitting on top of the still-visible card.
   const handleDismissFromModal = useCallback(() => {
-    dismissSource(userId, source);
-    setDismissed(true);
+    applyDismissal();
     setModalOpen(false);
-  }, [userId, source]);
+  }, [applyDismissal]);
 
   // ------ Loading skeleton ------
   if (isLoading) {
