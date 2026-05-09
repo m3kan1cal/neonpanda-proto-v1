@@ -335,7 +335,7 @@ Enabled Modifications: ${capabilities.enabled_modifications?.join(", ") || "inte
 - When calling any tool, do not generate conversational text in the same turn as the tool call. Call the tool first; respond to the user in the following turn after you have the tool result. This applies to ALL tools (query_exercise_history, get_todays_workout, query_programs, save_memory, log_workout, etc.) — not just save_memory.
 - Performance, PR, "last weight", "best ever", or "max" questions: ALWAYS call \`query_exercise_history\` for the specific lift. Never answer from conversation history or model knowledge alone. A prior tool result for a different exercise (or list_exercise_names returning a name) is not a substitute.
 - "Did I do today's workout?" questions: ALWAYS read the \`## TODAY'S PRESCRIBED WORKOUT STATUS\` block in your dynamic context (when present) or call \`get_todays_workout\` for its \`status\` field. Never infer today's prescribed-template completion from \`query_exercise_history\` row dates alone — those rows are previously-logged work, not a status signal for today's prescription.
-${buildDateMathRuleBlock({ hasProgramCalendar: true })}
+- Date math: see \`## DATE MATH DISCIPLINE\` in your dynamic context — it is authoritative for every date, weekday, or "in N days" claim you make.
 
 ### Coaching Responsibility
 - All coaching decisions are yours. Never defer the decision to the platform, to the NeonPanda team, to "support", or to anyone else (including individuals named in memories). You are the coach; the decision is yours.
@@ -359,6 +359,26 @@ ${buildDateMathRuleBlock({ hasProgramCalendar: true })}
     upcomingAnchors: options.upcomingAnchors,
   });
   dynamicSections.push(temporal.promptBlock);
+
+  // Section 1b: Date-math discipline rule.
+  //
+  // Lives in the dynamic prompt (not the static block) because the rule's
+  // "use the PROGRAM CALENDAR table" branch is only valid when that table is
+  // actually rendered — which depends on whether the user has an active
+  // program with a populated calendar window. Hardcoding it static would
+  // tell users without an active program to consult a table that does not
+  // exist. The cache cost is trivial (a few hundred chars per turn).
+  const willRenderProgramCalendar = Boolean(
+    options.activeProgram &&
+      (options.activeProgram.status || "").toLowerCase() === "active" &&
+      options.programCalendarWindow &&
+      options.programCalendarWindow.rows.length > 0,
+  );
+  dynamicSections.push(
+    `## DATE MATH DISCIPLINE\n\n${buildDateMathRuleBlock({
+      hasProgramCalendar: willRenderProgramCalendar,
+    })}`,
+  );
 
   // Section 2: Living Profile (conditional — coach's mental model of the user)
   if (options.livingProfileContext) {
@@ -430,13 +450,11 @@ ${toolNote}`);
   // for a small window around today. Without this, the agent has only the
   // bare `currentDay` integer and confabulates calendar dates / weekdays for
   // any "when is Day N?" or "when is my next session?" question. With this,
-  // the answer is a row lookup. Only emitted for active programs.
-  if (
-    options.activeProgram &&
-    (options.activeProgram.status || "").toLowerCase() === "active" &&
-    options.programCalendarWindow &&
-    options.programCalendarWindow.rows.length > 0
-  ) {
+  // the answer is a row lookup. The render guard (`willRenderProgramCalendar`)
+  // is shared with the date-math rule above so the rule's "use the PROGRAM
+  // CALENDAR table" branch is never out of sync with whether the table is
+  // actually present.
+  if (willRenderProgramCalendar && options.programCalendarWindow) {
     dynamicSections.push(
       formatProgramCalendarWindowForPrompt(options.programCalendarWindow),
     );
