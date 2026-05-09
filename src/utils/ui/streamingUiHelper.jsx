@@ -112,10 +112,17 @@ export function getStreamingMessageClasses(
 
 /**
  * Shared message footer row used across all streaming conversation pages.
- * Renders timestamp, status dots, and (when not streaming) a copy button.
- * Memoized with a comparator that excludes streamingMessage so the footer
- * DOM is not recreated on every chunk — only when streaming ends or dot
- * colors change.
+ * Renders timestamp, status dots, an optional sender avatar, and (when not
+ * streaming) a copy button. Memoized with a comparator that excludes
+ * streamingMessage so the footer DOM is not recreated on every chunk —
+ * only when streaming ends or dot colors change. avatarSlot is intentionally
+ * excluded from the comparator: callers pass inline JSX, so referential
+ * equality would always be false and defeat the memo. Avatars are derived
+ * from stable upstream identity, so a stale avatar render is not a concern.
+ *
+ * Layout (matches the contextual chat drawer):
+ *   - AI message:   [avatar] [timestamp] [dots] [copy?]
+ *   - User message: [timestamp] [dots] [avatar]
  *
  * @param {boolean} isCurrentlyStreaming - Whether this message is actively streaming
  * @param {string} timestamp - ISO timestamp string
@@ -124,6 +131,9 @@ export function getStreamingMessageClasses(
  * @param {Function} formatTime - Timestamp formatting function
  * @param {string} aiDotColorClass - Tailwind color class for AI status dots (e.g. messagePatterns.statusDotCyan)
  * @param {string} userDotColorClass - Tailwind color class for user status dots
+ * @param {React.ReactNode} [avatarSlot] - Optional avatar element. Rendered as the
+ *   leading element on AI messages and the trailing element on user messages so
+ *   the avatar always sits on the message's outer edge.
  */
 export const MessageFooter = memo(
   ({
@@ -134,11 +144,12 @@ export const MessageFooter = memo(
     formatTime,
     aiDotColorClass = messagePatterns.statusDotCyan,
     userDotColorClass = messagePatterns.statusDotPink,
+    avatarSlot = null,
   }) => (
     <div
       className={`flex items-center gap-2 px-1 mt-2 ${messageType === "user" ? "justify-end" : "justify-start"}`}
     >
-      {/* User messages: timestamp first, then dots (matches original ordering) */}
+      {/* User messages: timestamp, dots, avatar (avatar on the right edge) */}
       {messageType === "user" && (
         <>
           <span className="text-xs text-synthwave-text-secondary font-body">
@@ -148,11 +159,13 @@ export const MessageFooter = memo(
             <div className={`${messagePatterns.statusDotSecondary} ${userDotColorClass}`} />
             <div className={`${messagePatterns.statusDotPrimary} ${userDotColorClass}`} />
           </div>
+          {avatarSlot && <div className="shrink-0">{avatarSlot}</div>}
         </>
       )}
-      {/* AI messages: timestamp, dots, copy button */}
+      {/* AI messages: avatar, timestamp, dots, copy button (avatar on the left edge) */}
       {messageType === "ai" && (
         <>
+          {avatarSlot && <div className="shrink-0">{avatarSlot}</div>}
           <span className="text-xs text-synthwave-text-secondary font-body">
             {formatTime(timestamp)}
           </span>

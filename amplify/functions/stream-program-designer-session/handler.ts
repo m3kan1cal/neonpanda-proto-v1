@@ -291,6 +291,15 @@ async function* createProgramDesignerEventStreamV2(
           ).timestamp ?? null)
         : null;
 
+    // Extract any ISO YYYY-MM-DD dates the agent has captured into the
+    // todoList so the temporal context block echoes them back with weekday
+    // and "days from today" already resolved. The model is instructed to
+    // store dates as ISO via compute_date — when it has, this lifts the
+    // resolved values straight into the prompt.
+    const designerUpcomingAnchors = extractUpcomingAnchorsFromTodoList(
+      programSession.todoList,
+    );
+
     // 6. Build system prompts
     const { staticPrompt, dynamicPrompt } =
       buildProgramDesignerSessionAgentPrompt(programSession, {
@@ -301,6 +310,9 @@ async function* createProgramDesignerEventStreamV2(
         messageCount: programSession.conversationHistory?.length || 0,
         criticalTrainingDirective,
         lastInteractionAt,
+        ...(designerUpcomingAnchors.length > 0
+          ? { upcomingAnchors: designerUpcomingAnchors }
+          : {}),
       });
 
     logger.info("✅ V2: System prompt built:", {
@@ -660,6 +672,52 @@ const authenticatedStreamingHandler = async (
     await pipeline(errorStream, responseStream);
   }
 };
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Pull ISO YYYY-MM-DD dates out of the program-designer's collected fields
+ * so the temporal-context block can echo them back with day-of-week and
+ * "days from today" already resolved.
+ *
+ * The agent stores user-supplied dates as ISO strings via compute_date +
+ * update_design_fields. Each TodoItem.value is `any`, so we stringify and
+ * regex-scan; any `YYYY-MM-DD` substring counts. Field labels are tuned to
+ * read naturally inside the temporal block ("Target event", "Program start").
+ */
+const DATE_FIELD_LABELS: Array<[string, string]> = [
+  ["targetEvent", "Target event"],
+  ["startDate", "Program start"],
+];
+const ISO_DATE_REGEX = /\b(\d{4}-\d{2}-\d{2})\b/;
+
+function extractUpcomingAnchorsFromTodoList(
+  todoList: Record<string, { value?: unknown }> | null | undefined,
+): Array<{ label: string; date: string }> {
+  if (!todoList) return [];
+  const anchors: Array<{ label: string; date: string }> = [];
+  const seenDates = new Set<string>();
+  for (const [field, label] of DATE_FIELD_LABELS) {
+    const value = todoList[field]?.value;
+    if (value === null || value === undefined) continue;
+    let asString: string;
+    try {
+      asString =
+        typeof value === "string" ? value : JSON.stringify(value);
+    } catch {
+      continue;
+    }
+    const match = asString.match(ISO_DATE_REGEX);
+    if (!match) continue;
+    const iso = match[1];
+    if (seenDates.has(iso)) continue;
+    seenDates.add(iso);
+    anchors.push({ label, date: iso });
+  }
+  return anchors;
+}
 
 // Use awslambda.streamifyResponse to enable streaming responses
 // awslambda is a global object provided by Lambda's Node.js runtime

@@ -1820,7 +1820,7 @@ function PanelContent({
   const exit = requestClose ?? onClose;
   const viewAllUrl =
     userId && coachId
-      ? `/training-grounds/coach-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
+      ? `/training-grounds/manage-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
       : "#";
 
   const inputPlaceholder = isTraining
@@ -2297,8 +2297,10 @@ function MessageBubble({
   const hasImages = message.imageS3Keys && message.imageS3Keys.length > 0;
   const hasDocuments =
     message.documentS3Keys && message.documentS3Keys.length > 0;
+  const hasToolCalls =
+    Array.isArray(message.toolCalls) && message.toolCalls.length > 0;
 
-  if (!content && !hasImages && !hasDocuments) return null;
+  if (!content && !hasImages && !hasDocuments && !hasToolCalls) return null;
 
   if (isUser) {
     return (

@@ -126,16 +126,10 @@ const MessageItem = memo(
 
     if (message.type === "user") {
       return (
-        <div className="flex flex-row-reverse items-start gap-3 mb-8 group animate-message-in">
-          {/* User avatar: anchored top-right, never shifts */}
-          <div className="shrink-0 mt-1">
-            <UserAvatar
-              email={userEmail}
-              username={userDisplayName}
-              size={32}
-            />
-          </div>
-          {/* Content column */}
+        <div className="flex flex-col items-end mb-8 group animate-message-in">
+          {/* Content column — avatar moved into the footer row below the
+              bubble so it sits next to the timestamp (mirrors the contextual
+              chat drawer pattern). */}
           <div className="min-w-0 flex flex-col items-end md:max-w-[85%]">
             <div
               className={getStreamingMessageClasses(
@@ -154,6 +148,13 @@ const MessageItem = memo(
               messageType={message.type}
               messageContent={message.content}
               formatTime={formatTime}
+              avatarSlot={
+                <UserAvatar
+                  email={userEmail}
+                  username={userDisplayName}
+                  size={32}
+                />
+              }
             />
           </div>
         </div>
@@ -161,15 +162,12 @@ const MessageItem = memo(
     }
 
     return (
-      <div className="flex flex-row items-start gap-3 mb-8 group animate-message-in">
-        {/* AI avatar: anchored top-left, never shifts as content grows */}
-        <div className="shrink-0 mt-1">
-          <div className={avatarPatterns.aiSmall}>
-            {coachName?.charAt(0) || "C"}
-          </div>
-        </div>
-        {/* Content column */}
-        <div className="min-w-0 flex-1 flex flex-col">
+      <div className="flex flex-col mb-8 group animate-message-in">
+        {/* Content column — avatar moved into the footer row below the bubble
+            so it sits next to the timestamp (mirrors the contextual chat
+            drawer pattern). The 85% cap stops tool-call blocks from spanning
+            the full panel on wide screens. */}
+        <div className="min-w-0 flex-1 md:max-w-[85%] flex flex-col">
           {/* Workout Log Indicator Badge */}
           {message.metadata?.mode === CONVERSATION_MODES.WORKOUT_LOG && (
             <div className={`${buttonPatterns.modeBadgeWorkoutLog} mb-1`}>
@@ -231,6 +229,11 @@ const MessageItem = memo(
               message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
                 ? messagePatterns.statusDotPurple
                 : messagePatterns.statusDotCyan
+            }
+            avatarSlot={
+              <div className={avatarPatterns.aiSmall}>
+                {coachName?.charAt(0) || "C"}
+              </div>
             }
           />
         </div>
@@ -1132,9 +1135,16 @@ function ProgramDesigner() {
                     const hasStreamingContent =
                       agentState.streamingMessage &&
                       agentState.streamingMessage.trim().length > 0;
+                    const hasToolCalls =
+                      Array.isArray(message.toolCalls) &&
+                      message.toolCalls.length > 0;
 
-                    // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
-                    return hasContent || (streaming && hasStreamingContent);
+                    // Show message if: (1) it has content, OR (2) it's streaming and has
+                    // streaming content or tool calls (so tool blocks render live before text).
+                    return (
+                      hasContent ||
+                      (streaming && (hasStreamingContent || hasToolCalls))
+                    );
                   })
                   .map((message, index) => (
                     <React.Fragment key={message.id}>
