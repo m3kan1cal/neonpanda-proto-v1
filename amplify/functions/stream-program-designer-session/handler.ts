@@ -690,7 +690,6 @@ const authenticatedStreamingHandler = async (
 const DATE_FIELD_LABELS: Array<[string, string]> = [
   ["targetEvent", "Target event"],
   ["startDate", "Program start"],
-  ["programDuration", "Program duration"],
 ];
 const ISO_DATE_REGEX = /\b(\d{4}-\d{2}-\d{2})\b/;
 
