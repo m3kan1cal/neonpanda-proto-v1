@@ -37,6 +37,20 @@ vi.mock("../libs/coach-creator/session-management", () => ({
       },
       lastActivity: new Date("2026-05-08T20:30:00.000Z"),
     })),
+  createCoachConfigGenerationFailure: vi
+    .fn()
+    .mockImplementation((session: any, error: any) => ({
+      ...session,
+      configGeneration: {
+        status: "FAILED",
+        startedAt:
+          session.configGeneration?.startedAt ||
+          new Date("2026-05-08T20:30:00.000Z"),
+        failedAt: new Date("2026-05-08T20:31:00.000Z"),
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      lastActivity: new Date("2026-05-08T20:31:00.000Z"),
+    })),
 }));
 
 vi.mock("../libs/logger", () => ({
@@ -54,7 +68,10 @@ import {
   createErrorResponse,
   invokeAsyncLambda,
 } from "../libs/api-helpers";
-import { createCoachConfigGenerationLock } from "../libs/coach-creator/session-management";
+import {
+  createCoachConfigGenerationLock,
+  createCoachConfigGenerationFailure,
+} from "../libs/coach-creator/session-management";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -103,6 +120,20 @@ describe("create-coach-config handler", () => {
           startedAt: new Date("2026-05-08T20:30:00.000Z"),
         },
         lastActivity: new Date("2026-05-08T20:30:00.000Z"),
+      }),
+    );
+    vi.mocked(createCoachConfigGenerationFailure).mockImplementation(
+      (session: any, error: any) => ({
+        ...session,
+        configGeneration: {
+          status: "FAILED",
+          startedAt:
+            session.configGeneration?.startedAt ||
+            new Date("2026-05-08T20:30:00.000Z"),
+          failedAt: new Date("2026-05-08T20:31:00.000Z"),
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+        lastActivity: new Date("2026-05-08T20:31:00.000Z"),
       }),
     );
   });
@@ -179,7 +210,7 @@ describe("create-coach-config handler", () => {
     );
   });
 
-  it("returns 500 when BUILD_COACH_CONFIG_FUNCTION_NAME env var is missing", async () => {
+  it("returns 500 when BUILD_COACH_CONFIG_FUNCTION_NAME env var is missing — and does NOT lock the session", async () => {
     delete process.env.BUILD_COACH_CONFIG_FUNCTION_NAME;
     vi.mocked(getCoachCreatorSession).mockResolvedValue(makeSession() as any);
 
@@ -191,10 +222,15 @@ describe("create-coach-config handler", () => {
         "BUILD_COACH_CONFIG_FUNCTION_NAME environment variable not set",
       ),
     );
+    // Env var is checked before the lock save, so the session must NOT be
+    // mutated and no Lambda may be triggered. This guarantees a misconfigured
+    // function name can't strand a session in IN_PROGRESS.
+    expect(createCoachConfigGenerationLock).not.toHaveBeenCalled();
+    expect(saveCoachCreatorSession).not.toHaveBeenCalled();
     expect(invokeAsyncLambda).not.toHaveBeenCalled();
   });
 
-  it("returns 500 when invokeAsyncLambda throws", async () => {
+  it("rolls session back to FAILED when invokeAsyncLambda throws after locking", async () => {
     vi.mocked(getCoachCreatorSession).mockResolvedValue(makeSession() as any);
     vi.mocked(invokeAsyncLambda).mockRejectedValue(
       new Error("Lambda invocation failed"),
@@ -202,6 +238,36 @@ describe("create-coach-config handler", () => {
 
     await handler(makeEvent());
 
+    expect(createErrorResponse).toHaveBeenCalledWith(
+      500,
+      "Lambda invocation failed",
+    );
+
+    // Two saves: the IN_PROGRESS lock, then the FAILED rollback.
+    expect(saveCoachCreatorSession).toHaveBeenCalledTimes(2);
+    const firstSave = vi.mocked(saveCoachCreatorSession).mock.calls[0][0];
+    const secondSave = vi.mocked(saveCoachCreatorSession).mock.calls[1][0];
+    expect(firstSave.configGeneration?.status).toBe("IN_PROGRESS");
+    expect(secondSave.configGeneration?.status).toBe("FAILED");
+    expect(secondSave.configGeneration?.error).toBe("Lambda invocation failed");
+
+    // Rollback was constructed via the canonical helper.
+    expect(createCoachConfigGenerationFailure).toHaveBeenCalledTimes(1);
+  });
+
+  it("still returns 500 if the rollback save itself fails (does not throw)", async () => {
+    vi.mocked(getCoachCreatorSession).mockResolvedValue(makeSession() as any);
+    vi.mocked(invokeAsyncLambda).mockRejectedValue(
+      new Error("Lambda invocation failed"),
+    );
+    // First save (lock) succeeds, second save (rollback) fails.
+    vi.mocked(saveCoachCreatorSession)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("DDB unavailable"));
+
+    await handler(makeEvent());
+
+    // Original error is what surfaces to the caller, not the rollback error.
     expect(createErrorResponse).toHaveBeenCalledWith(
       500,
       "Lambda invocation failed",
