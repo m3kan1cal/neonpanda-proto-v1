@@ -74,15 +74,30 @@ export class CoachCreatorAgentV2 {
         `- Timestamp: ${this.creationTimestamp}`,
       tools: [
         adaptLegacyTool(loadSessionRequirementsTool),
+        // Most of these tools call Bedrock internally (personality/methodology
+        // selection, prompt generation, coach name generation in assemble,
+        // AI validation in validate, callBedrockApi in normalize). The
+        // legacy-adapter default is 25s; the framework's own guidance is
+        // "Use 60_000+ for tools that call Bedrock." Bumping these to 60s
+        // so coach creation doesn't time out under normal production
+        // latency once AGENT_V2_COACH_CREATOR is flipped on.
         // personality + methodology selection are independent and can run
         // concurrently when the model emits both in a single tool_use turn.
-        adaptLegacyTool(selectPersonalityTemplateTool, { parallelSafe: true }),
-        adaptLegacyTool(selectMethodologyTemplateTool, { parallelSafe: true }),
-        adaptLegacyTool(generateCoachPromptsTool),
-        adaptLegacyTool(assembleCoachConfigTool),
-        adaptLegacyTool(validateCoachConfigTool),
-        adaptLegacyTool(normalizeCoachConfigTool),
-        adaptLegacyTool(saveCoachConfigToDatabaseTool),
+        adaptLegacyTool(selectPersonalityTemplateTool, {
+          parallelSafe: true,
+          timeoutMs: 60_000,
+        }),
+        adaptLegacyTool(selectMethodologyTemplateTool, {
+          parallelSafe: true,
+          timeoutMs: 60_000,
+        }),
+        adaptLegacyTool(generateCoachPromptsTool, { timeoutMs: 60_000 }),
+        adaptLegacyTool(assembleCoachConfigTool, { timeoutMs: 60_000 }),
+        adaptLegacyTool(validateCoachConfigTool, { timeoutMs: 60_000 }),
+        adaptLegacyTool(normalizeCoachConfigTool, { timeoutMs: 60_000 }),
+        // save tool writes to DDB + Pinecone; 60s gives safe headroom over
+        // the 25s default if Pinecone is slow.
+        adaptLegacyTool(saveCoachConfigToDatabaseTool, { timeoutMs: 60_000 }),
       ],
       resultStoreAliases: STORAGE_KEY_MAP,
       maxIterations: 20,
