@@ -115,7 +115,10 @@ export function getStreamingMessageClasses(
  * Renders timestamp, status dots, an optional sender avatar, and (when not
  * streaming) a copy button. Memoized with a comparator that excludes
  * streamingMessage so the footer DOM is not recreated on every chunk —
- * only when streaming ends, dot colors change, or the avatar slot changes.
+ * only when streaming ends or dot colors change. avatarSlot is intentionally
+ * excluded from the comparator: callers pass inline JSX, so referential
+ * equality would always be false and defeat the memo. Avatars are derived
+ * from stable upstream identity, so a stale avatar render is not a concern.
  *
  * Layout (matches the contextual chat drawer):
  *   - AI message:   [avatar] [timestamp] [dots] [copy?]
@@ -181,8 +184,7 @@ export const MessageFooter = memo(
     prev.messageContent === next.messageContent &&
     prev.messageType === next.messageType &&
     prev.aiDotColorClass === next.aiDotColorClass &&
-    prev.userDotColorClass === next.userDotColorClass &&
-    prev.avatarSlot === next.avatarSlot,
+    prev.userDotColorClass === next.userDotColorClass,
 );
 MessageFooter.displayName = "MessageFooter";
 
