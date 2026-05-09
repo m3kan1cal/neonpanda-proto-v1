@@ -1675,6 +1675,41 @@ paths:
               schema:
                 type: string
 
+  /users/{userId}/program-designer-sessions/{sessionId}/retry:
+    post:
+      tags: [Program Designer Sessions]
+      summary: Retry a failed program build
+      description: |
+        Resets a failed program designer session's generation status to
+        IN_PROGRESS, generates a fresh programId, and triggers a new async
+        build-program invocation. The session must be `isComplete: true`.
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      responses:
+        "200":
+          description: Program build retry triggered
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Program build retried successfully
+                      sessionId:
+                        type: string
+                      userId:
+                        type: string
+                      programId:
+                        type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ===================================================================
   # TRAINING PROGRAMS
   # ===================================================================
