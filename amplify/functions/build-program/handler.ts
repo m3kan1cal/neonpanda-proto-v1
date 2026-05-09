@@ -10,6 +10,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { withHeartbeat } from "../libs/heartbeat";
 import type { BuildProgramEvent } from "../libs/program/types";
 import { ProgramDesignerAgent } from "../libs/agents/program-designer/agent";
+import { ProgramDesignerAgentV2 } from "../libs/agents/program-designer/v2-agent";
 import {
   getProgramDesignerSession,
   saveProgramDesignerSession,
@@ -182,11 +183,19 @@ export const handler = async (event: BuildProgramEvent) => {
       }
 
       // Create ProgramDesigner agent
-      // ProgramDesignerContext extends BuildProgramEvent, so event is the context
-      const agent = new ProgramDesignerAgent(event);
+      // ProgramDesignerContext extends BuildProgramEvent, so event is the context.
+      // Per the unified-agent-framework migration plan, v2 is gated behind a
+      // per-agent env flag so v1 stays as instant rollback. Flip
+      // AGENT_V2_PROGRAM_DESIGNER=true once the v2 path is verified end to end.
+      const useV2 = process.env.AGENT_V2_PROGRAM_DESIGNER === "true";
+      logger.info(
+        `🤖 Starting agent workflow (${useV2 ? "v2" : "v1"})...`,
+      );
+      const agent = useV2
+        ? new ProgramDesignerAgentV2(event)
+        : new ProgramDesignerAgent(event);
 
       // Let agent handle the entire workflow
-      logger.info("🤖 Starting agent workflow...");
       const result = await agent.designProgram();
 
       logger.info("✅ Agent workflow completed:", {
