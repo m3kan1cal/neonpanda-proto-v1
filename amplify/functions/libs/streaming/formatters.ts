@@ -53,41 +53,57 @@ export function formatContextualEvent(content: string, stage?: string): string {
 }
 
 /**
- * Creates a formatted SSE tool_call event for the streaming tool-call blocks
- * shown in the conversation UI.
+ * Wire shape for `tool_call` SSE events shown in the conversation UI.
  *
- * Emitted twice per tool call:
+ * Emitted twice per tool call by both the v1 streaming agent and the v2
+ * streaming runtime:
  *   - status === "running" at tool_use_start so the UI can render a placeholder
- *     block immediately (no toolInput available yet — input is still streaming)
- *   - status === "complete" or "error" after tool.execute resolves, with
- *     durationMs, optional errorMessage, and optional toolInput (omitted when
- *     the tool is flagged redactInput)
+ *     block immediately (toolInput may still be streaming and is often omitted).
+ *   - status === "complete" or "error" after the tool resolves, with
+ *     durationMs, optional errorMessage/errorCode, and optional toolInput
+ *     (omitted when the tool is flagged redactInput).
  *
  * The frontend upserts on `toolUseId` so a single tool call is rendered as
- * one block that transitions from running → complete/error in place.
+ * one block that transitions from running → complete/error in place. Forward
+ * compatible: existing v1 frontends ignore unknown event fields.
+ *
+ * v1 callers ([streaming-agent.ts]) don't set `iteration` / `resultSummary` /
+ * `errorCode`; v2 callers ([core/v2/runtime/sse-formatter.ts]) do. All such
+ * fields are therefore optional in the unified shape.
  */
-export function formatToolCallEvent(payload: {
+export interface ToolCallSseEvent {
+  type: "tool_call";
   toolUseId: string;
   toolName: string;
   status: "running" | "complete" | "error";
-  durationMs?: number;
-  errorMessage?: string;
-  toolInput?: any;
   contentOffset?: number;
-}): string {
+  iteration?: number;
+  durationMs?: number;
+  toolInput?: unknown;
+  resultSummary?: string;
+  errorMessage?: string;
+  errorCode?: string;
+}
+
+export function formatToolCallEvent(
+  event: Omit<ToolCallSseEvent, "type">,
+): string {
   return formatSseEvent({
     type: "tool_call",
-    toolUseId: payload.toolUseId,
-    toolName: payload.toolName,
-    status: payload.status,
-    ...(typeof payload.durationMs === "number" && {
-      durationMs: payload.durationMs,
+    toolUseId: event.toolUseId,
+    toolName: event.toolName,
+    status: event.status,
+    ...(typeof event.contentOffset === "number" && {
+      contentOffset: event.contentOffset,
     }),
-    ...(payload.errorMessage && { errorMessage: payload.errorMessage }),
-    ...(payload.toolInput !== undefined && { toolInput: payload.toolInput }),
-    ...(typeof payload.contentOffset === "number" && {
-      contentOffset: payload.contentOffset,
+    ...(typeof event.iteration === "number" && { iteration: event.iteration }),
+    ...(typeof event.durationMs === "number" && {
+      durationMs: event.durationMs,
     }),
+    ...(event.errorMessage && { errorMessage: event.errorMessage }),
+    ...(event.errorCode && { errorCode: event.errorCode }),
+    ...(event.resultSummary && { resultSummary: event.resultSummary }),
+    ...(event.toolInput !== undefined && { toolInput: event.toolInput }),
   });
 }
 
@@ -249,3 +265,4 @@ export function formatSuggestionEvent(
 export function createStreamTerminator(): null {
   return null;
 }
+

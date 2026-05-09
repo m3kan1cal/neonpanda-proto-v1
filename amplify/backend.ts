@@ -42,6 +42,7 @@ import { createProgramDesignerSession } from "./functions/create-program-designe
 import { getProgramDesignerSession } from "./functions/get-program-designer-session/resource";
 import { getProgramDesignerSessions } from "./functions/get-program-designer-sessions/resource";
 import { deleteProgramDesignerSession } from "./functions/delete-program-designer-session/resource";
+import { retryProgramBuild } from "./functions/retry-program-build/resource";
 import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
@@ -167,6 +168,7 @@ const backend = defineBackend({
   getProgramDesignerSession,
   getProgramDesignerSessions,
   deleteProgramDesignerSession,
+  retryProgramBuild,
   createWorkout,
   buildWorkout,
   buildConversationSummary,
@@ -265,6 +267,7 @@ const allBackendFunctions = [
   backend.getProgramDesignerSession,
   backend.getProgramDesignerSessions,
   backend.deleteProgramDesignerSession,
+  backend.retryProgramBuild,
   backend.createWorkout,
   backend.buildWorkout,
   backend.buildConversationSummary,
@@ -461,6 +464,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getProgramDesignerSessions.resources.lambda,
   backend.deleteProgramDesignerSession.resources.lambda,
   backend.streamProgramDesign.resources.lambda,
+  backend.retryProgramBuild.resources.lambda,
   backend.createProgram.resources.lambda,
   backend.getProgram.resources.lambda,
   backend.getPrograms.resources.lambda,
@@ -577,6 +581,7 @@ const scheduledPolicies = new StackGroupPolicies(
   backend.getProgramDesignerSession,
   backend.getProgramDesignerSessions,
   backend.deleteProgramDesignerSession,
+  backend.retryProgramBuild,
   backend.deleteCoachConversation,
   backend.getWorkouts,
   backend.getWorkout,
@@ -1047,6 +1052,11 @@ grantLambdaInvokePermissions(backend.streamProgramDesign.resources.lambda, [
   backend.buildProgram.resources.lambda.functionArn,
 ]);
 
+// Grant permission to retryProgramBuild to invoke buildProgram
+grantLambdaInvokePermissions(backend.retryProgramBuild.resources.lambda, [
+  backend.buildProgram.resources.lambda.functionArn,
+]);
+
 // Grant permission to logWorkoutTemplate to invoke buildWorkout
 grantLambdaInvokePermissions(backend.logWorkoutTemplate.resources.lambda, [
   backend.buildWorkout.resources.lambda.functionArn,
@@ -1176,6 +1186,7 @@ const allFunctions = [
   backend.getProgramDesignerSession,
   backend.getProgramDesignerSessions,
   backend.deleteProgramDesignerSession,
+  backend.retryProgramBuild,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
@@ -1454,6 +1465,11 @@ backend.streamProgramDesign.addEnvironment(
   backend.auth.resources.userPoolClient.userPoolClientId,
 );
 backend.streamProgramDesign.addEnvironment(
+  "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
+  backend.buildProgram.resources.lambda.functionName,
+);
+
+backend.retryProgramBuild.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
   backend.buildProgram.resources.lambda.functionName,
 );

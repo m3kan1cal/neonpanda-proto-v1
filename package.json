@@ -58,7 +58,8 @@
     "react-tooltip": "^5.30.1",
     "recharts": "^3.8.1",
     "remark-gfm": "^4.0.1",
-    "stripe": "^22.0.2"
+    "stripe": "^22.0.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.22.0",
