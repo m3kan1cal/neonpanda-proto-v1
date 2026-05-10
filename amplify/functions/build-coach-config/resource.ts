@@ -7,6 +7,7 @@ export const buildCoachConfig = defineFunction({
   entry: "./handler.ts",
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900,
-  memoryMB: 2048,
+  // 1024 MB. Workload is Bedrock-bound; aligned with build-program / build-workout.
+  memoryMB: 1024,
   resourceGroupName: "jobs",
 });
