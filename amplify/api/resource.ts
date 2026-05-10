@@ -108,8 +108,16 @@ export function createCoreApi(
     useCustomDomain = true;
   } else {
     // Non-production branches (develop, feature branches, etc.)
+    // TEMPORARY (Phase 0A of fix/api-gateway-nested-stack migration):
+    // useCustomDomain = false to release CFN's cross-stack ownership of
+    // api-dev.neonpanda.ai. The function nested stack still claims the
+    // physical name from the previous deploy state; coreApi cannot CREATE
+    // a competing resource until function stack DELETEs its claim. This
+    // deploy lets function stack release ownership cleanly. Revert in a
+    // follow-up commit (Phase 0B) so coreApi can create the domain fresh.
+    // See plan f1-f3-buildprogram-fixes for full context.
     domainName = `api-dev.${baseDomain}`;
-    useCustomDomain = true;
+    useCustomDomain = false;
   }
 
   console.info(`🌐 API Configuration:`, {
