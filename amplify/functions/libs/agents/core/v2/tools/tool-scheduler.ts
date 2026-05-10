@@ -168,6 +168,19 @@ export class ToolScheduler<TContext extends AgentContext> {
       tool.timeoutMs,
     );
 
+    // Compute the persistence location once. `getStoreLocation` is the
+    // tool-author's hook for telling the scheduler where to write across
+    // every persist path (success, returned-failure, blocked-by-policy,
+    // throw-from-execute). Workout-logger uses this for its multi-workout
+    // positional storage so a single tool failure doesn't replace the
+    // entire keyed array and silently drop earlier successful slots.
+    // Tools that don't define it get an empty object → unchanged
+    // alias-key replace semantics. Per-result `toolStoreIndex` /
+    // `toolStoreKey` on a `ToolSuccess` envelope still take precedence
+    // for the success branch (preserves the existing `defineTool` API).
+    const storeLocation: { index?: number; uniqueKey?: string } =
+      tool.getStoreLocation ? tool.getStoreLocation(inputCheck.value, ctx) : {};
+
     return withToolCorrelation(use.toolUseId, async () => {
       try {
         if (blockingFn) {
@@ -182,7 +195,7 @@ export class ToolScheduler<TContext extends AgentContext> {
             };
             // Persist the block to the store so downstream tools/policies
             // can observe it. See "persist immediately" note below.
-            ctx.resultStore.put(tool.id, blockedResult);
+            ctx.resultStore.put(tool.id, blockedResult, storeLocation);
             return {
               toolUseId: use.toolUseId,
               toolName: tool.id,
@@ -241,12 +254,19 @@ export class ToolScheduler<TContext extends AgentContext> {
         // here too — the contract is that they're independent, so they
         // don't read each other's results during their blocking checks.
         if (result.ok) {
+          // Per-result overrides win when set (a tool's `execute` can
+          // dynamically decide its own slot); otherwise fall back to
+          // the per-tool `getStoreLocation` value computed above.
           ctx.resultStore.put(tool.id, result.data, {
-            index: result.toolStoreIndex,
-            uniqueKey: result.toolStoreKey,
+            index: result.toolStoreIndex ?? storeLocation.index,
+            uniqueKey: result.toolStoreKey ?? storeLocation.uniqueKey,
           });
         } else {
-          ctx.resultStore.put(tool.id, result);
+          // Returned-failure path uses the per-tool location. Tools
+          // that need a positional slot for failure (workout-logger's
+          // multi-workout pattern) declare it via getStoreLocation so
+          // a single failure doesn't replace the entire keyed array.
+          ctx.resultStore.put(tool.id, result, storeLocation);
         }
 
         return {
@@ -282,8 +302,10 @@ export class ToolScheduler<TContext extends AgentContext> {
           details: { errorName: (error as any)?.name },
         };
         // Persist the failure for the same reason as the success path —
-        // downstream same-turn tools must observe this result via blocking.
-        ctx.resultStore.put(tool.id, failure);
+        // downstream same-turn tools must observe this result via
+        // blocking. Use the per-tool `getStoreLocation` so multi-workout
+        // patterns preserve sibling slots even when execute throws.
+        ctx.resultStore.put(tool.id, failure, storeLocation);
 
         return {
           toolUseId: use.toolUseId,
