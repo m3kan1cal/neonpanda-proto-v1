@@ -4,6 +4,7 @@ import {
   queryFromDynamoDB,
   deleteFromDynamoDB,
   createDynamoDBItem,
+  deepMerge,
 } from "./core";
 import { CoachCreatorSession } from "../functions/libs/coach-creator/types";
 import { logger } from "../functions/libs/logger";
@@ -51,6 +52,46 @@ export async function getCoachCreatorSession(
     "coachCreatorSession",
   );
   return item?.attributes ?? null;
+}
+
+/**
+ * Update mutable metadata fields (currently: title) on a coach creator session.
+ * Preserves all other fields via deep merge and bumps lastActivity.
+ */
+export async function updateCoachCreatorSession(
+  userId: string,
+  sessionId: string,
+  updateData: { title?: string },
+): Promise<CoachCreatorSession> {
+  const existingItem = await loadFromDynamoDB<CoachCreatorSession>(
+    `user#${userId}`,
+    `coachCreatorSession#${sessionId}`,
+    "coachCreatorSession",
+  );
+
+  if (!existingItem) {
+    throw new Error(`Coach creator session not found: ${sessionId}`);
+  }
+
+  const updates: Partial<CoachCreatorSession> = {
+    ...(updateData.title !== undefined && { title: updateData.title }),
+    lastActivity: new Date(),
+  };
+
+  const updatedSession: CoachCreatorSession = deepMerge(
+    existingItem.attributes,
+    updates,
+  );
+
+  const updatedItem = {
+    ...existingItem,
+    attributes: updatedSession,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
+
+  return updatedSession;
 }
 
 /**

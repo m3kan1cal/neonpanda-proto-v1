@@ -45,6 +45,10 @@ export interface ProgramDesignerSession {
   coachName?: string; // Coach name for display purposes (embedded for efficiency)
   sessionId: string; // program_designer_{userId}_{timestamp}
 
+  // Optional human-readable title. Set by AI after the first turn,
+  // and editable by the user afterwards.
+  title?: string;
+
   // Todo-list based conversational flow
   todoList: ProgramDesignerTodoList;
   conversationHistory: CoachMessage[];

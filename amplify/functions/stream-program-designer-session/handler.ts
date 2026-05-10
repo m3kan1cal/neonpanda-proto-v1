@@ -14,6 +14,7 @@ import {
   MODEL_IDS,
   queryPineconeContext,
   GuardrailInterventionError,
+  invokeAsyncLambda,
 } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
 import { getUserTimezone } from "../libs/user/timezone";
@@ -516,6 +517,39 @@ async function* createProgramDesignerEventStreamV2(
       alreadyGenerating: saveResult?.alreadyGenerating,
       progressPercentage: programSession.progressDetails.percentage,
     });
+
+    // 13b. AI title generation after the first user-AI exchange.
+    // conversationHistory.length === 2 means we just appended the first
+    // user message + first AI reply. Skipped silently if env var unset or
+    // the message is too short.
+    // Awaited so the SDK Invoke call completes before the streaming runtime
+    // freezes between yields — invokeAsyncLambda itself uses InvocationType.Event
+    // (fire-and-forget on the AWS side, ~50ms to acknowledge).
+    if (programSession.conversationHistory.length === 2) {
+      const titleFunctionName = process.env.BUILD_CONVERSATION_TITLE_FUNCTION_NAME;
+      if (titleFunctionName) {
+        await invokeAsyncLambda(
+          titleFunctionName,
+          {
+            entityType: "programDesignerSession",
+            userId,
+            sessionId,
+            userMessage: userResponse!,
+            aiResponse: fullResponseText,
+          },
+          `title generation for program designer session ${sessionId}`,
+        ).catch((err) => {
+          logger.error(
+            "⚠️ Failed to invoke build-conversation-title (non-blocking):",
+            err,
+          );
+        });
+      } else {
+        logger.warn(
+          "⚠️ BUILD_CONVERSATION_TITLE_FUNCTION_NAME not set — skipping title generation",
+        );
+      }
+    }
 
     // 14. Emit updated progress metadata after agent completes
     yield formatMetadataEvent({
