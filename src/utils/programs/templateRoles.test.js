@@ -74,11 +74,22 @@ describe("countOptionalTemplates (frontend)", () => {
     expect(countOptionalTemplates([makeTemplate("a")])).toBe(0);
   });
 
-  it("counts templates with sessionRole === 'optional' when explicit", () => {
+  it("counts templates with sessionRole === 'optional' when fully labeled", () => {
     const day = [
       makeTemplate("a", "primary"),
       makeTemplate("b", "optional"),
       makeTemplate("c", "optional"),
+    ];
+    expect(countOptionalTemplates(day)).toBe(2);
+  });
+
+  it("counts unlabeled siblings as optional when any template has an explicit role", () => {
+    // Stays in lockstep with isPrimaryTemplate, which treats unlabeled
+    // templates as non-primary in the explicit-role mode.
+    const day = [
+      makeTemplate("a", "primary"),
+      makeTemplate("b", "optional"),
+      makeTemplate("c"), // unlabeled
     ];
     expect(countOptionalTemplates(day)).toBe(2);
   });

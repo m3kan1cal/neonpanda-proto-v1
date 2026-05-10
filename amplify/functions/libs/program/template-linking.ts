@@ -61,10 +61,16 @@ export const isPrimaryTemplate = (
  *
  * Behavior:
  * - If ANY template on the day declares an explicit sessionRole, count the
- *   templates whose sessionRole === "optional".
- * - Otherwise (legacy programs), fall back to (dayTemplates.length - 1)
- *   under the historical assumption that the first-by-templateId template
- *   is primary and everything else is optional.
+ *   templates that are NOT primary (sessionRole !== "primary"). This
+ *   intentionally includes both explicitly-`"optional"` templates and any
+ *   unlabeled siblings — `isPrimaryTemplate` already treats unlabeled
+ *   templates as non-primary in that mode, so totalOptional must agree
+ *   or `optionalCompleted` will eventually exceed `totalOptional` and
+ *   break the day-completion invariant.
+ * - Otherwise (legacy programs with NO sessionRole anywhere), fall back to
+ *   (dayTemplates.length - 1) under the historical assumption that the
+ *   first-by-templateId template is primary and everything else is
+ *   optional.
  *
  * Always returns >= 0.
  */
@@ -74,7 +80,7 @@ export const countOptionalTemplates = (
   if (dayTemplates.length <= 1) return 0;
 
   if (hasExplicitSessionRoles(dayTemplates)) {
-    return dayTemplates.filter((t) => t.sessionRole === "optional").length;
+    return dayTemplates.filter((t) => t.sessionRole !== "primary").length;
   }
 
   return Math.max(0, dayTemplates.length - 1);

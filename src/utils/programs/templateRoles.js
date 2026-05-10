@@ -68,6 +68,12 @@ export const pickPrimaryTemplate = (dayTemplates) => {
 
 /**
  * Count optional-role templates on a day.
+ *
+ * If any template on the day declares an explicit sessionRole, counts
+ * non-primary templates (sessionRole !== "primary") so unlabeled siblings
+ * are included. This matches `isPrimaryTemplate`'s classification of
+ * unlabeled templates as non-primary in that mode — the two helpers must
+ * stay in sync or `optionalCompleted` can exceed `totalOptional`.
  * Always returns >= 0.
  *
  * @param {object[]} dayTemplates - All templates sharing the same day.
@@ -77,7 +83,7 @@ export const countOptionalTemplates = (dayTemplates) => {
   if (!Array.isArray(dayTemplates) || dayTemplates.length <= 1) return 0;
 
   if (hasExplicitSessionRoles(dayTemplates)) {
-    return dayTemplates.filter((t) => t.sessionRole === "optional").length;
+    return dayTemplates.filter((t) => t.sessionRole !== "primary").length;
   }
 
   return Math.max(0, dayTemplates.length - 1);

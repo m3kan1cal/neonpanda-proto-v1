@@ -94,7 +94,7 @@ describe("countOptionalTemplates", () => {
   });
 
   describe("explicit sessionRole", () => {
-    it("counts templates with sessionRole === 'optional'", () => {
+    it("counts templates with sessionRole === 'optional' on a fully-labeled day", () => {
       const day = [
         makeTemplate("a", "primary"),
         makeTemplate("b", "optional"),
@@ -103,9 +103,22 @@ describe("countOptionalTemplates", () => {
       expect(countOptionalTemplates(day)).toBe(2);
     });
 
-    it("returns 0 when no template is explicitly optional (all primary)", () => {
+    it("counts unlabeled siblings as optional when any template has an explicit role", () => {
+      // Defensive consistency with isPrimaryTemplate: as soon as any
+      // sibling declares a role, unlabeled templates are non-primary
+      // (i.e. optional). totalOptional must agree or `optionalCompleted`
+      // will exceed `totalOptional` after all logs land.
+      const day = [
+        makeTemplate("a", "primary"),
+        makeTemplate("b", "optional"),
+        makeTemplate("c"), // unlabeled, partial-label day
+      ];
+      expect(countOptionalTemplates(day)).toBe(2);
+    });
+
+    it("returns 0 when every template is explicitly primary", () => {
       // Edge case: malformed program where every template was labeled
-      // primary. The count reflects the labels, not a fallback.
+      // primary. Count reflects the labels — no fallback.
       const day = [
         makeTemplate("a", "primary"),
         makeTemplate("b", "primary"),
