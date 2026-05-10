@@ -4,7 +4,6 @@ import {
   queryFromDynamoDB,
   deleteFromDynamoDB,
   createDynamoDBItem,
-  deepMerge,
   docClient,
   UpdateCommand,
   withThroughputScaling,
