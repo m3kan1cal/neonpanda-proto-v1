@@ -416,6 +416,12 @@ backend.processMemoryLifecycle.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 
+// Dedicated nested stack for the HTTP API surface (Api, Stage, Routes,
+// Integrations, DomainName, ApiMapping, and the auto-generated Lambda
+// invoke permissions). Splitting these out keeps the Amplify-managed
+// `function` stack under CloudFormation's 500-resource-per-stack limit.
+const coreApiStack = backend.createStack("coreApi");
+
 // Create User Pool authorizer
 const userPoolAuthorizer = new HttpUserPoolAuthorizer(
   "UserPoolAuthorizer",
@@ -427,7 +433,7 @@ const userPoolAuthorizer = new HttpUserPoolAuthorizer(
 
 // Create the Core API with all endpoints
 const coreApi = apiGatewayv2.createCoreApi(
-  backend.contactForm.stack,
+  coreApiStack,
   backend.contactForm.resources.lambda,
   backend.createCoachCreatorSession.resources.lambda,
   backend.updateCoachCreatorSession.resources.lambda,
