@@ -104,20 +104,23 @@ export function createCoreApi(
     useCustomDomain = false;
   } else if (branchInfo.branchName === "main") {
     // Production from main branch.
-    // TEMPORARY (Phase 0A-prod of fix/api-gateway-nested-stack migration):
-    // useCustomDomain = false to release the function nested stack's CFN
-    // ownership of api-prod.neonpanda.ai. Once main has deployed cleanly
-    // with the domain disabled, a follow-up commit (Phase 0B-prod) will
-    // restore useCustomDomain = true so the coreApi nested stack can
-    // CREATE the ApiCustomDomain resource fresh under its new home.
+    // Phase 0B-prod of fix/api-gateway-nested-stack migration: now that
+    // Phase 0A-prod has shipped to main and CFN dropped the function
+    // nested stack's ownership of api-prod.neonpanda.ai, re-enable the
+    // custom domain so the coreApi nested stack CREATEs the
+    // ApiCustomDomain resource fresh under its new home.
     //
-    // Note: this code path is dead from develop's runtime perspective —
-    // develop hits the `else` branch below — so this commit is a true
-    // no-op for develop deploys. It only activates when this code is
-    // merged to main. After Phase 0B-prod lands, this whole block reverts
-    // to `useCustomDomain = true`.
+    // After this lands on main and deploys cleanly:
+    //   1. coreApi will own api-prod.neonpanda.ai under a new
+    //      d-XXXXXXXXX.execute-api.us-west-2.amazonaws.com endpoint.
+    //   2. The Route53 CNAME for api-prod.neonpanda.ai needs a manual
+    //      UPSERT to the new endpoint (see the discovery + UPSERT
+    //      script in SCRIPTS_MLF.md / docs). The CNAME is not yet
+    //      managed by CDK — that's tracked as a follow-up.
+    //
+    // No-op for develop runtime — develop hits the `else` branch below.
     domainName = `api-prod.${baseDomain}`;
-    useCustomDomain = false;
+    useCustomDomain = true;
   } else {
     // Non-production branches (develop, feature branches, etc.)
     domainName = `api-dev.${baseDomain}`;
