@@ -4,6 +4,7 @@ import {
   queryFromDynamoDB,
   deleteFromDynamoDB,
   createDynamoDBItem,
+  deserializeFromDynamoDB,
   docClient,
   UpdateCommand,
   withThroughputScaling,
@@ -144,7 +145,15 @@ export async function updateProgramDesignerSession(
       });
 
       const result = await docClient.send(command);
-      return result.Attributes?.attributes as ProgramDesignerSession;
+      if (!result.Attributes?.attributes) {
+        throw new Error(`Program designer session not found: ${sessionId}`);
+      }
+      // Run through the same deserializer as loadFromDynamoDB so callers
+      // get Date objects on `lastActivity` / `startedAt`, matching the
+      // declared `Promise<ProgramDesignerSession>` return type.
+      return deserializeFromDynamoDB(
+        result.Attributes.attributes,
+      ) as ProgramDesignerSession;
     } catch (error: any) {
       if (error?.name === "ConditionalCheckFailedException") {
         throw new Error(`Program designer session not found: ${sessionId}`);

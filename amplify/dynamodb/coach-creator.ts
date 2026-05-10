@@ -4,6 +4,7 @@ import {
   queryFromDynamoDB,
   deleteFromDynamoDB,
   createDynamoDBItem,
+  deserializeFromDynamoDB,
   docClient,
   UpdateCommand,
   withThroughputScaling,
@@ -106,7 +107,15 @@ export async function updateCoachCreatorSession(
       });
 
       const result = await docClient.send(command);
-      return result.Attributes?.attributes as CoachCreatorSession;
+      if (!result.Attributes?.attributes) {
+        throw new Error(`Coach creator session not found: ${sessionId}`);
+      }
+      // Run through the same deserializer as loadFromDynamoDB so callers
+      // get Date objects on `lastActivity` / `startedAt`, matching the
+      // declared `Promise<CoachCreatorSession>` return type.
+      return deserializeFromDynamoDB(
+        result.Attributes.attributes,
+      ) as CoachCreatorSession;
     } catch (error: any) {
       if (error?.name === "ConditionalCheckFailedException") {
         throw new Error(`Coach creator session not found: ${sessionId}`);
