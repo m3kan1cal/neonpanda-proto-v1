@@ -96,6 +96,13 @@ const MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW = 5;
  * (which fires AFTER middleware) write to the right slot in one go —
  * avoids the double-write that program-designer's phaseWorkoutsMiddleware
  * does (where uniqueKey writes a different key than the alias).
+ *
+ * Critically, this must run for FAILURES too. The scheduler's failure
+ * persist also honours `result.toolStoreIndex` (per the
+ * scheduler-failure-positional fix that ships in this PR), so without
+ * setting it on failures, a single tool failure in a multi-workout flow
+ * would replace the entire keyed array and silently drop earlier
+ * successful results — Bugbot finding 288d112c.
  */
 function makeWorkoutIndexMiddleware(
   toolId: string,
@@ -103,18 +110,24 @@ function makeWorkoutIndexMiddleware(
 ): ToolMiddleware<WorkoutLoggerContext> {
   return {
     after: (input, result, ctx) => {
-      if (!result.ok) return;
       const explicit = (input as any)?.workoutIndex;
+      let idx: number;
       if (typeof explicit === "number" && Number.isFinite(explicit)) {
-        (result as any).toolStoreIndex = explicit;
-        return;
+        idx = explicit;
+      } else {
+        // No explicit workoutIndex: append to next available slot.
+        // ctx.resultStore.getAll uses the alias-resolved key. Safe under
+        // sequential execution because the previous call's persist has
+        // already landed before this middleware runs.
+        const existing = ctx.resultStore.getAll<unknown>(alias) ?? [];
+        idx = existing.length;
       }
-      // No explicit workoutIndex: append to next available slot.
-      // ctx.resultStore.getAll uses the alias-resolved key. Safe under
-      // sequential execution because the previous call's persist has
-      // already landed before this middleware runs.
-      const existing = ctx.resultStore.getAll<unknown>(alias) ?? [];
-      (result as any).toolStoreIndex = existing.length;
+      // Mutate both success and failure envelopes so the scheduler's
+      // post-middleware persist lands at the right slot in either case.
+      // ToolFailure doesn't declare toolStoreIndex in its type but the
+      // scheduler reads it via `(result as any).toolStoreIndex` on the
+      // failure path now.
+      (result as any).toolStoreIndex = idx;
     },
   };
 }
@@ -237,7 +250,30 @@ export class WorkoutLoggerAgentV2 {
             return null;
           }
 
-          // 2. Don't retry on explicit validation block (planning,
+          // 2. Tool-level timeout (per program-designer/v2's eecf4d7
+          //    lesson). Treat as infrastructure issue and retry once
+          //    with a fresh store + targeted prompt. **Must run BEFORE
+          //    the validation-blocked / valid-blocking-response checks**
+          //    because Claude's polished post-timeout response often
+          //    reads as a valid block ("I was unable to extract the
+          //    workout data") and would short-circuit the retry —
+          //    Bugbot finding da826b4b. The timeout is a fact about the
+          //    store, not the response text, so it's safe to evaluate
+          //    first.
+          const sawTimeout = Object.values(STORAGE_KEY_MAP).some((alias) => {
+            const arr = resultStore.getAll<any>(alias) ?? [];
+            return arr.some(
+              (r: any) => r && r.ok === false && r.code === "timeout",
+            );
+          });
+          if (sawTimeout) {
+            const originalMessage = this.extractOriginalUserMessage();
+            const retryPrompt = this.buildRetryPrompt(originalMessage, finalText);
+            this.clearStoreForRetry(resultStore);
+            return { retryPrompt, reason: "tool_timeout" };
+          }
+
+          // 3. Don't retry on explicit validation block (planning,
           //    insufficient_data, etc.). Trust the AI validation
           //    decision — same as v1 (workout-logger/agent.ts:469-476).
           //    Normalise so v2 envelope matches v1 shape.
@@ -252,29 +288,11 @@ export class WorkoutLoggerAgentV2 {
           });
           if (hasExplicitBlock) return null;
 
-          // 3. Don't retry if Claude correctly identified non-workout
+          // 4. Don't retry if Claude correctly identified non-workout
           //    content and produced a valid blocking response. v1
           //    catalog (workout-logger/agent.ts:530-613) — preserved
           //    verbatim because it carries months of tuned patterns.
           if (isValidBlockingResponse(finalText)) return null;
-
-          // 4. Tool-level timeout (per program-designer/v2's eecf4d7
-          //    lesson). Treat as infrastructure issue: retry once with
-          //    a clean store + targeted prompt. Without this, finalText
-          //    heuristics miss the timeout because Claude tends to write
-          //    a polished failure report rather than asking a question.
-          const sawTimeout = Object.values(STORAGE_KEY_MAP).some((alias) => {
-            const arr = resultStore.getAll<any>(alias) ?? [];
-            return arr.some(
-              (r: any) => r && r.ok === false && r.code === "timeout",
-            );
-          });
-          if (sawTimeout) {
-            const originalMessage = this.extractOriginalUserMessage();
-            const retryPrompt = this.buildRetryPrompt(originalMessage, finalText);
-            this.clearStoreForRetry(resultStore);
-            return { retryPrompt, reason: "tool_timeout" };
-          }
 
           // 5. Don't retry if we already have most of the workflow
           //    complete (e.g. extraction succeeded but summary did not —

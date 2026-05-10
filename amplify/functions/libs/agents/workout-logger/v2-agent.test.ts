@@ -402,6 +402,189 @@ describe("WorkoutLoggerAgentV2", () => {
     expect(result.reason).toMatch(/infrastructure|timeout|retry/i);
   });
 
+  it("triggers timeout retry even when finalText reads as a valid blocking response (Bugbot da826b4b)", async () => {
+    // Pre-fix: shouldRetry's isValidBlockingResponse step ran BEFORE
+    // the timeout-detection step. When extract timed out, Claude wrote
+    // "I was unable to extract the workout data" which matches the
+    // `unable to (extract)` regex — so the timeout retry was never
+    // reachable. After the reorder, the store-side timeout check fires
+    // first and queues a retry round.
+    (detectDisciplineTool.execute as any).mockResolvedValue({
+      discipline: "crossfit",
+    });
+    let extractCalls = 0;
+    (extractWorkoutDataTool.execute as any).mockImplementation(() => {
+      extractCalls++;
+      // First call hangs (will be timed out by scheduler); retry round
+      // succeeds.
+      if (extractCalls === 1) return new Promise(() => {});
+      return Promise.resolve({
+        workoutData: {
+          discipline: "crossfit",
+          workout_name: "Fran",
+          metadata: { data_confidence: 0.9 },
+        },
+        generationMethod: "tool",
+      });
+    });
+    (validateWorkoutCompletenessTool.execute as any).mockResolvedValue({
+      isValid: true,
+      shouldSave: true,
+      shouldNormalize: false,
+      confidence: 0.9,
+      completeness: 1.0,
+      blockingFlags: [],
+    });
+    (generateWorkoutSummaryTool.execute as any).mockResolvedValue({
+      summary: "ok",
+    });
+    (saveWorkoutToDatabaseTool.execute as any).mockResolvedValue({
+      workoutId: "workout_after_retry",
+      success: true,
+    });
+
+    const agent = new WorkoutLoggerAgentV2(baseContext);
+    const innerAgent = (agent as any).agent;
+    const extractTool = innerAgent.config.tools.find(
+      (t: any) => t.id === "extract_workout_data",
+    );
+    extractTool.timeoutMs = 20;
+
+    wireRuntime([
+      turn([toolUseBlock("u1", "detect_discipline", {})], "tool_use"),
+      turn([toolUseBlock("u2", "extract_workout_data", {})], "tool_use"),
+      // Timeout produces a polished "unable to extract" reply that would
+      // match isValidBlockingResponse. Pre-fix, retry would be suppressed
+      // here; post-fix, the timeout check sees the store envelope first
+      // and triggers a retry.
+      turn(
+        [{ text: "I was unable to extract the workout data from your message." }],
+        "end_turn",
+      ),
+      // Retry round: extract succeeds → validate → summary → save → success.
+      turn([toolUseBlock("u3", "extract_workout_data", {})], "tool_use"),
+      turn(
+        [toolUseBlock("u4", "validate_workout_completeness", {})],
+        "tool_use",
+      ),
+      turn([toolUseBlock("u5", "generate_workout_summary", {})], "tool_use"),
+      turn([toolUseBlock("u6", "save_workout_to_database", {})], "tool_use"),
+      turn([{ text: "Workout logged after retry." }], "end_turn"),
+    ]);
+
+    const result = await agent.logWorkout("Did Fran today");
+    expect(result.success).toBe(true);
+    expect(result.workoutId).toBe("workout_after_retry");
+    // Confirm the retry actually fired (extract called twice).
+    expect(extractWorkoutDataTool.execute).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves earlier successful indexed entries when a later call throws (Bugbot 288d112c)", async () => {
+    // Multi-workout: save 0 succeeds, save 1 throws. Pre-fix, the
+    // catch-block bare put replaced the entire `save` array with the
+    // failure envelope, wiping save[0] and triggering a template
+    // revert for a workout that was actually persisted. Post-fix, the
+    // scheduler reads `inputCheck.value.workoutIndex` and stores the
+    // failure at slot 1, leaving save[0] intact.
+    (detectDisciplineTool.execute as any).mockResolvedValue({
+      discipline: "crossfit",
+    });
+    (extractWorkoutDataTool.execute as any).mockResolvedValue({
+      workoutData: { discipline: "crossfit", workout_name: "Fran" },
+    });
+    (validateWorkoutCompletenessTool.execute as any).mockResolvedValue({
+      isValid: true,
+      shouldSave: true,
+      shouldNormalize: false,
+      confidence: 0.9,
+      completeness: 1.0,
+      blockingFlags: [],
+    });
+    (generateWorkoutSummaryTool.execute as any).mockResolvedValue({
+      summary: "ok",
+    });
+    let saveCallIdx = 0;
+    (saveWorkoutToDatabaseTool.execute as any).mockImplementation(
+      async (input: any) => {
+        if (saveCallIdx++ === 0) {
+          return {
+            workoutId: "workout_zero",
+            success: true,
+            pineconeStored: true,
+          };
+        }
+        // Second save call throws — simulates DDB outage mid-batch.
+        throw new Error("DDB write failed");
+      },
+    );
+
+    const agent = new WorkoutLoggerAgentV2(baseContext);
+    wireRuntime([
+      turn(
+        [
+          toolUseBlock("u1", "detect_discipline", {}),
+          toolUseBlock("u2", "detect_discipline", {}),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u3", "extract_workout_data", {}),
+          toolUseBlock("u4", "extract_workout_data", {}),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u5", "validate_workout_completeness", {
+            workoutIndex: 0,
+          }),
+          toolUseBlock("u6", "validate_workout_completeness", {
+            workoutIndex: 1,
+          }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u7", "generate_workout_summary", { workoutIndex: 0 }),
+          toolUseBlock("u8", "generate_workout_summary", { workoutIndex: 1 }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u9", "save_workout_to_database", { workoutIndex: 0 }),
+          toolUseBlock("u10", "save_workout_to_database", {
+            workoutIndex: 1,
+          }),
+        ],
+        "tool_use",
+      ),
+      turn([{ text: "Logged 1 of 2." }], "end_turn"),
+    ]);
+
+    const result = await agent.logWorkout("Did two workouts");
+
+    // The first successful save MUST survive the second save's throw.
+    // Pre-fix: result.success would be false and result.workoutId
+    // undefined, leading the handler to revert the template even
+    // though workout_zero was persisted.
+    expect(result.success).toBe(true);
+    expect(result.workoutId).toBe("workout_zero");
+
+    // Direct store inspection: save[0] preserved, save[1] is a failure
+    // envelope at the right slot — not a replace that wiped save[0].
+    const store = (agent as any).agent.getResultStore();
+    const allSaves = store.getAll("save");
+    expect(allSaves).toHaveLength(2);
+    expect(allSaves[0]).toMatchObject({
+      workoutId: "workout_zero",
+      success: true,
+    });
+    expect(allSaves[1]).toMatchObject({ ok: false });
+  });
+
   it("returns skipped result with the agent response when no tools are called", async () => {
     const agent = new WorkoutLoggerAgentV2(baseContext);
     wireRuntime([

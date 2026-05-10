@@ -182,7 +182,15 @@ export class ToolScheduler<TContext extends AgentContext> {
             };
             // Persist the block to the store so downstream tools/policies
             // can observe it. See "persist immediately" note below.
-            ctx.resultStore.put(tool.id, blockedResult);
+            // Honour positional storage when the tool input carries a
+            // `workoutIndex` (workout-logger's multi-workout convention)
+            // so a single tool block doesn't replace the keyed array
+            // and wipe earlier successful slots — Bugbot finding
+            // 288d112c. Tools without that field are unaffected
+            // (fallback resolves to undefined → bare put → replace).
+            ctx.resultStore.put(tool.id, blockedResult, {
+              index: inferInputIndex(inputCheck.value),
+            });
             return {
               toolUseId: use.toolUseId,
               toolName: tool.id,
@@ -246,7 +254,18 @@ export class ToolScheduler<TContext extends AgentContext> {
             uniqueKey: result.toolStoreKey,
           });
         } else {
-          ctx.resultStore.put(tool.id, result);
+          // Honour `toolStoreIndex` / `toolStoreKey` on the failure path
+          // too. Without this, a failure in a multi-workout flow under
+          // an indexed alias (workout-logger pattern) replaces the
+          // entire keyed array and silently drops earlier successful
+          // results — Bugbot finding 288d112c. Middleware that wants
+          // positional / keyed failure storage sets these fields via
+          // `(result as any).toolStoreIndex` (ToolFailure doesn't
+          // declare them in its type, hence the cast).
+          ctx.resultStore.put(tool.id, result, {
+            index: (result as any).toolStoreIndex,
+            uniqueKey: (result as any).toolStoreKey,
+          });
         }
 
         return {
@@ -283,7 +302,14 @@ export class ToolScheduler<TContext extends AgentContext> {
         };
         // Persist the failure for the same reason as the success path —
         // downstream same-turn tools must observe this result via blocking.
-        ctx.resultStore.put(tool.id, failure);
+        // Same positional-storage convention as the blocked-by-policy
+        // path: workout-logger's `workoutIndex` keeps multi-workout
+        // arrays intact when a single call throws. Tools without
+        // `workoutIndex` fall through to a bare put (replace) — same
+        // as before this fix.
+        ctx.resultStore.put(tool.id, failure, {
+          index: inferInputIndex(inputCheck.value),
+        });
 
         return {
           toolUseId: use.toolUseId,
@@ -296,4 +322,24 @@ export class ToolScheduler<TContext extends AgentContext> {
       }
     });
   }
+}
+
+/**
+ * Generic positional-storage hint used by the bypass-middleware put
+ * sites (blocked-by-policy and execute-throws-catch). Tools whose input
+ * objects carry a numeric `workoutIndex` (workout-logger's multi-workout
+ * convention) get the index forwarded to `ToolResultStore.put` so a
+ * single block / throw doesn't replace the entire keyed array. Tools
+ * that don't carry the field return undefined → bare put → existing
+ * replace semantics. Documented as a convention rather than a config
+ * knob to keep the framework footprint small; if a future agent needs
+ * positional storage with a different field name, this becomes a
+ * per-tool callback.
+ */
+function inferInputIndex(input: unknown): number | undefined {
+  if (input && typeof input === "object") {
+    const v = (input as Record<string, unknown>).workoutIndex;
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+  }
+  return undefined;
 }
