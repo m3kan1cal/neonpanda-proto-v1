@@ -101,19 +101,21 @@ export const handler = async (event: BuildConversationTitleEvent) => {
     }
 
     // Idempotency: skip if the entity already has a non-default title
-    // (user already renamed it manually).
-    const currentTitle = await loadCurrentTitle(event);
-    if (currentTitle === undefined) {
+    // (user already renamed it manually). Distinguish "entity not found"
+    // from "entity has no title" — sessions are created without a title,
+    // so an undefined title is normal and should NOT short-circuit.
+    const before = await loadCurrentTitle(event);
+    if (!before.found) {
       logger.warn("⚠️ Entity not found — skipping title generation", {
         entityType: event.entityType,
       });
       return createOkResponse({ success: false, reason: "entity_not_found" });
     }
 
-    if (!isDefaultTitle(currentTitle)) {
+    if (!isDefaultTitle(before.title)) {
       logger.info("⏭️ Skipping title generation — non-default title already set", {
         entityType: event.entityType,
-        currentTitle,
+        currentTitle: before.title,
       });
       return createOkResponse({
         success: false,
@@ -165,11 +167,11 @@ export const handler = async (event: BuildConversationTitleEvent) => {
 
     // Final guard: don't overwrite an entity that was renamed during the
     // ~1-2 second AI call window.
-    const titleAfterAi = await loadCurrentTitle(event);
-    if (titleAfterAi !== undefined && !isDefaultTitle(titleAfterAi)) {
+    const after = await loadCurrentTitle(event);
+    if (after.found && !isDefaultTitle(after.title)) {
       logger.info(
         "⏭️ Skipping write — title was set by another writer during AI call",
-        { entityType: event.entityType, titleAfterAi },
+        { entityType: event.entityType, titleAfterAi: after.title },
       );
       return createOkResponse({
         success: false,
@@ -202,9 +204,14 @@ export const handler = async (event: BuildConversationTitleEvent) => {
   }
 };
 
+interface LoadedTitle {
+  found: boolean;
+  title: string | undefined;
+}
+
 async function loadCurrentTitle(
   event: BuildConversationTitleEvent,
-): Promise<string | undefined> {
+): Promise<LoadedTitle> {
   switch (event.entityType) {
     case "coachConversation": {
       const conv = await getCoachConversation(
@@ -212,24 +219,24 @@ async function loadCurrentTitle(
         event.coachId,
         event.conversationId,
       );
-      if (!conv) return undefined;
-      return conv.title;
+      if (!conv) return { found: false, title: undefined };
+      return { found: true, title: conv.title };
     }
     case "coachCreatorSession": {
       const session = await getCoachCreatorSession(
         event.userId,
         event.sessionId,
       );
-      if (!session) return undefined;
-      return session.title;
+      if (!session) return { found: false, title: undefined };
+      return { found: true, title: session.title };
     }
     case "programDesignerSession": {
       const session = await getProgramDesignerSession(
         event.userId,
         event.sessionId,
       );
-      if (!session) return undefined;
-      return session.title;
+      if (!session) return { found: false, title: undefined };
+      return { found: true, title: session.title };
     }
   }
 }

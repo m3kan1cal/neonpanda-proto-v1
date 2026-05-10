@@ -390,10 +390,10 @@ async function* createCoachCreatorEventStreamV2(
     });
 
     // 11b. Fire-and-forget AI title generation after the first user-AI exchange.
-    // session.conversationHistory.length === 2 means we just appended the
-    // first user message + first AI reply. Skipped silently if the function
-    // env var isn't wired or the message is too short.
-    if (session.conversationHistory.length === 2) {
+    // Coach creator sessions are created with one initial AI greeting message
+    // (see create-coach-creator-session/handler.ts), so the first turn pair
+    // brings the history to length 3, not 2.
+    if (session.conversationHistory.length === 3) {
       const titleFunctionName = process.env.BUILD_CONVERSATION_TITLE_FUNCTION_NAME;
       if (titleFunctionName) {
         invokeAsyncLambda(
