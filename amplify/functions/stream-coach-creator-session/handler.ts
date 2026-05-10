@@ -15,6 +15,7 @@ import {
   queryPineconeContext,
   MODEL_IDS,
   GuardrailInterventionError,
+  invokeAsyncLambda,
 } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
 import { getUserTimezone } from "../libs/user/timezone";
@@ -387,6 +388,36 @@ async function* createCoachCreatorEventStreamV2(
       coachConfigId: saveResult.coachConfigId,
       progressPercentage: session.progressDetails.percentage,
     });
+
+    // 11b. Fire-and-forget AI title generation after the first user-AI exchange.
+    // session.conversationHistory.length === 2 means we just appended the
+    // first user message + first AI reply. Skipped silently if the function
+    // env var isn't wired or the message is too short.
+    if (session.conversationHistory.length === 2) {
+      const titleFunctionName = process.env.BUILD_CONVERSATION_TITLE_FUNCTION_NAME;
+      if (titleFunctionName) {
+        invokeAsyncLambda(
+          titleFunctionName,
+          {
+            entityType: "coachCreatorSession",
+            userId,
+            sessionId,
+            userMessage: userResponse!,
+            aiResponse: fullResponseText,
+          },
+          `title generation for coach creator session ${sessionId}`,
+        ).catch((err) => {
+          logger.error(
+            "⚠️ Failed to invoke build-conversation-title (non-blocking):",
+            err,
+          );
+        });
+      } else {
+        logger.warn(
+          "⚠️ BUILD_CONVERSATION_TITLE_FUNCTION_NAME not set — skipping title generation",
+        );
+      }
+    }
 
     // 12. Yield complete event
     yield formatCompleteEvent({

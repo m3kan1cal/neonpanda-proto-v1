@@ -30,6 +30,7 @@ import UserAvatar from "./shared/UserAvatar";
 import PageHeader from "./shared/PageHeader";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { InlineEditField } from "./shared/InlineEditField.jsx";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
@@ -323,7 +324,22 @@ function CoachCreator() {
     isStreaming: false,
     streamingMessage: "",
     streamingMessageId: null,
+    title: null,
   });
+
+  const handleSaveSessionTitle = async (newTitle) => {
+    if (!agentRef.current) {
+      throw new Error("Coach creator agent not initialized");
+    }
+    try {
+      await agentRef.current.updateSessionTitle(newTitle);
+      showSuccess("Session title updated");
+    } catch (error) {
+      logger.error("Error updating coach creator session title:", error);
+      showError("Failed to update session title");
+      throw error;
+    }
+  };
 
   // Initialize agent
   useEffect(() => {
@@ -685,6 +701,29 @@ function CoachCreator() {
             />
           }
         />
+
+        {/* Session Title — AI-generated after first turn, editable by user */}
+        {agentRef.current?.sessionId && (
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="font-body text-lg text-white flex flex-col md:flex-row md:items-center">
+                <span className="text-synthwave-neon-cyan md:mr-2 whitespace-nowrap mb-1 md:mb-0">
+                  Session:
+                </span>
+                <InlineEditField
+                  value={agentState.title || "New Coach Session"}
+                  onSave={handleSaveSessionTitle}
+                  placeholder="Enter session title..."
+                  maxLength={100}
+                  showCharacterCount={false}
+                  size="medium"
+                  displayClassName="text-white font-body text-lg"
+                  tooltipPrefix="coach-creator-session-title"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">

@@ -14,6 +14,8 @@ export function createCoreApi(
   contactFormLambda: lambda.IFunction,
   createCoachCreatorSessionLambda: lambda.IFunction,
   updateCoachCreatorSessionLambda: lambda.IFunction,
+  updateCoachCreatorSessionMetadataLambda: lambda.IFunction,
+  updateProgramDesignerSessionMetadataLambda: lambda.IFunction,
   getCoachConfigsLambda: lambda.IFunction,
   getCoachConfigLambda: lambda.IFunction,
   updateCoachConfigLambda: lambda.IFunction,
@@ -173,6 +175,18 @@ export function createCoreApi(
     new apigatewayv2_integrations.HttpLambdaIntegration(
       "UpdateCoachCreatorSessionIntegration",
       updateCoachCreatorSessionLambda,
+    );
+
+  const updateCoachCreatorSessionMetadataIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateCoachCreatorSessionMetadataIntegration",
+      updateCoachCreatorSessionMetadataLambda,
+    );
+
+  const updateProgramDesignerSessionMetadataIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateProgramDesignerSessionMetadataIntegration",
+      updateProgramDesignerSessionMetadataLambda,
     );
 
   const getCoachCreatorSessionIntegration =
@@ -599,6 +613,10 @@ export function createCoreApi(
     contactForm: contactFormIntegration,
     createCoachCreatorSession: createCoachCreatorSessionIntegration,
     updateCoachCreatorSession: updateCoachCreatorSessionIntegration,
+    updateCoachCreatorSessionMetadata:
+      updateCoachCreatorSessionMetadataIntegration,
+    updateProgramDesignerSessionMetadata:
+      updateProgramDesignerSessionMetadataIntegration,
     getCoachCreatorSession: getCoachCreatorSessionIntegration,
     getCoachCreatorSessions: getCoachCreatorSessionsIntegration,
     deleteCoachCreatorSession: deleteCoachCreatorSessionIntegration,
@@ -959,6 +977,14 @@ export function createCoreApi(
     authorizer: userPoolAuthorizer,
   });
 
+  // Metadata-only update (e.g., user-driven title rename)
+  httpApi.addRoutes({
+    path: "/users/{userId}/coach-creator-sessions/{sessionId}/metadata",
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateCoachCreatorSessionMetadata,
+    authorizer: userPoolAuthorizer,
+  });
+
   // Coach Config Routes
   httpApi.addRoutes({
     path: "/users/{userId}/coaches",
@@ -1222,6 +1248,14 @@ export function createCoreApi(
     path: "/users/{userId}/program-designer-sessions/{sessionId}/retry",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.retryProgramBuild,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Metadata-only update (e.g., user-driven title rename)
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions/{sessionId}/metadata",
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateProgramDesignerSessionMetadata,
     authorizer: userPoolAuthorizer,
   });
 

@@ -4,6 +4,7 @@ import {
   queryFromDynamoDB,
   deleteFromDynamoDB,
   createDynamoDBItem,
+  deepMerge,
 } from "./core";
 import { ProgramDesignerSession } from "../functions/libs/program-designer/types";
 import { logger } from "../functions/libs/logger";
@@ -89,6 +90,46 @@ export async function getProgramDesignerSession(
     logger.error("Error getting program designer session:", error);
     return null;
   }
+}
+
+/**
+ * Update mutable metadata fields (currently: title) on a program designer session.
+ * Preserves all other fields via deep merge and bumps lastActivity.
+ */
+export async function updateProgramDesignerSession(
+  userId: string,
+  sessionId: string,
+  updateData: { title?: string },
+): Promise<ProgramDesignerSession> {
+  const existingItem = await loadFromDynamoDB<ProgramDesignerSession>(
+    `user#${userId}`,
+    `programDesignerSession#${sessionId}`,
+    "programDesignerSession",
+  );
+
+  if (!existingItem) {
+    throw new Error(`Program designer session not found: ${sessionId}`);
+  }
+
+  const updates: Partial<ProgramDesignerSession> = {
+    ...(updateData.title !== undefined && { title: updateData.title }),
+    lastActivity: new Date(),
+  };
+
+  const updatedSession: ProgramDesignerSession = deepMerge(
+    existingItem.attributes,
+    updates,
+  );
+
+  const updatedItem = {
+    ...existingItem,
+    attributes: updatedSession,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
+
+  return updatedSession;
 }
 
 /**

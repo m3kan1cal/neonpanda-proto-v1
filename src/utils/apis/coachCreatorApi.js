@@ -160,6 +160,35 @@ export const getCoachCreatorSessions = async (userId, options = {}) => {
 };
 
 /**
+ * Updates the metadata (currently: title) of a coach creator session.
+ * Used for user-driven rename. Backend accepts only the title field today.
+ * @param {string} userId - The user ID
+ * @param {string} sessionId - The session ID
+ * @param {{ title: string }} updates - Metadata fields to update
+ * @returns {Promise<Object>} - API response with the updated session
+ */
+export const updateCoachCreatorSessionMetadata = async (
+  userId,
+  sessionId,
+  updates,
+) => {
+  const url = `${getApiUrl("")}/users/${userId}/coach-creator-sessions/${sessionId}/metadata`;
+  const response = await authenticatedFetch(url, {
+    method: "PUT",
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Coach creator session not found");
+    }
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+/**
  * Deletes a coach creator session
  * @param {string} userId - The user ID
  * @param {string} sessionId - The session ID

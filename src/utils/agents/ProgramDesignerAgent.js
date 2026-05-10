@@ -5,6 +5,7 @@ import {
   getProgramDesignerConversation,
   updateProgramDesignerConversation,
   deleteProgramDesignerConversation,
+  updateProgramDesignerSessionMetadata,
 } from "../apis/programDesignerApi";
 import {
   createCoachConversation,
@@ -63,7 +64,13 @@ export class ProgramDesignerAgent {
       progress: null, // { questionsCompleted, estimatedTotal, percentage }
       // Session completion tracking
       isComplete: false, // Set to true when program generation is triggered
+      // Session-level metadata
+      sessionTitle: null, // AI-generated or user-renamed title for the session
     };
+
+    // Polling state for AI-generated session title
+    this._titlePollInterval = null;
+    this._titlePollTimeout = null;
 
     // Bind methods
     this.createConversation = this.createConversation.bind(this);
@@ -74,6 +81,10 @@ export class ProgramDesignerAgent {
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
     this.deleteCoachConversation = this.deleteCoachConversation.bind(this);
+    this.updateSessionTitle = this.updateSessionTitle.bind(this);
+    this._startSessionTitlePolling =
+      this._startSessionTitlePolling.bind(this);
+    this._stopSessionTitlePolling = this._stopSessionTitlePolling.bind(this);
   }
 
   /**
@@ -208,6 +219,7 @@ export class ProgramDesignerAgent {
         isLoadingItem: false,
         progress: session.progressDetails || null,
         isComplete: isSessionComplete,
+        sessionTitle: session.title ?? this.state.sessionTitle ?? null,
       });
 
       return session;
@@ -641,6 +653,18 @@ export class ProgramDesignerAgent {
                 : {}),
             });
 
+            // First-turn AI title generation runs server-side after the first
+            // user-AI exchange. Poll briefly so the freshly-generated title
+            // surfaces without a manual reload.
+            if (!this.state.sessionTitle) {
+              const userTurnsSoFar = this.state.messages.filter(
+                (m) => m.type === "user",
+              ).length;
+              if (userTurnsSoFar === 1) {
+                this._startSessionTitlePolling();
+              }
+            }
+
             // Trigger completion handler if program generation started
             if (programGenerationTriggered || isSessionComplete) {
               this.handleCompletion();
@@ -1051,9 +1075,75 @@ export class ProgramDesignerAgent {
   }
 
   /**
+   * Updates the program designer session title (user-driven rename) and
+   * merges into local state.
+   */
+  async updateSessionTitle(title) {
+    if (!this.userId || !this.sessionId) {
+      throw new Error("Cannot update title — session not loaded");
+    }
+    const trimmed = (title ?? "").trim();
+    if (!trimmed) {
+      throw new Error("Title must not be empty");
+    }
+    const result = await updateProgramDesignerSessionMetadata(
+      this.userId,
+      this.sessionId,
+      { title: trimmed },
+    );
+    const newTitle = result?.session?.title ?? trimmed;
+    this._stopSessionTitlePolling();
+    this._updateState({ sessionTitle: newTitle });
+    return result;
+  }
+
+  /**
+   * Polls the session every 3s for up to 30s, picking up the AI-generated
+   * title once it lands.
+   */
+  _startSessionTitlePolling(maxMs = 30000, intervalMs = 3000) {
+    if (!this.userId || !this.sessionId) return;
+    this._stopSessionTitlePolling();
+    this._titlePollInterval = setInterval(async () => {
+      if (!this.userId || !this.sessionId) {
+        this._stopSessionTitlePolling();
+        return;
+      }
+      try {
+        const result = await getProgramDesignerSession(
+          this.userId,
+          this.sessionId,
+        );
+        const session = result?.session ?? result;
+        if (session?.title && this.state) {
+          this._updateState({ sessionTitle: session.title });
+          this._stopSessionTitlePolling();
+        }
+      } catch (err) {
+        logger.warn("Title polling fetch failed (non-blocking):", err);
+      }
+    }, intervalMs);
+    this._titlePollTimeout = setTimeout(() => {
+      this._stopSessionTitlePolling();
+    }, maxMs);
+  }
+
+  _stopSessionTitlePolling() {
+    if (this._titlePollInterval) {
+      clearInterval(this._titlePollInterval);
+      this._titlePollInterval = null;
+    }
+    if (this._titlePollTimeout) {
+      clearTimeout(this._titlePollTimeout);
+      this._titlePollTimeout = null;
+    }
+  }
+
+  /**
    * Destroys the agent and cleans up
    */
   destroy() {
+    this._stopSessionTitlePolling();
     this.userId = null;
     this.coachId = null;
     this.conversationId = null;
