@@ -27,6 +27,7 @@ import type {
   ToolResult,
   ToolResultStoreLike,
 } from "../core/v2/tools/tool-types";
+import type { ToolResultStore } from "../core/v2/tools/tool-result-store";
 import {
   normaliseLegacyToolResult,
   countSuccessfulToolResults,
@@ -82,6 +83,19 @@ const phaseWorkoutsMiddleware: ToolMiddleware<ProgramDesignerContext> = {
     ctx.resultStore.put("generate_phase_workouts", result.data, {
       uniqueKey: `phase_workouts:${phaseId}`,
     });
+    // Mirror v1's per-phase completion logging
+    // (program-designer/agent.ts:195-198) — without this, parallel phase
+    // generation is opaque in CloudWatch beyond the framework's generic
+    // recordToolLatency.
+    const data = result.data as any;
+    logger.info(
+      `✅ generate_phase_workouts completed for phase ${phaseId}`,
+      {
+        phaseId,
+        phaseName: phase?.name,
+        workoutCount: data?.workoutTemplates?.length,
+      },
+    );
   },
 };
 
@@ -116,14 +130,35 @@ export class ProgramDesignerAgentV2 {
   constructor(private readonly context: ProgramDesignerContext) {
     const fullPrompt = buildProgramDesignerPrompt(context);
 
+    // Match v1's static/dynamic split for Bedrock prompt caching. v1
+    // (program-designer/agent.ts:399-414) passes the full prompt as the
+    // large static portion (~95% of tokens — periodization rules, tool
+    // descriptions, examples) and a small session-specific tail as the
+    // dynamic portion. SyncRuntime forwards both to the api-helpers
+    // caching path when both are present (sync-runtime.ts:26-34).
+    const duration = context.todoList?.programDuration?.value || "Unknown";
+    const trainingGoals =
+      context.todoList?.trainingGoals?.value || "Not specified";
+    const trainingFreq =
+      context.todoList?.trainingFrequency?.value || "Unknown";
+    const trainingMethodology =
+      context.todoList?.trainingMethodology?.value || "Not specified";
+    const dynamicPrompt =
+      `\n## CURRENT DESIGN SESSION\n` +
+      `- Program Duration: ${duration}\n` +
+      `- Training Goals: ${trainingGoals}\n` +
+      `- Training Frequency: ${trainingFreq} days/week\n` +
+      `- Training Methodology: ${trainingMethodology}\n` +
+      `- Session ID: ${context.sessionId}\n` +
+      `- Program ID: ${context.programId}`;
+
     const config: AgentConfigV2<ProgramDesignerContext> = {
       agentId: "program-designer",
       context,
       runtime: new SyncRuntime<ProgramDesignerContext>(),
       modelId: MODEL_IDS.PLANNER_MODEL_FULL,
-      // v1 ProgramDesignerAgent passed a single `systemPrompt` (no
-      // static/dynamic split). Match v1 here; a future refactor of
-      // prompts.ts can opt into Bedrock prompt caching by splitting.
+      staticPrompt: fullPrompt,
+      dynamicPrompt,
       systemPrompt: fullPrompt,
       tools: [
         // All Bedrock-calling tools get a 60s timeout (mirrors the
@@ -132,9 +167,18 @@ export class ProgramDesignerAgentV2 {
         // agent-driven Bedrock + DynamoDB + S3 + Pinecone tools.
         adaptLegacyTool(loadProgramRequirementsTool, { timeoutMs: 60_000 }),
         adaptLegacyTool(generatePhaseStructureTool, { timeoutMs: 60_000 }),
+        // generate_phase_workouts is the heaviest call in the workflow:
+        // Sonnet 4.6 + extended thinking + 32k max_tokens generating
+        // 10–15 detailed workouts per phase. v1's ProgramDesignerAgent
+        // intentionally runs these in parallel via Promise.all (~60%
+        // faster total generation time per its own benchmark), so keep
+        // parallelSafe: true to preserve that. The actual regression
+        // was the timeout ceiling — 60s clipped routine calls in both
+        // parallel and sequential modes; widening to 240s gives even
+        // slow Bedrock turns (Sonnet 4.6 + 32k output) ample headroom.
         adaptLegacyTool(generatePhaseWorkoutsTool, {
           parallelSafe: true,
-          timeoutMs: 60_000,
+          timeoutMs: 240_000,
           middleware: [phaseWorkoutsMiddleware],
         }),
         adaptLegacyTool(validateProgramStructureTool, { timeoutMs: 60_000 }),
@@ -197,6 +241,25 @@ export class ProgramDesignerAgentV2 {
             return null;
           }
 
+          // Detect tool-level timeout failures stored by ToolScheduler.
+          // These land at the canonical store key as
+          // `{ ok: false, code: "timeout", retryable: false }`. The
+          // finalText heuristics below won't catch a timeout because
+          // Claude tends to write a polished failure report rather than
+          // asking a question — so check the store directly.
+          const sawTimeout = Object.values(STORAGE_KEY_MAP).some((key) => {
+            const r = resultStore.get<any>(key);
+            return r && r.ok === false && r.code === "timeout";
+          });
+          if (sawTimeout) {
+            const retryPrompt = this.buildRetryPrompt(finalText, resultStore);
+            this.clearStoreForRetry(resultStore);
+            return {
+              retryPrompt,
+              reason: "tool_timeout",
+            };
+          }
+
           const successfulCount = countSuccessfulToolResults(resultStore, Object.values(STORAGE_KEY_MAP));
           if (successfulCount >= MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW) {
             return null;
@@ -219,12 +282,15 @@ export class ProgramDesignerAgentV2 {
 
           if (!looksIncomplete && !hasContextError) return null;
 
-          // v1 ProgramDesignerAgent.designProgram() clears tool results
-          // before the retry round so the model starts fresh. Mirror
-          // that. (coach-creator's retry preserved prior results; the
-          // two agents have different design intents here.)
+          // v1 ProgramDesignerAgent cleared all tool results before the
+          // retry. v2 preserves the cheap deterministic upfront loads
+          // (requirements, phase_structure) via clearStoreForRetry so
+          // the retry doesn't redundantly hit DynamoDB/Pinecone — and
+          // the "ALREADY DONE - reuse this result" hint in the retry
+          // prompt becomes meaningful. coach-creator's retry preserved
+          // everything; the two agents have different design intents.
           const retryPrompt = this.buildRetryPrompt(finalText, resultStore);
-          resultStore.clear();
+          this.clearStoreForRetry(resultStore);
           return {
             retryPrompt,
             reason: hasContextError
@@ -240,7 +306,9 @@ export class ProgramDesignerAgentV2 {
     };
 
     this.agent = new Agent<ProgramDesignerContext>(config);
-    logger.info("ProgramDesignerAgentV2 initialized");
+    logger.info(
+      "🔥 ProgramDesignerAgentV2 initialized with prompt-caching support",
+    );
   }
 
   /**
@@ -342,6 +410,24 @@ export class ProgramDesignerAgentV2 {
       };
     }
 
+    // Tool-level timeout failures (typically `generate_phase_workouts`)
+    // are infrastructure issues, not user-input rejections. Mark them
+    // as `skipped: false` so observability and the session-update path
+    // can distinguish a Bedrock timeout from "user asked for something
+    // we can't do".
+    const timedOutToolKey = Object.values(STORAGE_KEY_MAP).find((key) => {
+      const r = store.get<any>(key);
+      return r && r.ok === false && r.code === "timeout";
+    });
+    if (timedOutToolKey) {
+      return {
+        success: false,
+        skipped: false,
+        reason:
+          "Phase workout generation timed out. This is an infrastructure issue — please retry the request.",
+      };
+    }
+
     // No tools called at all: surface the agent text as the reason.
     if (!requirements && !phaseStructure && !validation && !save) {
       return {
@@ -398,7 +484,7 @@ Your previous response: "${aiResponse.substring(0, 200)}..."
 ${contextGuidance}
 
 You MUST now complete the workflow by calling ALL required tools:
-1. load_program_requirements
+1. load_program_requirements${hasRequirements ? " (✓ ALREADY DONE - reuse this result)" : ""}
 2. generate_phase_structure
 3. generate_phase_workouts (for EACH phase) ${hasProgramContextError ? "← FIX YOUR DATA PASSING HERE" : ""}
 4. validate_program_structure
@@ -407,6 +493,7 @@ You MUST now complete the workflow by calling ALL required tools:
 7. save_program_to_database
 
 CRITICAL INSTRUCTIONS:
+- ${hasRequirements ? "REUSE the existing requirementsResult from step 1" : "Call load_program_requirements first"}
 - When calling generate_phase_workouts, pass requirementsResult as programContext
 - DO NOT construct programContext manually
 - DO NOT pass individual fields - pass the ENTIRE object
@@ -415,6 +502,29 @@ CRITICAL INSTRUCTIONS:
 - CALL YOUR TOOLS to design and save the program
 
 Now design the complete program using your tools with CORRECT data passing.`;
+  }
+
+  /**
+   * Clear the result store before a retry while preserving the cheap
+   * deterministic upfront loads. `requirements` and `phase_structure`
+   * are pure DynamoDB/Pinecone reads + a small Bedrock structuring
+   * call respectively; re-running them on every retry wastes a few
+   * seconds and (for requirements) a Pinecone round-trip. The retry
+   * prompt's "ALREADY DONE - reuse this result" hint depends on these
+   * remaining in the store post-clear.
+   */
+  private clearStoreForRetry(store: ToolResultStore): void {
+    const requirements = store.get<unknown>("requirements");
+    const phaseStructure = store.get<unknown>("phase_structure");
+    const isPreservable = (r: any) =>
+      r && typeof r === "object" && !r.error && r.ok !== false;
+    store.clear();
+    if (isPreservable(requirements)) {
+      store.put("load_program_requirements", requirements);
+    }
+    if (isPreservable(phaseStructure)) {
+      store.put("generate_phase_structure", phaseStructure);
+    }
   }
 }
 
