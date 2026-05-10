@@ -61,6 +61,7 @@ import {
 import { generateProgramSummary } from "../../program/summary";
 import { storeProgramSummaryInPinecone } from "../../program/pinecone";
 import { storeProgramDetailsInS3 } from "../../program/s3-utils";
+import { buildDayPruneSummaries } from "./prune-helpers";
 import {
   storeGenerationDebugData,
   calculateProgramMetrics,
@@ -248,7 +249,7 @@ export interface ProgramSaveResult {
   startDate?: string; // ISO date string, if set on the program
   endDate?: string; // ISO date string, if set on the program
   s3Key: string;
-  pineconeRecordId: string | null; // "async-pending" if storage was attempted, null if skipped
+  pineconeRecordId: string | null; // Real recordId when upsert completes within the await timeout; "async-pending" if it ran past the timeout (continues in background); null on confirmed failure or skip.
 }
 
 /**
@@ -1038,15 +1039,14 @@ Returns: prunedWorkoutTemplates, removedCount, keptCount, removalReasoning, phas
       `📦 Retrieved ${allWorkoutTemplates.length} workout templates from ${phaseWorkoutResults.length} phases`,
     );
 
-    // Build prompt for AI to select which workouts to remove
-    const workoutMetadata = allWorkoutTemplates.map((w: WorkoutTemplate) => ({
-      templateId: w.templateId,
-      dayNumber: w.dayNumber,
-      phaseId: w.phaseId,
-      name: w.name,
-      type: w.type,
-      estimatedDuration: w.estimatedDuration,
-    }));
+    // Group templates by day so the AI can reason about whole-day removal
+    // (which is the only granularity this tool supports). Per-day summaries
+    // surface which template is the day's "primary" (the work the user must
+    // complete to advance) vs. "optional" supplementary work, using the
+    // sessionRole-aware helper with legacy alphabetic-sort fallback.
+    const daySummaries = buildDayPruneSummaries(
+      allWorkoutTemplates as WorkoutTemplate[],
+    );
 
     const prompt = `You are a training program optimizer. You need to remove ${excessDays} training days from this program to match the user's requested training frequency.
 
@@ -1057,33 +1057,41 @@ Unique training days: ${currentTrainingDays}
 Target training days: ${targetTrainingDays}
 Days to remove: ${excessDays}
 
-## WORKOUT METADATA
+## DAYS (one entry per dayNumber)
 
-${JSON.stringify(workoutMetadata, null, 2)}
+Each day has ONE primary workout (the work the user must complete to
+advance) and zero or more optional supplementary workouts. Pruning operates
+at day granularity — removing a day removes its primary AND all of its
+optionals together.
+
+${JSON.stringify(daySummaries, null, 2)}
 
 ## YOUR TASK
 
-Select ${excessDays} training days (dayNumber values) to REMOVE from the program.
+Select ${excessDays} dayNumber values to REMOVE from the program.
 
-## PRIORITIZATION FOR REMOVAL (remove these first):
-1. Days with type: "accessory" or "optional"
-2. Extra conditioning/metcon days
-3. Days in later phases (preserve early foundation work)
-4. Days with longer estimated duration (easier to skip)
-5. Days that create clusters (remove to spread out rest days)
+## PRIORITIZATION FOR REMOVAL (remove these first)
+1. Days whose primary type is "accessory", "conditioning", "mobility",
+   "recovery", "flexibility", "balance", "core", or "stability"
+   (supplementary or low-stakes work).
+2. Days that consist of mostly optional volume with a low-stakes primary
+   (high optional count + non-strength primary).
+3. Extra conditioning / metcon days that duplicate similar days nearby.
+4. Days in later phases (preserve early foundation work).
+5. Days that create clusters (remove to spread out rest days more evenly).
 
-## PRESERVATION PRIORITIES (keep these):
-1. Days with type: "primary" or "strength"
-2. Early phase foundation work
-3. Skill development days
-4. Days with progressive overload markers
-5. Workouts critical to program goals
+## PRESERVATION PRIORITIES (keep these)
+1. Days whose primary type is "strength", "power", "olympic", or "skill"
+   (core work that drives program goals).
+2. Early phase foundation work and named/anchor sessions.
+3. Days with progressive overload markers in the primary.
+4. Workouts critical to the user's stated program goals.
 
 ## CONSTRAINTS
-- Remove ENTIRE training days (all templates sharing the same dayNumber)
-- Maintain even distribution across the program
-- Don't create large gaps in training
-- Preserve program progression logic
+- Remove ENTIRE training days (the day's primary AND all its optionals).
+- Maintain even distribution across the program.
+- Don't create large gaps in training.
+- Preserve program progression logic.
 
 Return an array of dayNumber values to REMOVE (not keep).`;
 
@@ -1966,21 +1974,53 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       validationPassed: true,
     });
 
-    // 5. Store program summary in Pinecone (async, attempt but don't block)
-    logger.info("Storing program summary in Pinecone (async)...");
-    let pineconeAttempted = false;
-    storeProgramSummaryInPinecone(context.userId, summary, program)
-      .then(() => {
-        logger.info("✅ Program stored in Pinecone successfully");
-      })
-      .catch((error) => {
-        logger.error(
-          "⚠️ Failed to store program in Pinecone (non-blocking):",
-          error,
-        );
-        // Don't throw - this is fire-and-forget
+    // 5. Store program summary in Pinecone — await with a tight
+    // timeout so the response can surface a real recordId in the
+    // common case (Pinecone upserts are typically <1s). On timeout,
+    // fall back to fire-and-forget with an "async-pending" sentinel;
+    // storeProgramSummaryInPinecone has its own success/error
+    // logging so the background outcome still lands in CloudWatch.
+    logger.info("Storing program summary in Pinecone...");
+    const PINECONE_AWAIT_TIMEOUT_MS = 5000;
+    const pineconePromise = storeProgramSummaryInPinecone(
+      context.userId,
+      summary,
+      program,
+    );
+    const pineconeTimeoutSentinel = Symbol("pinecone-timeout");
+    const pineconeRaceResult = await Promise.race([
+      pineconePromise,
+      new Promise<typeof pineconeTimeoutSentinel>((resolve) =>
+        setTimeout(
+          () => resolve(pineconeTimeoutSentinel),
+          PINECONE_AWAIT_TIMEOUT_MS,
+        ),
+      ),
+    ]);
+
+    let pineconeRecordId: string | null = null;
+    if (pineconeRaceResult === pineconeTimeoutSentinel) {
+      logger.warn(
+        `⚠️ Pinecone upsert exceeded ${PINECONE_AWAIT_TIMEOUT_MS}ms — falling back to async-pending; upsert continues in the background.`,
+      );
+      pineconeRecordId = "async-pending";
+    } else if (
+      pineconeRaceResult &&
+      typeof pineconeRaceResult === "object" &&
+      "recordId" in pineconeRaceResult &&
+      typeof (pineconeRaceResult as { recordId?: unknown }).recordId ===
+        "string"
+    ) {
+      pineconeRecordId = (pineconeRaceResult as { recordId: string }).recordId;
+      logger.info("✅ Program stored in Pinecone successfully", {
+        recordId: pineconeRecordId,
       });
-    pineconeAttempted = true;
+    } else {
+      // storeProgramSummaryInPinecone returns { success: false } on
+      // error and has already logged. Keep recordId null so
+      // pineconeStored evaluates to false in the response.
+      logger.warn("⚠️ Pinecone upsert returned no recordId");
+    }
 
     // 6. Store debug data
     await storeGenerationDebugData(
@@ -2016,7 +2056,7 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       startDate: program.startDate,
       endDate: program.endDate,
       s3Key,
-      pineconeRecordId: pineconeAttempted ? "async-pending" : null,
+      pineconeRecordId,
     };
   },
 };

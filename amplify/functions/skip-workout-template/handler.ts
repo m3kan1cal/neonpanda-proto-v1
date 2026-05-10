@@ -20,6 +20,10 @@ import {
   saveProgramDetailsToS3,
 } from "../libs/program/s3-utils";
 import { WorkoutTemplate } from "../libs/program/types";
+import {
+  isPrimaryTemplate,
+  countOptionalTemplates,
+} from "../libs/program/template-linking";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { logger } from "../libs/logger";
 
@@ -398,7 +402,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         (t: WorkoutTemplate) => t.dayNumber === dayNumber,
       );
 
-      const totalOptional = dayTemplates.length - 1; // All templates except first
+      // sessionRole-aware: count templates explicitly marked optional (or
+      // fall back to length - 1 for legacy programs without sessionRole).
+      const totalOptional = countOptionalTemplates(dayTemplates);
 
       program.dayCompletionStatus[dayNumber] = {
         primaryComplete: false,
@@ -407,14 +413,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       };
     }
 
-    // Get all templates for this day to determine if this is the primary template
+    // Get all templates for this day to determine if this is the primary
+    // template (sessionRole-aware with legacy alphabetic-sort fallback).
     const dayTemplates = programDetails.workoutTemplates.filter(
       (t: WorkoutTemplate) => t.dayNumber === dayNumber,
     );
-    const sortedTemplates = [...dayTemplates].sort((a, b) =>
-      a.templateId.localeCompare(b.templateId),
-    );
-    const isPrimary = sortedTemplates[0]?.templateId === template.templateId;
+    const isPrimary = isPrimaryTemplate(template, dayTemplates);
 
     // Update completion status (mark as "complete" for day advancement purposes)
     if (isPrimary) {

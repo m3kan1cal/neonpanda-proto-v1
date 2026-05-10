@@ -142,6 +142,26 @@ export interface Tool<TContext extends AgentContext = AgentContext, TIn = any, T
   ) => Promise<ToolResult<TOut>>;
   validateInput: ToolValidator<TIn>;
   validateOutput?: ToolValidator<TOut>;
+  /**
+   * Optional callback that decides where in the result store this tool's
+   * output should be persisted. Called for every put path (success,
+   * returned failure, blocked-by-policy, throw-from-execute) so the
+   * placement is consistent regardless of how the call resolved. Returns
+   * `{ index?, uniqueKey? }` — same options as `ToolResultStore.put`.
+   * When undefined (the default) the scheduler falls back to alias-key
+   * replace semantics. Workout-logger uses this for its multi-workout
+   * positional storage; coach-creator and program-designer don't need it
+   * (single-call alias storage / dedicated middleware respectively).
+   *
+   * Per-result `toolStoreIndex` / `toolStoreKey` on a `ToolSuccess`
+   * envelope still take precedence over this callback's value, so a
+   * tool's `execute` can override the per-tool default for individual
+   * calls.
+   */
+  getStoreLocation?: (
+    input: TIn,
+    ctx: ToolExecutionContext<TContext>,
+  ) => { index?: number; uniqueKey?: string };
 }
 
 /* -------------------------------------------------------------------------- */

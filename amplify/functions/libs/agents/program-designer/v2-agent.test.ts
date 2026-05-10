@@ -1,0 +1,534 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("../core/v2/runtime/sync-runtime", () => ({
+  SyncRuntime: vi.fn().mockImplementation(function (this: any) {
+    this.invokeTurn = vi.fn();
+  }),
+}));
+vi.mock("./tools", () => ({
+  loadProgramRequirementsTool: makeToolMock("load_program_requirements"),
+  generatePhaseStructureTool: makeToolMock("generate_phase_structure"),
+  generatePhaseWorkoutsTool: makeToolMock("generate_phase_workouts"),
+  validateProgramStructureTool: makeToolMock("validate_program_structure"),
+  pruneExcessWorkoutsTool: makeToolMock("prune_excess_workouts"),
+  normalizeProgramDataTool: makeToolMock("normalize_program_data"),
+  generateProgramSummaryTool: makeToolMock("generate_program_summary"),
+  saveProgramToDatabaseTool: makeToolMock("save_program_to_database"),
+}));
+vi.mock("./prompts", () => ({
+  buildProgramDesignerPrompt: vi.fn(() => "STATIC PROMPT"),
+}));
+vi.mock("./helpers", async () => {
+  const actual = await vi.importActual<any>("./helpers");
+  return {
+    ...actual,
+    // Use real enforceAllBlocking + calculateProgramMetrics; mocks would
+    // hide migration parity bugs.
+  };
+});
+vi.mock("../../api-helpers", () => ({
+  MODEL_IDS: {
+    PLANNER_MODEL_FULL: "test-planner",
+    EXECUTOR_MODEL_FULL: "test-executor",
+    CONTEXTUAL_MODEL_FULL: "test-contextual",
+  },
+  callBedrockApiForAgent: vi.fn(),
+}));
+vi.mock("../../../streaming/multimodal-helpers", () => ({
+  buildMultimodalContent: vi.fn(),
+}));
+vi.mock("../../../logger", () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+vi.mock("../../logger", () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
+import { ProgramDesignerAgentV2 } from "./v2-agent";
+import { SyncRuntime } from "../core/v2/runtime/sync-runtime";
+import {
+  loadProgramRequirementsTool,
+  generatePhaseStructureTool,
+  generatePhaseWorkoutsTool,
+  validateProgramStructureTool,
+  pruneExcessWorkoutsTool,
+  normalizeProgramDataTool,
+  generateProgramSummaryTool,
+  saveProgramToDatabaseTool,
+} from "./tools";
+
+function makeToolMock(id: string) {
+  return {
+    id,
+    description: `Mock for ${id}`,
+    inputSchema: { type: "object", properties: {}, additionalProperties: true },
+    execute: vi.fn(),
+  };
+}
+
+const baseContext: any = {
+  userId: "user_test",
+  coachId: "coach_test",
+  programId: "program_test",
+  sessionId: "session_test",
+  todoList: {
+    trainingGoals: { value: "Strength + conditioning" },
+    programDuration: { value: "4 weeks" },
+    trainingFrequency: { value: "4x/week" },
+    trainingMethodology: { value: "balanced" },
+  },
+  conversationContext: "User wants to build strength and stay conditioned",
+};
+
+const turn = (assistantContent: any[], stopReason: string) => ({
+  stopReason,
+  assistantContent,
+  usage: { inputTokens: 10, outputTokens: 5 },
+  modelId: "test-planner",
+});
+
+const toolUseBlock = (toolUseId: string, name: string, input: any = {}) => ({
+  toolUse: { toolUseId, name, input },
+});
+
+const wireRuntime = (turns: any[]) => {
+  const runtimeInstance = (SyncRuntime as any).mock.instances.at(-1);
+  runtimeInstance.invokeTurn = vi.fn(async () => {
+    const next = turns.shift();
+    if (!next) throw new Error("no more turns");
+    return next;
+  });
+};
+
+describe("ProgramDesignerAgentV2", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    [
+      loadProgramRequirementsTool,
+      generatePhaseStructureTool,
+      generatePhaseWorkoutsTool,
+      validateProgramStructureTool,
+      pruneExcessWorkoutsTool,
+      normalizeProgramDataTool,
+      generateProgramSummaryTool,
+      saveProgramToDatabaseTool,
+    ].forEach((t: any) => t.execute.mockReset());
+  });
+
+  it("happy path: load → phase_structure → phase_workouts (3 phases) → validate → save → success", async () => {
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 4,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [
+        { phaseId: "phase_1" },
+        { phaseId: "phase_2" },
+        { phaseId: "phase_3" },
+      ],
+    });
+    // Three parallel calls — each returns workoutTemplates for its phase.
+    let phaseCallIdx = 0;
+    (generatePhaseWorkoutsTool.execute as any).mockImplementation(
+      async (input: any) => {
+        phaseCallIdx++;
+        return {
+          workoutTemplates: [
+            { id: `wt_${input.phase.phaseId}_1`, day: 1 },
+            { id: `wt_${input.phase.phaseId}_2`, day: 3 },
+          ],
+        };
+      },
+    );
+    (validateProgramStructureTool.execute as any).mockResolvedValue({
+      isValid: true,
+      shouldNormalize: false,
+      shouldPrune: false,
+    });
+    (generateProgramSummaryTool.execute as any).mockResolvedValue({
+      summary: "Looks great",
+    });
+    (saveProgramToDatabaseTool.execute as any).mockResolvedValue({
+      success: true,
+      programId: "program_test_123",
+      name: "4-Week Strength + conditioning",
+      startDate: "2026-05-10",
+      endDate: "2026-06-07",
+      pineconeRecordId: "rec_1",
+      s3Key: "programs/program_test_123.json",
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      // Three phase calls in one tool_use turn — exercise parallelSafe.
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_1" },
+          }),
+          toolUseBlock("u4", "generate_phase_workouts", {
+            phase: { phaseId: "phase_2" },
+          }),
+          toolUseBlock("u5", "generate_phase_workouts", {
+            phase: { phaseId: "phase_3" },
+          }),
+        ],
+        "tool_use",
+      ),
+      turn([toolUseBlock("u6", "validate_program_structure", {})], "tool_use"),
+      turn([toolUseBlock("u7", "generate_program_summary", {})], "tool_use"),
+      turn([toolUseBlock("u8", "save_program_to_database", {})], "tool_use"),
+      turn([{ text: "Program designed." }], "end_turn"),
+    ]);
+
+    const result = await agent.designProgram();
+    expect(result.success).toBe(true);
+    expect(result.programId).toBe("program_test_123");
+    expect(result.programName).toBe("4-Week Strength + conditioning");
+    expect(result.phaseCount).toBe(3);
+    expect(result.totalWorkoutTemplates).toBe(6);
+    expect(result.generationMethod).toBe("agent_v2");
+    expect(generatePhaseWorkoutsTool.execute).toHaveBeenCalledTimes(3);
+    expect(saveProgramToDatabaseTool.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("phase_workouts middleware writes each phase under phase_workouts:{phaseId}", async () => {
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 3,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [{ phaseId: "phase_alpha" }, { phaseId: "phase_beta" }],
+    });
+    (generatePhaseWorkoutsTool.execute as any).mockImplementation(
+      async (input: any) => ({
+        // Tag the result so we can identify which call landed where.
+        phaseTag: input.phase.phaseId,
+        workoutTemplates: [],
+      }),
+    );
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_alpha" },
+          }),
+          toolUseBlock("u4", "generate_phase_workouts", {
+            phase: { phaseId: "phase_beta" },
+          }),
+        ],
+        "tool_use",
+      ),
+      turn([{ text: "Stopping here." }], "end_turn"),
+    ]);
+    await agent.designProgram();
+
+    const store = (agent as any).agent.getResultStore();
+    expect(store.get("phase_workouts:phase_alpha")).toMatchObject({
+      phaseTag: "phase_alpha",
+    });
+    expect(store.get("phase_workouts:phase_beta")).toMatchObject({
+      phaseTag: "phase_beta",
+    });
+  });
+
+  it("prune_excess_workouts middleware applies phaseUpdates back to phase keys", async () => {
+    (pruneExcessWorkoutsTool.execute as any).mockResolvedValue({
+      pruningApplied: true,
+      phaseUpdates: [
+        {
+          storageKey: "phase_workouts:phase_1",
+          updatedResult: { workoutTemplates: [{ id: "pruned_1" }] },
+        },
+        {
+          storageKey: "phase_workouts:phase_2",
+          updatedResult: { workoutTemplates: [{ id: "pruned_2" }] },
+        },
+      ],
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn([toolUseBlock("u1", "prune_excess_workouts", {})], "tool_use"),
+      turn([{ text: "Pruned." }], "end_turn"),
+    ]);
+    await agent.designProgram();
+
+    const store = (agent as any).agent.getResultStore();
+    expect(store.get("phase_workouts:phase_1")).toEqual({
+      workoutTemplates: [{ id: "pruned_1" }],
+    });
+    expect(store.get("phase_workouts:phase_2")).toEqual({
+      workoutTemplates: [{ id: "pruned_2" }],
+    });
+  });
+
+  it("blocks save_program_to_database when validation returns isValid:false", async () => {
+    (validateProgramStructureTool.execute as any).mockResolvedValue({
+      isValid: false,
+      validationIssues: ["phase 2 has no workouts"],
+    });
+    (saveProgramToDatabaseTool.execute as any).mockResolvedValue({
+      success: true,
+      programId: "should_not_save",
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn(
+        [toolUseBlock("u1", "validate_program_structure", {})],
+        "tool_use",
+      ),
+      turn([toolUseBlock("u2", "save_program_to_database", {})], "tool_use"),
+      turn([{ text: "Validation failed." }], "end_turn"),
+    ]);
+
+    const result = await agent.designProgram();
+    expect(saveProgramToDatabaseTool.execute).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toMatch(/Program validation failed/);
+    expect(result.blockingFlags).toEqual(["phase 2 has no workouts"]);
+  });
+
+  it("blocks save when validate throws an exception (defense-in-depth)", async () => {
+    (validateProgramStructureTool.execute as any).mockRejectedValue(
+      new Error("validation lambda timed out"),
+    );
+    (saveProgramToDatabaseTool.execute as any).mockResolvedValue({
+      success: true,
+      programId: "should_not_save",
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn(
+        [toolUseBlock("u1", "validate_program_structure", {})],
+        "tool_use",
+      ),
+      turn([toolUseBlock("u2", "save_program_to_database", {})], "tool_use"),
+      turn([{ text: "Validation threw." }], "end_turn"),
+    ]);
+
+    const result = await agent.designProgram();
+    expect(saveProgramToDatabaseTool.execute).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+  });
+
+  it("does not retry when validate throws (v2 envelope still satisfies the validation-failure guard)", async () => {
+    // Regression for Bugbot finding 6c089d33. When validate throws,
+    // adaptLegacyTool stores `{ ok: false, code, message }` which lacks
+    // `isValid` and `error`. The shouldRetry guard must normalise back
+    // to v1 shape so the "validation failed → don't retry" branch fires
+    // and we don't burn an unnecessary retry that clears the store and
+    // re-runs the entire workflow into the same failure.
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 4,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [{ phaseId: "phase_1" }],
+    });
+    (generatePhaseWorkoutsTool.execute as any).mockResolvedValue({
+      workoutTemplates: [],
+    });
+    (validateProgramStructureTool.execute as any).mockRejectedValue(
+      new Error("validation lambda 502"),
+    );
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_1" },
+          }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [toolUseBlock("u4", "validate_program_structure", {})],
+        "tool_use",
+      ),
+      turn([{ text: "Validation threw." }], "end_turn"),
+    ]);
+
+    const result = await agent.designProgram();
+    expect(result.success).toBe(false);
+    // shouldRetry must have early-returned, so validate was called once
+    // — not twice (which would indicate a retry round).
+    expect(validateProgramStructureTool.execute).toHaveBeenCalledTimes(1);
+    // load + phase_structure + phase_workouts each called exactly once
+    // for the same reason. If retry had fired, the store would have been
+    // cleared and these would each have been called twice.
+    expect(loadProgramRequirementsTool.execute).toHaveBeenCalledTimes(1);
+    expect(generatePhaseStructureTool.execute).toHaveBeenCalledTimes(1);
+    expect(generatePhaseWorkoutsTool.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats generate_phase_workouts scheduler-timeout failures as infrastructure errors (skipped: false)", async () => {
+    // Real timeouts come from ToolScheduler's AbortController + Promise.race
+    // and land in the store as `{ ok: false, code: "timeout" }`. The
+    // legacy-adapter's exception path translates thrown errors to
+    // `code: "permanent"`, so we can't trigger a true scheduler timeout
+    // by mocking execute() to throw — instead we drive the agent through
+    // a turn that completes normally, then seed the timeout-shaped
+    // failure directly into the result store before asking the agent
+    // to build its final result. This isolates the result-builder's
+    // skipped-vs-infrastructure-failure logic.
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 4,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [{ phaseId: "phase_1" }],
+    });
+    (generatePhaseWorkoutsTool.execute as any).mockResolvedValue({
+      workoutTemplates: [{ id: "wt_phase_1_1" }],
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_1" },
+          }),
+        ],
+        "tool_use",
+      ),
+      turn([{ text: "Phase generation done." }], "end_turn"),
+    ]);
+
+    await (agent as any).agent.run({ userMessage: "test" });
+
+    // Seed a scheduler-shaped timeout failure at the canonical key, the
+    // exact shape ToolScheduler stores for an aborted call.
+    const store = (agent as any).agent.getResultStore();
+    store.put("generate_phase_workouts", {
+      ok: false,
+      code: "timeout",
+      message: "generate_phase_workouts timed out after 240000ms",
+      retryable: false,
+      details: { errorName: "TimeoutError" },
+    });
+
+    const built = (agent as any).buildResultFromToolData(
+      "Phase generation timed out.",
+    );
+    expect(built.success).toBe(false);
+    expect(built.skipped).toBe(false);
+    expect(built.reason).toMatch(/timed out|infrastructure/i);
+  });
+
+  it("shouldRetry detects a scheduler timeout in the store and triggers a single workflow retry", async () => {
+    // Drive the agent's first pass to completion, then seed a
+    // timeout-shaped failure at the canonical key and run a second
+    // pass. shouldRetry must observe the timeout and ask the framework
+    // to retry — verified by load_program_requirements being called
+    // again on the retry round.
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 4,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [{ phaseId: "phase_1" }],
+    });
+    (generatePhaseWorkoutsTool.execute as any).mockResolvedValue({
+      workoutTemplates: [{ id: "wt_phase_1_1" }],
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      // First pass.
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_1" },
+          }),
+        ],
+        "tool_use",
+      ),
+      // First end_turn — shouldRetry runs here. After we seed the
+      // timeout below, the retry round should fire.
+      turn([{ text: "Phase generation timed out." }], "end_turn"),
+      // Retry round (load is rerun by the retry, store cleared).
+      turn([toolUseBlock("u4", "load_program_requirements", {})], "tool_use"),
+      turn([{ text: "Stopping after retry." }], "end_turn"),
+    ]);
+
+    // Pre-stage the timeout failure: we can't time it precisely between
+    // turns, but shouldRetry only runs after end_turn, so we install a
+    // hook that mutates the store right before end_turn fires. Easiest:
+    // install via the runtime mock — wrap invokeTurn so the third turn
+    // (after which shouldRetry runs) leaves a timeout in the store.
+    const runtimeInstance = (SyncRuntime as any).mock.instances.at(-1);
+    const originalInvoke = runtimeInstance.invokeTurn;
+    let turnIdx = 0;
+    runtimeInstance.invokeTurn = vi.fn(async (...args: any[]) => {
+      const result = await originalInvoke(...args);
+      turnIdx++;
+      if (turnIdx === 4) {
+        // Right before shouldRetry runs (end_turn of first pass).
+        const store = (agent as any).agent.getResultStore();
+        store.put("generate_phase_workouts", {
+          ok: false,
+          code: "timeout",
+          message: "generate_phase_workouts timed out",
+          retryable: false,
+          details: { errorName: "TimeoutError" },
+        });
+      }
+      return result;
+    });
+
+    await agent.designProgram();
+
+    // load was called twice — once in the first pass, once after the
+    // retry triggered by the timeout-detection branch in shouldRetry.
+    expect(loadProgramRequirementsTool.execute).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns skipped result with the agent response when no tools are called", async () => {
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn(
+        [{ text: "I need more info before I can design a program." }],
+        "end_turn",
+      ),
+      turn(
+        [{ text: "Still need clarification on goals." }],
+        "end_turn",
+      ),
+    ]);
+
+    const result = await agent.designProgram();
+    expect(result.success).toBe(false);
+    expect(result.skipped).toBe(true);
+    // First-turn text is captured as the reason via the agent's
+    // lastTurnResponseText snapshot (or the initial finalText).
+    expect(result.reason).toMatch(/clarification|more info/i);
+  });
+});

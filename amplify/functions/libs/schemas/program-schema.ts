@@ -88,6 +88,17 @@ const WORKOUT_TEMPLATE_SCHEMA = {
       ],
       description: "Template type/category",
     },
+    sessionRole: {
+      type: "string",
+      enum: ["primary", "optional"],
+      description:
+        "Session role for multi-template days. Use 'primary' for the main " +
+        "workout the user must complete to advance the program; 'optional' " +
+        "for supplementary work like metabolic finishers or recovery flows " +
+        "the user may skip. On single-template days, omit (defaults to " +
+        "primary). On multi-template days, EXACTLY ONE template per day " +
+        "must be 'primary' and all others 'optional'.",
+    },
     description: {
       type: "string",
       description:

@@ -99,6 +99,10 @@ export interface CoachCreatorSession {
   userId: string;
   sessionId: string;
 
+  // Optional human-readable title. Set by AI after the first turn,
+  // and editable by the user afterwards.
+  title?: string;
+
   // To-do list based conversational flow
   todoList: CoachCreatorTodoList;
   conversationHistory: CoachMessage[];

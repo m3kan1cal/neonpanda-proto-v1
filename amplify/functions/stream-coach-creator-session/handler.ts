@@ -15,6 +15,7 @@ import {
   queryPineconeContext,
   MODEL_IDS,
   GuardrailInterventionError,
+  invokeAsyncLambda,
 } from "../libs/api-helpers";
 import { formatPineconeContext } from "../libs/pinecone-utils";
 import { getUserTimezone } from "../libs/user/timezone";
@@ -387,6 +388,39 @@ async function* createCoachCreatorEventStreamV2(
       coachConfigId: saveResult.coachConfigId,
       progressPercentage: session.progressDetails.percentage,
     });
+
+    // 11b. AI title generation after the first user-AI exchange.
+    // Coach creator sessions are created with one initial AI greeting message
+    // (see create-coach-creator-session/handler.ts), so the first turn pair
+    // brings the history to length 3, not 2.
+    // Awaited so the SDK Invoke call completes before the streaming runtime
+    // freezes between yields — invokeAsyncLambda itself uses InvocationType.Event
+    // (fire-and-forget on the AWS side, ~50ms to acknowledge).
+    if (session.conversationHistory.length === 3) {
+      const titleFunctionName = process.env.BUILD_CONVERSATION_TITLE_FUNCTION_NAME;
+      if (titleFunctionName) {
+        await invokeAsyncLambda(
+          titleFunctionName,
+          {
+            entityType: "coachCreatorSession",
+            userId,
+            sessionId,
+            userMessage: userResponse!,
+            aiResponse: fullResponseText,
+          },
+          `title generation for coach creator session ${sessionId}`,
+        ).catch((err) => {
+          logger.error(
+            "⚠️ Failed to invoke build-conversation-title (non-blocking):",
+            err,
+          );
+        });
+      } else {
+        logger.warn(
+          "⚠️ BUILD_CONVERSATION_TITLE_FUNCTION_NAME not set — skipping title generation",
+        );
+      }
+    }
 
     // 12. Yield complete event
     yield formatCompleteEvent({

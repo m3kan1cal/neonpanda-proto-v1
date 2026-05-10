@@ -27,6 +27,7 @@ import {
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import PageHeader from "./shared/PageHeader";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { InlineEditField } from "./shared/InlineEditField.jsx";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
@@ -346,7 +347,22 @@ function ProgramDesigner() {
     isStreaming: false,
     streamingMessage: "",
     streamingMessageId: null,
+    sessionTitle: null,
   });
+
+  const handleSaveSessionTitle = async (newTitle) => {
+    if (!agentRef.current) {
+      throw new Error("Program designer agent not initialized");
+    }
+    try {
+      await agentRef.current.updateSessionTitle(newTitle);
+      showSuccess("Session title updated");
+    } catch (error) {
+      logger.error("Error updating program designer session title:", error);
+      showError("Failed to update session title");
+      throw error;
+    }
+  };
 
   // Slash commands configuration (minimal for program designer)
   const availableSlashCommands = [
@@ -914,6 +930,29 @@ function ProgramDesigner() {
             />
           }
         />
+
+        {/* Session Title — AI-generated after first turn, editable by user */}
+        {agentRef.current?.sessionId && (
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="font-body text-lg text-white flex flex-col md:flex-row md:items-center">
+                <span className="text-synthwave-neon-cyan md:mr-2 whitespace-nowrap mb-1 md:mb-0">
+                  Session:
+                </span>
+                <InlineEditField
+                  value={agentState.sessionTitle || "New Program Design"}
+                  onSave={handleSaveSessionTitle}
+                  placeholder="Enter session title..."
+                  maxLength={100}
+                  showCharacterCount={false}
+                  size="medium"
+                  displayClassName="text-white font-body text-lg"
+                  tooltipPrefix="program-designer-session-title"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">

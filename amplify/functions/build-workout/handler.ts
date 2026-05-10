@@ -9,6 +9,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { withHeartbeat } from "../libs/heartbeat";
 import type { BuildWorkoutEvent } from "../libs/workout/types";
 import { WorkoutLoggerAgent } from "../libs/agents/workout-logger/agent";
+import { WorkoutLoggerAgentV2 } from "../libs/agents/workout-logger/v2-agent";
 import type { WorkoutLoggerContext } from "../libs/agents/workout-logger/types";
 import { revertTemplateStatus } from "../libs/program/template-linking";
 import { logger } from "../libs/logger";
@@ -102,11 +103,20 @@ export const handler = async (event: BuildWorkoutEvent) => {
         imageS3Keys: event.imageS3Keys,
       };
 
-      // Create WorkoutLogger agent
-      const agent = new WorkoutLoggerAgent(context);
+      // Create WorkoutLogger agent.
+      // Per the unified-agent-framework migration plan, v2 is gated
+      // behind a per-agent env flag so v1 stays as instant rollback.
+      // Flip AGENT_V2_WORKOUT_LOGGER=true once the v2 path is verified
+      // end to end.
+      const useV2 = process.env.AGENT_V2_WORKOUT_LOGGER === "true";
+      logger.info(
+        `🤖 Starting agent workflow (${useV2 ? "v2" : "v1"})...`,
+      );
+      const agent = useV2
+        ? new WorkoutLoggerAgentV2(context)
+        : new WorkoutLoggerAgent(context);
 
       // Let agent handle the entire workflow
-      logger.info("🤖 Starting agent workflow...");
       const result = await agent.logWorkout(
         event.userMessage,
         event.imageS3Keys,
@@ -144,9 +154,15 @@ export const handler = async (event: BuildWorkoutEvent) => {
           );
         }
 
+        // v2 returns `skipped: false` for infrastructure failures (e.g. tool
+        // timeouts) so the caller can distinguish "user rejected / planning"
+        // from "Bedrock slow". Mirrors program-designer/v2's
+        // `result.skipped ?? true` pattern. v1 always set skipped:true on
+        // the failure branch — this fall-through preserves that behaviour
+        // when v2 doesn't explicitly set the field.
         return createOkResponse({
           success: false,
-          skipped: true,
+          skipped: result.skipped ?? true,
           reason: result.reason,
           blockingFlags: result.blockingFlags,
           confidence: result.confidence,

@@ -6,6 +6,11 @@ import {
   deleteFromDynamoDB,
   createDynamoDBItem,
   deepMerge,
+  deserializeFromDynamoDB,
+  docClient,
+  UpdateCommand,
+  withThroughputScaling,
+  getTableName,
   DynamoDBSaveResult,
 } from "./core";
 import { logger } from "../functions/libs/logger";
@@ -14,6 +19,7 @@ import {
   CoachConversationListItem,
   CoachMessage,
   CoachConversationSummary,
+  ConversationMode,
 } from "../functions/libs/coach-conversation/types";
 import { applyPaginationSlice } from "../functions/libs/pagination";
 
@@ -409,54 +415,106 @@ export async function sendCoachConversationMessage(
 }
 
 /**
- * Update conversation metadata (title, tags, isActive)
+ * Update mutable metadata fields on a coach conversation.
+ *
+ * Uses a targeted UpdateExpression rather than load → deepMerge → PutItem
+ * so a concurrent `sendCoachConversationMessage` write that appends to
+ * `attributes.messages` cannot be silently overwritten — only the fields
+ * the caller asked for (plus `attributes.metadata.lastActivity` and
+ * `updatedAt`) are touched. This matches the pattern used by
+ * `updateCoachCreatorSession` and `updateProgramDesignerSession`, and
+ * closes the race window opened when `build-conversation-title` runs in
+ * parallel with the next user turn (Bedrock title generation takes
+ * ~1–3 s — plenty of room for the user to send another message).
+ *
+ * Supported fields: `title`, `mode` (top-level on attributes);
+ * `tags`, `isActive` (under attributes.metadata). `mode` was previously
+ * accepted by the API handler but silently dropped here — now persisted.
  */
 export async function updateCoachConversation(
   userId: string,
   coachId: string,
   conversationId: string,
-  updateData: { title?: string; tags?: string[]; isActive?: boolean },
+  updateData: {
+    title?: string;
+    tags?: string[];
+    isActive?: boolean;
+    mode?: ConversationMode;
+  },
 ): Promise<CoachConversation> {
-  // Load the full DynamoDB item (needed for pk/sk/timestamps)
-  const existingItem = await loadFromDynamoDB<CoachConversation>(
-    `user#${userId}`,
-    `coachConversation#${coachId}#${conversationId}`,
-    "coachConversation",
-  );
+  const nowIso = new Date().toISOString();
 
-  if (!existingItem) {
-    throw new Error(`Conversation not found: ${conversationId}`);
+  const setClauses: string[] = [
+    "#attrs.#metadata.#lastActivity = :nowIso",
+    "updatedAt = :nowIso",
+  ];
+  const names: Record<string, string> = {
+    "#attrs": "attributes",
+    "#metadata": "metadata",
+    "#lastActivity": "lastActivity",
+  };
+  const values: Record<string, any> = {
+    ":nowIso": nowIso,
+  };
+
+  if (updateData.title !== undefined) {
+    setClauses.push("#attrs.#title = :title");
+    names["#title"] = "title";
+    values[":title"] = updateData.title;
   }
 
-  // Prepare update with lastActivity timestamp
-  // Only title goes at top level; tags and isActive belong in metadata
-  const updates = {
-    ...(updateData.title !== undefined && { title: updateData.title }),
-    metadata: {
-      ...(updateData.tags !== undefined && { tags: updateData.tags }),
-      ...(updateData.isActive !== undefined && {
-        isActive: updateData.isActive,
-      }),
-      lastActivity: new Date(),
-    },
-  };
+  if (updateData.mode !== undefined) {
+    setClauses.push("#attrs.#mode = :mode");
+    names["#mode"] = "mode";
+    values[":mode"] = updateData.mode;
+  }
 
-  // Deep merge to preserve nested properties
-  const updatedConversation: CoachConversation = deepMerge(
-    existingItem.attributes,
-    updates,
-  );
+  if (updateData.tags !== undefined) {
+    setClauses.push("#attrs.#metadata.#tags = :tags");
+    names["#tags"] = "tags";
+    values[":tags"] = updateData.tags;
+  }
 
-  // Create updated item maintaining original timestamps but updating the updatedAt field
-  const updatedItem = {
-    ...existingItem,
-    attributes: updatedConversation,
-    updatedAt: new Date().toISOString(),
-  };
+  if (updateData.isActive !== undefined) {
+    setClauses.push("#attrs.#metadata.#isActive = :isActive");
+    names["#isActive"] = "isActive";
+    values[":isActive"] = updateData.isActive;
+  }
 
-  await saveToDynamoDB(updatedItem, true /* requireExists */);
+  return withThroughputScaling(async () => {
+    try {
+      const command = new UpdateCommand({
+        TableName: getTableName(),
+        Key: {
+          pk: `user#${userId}`,
+          sk: `coachConversation#${coachId}#${conversationId}`,
+        },
+        UpdateExpression: `SET ${setClauses.join(", ")}`,
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
+        ConditionExpression: "attribute_exists(pk)",
+        ReturnValues: "ALL_NEW",
+      });
 
-  return updatedConversation;
+      const result = await docClient.send(command);
+
+      if (!result.Attributes?.attributes) {
+        throw new Error(`Conversation not found: ${conversationId}`);
+      }
+
+      // Run through the same deserializer as loadFromDynamoDB so callers
+      // get Date objects on `metadata.lastActivity` / `metadata.startedAt`,
+      // matching the declared `Promise<CoachConversation>` return type.
+      return deserializeFromDynamoDB(
+        result.Attributes.attributes,
+      ) as CoachConversation;
+    } catch (error: any) {
+      if (error?.name === "ConditionalCheckFailedException") {
+        throw new Error(`Conversation not found: ${conversationId}`);
+      }
+      throw error;
+    }
+  }, `Update coach conversation ${conversationId}`);
 }
 
 /**

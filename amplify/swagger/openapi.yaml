@@ -264,6 +264,9 @@ components:
           type: string
         userId:
           type: string
+        title:
+          type: string
+          description: Optional human-readable title (AI-generated after first turn, editable by user).
         status:
           type: string
           enum: [IN_PROGRESS, COMPLETED, ERROR]
@@ -1168,6 +1171,43 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /users/{userId}/coach-creator-sessions/{sessionId}/metadata:
+    put:
+      tags: [Coach Creator Sessions]
+      summary: Update coach creator session metadata
+      description: Updates lightweight metadata fields on a coach creator session, currently the human-readable title (e.g., user-driven rename).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+      responses:
+        "200":
+          description: Session metadata updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      session:
+                        $ref: "#/components/schemas/CoachCreatorSession"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /users/{userId}/coach-creator-sessions/{sessionId}/config-status:
     get:
       tags: [Coach Creator Sessions]
@@ -1705,6 +1745,43 @@ paths:
                         type: string
                       programId:
                         type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{userId}/program-designer-sessions/{sessionId}/metadata:
+    put:
+      tags: [Program Designer Sessions]
+      summary: Update program designer session metadata
+      description: Updates lightweight metadata fields on a program designer session, currently the human-readable title (e.g., user-driven rename).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/SessionIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+      responses:
+        "200":
+          description: Session metadata updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      session:
+                        type: object
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":

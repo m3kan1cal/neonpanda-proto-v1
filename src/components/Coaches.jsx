@@ -206,7 +206,7 @@ function Coaches() {
       })
       .map((s) => ({
         sessionId: s.sessionId,
-        title: "Coach Creator Session",
+        title: s.title || "New Coach Session",
       }));
   }, [inProgressSessions]);
 
@@ -1304,7 +1304,7 @@ function Coaches() {
                       </span>
                       <div className="flex-1">
                         <h3 className="font-header font-bold text-white text-lg uppercase">
-                          Coach Creator Session
+                          {session.title || "New Coach Session"}
                         </h3>
                       </div>
                     </div>

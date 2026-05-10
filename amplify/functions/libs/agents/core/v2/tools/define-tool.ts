@@ -32,6 +32,11 @@ export interface DefineToolSpec<
   retryable?: boolean;
   redactInput?: boolean;
   middleware?: ToolMiddleware<TContext>[];
+  /** See `Tool.getStoreLocation`. Forwarded to the produced Tool. */
+  getStoreLocation?: (
+    input: z.infer<TInSchema>,
+    ctx: ToolExecutionContext<TContext>,
+  ) => { index?: number; uniqueKey?: string };
   execute: (
     input: z.infer<TInSchema>,
     ctx: ToolExecutionContext<TContext>,
@@ -81,6 +86,7 @@ export function defineTool<
     retryable: spec.retryable ?? true,
     redactInput: spec.redactInput ?? false,
     middleware: spec.middleware ?? [],
+    getStoreLocation: spec.getStoreLocation as Tool<TContext>["getStoreLocation"],
     execute: spec.execute as Tool<TContext>["execute"],
     validateInput,
     validateOutput: validateOutput as Tool<TContext>["validateOutput"],

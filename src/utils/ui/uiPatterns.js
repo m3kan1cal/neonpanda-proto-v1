@@ -12,40 +12,40 @@
 export const buttonPatterns = {
   // Primary Actions (Pink) - High-impact actions that create, save, or commit changes
   primary:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
 
   // Secondary Actions (Cyan) - Navigation and management actions
   secondary:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-cyan/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
 
   // Special Actions (Purple) - AI-powered and premium features
   special:
-    "bg-synthwave-neon-purple text-white px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-purple/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
+    "bg-synthwave-neon-purple text-white px-6 py-3 rounded-full font-body font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-purple/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-purple/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
 
   // Small variants (32px height)
   primarySmall:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[32px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[32px] flex items-center justify-center",
 
   secondarySmall:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-3 py-1.5 rounded-full font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[32px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-3 py-1.5 rounded-full font-body font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-cyan/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[32px] flex items-center justify-center",
 
   // Medium variants (40px height)
   primaryMedium:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] flex items-center justify-center",
 
   secondaryMedium:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-full font-body font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-cyan/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] flex items-center justify-center",
 
   // Compact variants (48px height, text-sm) - For floating menus and compact interfaces
   primaryCompact:
-    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-3 rounded-full font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
+    "bg-synthwave-neon-pink text-synthwave-bg-primary px-4 py-3 rounded-full font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
 
   secondaryCompact:
-    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-3 rounded-full font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
+    "bg-transparent border border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-3 rounded-full font-body font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-cyan/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[48px] flex items-center justify-center",
 
   // Hero CTA (56px height) - Premium gradient button for landing pages and major CTAs
   heroCTA:
-    "px-8 py-4 rounded-full bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-[transform,scale,box-shadow] duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[56px] flex items-center justify-center cursor-pointer",
+    "px-8 py-4 rounded-full bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-body font-bold text-xl uppercase tracking-wide transition-[transform,scale,box-shadow] duration-300 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[56px] flex items-center justify-center cursor-pointer",
 
   // Loading state variants - For buttons showing loading spinners
   primaryMediumLoading:
@@ -202,59 +202,59 @@ export const badgePatterns = {
 export const iconButtonPatterns = {
   // Minimal Clean - Just color change on hover (Pink)
   minimal:
-    "p-3 rounded-full text-synthwave-neon-pink hover:text-synthwave-neon-pink/80 hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
+    "p-3 rounded-full text-synthwave-neon-pink hover:text-synthwave-neon-pink/80 hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Soft Background - Subtle background with hover enhancement (Pink)
   softBg:
-    "p-3 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
+    "p-3 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:ring-2 active:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Bordered - Border with hover fill (Cyan)
   bordered:
-    "cursor-pointer p-3 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent]",
+    "cursor-pointer p-3 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Solid Fill - Full background with shadow (Pink)
   solid:
-    "p-3 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
+    "p-3 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Solid Fill Cyan - Full background with shadow (Cyan)
   solidCyan:
-    "p-3 rounded-full bg-synthwave-neon-cyan text-synthwave-bg-primary hover:bg-synthwave-neon-cyan/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent]",
+    "p-3 rounded-full bg-synthwave-neon-cyan text-synthwave-bg-primary hover:bg-synthwave-neon-cyan/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-cyan/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Floating - Glassmorphism with backdrop blur (Pink)
   floating:
-    "p-3 rounded-full bg-synthwave-bg-card/80 backdrop-blur-sm border border-synthwave-neon-pink/20 text-synthwave-neon-pink hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
+    "p-3 rounded-full bg-synthwave-bg-card/80 backdrop-blur-sm border border-synthwave-neon-pink/20 text-synthwave-neon-pink hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:ring-2 active:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Glow Effect - Animated glow (Cyan)
   // No active:shadow-* here — animate-pulse-glow continuously animates
   // box-shadow, and CSS animation origin beats author styles on the same
   // property, so any press-state shadow would be dead code. The continuous
   // pulse already provides emphasis; active:scale-[0.97] alone signals press.
-  glow: "p-3 rounded-full bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent] animate-pulse-glow",
+  glow: "p-3 rounded-full bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent] animate-pulse-glow",
 
   // Small Action Buttons - Modern versions of chat action buttons with dark background by default (like microphone button)
   // Icons should be w-5 h-5 (20px) for consistent sizing across all action buttons
   actionSmallBlue:
-    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 active:scale-[0.97] active:shadow-[0_0_10px_rgba(96,165,250,0.4)] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50 active:ring-2 active:ring-blue-400/50 active:scale-[0.97] active:shadow-[0_0_10px_rgba(96,165,250,0.4)] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallGreen:
-    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-green-400 hover:bg-green-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400/50 active:scale-[0.97] active:shadow-[0_0_10px_rgba(74,222,128,0.4)] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-green-400 hover:bg-green-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400/50 active:ring-2 active:ring-green-400/50 active:scale-[0.97] active:shadow-[0_0_10px_rgba(74,222,128,0.4)] touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallPurple:
-    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-purple-400 hover:bg-purple-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400/50 active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-purple-400 hover:bg-purple-400/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400/50 active:ring-2 active:ring-purple-400/50 active:scale-[0.97] active:shadow-neon-purple touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallPink:
-    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:ring-2 active:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   actionSmallCyan:
-    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
+    "p-2 sm:p-2.5 rounded-full bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] min-h-[40px] min-w-[40px] flex items-center justify-center",
 
   // Compact delete button - For card corner delete actions (smaller than minimal, starts muted)
   deleteCompact:
-    "p-1.5 rounded-full text-synthwave-text-muted hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
+    "p-1.5 rounded-full text-synthwave-text-muted hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent]",
 
   // Delete card button - Absolute-positioned pink delete/trash button on manage-page cards
   deleteCard:
-    "absolute top-4 right-4 p-2 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer",
+    "absolute top-4 right-4 p-2 rounded-full bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:ring-2 active:ring-synthwave-neon-pink/50 active:scale-[0.97] active:shadow-neon-pink touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer",
 };
 
 export const formPatterns = {
@@ -344,29 +344,29 @@ export const inlineEditPatterns = {
     small:
       "p-1 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer",
     medium:
-      "p-1.5 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+      "p-1.5 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 cursor-pointer",
     large:
-      "p-2 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+      "p-2 rounded-full text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 cursor-pointer",
   },
 
   // Save button patterns (pink primary action)
   saveButton: {
     small:
-      "p-1 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
     medium:
-      "p-1.5 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1.5 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
     large:
-      "p-2 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-2 rounded-full bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed",
   },
 
   // Cancel button patterns (cyan secondary action)
   cancelButton: {
     small:
-      "p-1 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
     medium:
-      "p-1.5 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-1.5 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
     large:
-      "p-2 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
+      "p-2 rounded-full border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed",
   },
 
   // Icon sizes (standardized across all inline edits)
@@ -645,7 +645,7 @@ export const containerPatterns = {
 
   // Action dropdown trigger button base
   actionDropdownTrigger:
-    "p-2 rounded-full transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+    "p-2 rounded-full transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 active:ring-1 active:ring-synthwave-neon-cyan/50 cursor-pointer",
 
   // Sub-panel container - inner content panels within cards
   subPanel:
@@ -804,7 +804,7 @@ export const compactCardPatterns = {
   // Coach pill - Horizontal compact coach display with online status
   // Features: 24px avatar, first name only, inline status indicator
   coachPill:
-    "flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+    "flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/40 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-cyan/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary",
 
   // Avatar container within pill (relative positioning for status badge)
   coachPillAvatar: "relative shrink-0",
@@ -835,7 +835,7 @@ export const compactCardPatterns = {
 export const commandPalettePatterns = {
   // Command palette trigger button - Minimal button showing just keyboard shortcut (hidden on mobile via component)
   triggerButton:
-    "flex items-center justify-center px-3 py-2 rounded-full bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary cursor-pointer",
+    "flex items-center justify-center px-3 py-2 rounded-full bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-cyan/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary cursor-pointer",
 
   // Button text (hidden on mobile)
   triggerButtonText: "font-body text-sm font-medium hidden sm:inline",
@@ -926,7 +926,7 @@ export const navigationPatterns = {
     header: "px-6 py-4 border-b border-synthwave-neon-cyan/10",
     headerTitle: "font-header font-bold text-2xl text-white uppercase",
     headerCloseButton:
-      "p-2 rounded-full text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+      "p-2 rounded-full text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 cursor-pointer",
 
     // Section headers
     sectionContainer: "py-2",
@@ -1050,7 +1050,7 @@ export const navigationPatterns = {
     container: "fixed right-6 z-[55] md:hidden",
     containerStyle: { bottom: "calc(80px + env(safe-area-inset-bottom))" }, // Inline style for calc() support
     button:
-      "w-14 h-14 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full shadow-sm shadow-synthwave-neon-pink/30 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary cursor-pointer",
+      "w-14 h-14 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full shadow-sm shadow-synthwave-neon-pink/30 hover:shadow-sm hover:shadow-synthwave-neon-pink/40 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary cursor-pointer",
     icon: "w-6 h-6",
 
     // Speed dial menu - expands above FAB (right-aligned, shifted left with padding)
@@ -1060,7 +1060,7 @@ export const navigationPatterns = {
 
     // Speed dial item - wrapper button (minimal styling, hover on children)
     speedDialItem:
-      "flex items-center gap-3 justify-end transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary rounded-full cursor-pointer",
+      "flex items-center gap-3 justify-end transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary active:ring-2 active:ring-synthwave-neon-pink/50 active:ring-offset-2 active:ring-offset-synthwave-bg-primary rounded-full cursor-pointer",
 
     // Speed dial icon button (receives hover effects) - PINK themed
     speedDialButton:
@@ -1089,9 +1089,9 @@ export const navigationPatterns = {
         "calc(var(--entity-fab-bottom, 80px) + env(safe-area-inset-bottom))",
     },
     button:
-      "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink/40 transition-all duration-300 hover:border-synthwave-neon-pink/70 hover:shadow-[0_0_20px_rgba(255,0,128,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
+      "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink/40 transition-all duration-300 hover:border-synthwave-neon-pink/70 hover:shadow-[0_0_20px_rgba(255,0,128,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:ring-2 active:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
     buttonActive:
-      "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink shadow-[0_0_20px_rgba(255,0,128,0.4)] scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
+      "w-14 h-14 rounded-2xl flex items-center justify-center bg-synthwave-bg-card/90 backdrop-blur-sm border-2 border-synthwave-neon-pink shadow-[0_0_20px_rgba(255,0,128,0.4)] scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 active:ring-2 active:ring-synthwave-neon-pink/50 cursor-pointer overflow-hidden",
   },
 
   // Quick Prompts Submenu - Context-aware prompt suggestions
@@ -1323,7 +1323,7 @@ export const contextualDrawerPatterns = {
 
   // Close button (icon button style)
   closeButton:
-    "shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-synthwave-text-muted hover:text-synthwave-text-primary hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer",
+    "shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-synthwave-text-muted hover:text-synthwave-text-primary hover:bg-synthwave-bg-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:ring-2 active:ring-synthwave-neon-cyan/50 cursor-pointer",
 
   // Resize handle — vertical drag affordance on the panel's left edge (desktop only)
   // 12px hit area centered on the edge (6px inside / 6px outside)

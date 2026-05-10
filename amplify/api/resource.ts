@@ -14,6 +14,8 @@ export function createCoreApi(
   contactFormLambda: lambda.IFunction,
   createCoachCreatorSessionLambda: lambda.IFunction,
   updateCoachCreatorSessionLambda: lambda.IFunction,
+  updateCoachCreatorSessionMetadataLambda: lambda.IFunction,
+  updateProgramDesignerSessionMetadataLambda: lambda.IFunction,
   getCoachConfigsLambda: lambda.IFunction,
   getCoachConfigLambda: lambda.IFunction,
   updateCoachConfigLambda: lambda.IFunction,
@@ -101,9 +103,21 @@ export function createCoreApi(
     domainName = null;
     useCustomDomain = false;
   } else if (branchInfo.branchName === "main") {
-    // Production from main branch
+    // Production from main branch.
+    // TEMPORARY (Phase 0A-prod of fix/api-gateway-nested-stack migration):
+    // useCustomDomain = false to release the function nested stack's CFN
+    // ownership of api-prod.neonpanda.ai. Once main has deployed cleanly
+    // with the domain disabled, a follow-up commit (Phase 0B-prod) will
+    // restore useCustomDomain = true so the coreApi nested stack can
+    // CREATE the ApiCustomDomain resource fresh under its new home.
+    //
+    // Note: this code path is dead from develop's runtime perspective —
+    // develop hits the `else` branch below — so this commit is a true
+    // no-op for develop deploys. It only activates when this code is
+    // merged to main. After Phase 0B-prod lands, this whole block reverts
+    // to `useCustomDomain = true`.
     domainName = `api-prod.${baseDomain}`;
-    useCustomDomain = true;
+    useCustomDomain = false;
   } else {
     // Non-production branches (develop, feature branches, etc.)
     domainName = `api-dev.${baseDomain}`;
@@ -173,6 +187,18 @@ export function createCoreApi(
     new apigatewayv2_integrations.HttpLambdaIntegration(
       "UpdateCoachCreatorSessionIntegration",
       updateCoachCreatorSessionLambda,
+    );
+
+  const updateCoachCreatorSessionMetadataIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateCoachCreatorSessionMetadataIntegration",
+      updateCoachCreatorSessionMetadataLambda,
+    );
+
+  const updateProgramDesignerSessionMetadataIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateProgramDesignerSessionMetadataIntegration",
+      updateProgramDesignerSessionMetadataLambda,
     );
 
   const getCoachCreatorSessionIntegration =
@@ -599,6 +625,10 @@ export function createCoreApi(
     contactForm: contactFormIntegration,
     createCoachCreatorSession: createCoachCreatorSessionIntegration,
     updateCoachCreatorSession: updateCoachCreatorSessionIntegration,
+    updateCoachCreatorSessionMetadata:
+      updateCoachCreatorSessionMetadataIntegration,
+    updateProgramDesignerSessionMetadata:
+      updateProgramDesignerSessionMetadataIntegration,
     getCoachCreatorSession: getCoachCreatorSessionIntegration,
     getCoachCreatorSessions: getCoachCreatorSessionsIntegration,
     deleteCoachCreatorSession: deleteCoachCreatorSessionIntegration,
@@ -959,6 +989,14 @@ export function createCoreApi(
     authorizer: userPoolAuthorizer,
   });
 
+  // Metadata-only update (e.g., user-driven title rename)
+  httpApi.addRoutes({
+    path: "/users/{userId}/coach-creator-sessions/{sessionId}/metadata",
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateCoachCreatorSessionMetadata,
+    authorizer: userPoolAuthorizer,
+  });
+
   // Coach Config Routes
   httpApi.addRoutes({
     path: "/users/{userId}/coaches",
@@ -1222,6 +1260,14 @@ export function createCoreApi(
     path: "/users/{userId}/program-designer-sessions/{sessionId}/retry",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.retryProgramBuild,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Metadata-only update (e.g., user-driven title rename)
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions/{sessionId}/metadata",
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateProgramDesignerSessionMetadata,
     authorizer: userPoolAuthorizer,
   });
 

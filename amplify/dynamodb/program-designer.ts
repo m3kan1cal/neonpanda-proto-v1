@@ -4,6 +4,11 @@ import {
   queryFromDynamoDB,
   deleteFromDynamoDB,
   createDynamoDBItem,
+  deserializeFromDynamoDB,
+  docClient,
+  UpdateCommand,
+  withThroughputScaling,
+  getTableName,
 } from "./core";
 import { ProgramDesignerSession } from "../functions/libs/program-designer/types";
 import { logger } from "../functions/libs/logger";
@@ -89,6 +94,73 @@ export async function getProgramDesignerSession(
     logger.error("Error getting program designer session:", error);
     return null;
   }
+}
+
+/**
+ * Update mutable metadata fields (currently: title) on a program designer session.
+ *
+ * Uses a targeted UpdateExpression rather than load-merge-PutItem so a
+ * concurrent stream-handler save appending to `conversationHistory` cannot
+ * be silently overwritten — only `attributes.title` and
+ * `attributes.lastActivity` are touched here.
+ */
+export async function updateProgramDesignerSession(
+  userId: string,
+  sessionId: string,
+  updateData: { title?: string },
+): Promise<ProgramDesignerSession> {
+  const nowIso = new Date().toISOString();
+
+  const setClauses: string[] = [
+    "#attrs.#lastActivity = :now",
+    "updatedAt = :now",
+  ];
+  const names: Record<string, string> = {
+    "#attrs": "attributes",
+    "#lastActivity": "lastActivity",
+  };
+  const values: Record<string, any> = {
+    ":now": nowIso,
+  };
+
+  if (updateData.title !== undefined) {
+    setClauses.push("#attrs.#title = :title");
+    names["#title"] = "title";
+    values[":title"] = updateData.title;
+  }
+
+  return withThroughputScaling(async () => {
+    try {
+      const command = new UpdateCommand({
+        TableName: getTableName(),
+        Key: {
+          pk: `user#${userId}`,
+          sk: `programDesignerSession#${sessionId}`,
+        },
+        UpdateExpression: `SET ${setClauses.join(", ")}`,
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
+        ConditionExpression: "attribute_exists(pk)",
+        ReturnValues: "ALL_NEW",
+      });
+
+      const result = await docClient.send(command);
+      if (!result.Attributes?.attributes) {
+        throw new Error(`Program designer session not found: ${sessionId}`);
+      }
+      // Run through the same deserializer as loadFromDynamoDB so callers
+      // get Date objects on `lastActivity` / `startedAt`, matching the
+      // declared `Promise<ProgramDesignerSession>` return type.
+      return deserializeFromDynamoDB(
+        result.Attributes.attributes,
+      ) as ProgramDesignerSession;
+    } catch (error: any) {
+      if (error?.name === "ConditionalCheckFailedException") {
+        throw new Error(`Program designer session not found: ${sessionId}`);
+      }
+      throw error;
+    }
+  }, `Update program designer session ${sessionId}`);
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   getCoachCreatorSession,
   getCoachCreatorSessions,
   deleteCoachCreatorSession,
+  updateCoachCreatorSessionMetadata,
 } from "../apis/coachCreatorApi";
 import { logger } from "../logger";
 import {
@@ -51,6 +52,7 @@ export class CoachCreatorAgent {
       isRedirecting: false,
       error: null,
       sessionData: null,
+      title: null, // AI-generated title (populated after first turn) or user-renamed
       progress: {
         questionsCompleted: 0,
         estimatedTotal: 15, // Default estimate
@@ -64,12 +66,19 @@ export class CoachCreatorAgent {
       contextualUpdate: null, // { content: string, stage: string }
     };
 
+    // Polling state for AI-generated title arrival
+    this._titlePollInterval = null;
+    this._titlePollTimeout = null;
+
     // Bind methods
     this.createSession = this.createSession.bind(this);
     this.loadExistingSession = this.loadExistingSession.bind(this);
     this.sendMessageStream = this.sendMessageStream.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.handleCompletion = this.handleCompletion.bind(this);
+    this.updateSessionTitle = this.updateSessionTitle.bind(this);
+    this._startTitlePolling = this._startTitlePolling.bind(this);
+    this._stopTitlePolling = this._stopTitlePolling.bind(this);
   }
 
   /**
@@ -234,6 +243,7 @@ export class CoachCreatorAgent {
         sessionData,
         progress: progressData,
         isComplete: isSessionComplete,
+        title: sessionData?.title ?? null,
       });
 
       return sessionData;
@@ -353,6 +363,18 @@ export class CoachCreatorAgent {
             resetStreamingState(this, {
               progress: updatedProgress,
             });
+
+            // First-turn AI title generation runs server-side after the first
+            // user-AI exchange. Poll briefly so the freshly-generated title
+            // appears without a manual reload.
+            if (!this.state.title) {
+              const userTurnsSoFar = this.state.messages.filter(
+                (m) => m.type === "user",
+              ).length;
+              if (userTurnsSoFar === 1) {
+                this._startTitlePolling();
+              }
+            }
 
             // Handle completion
             if (chunk.isComplete) {
@@ -627,9 +649,85 @@ export class CoachCreatorAgent {
   }
 
   /**
+   * Updates the session title (user-driven rename) and merges into local state.
+   */
+  async updateSessionTitle(title) {
+    if (!this.userId || !this.sessionId) {
+      throw new Error("Cannot update title — session not loaded");
+    }
+    const trimmed = (title ?? "").trim();
+    if (!trimmed) {
+      throw new Error("Title must not be empty");
+    }
+    const result = await updateCoachCreatorSessionMetadata(
+      this.userId,
+      this.sessionId,
+      { title: trimmed },
+    );
+    const newTitle = result?.session?.title ?? trimmed;
+    // User-driven rename should also stop any pending AI title polling.
+    this._stopTitlePolling();
+    this._updateState({
+      title: newTitle,
+      sessionData: this.state?.sessionData
+        ? { ...this.state.sessionData, title: newTitle }
+        : this.state?.sessionData,
+    });
+    return result;
+  }
+
+  /**
+   * Polls the session every 3 seconds for up to 30 seconds, picking up
+   * the AI-generated title once it lands.
+   */
+  _startTitlePolling(maxMs = 30000, intervalMs = 3000) {
+    if (!this.userId || !this.sessionId) return;
+    this._stopTitlePolling();
+    const start = Date.now();
+    this._titlePollInterval = setInterval(async () => {
+      if (!this.userId || !this.sessionId) {
+        this._stopTitlePolling();
+        return;
+      }
+      try {
+        const session = await getCoachCreatorSession(
+          this.userId,
+          this.sessionId,
+        );
+        if (session?.title && this.state) {
+          this._updateState({
+            title: session.title,
+            sessionData: this.state.sessionData
+              ? { ...this.state.sessionData, title: session.title }
+              : session,
+          });
+          this._stopTitlePolling();
+        }
+      } catch (err) {
+        logger.warn("Title polling fetch failed (non-blocking):", err);
+      }
+    }, intervalMs);
+    this._titlePollTimeout = setTimeout(() => {
+      this._stopTitlePolling();
+    }, maxMs);
+  }
+
+  _stopTitlePolling() {
+    if (this._titlePollInterval) {
+      clearInterval(this._titlePollInterval);
+      this._titlePollInterval = null;
+    }
+    if (this._titlePollTimeout) {
+      clearTimeout(this._titlePollTimeout);
+      this._titlePollTimeout = null;
+    }
+  }
+
+  /**
    * Destroys the agent and cleans up
    */
   destroy() {
+    this._stopTitlePolling();
     this.userId = null;
     this.sessionId = null;
     this.state = null;

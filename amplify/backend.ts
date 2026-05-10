@@ -17,6 +17,7 @@ import {
 import { contactForm } from "./functions/contact-form/resource";
 import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
 import { updateCoachCreatorSession } from "./functions/update-coach-creator-session/resource";
+import { updateCoachCreatorSessionMetadata } from "./functions/update-coach-creator-session-metadata/resource";
 import { buildCoachConfig } from "./functions/build-coach-config/resource";
 import { getCoachConfigs } from "./functions/get-coach-configs/resource";
 import { getCoachConfig } from "./functions/get-coach-config/resource";
@@ -42,10 +43,12 @@ import { createProgramDesignerSession } from "./functions/create-program-designe
 import { getProgramDesignerSession } from "./functions/get-program-designer-session/resource";
 import { getProgramDesignerSessions } from "./functions/get-program-designer-sessions/resource";
 import { deleteProgramDesignerSession } from "./functions/delete-program-designer-session/resource";
+import { updateProgramDesignerSessionMetadata } from "./functions/update-program-designer-session-metadata/resource";
 import { retryProgramBuild } from "./functions/retry-program-build/resource";
 import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
+import { buildConversationTitle } from "./functions/build-conversation-title/resource";
 import { buildLivingProfile } from "./functions/build-living-profile/resource";
 import { processPostTurn } from "./functions/process-post-turn/resource";
 import {
@@ -143,6 +146,8 @@ const backend = defineBackend({
   contactForm,
   createCoachCreatorSession,
   updateCoachCreatorSession,
+  updateCoachCreatorSessionMetadata,
+  updateProgramDesignerSessionMetadata,
   buildCoachConfig,
   getCoachConfigs,
   getCoachConfig,
@@ -172,6 +177,7 @@ const backend = defineBackend({
   createWorkout,
   buildWorkout,
   buildConversationSummary,
+  buildConversationTitle,
   buildLivingProfile,
   processPostTurn,
   dispatchMemoryLifecycle,
@@ -242,6 +248,8 @@ const allBackendFunctions = [
   backend.contactForm,
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
+  backend.updateCoachCreatorSessionMetadata,
+  backend.updateProgramDesignerSessionMetadata,
   backend.buildCoachConfig,
   backend.getCoachConfigs,
   backend.getCoachConfig,
@@ -271,6 +279,7 @@ const allBackendFunctions = [
   backend.createWorkout,
   backend.buildWorkout,
   backend.buildConversationSummary,
+  backend.buildConversationTitle,
   backend.buildLivingProfile,
   backend.processPostTurn,
   backend.dispatchMemoryLifecycle,
@@ -391,6 +400,9 @@ backend.buildWorkoutAnalysis.resources.lambda.configureAsyncInvoke({
 backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
+backend.buildConversationTitle.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
 backend.buildLivingProfile.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
@@ -404,6 +416,12 @@ backend.processMemoryLifecycle.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 
+// Dedicated nested stack for the HTTP API surface (Api, Stage, Routes,
+// Integrations, DomainName, ApiMapping, and the auto-generated Lambda
+// invoke permissions). Splitting these out keeps the Amplify-managed
+// `function` stack under CloudFormation's 500-resource-per-stack limit.
+const coreApiStack = backend.createStack("coreApi");
+
 // Create User Pool authorizer
 const userPoolAuthorizer = new HttpUserPoolAuthorizer(
   "UserPoolAuthorizer",
@@ -415,10 +433,12 @@ const userPoolAuthorizer = new HttpUserPoolAuthorizer(
 
 // Create the Core API with all endpoints
 const coreApi = apiGatewayv2.createCoreApi(
-  backend.contactForm.stack,
+  coreApiStack,
   backend.contactForm.resources.lambda,
   backend.createCoachCreatorSession.resources.lambda,
   backend.updateCoachCreatorSession.resources.lambda,
+  backend.updateCoachCreatorSessionMetadata.resources.lambda,
+  backend.updateProgramDesignerSessionMetadata.resources.lambda,
   backend.getCoachConfigs.resources.lambda,
   backend.getCoachConfig.resources.lambda,
   backend.updateCoachConfig.resources.lambda,
@@ -560,6 +580,8 @@ const scheduledPolicies = new StackGroupPolicies(
   backend.contactForm,
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
+  backend.updateCoachCreatorSessionMetadata,
+  backend.updateProgramDesignerSessionMetadata,
   backend.getCoachConfigs,
   backend.getCoachConfig,
   backend.updateCoachConfig,
@@ -862,6 +884,7 @@ backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
   backend.buildExercise,
   backend.buildWorkoutAnalysis,
   backend.buildConversationSummary,
+  backend.buildConversationTitle,
   backend.buildLivingProfile,
   backend.processPostTurn,
 ].forEach((func) => {
@@ -1030,9 +1053,10 @@ grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildExercise.resources.lambda.functionArn,
 ]);
 
-// Grant permission to processPostTurn to invoke buildConversationSummary
+// Grant permission to processPostTurn to invoke buildConversationSummary and buildConversationTitle
 grantLambdaInvokePermissions(backend.processPostTurn.resources.lambda, [
   backend.buildConversationSummary.resources.lambda.functionArn,
+  backend.buildConversationTitle.resources.lambda.functionArn,
 ]);
 
 // Grant permission to buildConversationSummary to invoke buildLivingProfile
@@ -1041,15 +1065,19 @@ grantLambdaInvokePermissions(
   [backend.buildLivingProfile.resources.lambda.functionArn],
 );
 
-// Grant permission to streamCoachCreatorSession to invoke buildCoachConfig
+// Grant permission to streamCoachCreatorSession to invoke buildCoachConfig and buildConversationTitle
 grantLambdaInvokePermissions(
   backend.streamCoachCreatorSession.resources.lambda,
-  [backend.buildCoachConfig.resources.lambda.functionArn],
+  [
+    backend.buildCoachConfig.resources.lambda.functionArn,
+    backend.buildConversationTitle.resources.lambda.functionArn,
+  ],
 );
 
-// Grant permission to streamProgramDesign to invoke buildProgram
+// Grant permission to streamProgramDesign to invoke buildProgram and buildConversationTitle
 grantLambdaInvokePermissions(backend.streamProgramDesign.resources.lambda, [
   backend.buildProgram.resources.lambda.functionArn,
+  backend.buildConversationTitle.resources.lambda.functionArn,
 ]);
 
 // Grant permission to retryProgramBuild to invoke buildProgram
@@ -1407,6 +1435,12 @@ backend.processPostTurn.addEnvironment(
   backend.buildConversationSummary.resources.lambda.functionName,
 );
 
+// Post-turn Lambda also triggers AI title generation after the first turn
+backend.processPostTurn.addEnvironment(
+  "BUILD_CONVERSATION_TITLE_FUNCTION_NAME",
+  backend.buildConversationTitle.resources.lambda.functionName,
+);
+
 // USER_POOL_ID needed by withStreamingAuth for JWT signature verification via JWKS
 backend.streamCoachConversation.addEnvironment(
   "USER_POOL_ID",
@@ -1454,6 +1488,10 @@ backend.streamCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
   backend.buildCoachConfig.resources.lambda.functionName,
 );
+backend.streamCoachCreatorSession.addEnvironment(
+  "BUILD_CONVERSATION_TITLE_FUNCTION_NAME",
+  backend.buildConversationTitle.resources.lambda.functionName,
+);
 
 // USER_POOL_ID needed by withStreamingAuth for JWT signature verification via JWKS
 backend.streamProgramDesign.addEnvironment(
@@ -1467,6 +1505,10 @@ backend.streamProgramDesign.addEnvironment(
 backend.streamProgramDesign.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
   backend.buildProgram.resources.lambda.functionName,
+);
+backend.streamProgramDesign.addEnvironment(
+  "BUILD_CONVERSATION_TITLE_FUNCTION_NAME",
+  backend.buildConversationTitle.resources.lambda.functionName,
 );
 
 backend.retryProgramBuild.addEnvironment(

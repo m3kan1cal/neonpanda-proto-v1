@@ -17,6 +17,7 @@
 import { BedrockClient, ListGuardrailsCommand } from "@aws-sdk/client-bedrock";
 import { detectAndProcessConversationSummary } from "../libs/coach-conversation/detection";
 import { extractAndSaveProspectiveMemories } from "../libs/coach-conversation/memory-processing";
+import { maybeTriggerTitleGeneration } from "../libs/coach-conversation/title-trigger";
 import { logger } from "../libs/logger";
 
 // Resolve guardrail ID from name on first invocation (cold start).
@@ -91,22 +92,31 @@ export const handler = async (event: ProcessPostTurnEvent) => {
 
   const startTime = Date.now();
 
-  const [summaryResult, prospectiveResult] = await Promise.allSettled([
-    detectAndProcessConversationSummary(
-      userId,
-      coachId,
-      conversationId,
-      userMessage,
-      currentMessageCount,
-    ),
-    extractAndSaveProspectiveMemories(
-      userMessage,
-      aiResponse,
-      userId,
-      coachId,
-      conversationId,
-    ),
-  ]);
+  const [summaryResult, prospectiveResult, titleResult] =
+    await Promise.allSettled([
+      detectAndProcessConversationSummary(
+        userId,
+        coachId,
+        conversationId,
+        userMessage,
+        currentMessageCount,
+      ),
+      extractAndSaveProspectiveMemories(
+        userMessage,
+        aiResponse,
+        userId,
+        coachId,
+        conversationId,
+      ),
+      maybeTriggerTitleGeneration({
+        userId,
+        coachId,
+        conversationId,
+        userMessage,
+        aiResponse,
+        currentMessageCount,
+      }),
+    ]);
 
   const elapsed = Date.now() - startTime;
 
@@ -136,12 +146,28 @@ export const handler = async (event: ProcessPostTurnEvent) => {
               : String(prospectiveResult.reason),
         };
 
+  const titleOutcome =
+    titleResult.status === "fulfilled"
+      ? {
+          status: "ok",
+          triggered: titleResult.value.triggered,
+          reason: titleResult.value.reason,
+        }
+      : {
+          status: "error",
+          error:
+            titleResult.reason instanceof Error
+              ? titleResult.reason.message
+              : String(titleResult.reason),
+        };
+
   logger.info("✅ Post-turn processing complete:", {
     userId,
     conversationId,
     elapsedMs: elapsed,
     summary: summaryOutcome,
     prospective: prospectiveOutcome,
+    title: titleOutcome,
   });
 
   return {
@@ -150,6 +176,7 @@ export const handler = async (event: ProcessPostTurnEvent) => {
       success: true,
       summary: summaryOutcome,
       prospective: prospectiveOutcome,
+      title: titleOutcome,
     }),
   };
 };
