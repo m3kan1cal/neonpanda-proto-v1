@@ -1,7 +1,10 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { updateCoachConversation } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
-import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
+import {
+  CONVERSATION_MODES,
+  ConversationMode,
+} from "../libs/coach-conversation/types";
 import { logger } from "../libs/logger";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -63,12 +66,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, "mode must be a valid conversation mode");
   }
 
-  // Prepare update data
+  // Prepare update data. `mode` was validated against CONVERSATION_MODES
+  // above, so the cast to ConversationMode is sound.
   const updateData: {
     title?: string;
     tags?: string[];
     isActive?: boolean;
-    mode?: string;
+    mode?: ConversationMode;
   } = {};
   if (title !== undefined) {
     updateData.title = title.trim();
@@ -80,7 +84,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     updateData.isActive = isActive;
   }
   if (mode !== undefined) {
-    updateData.mode = mode;
+    updateData.mode = mode as ConversationMode;
   }
 
   // Update conversation using the safe deep-merge function from operations
