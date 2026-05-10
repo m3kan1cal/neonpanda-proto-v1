@@ -415,9 +415,6 @@ export async function sendCoachConversationMessage(
 }
 
 /**
- * Update conversation metadata (title, tags, isActive)
- */
-/**
  * Update mutable metadata fields on a coach conversation.
  *
  * Uses a targeted UpdateExpression rather than load → deepMerge → PutItem
