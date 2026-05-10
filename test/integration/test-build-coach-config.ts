@@ -660,6 +660,9 @@ async function runTestCase(
       lambdaStartTime,
       {
         waitMs: LOG_WAIT_TIME,
+        // toolTimeouts (and other v2 RunMetrics fields) are now parsed
+        // structurally from each `agent.run.completed` log line by
+        // cloudwatch-logs.ts. See `summary.agentRunMetrics`.
         markers: {
           coachCreatorAgentInit: "CoachCreatorAgentV2 initialized",
           toolExecutions: "[TOOL_START]",
@@ -667,7 +670,6 @@ async function runTestCase(
           toolErrors: "[TOOL_ERROR]",
           toolBlocked: "[TOOL_BLOCKED]",
           agentRunCompleted: "agent.run.completed",
-          toolTimeouts: "code\":\"timeout\"",
         },
       },
     );

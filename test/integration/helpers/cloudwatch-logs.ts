@@ -41,6 +41,28 @@ export interface FetchLogsOptions {
   totalLimit?: number;
 }
 
+/**
+ * Parsed numeric fields extracted from a single `agent.run.completed`
+ * structured log line emitted by the v2 framework's RunMetrics.
+ *
+ * One entry per agent.run.completed line — multi-iteration test runs
+ * (e.g. retry scenarios) can produce more than one.
+ */
+export interface AgentRunMetrics {
+  iterations?: number;
+  parallelToolBatches?: number;
+  modelFallbacks?: number;
+  toolRetries?: number;
+  toolTimeouts?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadInputTokens?: number;
+  totalDurationMs?: number;
+  agentId?: string;
+  runId?: string;
+  modelId?: string;
+}
+
 export interface CloudWatchLogsSummary {
   /** Raw events ordered by timestamp ascending. */
   events: CloudWatchLogEvent[];
@@ -64,6 +86,13 @@ export interface CloudWatchLogsSummary {
   warnings: string[];
   /** Caller-supplied marker counts (substring matches in fullLogs). */
   markerCounts: Record<string, number>;
+  /**
+   * Structured metrics parsed out of every `agent.run.completed` log line
+   * in the window. Empty array if no v2 agent ran (or didn't reach
+   * completion). Replaces ad-hoc substring markers like
+   * `parallelToolBatches: "🚀 Executing"` which never matched cleanly.
+   */
+  agentRunMetrics: AgentRunMetrics[];
   /** Truncation flag if totalLimit was hit. */
   truncated: boolean;
 }
@@ -73,6 +102,64 @@ const REPORT_RE =
 const REQUEST_ID_RE = /RequestId:\s+([0-9a-f-]{36})/i;
 const CACHE_READ_RE = /cacheReadInputTokens['":\s]+(\d+)/;
 const CACHE_WRITE_RE = /cacheWriteInputTokens['":\s]+(\d+)/;
+const AGENT_RUN_COMPLETED_RE = /agent\.run\.completed\s*\{/;
+
+// RunMetrics emits via util.inspect, producing JS-object syntax (single
+// quotes, unquoted keys). Per-key extractors below tolerate the actual
+// CloudWatch formatting (whitespace, line breaks, optional quoting on
+// either keys or string values).
+const NUMERIC_FIELD_RES: Record<keyof AgentRunMetrics, RegExp> = {
+  iterations: /\biterations[\s'"]?:\s*(\d+)/,
+  parallelToolBatches: /\bparallelToolBatches[\s'"]?:\s*(\d+)/,
+  modelFallbacks: /\bmodelFallbacks[\s'"]?:\s*(\d+)/,
+  toolRetries: /\btoolRetries[\s'"]?:\s*(\d+)/,
+  toolTimeouts: /\btoolTimeouts[\s'"]?:\s*(\d+)/,
+  inputTokens: /\binputTokens[\s'"]?:\s*(\d+)/,
+  outputTokens: /\boutputTokens[\s'"]?:\s*(\d+)/,
+  cacheReadInputTokens: /\bcacheReadInputTokens[\s'"]?:\s*(\d+)/,
+  totalDurationMs: /\btotalDurationMs[\s'"]?:\s*(\d+)/,
+  // Stringy fields — populated by separate regexes below since the value
+  // type is not numeric. The shared loop just skips these entries.
+  agentId: /^_/,
+  runId: /^_/,
+  modelId: /^_/,
+};
+const STRING_FIELD_RES: Record<"agentId" | "runId" | "modelId", RegExp> = {
+  agentId: /\bagentId[\s'"]?:\s*['"]([^'"]+)['"]/,
+  runId: /\brunId[\s'"]?:\s*['"]([^'"]+)['"]/,
+  modelId: /\bmodelId[\s'"]?:\s*['"]([^'"]+)['"]/,
+};
+
+/**
+ * Parse a single CloudWatch event message that contains an
+ * `agent.run.completed { ... }` block into a typed metrics object.
+ * Returns `null` when the message is not an agent-run line.
+ */
+export function parseAgentRunCompleted(
+  message: string,
+): AgentRunMetrics | null {
+  if (!AGENT_RUN_COMPLETED_RE.test(message)) return null;
+
+  const out: AgentRunMetrics = {};
+  for (const [field, re] of Object.entries(NUMERIC_FIELD_RES) as Array<
+    [keyof AgentRunMetrics, RegExp]
+  >) {
+    if (field === "agentId" || field === "runId" || field === "modelId") {
+      continue;
+    }
+    const match = message.match(re);
+    if (match) {
+      (out as any)[field] = parseInt(match[1], 10);
+    }
+  }
+  for (const [field, re] of Object.entries(STRING_FIELD_RES) as Array<
+    ["agentId" | "runId" | "modelId", RegExp]
+  >) {
+    const match = message.match(re);
+    if (match) out[field] = match[1];
+  }
+  return out;
+}
 
 /**
  * Fetch logs for a Lambda invocation in a given time window and produce
@@ -142,6 +229,7 @@ export async function fetchLambdaLogs(
     markerCounts: Object.fromEntries(
       Object.keys(markers).map((k) => [k, 0]),
     ),
+    agentRunMetrics: [],
     truncated,
   };
 
@@ -176,6 +264,8 @@ export async function fetchLambdaLogs(
     for (const [name, substr] of Object.entries(markers)) {
       if (message.includes(substr)) summary.markerCounts[name]++;
     }
+    const agentRun = parseAgentRunCompleted(message);
+    if (agentRun) summary.agentRunMetrics.push(agentRun);
   }
 
   return summary;
@@ -205,6 +295,11 @@ export function writeLogsFile(
     `# CacheWriteInputTokens: ${summary.cacheWriteInputTokens}`,
     `# Errors: ${summary.errors.length}`,
     `# Warnings: ${summary.warnings.length}`,
+    `# AgentRuns: ${summary.agentRunMetrics.length}`,
+    ...summary.agentRunMetrics.map(
+      (m, i) =>
+        `#   [${i}] iter=${m.iterations ?? "?"}, parallelBatches=${m.parallelToolBatches ?? "?"}, retries=${m.toolRetries ?? "?"}, timeouts=${m.toolTimeouts ?? "?"}, fallbacks=${m.modelFallbacks ?? "?"}, in=${m.inputTokens ?? "?"}, out=${m.outputTokens ?? "?"}, cacheRead=${m.cacheReadInputTokens ?? "?"}, totalMs=${m.totalDurationMs ?? "?"}`,
+    ),
     `# Events: ${summary.events.length}${summary.truncated ? " (TRUNCATED)" : ""}`,
     "",
   ].join("\n");
@@ -255,5 +350,21 @@ export function printLogsSummary(
     console.info(
       `${p}   markers: ${markerEntries.map(([k, v]) => `${k}=${v}`).join(", ")}`,
     );
+  }
+  if (summary.agentRunMetrics.length > 0) {
+    summary.agentRunMetrics.forEach((m, i) => {
+      const idLabel =
+        summary.agentRunMetrics.length > 1 ? ` [${i}]` : "";
+      console.info(
+        `${p}   agent.run${idLabel}: iter=${m.iterations ?? "?"}, ` +
+          `parallelBatches=${m.parallelToolBatches ?? "?"}, ` +
+          `retries=${m.toolRetries ?? "?"}, ` +
+          `timeouts=${m.toolTimeouts ?? "?"}, ` +
+          `fallbacks=${m.modelFallbacks ?? "?"}, ` +
+          `tokens=${m.inputTokens ?? "?"}/${m.outputTokens ?? "?"}, ` +
+          `cacheRead=${m.cacheReadInputTokens ?? "?"}, ` +
+          `totalMs=${m.totalDurationMs ?? "?"}`,
+      );
+    });
   }
 }

@@ -292,7 +292,10 @@ export class ToolScheduler<TContext extends AgentContext> {
           ctrl.signal.aborted;
 
         const durationMs = Date.now() - startedAt;
-        if (this.metrics) this.metrics.recordToolLatency(tool.id, durationMs);
+        if (this.metrics) {
+          this.metrics.recordToolLatency(tool.id, durationMs);
+          if (isTimeout) this.metrics.toolTimeouts++;
+        }
 
         const failure: ToolResult<unknown> = {
           ok: false as const,
