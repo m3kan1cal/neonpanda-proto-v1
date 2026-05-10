@@ -5,6 +5,10 @@ import {
   deleteFromDynamoDB,
   createDynamoDBItem,
   deepMerge,
+  docClient,
+  UpdateCommand,
+  withThroughputScaling,
+  getTableName,
 } from "./core";
 import { ProgramDesignerSession } from "../functions/libs/program-designer/types";
 import { logger } from "../functions/libs/logger";
@@ -94,42 +98,61 @@ export async function getProgramDesignerSession(
 
 /**
  * Update mutable metadata fields (currently: title) on a program designer session.
- * Preserves all other fields via deep merge and bumps lastActivity.
+ *
+ * Uses a targeted UpdateExpression rather than load-merge-PutItem so a
+ * concurrent stream-handler save appending to `conversationHistory` cannot
+ * be silently overwritten — only `attributes.title` and
+ * `attributes.lastActivity` are touched here.
  */
 export async function updateProgramDesignerSession(
   userId: string,
   sessionId: string,
   updateData: { title?: string },
 ): Promise<ProgramDesignerSession> {
-  const existingItem = await loadFromDynamoDB<ProgramDesignerSession>(
-    `user#${userId}`,
-    `programDesignerSession#${sessionId}`,
-    "programDesignerSession",
-  );
+  const nowIso = new Date().toISOString();
 
-  if (!existingItem) {
-    throw new Error(`Program designer session not found: ${sessionId}`);
+  const setClauses: string[] = [
+    "#attrs.#lastActivity = :now",
+    "updatedAt = :now",
+  ];
+  const names: Record<string, string> = {
+    "#attrs": "attributes",
+    "#lastActivity": "lastActivity",
+  };
+  const values: Record<string, any> = {
+    ":now": nowIso,
+  };
+
+  if (updateData.title !== undefined) {
+    setClauses.push("#attrs.#title = :title");
+    names["#title"] = "title";
+    values[":title"] = updateData.title;
   }
 
-  const updates: Partial<ProgramDesignerSession> = {
-    ...(updateData.title !== undefined && { title: updateData.title }),
-    lastActivity: new Date(),
-  };
+  return withThroughputScaling(async () => {
+    try {
+      const command = new UpdateCommand({
+        TableName: getTableName(),
+        Key: {
+          pk: `user#${userId}`,
+          sk: `programDesignerSession#${sessionId}`,
+        },
+        UpdateExpression: `SET ${setClauses.join(", ")}`,
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
+        ConditionExpression: "attribute_exists(pk)",
+        ReturnValues: "ALL_NEW",
+      });
 
-  const updatedSession: ProgramDesignerSession = deepMerge(
-    existingItem.attributes,
-    updates,
-  );
-
-  const updatedItem = {
-    ...existingItem,
-    attributes: updatedSession,
-    updatedAt: new Date().toISOString(),
-  };
-
-  await saveToDynamoDB(updatedItem, true /* requireExists */);
-
-  return updatedSession;
+      const result = await docClient.send(command);
+      return result.Attributes?.attributes as ProgramDesignerSession;
+    } catch (error: any) {
+      if (error?.name === "ConditionalCheckFailedException") {
+        throw new Error(`Program designer session not found: ${sessionId}`);
+      }
+      throw error;
+    }
+  }, `Update program designer session ${sessionId}`);
 }
 
 /**
