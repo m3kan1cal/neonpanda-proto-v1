@@ -28,62 +28,69 @@ const hasExplicitSessionRoles = (
   );
 
 /**
- * Determine whether a given template is the primary workout for its day.
+ * Single source of truth for "which template is the day's primary?".
+ * All three exported helpers (isPrimaryTemplate, countOptionalTemplates,
+ * and the per-day pruner summary) derive from this so they cannot drift.
  *
- * Behavior:
- * - If ANY template on the day declares an explicit sessionRole, the
- *   template is primary iff its own sessionRole === "primary".
- * - Otherwise (legacy programs that pre-date the sessionRole field),
- *   fall back to deterministic alphabetic sort by templateId — the first
- *   template wins. This matches the historical convention used by
- *   log-workout-template / skip-workout-template.
- *
- * Single-template days: the template is always primary.
+ * Resolution order:
+ *  1. Empty day → undefined.
+ *  2. Single-template day → that template's id.
+ *  3. Explicit roles present AND a sessionRole === "primary" exists →
+ *     that template's id.
+ *  4. Otherwise (legacy programs with no sessionRole anywhere, OR
+ *     malformed explicit-role days that lack a primary) → alphabetic sort
+ *     by templateId, first wins. The alphabetic fallback for malformed
+ *     explicit-role days exists so a single missing/wrong label can't
+ *     break the UI ("today's workout disappears") or the day-advancement
+ *     logic. The integration validator on test-build-program asserts the
+ *     "exactly one primary" invariant so malformed days are caught at
+ *     generation time — this fallback is a runtime safety net, not a
+ *     blessing of the malformed shape.
  */
-export const isPrimaryTemplate = (
-  template: RoleAwareTemplate,
+const getPrimaryTemplateId = (
   dayTemplates: readonly RoleAwareTemplate[],
-): boolean => {
-  if (dayTemplates.length <= 1) return true;
+): string | undefined => {
+  if (dayTemplates.length === 0) return undefined;
+  if (dayTemplates.length === 1) return dayTemplates[0].templateId;
 
   if (hasExplicitSessionRoles(dayTemplates)) {
-    return template.sessionRole === "primary";
+    const explicit = dayTemplates.find((t) => t.sessionRole === "primary");
+    if (explicit) return explicit.templateId;
+    // Fall through: explicit roles present but no primary among them.
   }
 
   const sorted = [...dayTemplates].sort((a, b) =>
     a.templateId.localeCompare(b.templateId),
   );
-  return sorted[0]?.templateId === template.templateId;
+  return sorted[0]?.templateId;
 };
 
 /**
- * Count the optional-role templates on a day.
- *
- * Behavior:
- * - If ANY template on the day declares an explicit sessionRole, count the
- *   templates that are NOT primary (sessionRole !== "primary"). This
- *   intentionally includes both explicitly-`"optional"` templates and any
- *   unlabeled siblings — `isPrimaryTemplate` already treats unlabeled
- *   templates as non-primary in that mode, so totalOptional must agree
- *   or `optionalCompleted` will eventually exceed `totalOptional` and
- *   break the day-completion invariant.
- * - Otherwise (legacy programs with NO sessionRole anywhere), fall back to
- *   (dayTemplates.length - 1) under the historical assumption that the
- *   first-by-templateId template is primary and everything else is
- *   optional.
- *
- * Always returns >= 0.
+ * Determine whether a given template is the primary workout for its day.
+ * Single-template days: always primary. See `getPrimaryTemplateId` for the
+ * explicit-role-vs-fallback resolution rules.
+ */
+export const isPrimaryTemplate = (
+  template: RoleAwareTemplate,
+  dayTemplates: readonly RoleAwareTemplate[],
+): boolean => {
+  const primaryId = getPrimaryTemplateId(dayTemplates);
+  return primaryId !== undefined && primaryId === template.templateId;
+};
+
+/**
+ * Count optional-role templates on a day. Equivalent to
+ * `dayTemplates.length - 1` whenever there's a recognized primary, since
+ * "everything that isn't the primary is optional". Returns 0 for empty
+ * and single-template days. Always >= 0.
  */
 export const countOptionalTemplates = (
   dayTemplates: readonly RoleAwareTemplate[],
 ): number => {
   if (dayTemplates.length <= 1) return 0;
-
-  if (hasExplicitSessionRoles(dayTemplates)) {
-    return dayTemplates.filter((t) => t.sessionRole !== "primary").length;
-  }
-
-  return Math.max(0, dayTemplates.length - 1);
+  const primaryId = getPrimaryTemplateId(dayTemplates);
+  if (primaryId === undefined) return Math.max(0, dayTemplates.length - 1);
+  return dayTemplates.filter((t) => t.templateId !== primaryId).length;
 };
 
 /**

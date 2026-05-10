@@ -34,12 +34,22 @@ describe("isPrimaryTemplate (frontend)", () => {
     expect(isPrimaryTemplate(t2, day)).toBe(false);
   });
 
-  it("does NOT fall back when any sibling has explicit role", () => {
+  it("does NOT promote alphabetically-first when an explicit primary exists", () => {
     const labeledPrimary = makeTemplate("template_user_001_zzz", "primary");
     const unlabeled = makeTemplate("template_user_001_aaa");
     expect(isPrimaryTemplate(unlabeled, [labeledPrimary, unlabeled])).toBe(
       false,
     );
+  });
+
+  it("falls back to alphabetic when explicit roles exist but no primary (malformed)", () => {
+    // Runtime safety net for a shape the AI prompt + integration
+    // validator forbid. Better to surface SOME workout than nothing.
+    const t1 = makeTemplate("template_user_001_aaa", "optional");
+    const t2 = makeTemplate("template_user_001_zzz", "optional");
+    const day = [t2, t1];
+    expect(isPrimaryTemplate(t1, day)).toBe(true);
+    expect(isPrimaryTemplate(t2, day)).toBe(false);
   });
 });
 
@@ -64,6 +74,14 @@ describe("pickPrimaryTemplate (frontend)", () => {
   it("returns the alphabetically-first template for legacy programs", () => {
     const t1 = makeTemplate("template_user_001_aaa");
     const t2 = makeTemplate("template_user_001_zzz");
+    expect(pickPrimaryTemplate([t2, t1])).toBe(t1);
+  });
+
+  it("returns alphabetic-first for malformed explicit-role days (no primary)", () => {
+    // Guarantees the UI never silently shows "rest day" because of a
+    // missing/wrong sessionRole label.
+    const t1 = makeTemplate("template_user_001_aaa", "optional");
+    const t2 = makeTemplate("template_user_001_zzz", "optional");
     expect(pickPrimaryTemplate([t2, t1])).toBe(t1);
   });
 });
@@ -96,6 +114,17 @@ describe("countOptionalTemplates (frontend)", () => {
 
   it("falls back to length - 1 for legacy programs", () => {
     const day = [makeTemplate("a"), makeTemplate("b"), makeTemplate("c")];
+    expect(countOptionalTemplates(day)).toBe(2);
+  });
+
+  it("returns length - 1 for malformed explicit-role days (no primary)", () => {
+    // Stays in lockstep with the alphabetic safety net used by
+    // isPrimaryTemplate / pickPrimaryTemplate.
+    const day = [
+      makeTemplate("a", "optional"),
+      makeTemplate("b", "optional"),
+      makeTemplate("c", "optional"),
+    ];
     expect(countOptionalTemplates(day)).toBe(2);
   });
 });

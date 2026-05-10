@@ -39,10 +39,32 @@ describe("isPrimaryTemplate", () => {
       expect(isPrimaryTemplate(optional2, day)).toBe(false);
     });
 
-    it("does NOT fall back to alphabetic sort when explicit roles exist", () => {
+    it("does NOT promote alphabetically-first when an explicit primary exists", () => {
       // optional1 is alphabetically first ("aaa") but explicitly optional —
-      // it must remain optional, not get promoted by the legacy fallback.
+      // it must remain optional, not get promoted, because the day
+      // already has a real primary on a different template.
       expect(isPrimaryTemplate(optional1, day)).toBe(false);
+    });
+  });
+
+  describe("malformed days (explicit roles, but no primary)", () => {
+    // Runtime safety net: AI prompt + JSON schema + integration validator
+    // forbid this shape, but if it slips through we degrade gracefully
+    // by falling back to alphabetic sort instead of "no primary at all".
+    const t1 = makeTemplate("template_user_001_aaa", "optional");
+    const t2 = makeTemplate("template_user_001_zzz", "optional");
+    const day = [t2, t1];
+
+    it("falls back to alphabetic-first when no template is primary", () => {
+      expect(isPrimaryTemplate(t1, day)).toBe(true);
+      expect(isPrimaryTemplate(t2, day)).toBe(false);
+    });
+
+    it("countOptionalTemplates agrees with the fallback (length - 1)", () => {
+      // Without a fallback, countOptionalTemplates would have returned
+      // dayTemplates.length here (filter !== "primary" matches both),
+      // breaking the invariant `optionalCompleted ≤ totalOptional`.
+      expect(countOptionalTemplates(day)).toBe(1);
     });
   });
 
@@ -116,14 +138,19 @@ describe("countOptionalTemplates", () => {
       expect(countOptionalTemplates(day)).toBe(2);
     });
 
-    it("returns 0 when every template is explicitly primary", () => {
+    it("returns length - 1 when every template is explicitly primary", () => {
       // Edge case: malformed program where every template was labeled
-      // primary. Count reflects the labels — no fallback.
+      // primary. The shared resolver picks the first explicit primary
+      // (alphabetic by find order in the array) so isPrimaryTemplate
+      // identifies exactly one as primary; countOptionalTemplates must
+      // agree (everything else is non-primary).
       const day = [
         makeTemplate("a", "primary"),
         makeTemplate("b", "primary"),
       ];
-      expect(countOptionalTemplates(day)).toBe(0);
+      expect(countOptionalTemplates(day)).toBe(1);
+      expect(isPrimaryTemplate(day[0], day)).toBe(true);
+      expect(isPrimaryTemplate(day[1], day)).toBe(false);
     });
   });
 
