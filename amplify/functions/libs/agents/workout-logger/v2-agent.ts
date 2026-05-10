@@ -156,9 +156,14 @@ export class WorkoutLoggerAgentV2 {
       context,
       runtime: new SyncRuntime<WorkoutLoggerContext>(),
       modelId: MODEL_IDS.PLANNER_MODEL_FULL,
+      // staticPrompt + dynamicPrompt enable Bedrock prompt caching; the
+      // single-string `systemPrompt` field is documented as fallback-only
+      // and `SyncRuntime` resolves it as
+      // `input.systemPrompt ?? input.staticPrompt ?? ...`. We omit it
+      // here so there's no chance of double-sending if a future runtime
+      // refactor mishandles the precedence (Bugbot finding aafdb11c).
       staticPrompt: fullPrompt,
       dynamicPrompt,
-      systemPrompt: fullPrompt,
       tools: [
         // All Bedrock-calling tools get a 60s ceiling (mirrors the
         // coach-creator/v2 follow-up fix). extract_workout_data gets
