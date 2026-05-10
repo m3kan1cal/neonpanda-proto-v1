@@ -14,6 +14,8 @@ export class RunMetrics {
   parallelToolBatches = 0;
   modelFallbacks = 0;
   toolRetries = 0;
+  /** Tools that hit their `timeoutMs` and were aborted by the scheduler. */
+  toolTimeouts = 0;
   inputTokens = 0;
   outputTokens = 0;
   cacheReadInputTokens = 0;
@@ -35,6 +37,7 @@ export class RunMetrics {
       parallelToolBatches: this.parallelToolBatches,
       modelFallbacks: this.modelFallbacks,
       toolRetries: this.toolRetries,
+      toolTimeouts: this.toolTimeouts,
       inputTokens: this.inputTokens,
       outputTokens: this.outputTokens,
       cacheReadInputTokens: this.cacheReadInputTokens,

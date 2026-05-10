@@ -112,6 +112,16 @@ export interface WorkoutTemplate {
   name: string; // "Strength Block", "Lower Body Burn" (user-facing name)
   type: TemplateType; // Type of workout
 
+  // === Session Role (multi-template days) ===
+  // On single-template days: omit (defaults to primary).
+  // On multi-template days: EXACTLY ONE template must be "primary" (the
+  // workout the user must complete to advance the program), all others must
+  // be "optional" (supplementary work the user may skip without blocking
+  // day advancement). Backward-compat: when no template on a day declares
+  // sessionRole, callers should fall back to a deterministic primary by
+  // sorted templateId (see template-linking helpers).
+  sessionRole?: "primary" | "optional";
+
   // === Natural Language Content ===
   description: string; // Natural language workout (coach-like, prescriptive)
   prescribedExercises: string[]; // ["Back Squat", "KB Swings"] - for AI context & filtering

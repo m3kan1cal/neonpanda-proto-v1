@@ -7,6 +7,91 @@
 import { getProgram, updateProgram } from "../../../dynamodb/operations";
 import { getProgramDetailsFromS3, saveProgramDetailsToS3 } from "./s3-utils";
 import { logger } from "../logger";
+import type { WorkoutTemplate } from "./types";
+
+// Minimum shape required by the role helpers. Lets callers pass either full
+// WorkoutTemplate values (post-typing) or loosely-typed S3 records (legacy).
+type RoleAwareTemplate = Pick<WorkoutTemplate, "templateId"> & {
+  sessionRole?: WorkoutTemplate["sessionRole"];
+};
+
+/**
+ * Returns true when at least one template in the day group declares an
+ * explicit sessionRole. Used to choose between the explicit-role path and
+ * the legacy alphabetic-sort fallback.
+ */
+const hasExplicitSessionRoles = (
+  dayTemplates: readonly RoleAwareTemplate[],
+): boolean =>
+  dayTemplates.some(
+    (t) => t.sessionRole === "primary" || t.sessionRole === "optional",
+  );
+
+/**
+ * Single source of truth for "which template is the day's primary?".
+ * All three exported helpers (isPrimaryTemplate, countOptionalTemplates,
+ * and the per-day pruner summary) derive from this so they cannot drift.
+ *
+ * Resolution order:
+ *  1. Empty day → undefined.
+ *  2. Single-template day → that template's id.
+ *  3. Explicit roles present AND a sessionRole === "primary" exists →
+ *     that template's id.
+ *  4. Otherwise (legacy programs with no sessionRole anywhere, OR
+ *     malformed explicit-role days that lack a primary) → alphabetic sort
+ *     by templateId, first wins. The alphabetic fallback for malformed
+ *     explicit-role days exists so a single missing/wrong label can't
+ *     break the UI ("today's workout disappears") or the day-advancement
+ *     logic. The integration validator on test-build-program asserts the
+ *     "exactly one primary" invariant so malformed days are caught at
+ *     generation time — this fallback is a runtime safety net, not a
+ *     blessing of the malformed shape.
+ */
+const getPrimaryTemplateId = (
+  dayTemplates: readonly RoleAwareTemplate[],
+): string | undefined => {
+  if (dayTemplates.length === 0) return undefined;
+  if (dayTemplates.length === 1) return dayTemplates[0].templateId;
+
+  if (hasExplicitSessionRoles(dayTemplates)) {
+    const explicit = dayTemplates.find((t) => t.sessionRole === "primary");
+    if (explicit) return explicit.templateId;
+    // Fall through: explicit roles present but no primary among them.
+  }
+
+  const sorted = [...dayTemplates].sort((a, b) =>
+    a.templateId.localeCompare(b.templateId),
+  );
+  return sorted[0]?.templateId;
+};
+
+/**
+ * Determine whether a given template is the primary workout for its day.
+ * Single-template days: always primary. See `getPrimaryTemplateId` for the
+ * explicit-role-vs-fallback resolution rules.
+ */
+export const isPrimaryTemplate = (
+  template: RoleAwareTemplate,
+  dayTemplates: readonly RoleAwareTemplate[],
+): boolean => {
+  const primaryId = getPrimaryTemplateId(dayTemplates);
+  return primaryId !== undefined && primaryId === template.templateId;
+};
+
+/**
+ * Count optional-role templates on a day. Equivalent to
+ * `dayTemplates.length - 1` whenever there's a recognized primary, since
+ * "everything that isn't the primary is optional". Returns 0 for empty
+ * and single-template days. Always >= 0.
+ */
+export const countOptionalTemplates = (
+  dayTemplates: readonly RoleAwareTemplate[],
+): number => {
+  if (dayTemplates.length <= 1) return 0;
+  const primaryId = getPrimaryTemplateId(dayTemplates);
+  if (primaryId === undefined) return Math.max(0, dayTemplates.length - 1);
+  return dayTemplates.filter((t) => t.templateId !== primaryId).length;
+};
 
 /**
  * Link a completed workout to its template in a training program
@@ -150,15 +235,13 @@ export const revertTemplateStatus = async (
     const dayNumber: number = template.dayNumber;
 
     // Mirror log-workout-template's STEP 6 ordering so we revert the same
-    // bucket (primary vs. optional) that was incremented.
+    // bucket (primary vs. optional) that was incremented. Uses the shared
+    // role helpers so explicit sessionRole and legacy alphabetic-sort
+    // programs are handled the same way across handlers.
     const dayTemplates = programDetails.workoutTemplates.filter(
       (t: any) => t.dayNumber === dayNumber,
     );
-    const sortedTemplates = [...dayTemplates].sort((a: any, b: any) =>
-      a.templateId.localeCompare(b.templateId),
-    );
-    const isPrimary =
-      sortedTemplates[0]?.templateId === templateContext.templateId;
+    const isPrimary = isPrimaryTemplate(template, dayTemplates);
 
     template.status = "pending";
     template.completedAt = null;

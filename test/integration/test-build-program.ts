@@ -753,15 +753,17 @@ async function runTestCase(
     lambdaStartTime,
     {
       waitMs: LOG_WAIT_TIME,
-      // Markers help confirm v2-framework instrumentation is firing as
-      // expected. Counts surface in the logs summary and the saved
-      // .log file header.
+      // Substring markers help confirm v2-framework instrumentation is
+      // firing as expected. NOTE: structured per-run metrics
+      // (parallelToolBatches, toolRetries, toolTimeouts, modelFallbacks,
+      // tokens, totalDurationMs) are now parsed directly from each
+      // `agent.run.completed` log line via cloudwatch-logs.ts and
+      // surfaced in the .log file header + per-test summary printout.
+      // See `summary.agentRunMetrics`.
       markers: {
         agentInitWithCaching: "🔥 ProgramDesignerAgentV2 initialized",
         phaseGenCompletions: "generate_phase_workouts completed for phase",
-        parallelToolBatches: "🚀 Executing",
         agentRunCompleted: "agent.run.completed",
-        toolTimeouts: "code\":\"timeout\"",
       },
     },
   );
@@ -1207,6 +1209,60 @@ async function validateS3Content(
         name: "S3: Workout days within phase ranges",
         passed: invalidDayNumbers.length === 0,
       });
+
+      // === sessionRole invariant (F2) =====================================
+      // For every multi-template day:
+      //   - If ANY template on the day declares an explicit sessionRole, then
+      //     EXACTLY ONE template must be "primary" and all others "optional"
+      //     (no missing labels, no second primary, no rogue values).
+      //   - If NO template on the day declares sessionRole, the day is a
+      //     legacy day — backward compat permits this. Single-template days
+      //     are exempt entirely.
+      // We surface (a) total multi-template days, (b) days that declare
+      // explicit roles, (c) days that violate the invariant.
+      const multiTemplateDays = Object.values(templatesByDay).filter(
+        (day) => day.length > 1,
+      );
+
+      const explicitRoleDays = multiTemplateDays.filter((day) =>
+        day.some(
+          (t: any) =>
+            t.sessionRole === "primary" || t.sessionRole === "optional",
+        ),
+      );
+
+      const invariantViolations = explicitRoleDays.filter((day) => {
+        const primaryCount = day.filter(
+          (t: any) => t.sessionRole === "primary",
+        ).length;
+        const optionalCount = day.filter(
+          (t: any) => t.sessionRole === "optional",
+        ).length;
+        const labeledCount = primaryCount + optionalCount;
+        return (
+          primaryCount !== 1 ||
+          // Every template on the day must carry an explicit role once any
+          // template does. No partial labeling.
+          labeledCount !== day.length
+        );
+      });
+
+      const invariantPassed = invariantViolations.length === 0;
+      validations.push({
+        name: `S3: sessionRole invariant on multi-template days (${explicitRoleDays.length}/${multiTemplateDays.length} days have explicit roles)`,
+        passed: invariantPassed,
+      });
+
+      if (!invariantPassed) {
+        console.info(
+          `   ⚠️  sessionRole invariant violations on ${invariantViolations.length} day(s):`,
+          invariantViolations.map((day) => ({
+            dayNumber: day[0]?.dayNumber,
+            templateIds: day.map((t: any) => t.templateId),
+            sessionRoles: day.map((t: any) => t.sessionRole ?? null),
+          })),
+        );
+      }
     }
   } catch (s3Error: any) {
     validations.push({

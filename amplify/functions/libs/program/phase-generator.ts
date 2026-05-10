@@ -719,6 +719,31 @@ Each workout must follow the segmented, implicitly grouped structure:
   * "Olympic Lifting" + "Conditioning"
   * "Upper Body Strength" + "Metcon"
 
+### Multi-Template Days (sessionRole):
+On any given day (templates sharing the same groupId), you MUST label each
+template's role explicitly so the platform knows which workout gates day
+advancement and which work is supplementary:
+
+- **Single-template days**: omit \`sessionRole\` (defaults to primary).
+- **Multi-template days**: assign \`sessionRole\` on EVERY template:
+  * EXACTLY ONE template per day must be \`"primary"\` — the workout the
+    user must complete to advance the program (typically the main
+    strength/conditioning piece, the lift, or the named session).
+  * ALL OTHER templates must be \`"optional"\` — supplementary work the
+    user may skip without blocking day advancement (metabolic finishers,
+    accessory blocks, recovery flows, AM/PM secondary sessions).
+
+How to choose the primary:
+- The "main event" of the day. If the day is built around a strength lift,
+  that lift is primary. If it's built around a metcon, the metcon is primary.
+- Accessory / pump work is almost always optional.
+- Mobility, recovery, and finishers are optional.
+- For AM/PM splits, the harder/named session is primary; the lighter
+  session is optional.
+
+Day progression: only the primary needs to be completed (or skipped) for
+the day to advance. Optional work boosts adherence but is never gated.
+
 ### Template ID Patterns:
 - templateId: "template_\${userId}_\${phaseId}_\${unique}"
 - groupId: "group_\${userId}_\${phaseId}_day\${dayNumber}"

@@ -61,6 +61,7 @@ import {
 import { generateProgramSummary } from "../../program/summary";
 import { storeProgramSummaryInPinecone } from "../../program/pinecone";
 import { storeProgramDetailsInS3 } from "../../program/s3-utils";
+import { buildDayPruneSummaries } from "./prune-helpers";
 import {
   storeGenerationDebugData,
   calculateProgramMetrics,
@@ -1038,15 +1039,14 @@ Returns: prunedWorkoutTemplates, removedCount, keptCount, removalReasoning, phas
       `📦 Retrieved ${allWorkoutTemplates.length} workout templates from ${phaseWorkoutResults.length} phases`,
     );
 
-    // Build prompt for AI to select which workouts to remove
-    const workoutMetadata = allWorkoutTemplates.map((w: WorkoutTemplate) => ({
-      templateId: w.templateId,
-      dayNumber: w.dayNumber,
-      phaseId: w.phaseId,
-      name: w.name,
-      type: w.type,
-      estimatedDuration: w.estimatedDuration,
-    }));
+    // Group templates by day so the AI can reason about whole-day removal
+    // (which is the only granularity this tool supports). Per-day summaries
+    // surface which template is the day's "primary" (the work the user must
+    // complete to advance) vs. "optional" supplementary work, using the
+    // sessionRole-aware helper with legacy alphabetic-sort fallback.
+    const daySummaries = buildDayPruneSummaries(
+      allWorkoutTemplates as WorkoutTemplate[],
+    );
 
     const prompt = `You are a training program optimizer. You need to remove ${excessDays} training days from this program to match the user's requested training frequency.
 
@@ -1057,33 +1057,41 @@ Unique training days: ${currentTrainingDays}
 Target training days: ${targetTrainingDays}
 Days to remove: ${excessDays}
 
-## WORKOUT METADATA
+## DAYS (one entry per dayNumber)
 
-${JSON.stringify(workoutMetadata, null, 2)}
+Each day has ONE primary workout (the work the user must complete to
+advance) and zero or more optional supplementary workouts. Pruning operates
+at day granularity — removing a day removes its primary AND all of its
+optionals together.
+
+${JSON.stringify(daySummaries, null, 2)}
 
 ## YOUR TASK
 
-Select ${excessDays} training days (dayNumber values) to REMOVE from the program.
+Select ${excessDays} dayNumber values to REMOVE from the program.
 
-## PRIORITIZATION FOR REMOVAL (remove these first):
-1. Days with type: "accessory" or "optional"
-2. Extra conditioning/metcon days
-3. Days in later phases (preserve early foundation work)
-4. Days with longer estimated duration (easier to skip)
-5. Days that create clusters (remove to spread out rest days)
+## PRIORITIZATION FOR REMOVAL (remove these first)
+1. Days whose primary type is "accessory", "conditioning", "mobility",
+   "recovery", "flexibility", "balance", "core", or "stability"
+   (supplementary or low-stakes work).
+2. Days that consist of mostly optional volume with a low-stakes primary
+   (high optional count + non-strength primary).
+3. Extra conditioning / metcon days that duplicate similar days nearby.
+4. Days in later phases (preserve early foundation work).
+5. Days that create clusters (remove to spread out rest days more evenly).
 
-## PRESERVATION PRIORITIES (keep these):
-1. Days with type: "primary" or "strength"
-2. Early phase foundation work
-3. Skill development days
-4. Days with progressive overload markers
-5. Workouts critical to program goals
+## PRESERVATION PRIORITIES (keep these)
+1. Days whose primary type is "strength", "power", "olympic", or "skill"
+   (core work that drives program goals).
+2. Early phase foundation work and named/anchor sessions.
+3. Days with progressive overload markers in the primary.
+4. Workouts critical to the user's stated program goals.
 
 ## CONSTRAINTS
-- Remove ENTIRE training days (all templates sharing the same dayNumber)
-- Maintain even distribution across the program
-- Don't create large gaps in training
-- Preserve program progression logic
+- Remove ENTIRE training days (the day's primary AND all its optionals).
+- Maintain even distribution across the program.
+- Don't create large gaps in training.
+- Preserve program progression logic.
 
 Return an array of dayNumber values to REMOVE (not keep).`;
 
