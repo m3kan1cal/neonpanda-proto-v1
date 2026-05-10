@@ -326,7 +326,14 @@ export class ProgramDesignerAgentV2 {
       const userMessage =
         "Design the complete training program based on the provided todo list and context.";
       const result = await this.agent.run({ userMessage });
-      const built = this.buildResultFromToolData(result.finalResponseText);
+      // Use last-turn text rather than the accumulated transcript so the
+      // failure-path "reason" surfaced from `buildResultFromToolData`
+      // reflects the model's actual final assistant message, not stale
+      // preamble from earlier `tool_use` turns. Matches v1 behavior
+      // (one converse call = one turn) and workout-logger v2 (Bugbot
+      // ec6c75b5; see workout-logger/v2-agent.ts comment for the
+      // 3fec1de7 precedent).
+      const built = this.buildResultFromToolData(result.lastTurnResponseText);
       logger.info("ProgramDesignerAgentV2 completed", {
         success: built.success,
         programId: built.programId,
