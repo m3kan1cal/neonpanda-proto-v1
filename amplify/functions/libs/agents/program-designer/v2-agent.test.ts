@@ -384,6 +384,133 @@ describe("ProgramDesignerAgentV2", () => {
     expect(generatePhaseWorkoutsTool.execute).toHaveBeenCalledTimes(1);
   });
 
+  it("treats generate_phase_workouts scheduler-timeout failures as infrastructure errors (skipped: false)", async () => {
+    // Real timeouts come from ToolScheduler's AbortController + Promise.race
+    // and land in the store as `{ ok: false, code: "timeout" }`. The
+    // legacy-adapter's exception path translates thrown errors to
+    // `code: "permanent"`, so we can't trigger a true scheduler timeout
+    // by mocking execute() to throw — instead we drive the agent through
+    // a turn that completes normally, then seed the timeout-shaped
+    // failure directly into the result store before asking the agent
+    // to build its final result. This isolates the result-builder's
+    // skipped-vs-infrastructure-failure logic.
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 4,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [{ phaseId: "phase_1" }],
+    });
+    (generatePhaseWorkoutsTool.execute as any).mockResolvedValue({
+      workoutTemplates: [{ id: "wt_phase_1_1" }],
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_1" },
+          }),
+        ],
+        "tool_use",
+      ),
+      turn([{ text: "Phase generation done." }], "end_turn"),
+    ]);
+
+    await (agent as any).agent.run({ userMessage: "test" });
+
+    // Seed a scheduler-shaped timeout failure at the canonical key, the
+    // exact shape ToolScheduler stores for an aborted call.
+    const store = (agent as any).agent.getResultStore();
+    store.put("generate_phase_workouts", {
+      ok: false,
+      code: "timeout",
+      message: "generate_phase_workouts timed out after 240000ms",
+      retryable: false,
+      details: { errorName: "TimeoutError" },
+    });
+
+    const built = (agent as any).buildResultFromToolData(
+      "Phase generation timed out.",
+    );
+    expect(built.success).toBe(false);
+    expect(built.skipped).toBe(false);
+    expect(built.reason).toMatch(/timed out|infrastructure/i);
+  });
+
+  it("shouldRetry detects a scheduler timeout in the store and triggers a single workflow retry", async () => {
+    // Drive the agent's first pass to completion, then seed a
+    // timeout-shaped failure at the canonical key and run a second
+    // pass. shouldRetry must observe the timeout and ask the framework
+    // to retry — verified by load_program_requirements being called
+    // again on the retry round.
+    (loadProgramRequirementsTool.execute as any).mockResolvedValue({
+      programDuration: 28,
+      trainingFrequency: 4,
+    });
+    (generatePhaseStructureTool.execute as any).mockResolvedValue({
+      phases: [{ phaseId: "phase_1" }],
+    });
+    (generatePhaseWorkoutsTool.execute as any).mockResolvedValue({
+      workoutTemplates: [{ id: "wt_phase_1_1" }],
+    });
+
+    const agent = new ProgramDesignerAgentV2(baseContext);
+    wireRuntime([
+      // First pass.
+      turn([toolUseBlock("u1", "load_program_requirements", {})], "tool_use"),
+      turn([toolUseBlock("u2", "generate_phase_structure", {})], "tool_use"),
+      turn(
+        [
+          toolUseBlock("u3", "generate_phase_workouts", {
+            phase: { phaseId: "phase_1" },
+          }),
+        ],
+        "tool_use",
+      ),
+      // First end_turn — shouldRetry runs here. After we seed the
+      // timeout below, the retry round should fire.
+      turn([{ text: "Phase generation timed out." }], "end_turn"),
+      // Retry round (load is rerun by the retry, store cleared).
+      turn([toolUseBlock("u4", "load_program_requirements", {})], "tool_use"),
+      turn([{ text: "Stopping after retry." }], "end_turn"),
+    ]);
+
+    // Pre-stage the timeout failure: we can't time it precisely between
+    // turns, but shouldRetry only runs after end_turn, so we install a
+    // hook that mutates the store right before end_turn fires. Easiest:
+    // install via the runtime mock — wrap invokeTurn so the third turn
+    // (after which shouldRetry runs) leaves a timeout in the store.
+    const runtimeInstance = (SyncRuntime as any).mock.instances.at(-1);
+    const originalInvoke = runtimeInstance.invokeTurn;
+    let turnIdx = 0;
+    runtimeInstance.invokeTurn = vi.fn(async (...args: any[]) => {
+      const result = await originalInvoke(...args);
+      turnIdx++;
+      if (turnIdx === 4) {
+        // Right before shouldRetry runs (end_turn of first pass).
+        const store = (agent as any).agent.getResultStore();
+        store.put("generate_phase_workouts", {
+          ok: false,
+          code: "timeout",
+          message: "generate_phase_workouts timed out",
+          retryable: false,
+          details: { errorName: "TimeoutError" },
+        });
+      }
+      return result;
+    });
+
+    await agent.designProgram();
+
+    // load was called twice — once in the first pass, once after the
+    // retry triggered by the timeout-detection branch in shouldRetry.
+    expect(loadProgramRequirementsTool.execute).toHaveBeenCalledTimes(2);
+  });
+
   it("returns skipped result with the agent response when no tools are called", async () => {
     const agent = new ProgramDesignerAgentV2(baseContext);
     wireRuntime([

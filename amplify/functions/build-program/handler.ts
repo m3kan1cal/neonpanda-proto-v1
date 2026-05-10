@@ -486,7 +486,7 @@ export const handler = async (event: BuildProgramEvent) => {
 
         return createOkResponse({
           success: false,
-          skipped: true,
+          skipped: result.skipped ?? true,
           reason: result.reason,
         });
       }

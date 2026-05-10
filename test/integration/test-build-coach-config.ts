@@ -60,10 +60,14 @@
  */
 
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
 import {
-  CloudWatchLogsClient,
-  FilterLogEventsCommand,
-} from "@aws-sdk/client-cloudwatch-logs";
+  fetchLambdaLogs,
+  writeLogsFile,
+  logsSummaryForJson,
+  printLogsSummary,
+  type CloudWatchLogsSummary,
+} from "./helpers/cloudwatch-logs";
 import * as fs from "fs";
 import * as path from "path";
 import readline from "readline";
@@ -103,12 +107,13 @@ interface TestResult {
   error?: string;
   coachConfig?: any;
   session?: any;
+  logs?: CloudWatchLogsSummary;
 }
 
 // Configuration
 const DEFAULT_REGION = "us-west-2";
 const DEFAULT_FUNCTION =
-  "amplify-neonpandaprotov1--buildcoachconfiglambdaA4-1H0brHFtypZM"; // Update with actual function name
+  "amplify-neonpandaprotov1--buildcoachconfiglambdaA4-NyiACUbVRZIF"; // Update with actual function name
 const LOG_WAIT_TIME = 30000; // Wait 30s for logs (coach config generation takes time)
 // Note: DynamoDB table name is handled by centralized operations.ts (uses getTableName())
 
@@ -598,8 +603,10 @@ async function runTestCase(
   verbose: boolean = false,
 ): Promise<TestResult> {
   const lambdaClient = new LambdaClient({ region: DEFAULT_REGION });
+  const logsClient = new CloudWatchLogsClient({ region: DEFAULT_REGION });
   const userId = TEST_USER_ID;
   let sessionId: string | null = null;
+  let cwLogs: CloudWatchLogsSummary | undefined;
 
   try {
     // Step 1: Create session if overrides provided
@@ -614,7 +621,9 @@ async function runTestCase(
       );
     }
 
-    // Step 2: Invoke Lambda
+    // Step 2: Invoke Lambda. Capture before invoke so the CloudWatch
+    // query window covers the entire Lambda execution.
+    const lambdaStartTime = Date.now();
     console.info("🚀 Invoking build-coach-config Lambda...");
     const invokeCommand = new InvokeCommand({
       FunctionName: DEFAULT_FUNCTION,
@@ -643,9 +652,26 @@ async function runTestCase(
       });
     }
 
-    // Step 3: Wait for processing
-    console.info("⏳ Waiting for processing...");
-    await new Promise((resolve) => setTimeout(resolve, LOG_WAIT_TIME));
+    // Step 3: Fetch CloudWatch logs (helper sleeps internally).
+    console.info("📋 Fetching CloudWatch logs...");
+    cwLogs = await fetchLambdaLogs(
+      logsClient,
+      DEFAULT_FUNCTION,
+      lambdaStartTime,
+      {
+        waitMs: LOG_WAIT_TIME,
+        markers: {
+          coachCreatorAgentInit: "CoachCreatorAgentV2 initialized",
+          toolExecutions: "[TOOL_START]",
+          toolSuccess: "[TOOL_SUCCESS]",
+          toolErrors: "[TOOL_ERROR]",
+          toolBlocked: "[TOOL_BLOCKED]",
+          agentRunCompleted: "agent.run.completed",
+          toolTimeouts: "code\":\"timeout\"",
+        },
+      },
+    );
+    printLogsSummary(cwLogs);
 
     // Step 4: Validate response
     const validations: ValidationResult[] = [];
@@ -838,6 +864,7 @@ async function runTestCase(
       validations,
       failures,
       response: payload,
+      logs: cwLogs,
     };
   } catch (error) {
     console.error("❌ Test error:", error);
@@ -846,6 +873,7 @@ async function runTestCase(
       passed: false,
       error: error instanceof Error ? error.message : "Unknown error",
       failures: ["Test execution failed"],
+      logs: cwLogs,
     };
   }
 }
@@ -940,6 +968,9 @@ async function runTests() {
             validations: result.validations,
             failures: result.failures,
             response: result.response,
+            // Log summary only — full event stream goes to the
+            // adjacent .log file to keep this JSON scannable.
+            logs: result.logs ? logsSummaryForJson(result.logs) : undefined,
             config: {
               region: DEFAULT_REGION,
               function: DEFAULT_FUNCTION,
@@ -954,6 +985,26 @@ async function runTests() {
           console.info(
             `   💾 Result saved to: ${path.basename(individualFile)}`,
           );
+
+          if (result.logs) {
+            const logsFile = path.join(
+              outputDir,
+              `${timestamp}_${sanitizedTestName}_logs.log`,
+            );
+            try {
+              writeLogsFile(logsFile, result.logs, {
+                testName: testCase.name,
+                functionName: DEFAULT_FUNCTION,
+              });
+              console.info(
+                `   💾 Logs saved to: ${path.basename(logsFile)}`,
+              );
+            } catch (err) {
+              console.warn(
+                `   ⚠️  Failed to save logs file: ${(err as Error).message}`,
+              );
+            }
+          }
         } catch (error) {
           console.error(
             `   ⚠️  Failed to save individual result: ${(error as Error).message}`,
