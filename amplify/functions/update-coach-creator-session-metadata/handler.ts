@@ -7,10 +7,7 @@
  */
 
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
-import {
-  getCoachCreatorSession,
-  updateCoachCreatorSession,
-} from "../../dynamodb/operations";
+import { updateCoachCreatorSession } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { logger } from "../libs/logger";
 
@@ -51,14 +48,19 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, "title must be 100 characters or fewer");
   }
 
-  const existing = await getCoachCreatorSession(userId, sessionId);
-  if (!existing) {
-    return createErrorResponse(404, "Coach creator session not found");
+  // The DynamoDB update loads the item and throws "not found" if missing,
+  // so a separate existence check would just double the reads.
+  let updated;
+  try {
+    updated = await updateCoachCreatorSession(userId, sessionId, {
+      title: trimmed,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      return createErrorResponse(404, "Coach creator session not found");
+    }
+    throw error;
   }
-
-  const updated = await updateCoachCreatorSession(userId, sessionId, {
-    title: trimmed,
-  });
 
   logger.info("Coach creator session metadata updated:", {
     userId,
