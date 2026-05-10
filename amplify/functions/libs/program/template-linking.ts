@@ -7,6 +7,78 @@
 import { getProgram, updateProgram } from "../../../dynamodb/operations";
 import { getProgramDetailsFromS3, saveProgramDetailsToS3 } from "./s3-utils";
 import { logger } from "../logger";
+import type { WorkoutTemplate } from "./types";
+
+// Minimum shape required by the role helpers. Lets callers pass either full
+// WorkoutTemplate values (post-typing) or loosely-typed S3 records (legacy).
+type RoleAwareTemplate = Pick<WorkoutTemplate, "templateId"> & {
+  sessionRole?: WorkoutTemplate["sessionRole"];
+};
+
+/**
+ * Returns true when at least one template in the day group declares an
+ * explicit sessionRole. Used to choose between the explicit-role path and
+ * the legacy alphabetic-sort fallback.
+ */
+const hasExplicitSessionRoles = (
+  dayTemplates: readonly RoleAwareTemplate[],
+): boolean =>
+  dayTemplates.some(
+    (t) => t.sessionRole === "primary" || t.sessionRole === "optional",
+  );
+
+/**
+ * Determine whether a given template is the primary workout for its day.
+ *
+ * Behavior:
+ * - If ANY template on the day declares an explicit sessionRole, the
+ *   template is primary iff its own sessionRole === "primary".
+ * - Otherwise (legacy programs that pre-date the sessionRole field),
+ *   fall back to deterministic alphabetic sort by templateId — the first
+ *   template wins. This matches the historical convention used by
+ *   log-workout-template / skip-workout-template.
+ *
+ * Single-template days: the template is always primary.
+ */
+export const isPrimaryTemplate = (
+  template: RoleAwareTemplate,
+  dayTemplates: readonly RoleAwareTemplate[],
+): boolean => {
+  if (dayTemplates.length <= 1) return true;
+
+  if (hasExplicitSessionRoles(dayTemplates)) {
+    return template.sessionRole === "primary";
+  }
+
+  const sorted = [...dayTemplates].sort((a, b) =>
+    a.templateId.localeCompare(b.templateId),
+  );
+  return sorted[0]?.templateId === template.templateId;
+};
+
+/**
+ * Count the optional-role templates on a day.
+ *
+ * Behavior:
+ * - If ANY template on the day declares an explicit sessionRole, count the
+ *   templates whose sessionRole === "optional".
+ * - Otherwise (legacy programs), fall back to (dayTemplates.length - 1)
+ *   under the historical assumption that the first-by-templateId template
+ *   is primary and everything else is optional.
+ *
+ * Always returns >= 0.
+ */
+export const countOptionalTemplates = (
+  dayTemplates: readonly RoleAwareTemplate[],
+): number => {
+  if (dayTemplates.length <= 1) return 0;
+
+  if (hasExplicitSessionRoles(dayTemplates)) {
+    return dayTemplates.filter((t) => t.sessionRole === "optional").length;
+  }
+
+  return Math.max(0, dayTemplates.length - 1);
+};
 
 /**
  * Link a completed workout to its template in a training program
@@ -150,15 +222,13 @@ export const revertTemplateStatus = async (
     const dayNumber: number = template.dayNumber;
 
     // Mirror log-workout-template's STEP 6 ordering so we revert the same
-    // bucket (primary vs. optional) that was incremented.
+    // bucket (primary vs. optional) that was incremented. Uses the shared
+    // role helpers so explicit sessionRole and legacy alphabetic-sort
+    // programs are handled the same way across handlers.
     const dayTemplates = programDetails.workoutTemplates.filter(
       (t: any) => t.dayNumber === dayNumber,
     );
-    const sortedTemplates = [...dayTemplates].sort((a: any, b: any) =>
-      a.templateId.localeCompare(b.templateId),
-    );
-    const isPrimary =
-      sortedTemplates[0]?.templateId === templateContext.templateId;
+    const isPrimary = isPrimaryTemplate(template, dayTemplates);
 
     template.status = "pending";
     template.completedAt = null;

@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { buttonPatterns } from "../../utils/ui/uiPatterns";
+import { pickPrimaryTemplate } from "../../utils/programs/templateRoles";
 import { WorkoutIconSmall } from "../themes/SynthwaveComponents";
 import { InlineError } from "../shared/ErrorStates";
 import CollapsibleSection from "./CollapsibleSection";
@@ -140,12 +141,11 @@ function TodaysWorkoutCard({
   }
 
   const { dayNumber, phaseName, templates } = todaysWorkout;
-  // Sort templates by templateId to get the "primary" template consistently
-  // (the first template sorted by ID is considered the main workout for the day)
-  const sortedTemplates = [...templates].sort((a, b) =>
-    a.templateId.localeCompare(b.templateId),
-  );
-  const primaryTemplate = sortedTemplates[0];
+  // Pick the day's "primary" template (the workout the user must complete
+  // to advance the program). sessionRole-aware with legacy alphabetic-sort
+  // fallback — keep in sync with the backend helper in
+  // amplify/functions/libs/program/template-linking.ts.
+  const primaryTemplate = pickPrimaryTemplate(templates);
 
   if (!primaryTemplate) {
     // No primary template - show rest day

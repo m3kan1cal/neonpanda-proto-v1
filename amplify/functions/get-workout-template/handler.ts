@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { getProgram, getUserProfile } from "../../dynamodb/operations";
 import { getProgramDetailsFromS3 } from "../libs/program/s3-utils";
 import { getPhaseForDay } from "../libs/program/calendar-utils";
+import { countOptionalTemplates } from "../libs/program/template-linking";
 import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
 import { TodaysWorkoutTemplates } from "../libs/program/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
@@ -183,7 +184,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         completionStatus: program.dayCompletionStatus?.[currentDay] || {
           primaryComplete: false,
           optionalCompleted: 0,
-          totalOptional: templates.length - 1, // All but first template
+          // sessionRole-aware fallback (legacy programs: length - 1).
+          totalOptional: countOptionalTemplates(templates),
         },
       });
     }

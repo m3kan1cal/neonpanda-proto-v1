@@ -30,6 +30,10 @@ import {
   getDefaultScalingAnalysis,
   normalizeScalingAnalysis,
 } from "../libs/program/scaling-analysis";
+import {
+  isPrimaryTemplate,
+  countOptionalTemplates,
+} from "../libs/program/template-linking";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -295,12 +299,9 @@ ${userPerformance}`;
         (t: WorkoutTemplate) => t.dayNumber === dayNumber,
       );
 
-      // First template of the day is considered primary (for day advancement logic)
-      const sortedTemplates = [...dayTemplates].sort((a, b) =>
-        a.templateId.localeCompare(b.templateId),
-      );
-
-      const totalOptional = dayTemplates.length - 1; // All templates except first
+      // sessionRole-aware: count templates explicitly marked optional (or
+      // fall back to length - 1 for legacy programs without sessionRole).
+      const totalOptional = countOptionalTemplates(dayTemplates);
 
       program.dayCompletionStatus[dayNumber] = {
         primaryComplete: false,
@@ -309,14 +310,12 @@ ${userPerformance}`;
       };
     }
 
-    // Get all templates for this day to determine if this is the primary template
+    // Get all templates for this day to determine if this is the primary
+    // template (sessionRole-aware with legacy alphabetic-sort fallback).
     const dayTemplates = programDetails.workoutTemplates.filter(
       (t: WorkoutTemplate) => t.dayNumber === dayNumber,
     );
-    const sortedTemplates = [...dayTemplates].sort((a, b) =>
-      a.templateId.localeCompare(b.templateId),
-    );
-    const isPrimary = sortedTemplates[0]?.templateId === template.templateId;
+    const isPrimary = isPrimaryTemplate(template, dayTemplates);
 
     // Update completion status
     if (isPrimary) {
