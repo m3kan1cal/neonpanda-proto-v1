@@ -157,9 +157,14 @@ export class ProgramDesignerAgentV2 {
       context,
       runtime: new SyncRuntime<ProgramDesignerContext>(),
       modelId: MODEL_IDS.PLANNER_MODEL_FULL,
+      // Caching path: SyncRuntime resolves the system text via
+      // `systemPrompt ?? staticPrompt ?? dynamicPrompt`, and
+      // buildSystemParams prefers static+dynamic when both are present.
+      // Setting `systemPrompt` here on top of the split would be
+      // redundant — match coach-creator/v2 and workout-logger/v2
+      // (commit cd702f3) by omitting it.
       staticPrompt: fullPrompt,
       dynamicPrompt,
-      systemPrompt: fullPrompt,
       tools: [
         // All Bedrock-calling tools get a 60s timeout (mirrors the
         // coach-creator/v2 follow-up fix on develop). The framework
