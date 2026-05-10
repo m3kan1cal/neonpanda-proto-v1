@@ -692,6 +692,56 @@ describe("WorkoutLoggerAgentV2", () => {
     expect(result.workoutId).toBe("workout_existing_123");
     expect(result.reason).toMatch(/already exists/i);
   });
+
+  it("regex fallback ignores workoutId mentioned in an earlier tool_use preamble (Bugbot ec6c75b5)", async () => {
+    // Partial workflow: detect + extract + validate succeed, but the
+    // model never calls save. The regex fallback in buildResultFromToolData
+    // must run against the FINAL turn's text only — not the accumulator
+    // that includes a preamble from an earlier tool_use turn. Otherwise
+    // a stale workout_<id> mentioned mid-thought (e.g. quoting an
+    // existing workout) would be returned as a false success.
+    (detectDisciplineTool.execute as any).mockResolvedValue({
+      discipline: "crossfit",
+    });
+    (extractWorkoutDataTool.execute as any).mockResolvedValue({
+      workoutData: { discipline: "crossfit", workout_name: "Fran" },
+    });
+    (validateWorkoutCompletenessTool.execute as any).mockResolvedValue({
+      isValid: true,
+      shouldSave: true,
+      shouldNormalize: false,
+      confidence: 0.9,
+      completeness: 1,
+      blockingFlags: [],
+    });
+
+    const agent = new WorkoutLoggerAgentV2(baseContext);
+    wireRuntime([
+      // Tool-use turn with a preamble mentioning a stale workoutId.
+      // fullResponseText would absorb this; lastTurnResponseText must not.
+      turn(
+        [
+          { text: "Comparing this against your prior workout_stale_id_555." },
+          toolUseBlock("u1", "detect_discipline", {}),
+        ],
+        "tool_use",
+      ),
+      turn([toolUseBlock("u2", "extract_workout_data", {})], "tool_use"),
+      turn(
+        [toolUseBlock("u3", "validate_workout_completeness", {})],
+        "tool_use",
+      ),
+      // Terminal turn with no workout_<id> mention. Must not retry
+      // (no incomplete-workflow pattern), must hit the regex fallback,
+      // and the fallback must NOT match the stale id from turn 1.
+      turn([{ text: "All set." }], "end_turn"),
+    ]);
+
+    const result = await agent.logWorkout("Did Fran");
+    expect(result.success).toBe(false);
+    expect(result.skipped).toBe(true);
+    expect(result.workoutId).toBeUndefined();
+  });
 });
 
 describe("isValidBlockingResponse / isIncompleteWorkflow regex catalogs", () => {

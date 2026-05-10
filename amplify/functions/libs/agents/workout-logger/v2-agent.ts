@@ -319,7 +319,14 @@ export class WorkoutLoggerAgentV2 {
     });
     try {
       const result = await this.agent.run({ userMessage, imageS3Keys });
-      const built = this.buildResultFromToolData(result.finalResponseText);
+      // Use last-turn text rather than the accumulated transcript so the
+      // regex fallback that pulls a `workout_<id>` out of the assistant's
+      // narrative can't false-match an ID mentioned in a tool_use preamble
+      // from an earlier turn (Bugbot ec6c75b5; mirrors program-designer's
+      // 3fec1de7 fix).
+      const built = this.buildResultFromToolData(
+        result.lastTurnResponseText ?? result.finalResponseText,
+      );
       logger.info("WorkoutLoggerAgentV2 completed", {
         success: built.success,
         workoutId: built.workoutId,

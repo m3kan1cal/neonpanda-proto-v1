@@ -76,7 +76,21 @@ export interface AgentRunInput {
 
 export interface AgentRunResult {
   status: "ok" | "max_iterations" | "stopped" | "paused" | "error";
+  /**
+   * All assistant text the run produced, concatenated across every
+   * iteration — including preambles emitted on intermediate `tool_use`
+   * turns. Mirrors what was streamed to the client in the streaming
+   * runtime. Use this for full-transcript display.
+   */
   finalResponseText: string;
+  /**
+   * Text from the most recent terminal (non-`tool_use`) turn only. The
+   * v1 `Agent.converse()` API returned this directly; v2 surfaces it
+   * alongside `finalResponseText` so callers that need to mirror v1
+   * semantics — surfacing a clean reason string, parsing for an entity
+   * id, etc. — don't have to scan a multi-turn haystack.
+   */
+  lastTurnResponseText: string;
   iterations: number;
   toolsUsed: string[];
   toolCalls: ToolCallRecord[];
@@ -524,6 +538,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     return {
       status,
       finalResponseText: this.fullResponseText,
+      lastTurnResponseText: this.lastTurnResponseText,
       iterations: this.currentIteration,
       toolsUsed: this.toolsUsed.slice(),
       toolCalls: this.toolCalls.slice(),
