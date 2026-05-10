@@ -63,29 +63,34 @@
  *   tsx test/integration/test-build-program.ts [options]
  *
  * Options:
- *   --function=NAME     Lambda function name (default: build-program)
- *   --test=NAME         Run specific test (default: all)
+ *   --function=NAME     Lambda function name (default: build-program) [not yet wired]
+ *   --test=NAME         Run specific test(s), comma-separated (default: all)
  *   --output=DIR        Save results to directory (creates timestamped files)
  *   --verbose           Show detailed logging
- *   --region=REGION     AWS region (default: us-west-2)
+ *   --region=REGION     AWS region (default: us-west-2) [not yet wired]
  *
  * Examples:
  *   tsx test/integration/test-build-program.ts
  *   tsx test/integration/test-build-program.ts --test=simple-4week --verbose
+ *   tsx test/integration/test-build-program.ts --test=complex-8week,powerlifting-prep --verbose
  *   tsx test/integration/test-build-program.ts --output=test/fixtures/results --verbose
  */
 
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
-import {
-  CloudWatchLogsClient,
-  FilterLogEventsCommand,
-} from "@aws-sdk/client-cloudwatch-logs";
+import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import Ajv from "ajv";
 import * as fs from "fs";
 import * as path from "path";
+import {
+  fetchLambdaLogs,
+  writeLogsFile,
+  logsSummaryForJson,
+  printLogsSummary,
+  type CloudWatchLogsSummary,
+} from "./helpers/cloudwatch-logs";
 import { PROGRAM_STORAGE_SCHEMA } from "../../amplify/functions/libs/schemas/program-schema";
 
 // Types
@@ -107,6 +112,7 @@ interface TestResult {
   failures?: string[];
   response?: any;
   error?: string;
+  logs?: CloudWatchLogsSummary;
 }
 
 // General sanity bounds for ALL programs (not test-specific)
@@ -124,7 +130,7 @@ const SANITY_BOUNDS = {
 // Configuration
 const DEFAULT_REGION = "us-west-2";
 const DEFAULT_FUNCTION =
-  "amplify-neonpandaprotov1--buildprogramlambda205E00-1arOjN3G11Sh";
+  "amplify-neonpandaprotov1--buildprogramlambda205E00-C4DZlT0ZN3QL";
 const LOG_WAIT_TIME = 30000; // Wait 30s for logs (program generation takes time)
 const DYNAMODB_TABLE_NAME =
   process.env.DYNAMODB_TABLE_NAME || "NeonPandaProtoV1-DataTable-Sandbox";
@@ -480,9 +486,16 @@ async function runTests() {
 
   // Parse command line arguments
   const verbose = process.argv.includes("--verbose");
-  const testFilter = process.argv
+  const testFilterRaw = process.argv
     .find((arg) => arg.startsWith("--test="))
     ?.split("=")[1];
+  // Support comma-separated list, e.g. --test=complex-8week,powerlifting-prep
+  const testFilters = testFilterRaw
+    ? testFilterRaw
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : undefined;
   const outputDir = process.argv
     .find((arg) => arg.startsWith("--output="))
     ?.split("=")[1];
@@ -504,10 +517,17 @@ async function runTests() {
     }
   }
 
-  // Filter tests if --test flag provided
-  if (testFilter) {
-    testCases = testCases.filter((tc) => tc.name.includes(testFilter));
-    console.info(`🔍 Running filtered tests: ${testFilter}\n`);
+  // Filter tests if --test flag provided (supports comma-separated list)
+  if (testFilters && testFilters.length > 0) {
+    testCases = testCases.filter((tc) =>
+      testFilters.some((f) => tc.name.includes(f)),
+    );
+    console.info(`🔍 Running filtered tests: ${testFilters.join(", ")}\n`);
+    if (testCases.length === 0) {
+      console.warn(
+        `⚠️  No tests matched filter(s): ${testFilters.join(", ")}\n`,
+      );
+    }
   }
 
   for (const testCase of testCases) {
@@ -564,6 +584,9 @@ async function runTests() {
               typeof result.response?.body === "string"
                 ? JSON.parse(result.response.body)
                 : result.response?.body,
+            // Log summary only — full event stream goes to the
+            // adjacent .log file to keep this JSON scannable.
+            logs: result.logs ? logsSummaryForJson(result.logs) : undefined,
             config: {
               region: DEFAULT_REGION,
               function: DEFAULT_FUNCTION,
@@ -578,6 +601,26 @@ async function runTests() {
           console.info(
             `   💾 Result saved to: ${path.basename(individualFile)}`,
           );
+
+          if (result.logs) {
+            const logsFile = path.join(
+              outputDir,
+              `${timestamp}_${sanitizedTestName}_logs.log`,
+            );
+            try {
+              writeLogsFile(logsFile, result.logs, {
+                testName: testCase.name,
+                functionName: DEFAULT_FUNCTION,
+              });
+              console.info(
+                `   💾 Logs saved to: ${path.basename(logsFile)}`,
+              );
+            } catch (err) {
+              console.warn(
+                `   ⚠️  Failed to save logs file: ${(err as Error).message}`,
+              );
+            }
+          }
         } catch (error) {
           console.error(
             `   ⚠️  Failed to save individual result: ${(error as Error).message}`,
@@ -664,9 +707,14 @@ async function runTestCase(
   verbose: boolean = false,
 ): Promise<TestResult> {
   const lambdaClient = new LambdaClient({ region: DEFAULT_REGION });
+  const logsClient = new CloudWatchLogsClient({ region: DEFAULT_REGION });
   const dynamoClient = DynamoDBDocumentClient.from(
     new DynamoDBClient({ region: DEFAULT_REGION }),
   );
+
+  // Capture before invoke so the CloudWatch query window covers the
+  // entire Lambda execution.
+  const lambdaStartTime = Date.now();
 
   // 1. Invoke Lambda
   console.info(`   Invoking Lambda...`);
@@ -695,9 +743,29 @@ async function runTestCase(
     });
   }
 
-  // Wait for logs
-  console.info(`   Waiting for logs...`);
-  await new Promise((resolve) => setTimeout(resolve, LOG_WAIT_TIME));
+  // Fetch CloudWatch logs for the invocation. The helper sleeps
+  // internally for waitMs (default 30s) before querying so logs have
+  // time to land.
+  console.info(`   Fetching CloudWatch logs...`);
+  const cwLogs = await fetchLambdaLogs(
+    logsClient,
+    DEFAULT_FUNCTION,
+    lambdaStartTime,
+    {
+      waitMs: LOG_WAIT_TIME,
+      // Markers help confirm v2-framework instrumentation is firing as
+      // expected. Counts surface in the logs summary and the saved
+      // .log file header.
+      markers: {
+        agentInitWithCaching: "🔥 ProgramDesignerAgentV2 initialized",
+        phaseGenCompletions: "generate_phase_workouts completed for phase",
+        parallelToolBatches: "🚀 Executing",
+        agentRunCompleted: "agent.run.completed",
+        toolTimeouts: "code\":\"timeout\"",
+      },
+    },
+  );
+  printLogsSummary(cwLogs);
 
   // 2. Validate response
   const validations: ValidationResult[] = [];
@@ -1027,6 +1095,7 @@ async function runTestCase(
     validations,
     failures,
     response: payload,
+    logs: cwLogs,
   };
 }
 
