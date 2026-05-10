@@ -693,6 +693,113 @@ describe("WorkoutLoggerAgentV2", () => {
     expect(result.reason).toMatch(/already exists/i);
   });
 
+  it("cross-references extraction by raw store index when saves are sparse (Bugbot c1d90fe8)", async () => {
+    // Three extractions land at indices 0, 1, 2 (distinguishable workout
+    // names). Saves run only at indices 0 and 2 — index 1 is left
+    // undefined in the save store. The compacted `allSaves`/`successfulSaves`
+    // path used to capture `originalIndex` from the *filtered* array (0, 1)
+    // and look up `allExtractions[1]` — returning the wrong (middle)
+    // extraction. The fix uses raw arrays so `originalIndex` is the true
+    // store position (0, 2) and `rawExtractions[2]` returns the correct one.
+    (detectDisciplineTool.execute as any).mockImplementation(
+      async () => ({ discipline: "crossfit" }),
+    );
+    let extractCount = 0;
+    (extractWorkoutDataTool.execute as any).mockImplementation(async () => {
+      const idx = extractCount++;
+      return {
+        workoutData: {
+          discipline: "crossfit",
+          workout_name: `Extraction-${idx}`,
+        },
+        generationMethod: "tool",
+      };
+    });
+    (validateWorkoutCompletenessTool.execute as any).mockResolvedValue({
+      isValid: true,
+      shouldSave: true,
+      shouldNormalize: false,
+      confidence: 0.9,
+      completeness: 1.0,
+      blockingFlags: [],
+    });
+    (generateWorkoutSummaryTool.execute as any).mockResolvedValue({
+      summary: "ok",
+    });
+    (saveWorkoutToDatabaseTool.execute as any).mockImplementation(
+      async (input: any) => ({
+        workoutId: `workout_${input.workoutIndex}`,
+        success: true,
+        pineconeStored: true,
+      }),
+    );
+
+    const agent = new WorkoutLoggerAgentV2(baseContext);
+    wireRuntime([
+      turn(
+        [
+          toolUseBlock("u1", "detect_discipline", { workoutIndex: 0 }),
+          toolUseBlock("u2", "detect_discipline", { workoutIndex: 1 }),
+          toolUseBlock("u3", "detect_discipline", { workoutIndex: 2 }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u4", "extract_workout_data", { workoutIndex: 0 }),
+          toolUseBlock("u5", "extract_workout_data", { workoutIndex: 1 }),
+          toolUseBlock("u6", "extract_workout_data", { workoutIndex: 2 }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u7", "validate_workout_completeness", {
+            workoutIndex: 0,
+          }),
+          toolUseBlock("u8", "validate_workout_completeness", {
+            workoutIndex: 1,
+          }),
+          toolUseBlock("u9", "validate_workout_completeness", {
+            workoutIndex: 2,
+          }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u10", "generate_workout_summary", { workoutIndex: 0 }),
+          toolUseBlock("u11", "generate_workout_summary", { workoutIndex: 1 }),
+          toolUseBlock("u12", "generate_workout_summary", { workoutIndex: 2 }),
+        ],
+        "tool_use",
+      ),
+      // Saves only at 0 and 2 — model skipped the middle slot.
+      turn(
+        [
+          toolUseBlock("u13", "save_workout_to_database", { workoutIndex: 0 }),
+          toolUseBlock("u14", "save_workout_to_database", { workoutIndex: 2 }),
+        ],
+        "tool_use",
+      ),
+      turn([{ text: "Logged the two real workouts." }], "end_turn"),
+    ]);
+
+    const result = await agent.logWorkout("Did three things, two countable");
+    expect(result.success).toBe(true);
+    expect(result.workoutId).toBe("workout_0");
+    expect(result.workoutName).toBe("Extraction-0");
+    expect(result.allWorkouts).toHaveLength(2);
+    // The critical assertion — the second saved workout maps to
+    // extraction index 2 ("Extraction-2"), NOT extraction index 1
+    // ("Extraction-1") which would happen if cross-referencing used
+    // the compacted-filter index.
+    expect(result.allWorkouts![1]).toMatchObject({
+      workoutId: "workout_2",
+      workoutName: "Extraction-2",
+    });
+  });
+
   it("regex fallback ignores workoutId mentioned in an earlier tool_use preamble (Bugbot ec6c75b5)", async () => {
     // Partial workflow: detect + extract + validate succeed, but the
     // model never calls save. The regex fallback in buildResultFromToolData

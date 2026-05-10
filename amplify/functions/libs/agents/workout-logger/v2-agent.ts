@@ -356,20 +356,25 @@ export class WorkoutLoggerAgentV2 {
   private buildResultFromToolData(agentResponse: string): WorkoutLogResult {
     const store = this.agent.getResultStore();
 
-    const allSaves = (store.getAll<any>("save") ?? []).filter(
-      (s) => s !== undefined,
-    );
-    const allExtractions = (store.getAll<any>("extraction") ?? []).filter(
-      (e) => e !== undefined,
-    );
-    const allValidations = (store.getAll<any>("validation") ?? []).filter(
-      (v) => v !== undefined,
-    );
-    const allNormalizations = (
-      store.getAll<any>("normalization") ?? []
-    ).filter((n) => n !== undefined);
+    // Raw arrays preserve sparse holes from positional puts (e.g. saves
+    // landed at indices 0 and 2 leave index 1 undefined). Cross-reference
+    // lookups like `rawExtractions[primary.originalIndex]` MUST use the
+    // raw arrays so the index aligns with the slot the corresponding
+    // save was written to. The compacted `allX` views are only safe for
+    // length / count / "any defined entry" checks.
+    const rawSaves = store.getAll<any>("save") ?? [];
+    const rawExtractions = store.getAll<any>("extraction") ?? [];
+    const rawValidations = store.getAll<any>("validation") ?? [];
+    const rawNormalizations = store.getAll<any>("normalization") ?? [];
 
-    const successfulSaves = allSaves
+    const allSaves = rawSaves.filter((s: any) => s !== undefined);
+    const allExtractions = rawExtractions.filter((e: any) => e !== undefined);
+    const allValidations = rawValidations.filter((v: any) => v !== undefined);
+    const allNormalizations = rawNormalizations.filter(
+      (n: any) => n !== undefined,
+    );
+
+    const successfulSaves = rawSaves
       .map((save: any, originalIndex: number) => ({ save, originalIndex }))
       .filter(
         (entry) =>
@@ -431,12 +436,16 @@ export class WorkoutLoggerAgentV2 {
 
     if (successfulSaves.length > 0) {
       const primary = successfulSaves[0];
-      const primaryExtraction = allExtractions[primary.originalIndex];
+      // Index by raw arrays so the slot aligns with `rawSaves`. Fall
+      // back to the last *defined* sibling when the positional slot is
+      // missing (e.g. validation never ran for this workout but did for
+      // a sibling).
+      const primaryExtraction = rawExtractions[primary.originalIndex];
       const primaryValidation =
-        allValidations[primary.originalIndex] ??
+        rawValidations[primary.originalIndex] ??
         allValidations[allValidations.length - 1];
       const primaryNormalization =
-        allNormalizations[primary.originalIndex] ??
+        rawNormalizations[primary.originalIndex] ??
         allNormalizations[allNormalizations.length - 1];
 
       logger.info("✅ Building success result from save tool", {
@@ -463,7 +472,7 @@ export class WorkoutLoggerAgentV2 {
 
       if (successfulSaves.length > 1) {
         primaryResult.allWorkouts = successfulSaves.map((entry) => {
-          const extraction = allExtractions[entry.originalIndex];
+          const extraction = rawExtractions[entry.originalIndex];
           return {
             workoutId: entry.save.workoutId,
             workoutName: extraction?.workoutData?.workout_name,
