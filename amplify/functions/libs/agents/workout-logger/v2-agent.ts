@@ -324,9 +324,15 @@ export class WorkoutLoggerAgentV2 {
       // narrative can't false-match an ID mentioned in a tool_use preamble
       // from an earlier turn (Bugbot ec6c75b5; mirrors program-designer's
       // 3fec1de7 fix).
-      const built = this.buildResultFromToolData(
-        result.lastTurnResponseText ?? result.finalResponseText,
-      );
+      //
+      // No `?? finalResponseText` fallback by design: when the run ends
+      // without a terminal turn (e.g. max-iterations exhausted entirely
+      // on tool_use turns), `lastTurnResponseText` stays `""` and we
+      // *want* the empty string. Falling back to the full transcript
+      // would reintroduce the false-match risk above. The downstream
+      // result builder already handles `agentResponse === ""` cleanly
+      // via its workflow-incomplete branch.
+      const built = this.buildResultFromToolData(result.lastTurnResponseText);
       logger.info("WorkoutLoggerAgentV2 completed", {
         success: built.success,
         workoutId: built.workoutId,
