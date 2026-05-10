@@ -36,10 +36,7 @@
 import { Agent, type AgentConfigV2 } from "../core/v2/agent";
 import { adaptLegacyTool } from "../core/v2/tools/legacy-adapter";
 import { SyncRuntime } from "../core/v2/runtime/sync-runtime";
-import type {
-  ToolMiddleware,
-  ToolResultStoreLike,
-} from "../core/v2/tools/tool-types";
+import type { ToolResultStoreLike } from "../core/v2/tools/tool-types";
 import type { ToolResultStore } from "../core/v2/tools/tool-result-store";
 import {
   normaliseLegacyToolResult,
@@ -82,8 +79,8 @@ const STORAGE_KEY_MAP: Record<string, string> = {
 const MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW = 5;
 
 /**
- * Per-tool middleware that aligns the v2 store-write to v1's positional
- * semantics. Two cases:
+ * Per-tool `getStoreLocation` factory that aligns v2 store-writes to v1's
+ * positional semantics. Two cases:
  *
  *   - Tool input carries `workoutIndex` (validate / normalize / summary /
  *     save in multi-workout flows): use that value as the storage index.
@@ -92,60 +89,27 @@ const MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW = 5;
  *     available slot via `getAll(alias).length`. Safe under sequential
  *     execution (`parallelSafe: false` for all workout-logger tools).
  *
- * Setting `result.toolStoreIndex` here lets the scheduler's default put
- * (which fires AFTER middleware) write to the right slot in one go —
- * avoids the double-write that program-designer's phaseWorkoutsMiddleware
- * does (where uniqueKey writes a different key than the alias).
- *
- * Critically, this must run for FAILURES too. The scheduler's failure
- * persist also honours `result.toolStoreIndex` (per the
- * scheduler-failure-positional fix that ships in this PR), so without
- * setting it on failures, a single tool failure in a multi-workout flow
- * would replace the entire keyed array and silently drop earlier
- * successful results — Bugbot finding 288d112c.
+ * The scheduler calls `getStoreLocation` for every persist path —
+ * success, returned-failure, blocked-by-policy, throw-from-execute — so
+ * a single tool failure in a multi-workout flow no longer replaces the
+ * entire keyed array and drops earlier successful slots. This replaces
+ * the earlier middleware approach and the framework-level
+ * `inferInputIndex` helper (Bugbot finding f61c3f4b: domain-specific
+ * field name shouldn't leak into the shared core).
  */
-function makeWorkoutIndexMiddleware(
-  toolId: string,
-  alias: string,
-): ToolMiddleware<WorkoutLoggerContext> {
-  return {
-    after: (input, result, ctx) => {
-      const explicit = (input as any)?.workoutIndex;
-      let idx: number;
-      if (typeof explicit === "number" && Number.isFinite(explicit)) {
-        idx = explicit;
-      } else {
-        // No explicit workoutIndex: append to next available slot.
-        // ctx.resultStore.getAll uses the alias-resolved key. Safe under
-        // sequential execution because the previous call's persist has
-        // already landed before this middleware runs.
-        const existing = ctx.resultStore.getAll<unknown>(alias) ?? [];
-        idx = existing.length;
-      }
-      // Mutate both success and failure envelopes so the scheduler's
-      // post-middleware persist lands at the right slot in either case.
-      // ToolFailure doesn't declare toolStoreIndex in its type but the
-      // scheduler reads it via `(result as any).toolStoreIndex` on the
-      // failure path now.
-      (result as any).toolStoreIndex = idx;
-    },
+function makeWorkoutStoreLocation(alias: string) {
+  return (
+    input: unknown,
+    ctx: { resultStore: { getAll: (k: string) => unknown[] | undefined } },
+  ): { index?: number } => {
+    const explicit = (input as any)?.workoutIndex;
+    if (typeof explicit === "number" && Number.isFinite(explicit)) {
+      return { index: explicit };
+    }
+    const existing = ctx.resultStore.getAll(alias) ?? [];
+    return { index: existing.length };
   };
 }
-
-const indexMiddleware = {
-  detect: makeWorkoutIndexMiddleware("detect_discipline", "discipline"),
-  extract: makeWorkoutIndexMiddleware("extract_workout_data", "extraction"),
-  validate: makeWorkoutIndexMiddleware(
-    "validate_workout_completeness",
-    "validation",
-  ),
-  normalize: makeWorkoutIndexMiddleware(
-    "normalize_workout_data",
-    "normalization",
-  ),
-  summary: makeWorkoutIndexMiddleware("generate_workout_summary", "summary"),
-  save: makeWorkoutIndexMiddleware("save_workout_to_database", "save"),
-};
 
 export class WorkoutLoggerAgentV2 {
   private readonly agent: Agent<WorkoutLoggerContext>;
@@ -184,23 +148,23 @@ export class WorkoutLoggerAgentV2 {
         // especially with the targetedSchema fallback path.
         adaptLegacyTool(detectDisciplineTool, {
           timeoutMs: 60_000,
-          middleware: [indexMiddleware.detect],
+          getStoreLocation: makeWorkoutStoreLocation("discipline"),
         }),
         adaptLegacyTool(extractWorkoutDataTool, {
           timeoutMs: 180_000,
-          middleware: [indexMiddleware.extract],
+          getStoreLocation: makeWorkoutStoreLocation("extraction"),
         }),
         adaptLegacyTool(validateWorkoutCompletenessTool, {
           timeoutMs: 60_000,
-          middleware: [indexMiddleware.validate],
+          getStoreLocation: makeWorkoutStoreLocation("validation"),
         }),
         adaptLegacyTool(normalizeWorkoutDataTool, {
           timeoutMs: 60_000,
-          middleware: [indexMiddleware.normalize],
+          getStoreLocation: makeWorkoutStoreLocation("normalization"),
         }),
         adaptLegacyTool(generateWorkoutSummaryTool, {
           timeoutMs: 60_000,
-          middleware: [indexMiddleware.summary],
+          getStoreLocation: makeWorkoutStoreLocation("summary"),
         }),
         // save: DDB + Pinecone + 2 fire-and-forget Lambda invokes.
         // 60s gives enough headroom; the redactInput keeps user health
@@ -208,9 +172,11 @@ export class WorkoutLoggerAgentV2 {
         adaptLegacyTool(saveWorkoutToDatabaseTool, {
           timeoutMs: 60_000,
           redactInput: true,
-          middleware: [indexMiddleware.save],
+          getStoreLocation: makeWorkoutStoreLocation("save"),
         }),
         // compute_date: deterministic date math, no Bedrock, fast.
+        // No getStoreLocation — single-call tool, default replace
+        // semantics are fine.
         adaptLegacyTool(computeDateTool),
       ],
       resultStoreAliases: STORAGE_KEY_MAP,

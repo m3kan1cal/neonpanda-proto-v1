@@ -23,6 +23,9 @@ export interface AdaptLegacyToolOptions<TContext extends AgentContext> {
   retryable?: boolean;
   redactInput?: boolean;
   middleware?: ToolMiddleware<TContext>[];
+  /** See `Tool.getStoreLocation`. Forwarded onto the wrapped tool so the
+   *  scheduler can read it across all persist paths. */
+  getStoreLocation?: Tool<TContext>["getStoreLocation"];
 }
 
 export function adaptLegacyTool<TContext extends AgentContext>(
@@ -45,6 +48,7 @@ export function adaptLegacyTool<TContext extends AgentContext>(
     retryable: opts.retryable ?? true,
     redactInput: opts.redactInput ?? false,
     middleware: opts.middleware ?? [],
+    getStoreLocation: opts.getStoreLocation,
     validateInput: passthroughValidator,
     execute: async (
       input: unknown,
