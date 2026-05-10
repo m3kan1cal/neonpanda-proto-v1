@@ -248,7 +248,7 @@ export interface ProgramSaveResult {
   startDate?: string; // ISO date string, if set on the program
   endDate?: string; // ISO date string, if set on the program
   s3Key: string;
-  pineconeRecordId: string | null; // "async-pending" if storage was attempted, null if skipped
+  pineconeRecordId: string | null; // Real recordId when upsert completes within the await timeout; "async-pending" if it ran past the timeout (continues in background); null on confirmed failure or skip.
 }
 
 /**
@@ -1966,21 +1966,53 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       validationPassed: true,
     });
 
-    // 5. Store program summary in Pinecone (async, attempt but don't block)
-    logger.info("Storing program summary in Pinecone (async)...");
-    let pineconeAttempted = false;
-    storeProgramSummaryInPinecone(context.userId, summary, program)
-      .then(() => {
-        logger.info("✅ Program stored in Pinecone successfully");
-      })
-      .catch((error) => {
-        logger.error(
-          "⚠️ Failed to store program in Pinecone (non-blocking):",
-          error,
-        );
-        // Don't throw - this is fire-and-forget
+    // 5. Store program summary in Pinecone — await with a tight
+    // timeout so the response can surface a real recordId in the
+    // common case (Pinecone upserts are typically <1s). On timeout,
+    // fall back to fire-and-forget with an "async-pending" sentinel;
+    // storeProgramSummaryInPinecone has its own success/error
+    // logging so the background outcome still lands in CloudWatch.
+    logger.info("Storing program summary in Pinecone...");
+    const PINECONE_AWAIT_TIMEOUT_MS = 5000;
+    const pineconePromise = storeProgramSummaryInPinecone(
+      context.userId,
+      summary,
+      program,
+    );
+    const pineconeTimeoutSentinel = Symbol("pinecone-timeout");
+    const pineconeRaceResult = await Promise.race([
+      pineconePromise,
+      new Promise<typeof pineconeTimeoutSentinel>((resolve) =>
+        setTimeout(
+          () => resolve(pineconeTimeoutSentinel),
+          PINECONE_AWAIT_TIMEOUT_MS,
+        ),
+      ),
+    ]);
+
+    let pineconeRecordId: string | null = null;
+    if (pineconeRaceResult === pineconeTimeoutSentinel) {
+      logger.warn(
+        `⚠️ Pinecone upsert exceeded ${PINECONE_AWAIT_TIMEOUT_MS}ms — falling back to async-pending; upsert continues in the background.`,
+      );
+      pineconeRecordId = "async-pending";
+    } else if (
+      pineconeRaceResult &&
+      typeof pineconeRaceResult === "object" &&
+      "recordId" in pineconeRaceResult &&
+      typeof (pineconeRaceResult as { recordId?: unknown }).recordId ===
+        "string"
+    ) {
+      pineconeRecordId = (pineconeRaceResult as { recordId: string }).recordId;
+      logger.info("✅ Program stored in Pinecone successfully", {
+        recordId: pineconeRecordId,
       });
-    pineconeAttempted = true;
+    } else {
+      // storeProgramSummaryInPinecone returns { success: false } on
+      // error and has already logged. Keep recordId null so
+      // pineconeStored evaluates to false in the response.
+      logger.warn("⚠️ Pinecone upsert returned no recordId");
+    }
 
     // 6. Store debug data
     await storeGenerationDebugData(
@@ -2016,7 +2048,7 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       startDate: program.startDate,
       endDate: program.endDate,
       s3Key,
-      pineconeRecordId: pineconeAttempted ? "async-pending" : null,
+      pineconeRecordId,
     };
   },
 };

@@ -1221,12 +1221,16 @@ export const callBedrockApi = async (
     logger.info("Converse command created successfully..");
     logger.info("About to call bedrockClient.send()...");
 
-    // Add heartbeat logging to track if Lambda is still running
+    // Heartbeat to detect per-call Bedrock hangs. Agent-level
+    // heartbeat (libs/heartbeat.ts) already ticks every 10s, so this
+    // only needs to surface a per-call signal — 30s is plenty without
+    // flooding CloudWatch (was 5s, ~44 lines/call on 220s phase
+    // generation; now ~7 lines/call).
     const heartbeatInterval = setInterval(() => {
       logger.info(
         "HEARTBEAT: Lambda still running, waiting for Bedrock response..",
       );
-    }, 5000);
+    }, 30000);
 
     // Add explicit error handling around the send call with timeout
     let response;
@@ -1900,11 +1904,13 @@ export const callBedrockApiWithJsonOutput = async (
       }),
     });
 
+    // See callBedrockApi heartbeat note — 30s preserves per-call hang
+    // signal without duplicating the agent-level 10s heartbeat.
     const heartbeatInterval = setInterval(() => {
       logger.info(
         "HEARTBEAT: JSON output call still running, waiting for Bedrock response..",
       );
-    }, 5000);
+    }, 30000);
 
     let response;
     try {
