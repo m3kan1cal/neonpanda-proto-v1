@@ -479,9 +479,9 @@ function ManageWorkouts() {
       <div
         key="create-workout-card"
         onClick={handleLogNewWorkout}
-        className={`${containerPatterns.dashedCard} mb-4 group cursor-pointer`}
+        className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 group cursor-pointer`}
       >
-        <div className="text-center flex flex-col justify-center items-center py-6">
+        <div className="text-center flex flex-col justify-center items-center">
           {/* Plus Icon */}
           <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-2">
             <svg
@@ -854,7 +854,7 @@ function ManageWorkouts() {
               <div
                 className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
               >
-                <div className="text-center flex flex-col items-center py-6">
+                <div className="text-center flex flex-col items-center">
                   <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
                   <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
                   <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
@@ -904,7 +904,7 @@ function ManageWorkouts() {
                 <div
                   className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
                 >
-                  <div className="text-center flex flex-col items-center py-6">
+                  <div className="text-center flex flex-col items-center">
                     <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
                     <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
