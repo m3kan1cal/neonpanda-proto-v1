@@ -417,11 +417,11 @@ function ManageMemories() {
       <div
         key="create-memory-card"
         onClick={handleSaveNewMemory}
-        className={`${containerPatterns.dashedCard} mb-6 group cursor-pointer`}
+        className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 group cursor-pointer`}
       >
-        <div className="text-center flex flex-col justify-center items-center h-full min-h-[195px]">
+        <div className="text-center flex flex-col justify-center items-center">
           {/* Plus Icon */}
-          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
+          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-2">
             <svg
               className="w-10 h-10"
               fill="none"
@@ -520,7 +520,7 @@ function ManageMemories() {
       <div
         key={memory.memoryId}
         data-memory-card
-        className={`${containerPatterns.cardMedium} p-6 relative mb-6`}
+        className={`${containerPatterns.cardMedium} p-4 md:p-6 relative mb-4`}
       >
         {/* NEW badge for memories created within 24 hours */}
         {isNew && <NewBadge />}
@@ -587,7 +587,7 @@ function ManageMemories() {
         </SectionHeader>
 
         {/* Metadata Row */}
-        <div className="flex items-center flex-wrap gap-4 mb-4 pr-16">
+        <div className="flex items-center flex-wrap gap-4 mb-3 pr-16">
           {/* Created Date */}
           <div className="flex items-center gap-1.5 font-body text-sm">
             <ClockIconSmall />
@@ -648,7 +648,7 @@ function ManageMemories() {
           </button>
           {!isDescriptionCollapsed && (
             <div
-              className={`${containerPatterns.coachNotesSection} animate-fadeIn mb-4`}
+              className={`${containerPatterns.coachNotesSection} animate-fadeIn mb-3`}
             >
               <p className="font-body text-sm text-synthwave-text-secondary whitespace-pre-wrap">
                 {cleanContent}
@@ -658,7 +658,7 @@ function ManageMemories() {
         </div>
 
         {/* Badge Row - styled like workout badges with expandable "more/less" */}
-        <div className="flex flex-wrap items-center gap-2 mt-4">
+        <div className="flex flex-wrap items-center gap-2 mt-3">
           {visibleBadges.map((badge) => (
             <span key={badge.key} className={badgePatterns.workoutDetail}>
               {badge.label}
@@ -809,19 +809,19 @@ function ManageMemories() {
             <div className="lg:hidden">
               {/* Create Card Skeleton */}
               <div
-                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[195px]`}
+                className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
               >
                 <div className="text-center flex flex-col items-center">
-                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
-                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
+                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
+                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
                 </div>
               </div>
               {/* Memory Card Skeletons */}
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[195px]`}
+                  className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start gap-3 mb-2">
@@ -832,19 +832,19 @@ function ManageMemories() {
                   </div>
 
                   {/* Metadata Row */}
-                  <div className="flex flex-wrap gap-4 mb-4">
+                  <div className="flex flex-wrap gap-4 mb-3">
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
 
                   {/* Collapsible Description Section - Collapsed */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                   </div>
 
                   {/* Badge Row */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
@@ -858,19 +858,19 @@ function ManageMemories() {
               <div>
                 {/* Create Card Skeleton (first item, left column) */}
                 <div
-                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[195px]`}
+                  className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
                 >
                   <div className="text-center flex flex-col items-center">
-                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
-                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
+                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
+                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
                   </div>
                 </div>
                 {/* Memory Card Skeletons */}
                 {[1, 3].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[195px]`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start gap-3 mb-2">
@@ -881,19 +881,19 @@ function ManageMemories() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
 
                     {/* Collapsible Description Section - Collapsed */}
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
 
                     {/* Badge Row */}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
@@ -907,7 +907,7 @@ function ManageMemories() {
                 {[2, 4].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[195px]`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start gap-3 mb-2">
@@ -918,19 +918,19 @@ function ManageMemories() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
 
                     {/* Collapsible Description Section - Collapsed */}
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
 
                     {/* Badge Row */}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>

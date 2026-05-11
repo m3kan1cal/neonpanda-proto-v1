@@ -638,7 +638,7 @@ function ManageCoachConversations() {
       <div
         key={`${conversation.coachId}-${conversation.conversationId}`}
         data-conversation-card
-        className={`${containerPatterns.cardMedium} p-6 relative cursor-pointer mb-6`}
+        className={`${containerPatterns.cardMedium} p-4 md:p-6 relative cursor-pointer mb-4`}
         onClick={() => handleViewConversation(conversation)}
       >
         {/* NEW badge for conversations with recent activity */}
@@ -708,7 +708,7 @@ function ManageCoachConversations() {
         </SectionHeader>
 
         {/* Metadata Row */}
-        <div className="flex items-center flex-wrap gap-4 mb-4">
+        <div className="flex items-center flex-wrap gap-4 mb-3">
           {/* Started Date */}
           {conversation.metadata?.startedAt && (
             <div className="flex items-center gap-1.5 font-body text-sm">
@@ -763,7 +763,7 @@ function ManageCoachConversations() {
             </button>
             {!isPreviewCollapsed && (
               <div
-                className={`${containerPatterns.coachNotesSection} animate-fadeIn mb-4 space-y-3`}
+                className={`${containerPatterns.coachNotesSection} animate-fadeIn mb-3 space-y-3`}
               >
                 {conversation.firstUserMessage && (
                   <div>
@@ -796,7 +796,7 @@ function ManageCoachConversations() {
         )}
 
         {/* Badge Row - single line with dynamic overflow */}
-        <div className="mt-4" onClick={(e) => e.stopPropagation()}>
+        <div className="mt-3" onClick={(e) => e.stopPropagation()}>
           <BadgeRow
             badges={allBadges}
             badgeClassName={badgePatterns.workoutDetail}
@@ -812,15 +812,15 @@ function ManageCoachConversations() {
       <div
         key="create-conversation-card"
         onClick={isCreatingConversation ? undefined : handleCreateConversation}
-        className={`${containerPatterns.dashedCard} mb-6 group ${
+        className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 group ${
           isCreatingConversation
             ? "opacity-75 cursor-not-allowed"
             : "cursor-pointer"
         }`}
       >
-        <div className="text-center flex flex-col justify-center items-center h-full min-h-[195px]">
+        <div className="text-center flex flex-col justify-center items-center">
           {/* Plus Icon or Spinner */}
-          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
+          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-2">
             {isCreatingConversation ? (
               <div className="w-10 h-10 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
             ) : (
@@ -1002,19 +1002,19 @@ function ManageCoachConversations() {
             <div className="lg:hidden">
               {/* Create Card Skeleton */}
               <div
-                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[195px]`}
+                className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
               >
                 <div className="text-center flex flex-col items-center">
-                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
-                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
+                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
+                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
                 </div>
               </div>
               {/* Conversation Card Skeletons */}
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[195px]`}
+                  className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start gap-3 mb-2">
@@ -1025,7 +1025,7 @@ function ManageCoachConversations() {
                   </div>
 
                   {/* Metadata Row */}
-                  <div className="flex flex-wrap gap-4 mb-4">
+                  <div className="flex flex-wrap gap-4 mb-3">
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
@@ -1038,7 +1038,7 @@ function ManageCoachConversations() {
                   </div>
 
                   {/* Badge Row */}
-                  <div className="flex flex-wrap gap-2 mt-4">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
@@ -1051,19 +1051,19 @@ function ManageCoachConversations() {
               <div>
                 {/* Create Card Skeleton (first item, left column) */}
                 <div
-                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[195px]`}
+                  className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
                 >
                   <div className="text-center flex flex-col items-center">
-                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
-                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
+                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
+                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
                   </div>
                 </div>
                 {/* Conversation Card Skeletons (indices 2, 4) */}
                 {[2, 4].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[195px]`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start gap-3 mb-2">
@@ -1074,7 +1074,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
@@ -1087,7 +1087,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Badge Row */}
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
@@ -1100,7 +1100,7 @@ function ManageCoachConversations() {
                 {[1, 3, 5].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[195px]`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start gap-3 mb-2">
@@ -1111,7 +1111,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
@@ -1124,7 +1124,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Badge Row */}
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
