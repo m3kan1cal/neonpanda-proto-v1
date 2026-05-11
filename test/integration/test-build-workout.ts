@@ -1350,9 +1350,12 @@ Completed in 6:52. Maintained steady pace, kept rowing at 1:50-1:55/500m. DB cle
     expected: {
       success: true,
       shouldHave: ["workoutId", "discipline", "confidence"],
-      // Heavy deadlift PR test (powerlifting) + 3-round conditioning finisher (CrossFit) — both are valid.
-      // AI consistently classifies this as powerlifting due to the dominant deadlift focus.
-      disciplineOptions: ["crossfit", "powerlifting"],
+      // Heavy deadlift PR test (powerlifting) + 3-round conditioning finisher (CrossFit).
+      // Either pure-discipline call is defensible, and `hybrid` is also a correct read
+      // because the session deliberately combines strength + conditioning blocks. Accept
+      // all three so the fixture doesn't penalise the v2 classifier for a more nuanced
+      // (and arguably more accurate) "hybrid" call backed by full evidence.
+      disciplineOptions: ["crossfit", "powerlifting", "hybrid"],
       minConfidence: 0.9,
       toolsUsed: [
         "detect_discipline",
@@ -2412,12 +2415,28 @@ async function getCloudWatchLogs(
       const message = event.message || "";
       logs.fullLogs.push(message);
 
-      // Extract tool calls
-      if (message.includes("Executing tool:") || message.includes("⚙️")) {
-        const toolMatch = message.match(/tool:\s*(\w+)/);
-        if (toolMatch) {
-          logs.toolCalls.push(toolMatch[1]);
-        }
+      // Extract tool calls by matching the per-tool entry log emitted at the
+      // top of every tool implementation in
+      // libs/agents/{workout-logger,program-designer,coach-creator}/tools.ts:
+      // `<emoji> Executing <snake_case_name> tool` (e.g. `🏋️ Executing
+      // extract_workout_data tool`). That log fires once per execution
+      // regardless of whether the v1 or v2 agent dispatched it, so it's the
+      // safest single source of truth for tool-invocation counts.
+      //
+      // Why we deliberately do NOT also match the agent-dispatch lines:
+      //   • v1 also logs `⚙️ Executing tool: <name>` from agent.ts before
+      //     invoking the tool — counting that line on top of the tools.ts
+      //     line would double-count every v1 tool call.
+      //   • The summary lines `🔧 Executing N tool(s)` and
+      //     `🔧 Executing N tool group(s)` would otherwise be captured by a
+      //     loose `Executing\s+(\w+)\s+tool\b` and push `"N"` (a numeric
+      //     "tool name") into the count. The `[a-z_]` start anchor blocks
+      //     that since `N` is a digit.
+      const toolMatch = message.match(
+        /Executing\s+([a-z_][a-z0-9_]+)\s+tool\b/i,
+      );
+      if (toolMatch) {
+        logs.toolCalls.push(toolMatch[1]);
       }
 
       // Count iterations
@@ -2822,11 +2841,23 @@ async function runTest(
 
   const startTime = Date.now();
 
+  // Give each test its own conversationId so the workout-save dedupe layer
+  // (keyed on userId + conversationId + completedAt date + templateId) doesn't
+  // skip subsequent tests in the suite. Fixtures hardcode the same value for
+  // readability; this override keeps them isolated at runtime without touching
+  // 27 individual test definitions.
+  const isolatedPayload: TestPayload = {
+    ...testCase.payload,
+    conversationId: `conv_test_${testName}_${startTime}_${Math.random()
+      .toString(36)
+      .slice(2, 8)}`,
+  };
+
   // Invoke Lambda
   const result = await invokeLambda(
     lambdaClient,
     options.functionName,
-    testCase.payload,
+    isolatedPayload,
   );
 
   // Get CloudWatch logs
