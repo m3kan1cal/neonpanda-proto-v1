@@ -2415,13 +2415,26 @@ async function getCloudWatchLogs(
       const message = event.message || "";
       logs.fullLogs.push(message);
 
-      // Extract tool calls. v1 emitted `Executing tool: <name>`; v2 emits
-      // `<emoji> Executing <name> tool` (e.g. `🏋️ Executing extract_workout_data tool`).
-      // Match both so multi-workout assertions that count tool invocations stay accurate
-      // after the v2 cutover.
-      const toolMatch =
-        message.match(/Executing tool:\s*(\w+)/) ||
-        message.match(/Executing\s+(\w+)\s+tool\b/);
+      // Extract tool calls by matching the per-tool entry log emitted at the
+      // top of every tool implementation in
+      // libs/agents/{workout-logger,program-designer,coach-creator}/tools.ts:
+      // `<emoji> Executing <snake_case_name> tool` (e.g. `🏋️ Executing
+      // extract_workout_data tool`). That log fires once per execution
+      // regardless of whether the v1 or v2 agent dispatched it, so it's the
+      // safest single source of truth for tool-invocation counts.
+      //
+      // Why we deliberately do NOT also match the agent-dispatch lines:
+      //   • v1 also logs `⚙️ Executing tool: <name>` from agent.ts before
+      //     invoking the tool — counting that line on top of the tools.ts
+      //     line would double-count every v1 tool call.
+      //   • The summary lines `🔧 Executing N tool(s)` and
+      //     `🔧 Executing N tool group(s)` would otherwise be captured by a
+      //     loose `Executing\s+(\w+)\s+tool\b` and push `"N"` (a numeric
+      //     "tool name") into the count. The `[a-z_]` start anchor blocks
+      //     that since `N` is a digit.
+      const toolMatch = message.match(
+        /Executing\s+([a-z_][a-z0-9_]+)\s+tool\b/i,
+      );
       if (toolMatch) {
         logs.toolCalls.push(toolMatch[1]);
       }
