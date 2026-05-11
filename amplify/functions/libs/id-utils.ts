@@ -5,16 +5,35 @@
  * Pattern: {entityType}_{userId}_{timestamp}_{shortId}
  */
 
-import { nanoid } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
+
+// Lowercase-alphanumeric short-ID generator. Backed by `crypto.randomBytes`
+// via nanoid, so it remains unique under v2's parallel tool execution (two
+// `extract_workout_data` calls landing in the same Node tick previously
+// produced identical IDs because `Math.random()` advanced its state
+// predictably enough that paired calls collided — see Bugbot
+// multi-workout `workout_id` duplication finding).
+//
+// Alphabet [0-9a-z] (length 36) is deliberately preserved to stay
+// compatible with the `workout_[a-z0-9_]+` fallback regex in
+// workout-logger/{agent,v2-agent}.ts that scrapes IDs out of model
+// narration. URL-safe nanoid would introduce `-` and `A-Z` and silently
+// truncate that match.
+const generateShortIdInternal = customAlphabet(
+  "0123456789abcdefghijklmnopqrstuvwxyz",
+  9,
+);
 
 /**
- * Generate a random short ID (11 characters, alphanumeric)
- * Uses base36 encoding for URL-safe characters
+ * Generate a random short ID (9 characters, lowercase alphanumeric).
+ *
+ * Cryptographically strong: each call is independent and safe across
+ * concurrent invocations within the same Lambda process.
  *
  * @returns Random short ID string
  */
 export function generateShortId(): string {
-  return Math.random().toString(36).substring(2, 11);
+  return generateShortIdInternal();
 }
 
 /**
