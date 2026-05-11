@@ -332,7 +332,7 @@ function ManageExercises() {
     return (
       <div
         key={exercise.exerciseName}
-        className={`${containerPatterns.cardMedium} p-6 mb-6 cursor-pointer`}
+        className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4 cursor-pointer`}
         onClick={() => toggleExerciseCollapse(exercise.exerciseName)}
       >
         <SectionHeader
@@ -344,7 +344,7 @@ function ManageExercises() {
         </SectionHeader>
 
         {/* Metadata Row - consolidated on one line */}
-        <div className="flex items-center flex-wrap gap-4 mb-4">
+        <div className="flex items-center flex-wrap gap-4 mb-3">
           {/* Last Performed */}
           <div className="flex items-center gap-1.5 font-body text-sm">
             <ClockIconSmall />
@@ -653,7 +653,7 @@ function ManageExercises() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                  className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                 >
                   <div className="flex items-start gap-3 mb-2">
                     <span className="shrink-0 mt-1 text-synthwave-neon-pink/30 animate-pulse">
@@ -680,7 +680,7 @@ function ManageExercises() {
                 {[1, 3, 5].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     <div className="flex items-start gap-3 mb-2">
                       <span className="shrink-0 mt-1 text-synthwave-neon-pink/30 animate-pulse">
@@ -706,7 +706,7 @@ function ManageExercises() {
                 {[2, 4].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     <div className="flex items-start gap-3 mb-2">
                       <span className="shrink-0 mt-1 text-synthwave-neon-pink/30 animate-pulse">

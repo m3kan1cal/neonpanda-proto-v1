@@ -479,11 +479,11 @@ function ManageWorkouts() {
       <div
         key="create-workout-card"
         onClick={handleLogNewWorkout}
-        className={`${containerPatterns.dashedCard} mb-6 group cursor-pointer`}
+        className={`${containerPatterns.dashedCard} mb-4 group cursor-pointer`}
       >
-        <div className="text-center flex flex-col justify-center items-center h-full min-h-[220px]">
+        <div className="text-center flex flex-col justify-center items-center py-6">
           {/* Plus Icon */}
-          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
+          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-2">
             <svg
               className="w-10 h-10"
               fill="none"
@@ -549,7 +549,7 @@ function ManageWorkouts() {
       <div
         key={workout.workoutId}
         data-workout-card
-        className={`${containerPatterns.cardMedium} p-6 relative cursor-pointer mb-6`}
+        className={`${containerPatterns.cardMedium} p-4 md:p-6 relative cursor-pointer mb-4`}
         onClick={() =>
           navigate(
             `/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${workout.coachIds?.[0] || "default"}`,
@@ -635,7 +635,7 @@ function ManageWorkouts() {
           {workoutName}
         </SectionHeader>
 
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1.5 mb-3">
           <div className="flex items-center gap-1.5 font-body text-sm">
             <ClockIconSmall />
             <span className="text-synthwave-text-muted">Completed:</span>
@@ -752,7 +752,7 @@ function ManageWorkouts() {
         )}
 
         {/* Badge Row - styled like equipment badges in ViewWorkouts.jsx */}
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-3">
           <span className={badgePatterns.workoutDetail}>{discipline}</span>
           {workout.location && (
             <span className={badgePatterns.workoutDetail}>
@@ -852,19 +852,19 @@ function ManageWorkouts() {
             <div className="lg:hidden">
               {/* Create Card Skeleton */}
               <div
-                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[220px]`}
+                className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
               >
-                <div className="text-center flex flex-col items-center">
-                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
-                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
+                <div className="text-center flex flex-col items-center py-6">
+                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
+                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
                 </div>
               </div>
               {/* Workout Card Skeletons */}
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
+                  className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start gap-3 mb-2">
@@ -902,19 +902,19 @@ function ManageWorkouts() {
               <div>
                 {/* Create Card Skeleton (first item, left column) */}
                 <div
-                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[220px]`}
+                  className={`${containerPatterns.dashedCard} p-4 md:p-6 mb-4 opacity-60 flex flex-col justify-center`}
                 >
-                  <div className="text-center flex flex-col items-center">
-                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse mb-3"></div>
-                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse w-48 mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56"></div>
+                  <div className="text-center flex flex-col items-center py-6">
+                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
+                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
                   </div>
                 </div>
                 {/* Workout Card Skeletons */}
                 {[1, 3].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start gap-3 mb-2">
@@ -952,7 +952,7 @@ function ManageWorkouts() {
                 {[2, 4].map((i) => (
                   <div
                     key={i}
-                    className={`${containerPatterns.cardMedium} p-6 mb-6 min-h-[220px]`}
+                    className={`${containerPatterns.cardMedium} p-4 md:p-6 mb-4`}
                   >
                     {/* Header with pink dot */}
                     <div className="flex items-start gap-3 mb-2">
