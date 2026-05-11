@@ -824,6 +824,30 @@ BEDROCK_FUNCTIONS_WITH_GUARDRAIL.forEach((func) => {
 backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_NAME", guardrailName);
 backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
 
+// Unified agent framework (v2) per-agent rollout flags. Each build-* Lambda
+// reads its own AGENT_V2_* env var to choose between v1 and v2 at request
+// time. Default: ON in sandbox (so devs exercise v2 by default), OFF in
+// develop/main (v1 stays the safe production path until each agent is
+// verified). An explicit AGENT_V2_* env var overrides the default in either
+// direction — useful for one-off A/B testing or for forcing v2 on a branch
+// once it's promotion-ready.
+const v2DefaultByBranch = branchInfo.isSandbox ? "true" : "false";
+const resolveV2Flag = (envVarName: string): string =>
+  process.env[envVarName] ?? v2DefaultByBranch;
+
+backend.buildWorkout.addEnvironment(
+  "AGENT_V2_WORKOUT_LOGGER",
+  resolveV2Flag("AGENT_V2_WORKOUT_LOGGER"),
+);
+backend.buildProgram.addEnvironment(
+  "AGENT_V2_PROGRAM_DESIGNER",
+  resolveV2Flag("AGENT_V2_PROGRAM_DESIGNER"),
+);
+backend.buildCoachConfig.addEnvironment(
+  "AGENT_V2_COACH_CREATOR",
+  resolveV2Flag("AGENT_V2_COACH_CREATOR"),
+);
+
 // Functions needing S3 DEBUG bucket access
 // NOTE: Jobs group debug functions (buildWorkout, buildCoachConfig, buildConversationSummary,
 //        buildLivingProfile, buildProgram) use jobsPolicies
