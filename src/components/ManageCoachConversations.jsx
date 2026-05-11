@@ -1025,7 +1025,7 @@ function ManageCoachConversations() {
                   </div>
 
                   {/* Metadata Row */}
-                  <div className="flex flex-wrap gap-4 mb-4">
+                  <div className="flex flex-wrap gap-4 mb-3">
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
@@ -1038,7 +1038,7 @@ function ManageCoachConversations() {
                   </div>
 
                   {/* Badge Row */}
-                  <div className="flex flex-wrap gap-2 mt-4">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
@@ -1074,7 +1074,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
@@ -1087,7 +1087,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Badge Row */}
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
@@ -1111,7 +1111,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
@@ -1124,7 +1124,7 @@ function ManageCoachConversations() {
                     </div>
 
                     {/* Badge Row */}
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>

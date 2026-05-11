@@ -832,14 +832,14 @@ function ManageMemories() {
                   </div>
 
                   {/* Metadata Row */}
-                  <div className="flex flex-wrap gap-4 mb-4">
+                  <div className="flex flex-wrap gap-4 mb-3">
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
 
                   {/* Collapsible Description Section - Collapsed */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                   </div>
 
@@ -881,14 +881,14 @@ function ManageMemories() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
 
                     {/* Collapsible Description Section - Collapsed */}
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
 
@@ -918,14 +918,14 @@ function ManageMemories() {
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-24"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
 
                     {/* Collapsible Description Section - Collapsed */}
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
 

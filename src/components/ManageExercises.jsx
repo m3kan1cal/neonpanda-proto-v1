@@ -590,7 +590,7 @@ function ManageExercises() {
 
         {/* Discipline Badges - at bottom of card (always visible) */}
         {exercise.disciplines && exercise.disciplines.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-3">
             {exercise.disciplines.map((discipline, index) => (
               <span key={index} className={badgePatterns.workoutDetail}>
                 {discipline}
@@ -661,13 +661,13 @@ function ManageExercises() {
                     </span>
                     <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                   </div>
-                  <div className="flex flex-wrap gap-4 mb-4">
+                  <div className="flex flex-wrap gap-4 mb-3">
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                     <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-4"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-3"></div>
                   {/* Badge skeletons */}
-                  <div className="flex flex-wrap gap-2 mt-4">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                   </div>
@@ -688,14 +688,14 @@ function ManageExercises() {
                       </span>
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-4"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-3"></div>
                     {/* Badge skeletons */}
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
@@ -714,14 +714,14 @@ function ManageExercises() {
                       </span>
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
-                    <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex flex-wrap gap-4 mb-3">
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-4"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28 mb-3"></div>
                     {/* Badge skeletons */}
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
                       <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
                     </div>
