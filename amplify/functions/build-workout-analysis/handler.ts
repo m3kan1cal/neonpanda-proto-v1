@@ -173,21 +173,34 @@ export const handler = async (event: BuildWorkoutAnalysisEvent) => {
             const activePrograms = (await queryPrograms(event.userId)).filter(
               (p) => p.status === "active",
             );
-            if (activePrograms.length > 0) {
+            // Skip programs without a coachId — getProgram(userId, coachId, programId)
+            // returns null when coachId doesn't match, which would throw "Program not
+            // found" downstream. Falling back to event.coachId can also mismatch when
+            // the triggering workout's coach doesn't own this program.
+            const programsToFanOut = activePrograms.filter((p) => {
+              if (!p.coachIds?.[0]) {
+                logger.warn(
+                  `⚠️ Skipping program insights fan-out for ${p.programId}: program has no coachId`,
+                );
+                return false;
+              }
+              return true;
+            });
+            if (programsToFanOut.length > 0) {
               logger.info(
                 "🧠 Fanning out program insights for active programs:",
                 {
                   userId: event.userId,
-                  activeProgramCount: activePrograms.length,
+                  activeProgramCount: programsToFanOut.length,
                 },
               );
               await Promise.allSettled(
-                activePrograms.map((p) =>
+                programsToFanOut.map((p) =>
                   invokeAsyncLambda(
                     programInsightsFunctionName,
                     {
                       userId: event.userId,
-                      coachId: p.coachIds?.[0] ?? event.coachId,
+                      coachId: p.coachIds[0],
                       programId: p.programId,
                       source: "workout",
                       triggerWorkoutId: event.workoutId,

@@ -238,6 +238,7 @@ export const processBatch = async (
           };
 
           // Store analytics in DynamoDB
+          let weeklyDynamoSaveSucceeded = false;
           try {
             const weekId = generateWeekId(weeklyData.weekRange.weekStart);
             const weeklyAnalytics: WeeklyAnalytics = {
@@ -273,6 +274,7 @@ export const processBatch = async (
             };
 
             await saveWeeklyAnalytics(weeklyAnalytics);
+            weeklyDynamoSaveSucceeded = true;
             logger.info(
               `✅ User ${user.userId} analytics completed and stored:`,
               {
@@ -280,10 +282,6 @@ export const processBatch = async (
                 dynamodbKey: `user#${user.userId} / weeklyAnalytics#${weekId}`,
               },
             );
-
-            // Fan out program insights regeneration for each active program.
-            // Fire-and-forget; failures must not break weekly analytics.
-            await fanOutProgramInsights(user.userId, "weekly");
           } catch (dynamoError) {
             logger.warn(
               `⚠️ Failed to store analytics in DynamoDB for user ${user.userId}:`,
@@ -294,6 +292,13 @@ export const processBatch = async (
               `⚠️ User ${user.userId} analytics completed (S3 only - DynamoDB failed):`,
               logData,
             );
+          }
+
+          // Fan out program insights regeneration. Kept outside the DynamoDB
+          // try/catch so an unexpected fan-out error isn't misattributed as
+          // a DynamoDB failure. fanOutProgramInsights swallows its own errors.
+          if (weeklyDynamoSaveSucceeded) {
+            await fanOutProgramInsights(user.userId, "weekly");
           }
         } catch (s3Error) {
           logger.warn(
@@ -491,6 +496,7 @@ export const processMonthlyBatch = async (
           };
 
           // Store analytics in DynamoDB
+          let monthlyDynamoSaveSucceeded = false;
           try {
             const monthId = generateMonthId(monthlyData.monthRange.monthStart);
             const monthlyAnalytics: MonthlyAnalytics = {
@@ -528,6 +534,7 @@ export const processMonthlyBatch = async (
             };
 
             await saveMonthlyAnalytics(monthlyAnalytics);
+            monthlyDynamoSaveSucceeded = true;
             logger.info(
               `✅ User ${user.userId} monthly analytics completed and stored:`,
               {
@@ -535,11 +542,6 @@ export const processMonthlyBatch = async (
                 dynamodbKey: `user#${user.userId} / monthlyAnalytics#${monthId}`,
               },
             );
-
-            // Fan out program insights regeneration for each active program.
-            // Monthly cron also refreshes — many users may not get weekly
-            // analytics in a given week (need >=2 workouts), so this catches them.
-            await fanOutProgramInsights(user.userId, "monthly");
           } catch (dynamoError) {
             logger.warn(
               `⚠️ Failed to store monthly analytics in DynamoDB for user ${user.userId}:`,
@@ -550,6 +552,15 @@ export const processMonthlyBatch = async (
               `⚠️ User ${user.userId} monthly analytics completed (S3 only - DynamoDB failed):`,
               logData,
             );
+          }
+
+          // Fan out program insights regeneration. Kept outside the DynamoDB
+          // try/catch so an unexpected fan-out error isn't misattributed as
+          // a DynamoDB failure. Monthly cron also refreshes — many users may
+          // not get weekly analytics in a given week (need >=2 workouts),
+          // so this catches them.
+          if (monthlyDynamoSaveSucceeded) {
+            await fanOutProgramInsights(user.userId, "monthly");
           }
         } catch (s3Error) {
           logger.warn(
