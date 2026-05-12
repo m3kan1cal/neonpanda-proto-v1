@@ -332,8 +332,6 @@ const allBackendFunctions = [
   backend.processStripeWebhook,
   backend.buildExercise,
   backend.buildWorkoutAnalysis,
-  backend.buildProgramInsights,
-  backend.getProgramInsights,
   backend.getExercises,
   backend.getExerciseNames,
   backend.getExercisesCount,

@@ -286,10 +286,13 @@ export const gatherProgramInsightsContext = async (params: {
   }
 
   // Cap formatted workouts. Prioritize program-linked (these speak to plan
-  // adherence) but always show at least a few ad-hoc lines if present.
-  const adHocBudget = Math.max(
-    Math.floor(WORKOUT_FORMAT_CAP / 3),
-    Math.min(adHoc.length, WORKOUT_FORMAT_CAP - programLinked.length),
+  // adherence) but reserve up to AD_HOC_FLOOR slots for ad-hoc so a heavy
+  // program-linked week doesn't fully crowd them out. Never reserve more
+  // slots than ad-hoc actually has.
+  const AD_HOC_FLOOR = Math.floor(WORKOUT_FORMAT_CAP / 3);
+  const adHocBudget = Math.min(
+    adHoc.length,
+    Math.max(AD_HOC_FLOOR, WORKOUT_FORMAT_CAP - programLinked.length),
   );
   const programBudget = Math.max(0, WORKOUT_FORMAT_CAP - adHocBudget);
 

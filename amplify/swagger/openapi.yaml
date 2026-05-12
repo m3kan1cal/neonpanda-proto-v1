@@ -472,7 +472,7 @@ components:
           type: string
         source:
           type: string
-          enum: [workout, weekly, manual]
+          enum: [workout, weekly, monthly, manual]
         createdAt:
           type: string
           format: date-time

@@ -481,7 +481,7 @@ export interface ProgramInsights {
   modelId: string;
 
   /** What triggered this regeneration. */
-  source: "workout" | "weekly" | "manual";
+  source: "workout" | "weekly" | "monthly" | "manual";
 
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;
@@ -495,7 +495,7 @@ export interface BuildProgramInsightsEvent {
   userId: string;
   coachId: string;
   programId: string;
-  source: "workout" | "weekly" | "manual";
+  source: "workout" | "weekly" | "monthly" | "manual";
   /** If true, bypass the regeneration throttle. */
   force?: boolean;
   /** For diagnostics: the workout that triggered this regeneration. */

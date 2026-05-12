@@ -45,21 +45,35 @@ const fanOutProgramInsights = async (
     if (activePrograms.length === 0) {
       return;
     }
+    // Skip programs with no coachId — build-program-insights rejects events
+    // without coachId, so an invoke with undefined would silently 400.
+    const programsToFanOut = activePrograms.filter((p) => {
+      if (!p.coachIds?.[0]) {
+        logger.warn(
+          `⚠️ Skipping program insights fan-out for ${p.programId} (user ${userId}): program has no coachId`,
+        );
+        return false;
+      }
+      return true;
+    });
+    if (programsToFanOut.length === 0) {
+      return;
+    }
     logger.info(
       `🧠 Fanning out program insights for user ${userId} (${source}):`,
       {
-        activeProgramCount: activePrograms.length,
+        activeProgramCount: programsToFanOut.length,
       },
     );
     await Promise.allSettled(
-      activePrograms.map((p) =>
+      programsToFanOut.map((p) =>
         invokeAsyncLambda(
           functionName,
           {
             userId,
-            coachId: p.coachIds?.[0],
+            coachId: p.coachIds[0],
             programId: p.programId,
-            source: "weekly", // Treat monthly cron the same for v1 (force=true bypasses throttle)
+            source,
             force: true,
           },
           `program insights fan-out (${source})`,
