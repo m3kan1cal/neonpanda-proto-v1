@@ -826,12 +826,15 @@ backend.processPostTurn.addEnvironment("BEDROCK_GUARDRAIL_VERSION", "DRAFT");
 
 // Unified agent framework (v2) per-agent rollout flags. Each build-* Lambda
 // reads its own AGENT_V2_* env var to choose between v1 and v2 at request
-// time. Default: ON in sandbox (so devs exercise v2 by default), OFF in
-// develop/main (v1 stays the safe production path until each agent is
-// verified). An explicit AGENT_V2_* env var overrides the default in either
-// direction — useful for one-off A/B testing or for forcing v2 on a branch
-// once it's promotion-ready.
-const v2DefaultByBranch = branchInfo.isSandbox ? "true" : "false";
+// time. Default: ON in sandbox + develop (so v2 is exercised end-to-end
+// before promotion), OFF in main (v1 stays the safe production path until
+// the explicit cutover). An explicit AGENT_V2_* env var overrides the
+// default in either direction — useful for one-off A/B testing or for
+// forcing v2 on a branch once it's promotion-ready.
+const v2DefaultByBranch =
+  branchInfo.isSandbox || branchInfo.branchName === "develop"
+    ? "true"
+    : "false";
 const resolveV2Flag = (envVarName: string): string =>
   process.env[envVarName] ?? v2DefaultByBranch;
 
