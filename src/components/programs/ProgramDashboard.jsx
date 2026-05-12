@@ -44,6 +44,7 @@ import ProgressOverview from "./ProgressOverview";
 import ProgramCalendar from "./ProgramCalendar";
 import PhaseTimeline from "./PhaseTimeline";
 import PhaseBreakdown from "./PhaseBreakdown";
+import ProgramInsights from "./ProgramInsights";
 import ShareProgramModal from "../shared-programs/ShareProgramModal";
 import { useToast } from "../../contexts/ToastContext";
 import { useUpgradePrompts } from "../../hooks/useUpgradePrompts";
@@ -68,6 +69,10 @@ export default function ProgramDashboard() {
   const [programDetails, setProgramDetails] = useState(null);
   const [todaysWorkout, setTodaysWorkout] = useState(null);
   const [coachData, setCoachData] = useState(null);
+  const [programInsights, setProgramInsights] = useState(null);
+  const [isLoadingProgramInsights, setIsLoadingProgramInsights] =
+    useState(true);
+  const [programInsightsError, setProgramInsightsError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
@@ -188,6 +193,10 @@ export default function ProgramDashboard() {
             if (newState.todaysWorkout) {
               setTodaysWorkout(newState.todaysWorkout);
             }
+            // Sync program insights state from agent
+            setProgramInsights(newState.programInsights ?? null);
+            setIsLoadingProgramInsights(!!newState.isLoadingProgramInsights);
+            setProgramInsightsError(newState.programInsightsError ?? null);
           },
         );
       }
@@ -218,6 +227,15 @@ export default function ProgramDashboard() {
                 return null;
               })
           : Promise.resolve(null);
+
+      // Kick off program insights fetch in parallel — non-blocking; the
+      // insights panel renders its own loading/error/empty states so a
+      // failure here must not break the dashboard.
+      programAgentRef.current
+        .loadProgramInsights(programId)
+        .catch((insightsErr) => {
+          logger.warn("Could not load program insights:", insightsErr);
+        });
 
       const [allTemplatesData, todayData] = await Promise.all([
         programAgentRef.current.loadWorkoutTemplates(programId, {}),
@@ -513,6 +531,11 @@ export default function ProgramDashboard() {
           <PhaseTimeline program={program} />
           <ProgressOverview program={program} />
           <PhaseBreakdown program={program} />
+          <ProgramInsights
+            insights={programInsights}
+            isLoading={isLoadingProgramInsights}
+            error={programInsightsError}
+          />
         </div>
 
         {/* Desktop: original two-column layout with independent stacking */}
@@ -554,6 +577,11 @@ export default function ProgramDashboard() {
             />
             <ProgressOverview program={program} />
             <PhaseBreakdown program={program} />
+            <ProgramInsights
+              insights={programInsights}
+              isLoading={isLoadingProgramInsights}
+              error={programInsightsError}
+            />
           </div>
         </div>
         <AppFooter />

@@ -1,6 +1,7 @@
 import {
   getPrograms,
   getProgram,
+  getProgramInsights,
   getWorkoutTemplates,
   updateProgram,
   deleteProgram,
@@ -52,13 +53,16 @@ export class ProgramAgent {
       selectedProgram: null, // Currently viewing program
       todaysWorkout: null, // Today's workout templates (single program, backward compat)
       todaysWorkouts: {}, // Today's workouts for ALL active programs (keyed by programId)
+      programInsights: null, // Latest AI-generated program insights for selected program
       isLoadingPrograms: false,
       isLoadingProgram: false,
       isLoadingTodaysWorkout: false,
       isLoadingAllTodaysWorkouts: false,
+      isLoadingProgramInsights: false,
       isUpdating: false,
       isLoggingWorkout: false,
       error: null,
+      programInsightsError: null,
       lastCheckTime: null,
       pollingStatus: {}, // templateId -> "polling" | "timeout"
     };
@@ -226,6 +230,62 @@ export class ProgramAgent {
       }
 
       throw error;
+    }
+  }
+
+  /**
+   * Load the latest AI-generated program insights for a program.
+   * Returns `programInsights: null` from the API when no synthesis has been
+   * generated yet — that maps to the "empty state" UI.
+   *
+   * @param {string} programId - The program ID
+   * @param {Object} [opts] - Options
+   * @param {AbortSignal} [opts.signal] - Optional AbortSignal for cancellation
+   * @returns {Promise<Object|null>} - The programInsights object, or null
+   */
+  async loadProgramInsights(programId, { signal } = {}) {
+    if (!this.userId || !this.coachId) {
+      logger.error(
+        "ProgramAgent.loadProgramInsights: userId and coachId are required",
+      );
+      return null;
+    }
+    if (!programId) {
+      logger.error("ProgramAgent.loadProgramInsights: programId is required");
+      return null;
+    }
+
+    this._updateState({
+      isLoadingProgramInsights: true,
+      programInsightsError: null,
+    });
+
+    try {
+      const response = await getProgramInsights(
+        this.userId,
+        this.coachId,
+        programId,
+        { signal },
+      );
+      const programInsights = response?.programInsights ?? null;
+      this._updateState({
+        programInsights,
+        isLoadingProgramInsights: false,
+      });
+      return programInsights;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        // Don't surface aborts as errors — caller is cleaning up.
+        throw error;
+      }
+      logger.error("ProgramAgent.loadProgramInsights: Error:", error);
+      this._updateState({
+        programInsights: null,
+        programInsightsError: error.message,
+        isLoadingProgramInsights: false,
+      });
+      // Don't bubble up to onError — insights failure should not block dashboard.
+      return null;
     }
   }
 

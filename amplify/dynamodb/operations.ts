@@ -58,6 +58,9 @@ export * from "./memory";
 // Program operations
 export * from "./program";
 
+// Program insights operations
+export * from "./program-insights";
+
 // Program designer operations
 export * from "./program-designer";
 

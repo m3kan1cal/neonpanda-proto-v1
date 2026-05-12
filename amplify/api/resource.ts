@@ -65,6 +65,7 @@ export function createCoreApi(
   createProgramLambda: lambda.IFunction,
   getProgramLambda: lambda.IFunction,
   getProgramsLambda: lambda.IFunction,
+  getProgramInsightsLambda: lambda.IFunction,
   updateProgramLambda: lambda.IFunction,
   deleteProgramLambda: lambda.IFunction,
   logWorkoutTemplateLambda: lambda.IFunction,
@@ -506,6 +507,12 @@ export function createCoreApi(
       getProgramsLambda,
     );
 
+  const getProgramInsightsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetProgramInsightsIntegration",
+      getProgramInsightsLambda,
+    );
+
   const updateProgramIntegration =
     new apigatewayv2_integrations.HttpLambdaIntegration(
       "UpdateProgramIntegration",
@@ -681,6 +688,7 @@ export function createCoreApi(
     createProgram: createProgramIntegration,
     getProgram: getProgramIntegration,
     getPrograms: getProgramsIntegration,
+    getProgramInsights: getProgramInsightsIntegration,
     updateProgram: updateProgramIntegration,
     deleteProgram: deleteProgramIntegration,
     logWorkoutTemplate: logWorkoutTemplateIntegration,
@@ -848,6 +856,14 @@ export function createCoreApi(
     path: "/users/{userId}/coaches/{coachId}/programs/{programId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getProgram,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Program Insights (AI-generated, evolving snapshot of athlete progress)
+  httpApi.addRoutes({
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}/insights",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getProgramInsights,
     authorizer: userPoolAuthorizer,
   });
 

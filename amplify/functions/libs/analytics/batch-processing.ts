@@ -7,6 +7,7 @@ import {
   saveMonthlyAnalytics,
   getWeeklyAnalytics,
   getMonthlyAnalytics,
+  queryPrograms,
 } from "../../../dynamodb/operations";
 import {
   fetchUserWeeklyData,
@@ -19,9 +20,59 @@ import {
   WeeklyAnalytics,
   MonthlyAnalytics,
 } from "./types";
-import { storeDebugDataInS3 } from "../api-helpers";
+import { storeDebugDataInS3, invokeAsyncLambda } from "../api-helpers";
 import { generateMonthId, getCurrentWeekRange, getCurrentMonthRange } from "./date-utils";
 import { logger } from "../logger";
+
+/**
+ * Fan out program insights regeneration to all of a user's active programs.
+ * Always invoked with `force: true` so it bypasses the build-program-insights
+ * throttle — weekly cron runs once per user per week, so freshness wins.
+ * Wrapped in try/catch so failures never break weekly/monthly analytics.
+ */
+const fanOutProgramInsights = async (
+  userId: string,
+  source: "weekly" | "monthly",
+): Promise<void> => {
+  const functionName = process.env.BUILD_PROGRAM_INSIGHTS_FUNCTION_NAME;
+  if (!functionName) {
+    return;
+  }
+  try {
+    const activePrograms = (await queryPrograms(userId)).filter(
+      (p) => p.status === "active",
+    );
+    if (activePrograms.length === 0) {
+      return;
+    }
+    logger.info(
+      `🧠 Fanning out program insights for user ${userId} (${source}):`,
+      {
+        activeProgramCount: activePrograms.length,
+      },
+    );
+    await Promise.allSettled(
+      activePrograms.map((p) =>
+        invokeAsyncLambda(
+          functionName,
+          {
+            userId,
+            coachId: p.coachIds?.[0],
+            programId: p.programId,
+            source: "weekly", // Treat monthly cron the same for v1 (force=true bypasses throttle)
+            force: true,
+          },
+          `program insights fan-out (${source})`,
+        ),
+      ),
+    );
+  } catch (error) {
+    logger.warn(
+      `⚠️ Failed to fan out program insights for user ${userId} (non-fatal):`,
+      error,
+    );
+  }
+};
 
 // Minimum remaining Lambda time (ms) required before starting a new user.
 // Prevents a new user from starting when there is insufficient budget to complete it.
@@ -215,6 +266,10 @@ export const processBatch = async (
                 dynamodbKey: `user#${user.userId} / weeklyAnalytics#${weekId}`,
               },
             );
+
+            // Fan out program insights regeneration for each active program.
+            // Fire-and-forget; failures must not break weekly analytics.
+            await fanOutProgramInsights(user.userId, "weekly");
           } catch (dynamoError) {
             logger.warn(
               `⚠️ Failed to store analytics in DynamoDB for user ${user.userId}:`,
@@ -466,6 +521,11 @@ export const processMonthlyBatch = async (
                 dynamodbKey: `user#${user.userId} / monthlyAnalytics#${monthId}`,
               },
             );
+
+            // Fan out program insights regeneration for each active program.
+            // Monthly cron also refreshes — many users may not get weekly
+            // analytics in a given week (need >=2 workouts), so this catches them.
+            await fanOutProgramInsights(user.userId, "monthly");
           } catch (dynamoError) {
             logger.warn(
               `⚠️ Failed to store monthly analytics in DynamoDB for user ${user.userId}:`,

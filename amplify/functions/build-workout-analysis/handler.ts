@@ -15,12 +15,14 @@ import {
   createOkResponse,
   createErrorResponse,
   callBedrockApi,
+  invokeAsyncLambda,
   MODEL_IDS,
   TEMPERATURE_PRESETS,
 } from "../libs/api-helpers";
 import type { BedrockToolUseResult } from "../libs/api-helpers";
 import { withHeartbeat } from "../libs/heartbeat";
 import { queryWorkouts, updateWorkout } from "../../dynamodb/workout";
+import { queryPrograms } from "../../dynamodb/program";
 import {
   WORKOUT_INSIGHTS_TOOL,
   getWorkoutInsightsPrompt,
@@ -157,6 +159,51 @@ export const handler = async (event: BuildWorkoutAnalysisEvent) => {
         await updateWorkout(event.userId, event.workoutId, {
           insights,
         } as any);
+
+        // Step 5: Fan out to build-program-insights for each active program
+        // the user has. Fires on ANY workout (program-linked or ad-hoc) since
+        // ad-hoc training still affects adherence/recovery signal. The
+        // build-program-insights Lambda has its own throttle and empty-state
+        // short-circuit, so this fan-out is safe to fire eagerly. Wrapped so
+        // a failure here never breaks the workout analysis return path.
+        const programInsightsFunctionName =
+          process.env.BUILD_PROGRAM_INSIGHTS_FUNCTION_NAME;
+        if (programInsightsFunctionName) {
+          try {
+            const activePrograms = (await queryPrograms(event.userId)).filter(
+              (p) => p.status === "active",
+            );
+            if (activePrograms.length > 0) {
+              logger.info(
+                "🧠 Fanning out program insights for active programs:",
+                {
+                  userId: event.userId,
+                  activeProgramCount: activePrograms.length,
+                },
+              );
+              await Promise.allSettled(
+                activePrograms.map((p) =>
+                  invokeAsyncLambda(
+                    programInsightsFunctionName,
+                    {
+                      userId: event.userId,
+                      coachId: p.coachIds?.[0] ?? event.coachId,
+                      programId: p.programId,
+                      source: "workout",
+                      triggerWorkoutId: event.workoutId,
+                    },
+                    "program insights fan-out",
+                  ),
+                ),
+              );
+            }
+          } catch (fanOutError) {
+            logger.warn(
+              "⚠️ Failed to fan out program insights (non-fatal):",
+              fanOutError,
+            );
+          }
+        }
 
         const processingTimeMs = Date.now() - startTime;
 

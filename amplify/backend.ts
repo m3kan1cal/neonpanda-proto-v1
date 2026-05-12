@@ -106,6 +106,8 @@ import { createStripePortalSession } from "./functions/create-stripe-portal-sess
 import { processStripeWebhook } from "./functions/process-stripe-webhook/resource";
 import { buildExercise } from "./functions/build-exercise/resource";
 import { buildWorkoutAnalysis } from "./functions/build-workout-analysis/resource";
+import { buildProgramInsights } from "./functions/build-program-insights/resource";
+import { getProgramInsights } from "./functions/get-program-insights/resource";
 import { getExercises } from "./functions/get-exercises/resource";
 import { getExerciseNames } from "./functions/get-exercise-names/resource";
 import { getExercisesCount } from "./functions/get-exercises-count/resource";
@@ -224,6 +226,8 @@ const backend = defineBackend({
   processStripeWebhook,
   buildExercise,
   buildWorkoutAnalysis,
+  buildProgramInsights,
+  getProgramInsights,
   getExercises,
   getExerciseNames,
   getExercisesCount,
@@ -314,6 +318,8 @@ const allBackendFunctions = [
   backend.buildProgram,
   backend.getProgram,
   backend.getPrograms,
+  backend.buildProgramInsights,
+  backend.getProgramInsights,
   backend.updateProgram,
   backend.deleteProgram,
   backend.logWorkoutTemplate,
@@ -326,6 +332,8 @@ const allBackendFunctions = [
   backend.processStripeWebhook,
   backend.buildExercise,
   backend.buildWorkoutAnalysis,
+  backend.buildProgramInsights,
+  backend.getProgramInsights,
   backend.getExercises,
   backend.getExerciseNames,
   backend.getExercisesCount,
@@ -395,6 +403,9 @@ backend.buildExercise.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildWorkoutAnalysis.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildProgramInsights.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
@@ -488,6 +499,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.createProgram.resources.lambda,
   backend.getProgram.resources.lambda,
   backend.getPrograms.resources.lambda,
+  backend.getProgramInsights.resources.lambda,
   backend.updateProgram.resources.lambda,
   backend.deleteProgram.resources.lambda,
   backend.logWorkoutTemplate.resources.lambda,
@@ -660,6 +672,7 @@ const scheduledPolicies = new StackGroupPolicies(
   backend.generateDownloadUrls,
   backend.getProgram,
   backend.getPrograms,
+  backend.getProgramInsights,
   backend.getWorkoutTemplate,
   backend.getExercises,
   backend.getExerciseNames,
@@ -910,6 +923,7 @@ backend.buildCoachConfig.addEnvironment(
   backend.buildProgram,
   backend.buildExercise,
   backend.buildWorkoutAnalysis,
+  backend.buildProgramInsights,
   backend.buildConversationSummary,
   backend.buildConversationTitle,
   backend.buildLivingProfile,
@@ -1133,6 +1147,21 @@ grantLambdaInvokePermissions(backend.buildWorkout.resources.lambda, [
   backend.buildWorkoutAnalysis.resources.lambda.functionArn,
 ]);
 
+// Grant permission to buildWorkoutAnalysis to fan out program insights for
+// each of the user's active programs at the tail of analysis.
+grantLambdaInvokePermissions(backend.buildWorkoutAnalysis.resources.lambda, [
+  backend.buildProgramInsights.resources.lambda.functionArn,
+]);
+
+// Grant permission to weekly/monthly analytics builders to fan out program
+// insights per active program after their per-user analytics complete.
+grantLambdaInvokePermissions(backend.buildWeeklyAnalytics.resources.lambda, [
+  backend.buildProgramInsights.resources.lambda.functionArn,
+]);
+grantLambdaInvokePermissions(backend.buildMonthlyAnalytics.resources.lambda, [
+  backend.buildProgramInsights.resources.lambda.functionArn,
+]);
+
 // Grant permission to dispatchMemoryLifecycle to invoke processMemoryLifecycle (fan-out per user)
 grantLambdaInvokePermissions(backend.dispatchMemoryLifecycle.resources.lambda, [
   backend.processMemoryLifecycle.resources.lambda.functionArn,
@@ -1235,6 +1264,7 @@ const allFunctions = [
   backend.createProgram,
   backend.getProgram,
   backend.getPrograms,
+  backend.getProgramInsights,
   backend.updateProgram,
   backend.deleteProgram,
   backend.createProgramDesignerSession,
@@ -1286,6 +1316,7 @@ const jobsAndScheduledFunctions = [
   backend.buildProgram,
   backend.buildExercise,
   backend.buildWorkoutAnalysis,
+  backend.buildProgramInsights,
   backend.buildConversationSummary,
   backend.buildLivingProfile,
   backend.processPostTurn,
@@ -1566,6 +1597,22 @@ backend.buildWorkout.addEnvironment(
 backend.buildWorkout.addEnvironment(
   "BUILD_WORKOUT_ANALYSIS_FUNCTION_NAME",
   backend.buildWorkoutAnalysis.resources.lambda.functionName,
+);
+
+// Program insights fan-out: buildWorkoutAnalysis fires after every workout's
+// per-workout analysis completes; buildWeeklyAnalytics and buildMonthlyAnalytics
+// fire per active program after each user's analytics save.
+backend.buildWorkoutAnalysis.addEnvironment(
+  "BUILD_PROGRAM_INSIGHTS_FUNCTION_NAME",
+  backend.buildProgramInsights.resources.lambda.functionName,
+);
+backend.buildWeeklyAnalytics.addEnvironment(
+  "BUILD_PROGRAM_INSIGHTS_FUNCTION_NAME",
+  backend.buildProgramInsights.resources.lambda.functionName,
+);
+backend.buildMonthlyAnalytics.addEnvironment(
+  "BUILD_PROGRAM_INSIGHTS_FUNCTION_NAME",
+  backend.buildProgramInsights.resources.lambda.functionName,
 );
 
 // Stripe environment variables
