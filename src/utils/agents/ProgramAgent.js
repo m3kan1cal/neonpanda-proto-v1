@@ -58,7 +58,10 @@ export class ProgramAgent {
       isLoadingProgram: false,
       isLoadingTodaysWorkout: false,
       isLoadingAllTodaysWorkouts: false,
-      isLoadingProgramInsights: false,
+      // Default to true: every ProgramDashboard load fires loadProgramInsights,
+      // and starting false here would flicker the empty-state CTA between the
+      // first onStateChange (from loadProgram) and the insights fetch starting.
+      isLoadingProgramInsights: true,
       isUpdating: false,
       isLoggingWorkout: false,
       error: null,

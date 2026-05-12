@@ -7,7 +7,6 @@ import {
   saveMonthlyAnalytics,
   getWeeklyAnalytics,
   getMonthlyAnalytics,
-  queryPrograms,
 } from "../../../dynamodb/operations";
 import {
   fetchUserWeeklyData,
@@ -20,73 +19,14 @@ import {
   WeeklyAnalytics,
   MonthlyAnalytics,
 } from "./types";
-import { storeDebugDataInS3, invokeAsyncLambda } from "../api-helpers";
-import { generateMonthId, getCurrentWeekRange, getCurrentMonthRange } from "./date-utils";
+import { storeDebugDataInS3 } from "../api-helpers";
+import { fanOutProgramInsights } from "../program/insights-fanout";
+import {
+  generateMonthId,
+  getCurrentWeekRange,
+  getCurrentMonthRange,
+} from "./date-utils";
 import { logger } from "../logger";
-
-/**
- * Fan out program insights regeneration to all of a user's active programs.
- * Always invoked with `force: true` so it bypasses the build-program-insights
- * throttle — weekly cron runs once per user per week, so freshness wins.
- * Wrapped in try/catch so failures never break weekly/monthly analytics.
- */
-const fanOutProgramInsights = async (
-  userId: string,
-  source: "weekly" | "monthly",
-): Promise<void> => {
-  const functionName = process.env.BUILD_PROGRAM_INSIGHTS_FUNCTION_NAME;
-  if (!functionName) {
-    return;
-  }
-  try {
-    const activePrograms = (await queryPrograms(userId)).filter(
-      (p) => p.status === "active",
-    );
-    if (activePrograms.length === 0) {
-      return;
-    }
-    // Skip programs with no coachId — build-program-insights rejects events
-    // without coachId, so an invoke with undefined would silently 400.
-    const programsToFanOut = activePrograms.filter((p) => {
-      if (!p.coachIds?.[0]) {
-        logger.warn(
-          `⚠️ Skipping program insights fan-out for ${p.programId} (user ${userId}): program has no coachId`,
-        );
-        return false;
-      }
-      return true;
-    });
-    if (programsToFanOut.length === 0) {
-      return;
-    }
-    logger.info(
-      `🧠 Fanning out program insights for user ${userId} (${source}):`,
-      {
-        activeProgramCount: programsToFanOut.length,
-      },
-    );
-    await Promise.allSettled(
-      programsToFanOut.map((p) =>
-        invokeAsyncLambda(
-          functionName,
-          {
-            userId,
-            coachId: p.coachIds[0],
-            programId: p.programId,
-            source,
-            force: true,
-          },
-          `program insights fan-out (${source})`,
-        ),
-      ),
-    );
-  } catch (error) {
-    logger.warn(
-      `⚠️ Failed to fan out program insights for user ${userId} (non-fatal):`,
-      error,
-    );
-  }
-};
 
 // Minimum remaining Lambda time (ms) required before starting a new user.
 // Prevents a new user from starting when there is insufficient budget to complete it.
@@ -298,7 +238,11 @@ export const processBatch = async (
           // try/catch so an unexpected fan-out error isn't misattributed as
           // a DynamoDB failure. fanOutProgramInsights swallows its own errors.
           if (weeklyDynamoSaveSucceeded) {
-            await fanOutProgramInsights(user.userId, "weekly");
+            await fanOutProgramInsights({
+              userId: user.userId,
+              source: "weekly",
+              force: true,
+            });
           }
         } catch (s3Error) {
           logger.warn(
@@ -560,7 +504,11 @@ export const processMonthlyBatch = async (
           // not get weekly analytics in a given week (need >=2 workouts),
           // so this catches them.
           if (monthlyDynamoSaveSucceeded) {
-            await fanOutProgramInsights(user.userId, "monthly");
+            await fanOutProgramInsights({
+              userId: user.userId,
+              source: "monthly",
+              force: true,
+            });
           }
         } catch (s3Error) {
           logger.warn(

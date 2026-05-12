@@ -15,14 +15,13 @@ import {
   createOkResponse,
   createErrorResponse,
   callBedrockApi,
-  invokeAsyncLambda,
   MODEL_IDS,
   TEMPERATURE_PRESETS,
 } from "../libs/api-helpers";
 import type { BedrockToolUseResult } from "../libs/api-helpers";
 import { withHeartbeat } from "../libs/heartbeat";
 import { queryWorkouts, updateWorkout } from "../../dynamodb/workout";
-import { queryPrograms } from "../../dynamodb/program";
+import { fanOutProgramInsights } from "../libs/program/insights-fanout";
 import {
   WORKOUT_INSIGHTS_TOOL,
   getWorkoutInsightsPrompt,
@@ -164,59 +163,13 @@ export const handler = async (event: BuildWorkoutAnalysisEvent) => {
         // the user has. Fires on ANY workout (program-linked or ad-hoc) since
         // ad-hoc training still affects adherence/recovery signal. The
         // build-program-insights Lambda has its own throttle and empty-state
-        // short-circuit, so this fan-out is safe to fire eagerly. Wrapped so
-        // a failure here never breaks the workout analysis return path.
-        const programInsightsFunctionName =
-          process.env.BUILD_PROGRAM_INSIGHTS_FUNCTION_NAME;
-        if (programInsightsFunctionName) {
-          try {
-            const activePrograms = (await queryPrograms(event.userId)).filter(
-              (p) => p.status === "active",
-            );
-            // Skip programs without a coachId — getProgram(userId, coachId, programId)
-            // returns null when coachId doesn't match, which would throw "Program not
-            // found" downstream. Falling back to event.coachId can also mismatch when
-            // the triggering workout's coach doesn't own this program.
-            const programsToFanOut = activePrograms.filter((p) => {
-              if (!p.coachIds?.[0]) {
-                logger.warn(
-                  `⚠️ Skipping program insights fan-out for ${p.programId}: program has no coachId`,
-                );
-                return false;
-              }
-              return true;
-            });
-            if (programsToFanOut.length > 0) {
-              logger.info(
-                "🧠 Fanning out program insights for active programs:",
-                {
-                  userId: event.userId,
-                  activeProgramCount: programsToFanOut.length,
-                },
-              );
-              await Promise.allSettled(
-                programsToFanOut.map((p) =>
-                  invokeAsyncLambda(
-                    programInsightsFunctionName,
-                    {
-                      userId: event.userId,
-                      coachId: p.coachIds[0],
-                      programId: p.programId,
-                      source: "workout",
-                      triggerWorkoutId: event.workoutId,
-                    },
-                    "program insights fan-out",
-                  ),
-                ),
-              );
-            }
-          } catch (fanOutError) {
-            logger.warn(
-              "⚠️ Failed to fan out program insights (non-fatal):",
-              fanOutError,
-            );
-          }
-        }
+        // short-circuit, so this fan-out is safe to fire eagerly. The helper
+        // swallows its own errors so a fan-out failure can't break analysis.
+        await fanOutProgramInsights({
+          userId: event.userId,
+          source: "workout",
+          triggerWorkoutId: event.workoutId,
+        });
 
         const processingTimeMs = Date.now() - startTime;
 
