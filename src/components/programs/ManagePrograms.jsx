@@ -1430,14 +1430,16 @@ function ManagePrograms() {
           <PageHeaderSkeleton showBeta showCoach showRightSlot />
 
           {/* Programs grid skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr">
             {/* Add New Program Card skeleton */}
-            <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
+            <div className={`${containerPatterns.dashedCard} p-4 md:p-6 min-h-[18rem] md:min-h-0 opacity-60`}>
               <div className="text-center h-full flex flex-col justify-between">
                 <div className="flex-1 flex flex-col justify-center items-center">
-                  <div className="w-8 h-8 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-xl mb-2 md:mb-3"></div>
-                  <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40 md:w-48 mb-2 md:mb-3"></div>
-                  <div className="h-3 md:h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 md:w-56 mb-3 md:mb-4"></div>
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-xl mb-1 md:mb-3"></div>
+                  <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40 md:w-48 mb-1 md:mb-3"></div>
+                  {/* Description placeholder — two lines on mobile to mirror wrapped text */}
+                  <div className="h-3 md:h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-1.5"></div>
+                  <div className="h-3 md:h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40 mb-0 md:mb-4"></div>
                   <div className="hidden md:block h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-32 mb-3"></div>
                 </div>
                 {/* Bottom features skeleton — desktop only, mirrors loaded card */}
@@ -1670,12 +1672,12 @@ function ManagePrograms() {
         )}
 
         {/* Active Programs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr animate-fadeIn">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr animate-fadeIn">
           {/* Create New Program Card — opens the contextual chat drawer
               instantly, so there's no in-flight loading state on the card. */}
           <div
             onClick={handleCreateProgram}
-            className={`${containerPatterns.dashedCard} p-4 md:p-6 group cursor-pointer`}
+            className={`${containerPatterns.dashedCard} p-4 md:p-6 min-h-[18rem] md:min-h-0 group cursor-pointer`}
           >
             <div className="text-center h-full flex flex-col justify-between">
               {/* Top Section */}
