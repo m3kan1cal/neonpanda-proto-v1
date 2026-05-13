@@ -20,7 +20,12 @@ import {
   MonthlyAnalytics,
 } from "./types";
 import { storeDebugDataInS3 } from "../api-helpers";
-import { generateMonthId, getCurrentWeekRange, getCurrentMonthRange } from "./date-utils";
+import { fanOutProgramInsights } from "../program/insights-fanout";
+import {
+  generateMonthId,
+  getCurrentWeekRange,
+  getCurrentMonthRange,
+} from "./date-utils";
 import { logger } from "../logger";
 
 // Minimum remaining Lambda time (ms) required before starting a new user.
@@ -173,6 +178,7 @@ export const processBatch = async (
           };
 
           // Store analytics in DynamoDB
+          let weeklyDynamoSaveSucceeded = false;
           try {
             const weekId = generateWeekId(weeklyData.weekRange.weekStart);
             const weeklyAnalytics: WeeklyAnalytics = {
@@ -208,6 +214,7 @@ export const processBatch = async (
             };
 
             await saveWeeklyAnalytics(weeklyAnalytics);
+            weeklyDynamoSaveSucceeded = true;
             logger.info(
               `✅ User ${user.userId} analytics completed and stored:`,
               {
@@ -225,6 +232,17 @@ export const processBatch = async (
               `⚠️ User ${user.userId} analytics completed (S3 only - DynamoDB failed):`,
               logData,
             );
+          }
+
+          // Fan out program insights regeneration. Kept outside the DynamoDB
+          // try/catch so an unexpected fan-out error isn't misattributed as
+          // a DynamoDB failure. fanOutProgramInsights swallows its own errors.
+          if (weeklyDynamoSaveSucceeded) {
+            await fanOutProgramInsights({
+              userId: user.userId,
+              source: "weekly",
+              force: true,
+            });
           }
         } catch (s3Error) {
           logger.warn(
@@ -422,6 +440,7 @@ export const processMonthlyBatch = async (
           };
 
           // Store analytics in DynamoDB
+          let monthlyDynamoSaveSucceeded = false;
           try {
             const monthId = generateMonthId(monthlyData.monthRange.monthStart);
             const monthlyAnalytics: MonthlyAnalytics = {
@@ -459,6 +478,7 @@ export const processMonthlyBatch = async (
             };
 
             await saveMonthlyAnalytics(monthlyAnalytics);
+            monthlyDynamoSaveSucceeded = true;
             logger.info(
               `✅ User ${user.userId} monthly analytics completed and stored:`,
               {
@@ -476,6 +496,19 @@ export const processMonthlyBatch = async (
               `⚠️ User ${user.userId} monthly analytics completed (S3 only - DynamoDB failed):`,
               logData,
             );
+          }
+
+          // Fan out program insights regeneration. Kept outside the DynamoDB
+          // try/catch so an unexpected fan-out error isn't misattributed as
+          // a DynamoDB failure. Monthly cron also refreshes — many users may
+          // not get weekly analytics in a given week (need >=2 workouts),
+          // so this catches them.
+          if (monthlyDynamoSaveSucceeded) {
+            await fanOutProgramInsights({
+              userId: user.userId,
+              source: "monthly",
+              force: true,
+            });
           }
         } catch (s3Error) {
           logger.warn(

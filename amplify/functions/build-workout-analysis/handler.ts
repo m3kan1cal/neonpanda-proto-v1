@@ -21,6 +21,7 @@ import {
 import type { BedrockToolUseResult } from "../libs/api-helpers";
 import { withHeartbeat } from "../libs/heartbeat";
 import { queryWorkouts, updateWorkout } from "../../dynamodb/workout";
+import { fanOutProgramInsights } from "../libs/program/insights-fanout";
 import {
   WORKOUT_INSIGHTS_TOOL,
   getWorkoutInsightsPrompt,
@@ -157,6 +158,18 @@ export const handler = async (event: BuildWorkoutAnalysisEvent) => {
         await updateWorkout(event.userId, event.workoutId, {
           insights,
         } as any);
+
+        // Step 5: Fan out to build-program-insights for each active program
+        // the user has. Fires on ANY workout (program-linked or ad-hoc) since
+        // ad-hoc training still affects adherence/recovery signal. The
+        // build-program-insights Lambda has its own throttle and empty-state
+        // short-circuit, so this fan-out is safe to fire eagerly. The helper
+        // swallows its own errors so a fan-out failure can't break analysis.
+        await fanOutProgramInsights({
+          userId: event.userId,
+          source: "workout",
+          triggerWorkoutId: event.workoutId,
+        });
 
         const processingTimeMs = Date.now() - startTime;
 

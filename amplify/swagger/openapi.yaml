@@ -380,6 +380,106 @@ components:
           type: string
           format: date-time
 
+    ProgramInsights:
+      type: object
+      description: |
+        AI-generated synthesis of how the athlete is progressing through a training program.
+        Composes pre-digested per-workout insights and weekly analytics actionable insights.
+      properties:
+        programId:
+          type: string
+        userId:
+          type: string
+        coachId:
+          type: string
+        adherenceTrend:
+          type: string
+          description: 1-2 sentences on completion rate, scaling, missed days.
+        goalProgress:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required: [goal, status, evidence]
+            properties:
+              goal:
+                type: string
+              status:
+                type: string
+                enum: [on_track, ahead, behind, unclear]
+              evidence:
+                type: string
+        exercisePrTrends:
+          type: string
+          nullable: true
+        memorySignals:
+          type: string
+          nullable: true
+        livingProfileShifts:
+          type: string
+          nullable: true
+        phaseProgress:
+          type: object
+          properties:
+            currentPhase:
+              type: string
+            onPace:
+              type: boolean
+            notes:
+              type: string
+        riskFlags:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required: [type, note]
+            properties:
+              type:
+                type: string
+                enum:
+                  [
+                    overtraining,
+                    underrecovery,
+                    plateau,
+                    adherence_drop,
+                    injury_signal,
+                  ]
+              note:
+                type: string
+        coachRecommendation:
+          type: string
+          description: Concrete next action (1-2 sentences).
+        coachNote:
+          type: string
+          description: Warm narrative summary (2-3 sentences) in athlete-facing voice.
+        inputs:
+          type: object
+          properties:
+            programLinkedWorkoutCount:
+              type: integer
+            adHocWorkoutCount:
+              type: integer
+            weeklyAnalyticsCount:
+              type: integer
+            memoryCount:
+              type: integer
+            hasLivingProfile:
+              type: boolean
+        generatedAt:
+          type: string
+          format: date-time
+        modelId:
+          type: string
+        source:
+          type: string
+          enum: [workout, weekly, monthly, manual]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     Workout:
       type: object
       properties:
@@ -1974,6 +2074,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{userId}/coaches/{coachId}/programs/{programId}/insights:
+    get:
+      tags: [Programs]
+      summary: Get AI-generated program insights
+      description: |
+        Returns the latest AI-generated synthesis of how the athlete is progressing through
+        the program. Regenerated asynchronously after each logged workout (program-linked or
+        ad-hoc) and after weekly/monthly analytics jobs run. Returns `programInsights: null`
+        when no synthesis has been generated yet (e.g., brand-new program with no workouts).
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+        - $ref: "#/components/parameters/CoachIdParam"
+        - $ref: "#/components/parameters/ProgramIdParam"
+      responses:
+        "200":
+          description: Program insights (or null when not yet generated)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      programInsights:
+                        oneOf:
+                          - $ref: "#/components/schemas/ProgramInsights"
+                          - type: "null"
 
   # ===================================================================
   # WORKOUT TEMPLATES
