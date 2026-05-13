@@ -204,6 +204,57 @@ export const getProgram = async (userId, coachId, programId) => {
 };
 
 /**
+ * Gets the latest AI-generated program insights for a training program.
+ * Returns `programInsights: null` when no synthesis has been generated yet.
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} programId - The program ID
+ * @param {Object} [opts] - Options
+ * @param {AbortSignal} [opts.signal] - Optional AbortSignal for cancellation
+ * @returns {Promise<{ programInsights: Object|null }>}
+ */
+export const getProgramInsights = async (
+  userId,
+  coachId,
+  programId,
+  { signal } = {},
+) => {
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/insights`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+      signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error("getProgramInsights: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    if (error.name === "AbortError") throw error;
+    logger.error("getProgramInsights: Exception:", error);
+    throw error;
+  }
+};
+
+/**
  * Gets workout templates for a training program
  * @param {string} userId - The user ID
  * @param {string} coachId - The coach ID

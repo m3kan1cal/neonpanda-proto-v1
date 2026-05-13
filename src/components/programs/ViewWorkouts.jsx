@@ -1494,7 +1494,7 @@ General thoughts: `;
                           }
                         >
                           <div
-                            className={`${containerPatterns.workoutDescriptionEditable} text-sm`}
+                            className={containerPatterns.workoutDescriptionEditable}
                           >
                             {template.description}
                           </div>
@@ -1743,7 +1743,9 @@ General thoughts: `;
                             toggleSubCard(template.templateId, "coach-notes")
                           }
                         >
-                          <div className={containerPatterns.coachNotesSection}>
+                          <div
+                            className={`${containerPatterns.coachNotesSection} font-body text-base text-synthwave-text-secondary leading-relaxed`}
+                          >
                             <MarkdownRenderer content={template.notes} />
                           </div>
                         </CollapsibleSubCard>

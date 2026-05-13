@@ -413,6 +413,96 @@ export interface RegenerateWorkoutTemplateEvent {
 }
 
 /**
+ * AI-generated program-level insights, produced by build-program-insights.
+ * One record per program; overwritten in place as new workouts and weekly
+ * analytics arrive.
+ */
+export interface ProgramInsights {
+  programId: string;
+  userId: string;
+  coachId: string;
+
+  /** 1-2 sentences on completion rate, scaling patterns, missed days. */
+  adherenceTrend: string;
+
+  /** Status of each tracked training goal with supporting evidence. */
+  goalProgress: Array<{
+    goal: string;
+    status: "on_track" | "ahead" | "behind" | "unclear";
+    evidence: string;
+  }>;
+
+  /** PR / strength trajectory across program-linked workouts. Null if insufficient signal. */
+  exercisePrTrends: string | null;
+
+  /** Notable themes from recent memories (motivation, injury, life stress). Null if none. */
+  memorySignals: string | null;
+
+  /** Changes in the living profile since program start. Null if no meaningful shifts. */
+  livingProfileShifts: string | null;
+
+  /** Pace and notes about the current phase of the program. */
+  phaseProgress: {
+    currentPhase: string;
+    onPace: boolean;
+    notes: string;
+  };
+
+  /** Risk flags surfaced from the synthesis. */
+  riskFlags: Array<{
+    type:
+      | "overtraining"
+      | "underrecovery"
+      | "plateau"
+      | "adherence_drop"
+      | "injury_signal";
+    note: string;
+  }>;
+
+  /** Concrete next action recommendation (1-2 sentences). */
+  coachRecommendation: string;
+
+  /** Warm narrative summary in athlete-facing voice (2-3 sentences). */
+  coachNote: string;
+
+  /** Counts that fed this synthesis (rendered in UI footer + useful for debugging). */
+  inputs: {
+    programLinkedWorkoutCount: number;
+    adHocWorkoutCount: number;
+    weeklyAnalyticsCount: number;
+    memoryCount: number;
+    hasLivingProfile: boolean;
+  };
+
+  /** ISO timestamp when this synthesis was generated. */
+  generatedAt: string;
+
+  /** Bedrock model used for generation. */
+  modelId: string;
+
+  /** What triggered this regeneration. */
+  source: "workout" | "weekly" | "monthly" | "manual";
+
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+/**
+ * Event payload for the build-program-insights Lambda.
+ */
+export interface BuildProgramInsightsEvent {
+  userId: string;
+  coachId: string;
+  programId: string;
+  source: "workout" | "weekly" | "monthly" | "manual";
+  /** If true, bypass the regeneration throttle. */
+  force?: boolean;
+  /** For diagnostics: the workout that triggered this regeneration. */
+  triggerWorkoutId?: string;
+}
+
+/**
  * Training Program summary for list views (lightweight)
  */
 export interface ProgramSummary {
