@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { containerPatterns } from "../../utils/ui/uiPatterns";
-import { LightningIcon } from "../themes/SynthwaveComponents";
+import { LightningIconSmall } from "../themes/SynthwaveComponents";
 import CollapsibleSection from "./CollapsibleSection";
 
 /**
@@ -46,12 +46,6 @@ const formatRelativeTime = (iso) => {
   return generated.toLocaleDateString();
 };
 
-const SubSectionHeader = ({ children }) => (
-  <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-    {children}
-  </h4>
-);
-
 const TextBlock = ({ children }) => (
   <div className={containerPatterns.coachNotesSection}>
     <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
@@ -70,7 +64,10 @@ export default function ProgramInsights({
   const [showGoals, setShowGoals] = useState(true);
   const [showPhase, setShowPhase] = useState(true);
   const [showRisks, setShowRisks] = useState(true);
-  const [showSignals, setShowSignals] = useState(false);
+  const [showExercisePrTrends, setShowExercisePrTrends] = useState(false);
+  const [showMemorySignals, setShowMemorySignals] = useState(false);
+  const [showLivingProfileShifts, setShowLivingProfileShifts] = useState(false);
+  const [showCoachRecommendation, setShowCoachRecommendation] = useState(false);
 
   // Render container — preserved across all states so the dashboard layout
   // doesn't jump as data resolves.
@@ -125,13 +122,7 @@ export default function ProgramInsights({
     return (
       <div className="space-y-5">
         {/* Coach note — hero */}
-        {coachNote && (
-          <div className={containerPatterns.coachNotesSection}>
-            <p className="font-body text-base text-white leading-relaxed italic">
-              {coachNote}
-            </p>
-          </div>
-        )}
+        {coachNote && <TextBlock>{coachNote}</TextBlock>}
 
         {/* Adherence trend */}
         {adherenceTrend && (
@@ -277,20 +268,17 @@ export default function ProgramInsights({
             </button>
             {showRisks && (
               <div className={containerPatterns.coachNotesSection}>
-                <ul className="space-y-2">
+                <ul className="space-y-4">
                   {riskFlags.map((r, idx) => (
-                    <li
-                      key={idx}
-                      className="font-body text-sm flex items-start gap-2"
-                    >
+                    <li key={idx} className="font-body text-sm">
                       <span
-                        className={`shrink-0 text-xs px-2 py-0.5 rounded-full border ${STATUS_PILL.behind}`}
+                        className={`inline-block text-xs px-2 py-0.5 rounded-full border ${STATUS_PILL.behind} mb-2`}
                       >
                         {r.type.replace(/_/g, " ")}
                       </span>
-                      <span className="text-synthwave-text-secondary leading-relaxed">
+                      <p className="text-synthwave-text-secondary leading-relaxed">
                         {r.note}
-                      </span>
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -299,17 +287,17 @@ export default function ProgramInsights({
           </div>
         )}
 
-        {/* Other signals (collapsed by default) */}
-        {(exercisePrTrends || memorySignals || livingProfileShifts) && (
+        {/* Exercise & PR trends */}
+        {exercisePrTrends && (
           <div>
             <button
-              onClick={() => setShowSignals((v) => !v)}
+              onClick={() => setShowExercisePrTrends((v) => !v)}
               className={`${containerPatterns.collapsibleToggle} mb-2`}
-              aria-expanded={showSignals}
+              aria-expanded={showExercisePrTrends}
             >
-              <span>Other Signals</span>
+              <span>Exercise &amp; PR Trends</span>
               <svg
-                className={`w-4 h-4 transition-transform duration-200 ${showSignals ? "rotate-180" : ""}`}
+                className={`w-4 h-4 transition-transform duration-200 ${showExercisePrTrends ? "rotate-180" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -322,27 +310,62 @@ export default function ProgramInsights({
                 />
               </svg>
             </button>
-            {showSignals && (
-              <div className="space-y-3">
-                {exercisePrTrends && (
-                  <div>
-                    <SubSectionHeader>Exercise &amp; PR Trends</SubSectionHeader>
-                    <TextBlock>{exercisePrTrends}</TextBlock>
-                  </div>
-                )}
-                {memorySignals && (
-                  <div>
-                    <SubSectionHeader>Memory Signals</SubSectionHeader>
-                    <TextBlock>{memorySignals}</TextBlock>
-                  </div>
-                )}
-                {livingProfileShifts && (
-                  <div>
-                    <SubSectionHeader>Living Profile Shifts</SubSectionHeader>
-                    <TextBlock>{livingProfileShifts}</TextBlock>
-                  </div>
-                )}
-              </div>
+            {showExercisePrTrends && <TextBlock>{exercisePrTrends}</TextBlock>}
+          </div>
+        )}
+
+        {/* Memory signals */}
+        {memorySignals && (
+          <div>
+            <button
+              onClick={() => setShowMemorySignals((v) => !v)}
+              className={`${containerPatterns.collapsibleToggle} mb-2`}
+              aria-expanded={showMemorySignals}
+            >
+              <span>Memory Signals</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${showMemorySignals ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {showMemorySignals && <TextBlock>{memorySignals}</TextBlock>}
+          </div>
+        )}
+
+        {/* Living profile shifts */}
+        {livingProfileShifts && (
+          <div>
+            <button
+              onClick={() => setShowLivingProfileShifts((v) => !v)}
+              className={`${containerPatterns.collapsibleToggle} mb-2`}
+              aria-expanded={showLivingProfileShifts}
+            >
+              <span>Living Profile Shifts</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${showLivingProfileShifts ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {showLivingProfileShifts && (
+              <TextBlock>{livingProfileShifts}</TextBlock>
             )}
           </div>
         )}
@@ -350,8 +373,29 @@ export default function ProgramInsights({
         {/* Coach recommendation */}
         {coachRecommendation && (
           <div>
-            <SubSectionHeader>Coach Recommendation</SubSectionHeader>
-            <TextBlock>{coachRecommendation}</TextBlock>
+            <button
+              onClick={() => setShowCoachRecommendation((v) => !v)}
+              className={`${containerPatterns.collapsibleToggle} mb-2`}
+              aria-expanded={showCoachRecommendation}
+            >
+              <span>Coach Recommendation</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${showCoachRecommendation ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {showCoachRecommendation && (
+              <TextBlock>{coachRecommendation}</TextBlock>
+            )}
           </div>
         )}
 
@@ -368,7 +412,7 @@ export default function ProgramInsights({
   return (
     <CollapsibleSection
       title="Program Insights"
-      icon={LightningIcon}
+      icon={LightningIconSmall}
       iconColor="purple"
     >
       {body}
