@@ -647,10 +647,10 @@ function Coaches() {
           <PageHeaderSkeleton showCoach showRightSlot />
 
           {/* Coaches grid skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr">
             {/* Add New Coach Card skeleton */}
             <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
-              <div className="text-center h-full flex flex-col justify-between min-h-[350px]">
+              <div className="text-center h-full flex flex-col justify-between min-h-[200px] md:min-h-[400px]">
                 <div className="flex-1 flex flex-col justify-center items-center">
                   <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse rounded-full mb-4"></div>
                   <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48 mb-3"></div>
@@ -662,7 +662,10 @@ function Coaches() {
 
             {/* Coach card skeletons */}
             {[1, 2].map((i) => (
-              <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
+              <div
+                key={i}
+                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
+              >
                 <div className="flex-1">
                   {/* Coach name skeleton */}
                   <div className="flex items-start space-x-3 mb-4">
@@ -680,11 +683,11 @@ function Coaches() {
                       <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-40"></div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="hidden md:flex items-center space-x-2">
                       <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-36"></div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="hidden md:flex items-center space-x-2">
                       <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
@@ -692,7 +695,7 @@ function Coaches() {
                 </div>
 
                 {/* Action button skeleton */}
-                <div className="h-10 bg-synthwave-text-muted/20 animate-pulse"></div>
+                <div className="h-12 bg-synthwave-text-muted/20 animate-pulse mt-6"></div>
               </div>
             ))}
           </div>

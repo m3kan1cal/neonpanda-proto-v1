@@ -254,6 +254,26 @@ export default function ProgramDashboard() {
     };
   }, [loadData]);
 
+  // Scroll to top on initial mount, with manual scroll-restoration management
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    window.scrollTo(0, 0);
+    return () => {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
+
+  // Scroll to top again once data finishes loading
+  useEffect(() => {
+    if (!isValidatingUserId && !isLoading) {
+      window.scrollTo(0, 0);
+    }
+  }, [isValidatingUserId, isLoading]);
+
   // Handle program status changes (pause/resume/complete)
   const handleProgramUpdate = (updatedProgram) => {
     // Just update the program state without reloading everything
