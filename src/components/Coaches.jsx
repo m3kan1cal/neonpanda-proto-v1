@@ -649,13 +649,13 @@ function Coaches() {
           {/* Coaches grid skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr">
             {/* Add New Coach Card skeleton */}
-            <div className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
-              <div className="text-center h-full flex flex-col justify-between min-h-[200px] md:min-h-[400px]">
+            <div className={`${containerPatterns.dashedCard} p-4 md:p-6 opacity-60`}>
+              <div className="text-center flex flex-col justify-center items-center md:h-full md:justify-between md:min-h-[400px]">
                 <div className="flex-1 flex flex-col justify-center items-center">
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 animate-pulse rounded-full mb-4"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-48 mb-3"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse w-56 mb-4"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-xl mb-2 md:mb-4"></div>
+                  <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2 md:mb-3"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-0 md:mb-4"></div>
+                  <div className="hidden md:block h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-32"></div>
                 </div>
               </div>
             </div>
@@ -836,15 +836,15 @@ function Coaches() {
               so there's no in-flight loading state to show on the card. */}
           <div
             onClick={handleCreateCoach}
-            className={`${containerPatterns.dashedCard} p-6 group cursor-pointer`}
+            className={`${containerPatterns.dashedCard} p-4 md:p-6 group cursor-pointer`}
           >
-            <div className="text-center h-full flex flex-col justify-between min-h-[200px] md:min-h-[400px]">
+            <div className="text-center flex flex-col justify-center items-center md:h-full md:justify-between md:min-h-[400px]">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
                 {/* Plus Icon */}
-                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
+                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-2 md:mb-4">
                   <svg
-                    className="w-12 h-12"
+                    className="w-10 h-10 md:w-12 md:h-12"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -859,17 +859,17 @@ function Coaches() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
+                <h3 className="font-header font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 md:mb-3 transition-colors duration-300">
                   Create Custom Coach
                 </h3>
 
                 {/* Description */}
-                <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
+                <p className="font-body text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-0 md:mb-4 max-w-xs mx-auto">
                   Design your perfect coach through our guided process
                 </p>
 
-                {/* Time Estimate */}
-                <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
+                {/* Time Estimate (desktop only — mobile keeps a compact card) */}
+                <div className="hidden md:block bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 px-3 py-1 mb-4">
                   <p className="font-body text-synthwave-neon-pink text-xs font-semibold">
                     Takes 25-30 minutes
                   </p>
