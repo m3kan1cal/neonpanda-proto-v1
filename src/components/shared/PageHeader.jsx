@@ -82,25 +82,30 @@ const PageHeader = ({
             )}
           </div>
 
-          {/* Mobile-only avatar circle */}
-          {coachData && (
-            <button
-              type="button"
-              onClick={onCoachClick}
-              className="sm:hidden relative shrink-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary rounded-full"
-              aria-label={coachTooltipContent}
-            >
-              <div className={avatarPatterns.coachCompact}>
-                {getFirstChar(coachData.name)}
-              </div>
-              {coachOnline && (
-                <div className={compactCardPatterns.coachPillStatusBadge}>
-                  <div
-                    className={compactCardPatterns.coachPillStatusDot}
-                  ></div>
-                </div>
+          {/* Mobile-only right cluster: rightSlot + avatar */}
+          {(rightSlot || coachData) && (
+            <div className="sm:hidden flex items-center gap-2 shrink-0">
+              {rightSlot}
+              {coachData && (
+                <button
+                  type="button"
+                  onClick={onCoachClick}
+                  className="relative shrink-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary rounded-full"
+                  aria-label={coachTooltipContent}
+                >
+                  <div className={avatarPatterns.coachCompact}>
+                    {getFirstChar(coachData.name)}
+                  </div>
+                  {coachOnline && (
+                    <div className={compactCardPatterns.coachPillStatusBadge}>
+                      <div
+                        className={compactCardPatterns.coachPillStatusDot}
+                      ></div>
+                    </div>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
           )}
         </div>
 
@@ -117,9 +122,9 @@ const PageHeader = ({
         )}
       </div>
 
-      {/* Right section */}
+      {/* Right section (desktop only; mobile renders rightSlot inside the title row) */}
       {rightSlot && (
-        <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
           {rightSlot}
         </div>
       )}
