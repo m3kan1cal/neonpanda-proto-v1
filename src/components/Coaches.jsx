@@ -650,7 +650,7 @@ function Coaches() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:auto-rows-fr">
             {/* Add New Coach Card skeleton */}
             <div className={`${containerPatterns.dashedCard} p-4 md:p-6 opacity-60`}>
-              <div className="text-center flex flex-col justify-center items-center md:h-full md:justify-between md:min-h-[400px]">
+              <div className="text-center flex flex-col justify-center items-center md:h-full md:justify-between md:items-stretch md:min-h-[400px]">
                 <div className="flex-1 flex flex-col justify-center items-center">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-xl mb-2 md:mb-4"></div>
                   <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2 md:mb-3"></div>
@@ -838,7 +838,7 @@ function Coaches() {
             onClick={handleCreateCoach}
             className={`${containerPatterns.dashedCard} p-4 md:p-6 group cursor-pointer`}
           >
-            <div className="text-center flex flex-col justify-center items-center md:h-full md:justify-between md:min-h-[400px]">
+            <div className="text-center flex flex-col justify-center items-center md:h-full md:justify-between md:items-stretch md:min-h-[400px]">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
                 {/* Plus Icon */}
