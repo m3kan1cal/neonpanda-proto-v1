@@ -305,7 +305,7 @@ export default function InsightsModal({
         )}
 
         <ModalFooter
-          label="View Full Report"
+          label="View Report"
           onDismiss={handleDismiss}
           onClick={() => {
             onClose();
@@ -372,7 +372,7 @@ export default function InsightsModal({
         )}
 
         <ModalFooter
-          label="View Full Report"
+          label="View Report"
           onDismiss={handleDismiss}
           onClick={() => {
             onClose();
