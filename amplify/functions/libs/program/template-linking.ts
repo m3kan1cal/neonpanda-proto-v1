@@ -143,8 +143,16 @@ export const linkWorkoutToTemplate = async (
       );
 
       if (!programDetails) {
-        logger.warn("⚠️ Program details not found in S3");
-        return false;
+        // getProgramDetailsFromS3 catches all errors and returns null,
+        // so null here covers BOTH "transient S3 read failure" and
+        // "key genuinely missing". The latter shouldn't happen — the
+        // s3DetailKey we got from DynamoDB above means S3 had this
+        // object at write time. Throw to trigger the retry loop's
+        // catch; if it's truly missing the retries will just confirm
+        // it after the backoff window.
+        throw new Error(
+          `getProgramDetailsFromS3 returned null for s3DetailKey ${programData.s3DetailKey}`,
+        );
       }
 
       // 3. Find the template in the program
