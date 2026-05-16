@@ -283,7 +283,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleBold().run();
           }}
-          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm font-bold font-body transition-colors ${
+          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm font-bold font-body transition-colors focus:outline-none focus-visible:outline-none ${
             editor.isActive("bold") ? accentActive : accentInactive
           }`}
           title="Bold"
@@ -296,7 +296,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleItalic().run();
           }}
-          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm italic font-body transition-colors ${
+          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm italic font-body transition-colors focus:outline-none focus-visible:outline-none ${
             editor.isActive("italic") ? accentActive : accentInactive
           }`}
           title="Italic"
@@ -309,7 +309,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleStrike().run();
           }}
-          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm line-through font-body transition-colors ${
+          className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm line-through font-body transition-colors focus:outline-none focus-visible:outline-none ${
             editor.isActive("strike") ? accentActive : accentInactive
           }`}
           title="Strikethrough"
@@ -327,7 +327,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleBulletList().run();
           }}
-          className={`cursor-pointer p-1 rounded-xl transition-colors ${
+          className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none ${
             editor.isActive("bulletList") ? accentActive : accentInactive
           }`}
           title="Bullet list"
@@ -355,7 +355,7 @@ const TiptapEditor = forwardRef(
             e.preventDefault();
             editor.chain().focus().toggleOrderedList().run();
           }}
-          className={`cursor-pointer p-1 rounded-xl transition-colors ${
+          className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none ${
             editor.isActive("orderedList") ? accentActive : accentInactive
           }`}
           title="Numbered list"
@@ -416,7 +416,7 @@ const TiptapEditor = forwardRef(
                 if (!attachPhotoDisabled) onAttachPhoto();
               }}
               disabled={attachPhotoDisabled}
-              className={`cursor-pointer p-1 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${accentInactive}`}
+              className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${accentInactive}`}
               title={
                 attachPhotoDisabled
                   ? "Maximum 5 photos"
@@ -456,7 +456,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 setIsFullscreen((prev) => !prev);
               }}
-              className={`cursor-pointer p-1 rounded-xl transition-colors ${accentInactive}`}
+              className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none ${accentInactive}`}
               title={isFullscreen ? "Exit fullscreen" : "Expand editor"}
             >
               {isFullscreen ? (

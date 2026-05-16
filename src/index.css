@@ -258,12 +258,19 @@
   }
 }
 
+/* Suppress mobile tap-highlight flash on toolbar buttons */
+.tiptap-editor-wrapper button,
+.tiptap-fullscreen button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Tiptap content area reset */
 .tiptap-content {
   word-wrap: break-word;
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-body);
+  color: var(--color-synthwave-text-secondary);
 }
 
 /* Prevent iOS auto-zoom when focusing the chat input.
