@@ -126,7 +126,6 @@ export const handler = async (event: BuildWorkoutEvent) => {
         success: result.success,
         workoutId: result.workoutId,
         skipped: result.skipped,
-        templateLinked: (result as any).templateLinked,
         templateId: event.templateContext?.templateId,
         dayNumber: event.templateContext?.dayNumber,
       });

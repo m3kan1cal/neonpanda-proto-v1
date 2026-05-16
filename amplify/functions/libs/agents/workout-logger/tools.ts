@@ -1327,13 +1327,13 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     });
 
     // Update template linkedWorkoutId BEFORE the non-blocking work below.
-    // The UI polls this field to clear the "Processing…" state; everything
-    // after this point (Pinecone, build-exercise, build-workout-analysis)
-    // is fire-and-forget and must not be allowed to push linking past the
-    // Lambda's wall-clock budget. linkWorkoutToTemplate is internally
-    // retried; a return of false here means we couldn't link after retries
-    // and the caller needs to revert the template's optimistic
-    // "completed" status.
+    // The UI polls this field to clear the "Processing…" state; running
+    // linking here (rather than after Pinecone + the fire-and-forget
+    // invokes) gives it maximum Lambda wall-clock budget. The function
+    // is internally retried with exponential backoff. We treat a final
+    // false return as non-fatal at this layer — the workout is already
+    // saved, the user can re-fetch via "Refresh to check", and the
+    // relink-orphaned-templates.js script can recover any straggler.
     const templateLinked = context.templateContext
       ? await linkWorkoutToTemplate(
           context.userId,
@@ -1342,34 +1342,6 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
           workout.workoutId,
         )
       : false;
-
-    if (context.templateContext && !templateLinked) {
-      logger.error(
-        "❌ Workout saved but failed to link to program template",
-        {
-          workoutId: workout.workoutId,
-          userId: context.userId,
-          coachId: context.coachId,
-          programId: context.templateContext.programId,
-          templateId: context.templateContext.templateId,
-          dayNumber: context.templateContext.dayNumber,
-        },
-      );
-      // Surface as a failure so build-workout/handler.ts reverts the
-      // template's optimistic completed status. The orphaned workout in
-      // DynamoDB will be relinked by checkDuplicateWorkout on the next
-      // submission attempt.
-      return {
-        workoutId: workout.workoutId,
-        success: false,
-        skipped: false,
-        templateLinked: false,
-        pineconeStored: false,
-        pineconeRecordId: null,
-        reason:
-          "Workout saved but failed to link to program template — please retry.",
-      };
-    }
 
     // Store workout summary in Pinecone
     logger.info("📝 Storing workout summary in Pinecone..");

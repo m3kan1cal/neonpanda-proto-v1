@@ -197,9 +197,6 @@ function ViewWorkouts() {
   // Templates we've already toasted about for a polling timeout, so we don't
   // re-toast on every render while the "Refresh to check" button is visible.
   const seenTimeoutsRef = useRef(new Set());
-  // Same de-dupe pattern for the "reverted" polling status (backend rolled
-  // back the optimistic completed status because build-workout failed).
-  const seenRevertsRef = useRef(new Set());
   // Tracks the day key for which default collapse was last applied. Using
   // a string sentinel rather than a boolean lets the guard reset correctly
   // on day navigation without relying on effect ordering.
@@ -241,30 +238,13 @@ function ViewWorkouts() {
     return getViewWorkoutsInlineSessionKey(userId, coachId, programId);
   }, [userId, coachId, programId]);
 
-  // Toast once when a template's polling status flips to "timeout" or
-  // "reverted". Both signal that the "Processing…" state ended without
-  // a linked workout, but the recovery path differs:
-  //   timeout  → build-workout is just running long. Template is still
-  //              optimistically completed; user taps "Refresh to check"
-  //              to re-fetch and pick up a late linkedWorkoutId.
-  //   reverted → build-workout couldn't link the workout to the program
-  //              and the backend rolled the template back to pending.
-  //              The regular Log Workout button reappears for a fresh
-  //              edit (resubmitting through log-workout-template would
-  //              400 on the still-completed timeout case, so we don't
-  //              wire that path here).
+  // Toast once when a template's polling status flips to "timeout".
   useEffect(() => {
     Object.entries(pollingStatus).forEach(([tplId, status]) => {
       if (status === "timeout" && !seenTimeoutsRef.current.has(tplId)) {
         seenTimeoutsRef.current.add(tplId);
         showError(
           "Workout still processing. Tap 'Refresh to check' once it's ready.",
-        );
-      }
-      if (status === "reverted" && !seenRevertsRef.current.has(tplId)) {
-        seenRevertsRef.current.add(tplId);
-        showError(
-          "Workout couldn't be linked to your program. Please try logging it again.",
         );
       }
     });
@@ -524,12 +504,11 @@ General thoughts: `;
     if (processingWorkoutId || !programAgentRef.current) return;
 
     setProcessingWorkoutId(template.templateId);
-    // Drop any prior "seen toast" markers and clear residual pollingStatus
-    // for this template so a fresh submission (after a previous timeout or
-    // revert) can re-toast on a subsequent failure and so the inline button
-    // doesn't render a stale "timeout"/"reverted" state during the new attempt.
+    // Drop any prior "seen-timeout" marker and clear residual pollingStatus
+    // for this template so a fresh submission (after a previous timeout) can
+    // re-toast on a subsequent failure and so the inline button doesn't
+    // render a stale "timeout" state during the new attempt.
     seenTimeoutsRef.current.delete(template.templateId);
-    seenRevertsRef.current.delete(template.templateId);
     programAgentRef.current.clearPollingStatus(template.templateId);
     try {
       logger.info("📝 Submitting workout:", {
@@ -620,18 +599,38 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts are complete/skipped, navigate to the
-          // program dashboard after the celebration ends. The dashboard handles both
-          // mid-program day completion (shows next day) and program completion
-          // (shows completed status) gracefully — avoiding a failed template reload
-          // on a just-completed program.
-          if (isViewingToday) {
-            setTimeout(() => {
+          // After the celebration, advance the user forward instead of
+          // stranding them on the just-finished day. Two paths:
+          //   today view → dashboard (it gracefully handles both the
+          //                "next day" and "program completed" states
+          //                without a failed template reload on a
+          //                just-completed program).
+          //   ?day=N view → next day's workouts (?day=N+1). If N+1 is
+          //                past the program end, fall back to dashboard
+          //                so the user lands on the completion screen
+          //                rather than a 404 day. Rest days on N+1 are
+          //                handled by ViewWorkouts' own rest-day path
+          //                (loadWorkoutTemplates returns null →
+          //                workoutData = null → rest-day UI).
+          setTimeout(() => {
+            if (isViewingToday) {
               navigate(
                 `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
               );
-            }, 3500);
-          }
+              return;
+            }
+            const nextDay = (workoutData.dayNumber ?? 0) + 1;
+            const totalDays = program?.totalDays;
+            if (totalDays && nextDay > totalDays) {
+              navigate(
+                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+              );
+            } else {
+              navigate(
+                `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}&day=${nextDay}`,
+              );
+            }
+          }, 3500);
         }
       }
     } catch (err) {
@@ -725,18 +724,27 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts are complete/skipped, navigate to the
-          // program dashboard after the celebration ends. The dashboard handles both
-          // mid-program day completion (shows next day) and program completion
-          // (shows completed status) gracefully — avoiding a failed template reload
-          // on a just-completed program.
-          if (isViewingToday) {
-            setTimeout(() => {
+          // Mirror the submit-path advancement: today → dashboard,
+          // ?day=N → ?day=N+1 (or dashboard if past program end).
+          setTimeout(() => {
+            if (isViewingToday) {
               navigate(
                 `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
               );
-            }, 3500);
-          }
+              return;
+            }
+            const nextDay = (workoutData.dayNumber ?? 0) + 1;
+            const totalDays = program?.totalDays;
+            if (totalDays && nextDay > totalDays) {
+              navigate(
+                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+              );
+            } else {
+              navigate(
+                `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}&day=${nextDay}`,
+              );
+            }
+          }, 3500);
         }
       }
     } catch (err) {

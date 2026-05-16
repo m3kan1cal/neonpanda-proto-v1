@@ -406,43 +406,6 @@ export class WorkoutLoggerAgentV2 {
       };
     }
 
-    // Link-failed path: workout was written to DynamoDB but the linkback
-    // to the program template failed (S3 transient, retries exhausted).
-    // Surface as a structured failure WITHOUT forwarding workoutId so the
-    // build-workout handler's missing-workoutId test fires its revert
-    // path; otherwise the template sits at status="completed",
-    // linkedWorkoutId=null and the UI hangs on "Processing…" until the
-    // polling timeout.
-    const linkFailedSaves = allSaves.filter(
-      (s: any) =>
-        s &&
-        !s.success &&
-        s.workoutId &&
-        s.templateLinked === false &&
-        !s.duplicate,
-    );
-    if (
-      allSaves.length > 0 &&
-      successfulSaves.length === 0 &&
-      linkFailedSaves.length === allSaves.length
-    ) {
-      const firstLinkFailed = linkFailedSaves[0];
-      logger.error(
-        "❌ Building link-failed result (workout saved to DDB but template linking failed)",
-        {
-          orphanedWorkoutId: firstLinkFailed.workoutId,
-          skipCount: linkFailedSaves.length,
-        },
-      );
-      return {
-        success: false,
-        skipped: false,
-        reason:
-          firstLinkFailed.reason ||
-          "Workout saved but failed to link to program template — please retry.",
-      };
-    }
-
     // Duplicate-skip path: every save attempted but all reported the
     // workout already exists. Surface that explicitly so the caller
     // doesn't fabricate success or fall through to text-parsing.
