@@ -139,7 +139,7 @@ const MessageItem = memo(
                 containerPatterns.userMessageBubble,
               )}
             >
-              <div className="font-body text-base leading-relaxed">
+              <div className="font-body text-[15px] leading-relaxed">
                 {renderMessageContent(message)}
               </div>
             </div>
@@ -202,7 +202,7 @@ const MessageItem = memo(
               "w-full min-w-0",
             )}
           >
-            <div className="font-ai text-[17px] leading-relaxed text-synthwave-text-secondary break-words">
+            <div className="font-ai text-[15px] leading-relaxed text-synthwave-text-secondary break-words">
               {/* Attachments render once above the interleaved body. */}
               {renderMessageContent(message, { attachmentsOnly: true })}
               {/* Interleaves text segments with tool-call blocks based on

@@ -1310,16 +1310,14 @@ export const contextualDrawerPatterns = {
   inputArea:
     "shrink-0 border-t border-synthwave-neon-cyan/10 bg-synthwave-bg-card/80 text-sm",
 
-  // AI message — plain text style matching CoachConversations (no bubble)
-  // text-base brings the drawer to parity with the full-page CoachConversations
-  // chat font size so users don't perceive a noticeable drop-down when chatting
-  // inline. Markdown-rendered code/tables stay text-sm by intention (contrast).
+  // AI message — plain text style matching CoachConversations (no bubble).
+  // Markdown-rendered code/tables stay text-sm by intention (contrast).
   aiMessage:
-    "font-ai text-[17px] leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
+    "font-ai text-[15px] leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
 
   // User message bubble — matches CoachConversations userMessageBubble style, condensed for drawer width
   userMessage:
-    "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white rounded-xl rounded-br-none shadow-sm shadow-synthwave-neon-pink/30 px-3 py-2 max-w-[85%] ml-auto font-body text-base leading-relaxed",
+    "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white rounded-xl rounded-br-none shadow-sm shadow-synthwave-neon-pink/30 px-3 py-2 max-w-[85%] ml-auto font-body text-[15px] leading-relaxed",
 
   // Close button (icon button style)
   closeButton:
