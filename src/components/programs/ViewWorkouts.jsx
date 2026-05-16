@@ -1577,7 +1577,7 @@ General thoughts: `;
                               attachPhotoCount={selectedImages.length}
                               variant="pink"
                               className="tiptap-editor-pink w-full rounded-t-xl text-sm"
-                              contentClassName="px-4 py-3"
+                              contentClassName="px-4 py-3 text-synthwave-text-secondary"
                               placeholder="Edit to record what you actually did..."
                               mode="rich"
                               showToolbar={true}

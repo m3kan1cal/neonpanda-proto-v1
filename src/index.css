@@ -258,6 +258,12 @@
   }
 }
 
+/* Suppress mobile tap-highlight flash on toolbar buttons */
+.tiptap-editor-wrapper button,
+.tiptap-fullscreen button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Tiptap content area reset */
 .tiptap-content {
   word-wrap: break-word;
