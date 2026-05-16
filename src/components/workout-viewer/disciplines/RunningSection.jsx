@@ -383,7 +383,7 @@ export const RunningSection = ({
                 containerPatterns={containerPatterns}
               />
             ) : (
-              <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+              <div className={containerPatterns.nestedContent}>
                 <div className="text-synthwave-text-secondary font-body text-sm">
                   No running details data available for this workout.
                 </div>
@@ -432,7 +432,7 @@ export const RunningSection = ({
                   ))}
                 </div>
               ) : (
-                <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                <div className={containerPatterns.nestedContent}>
                   <div className="text-synthwave-text-secondary font-body text-sm">
                     No running segments data available for this workout.
                   </div>

@@ -598,9 +598,8 @@ export const containerPatterns = {
     "w-full px-4 py-4 rounded-lg bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 text-synthwave-text-secondary font-body text-base leading-relaxed whitespace-pre-line resize-none min-h-[120px] transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/40 focus:ring-2 focus:ring-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-primary/40",
 
   // Coach notes section - Styled exactly like workout description container (matches TodaysWorkoutCard phase subcontainer)
-  // Mobile (< md): styling stripped so text inherits parent padding and uses full horizontal width
   coachNotesSection:
-    "md:rounded-xl md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:px-4 md:py-4",
+    "rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4",
 
   // Nested content box inside a cardMedium section. Desktop: bordered, tinted box (matches the
   // recurring inline pattern in WorkoutViewer.jsx). Mobile (< md): unstyled so text inherits the

@@ -154,7 +154,7 @@ export const CircuitTrainingSection = ({
                 <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                   Stations
                 </h4>
-                <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                <div className={containerPatterns.nestedContent}>
                   <div className="space-y-2">
                     {circuitTrainingData.stations.map((station, idx) => (
                       <div key={idx} className="py-2">
@@ -207,7 +207,7 @@ export const CircuitTrainingSection = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Performance
                   </h4>
-                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                  <div className={containerPatterns.nestedContent}>
                     <div className="flex flex-wrap gap-4 text-sm font-body">
                       {circuitTrainingData.performance_data.total_time && (
                         <span className="text-synthwave-text-secondary">
@@ -248,7 +248,7 @@ export const CircuitTrainingSection = ({
               )}
             </div>
           ) : (
-            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+            <div className={containerPatterns.nestedContent}>
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No Circuit Training data available. Include station details,
                 work/rest times, and exercises when logging.

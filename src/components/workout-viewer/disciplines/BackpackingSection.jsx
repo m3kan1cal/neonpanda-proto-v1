@@ -198,7 +198,7 @@ export const BackpackingSection = ({
                 containerPatterns={containerPatterns}
               />
             ) : (
-              <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+              <div className={containerPatterns.nestedContent}>
                 <div className="text-synthwave-text-secondary font-body text-sm">
                   No backpacking details available for this workout.
                 </div>

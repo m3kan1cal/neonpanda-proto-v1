@@ -77,7 +77,7 @@ export const CrossFitSection = ({
                   </svg>
                 </button>
                 {!collapsedSubsections.has(`round-${round.round_number}`) && (
-                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                  <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                     <div className="space-y-2">
                       {round.exercises?.map((exercise, exerciseIndex) => (
                         <div key={exerciseIndex} className="py-2">
@@ -139,7 +139,7 @@ export const CrossFitSection = ({
               </div>
             ))
           ) : (
-            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+            <div className={containerPatterns.nestedContent}>
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No CrossFit rounds data available for this workout.
               </div>

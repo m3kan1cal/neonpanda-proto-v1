@@ -50,7 +50,7 @@ export const HyroxSection = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Stations
                   </h4>
-                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                  <div className={containerPatterns.nestedContent}>
                     <div className="space-y-2">
                       {hyroxData.stations.map((station, idx) => (
                         <div key={idx} className="py-2">
@@ -99,7 +99,7 @@ export const HyroxSection = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Runs
                   </h4>
-                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                  <div className={containerPatterns.nestedContent}>
                     <div className="space-y-2">
                       {hyroxData.runs.map((run, idx) => (
                         <div key={idx} className="py-2">
@@ -135,7 +135,7 @@ export const HyroxSection = ({
               )}
             </div>
           ) : (
-            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+            <div className={containerPatterns.nestedContent}>
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No Hyrox data available. Include station details, times,
                 weights, and run splits when logging.

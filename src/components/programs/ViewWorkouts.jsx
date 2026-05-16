@@ -964,7 +964,7 @@ General thoughts: `;
 
                 {/* Prescribed Workout Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
@@ -981,7 +981,7 @@ General thoughts: `;
 
                 {/* Coach Notes Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
@@ -996,7 +996,7 @@ General thoughts: `;
 
                 {/* The Setup Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28"></div>

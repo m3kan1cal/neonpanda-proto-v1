@@ -92,7 +92,7 @@ export const PowerliftingSection = ({
                   </svg>
                 </button>
                 {!collapsedSubsections.has(`exercise-${exerciseIndex}`) && (
-                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                  <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                     <div className="space-y-2">
                       {exercise.sets?.map((set, setIndex) => (
                         <div key={setIndex} className="py-2">
@@ -200,7 +200,7 @@ export const PowerliftingSection = ({
               </div>
             ))
           ) : (
-            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+            <div className={containerPatterns.nestedContent}>
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No powerlifting exercises data available for this workout.
               </div>

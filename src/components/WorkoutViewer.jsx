@@ -1333,7 +1333,7 @@ const WorkoutViewer = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Session Details
                   </h4>
-                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                  <div className={containerPatterns.nestedContent}>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       {/* Completed Date - Full Width */}
                       <div className="col-span-2 flex items-center gap-1.5 font-body text-sm">
@@ -1438,7 +1438,7 @@ const WorkoutViewer = ({
                     </svg>
                   </button>
                   {!collapsedSubsections.has("workout-metrics") && (
-                    <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                    <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         {/* Duration */}
                         {workoutData.duration && (
@@ -2141,7 +2141,7 @@ const WorkoutViewer = ({
                         <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                           Feedback Scores
                         </h4>
-                        <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                        <div className={containerPatterns.nestedContent}>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
                             {workoutData.subjective_feedback.enjoyment && (
                               <div className="flex items-center gap-1.5 font-body text-sm">
@@ -2241,7 +2241,7 @@ const WorkoutViewer = ({
                           </svg>
                         </button>
                         {!collapsedSubsections.has("physical-notes") && (
-                          <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl space-y-3 animate-fadeIn">
+                          <div className={`${containerPatterns.nestedContent} space-y-3 animate-fadeIn`}>
                             {workoutData.subjective_feedback.notes && (
                               <div className="text-synthwave-text-secondary font-body text-sm">
                                 {workoutData.subjective_feedback.notes}
@@ -2541,7 +2541,7 @@ const WorkoutViewer = ({
                     <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Personal Feedback
                     </h4>
-                    <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                    <div className={containerPatterns.nestedContent}>
                       {/* RPE and Intensity gradient bars */}
                       {(workoutData.performance_metrics?.intensity ||
                         workoutData.performance_metrics
@@ -2846,7 +2846,7 @@ const WorkoutViewer = ({
                       return (
                         <div
                           key={index}
-                          className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl"
+                          className={containerPatterns.nestedContent}
                         >
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-body font-bold text-synthwave-neon-pink text-base capitalize">
@@ -3008,7 +3008,7 @@ const WorkoutViewer = ({
                           </svg>
                         </button>
                         {!collapsedSubsections.has("programming-intent") && (
-                          <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                          <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                             <div className="text-synthwave-text-secondary font-body text-sm leading-relaxed">
                               {workoutData.coach_notes.programming_intent}
                             </div>
@@ -3052,7 +3052,7 @@ const WorkoutViewer = ({
                           {!collapsedSubsections.has(
                             "positive-observations",
                           ) && (
-                            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                            <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                               <ul className="space-y-2">
                                 {workoutData.coach_notes.positive_observations.map(
                                   (observation, index) => (
@@ -3110,7 +3110,7 @@ const WorkoutViewer = ({
                           {!collapsedSubsections.has(
                             "areas-for-improvement",
                           ) && (
-                            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                            <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                               <ul className="space-y-2">
                                 {workoutData.coach_notes.areas_for_improvement.map(
                                   (area, index) => (
@@ -3158,7 +3158,7 @@ const WorkoutViewer = ({
                           </svg>
                         </button>
                         {!collapsedSubsections.has("next-session-focus") && (
-                          <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                          <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                             <div className="text-synthwave-text-secondary font-body text-sm leading-relaxed">
                               {workoutData.coach_notes.next_session_focus}
                             </div>
@@ -3217,7 +3217,7 @@ const WorkoutViewer = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Extraction Summary
                   </h4>
-                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+                  <div className={containerPatterns.nestedContent}>
                     <div className="text-synthwave-text-secondary font-body text-sm">
                       {workoutData.metadata?.extraction_notes || (
                         <>
@@ -3260,7 +3260,7 @@ const WorkoutViewer = ({
                     </svg>
                   </button>
                   {!collapsedSubsections.has("quality-metrics") && (
-                    <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                    <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
                         {/* Confidence */}
                         {workoutData.metadata?.data_confidence !==
@@ -3403,7 +3403,7 @@ const WorkoutViewer = ({
                         </svg>
                       </button>
                       {!collapsedSubsections.has("extraction-tips") && (
-                        <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn">
+                        <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                           <div className="flex items-start space-x-2">
                             <div className="flex-1">
                               <h5 className="text-synthwave-neon-cyan font-body font-bold text-sm mb-2">

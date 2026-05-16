@@ -49,7 +49,7 @@ export const HybridSection = ({
           </SectionHeader>
         </div>
         <div className="px-4 pb-4 md:px-6 md:pb-6">
-          <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
+          <div className={containerPatterns.nestedContent}>
             <div className="text-synthwave-text-secondary font-body text-sm">
               No hybrid workout data available. This discipline is for
               mixed-modality workouts that don't fit a single training style.
@@ -145,7 +145,7 @@ export const HybridSection = ({
           </svg>
         </button>
         {!collapsedSubsections.has(subKey) && (
-          <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl animate-fadeIn mb-2">
+          <div className={`${containerPatterns.nestedContent} animate-fadeIn mb-2`}>
             <div className="space-y-2">
               {exercise.sets?.length > 0 ? (
                 exercise.sets.map((set, setIndex) => (
