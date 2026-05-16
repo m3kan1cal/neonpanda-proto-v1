@@ -17,7 +17,7 @@ export const HyroxSection = ({
   return (
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
-        className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+        className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
           collapsedSections.has(sectionId) ? "rounded-xl" : "rounded-t-xl"
         }`}
         onClick={() => toggleCollapse(sectionId)}
@@ -41,7 +41,7 @@ export const HyroxSection = ({
         </svg>
       </div>
       {!collapsedSections.has(sectionId) && (
-        <div className="px-6 pb-6">
+        <div className="px-4 pb-4 md:px-6 md:pb-6">
           {hyroxData?.stations?.length > 0 || hyroxData?.runs?.length > 0 ? (
             <div className="space-y-3">
               {/* Stations */}
@@ -50,7 +50,7 @@ export const HyroxSection = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Stations
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
                     <div className="space-y-2">
                       {hyroxData.stations.map((station, idx) => (
                         <div key={idx} className="py-2">
@@ -99,7 +99,7 @@ export const HyroxSection = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Runs
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
                     <div className="space-y-2">
                       {hyroxData.runs.map((run, idx) => (
                         <div key={idx} className="py-2">
@@ -135,7 +135,7 @@ export const HyroxSection = ({
               )}
             </div>
           ) : (
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No Hyrox data available. Include station details, times,
                 weights, and run splits when logging.

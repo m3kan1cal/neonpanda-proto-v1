@@ -58,7 +58,7 @@ export const CircuitTrainingSection = ({
   return (
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
-        className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+        className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
           collapsedSections.has(sectionId) ? "rounded-xl" : "rounded-t-xl"
         }`}
         onClick={() => toggleCollapse(sectionId)}
@@ -119,7 +119,7 @@ export const CircuitTrainingSection = ({
         </svg>
       </div>
       {!collapsedSections.has(sectionId) && (
-        <div className="px-6 pb-6">
+        <div className="px-4 pb-4 md:px-6 md:pb-6">
           {/* Class Name */}
           {circuitTrainingData?.class_name && (
             <div className="mb-4 text-synthwave-text-secondary font-body">
@@ -154,7 +154,7 @@ export const CircuitTrainingSection = ({
                 <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                   Stations
                 </h4>
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
                   <div className="space-y-2">
                     {circuitTrainingData.stations.map((station, idx) => (
                       <div key={idx} className="py-2">
@@ -207,7 +207,7 @@ export const CircuitTrainingSection = ({
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Performance
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                  <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
                     <div className="flex flex-wrap gap-4 text-sm font-body">
                       {circuitTrainingData.performance_data.total_time && (
                         <span className="text-synthwave-text-secondary">
@@ -248,7 +248,7 @@ export const CircuitTrainingSection = ({
               )}
             </div>
           ) : (
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+            <div className="md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl">
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No Circuit Training data available. Include station details,
                 work/rest times, and exercises when logging.
