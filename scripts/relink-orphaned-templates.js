@@ -181,7 +181,8 @@ async function revertTemplate(
   tableName,
   bucket,
   s3DetailKey,
-  program,
+  userId,
+  programId,
   programDetails,
   template,
   apply,
@@ -208,9 +209,24 @@ async function revertTemplate(
   programDetails.workoutTemplates[idx].linkedWorkoutId = null;
   await putProgramDetails(s3Client, bucket, s3DetailKey, programDetails);
 
+  // Re-fetch the program from DynamoDB before computing stat deltas.
+  // The orphan loop reuses the same in-memory programDetails, but the
+  // DynamoDB writes here are absolute SETs — a prior iteration in this
+  // run may have already decremented completedWorkouts (etc.), and a
+  // stale snapshot would overwrite that correction instead of
+  // compounding it (e.g. 2 orphans, starting at 10, both write 9
+  // instead of finishing at 8).
+  const refreshed = await getProgram(docClient, tableName, userId, programId);
+  if (!refreshed) {
+    console.warn(
+      `   ⚠️ Program disappeared mid-run — skipping DDB revert for ${template.templateId}`,
+    );
+    return;
+  }
+
   // Walk back DynamoDB program stats. Mirrors revertTemplateStatus in
   // amplify/functions/libs/program/template-linking.ts.
-  const programAttrs = program.attributes || {};
+  const programAttrs = refreshed.attributes || {};
   const existingDayStatus = programAttrs.dayCompletionStatus?.[dayNumber];
   const updatedDayStatus = existingDayStatus
     ? {
@@ -284,7 +300,7 @@ async function revertTemplate(
   await docClient.send(
     new UpdateCommand({
       TableName: tableName,
-      Key: { pk: program.pk, sk: program.sk },
+      Key: { pk: refreshed.pk, sk: refreshed.sk },
       UpdateExpression: `SET ${setExpressions.join(", ")}`,
       ExpressionAttributeValues: exprValues,
       ...(Object.keys(exprNames).length > 0 && {
@@ -380,7 +396,8 @@ async function main() {
         opts.tableName,
         opts.bucketName,
         s3DetailKey,
-        program,
+        opts.userId,
+        opts.programId,
         programDetails,
         template,
         opts.apply,
