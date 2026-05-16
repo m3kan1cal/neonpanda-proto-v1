@@ -1852,106 +1852,126 @@ function PanelContent({
         />
       )}
 
-      {/* Header */}
-      <div className={contextualDrawerPatterns.header}>
-        {mobileTrainingSheetChrome ? (
-          <>
-            <button
-              type="button"
-              className={`${contextualDrawerPatterns.closeButton} shrink-0 -ml-1`}
-              onClick={exit}
-              aria-label="Back"
-            >
-              <span className="inline-flex w-5 h-5 items-center justify-center [&_svg]:!w-5 [&_svg]:!h-5">
-                <ChevronLeftIcon />
-              </span>
-            </button>
-            <div className="flex-1 min-w-0 flex items-center gap-2">
-              <div
-                id={headingId}
-                className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
+      {/* Header
+          - Desktop: always shown (any variant)
+          - Mobile workoutEdit: shown (no selector row to consolidate into)
+          - Mobile training/session: hidden — consolidated into the selector row below */}
+      {(!mobileTrainingSheetChrome || !(isTraining || isSessionVariant)) && (
+        <div className={contextualDrawerPatterns.header}>
+          {mobileTrainingSheetChrome ? (
+            <>
+              {/* Mobile workoutEdit chrome: back arrow + entity label + BETA + Done */}
+              <button
+                type="button"
+                className={`${contextualDrawerPatterns.closeButton} shrink-0 -ml-1`}
+                onClick={exit}
+                aria-label="Back"
               >
-                {entityLabel ||
-                  (isTraining
-                    ? "Training Grounds"
-                    : isCoachCreatorSession
-                      ? "New Coach"
-                      : isProgramDesignerSession
-                        ? "New Program"
-                        : `Editing ${entityType}`)}
+                <span className="inline-flex w-5 h-5 items-center justify-center [&_svg]:!w-5 [&_svg]:!h-5">
+                  <ChevronLeftIcon />
+                </span>
+              </button>
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <div
+                  id={headingId}
+                  className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
+                >
+                  {entityLabel ||
+                    (isTraining
+                      ? "Training Grounds"
+                      : isCoachCreatorSession
+                        ? "New Coach"
+                        : isProgramDesignerSession
+                          ? "New Program"
+                          : `Editing ${entityType}`)}
+                </div>
+                <span className={`${badgePatterns.betaSmall} text-xs shrink-0`}>
+                  Beta
+                </span>
               </div>
-              <span className={`${badgePatterns.betaSmall} text-xs shrink-0`}>
+              <button
+                type="button"
+                onClick={exit}
+                className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
+              >
+                Done
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Expand/collapse button — desktop only */}
+              <button
+                type="button"
+                className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
+                onClick={onToggleExpand}
+                aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
+              >
+                <DrawerResizeIcon isExpanded={isExpanded} />
+              </button>
+
+              {/* Section header icon */}
+              <span className="shrink-0 text-synthwave-neon-pink">
+                <ChatIconSmall className="w-4 h-4" />
+              </span>
+
+              {/* Entity label */}
+              <div className="flex-1 min-w-0">
+                <div
+                  id={headingId}
+                  className={`${contextualDrawerPatterns.headerLabel} text-base`}
+                >
+                  {entityLabel ||
+                    (isTraining
+                      ? "Training Grounds"
+                      : isCoachCreatorSession
+                        ? "New Coach"
+                        : isProgramDesignerSession
+                          ? "New Program"
+                          : `Editing ${entityType}`)}
+                </div>
+              </div>
+
+              {/* Beta badge */}
+              <span
+                className={`${badgePatterns.betaSmall} text-[10px] shrink-0`}
+              >
                 Beta
               </span>
-            </div>
-            <button
-              type="button"
-              onClick={exit}
-              className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
-            >
-              Done
-            </button>
-          </>
-        ) : (
-          <>
-            {/* Expand/collapse button — desktop only (mobile is always full-screen) */}
-            <button
-              type="button"
-              className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
-              onClick={onToggleExpand}
-              aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
-            >
-              <DrawerResizeIcon isExpanded={isExpanded} />
-            </button>
 
-            {/* Section header icon */}
-            <span className="shrink-0 text-synthwave-neon-pink">
-              <ChatIconSmall className="w-4 h-4" />
-            </span>
-
-            {/* Entity label */}
-            <div className="flex-1 min-w-0">
-              <div
-                id={headingId}
-                className={`${contextualDrawerPatterns.headerLabel} text-base`}
+              {/* Close button */}
+              <button
+                type="button"
+                className={contextualDrawerPatterns.closeButton}
+                onClick={onClose}
+                aria-label={
+                  isTraining
+                    ? "Close chat"
+                    : isSessionVariant
+                      ? "Close session"
+                      : "Close edit session"
+                }
               >
-                {entityLabel ||
-                  (isTraining
-                    ? "Training Grounds"
-                    : isCoachCreatorSession
-                      ? "New Coach"
-                      : isProgramDesignerSession
-                        ? "New Program"
-                        : `Editing ${entityType}`)}
-              </div>
-            </div>
-
-            {/* Beta badge */}
-            <span className={`${badgePatterns.betaSmall} text-[10px] shrink-0`}>
-              Beta
-            </span>
-
-            {/* Close button */}
-            <button
-              type="button"
-              className={contextualDrawerPatterns.closeButton}
-              onClick={onClose}
-              aria-label={
-                isTraining
-                  ? "Close chat"
-                  : isSessionVariant
-                    ? "Close session"
-                    : "Close edit session"
-              }
-            >
-              <CloseIcon />
-            </button>
-          </>
-        )}
-      </div>
+                <CloseIcon />
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {(isTraining || isSessionVariant) && (
         <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/20">
+          {mobileTrainingSheetChrome && (
+            <span id={headingId} className="sr-only">
+              {entityLabel ||
+                (isTraining
+                  ? "Training Grounds"
+                  : isCoachCreatorSession
+                    ? "New Coach"
+                    : isProgramDesignerSession
+                      ? "New Program"
+                      : `Editing ${entityType}`)}
+            </span>
+          )}
           <span id={trainingSelectId} className="sr-only">
             {isSessionVariant ? "Session" : "Conversation"}
           </span>
@@ -2024,6 +2044,15 @@ function PanelContent({
                   <ChatIconSmall />
                 </span>
               </Link>
+            )}
+            {mobileTrainingSheetChrome && (
+              <button
+                type="button"
+                onClick={exit}
+                className="shrink-0 ml-1 px-2 py-1 rounded-full font-body font-semibold text-sm text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
+              >
+                Done
+              </button>
             )}
           </div>
           <Tooltip
