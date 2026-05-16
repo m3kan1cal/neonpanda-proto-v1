@@ -270,7 +270,6 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-body);
-  color: var(--color-synthwave-text-secondary);
 }
 
 /* Prevent iOS auto-zoom when focusing the chat input.
