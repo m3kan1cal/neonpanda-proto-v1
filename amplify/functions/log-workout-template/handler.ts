@@ -276,7 +276,18 @@ ${userPerformance}`;
         buildWorkoutPayload,
         `log workout from template ${templateId}`,
       );
-      logger.info("✅ build-workout lambda invoked successfully");
+      // Structured log that joins on userId+templateId across all three
+      // junctions (this handler, build-workout/handler.ts, the save tool)
+      // so CloudWatch can answer the "did dayMatchesCurrent affect the
+      // outcome?" question by filter alone, without correlating commits.
+      logger.info("📤 Invoked build-workout", {
+        userId,
+        programId,
+        templateId,
+        dayNumber: template.dayNumber,
+        currentDay: program.currentDay,
+        dayMatchesCurrent: template.dayNumber === program.currentDay,
+      });
     } catch (error) {
       logger.error("❌ Failed to invoke build-workout lambda:", error);
       // Don't return error - we've already updated template status

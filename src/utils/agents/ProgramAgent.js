@@ -606,6 +606,12 @@ export class ProgramAgent {
       const nextStatus = { ...this.programState.pollingStatus };
       if (reason === "timeout") {
         nextStatus[templateId] = "timeout";
+      } else if (reason === "reverted") {
+        // Backend rolled back the optimistic "completed" status because the
+        // build-workout Lambda couldn't link the workout to the program
+        // template. Surface as a distinct UI state so the component can
+        // toast the failure and prompt the user to retry.
+        nextStatus[templateId] = "reverted";
       } else {
         delete nextStatus[templateId];
       }
@@ -647,6 +653,22 @@ export class ProgramAgent {
           const updatedTemplate = templates.find(
             (t) => t.templateId === templateId,
           );
+
+          // Backend rolled back the optimistic "completed" status because
+          // build-workout failed (e.g. saved-but-not-linked path in
+          // tools.ts → handler.ts revertTemplateStatus). Patch the
+          // reverted template into local state so the UI flips back to
+          // the editable Log/Skip buttons, then stop polling so we don't
+          // wait for a linkedWorkoutId that will never arrive.
+          if (updatedTemplate && updatedTemplate.status === "pending") {
+            logger.warn(
+              "⚠️ Template reverted to pending — backend rejected workout build:",
+              templateId,
+            );
+            this._patchTemplate(templateId, updatedTemplate);
+            stopPolling("reverted");
+            return;
+          }
 
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
             logger.info(

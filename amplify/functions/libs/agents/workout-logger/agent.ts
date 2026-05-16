@@ -766,6 +766,42 @@ Complete the workout logging workflow now using your tools.`;
           entry.save.success && entry.save.workoutId && !entry.save.duplicate,
       );
 
+    // If every save attempt succeeded against DynamoDB but failed to link
+    // back to the program template, surface that as a structured failure
+    // WITHOUT forwarding workoutId. build-workout/handler.ts uses missing
+    // workoutId on the failure path as the signal to revert the optimistic
+    // template completion — forwarding it here would strand the template
+    // at status="completed", linkedWorkoutId=null and leave the UI sitting
+    // on "Processing…" until the polling timeout.
+    const linkFailedSaves = allSaves.filter(
+      (s) =>
+        !s.success &&
+        s.workoutId &&
+        s.templateLinked === false &&
+        !s.duplicate,
+    );
+    if (
+      allSaves.length > 0 &&
+      successfulSaves.length === 0 &&
+      linkFailedSaves.length === allSaves.length
+    ) {
+      const firstLinkFailed = linkFailedSaves[0];
+      logger.error(
+        "❌ Building link-failed result (workout saved to DDB but template linking failed)",
+        {
+          orphanedWorkoutId: firstLinkFailed.workoutId,
+          skipCount: linkFailedSaves.length,
+        },
+      );
+      return {
+        success: false,
+        skipped: false,
+        reason:
+          firstLinkFailed.reason ||
+          "Workout saved but failed to link to program template — please retry.",
+      };
+    }
+
     // If every save attempt was a duplicate-skip, surface that explicitly so
     // we don't fabricate success or fall through to the text-parsing fallback.
     const duplicateSkips = allSaves.filter(

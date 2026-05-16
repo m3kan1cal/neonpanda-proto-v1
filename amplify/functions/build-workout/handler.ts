@@ -126,6 +126,9 @@ export const handler = async (event: BuildWorkoutEvent) => {
         success: result.success,
         workoutId: result.workoutId,
         skipped: result.skipped,
+        templateLinked: (result as any).templateLinked,
+        templateId: event.templateContext?.templateId,
+        dayNumber: event.templateContext?.dayNumber,
       });
 
       // Return same response format as original build-workout
@@ -141,11 +144,15 @@ export const handler = async (event: BuildWorkoutEvent) => {
           allWorkouts: result.allWorkouts,
         });
       } else {
-        // Failure path. If the caller optimistically marked a program template
-        // "completed" but no workout was successfully linked, revert that
-        // optimism so the template doesn't stay stuck in the UI as "processing".
-        // result.workoutId is set when the duplicate-skip path successfully
-        // linked the existing workout — we leave that alone.
+        // Failure path. If the caller optimistically marked a program
+        // template "completed" but no workout was successfully linked,
+        // revert that optimism so the template doesn't stay stuck in the
+        // UI as "processing". result.workoutId is only present here on
+        // the duplicate-skip path AND only when the existing workout was
+        // successfully (re)linked to the template — agent.ts intentionally
+        // withholds workoutId on any failure where the template wasn't
+        // linked, so this missing-workoutId test cleanly covers both
+        // "nothing was saved" and "saved but linking failed".
         if (event.templateContext && !result.workoutId) {
           await revertTemplateStatus(
             event.userId,

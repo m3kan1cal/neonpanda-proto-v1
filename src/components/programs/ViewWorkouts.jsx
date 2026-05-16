@@ -197,6 +197,13 @@ function ViewWorkouts() {
   // Templates we've already toasted about for a polling timeout, so we don't
   // re-toast on every render while the "Refresh to check" button is visible.
   const seenTimeoutsRef = useRef(new Set());
+  // Same de-dupe pattern for the "reverted" polling status (backend rolled
+  // back the optimistic completed status because build-workout failed).
+  const seenRevertsRef = useRef(new Set());
+  // Stash the exact payload we submitted for each template so the timeout
+  // recovery path can re-fire it without forcing the user to re-type
+  // their performance notes. Cleared once the template links successfully.
+  const lastSubmittedPayloadRef = useRef({});
   // Tracks the day key for which default collapse was last applied. Using
   // a string sentinel rather than a boolean lets the guard reset correctly
   // on day navigation without relying on effect ordering.
@@ -238,13 +245,24 @@ function ViewWorkouts() {
     return getViewWorkoutsInlineSessionKey(userId, coachId, programId);
   }, [userId, coachId, programId]);
 
-  // Toast once when a template's polling status flips to "timeout".
+  // Toast once when a template's polling status flips to "timeout" or
+  // "reverted". Both signal the user that the "Processing…" state ended
+  // without a linked workout, but the recovery path differs: timeout
+  // keeps the template optimistically completed (retry resubmits with
+  // the stashed payload); reverted flips the template back to pending
+  // (the regular Log Workout button reappears for a fresh edit).
   useEffect(() => {
     Object.entries(pollingStatus).forEach(([tplId, status]) => {
       if (status === "timeout" && !seenTimeoutsRef.current.has(tplId)) {
         seenTimeoutsRef.current.add(tplId);
         showError(
-          "Workout still processing. Tap 'Refresh to check' once it's ready.",
+          "Workout still processing. Tap 'Retry submission' to resend.",
+        );
+      }
+      if (status === "reverted" && !seenRevertsRef.current.has(tplId)) {
+        seenRevertsRef.current.add(tplId);
+        showError(
+          "Workout couldn't be linked to your program. Please try logging it again.",
         );
       }
     });
@@ -529,6 +547,14 @@ General thoughts: `;
         options.day = parseInt(dayParam);
       }
 
+      // Stash for the timeout-retry path. Cleared either when the template
+      // links successfully (handled implicitly by the polling-found branch
+      // which clears pollingStatus) or when the user successfully retries.
+      lastSubmittedPayloadRef.current[template.templateId] = {
+        workoutPayload,
+        options,
+      };
+
       // Call agent method - it handles API call, state updates, and polling
       await programAgentRef.current.logWorkoutFromTemplate(
         programId,
@@ -624,6 +650,44 @@ General thoughts: `;
       } else {
         showError(err.message || "Failed to log workout");
       }
+    } finally {
+      setProcessingWorkoutId(null);
+    }
+  };
+
+  // Re-fire the original submission for a template that timed out waiting
+  // for build-workout to write linkedWorkoutId. Reuses the stashed payload
+  // so the user doesn't lose their performance notes. The backend's
+  // duplicate-skip path will detect the already-saved workout and relink
+  // it to the template if linking is what failed the first time.
+  const handleRetrySubmit = async (template) => {
+    if (processingWorkoutId || !programAgentRef.current) return;
+    const stashed = lastSubmittedPayloadRef.current[template.templateId];
+    if (!stashed) {
+      showError(
+        "Original submission unavailable. Please log the workout again.",
+      );
+      return;
+    }
+
+    setProcessingWorkoutId(template.templateId);
+    // Clear the timeout so the UI flips back to the "Processing…" spinner
+    // for the retry attempt. Drop the seen-toast marker so a fresh timeout
+    // on the retry can re-toast.
+    seenTimeoutsRef.current.delete(template.templateId);
+    programAgentRef.current.clearPollingStatus(template.templateId);
+
+    try {
+      await programAgentRef.current.logWorkoutFromTemplate(
+        programId,
+        template.templateId,
+        stashed.workoutPayload,
+        stashed.options,
+      );
+      showSuccess("Retrying — we'll link the workout in the background.");
+    } catch (err) {
+      logger.error("Retry submit failed:", err);
+      showError(err.message || "Retry failed. Please try again.");
     } finally {
       setProcessingWorkoutId(null);
     }
@@ -1968,68 +2032,30 @@ General thoughts: `;
                             </button>
                           ) : pollingStatus[template.templateId] ===
                             "timeout" ? (
-                            // Polling exhausted before the build-workout Lambda
-                            // wrote linkedWorkoutId. Let the user trigger a
-                            // manual refresh instead of staring at an inert spinner.
+                            // Polling exhausted before build-workout wrote
+                            // linkedWorkoutId. "Refresh to check" used to live
+                            // here but it can't recover if the Lambda never
+                            // wrote linkedWorkoutId at all (e.g. linking
+                            // failed silently); resubmitting the captured
+                            // payload is the only path that actually
+                            // unsticks the template. The backend's duplicate
+                            // detection relinks the existing workout if it
+                            // was saved on the first attempt.
                             <button
-                              onClick={async () => {
-                                const refreshOptions = {};
-                                if (isViewingToday) {
-                                  refreshOptions.today = true;
-                                } else if (dayParam) {
-                                  refreshOptions.day = parseInt(dayParam);
-                                }
-                                try {
-                                  const result =
-                                    await programAgentRef.current?.loadWorkoutTemplates(
-                                      programId,
-                                      refreshOptions,
-                                    );
-                                  // Only clear the timeout state when the
-                                  // refreshed template actually has a
-                                  // linkedWorkoutId — i.e. build-workout
-                                  // finished. If the workout is still
-                                  // building, leave pollingStatus as
-                                  // "timeout" so the button stays visible
-                                  // for another retry; otherwise the render
-                                  // falls through to the disabled
-                                  // "Processing..." spinner with no recovery.
-                                  const refreshedTemplates =
-                                    result?.templates ||
-                                    result?.todaysWorkoutTemplates?.templates;
-                                  const refreshed = refreshedTemplates?.find(
-                                    (t) =>
-                                      t.templateId === template.templateId,
-                                  );
-                                  if (refreshed?.linkedWorkoutId) {
-                                    seenTimeoutsRef.current.delete(
-                                      template.templateId,
-                                    );
-                                    programAgentRef.current?.clearPollingStatus(
-                                      template.templateId,
-                                    );
-                                  } else {
-                                    showError(
-                                      "Workout still processing. Try again in a moment.",
-                                    );
-                                  }
-                                } catch (err) {
-                                  logger.error(
-                                    "Manual refresh failed:",
-                                    err,
-                                  );
-                                  showError(
-                                    err.message ||
-                                      "Failed to refresh workout status",
-                                  );
-                                }
-                              }}
-                              className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
+                              onClick={() => handleRetrySubmit(template)}
+                              disabled={
+                                processingWorkoutId === template.templateId
+                              }
+                              className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                              <CheckIcon />
-                              <span className="md:hidden">Refresh</span>
+                              {processingWorkoutId === template.templateId ? (
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <CheckIcon />
+                              )}
+                              <span className="md:hidden">Retry</span>
                               <span className="hidden md:inline">
-                                Refresh to check
+                                Retry submission
                               </span>
                             </button>
                           ) : (
