@@ -890,9 +890,9 @@ function ManageWorkouts() {
 
                   {/* Badge Row */}
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-16"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-12"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-20"></div>
                   </div>
                 </div>
               ))}
@@ -941,9 +941,9 @@ function ManageWorkouts() {
 
                     {/* Badge Row */}
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-12"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -979,9 +979,9 @@ function ManageWorkouts() {
 
                     {/* Badge Row */}
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-12"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-20"></div>
                     </div>
                   </div>
                 ))}
