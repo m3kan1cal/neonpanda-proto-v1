@@ -1436,10 +1436,10 @@ function ManagePrograms() {
               <div className="text-center flex flex-col justify-center items-center md:h-full md:justify-between md:items-stretch">
                 <div className="flex-1 flex flex-col justify-center items-center">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-synthwave-text-muted/20 animate-pulse rounded-xl mb-2 md:mb-3"></div>
-                  <div className="h-5 md:h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2 md:mb-3"></div>
-                  {/* Description placeholder — single line on mobile, two on desktop */}
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-0 md:mb-1.5"></div>
-                  <div className="hidden md:block h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40 mb-0 md:mb-4"></div>
+                  <div className="h-7 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-48 mb-2 md:mb-3"></div>
+                  {/* Description placeholder — two lines, matches actual text wrap */}
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-1.5"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40 mb-0 md:mb-4"></div>
                   <div className="hidden md:block h-6 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-32 mb-3"></div>
                 </div>
                 {/* Bottom features skeleton — desktop only, mirrors loaded card */}
