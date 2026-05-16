@@ -1313,11 +1313,11 @@ export const contextualDrawerPatterns = {
   // AI message — plain text style matching CoachConversations (no bubble).
   // Markdown-rendered code/tables stay text-sm by intention (contrast).
   aiMessage:
-    "font-ai text-[15px] leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
+    "font-ai text-base leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
 
   // User message bubble — matches CoachConversations userMessageBubble style, condensed for drawer width
   userMessage:
-    "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white rounded-xl rounded-br-none shadow-sm shadow-synthwave-neon-pink/30 px-3 py-2 max-w-[85%] ml-auto font-body text-[15px] leading-relaxed",
+    "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white rounded-xl rounded-br-none shadow-sm shadow-synthwave-neon-pink/30 px-3 py-2 max-w-[85%] ml-auto font-body text-base leading-relaxed",
 
   // Close button (icon button style)
   closeButton:
