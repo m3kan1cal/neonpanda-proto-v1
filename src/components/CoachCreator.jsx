@@ -199,7 +199,7 @@ const MessageItem = memo(
               "w-full min-w-0",
             )}
           >
-            <div className="font-ai text-base leading-relaxed text-synthwave-text-secondary break-words">
+            <div className="font-ai text-[17px] leading-relaxed text-synthwave-text-secondary break-words">
               {/* Attachments render once above the interleaved body. */}
               {renderMessageContent(message, { attachmentsOnly: true })}
               {/* Interleaves text segments with tool-call blocks based on

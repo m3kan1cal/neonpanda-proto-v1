@@ -525,12 +525,14 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .streaming-cursor > p:last-child::after,
 .streaming-cursor > ul:last-child > li:last-child > span:last-child::after,
 .streaming-cursor > ol:last-child > li:last-child::after {
-  content: "\258E";
-  display: inline;
-  color: rgb(0 255 255 / 0.8);
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background-color: rgb(0 255 255 / 0.8);
+  vertical-align: text-bottom;
+  margin-left: 2px;
   animation: streamingCursorBlink 0.8s step-end infinite;
-  margin-left: 1px;
-  font-weight: 300;
 }
 
 /* Typing indicator wave animation - smoother than animate-bounce */

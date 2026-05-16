@@ -1315,7 +1315,7 @@ export const contextualDrawerPatterns = {
   // chat font size so users don't perceive a noticeable drop-down when chatting
   // inline. Markdown-rendered code/tables stay text-sm by intention (contrast).
   aiMessage:
-    "font-ai text-base leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
+    "font-ai text-[17px] leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
 
   // User message bubble — matches CoachConversations userMessageBubble style, condensed for drawer width
   userMessage:
