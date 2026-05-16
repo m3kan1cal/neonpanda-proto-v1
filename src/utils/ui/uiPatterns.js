@@ -301,7 +301,7 @@ export const inputPatterns = {
 
   // Chat input editor area - no border (border lives on chatInputWrapper), no padding reservations for buttons
   chatInput:
-    "w-full px-4 pt-3 pb-2 text-base md:text-sm text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
+    "w-full px-4 pt-2 pb-1.5 md:pt-3 md:pb-2 text-base md:text-sm text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
 
   // Command palette input field - same styling but without right padding
   commandInput:
@@ -1308,9 +1308,11 @@ export const contextualDrawerPatterns = {
   headerLabel:
     "flex-1 min-w-0 font-header font-bold text-white uppercase truncate",
 
-  // Scrollable message area
+  // Scrollable message area. Bottom padding is applied inline by the consumer
+  // using `--drawer-chat-input-height` so the gap above the input tracks the
+  // input's actual height (same pattern as full-page chat surfaces).
   messageArea:
-    "flex-1 overflow-y-auto overscroll-contain px-6 pt-3 pb-64 space-y-4 custom-scrollbar-cyan",
+    "flex-1 overflow-y-auto overscroll-contain px-6 pt-3 space-y-4 custom-scrollbar-cyan",
 
   // Pinned input area at bottom
   inputArea:

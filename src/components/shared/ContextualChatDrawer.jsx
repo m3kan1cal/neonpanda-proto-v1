@@ -1986,6 +1986,10 @@ function PanelContent({
       <div
         ref={messageAreaRef}
         className={`${contextualDrawerPatterns.messageArea} @container`}
+        style={{
+          paddingBottom:
+            "calc(var(--drawer-chat-input-height, 110px) + 4px)",
+        }}
         aria-live="polite"
         aria-label="Conversation messages"
       >
