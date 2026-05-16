@@ -353,7 +353,7 @@ export const RunningSection = ({
       {/* Section 6: Running Details */}
       <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
         <div
-          className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+          className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
             collapsedSections.has(detailsId) ? "rounded-xl" : "rounded-t-xl"
           }`}
           onClick={() => toggleCollapse(detailsId)}
@@ -376,14 +376,14 @@ export const RunningSection = ({
           </svg>
         </div>
         {!collapsedSections.has(detailsId) && (
-          <div className="px-6 pb-6">
+          <div className="px-4 pb-4 md:px-6 md:pb-6">
             {runningData ? (
               <RunningDetails
                 runningData={runningData}
                 containerPatterns={containerPatterns}
               />
             ) : (
-              <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+              <div className={containerPatterns.nestedContent}>
                 <div className="text-synthwave-text-secondary font-body text-sm">
                   No running details data available for this workout.
                 </div>
@@ -397,7 +397,7 @@ export const RunningSection = ({
       {runningData?.segments?.length > 0 && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
-            className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+            className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
               collapsedSections.has(segmentsId) ? "rounded-xl" : "rounded-t-xl"
             }`}
             onClick={() => toggleCollapse(segmentsId)}
@@ -420,7 +420,7 @@ export const RunningSection = ({
             </svg>
           </div>
           {!collapsedSections.has(segmentsId) && (
-            <div className="px-6 pb-6">
+            <div className="px-4 pb-4 md:px-6 md:pb-6">
               {runningData?.segments?.length > 0 ? (
                 <div className="space-y-3">
                   {runningData.segments.map((segment, index) => (
@@ -432,7 +432,7 @@ export const RunningSection = ({
                   ))}
                 </div>
               ) : (
-                <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                <div className={containerPatterns.nestedContent}>
                   <div className="text-synthwave-text-secondary font-body text-sm">
                     No running segments data available for this workout.
                   </div>

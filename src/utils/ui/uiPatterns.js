@@ -601,6 +601,12 @@ export const containerPatterns = {
   coachNotesSection:
     "rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4",
 
+  // Nested content box inside a cardMedium section. Desktop: bordered, tinted box (matches the
+  // recurring inline pattern in WorkoutViewer.jsx). Mobile (< md): unstyled so text inherits the
+  // outer card's padding instead of double-nesting.
+  nestedContent:
+    "md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl",
+
   // Modern delete modal container - 2025 glassmorphism with red destructive theming
   deleteModal:
     "rounded-xl bg-gradient-to-br from-red-500/10 via-synthwave-bg-card/40 to-red-400/10 backdrop-blur-xl border border-red-500/30 shadow shadow-red-500/20 transition-all duration-300",

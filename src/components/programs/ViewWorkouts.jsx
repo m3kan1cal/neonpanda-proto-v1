@@ -964,14 +964,14 @@ General thoughts: `;
 
                 {/* Prescribed Workout Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
-                  <div className="px-6 pb-6 space-y-2">
+                  <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-2">
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
@@ -981,14 +981,14 @@ General thoughts: `;
 
                 {/* Coach Notes Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
-                  <div className="px-6 pb-6 space-y-2">
+                  <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-2">
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
                   </div>
@@ -996,14 +996,14 @@ General thoughts: `;
 
                 {/* The Setup Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
-                  <div className="px-6 pb-6 space-y-4">
+                  <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-4">
                     <div>
                       <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-40 mb-2"></div>
                       <div className="flex flex-wrap gap-2">
@@ -1342,7 +1342,7 @@ General thoughts: `;
                     }`}
                   >
                     <div
-                      className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300"
+                      className="flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300"
                       onClick={() => toggleCardCollapse(template.templateId)}
                     >
                       <div className="flex-1">
@@ -2463,20 +2463,20 @@ function CollapsibleSubCard({
       <button
         type="button"
         onClick={onToggle}
-        className={`w-full flex items-center justify-between px-6 ${
-          isCollapsed ? "py-5" : "pt-5 pb-2"
+        className={`w-full flex items-center justify-between px-4 md:px-6 ${
+          isCollapsed ? "py-4 md:py-5" : "pt-4 pb-2 md:pt-5"
         } hover:bg-synthwave-bg-card/40 transition-colors cursor-pointer`}
       >
         <div className="flex items-start gap-3">
           {Icon ? (
             <span
-              className={`shrink-0 mt-1 text-synthwave-neon-${iconColor}`}
+              className={`hidden md:inline-block shrink-0 mt-1 text-synthwave-neon-${iconColor}`}
             >
               <Icon />
             </span>
           ) : (
             <div
-              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
+              className={`hidden md:block ${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
             />
           )}
           <h4 className="font-header font-bold text-white text-lg uppercase">
@@ -2503,7 +2503,7 @@ function CollapsibleSubCard({
         </div>
       </button>
       {!isCollapsed && (
-        <div className={`px-6 pb-6 animate-fadeIn ${bodyClassName}`}>
+        <div className={`px-4 pb-4 md:px-6 md:pb-6 animate-fadeIn ${bodyClassName}`}>
           {children}
         </div>
       )}
