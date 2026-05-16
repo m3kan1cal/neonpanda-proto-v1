@@ -298,7 +298,7 @@ export const HybridSection = ({
         onClick={() => toggleCollapse(sectionId)}
       >
         <div className="flex items-start gap-3">
-          <span className="shrink-0 mt-1 text-synthwave-neon-pink">
+          <span className="hidden md:inline-block shrink-0 mt-1 text-synthwave-neon-pink">
             <LightningIconSmall />
           </span>
           <div className="flex flex-col">
