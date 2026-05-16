@@ -130,8 +130,8 @@ const MarkdownRendererComponent = ({ content, className = "" }) => {
 
             if (isCodeBlock) {
               return (
-                <pre className="bg-synthwave-dark-purple/30 p-3 my-2 overflow-x-auto">
-                  <code className="text-synthwave-neon-cyan text-sm">
+                <pre className="bg-synthwave-dark-purple/30 p-3 my-2 overflow-x-auto font-mono">
+                  <code className="text-synthwave-neon-cyan text-sm font-mono">
                     {children}
                   </code>
                 </pre>
@@ -140,7 +140,7 @@ const MarkdownRendererComponent = ({ content, className = "" }) => {
 
             // Inline code
             return (
-              <code className="bg-synthwave-dark-purple/50 text-synthwave-neon-pink px-1 py-0.5 rounded-xl text-sm">
+              <code className="bg-synthwave-dark-purple/50 text-synthwave-neon-pink px-1 py-0.5 rounded-xl text-sm font-mono">
                 {children}
               </code>
             );

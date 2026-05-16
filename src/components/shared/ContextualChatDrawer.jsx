@@ -49,6 +49,7 @@ import {
 } from "../../utils/ui/uiPatterns";
 import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import UserAvatar from "./UserAvatar";
+import CopyButton from "./CopyButton";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
 import {
   INLINE_TRAINING_GROUNDS_TAG,
@@ -2017,17 +2018,21 @@ function PanelContent({
           )}
 
         {showMessageList &&
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id || message.messageId}
-              message={message}
-              coachInitial={coachInitial}
-              userInitial={userInitial}
-              userEmail={userEmail}
-              userDisplayName={userDisplayName}
-              userId={userId}
-            />
-          ))}
+          messages.map((message, index) => {
+            const isLast = index === messages.length - 1;
+            return (
+              <MessageBubble
+                key={message.id || message.messageId}
+                message={message}
+                coachInitial={coachInitial}
+                userInitial={userInitial}
+                userEmail={userEmail}
+                userDisplayName={userDisplayName}
+                userId={userId}
+                isStreaming={isLast && isStreaming}
+              />
+            );
+          })}
 
         {/* Contextual update indicator (tool-use feedback) */}
         {contextualUpdate && !suppressTrainingOverlay && (
@@ -2227,6 +2232,7 @@ function MessageBubble({
   userEmail,
   userDisplayName,
   userId,
+  isStreaming = false,
 }) {
   const isUser = message.type === "user" || message.role === "user";
   const content =
@@ -2287,7 +2293,7 @@ function MessageBubble({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5 group">
       {/* Interleaves text segments with Claude-Code-style tool-call blocks
           based on each tool call's `contentOffset`. Falls back to a single
           text bubble when there are no tool calls. Each text segment is
@@ -2313,6 +2319,7 @@ function MessageBubble({
             {formatDrawerTime(message.timestamp)}
           </span>
         )}
+        {!isStreaming && content && <CopyButton text={content} size="sm" />}
       </div>
     </div>
   );
