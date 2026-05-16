@@ -25,7 +25,6 @@ function MobileSheetDragHandle({
       if (el) {
         el.style.transform = "";
         el.style.transition = "";
-        el.style.animation = "";
       }
       requestClose();
       return;
@@ -55,10 +54,15 @@ function MobileSheetDragHandle({
     const el = sheetRef?.current;
     if (el) {
       el.style.transition = "none";
-      // Cancel any running CSS keyframe animation (e.g. MoreMenu's
-      // animate-slide-up). Keyframe animations sit above inline styles in the
-      // cascade and would otherwise mask our transform updates.
-      el.style.animation = "none";
+      // Cancel any in-flight CSS keyframe animations (e.g. MoreMenu's
+      // animate-slide-up). Keyframes sit above inline styles in the cascade
+      // and would otherwise mask our transform updates during drag. Using
+      // the Web Animations API avoids leaving an inline `animation: none`
+      // style on the element, which would also affect consumers (like
+      // ContextualChatDrawer) that have no keyframe to begin with.
+      if (typeof el.getAnimations === "function") {
+        el.getAnimations().forEach((anim) => anim.cancel());
+      }
     }
   };
 
