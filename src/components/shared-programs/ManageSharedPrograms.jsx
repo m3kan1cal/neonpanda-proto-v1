@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import {
@@ -12,7 +6,7 @@ import {
   deactivateSharedProgram,
 } from "../../utils/apis/sharedProgramApi";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../../hooks/useInlineChatDrawer";
 import ContextualChatDrawer from "../shared/ContextualChatDrawer";
 import EntityChatFAB from "../shared/EntityChatFAB";
 import {
@@ -145,22 +139,17 @@ function ManageSharedPrograms() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Navigation context for command palette
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
-  // User avatar props for the inline chat drawer
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
-
-  // Inline coach chat drawer state — mirrors the Training Pulse / Training
-  // Grounds wiring so one home thread per (userId, coachId) for this surface.
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+  // Inline coach chat drawer state + user avatar props
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
   const inlineConversationTag = INLINE_MANAGE_SHARED_PROGRAMS_TAG;
   const inlineSessionKey = useMemo(

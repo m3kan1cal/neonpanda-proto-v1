@@ -1,14 +1,8 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../hooks/useInlineChatDrawer";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import EntityChatFAB from "./shared/EntityChatFAB";
 import {
@@ -125,25 +119,18 @@ function ManageWorkouts() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Global Command Palette state
+  const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
+    useNavigationContext();
+
+  // Inline coach chat drawer state + user avatar props
   const {
-    setIsCommandPaletteOpen,
-    onCommandPaletteToggle,
-    setIsInlineCoachDrawerOpen,
-  } = useNavigationContext();
-
-  // User avatar props for the inline chat drawer
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
-
-  // Inline coach chat drawer state — mirrors the Training Pulse / Training
-  // Grounds wiring so one home thread per (userId, coachId) for this surface.
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
   const inlineConversationTag = INLINE_MANAGE_WORKOUTS_TAG;
   const inlineSessionKey = useMemo(

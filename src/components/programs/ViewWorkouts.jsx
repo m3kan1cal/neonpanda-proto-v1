@@ -1,13 +1,7 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../../hooks/useInlineChatDrawer";
 import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
@@ -86,11 +80,17 @@ function ViewWorkouts() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { success: showSuccess, error: showError } = useToast();
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
-  // Get global CommandPalette + inline coach drawer state from NavigationContext
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  // Get global CommandPalette state from NavigationContext
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // State
   const [program, setProgram] = useState(null);
@@ -99,19 +99,6 @@ function ViewWorkouts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingWorkoutId, setProcessingWorkoutId] = useState(null);
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-
-  // Mirror drawer-open state to the global flag so App.jsx hides mobile
-  // chrome (bottom nav, status chrome) while the drawer is up — same
-  // pattern used by Training Grounds and Program Dashboard.
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
   // templateId -> "polling" | "timeout"; mirrored from ProgramAgent state so
   // the UI can render an actionable "Refresh to check" button when the
   // build-workout Lambda runs longer than the polling budget.

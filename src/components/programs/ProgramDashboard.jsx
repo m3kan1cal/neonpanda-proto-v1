@@ -10,7 +10,7 @@ import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import { CoachAgent } from "../../utils/agents/CoachAgent";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../../hooks/useInlineChatDrawer";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import PageHeader from "../shared/PageHeader";
 import PageHeaderSkeleton from "../shared/PageHeaderSkeleton";
@@ -63,7 +63,14 @@ export default function ProgramDashboard() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
   const [program, setProgram] = useState(null);
   const [programDetails, setProgramDetails] = useState(null);
@@ -77,7 +84,6 @@ export default function ProgramDashboard() {
   const [error, setError] = useState(null);
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
   const [conversationAgentState, setConversationAgentState] = useState({
     totalMessages: 0,
     isLoadingConversationCount: false,
@@ -86,18 +92,8 @@ export default function ProgramDashboard() {
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  const { setIsCommandPaletteOpen } = useNavigationContext();
   const toast = useToast();
-
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   const {
     isPromptOpen: showUpgradePrompt,

@@ -1,14 +1,8 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../hooks/useInlineChatDrawer";
 import { AccessDenied } from "./shared/AccessDenied";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import EntityChatFAB from "./shared/EntityChatFAB";
@@ -67,27 +61,24 @@ function WeeklyReports() {
   const [report, setReport] = useState(null);
   const [viewMode, setViewMode] = useState("formatted");
 
-  // Command palette state + global inline-coach-drawer flag
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  // Command palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Coach data state
   const [coachData, setCoachData] = useState(null);
 
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
-
-  // Inline coach chat drawer state, scoped per weekId. Each report week is its
-  // own conversation, mirroring the Program Dashboard's per-program scoping.
-  // Drawer is hidden until the report has loaded so the agent's first turn has
-  // a stable weekId to forward via streamClientContext.
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+  // Inline coach chat drawer state + user avatar props. Scoped per weekId —
+  // each report week is its own conversation, mirroring Program Dashboard.
+  // Drawer is hidden until the report has loaded so the agent's first turn
+  // has a stable weekId to forward via streamClientContext.
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
   const inlineConversationTag = useMemo(
     () => (weekId ? getWeeklyReportInlineTag(weekId) : null),
