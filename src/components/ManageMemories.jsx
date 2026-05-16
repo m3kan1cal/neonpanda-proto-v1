@@ -1,7 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useInlineChatDrawer } from "../hooks/useInlineChatDrawer";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
+import {
+  INLINE_MANAGE_MEMORIES_TAG,
+  getManageMemoriesInlineSessionKey,
+} from "../constants/contextualChat";
 import {
   containerPatterns,
   badgePatterns,
@@ -91,6 +98,30 @@ function ManageMemories() {
   // Command palette state
   const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
     useNavigationContext();
+
+  // Inline coach chat drawer state + user avatar props
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
+
+  const inlineConversationTag = INLINE_MANAGE_MEMORIES_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getManageMemoriesInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Manage Memories";
+  const streamClientContext = useMemo(
+    () => ({ surface: "manage_memories" }),
+    [],
+  );
 
   // Coach data state
   const [coachData, setCoachData] = useState(null);
@@ -1226,6 +1257,33 @@ function ManageMemories() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Inline coach chat (mirrors Training Pulse / Training Grounds wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Manage Memories"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </>
   );
 }

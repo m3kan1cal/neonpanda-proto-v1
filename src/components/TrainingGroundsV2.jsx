@@ -9,7 +9,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../auth/contexts/AuthContext";
-import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../hooks/useInlineChatDrawer";
 import { useToast } from "../contexts/ToastContext";
 import {
   containerPatterns,
@@ -146,18 +146,22 @@ function TrainingGroundsV2() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { userProfile } = useAuth();
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
   const { success: showSuccess, error: showError } = useToast();
 
   // Derive unit system from user profile preferences (default: imperial)
   const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
-  // Global Command Palette + inline coach drawer (mobile shell visibility)
-  const {
-    setIsCommandPaletteOpen,
-    onCommandPaletteToggle,
-    setIsInlineCoachDrawerOpen,
-  } = useNavigationContext();
+  // Global Command Palette
+  const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
+    useNavigationContext();
 
   const coachAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
@@ -228,16 +232,6 @@ function TrainingGroundsV2() {
   // Component-local UI state
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   const streamClientContext = useMemo(
     () => ({ surface: "training_grounds" }),

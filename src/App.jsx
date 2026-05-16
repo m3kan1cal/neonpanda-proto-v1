@@ -137,13 +137,27 @@ function AppContent() {
   const matchProgramDayDetail = useMatch(
     "/training-grounds/programs/:programId/day/:dayNumber",
   );
+  const matchManageWorkouts = useMatch("/training-grounds/manage-workouts");
+  const matchManageExercises = useMatch("/training-grounds/manage-exercises");
+  const matchManageMemories = useMatch("/training-grounds/manage-memories");
+  const matchManageConversations = useMatch(
+    "/training-grounds/manage-conversations",
+  );
+  const matchManageSharedPrograms = useMatch(
+    "/training-grounds/programs/shared",
+  );
 
   const hideQuickFabOnEntityCoachMobile = Boolean(
     matchTrainingHome ||
       matchTodayWorkout ||
       matchProgramWorkouts ||
       matchProgramDashboard ||
-      matchProgramDayDetail,
+      matchProgramDayDetail ||
+      matchManageWorkouts ||
+      matchManageExercises ||
+      matchManageMemories ||
+      matchManageConversations ||
+      matchManageSharedPrograms,
   );
 
   // Workout agent for command palette

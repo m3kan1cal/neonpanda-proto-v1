@@ -120,3 +120,32 @@ export function getViewWorkoutsInlineSessionKey(userId, coachId, programId) {
 
 /** ~10 recent chats in drawer picker */
 export const TRAINING_GROUNDS_INLINE_PICKER_LIMIT = 10;
+
+/**
+ * Metadata tags for the per-page inline chat "home" threads on each of the
+ * `/training-grounds/manage-*` surfaces. Each page gets its own thread so
+ * conversations stay scoped to the page the user was browsing.
+ */
+export const INLINE_MANAGE_WORKOUTS_TAG = "manage_workouts_inline";
+export const INLINE_MANAGE_EXERCISES_TAG = "manage_exercises_inline";
+export const INLINE_MANAGE_MEMORIES_TAG = "manage_memories_inline";
+export const INLINE_MANAGE_CONVERSATIONS_TAG = "manage_conversations_inline";
+export const INLINE_MANAGE_SHARED_PROGRAMS_TAG =
+  "manage_shared_programs_inline";
+
+/** sessionStorage keys for last conversation opened from each manage page. */
+export function getManageWorkoutsInlineSessionKey(userId, coachId) {
+  return `neonpanda-mw-inline-chat:${userId}:${coachId}`;
+}
+export function getManageExercisesInlineSessionKey(userId, coachId) {
+  return `neonpanda-me-inline-chat:${userId}:${coachId}`;
+}
+export function getManageMemoriesInlineSessionKey(userId, coachId) {
+  return `neonpanda-mm-inline-chat:${userId}:${coachId}`;
+}
+export function getManageConversationsInlineSessionKey(userId, coachId) {
+  return `neonpanda-mc-inline-chat:${userId}:${coachId}`;
+}
+export function getManageSharedProgramsInlineSessionKey(userId, coachId) {
+  return `neonpanda-msp-inline-chat:${userId}:${coachId}`;
+}
