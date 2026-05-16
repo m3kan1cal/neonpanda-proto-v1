@@ -1316,10 +1316,8 @@ export const contextualDrawerPatterns = {
   inputArea:
     "shrink-0 border-t border-synthwave-neon-cyan/10 bg-synthwave-bg-card/80 text-sm",
 
-  // AI message — plain text style matching CoachConversations (no bubble)
-  // text-base brings the drawer to parity with the full-page CoachConversations
-  // chat font size so users don't perceive a noticeable drop-down when chatting
-  // inline. Markdown-rendered code/tables stay text-sm by intention (contrast).
+  // AI message — plain text style matching CoachConversations (no bubble).
+  // Markdown-rendered code/tables stay text-sm by intention (contrast).
   aiMessage:
     "font-ai text-base leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
 

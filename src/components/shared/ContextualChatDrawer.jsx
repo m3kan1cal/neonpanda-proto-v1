@@ -1985,7 +1985,7 @@ function PanelContent({
       {/* Message area */}
       <div
         ref={messageAreaRef}
-        className={contextualDrawerPatterns.messageArea}
+        className={`${contextualDrawerPatterns.messageArea} @container`}
         aria-live="polite"
         aria-label="Conversation messages"
       >
@@ -2293,7 +2293,7 @@ function MessageBubble({
   }
 
   return (
-    <div className="flex flex-col gap-1.5 group">
+    <div className="flex flex-col gap-1.5 group min-w-0 w-full @[640px]:max-w-[85%]">
       {/* Interleaves text segments with Claude-Code-style tool-call blocks
           based on each tool call's `contentOffset`. Falls back to a single
           text bubble when there are no tool calls. Each text segment is

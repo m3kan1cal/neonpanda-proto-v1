@@ -146,6 +146,10 @@ function AppContent() {
   const matchManageSharedPrograms = useMatch(
     "/training-grounds/programs/shared",
   );
+  const matchManagePrograms = useMatch("/training-grounds/programs");
+  const matchReports = useMatch("/training-grounds/reports");
+  const matchReportsWeekly = useMatch("/training-grounds/reports/weekly");
+  const matchTrainingPulse = useMatch("/training-grounds/training-pulse");
 
   const hideQuickFabOnEntityCoachMobile = Boolean(
     matchTrainingHome ||
@@ -157,7 +161,11 @@ function AppContent() {
       matchManageExercises ||
       matchManageMemories ||
       matchManageConversations ||
-      matchManageSharedPrograms,
+      matchManageSharedPrograms ||
+      matchManagePrograms ||
+      matchReports ||
+      matchReportsWeekly ||
+      matchTrainingPulse,
   );
 
   // Workout agent for command palette
