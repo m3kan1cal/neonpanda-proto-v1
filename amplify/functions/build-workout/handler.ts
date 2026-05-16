@@ -126,6 +126,8 @@ export const handler = async (event: BuildWorkoutEvent) => {
         success: result.success,
         workoutId: result.workoutId,
         skipped: result.skipped,
+        templateId: event.templateContext?.templateId,
+        dayNumber: event.templateContext?.dayNumber,
       });
 
       // Return same response format as original build-workout
@@ -141,11 +143,19 @@ export const handler = async (event: BuildWorkoutEvent) => {
           allWorkouts: result.allWorkouts,
         });
       } else {
-        // Failure path. If the caller optimistically marked a program template
-        // "completed" but no workout was successfully linked, revert that
-        // optimism so the template doesn't stay stuck in the UI as "processing".
-        // result.workoutId is set when the duplicate-skip path successfully
-        // linked the existing workout — we leave that alone.
+        // Failure path. Revert the optimistic "completed" status when no
+        // workout was produced — pure extraction/validation failures, the
+        // exception path below, and the duplicate-skip path where relink
+        // also failed (agent.ts withholds workoutId on that subcase).
+        //
+        // NOT covered: the "saved but linking failed after retries" case.
+        // After retries inside linkWorkoutToTemplate succeed at handling
+        // transient S3 issues, the residual failure modes (program/template
+        // not found, S3 fundamentally unavailable) are rare enough that we
+        // accept leaving the workout orphaned in DynamoDB and rely on
+        // scripts/relink-orphaned-templates.js for recovery. The UI can
+        // also re-fetch via "Refresh to check" if linkedWorkoutId arrives
+        // late.
         if (event.templateContext && !result.workoutId) {
           await revertTemplateStatus(
             event.userId,

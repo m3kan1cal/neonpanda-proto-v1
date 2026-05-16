@@ -100,6 +100,12 @@ export const countOptionalTemplates = (
  * This allows tracking which template workouts have been completed and
  * provides comparison data for scaling analysis.
  *
+ * Retries the S3 read+mutate+write block up to 3 times with exponential
+ * backoff on thrown errors (transient S3/DynamoDB failures). Terminal
+ * misses — program not found, template not found — return false without
+ * retrying. The UI blocks on this field, so silent failure here leaves
+ * the template stuck at "Processing…" until the 6-minute polling timeout.
+ *
  * @returns true if successfully linked, false otherwise
  */
 export const linkWorkoutToTemplate = async (
@@ -113,61 +119,87 @@ export const linkWorkoutToTemplate = async (
 ): Promise<boolean> => {
   logger.info("🔗 Updating template linkedWorkoutId in S3..");
 
-  try {
-    // 1. Get program metadata from DynamoDB
-    const programData = await getProgram(
-      userId,
-      coachId,
-      templateContext.programId,
-    );
+  const maxAttempts = 3;
+  const backoffMs = [250, 500, 1000];
+  let lastError: unknown;
 
-    if (!programData?.s3DetailKey) {
-      logger.warn("⚠️ Program data or S3 detail key not found");
-      return false;
-    }
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      // 1. Get program metadata from DynamoDB
+      const programData = await getProgram(
+        userId,
+        coachId,
+        templateContext.programId,
+      );
 
-    // 2. Get full program details from S3
-    const programDetails = await getProgramDetailsFromS3(
-      programData.s3DetailKey,
-    );
+      if (!programData?.s3DetailKey) {
+        logger.warn("⚠️ Program data or S3 detail key not found");
+        return false;
+      }
 
-    if (!programDetails) {
-      logger.warn("⚠️ Program details not found in S3");
-      return false;
-    }
+      // 2. Get full program details from S3
+      const programDetails = await getProgramDetailsFromS3(
+        programData.s3DetailKey,
+      );
 
-    // 3. Find the template in the program
-    const templateIndex = programDetails.workoutTemplates.findIndex(
-      (t: any) => t.templateId === templateContext.templateId,
-    );
+      if (!programDetails) {
+        // getProgramDetailsFromS3 catches all errors and returns null,
+        // so null here covers BOTH "transient S3 read failure" and
+        // "key genuinely missing". The latter shouldn't happen — the
+        // s3DetailKey we got from DynamoDB above means S3 had this
+        // object at write time. Throw to trigger the retry loop's
+        // catch; if it's truly missing the retries will just confirm
+        // it after the backoff window.
+        throw new Error(
+          `getProgramDetailsFromS3 returned null for s3DetailKey ${programData.s3DetailKey}`,
+        );
+      }
 
-    if (templateIndex === -1) {
-      logger.warn("⚠️ Template not found in program:", {
+      // 3. Find the template in the program
+      const templateIndex = programDetails.workoutTemplates.findIndex(
+        (t: any) => t.templateId === templateContext.templateId,
+      );
+
+      if (templateIndex === -1) {
+        logger.warn("⚠️ Template not found in program:", {
+          templateId: templateContext.templateId,
+          programId: templateContext.programId,
+        });
+        return false;
+      }
+
+      // 4. Update the linkedWorkoutId
+      programDetails.workoutTemplates[templateIndex].linkedWorkoutId =
+        workoutId;
+
+      // 5. Save updated program details back to S3
+      await saveProgramDetailsToS3(programData.s3DetailKey, programDetails);
+
+      logger.info("✅ Template linkedWorkoutId updated:", {
         templateId: templateContext.templateId,
-        programId: templateContext.programId,
+        workoutId,
+        attempt,
       });
-      return false;
+
+      return true;
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, backoffMs[attempt - 1]));
+      }
     }
-
-    // 4. Update the linkedWorkoutId
-    programDetails.workoutTemplates[templateIndex].linkedWorkoutId = workoutId;
-
-    // 5. Save updated program details back to S3
-    await saveProgramDetailsToS3(programData.s3DetailKey, programDetails);
-
-    logger.info("✅ Template linkedWorkoutId updated:", {
-      templateId: templateContext.templateId,
-      workoutId,
-    });
-
-    return true;
-  } catch (error) {
-    logger.error(
-      "⚠️ Failed to update template linkedWorkoutId (non-critical):",
-      error,
-    );
-    return false;
   }
+
+  logger.error("❌ linkWorkoutToTemplate failed after retries", {
+    userId,
+    coachId,
+    programId: templateContext.programId,
+    templateId: templateContext.templateId,
+    workoutId,
+    attempts: maxAttempts,
+    error: lastError,
+  });
+  return false;
 };
 
 /**

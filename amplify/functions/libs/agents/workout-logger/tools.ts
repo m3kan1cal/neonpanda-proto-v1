@@ -1326,6 +1326,23 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       imageCount: workout.imageS3Keys?.length ?? 0,
     });
 
+    // Update template linkedWorkoutId BEFORE the non-blocking work below.
+    // The UI polls this field to clear the "Processing…" state; running
+    // linking here (rather than after Pinecone + the fire-and-forget
+    // invokes) gives it maximum Lambda wall-clock budget. The function
+    // is internally retried with exponential backoff. We treat a final
+    // false return as non-fatal at this layer — the workout is already
+    // saved, the user can re-fetch via "Refresh to check", and the
+    // relink-orphaned-templates.js script can recover any straggler.
+    const templateLinked = context.templateContext
+      ? await linkWorkoutToTemplate(
+          context.userId,
+          context.coachId,
+          context.templateContext,
+          workout.workoutId,
+        )
+      : false;
+
     // Store workout summary in Pinecone
     logger.info("📝 Storing workout summary in Pinecone..");
     let pineconeStored = false;
@@ -1404,20 +1421,12 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       });
     }
 
-    // Update template linkedWorkoutId if from program
-    const templateLinked = context.templateContext
-      ? await linkWorkoutToTemplate(
-          context.userId,
-          context.coachId,
-          context.templateContext,
-          workout.workoutId,
-        )
-      : false;
-
     logger.info("✅ Workout saved successfully", {
       workoutId: workout.workoutId,
       pineconeStored,
       templateLinked,
+      templateId: context.templateContext?.templateId,
+      dayNumber: context.templateContext?.dayNumber,
       imageS3Keys: workout.imageS3Keys ?? [],
       imageCount: workout.imageS3Keys?.length ?? 0,
     });

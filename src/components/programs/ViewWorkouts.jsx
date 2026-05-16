@@ -499,11 +499,45 @@ General thoughts: `;
     clearImages();
   };
 
+  // Navigate the user forward after the last workout of a day is
+  // submitted or skipped. Shared between the submit and skip handlers
+  // so the advancement rule stays in one place:
+  //   today view → dashboard (handles next-day or program-completed
+  //                gracefully without a failed template reload).
+  //   ?day=N view → ?day=N+1, or dashboard if past totalDays. Rest
+  //                 days on N+1 are handled by ViewWorkouts' own
+  //                 rest-day UI path (null templates → rest-day view).
+  const advanceAfterDayComplete = (completedDayNumber) => {
+    if (isViewingToday) {
+      navigate(
+        `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+      );
+      return;
+    }
+    const nextDay = (completedDayNumber ?? 0) + 1;
+    const totalDays = program?.totalDays;
+    if (totalDays && nextDay > totalDays) {
+      navigate(
+        `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+      );
+    } else {
+      navigate(
+        `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}&day=${nextDay}`,
+      );
+    }
+  };
+
   // Submit the workout - actually logs it
   const handleSubmitWorkout = async (template) => {
     if (processingWorkoutId || !programAgentRef.current) return;
 
     setProcessingWorkoutId(template.templateId);
+    // Drop any prior "seen-timeout" marker and clear residual pollingStatus
+    // for this template so a fresh submission (after a previous timeout) can
+    // re-toast on a subsequent failure and so the inline button doesn't
+    // render a stale "timeout" state during the new attempt.
+    seenTimeoutsRef.current.delete(template.templateId);
+    programAgentRef.current.clearPollingStatus(template.templateId);
     try {
       logger.info("📝 Submitting workout:", {
         templateId: template.templateId,
@@ -593,18 +627,12 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts are complete/skipped, navigate to the
-          // program dashboard after the celebration ends. The dashboard handles both
-          // mid-program day completion (shows next day) and program completion
-          // (shows completed status) gracefully — avoiding a failed template reload
-          // on a just-completed program.
-          if (isViewingToday) {
-            setTimeout(() => {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-            }, 3500);
-          }
+          // Advance the user forward after the celebration window so
+          // they're not stranded on the just-finished day.
+          setTimeout(
+            () => advanceAfterDayComplete(workoutData.dayNumber),
+            3500,
+          );
         }
       }
     } catch (err) {
@@ -698,18 +726,11 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts are complete/skipped, navigate to the
-          // program dashboard after the celebration ends. The dashboard handles both
-          // mid-program day completion (shows next day) and program completion
-          // (shows completed status) gracefully — avoiding a failed template reload
-          // on a just-completed program.
-          if (isViewingToday) {
-            setTimeout(() => {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-            }, 3500);
-          }
+          // Shared advancement helper — same rule as the submit path.
+          setTimeout(
+            () => advanceAfterDayComplete(workoutData.dayNumber),
+            3500,
+          );
         }
       }
     } catch (err) {
@@ -1968,9 +1989,20 @@ General thoughts: `;
                             </button>
                           ) : pollingStatus[template.templateId] ===
                             "timeout" ? (
-                            // Polling exhausted before the build-workout Lambda
-                            // wrote linkedWorkoutId. Let the user trigger a
-                            // manual refresh instead of staring at an inert spinner.
+                            // Polling exhausted before build-workout wrote
+                            // linkedWorkoutId. Re-fetch on demand: if the
+                            // Lambda eventually finished and wrote the link,
+                            // we clear the timeout state and the View Workout
+                            // button takes over. We deliberately do NOT
+                            // resubmit through log-workout-template here —
+                            // that endpoint 400s on already-completed
+                            // templates, so a resubmit would always fail and
+                            // strand the UI on the disabled spinner. The
+                            // genuine "build-workout failed" case is handled
+                            // upstream now: tools.ts returns success: false
+                            // → handler reverts → polling sees status:
+                            // "pending" and stops with reason "reverted",
+                            // never reaching this timeout branch.
                             <button
                               onClick={async () => {
                                 const refreshOptions = {};
@@ -1985,15 +2017,6 @@ General thoughts: `;
                                       programId,
                                       refreshOptions,
                                     );
-                                  // Only clear the timeout state when the
-                                  // refreshed template actually has a
-                                  // linkedWorkoutId — i.e. build-workout
-                                  // finished. If the workout is still
-                                  // building, leave pollingStatus as
-                                  // "timeout" so the button stays visible
-                                  // for another retry; otherwise the render
-                                  // falls through to the disabled
-                                  // "Processing..." spinner with no recovery.
                                   const refreshedTemplates =
                                     result?.templates ||
                                     result?.todaysWorkoutTemplates?.templates;
@@ -2014,10 +2037,7 @@ General thoughts: `;
                                     );
                                   }
                                 } catch (err) {
-                                  logger.error(
-                                    "Manual refresh failed:",
-                                    err,
-                                  );
+                                  logger.error("Manual refresh failed:", err);
                                   showError(
                                     err.message ||
                                       "Failed to refresh workout status",
