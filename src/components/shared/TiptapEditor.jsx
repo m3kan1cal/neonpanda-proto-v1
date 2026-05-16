@@ -6,7 +6,7 @@ import React, {
   forwardRef,
 } from "react";
 import { createPortal } from "react-dom";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, useEditorState, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { buttonPatterns } from "../../utils/ui/uiPatterns";
@@ -150,6 +150,21 @@ const TiptapEditor = forwardRef(
       },
     });
 
+    // Subscribe to formatting state so toolbar buttons reflect editor.isActive
+    // synchronously. In @tiptap/react v3, useEditor no longer re-renders on
+    // every transaction — without this hook, isActive checks read stale state
+    // until something else triggers a parent re-render.
+    const editorState = useEditorState({
+      editor,
+      selector: ({ editor }) => ({
+        isBold: editor?.isActive("bold") ?? false,
+        isItalic: editor?.isActive("italic") ?? false,
+        isStrike: editor?.isActive("strike") ?? false,
+        isBulletList: editor?.isActive("bulletList") ?? false,
+        isOrderedList: editor?.isActive("orderedList") ?? false,
+      }),
+    });
+
     // Sync disabled state
     useEffect(() => {
       if (editor) {
@@ -269,6 +284,12 @@ const TiptapEditor = forwardRef(
     const accentInactive = isPink
       ? "text-synthwave-text-muted hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
       : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10";
+    // Pressed-state styling for non-toggle buttons (image, fullscreen). Gives
+    // a deliberate active-color frame during click so the button doesn't fade
+    // from hover-pink back to muted as focus shifts to the OS file picker.
+    const accentPressed = isPink
+      ? "active:text-synthwave-neon-pink active:bg-synthwave-neon-pink/10"
+      : "active:text-synthwave-neon-cyan active:bg-synthwave-neon-cyan/10";
     const accentDivider = isPink
       ? "bg-synthwave-neon-pink/20"
       : "bg-synthwave-neon-cyan/20";
@@ -284,7 +305,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleBold().run();
           }}
           className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm font-bold font-body transition-colors focus:outline-none focus-visible:outline-none ${
-            editor.isActive("bold") ? accentActive : accentInactive
+            editorState?.isBold ? accentActive : accentInactive
           }`}
           title="Bold"
         >
@@ -297,7 +318,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleItalic().run();
           }}
           className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm italic font-body transition-colors focus:outline-none focus-visible:outline-none ${
-            editor.isActive("italic") ? accentActive : accentInactive
+            editorState?.isItalic ? accentActive : accentInactive
           }`}
           title="Italic"
         >
@@ -310,7 +331,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleStrike().run();
           }}
           className={`cursor-pointer px-2.5 py-1 rounded-xl text-sm line-through font-body transition-colors focus:outline-none focus-visible:outline-none ${
-            editor.isActive("strike") ? accentActive : accentInactive
+            editorState?.isStrike ? accentActive : accentInactive
           }`}
           title="Strikethrough"
         >
@@ -328,7 +349,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleBulletList().run();
           }}
           className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none ${
-            editor.isActive("bulletList") ? accentActive : accentInactive
+            editorState?.isBulletList ? accentActive : accentInactive
           }`}
           title="Bullet list"
         >
@@ -356,7 +377,7 @@ const TiptapEditor = forwardRef(
             editor.chain().focus().toggleOrderedList().run();
           }}
           className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none ${
-            editor.isActive("orderedList") ? accentActive : accentInactive
+            editorState?.isOrderedList ? accentActive : accentInactive
           }`}
           title="Numbered list"
         >
@@ -416,7 +437,7 @@ const TiptapEditor = forwardRef(
                 if (!attachPhotoDisabled) onAttachPhoto();
               }}
               disabled={attachPhotoDisabled}
-              className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${accentInactive}`}
+              className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${accentInactive} ${accentPressed}`}
               title={
                 attachPhotoDisabled
                   ? "Maximum 5 photos"
@@ -456,7 +477,7 @@ const TiptapEditor = forwardRef(
                 e.preventDefault();
                 setIsFullscreen((prev) => !prev);
               }}
-              className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none ${accentInactive}`}
+              className={`cursor-pointer p-1 rounded-xl transition-colors focus:outline-none focus-visible:outline-none ${accentInactive} ${accentPressed}`}
               title={isFullscreen ? "Exit fullscreen" : "Expand editor"}
             >
               {isFullscreen ? (
