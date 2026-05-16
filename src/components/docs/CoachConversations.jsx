@@ -182,7 +182,7 @@ function CoachConversationsDoc() {
 
         <div className="space-y-2">
           <div className="flex items-start space-x-3 p-3 rounded-xl border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30">
-            <code className="shrink-0 px-2 py-0.5 rounded bg-synthwave-bg-primary border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-ai text-sm">
+            <code className="shrink-0 px-2 py-0.5 rounded bg-synthwave-bg-primary border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-mono text-sm">
               /log-workout
             </code>
             <p className="font-body text-sm text-synthwave-text-secondary">
@@ -192,7 +192,7 @@ function CoachConversationsDoc() {
             </p>
           </div>
           <div className="flex items-start space-x-3 p-3 rounded-xl border border-synthwave-neon-cyan/10 bg-synthwave-bg-card/30">
-            <code className="shrink-0 px-2 py-0.5 rounded bg-synthwave-bg-primary border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-ai text-sm">
+            <code className="shrink-0 px-2 py-0.5 rounded bg-synthwave-bg-primary border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-mono text-sm">
               /save-memory
             </code>
             <p className="font-body text-sm text-synthwave-text-secondary">
@@ -204,7 +204,7 @@ function CoachConversationsDoc() {
         </div>
 
         <Callout type="tip">
-          Slash commands are available by typing <code className="text-synthwave-neon-cyan font-ai">/</code> at the
+          Slash commands are available by typing <code className="text-synthwave-neon-cyan font-mono">/</code> at the
           start of your message. A suggestions menu will appear with available
           commands.
         </Callout>

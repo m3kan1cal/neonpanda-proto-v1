@@ -4,7 +4,7 @@ import Callout from "./Callout";
 
 function CodeBlock({ children }) {
   return (
-    <div className="rounded-lg border border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/80 p-4 font-ai text-sm text-synthwave-neon-cyan leading-relaxed overflow-x-auto">
+    <div className="rounded-lg border border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/80 p-4 font-mono text-sm text-synthwave-neon-cyan leading-relaxed overflow-x-auto">
       {children}
     </div>
   );
@@ -65,11 +65,11 @@ function LoggingWorkouts() {
               </h3>
               <p className="font-body text-synthwave-text-secondary text-sm leading-relaxed">
                 Press{" "}
-                <kbd className="px-2 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-ai text-xs">
+                <kbd className="px-2 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-mono text-xs">
                   Cmd+K
                 </kbd>{" "}
                 (Mac) or{" "}
-                <kbd className="px-2 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-ai text-xs">
+                <kbd className="px-2 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/20 text-synthwave-neon-cyan font-mono text-xs">
                   Ctrl+K
                 </kbd>{" "}
                 (Windows/Linux), or tap the <strong>Log Workout</strong> button
@@ -209,7 +209,7 @@ function LoggingWorkouts() {
             coach conversation
           </Link>{" "}
           using the{" "}
-          <code className="px-1.5 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/15 text-synthwave-neon-cyan font-ai text-sm">
+          <code className="px-1.5 py-0.5 rounded bg-synthwave-bg-card border border-synthwave-neon-cyan/15 text-synthwave-neon-cyan font-mono text-sm">
             /log-workout
           </code>{" "}
           slash command. Type the command followed by your workout description,
