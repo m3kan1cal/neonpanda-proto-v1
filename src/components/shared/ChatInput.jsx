@@ -224,12 +224,12 @@ const QUICK_PROMPTS = {
 function ChatInputSkeleton() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-2 sm:py-6">
         <div className="w-full rounded-xl bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
-          <div className="px-4 pt-3 pb-2 min-h-[80px]">
+          <div className="px-4 pt-2 pb-1.5 md:pt-3 md:pb-2 min-h-[60px] md:min-h-[80px]">
             <div className="h-4 bg-synthwave-text-muted/15 rounded animate-pulse w-1/3"></div>
           </div>
-          <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
+          <div className="flex items-center justify-between pl-3 pr-2 py-1 md:py-1.5 border-t border-synthwave-neon-pink/10">
             <div className="w-7 h-7 bg-synthwave-text-muted/15 rounded-xl animate-pulse"></div>
             <div className="flex items-center gap-1">
               <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
@@ -680,18 +680,20 @@ function ChatInput({
     ],
   );
 
-  // Update CSS custom property for chat input height
+  // Update CSS custom property for chat input height.
+  // Drawer (compact) publishes its own variable so it doesn't collide with the
+  // full-page surfaces when both might mount in the same document.
   React.useEffect(() => {
+    const cssVar = compact ? "--drawer-chat-input-height" : "--chat-input-height";
+    const selector = compact
+      ? "[data-drawer-chat-input-container]"
+      : "[data-chat-input-container]";
+
     const updateChatInputHeight = () => {
-      const chatInputElement = document.querySelector(
-        "[data-chat-input-container]",
-      );
+      const chatInputElement = document.querySelector(selector);
       if (chatInputElement) {
         const height = chatInputElement.offsetHeight;
-        document.documentElement.style.setProperty(
-          "--chat-input-height",
-          `${height}px`,
-        );
+        document.documentElement.style.setProperty(cssVar, `${height}px`);
       }
     };
 
@@ -699,9 +701,7 @@ function ChatInput({
     updateChatInputHeight();
 
     // Use ResizeObserver to track height changes
-    const chatInputElement = document.querySelector(
-      "[data-chat-input-container]",
-    );
+    const chatInputElement = document.querySelector(selector);
     if (chatInputElement) {
       const resizeObserver = new ResizeObserver(updateChatInputHeight);
       resizeObserver.observe(chatInputElement);
@@ -711,6 +711,7 @@ function ChatInput({
       };
     }
   }, [
+    compact,
     inputMessage,
     isRecording,
     showTipsModal,
@@ -727,11 +728,13 @@ function ChatInput({
   return (
     <div
       className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
-      data-chat-input-container
+      {...(compact
+        ? { "data-drawer-chat-input-container": "" }
+        : { "data-chat-input-container": "" })}
     >
       <div
         className={
-          compact ? "px-3 py-2" : "max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6"
+          compact ? "px-3 py-2" : "max-w-6xl mx-auto px-4 sm:px-8 py-2 sm:py-6"
         }
       >
         {/* Attachment Preview Grid — images and documents share one row */}
@@ -975,14 +978,20 @@ function ChatInput({
                 disabled={isTyping}
                 mode="rich"
                 className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
-                minHeight={editorMinHeight}
+                minHeight={
+                  !compact &&
+                  typeof window !== "undefined" &&
+                  window.innerWidth < 768
+                    ? "40px"
+                    : editorMinHeight
+                }
                 maxHeight={editorMaxHeight}
                 scrollOnWrapper={true}
                 onPaste={handlePaste}
               />
 
               {/* Button row: actions on left, controls on right */}
-              <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
+              <div className="flex items-center justify-between pl-3 pr-2 py-1 md:py-1.5 border-t border-synthwave-neon-pink/10">
                 {/* Left: actions menu button */}
                 <div className="relative" data-quick-actions-container>
                   <button
