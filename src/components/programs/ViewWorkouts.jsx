@@ -499,6 +499,34 @@ General thoughts: `;
     clearImages();
   };
 
+  // Navigate the user forward after the last workout of a day is
+  // submitted or skipped. Shared between the submit and skip handlers
+  // so the advancement rule stays in one place:
+  //   today view → dashboard (handles next-day or program-completed
+  //                gracefully without a failed template reload).
+  //   ?day=N view → ?day=N+1, or dashboard if past totalDays. Rest
+  //                 days on N+1 are handled by ViewWorkouts' own
+  //                 rest-day UI path (null templates → rest-day view).
+  const advanceAfterDayComplete = (completedDayNumber) => {
+    if (isViewingToday) {
+      navigate(
+        `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+      );
+      return;
+    }
+    const nextDay = (completedDayNumber ?? 0) + 1;
+    const totalDays = program?.totalDays;
+    if (totalDays && nextDay > totalDays) {
+      navigate(
+        `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+      );
+    } else {
+      navigate(
+        `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}&day=${nextDay}`,
+      );
+    }
+  };
+
   // Submit the workout - actually logs it
   const handleSubmitWorkout = async (template) => {
     if (processingWorkoutId || !programAgentRef.current) return;
@@ -599,38 +627,12 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // After the celebration, advance the user forward instead of
-          // stranding them on the just-finished day. Two paths:
-          //   today view → dashboard (it gracefully handles both the
-          //                "next day" and "program completed" states
-          //                without a failed template reload on a
-          //                just-completed program).
-          //   ?day=N view → next day's workouts (?day=N+1). If N+1 is
-          //                past the program end, fall back to dashboard
-          //                so the user lands on the completion screen
-          //                rather than a 404 day. Rest days on N+1 are
-          //                handled by ViewWorkouts' own rest-day path
-          //                (loadWorkoutTemplates returns null →
-          //                workoutData = null → rest-day UI).
-          setTimeout(() => {
-            if (isViewingToday) {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-              return;
-            }
-            const nextDay = (workoutData.dayNumber ?? 0) + 1;
-            const totalDays = program?.totalDays;
-            if (totalDays && nextDay > totalDays) {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-            } else {
-              navigate(
-                `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}&day=${nextDay}`,
-              );
-            }
-          }, 3500);
+          // Advance the user forward after the celebration window so
+          // they're not stranded on the just-finished day.
+          setTimeout(
+            () => advanceAfterDayComplete(workoutData.dayNumber),
+            3500,
+          );
         }
       }
     } catch (err) {
@@ -724,27 +726,11 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // Mirror the submit-path advancement: today → dashboard,
-          // ?day=N → ?day=N+1 (or dashboard if past program end).
-          setTimeout(() => {
-            if (isViewingToday) {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-              return;
-            }
-            const nextDay = (workoutData.dayNumber ?? 0) + 1;
-            const totalDays = program?.totalDays;
-            if (totalDays && nextDay > totalDays) {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-            } else {
-              navigate(
-                `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}&day=${nextDay}`,
-              );
-            }
-          }, 3500);
+          // Shared advancement helper — same rule as the submit path.
+          setTimeout(
+            () => advanceAfterDayComplete(workoutData.dayNumber),
+            3500,
+          );
         }
       }
     } catch (err) {
