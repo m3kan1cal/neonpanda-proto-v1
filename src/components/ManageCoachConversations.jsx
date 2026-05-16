@@ -1006,8 +1006,9 @@ function ManageCoachConversations() {
               >
                 <div className="text-center flex flex-col items-center">
                   <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
-                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
+                  <div className="h-7 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-1.5"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40"></div>
                 </div>
               </div>
               {/* Conversation Card Skeletons */}
@@ -1055,8 +1056,9 @@ function ManageCoachConversations() {
                 >
                   <div className="text-center flex flex-col items-center">
                     <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
-                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
+                    <div className="h-7 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-1.5"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40"></div>
                   </div>
                 </div>
                 {/* Conversation Card Skeletons (indices 2, 4) */}
