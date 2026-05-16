@@ -25,6 +25,7 @@ function MobileSheetDragHandle({
       if (el) {
         el.style.transform = "";
         el.style.transition = "";
+        el.style.animation = "";
       }
       requestClose();
       return;
@@ -52,7 +53,13 @@ function MobileSheetDragHandle({
     activeRef.current = true;
     setDragging(true);
     const el = sheetRef?.current;
-    if (el) el.style.transition = "none";
+    if (el) {
+      el.style.transition = "none";
+      // Cancel any running CSS keyframe animation (e.g. MoreMenu's
+      // animate-slide-up). Keyframe animations sit above inline styles in the
+      // cascade and would otherwise mask our transform updates.
+      el.style.animation = "none";
+    }
   };
 
   const onPointerMove = (e) => {
