@@ -2310,7 +2310,7 @@ const WorkoutViewer = ({
                     )}
                   </>
                 ) : (
-                  <div className={containerPatterns.coachNotesSection}>
+                  <div className={containerPatterns.nestedContent}>
                     <div className="font-body text-sm text-synthwave-text-secondary">
                       No subjective feedback recorded for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
@@ -2934,7 +2934,7 @@ const WorkoutViewer = ({
                     })}
                   </div>
                 ) : (
-                  <div className={containerPatterns.coachNotesSection}>
+                  <div className={containerPatterns.nestedContent}>
                     <div className="font-body text-sm text-synthwave-text-secondary">
                       No PR achievements recorded for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
@@ -3168,7 +3168,7 @@ const WorkoutViewer = ({
                     )}
                   </>
                 ) : (
-                  <div className={containerPatterns.coachNotesSection}>
+                  <div className={containerPatterns.nestedContent}>
                     <div className="font-body text-sm text-synthwave-text-secondary">
                       No coach notes available for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
