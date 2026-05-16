@@ -333,15 +333,23 @@ async function* createCoachConversationEventStreamV2(
           programName: programForClientContext.name || "Program",
         };
       }
-    } else if (clientContext?.surface === "training_grounds") {
+    } else if (
+      clientContext?.surface === "training_grounds" ||
+      clientContext?.surface === "manage_workouts" ||
+      clientContext?.surface === "manage_exercises" ||
+      clientContext?.surface === "manage_memories" ||
+      clientContext?.surface === "manage_conversations" ||
+      clientContext?.surface === "manage_shared_programs"
+    ) {
       // Telemetry-only surface: `clientContextSurface` logged above; no program priming.
     }
 
     // Load weekly/monthly report context when the user opened the chat from a
     // report viewer. Highlights only — the formatted block is appended to the
     // dynamic prompt (see `reportContext` option on buildConversationAgentPrompt).
-    // Telemetry-only surfaces (training_pulse, reports_list) intentionally do
-    // not fetch anything here.
+    // Telemetry-only surfaces (training_pulse, reports_list, manage_workouts,
+    // manage_exercises, manage_memories, manage_conversations,
+    // manage_shared_programs) intentionally do not fetch anything here.
     let reportContext: string | undefined;
     if (clientContext?.surface === "weekly_report") {
       try {
@@ -725,6 +733,15 @@ async function* createCoachConversationEventStreamV2(
       }
     }
 
+    const inlineSurface =
+      clientContext?.surface === "manage_workouts" ||
+      clientContext?.surface === "manage_exercises" ||
+      clientContext?.surface === "manage_memories" ||
+      clientContext?.surface === "manage_conversations" ||
+      clientContext?.surface === "manage_shared_programs"
+        ? clientContext.surface
+        : undefined;
+
     const { staticPrompt, dynamicPrompt } = buildConversationAgentPrompt(
       coachConfig,
       {
@@ -748,6 +765,7 @@ async function* createCoachConversationEventStreamV2(
           : {}),
         ...(programCalendarWindow ? { programCalendarWindow } : {}),
         ...(isEditMode && { editContext: agentContext.editContext }),
+        ...(inlineSurface ? { inlineSurface } : {}),
       },
     );
 

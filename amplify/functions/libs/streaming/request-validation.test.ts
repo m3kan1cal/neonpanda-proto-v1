@@ -270,6 +270,30 @@ describe("validateConversationClientContext", () => {
       }),
     ).toThrow(/programId is not allowed for monthly_report/);
   });
+
+  // manage_* telemetry-only surfaces ---------------------------------------
+
+  it.each([
+    "manage_workouts",
+    "manage_exercises",
+    "manage_memories",
+    "manage_conversations",
+    "manage_shared_programs",
+  ] as const)("accepts %s without programId", (surface) => {
+    expect(validateConversationClientContext({ surface })).toEqual({ surface });
+  });
+
+  it.each([
+    "manage_workouts",
+    "manage_exercises",
+    "manage_memories",
+    "manage_conversations",
+    "manage_shared_programs",
+  ] as const)("rejects %s with programId", (surface) => {
+    expect(() =>
+      validateConversationClientContext({ surface, programId: "pid" }),
+    ).toThrow(new RegExp(`not allowed for ${surface}`));
+  });
 });
 
 describe("validateStreamingRequestBody clientContext", () => {

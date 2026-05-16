@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import {
@@ -6,6 +12,13 @@ import {
   deactivateSharedProgram,
 } from "../../utils/apis/sharedProgramApi";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
+import {
+  INLINE_MANAGE_SHARED_PROGRAMS_TAG,
+  getManageSharedProgramsInlineSessionKey,
+} from "../../constants/contextualChat";
 import { AccessDenied, LoadingScreen } from "../shared/AccessDenied";
 import { useToast } from "../../contexts/ToastContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
@@ -132,7 +145,36 @@ function ManageSharedPrograms() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Navigation context for command palette
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
+
+  // User avatar props for the inline chat drawer
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+
+  // Inline coach chat drawer state — mirrors the Training Pulse / Training
+  // Grounds wiring so one home thread per (userId, coachId) for this surface.
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const inlineConversationTag = INLINE_MANAGE_SHARED_PROGRAMS_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getManageSharedProgramsInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Shared Programs";
+  const streamClientContext = useMemo(
+    () => ({ surface: "manage_shared_programs" }),
+    [],
+  );
 
   // Authorize user access
   const {
@@ -853,6 +895,33 @@ function ManageSharedPrograms() {
         place="bottom"
         className="max-w-xs"
       />
+
+      {/* Inline coach chat (mirrors Training Pulse / Training Grounds wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Shared Programs"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </>
   );
 }

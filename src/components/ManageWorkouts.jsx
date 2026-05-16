@@ -1,7 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
+import {
+  INLINE_MANAGE_WORKOUTS_TAG,
+  getManageWorkoutsInlineSessionKey,
+} from "../constants/contextualChat";
 import {
   containerPatterns,
   badgePatterns,
@@ -112,8 +125,39 @@ function ManageWorkouts() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Global Command Palette state
-  const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
-    useNavigationContext();
+  const {
+    setIsCommandPaletteOpen,
+    onCommandPaletteToggle,
+    setIsInlineCoachDrawerOpen,
+  } = useNavigationContext();
+
+  // User avatar props for the inline chat drawer
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+
+  // Inline coach chat drawer state — mirrors the Training Pulse / Training
+  // Grounds wiring so one home thread per (userId, coachId) for this surface.
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const inlineConversationTag = INLINE_MANAGE_WORKOUTS_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getManageWorkoutsInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Manage Workouts";
+  const streamClientContext = useMemo(
+    () => ({ surface: "manage_workouts" }),
+    [],
+  );
 
   // Coach data state
   const [coachData, setCoachData] = useState(null);
@@ -1435,6 +1479,33 @@ function ManageWorkouts() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Inline coach chat (mirrors Training Pulse / Training Grounds wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Manage Workouts"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </>
   );
 }

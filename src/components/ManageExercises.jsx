@@ -1,7 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
+import {
+  INLINE_MANAGE_EXERCISES_TAG,
+  getManageExercisesInlineSessionKey,
+} from "../constants/contextualChat";
 import {
   containerPatterns,
   badgePatterns,
@@ -78,7 +91,36 @@ function ManageExercises() {
   } = useAuthorizeUser(userId);
 
   // Global Command Palette state
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
+    useNavigationContext();
+
+  // User avatar props for the inline chat drawer
+  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+
+  // Inline coach chat drawer state — mirrors the Training Pulse / Training
+  // Grounds wiring so one home thread per (userId, coachId) for this surface.
+  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
+  const closeInlineCoachDrawer = useCallback(() => {
+    setIsInlineChatDrawerOpen(false);
+  }, []);
+  useEffect(() => {
+    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
+    return () => setIsInlineCoachDrawerOpen(false);
+  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+
+  const inlineConversationTag = INLINE_MANAGE_EXERCISES_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getManageExercisesInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Manage Exercises";
+  const streamClientContext = useMemo(
+    () => ({ surface: "manage_exercises" }),
+    [],
+  );
 
   // Coach data state
   const [coachData, setCoachData] = useState(null);
@@ -962,6 +1004,33 @@ function ManageExercises() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Inline coach chat (mirrors Training Pulse / Training Grounds wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="trainingGroundsInlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Manage Exercises"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </>
   );
 }
