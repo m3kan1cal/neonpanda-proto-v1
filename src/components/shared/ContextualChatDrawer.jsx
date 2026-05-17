@@ -1452,6 +1452,7 @@ export default function ContextualChatDrawer({
     isSessionComplete: isSessionVariant && !!agentState?.isComplete,
     sessionProgress:
       isSessionVariant && agentState?.progress ? agentState.progress : null,
+    conversationSize: agentState?.conversationSize ?? null,
     // The completion-banner "Done" button just closes the drawer. The
     // `onSessionComplete` callback already fired automatically when the agent
     // reported completion (see effect above), so the parent has already
@@ -1775,6 +1776,7 @@ function PanelContent({
   streamBusy = false,
   isSessionComplete = false,
   sessionProgress = null,
+  conversationSize = null,
   onSessionDone,
 }) {
   const trainingSelectId = useId();
@@ -2056,7 +2058,7 @@ function PanelContent({
         ref={messageAreaRef}
         className={`${contextualDrawerPatterns.messageArea} @container`}
         style={{
-          paddingBottom: `${chatInputHeight + 16}px`,
+          paddingBottom: `${chatInputHeight + 32}px`,
         }}
         aria-live="polite"
         aria-label="Conversation messages"
@@ -2153,6 +2155,7 @@ function PanelContent({
               compact={true}
               containerRef={chatInputContainerRef}
               progressData={sessionProgress}
+              conversationSize={conversationSize}
             />
           </div>
         </div>
