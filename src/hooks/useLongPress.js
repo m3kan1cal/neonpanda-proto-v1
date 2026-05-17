@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const DEFAULT_LONG_PRESS_MS = 600;
 const MOVE_CANCEL_THRESHOLD_PX = 10;
@@ -42,6 +42,18 @@ export function useLongPress(onLongPress, options = {}) {
     }
     setIsPressing(false);
     startPosRef.current = null;
+  }, []);
+
+  // Cancel any pending long-press timer if the host element unmounts mid-press
+  // (e.g., the calendar view toggles or the user navigates away). Without this
+  // the timer would still fire and invoke onLongPress on a defunct component.
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, []);
 
   const start = useCallback(
