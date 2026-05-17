@@ -1300,6 +1300,14 @@ export const contextualDrawerPatterns = {
   panelMobile:
     "fixed inset-0 z-[70] flex flex-col bg-synthwave-gradient transition-transform duration-300 ease-out pt-[env(safe-area-inset-top)] overscroll-contain",
 
+  // Opaque backstop behind the mobile panel. Uses 100lvh so it spans the full
+  // pre-keyboard viewport height — when the on-screen keyboard opens and the
+  // layout viewport shrinks, the panel's `inset-0` shrinks with it, but this
+  // backdrop keeps painting behind/around the keyboard area so page content
+  // never bleeds through.
+  panelMobileBackdrop:
+    "fixed inset-0 h-[100lvh] z-[69] bg-synthwave-bg-primary transition-opacity duration-300 ease-out pointer-events-none lg:hidden",
+
   // Panel header — entity name, edit badge, close button
   header:
     "flex items-center gap-3 px-3 py-3 border-b border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/20 shrink-0",

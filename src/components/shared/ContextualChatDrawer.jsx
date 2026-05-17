@@ -1478,6 +1478,17 @@ export default function ContextualChatDrawer({
         />
       </div>
 
+      {/* Mobile: opaque backstop that always covers the full pre-keyboard
+          viewport (h-[100lvh]) so page content can't bleed through the gap
+          between the chat input and the on-screen keyboard. */}
+      <div
+        aria-hidden="true"
+        className={[
+          contextualDrawerPatterns.panelMobileBackdrop,
+          isOpen ? "opacity-100" : "opacity-0",
+        ].join(" ")}
+      />
+
       {/* Mobile: full-screen takeover */}
       <div
         ref={mobileSheetRef}
@@ -1979,7 +1990,7 @@ function PanelContent({
         className={`${contextualDrawerPatterns.messageArea} @container`}
         style={{
           paddingBottom:
-            "calc(var(--drawer-chat-input-height, 110px) + 4px)",
+            "calc(var(--drawer-chat-input-height, 110px) + 16px)",
         }}
         aria-live="polite"
         aria-label="Conversation messages"

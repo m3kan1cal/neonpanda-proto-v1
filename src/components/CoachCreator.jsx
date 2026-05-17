@@ -735,7 +735,7 @@ function CoachCreator() {
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6 space-y-8 custom-scrollbar"
                 style={{
-                  paddingBottom: "calc(var(--chat-input-height, 120px) + 4px)",
+                  paddingBottom: "calc(var(--chat-input-height, 120px) + 16px)",
                 }}
               >
                 {agentState.messages
