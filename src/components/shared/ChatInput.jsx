@@ -316,6 +316,13 @@ function ChatInput({
 
   // Compact mode — tighter padding and smaller send button for narrow contexts (e.g. drawer)
   compact = false,
+
+  // Optional ref attached to the outer fixed container. When provided in
+  // compact mode, the parent owns height measurement and we skip publishing
+  // the shared `--drawer-chat-input-height` CSS variable — prevents two
+  // compact ChatInputs (drawer's hidden desktop panel + visible mobile panel)
+  // from racing on `document.querySelector` and writing 0px.
+  containerRef = null,
 }) {
   // Get context-appropriate prompts
   const currentPrompts = QUICK_PROMPTS[context] || QUICK_PROMPTS.default;
@@ -683,7 +690,13 @@ function ChatInput({
   // Update CSS custom property for chat input height.
   // Drawer (compact) publishes its own variable so it doesn't collide with the
   // full-page surfaces when both might mount in the same document.
+  // When the caller supplies a `containerRef` in compact mode the parent owns
+  // measurement directly (per-panel ResizeObserver) — skip the shared CSS
+  // variable to avoid `document.querySelector` racing between hidden + visible
+  // panels and resolving to a 0-height element.
   React.useEffect(() => {
+    if (compact && containerRef) return;
+
     const cssVar = compact ? "--drawer-chat-input-height" : "--chat-input-height";
     const selector = compact
       ? "[data-drawer-chat-input-container]"
@@ -712,6 +725,7 @@ function ChatInput({
     }
   }, [
     compact,
+    containerRef,
     inputMessage,
     isRecording,
     showTipsModal,
@@ -727,6 +741,7 @@ function ChatInput({
 
   return (
     <div
+      ref={containerRef}
       className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
       {...(compact
         ? { "data-drawer-chat-input-container": "" }

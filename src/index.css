@@ -462,6 +462,20 @@ body {
   }
 }
 
+/* Mobile ContextualChatDrawer overlay isolation.
+   ContextualChatDrawer toggles `body.mobile-drawer-open` while the drawer is
+   open at <lg breakpoints. Hiding `#root` keeps page content from bleeding
+   through iOS Safari's translucent IME bar and the gap between the chat
+   input bottom and the on-screen keyboard. Elements tagged
+   `data-mobile-drawer-overlay` (mobile backdrop + mobile sheet) override the
+   inherited `visibility: hidden` so the drawer itself stays visible. */
+body.mobile-drawer-open #root {
+  visibility: hidden;
+}
+body.mobile-drawer-open [data-mobile-drawer-overlay] {
+  visibility: visible;
+}
+
 /* Additional fallback for any remaining white space */
 * {
   box-sizing: border-box;

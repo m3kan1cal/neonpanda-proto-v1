@@ -454,6 +454,49 @@ export default function ContextualChatDrawer({
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  // Mobile body scroll-lock + hide page content while the drawer is open.
+  // iOS Safari's keyboard `overlays-content` mode keeps the page DOM painted
+  // under the translucent IME bar; locking the body and hiding `#root` via a
+  // body class (paired with `[data-mobile-drawer-overlay]` overrides in
+  // index.css) removes the bleed-through and prevents Safari from
+  // auto-scrolling the page beneath our fixed panel. Desktop bails on the
+  // matchMedia check, so it's a no-op there.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      overflow: body.style.overflow,
+      width: body.style.width,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    body.classList.add("mobile-drawer-open");
+
+    return () => {
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      body.classList.remove("mobile-drawer-open");
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
   const requestClose = useCallback(() => {
     // Synthetic-history pop applies on every mobile open of any variant —
     // the entry only exists when we pushed it, so the state check alone
@@ -1480,9 +1523,13 @@ export default function ContextualChatDrawer({
 
       {/* Mobile: opaque backstop that always covers the full pre-keyboard
           viewport (h-[100lvh]) so page content can't bleed through the gap
-          between the chat input and the on-screen keyboard. */}
+          between the chat input and the on-screen keyboard.
+          Tagged `data-mobile-drawer-overlay` so the global rule in
+          index.css keeps it visible while `body.mobile-drawer-open` hides
+          everything inside `#root`. */}
       <div
         aria-hidden="true"
+        data-mobile-drawer-overlay=""
         className={[
           contextualDrawerPatterns.panelMobileBackdrop,
           isOpen ? "opacity-100" : "opacity-0",
@@ -1496,6 +1543,7 @@ export default function ContextualChatDrawer({
         aria-modal="true"
         aria-labelledby={`${headingId}-mobile`}
         aria-label={dialogAriaLabel}
+        data-mobile-drawer-overlay=""
         className={[
           `flex lg:hidden ${contextualDrawerPatterns.panelMobile}`,
           isOpen ? "translate-y-0" : "translate-y-full",
@@ -1738,6 +1786,25 @@ function PanelContent({
   const isProgramDesignerSession = variant === "programDesignerSession";
   const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
   const exit = requestClose ?? onClose;
+
+  // Per-panel chat-input height measurement. Each <PanelContent> renders its
+  // own <ChatInput compact />; the drawer mounts two of them (one hidden by
+  // `display: none` for the inactive breakpoint). A shared CSS variable
+  // resolved via document.querySelector picks the first DOM match — the
+  // hidden one — and yields a 0px height, leaving the tail of the last
+  // message stuck behind the input. Owning the measurement locally fixes it.
+  const chatInputContainerRef = useRef(null);
+  const [chatInputHeight, setChatInputHeight] = useState(110);
+  useEffect(() => {
+    const el = chatInputContainerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const next = Math.round(entries[0]?.contentRect?.height ?? el.offsetHeight);
+      if (next > 0) setChatInputHeight(next);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const viewAllUrl =
     userId && coachId
       ? `/training-grounds/manage-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
@@ -1989,8 +2056,7 @@ function PanelContent({
         ref={messageAreaRef}
         className={`${contextualDrawerPatterns.messageArea} @container`}
         style={{
-          paddingBottom:
-            "calc(var(--drawer-chat-input-height, 110px) + 16px)",
+          paddingBottom: `${chatInputHeight + 16}px`,
         }}
         aria-live="polite"
         aria-label="Conversation messages"
@@ -2085,6 +2151,7 @@ function PanelContent({
               editorMinHeight="44px"
               editorMaxHeight="120px"
               compact={true}
+              containerRef={chatInputContainerRef}
               progressData={sessionProgress}
             />
           </div>
