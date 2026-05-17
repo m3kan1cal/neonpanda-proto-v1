@@ -1023,6 +1023,17 @@ backend.notifyInactiveUsers.resources.lambda.addToRolePolicy(
   }),
 );
 
+// Grant SES send email permissions to buildWeeklyAnalytics
+// (Sends weekly report notification email inline after each user's analytics
+// record is saved; see libs/analytics/batch-processing.ts.)
+backend.buildWeeklyAnalytics.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["ses:SendEmail", "ses:SendRawEmail"],
+    resources: ["*"], // SES requires wildcard for email sending
+  }),
+);
+
 // ============================================================================
 // SNS PERMISSIONS
 // ============================================================================

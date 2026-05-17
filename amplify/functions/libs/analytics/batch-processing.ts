@@ -7,7 +7,9 @@ import {
   saveMonthlyAnalytics,
   getWeeklyAnalytics,
   getMonthlyAnalytics,
+  getMostRecentCoachForUser,
 } from "../../../dynamodb/operations";
+import { sendWeeklyReportEmail } from "../notifications/weekly-report-email";
 import {
   fetchUserWeeklyData,
   fetchUserMonthlyData,
@@ -179,6 +181,7 @@ export const processBatch = async (
 
           // Store analytics in DynamoDB
           let weeklyDynamoSaveSucceeded = false;
+          let savedWeeklyAnalytics: WeeklyAnalytics | null = null;
           try {
             const weekId = generateWeekId(weeklyData.weekRange.weekStart);
             const weeklyAnalytics: WeeklyAnalytics = {
@@ -215,6 +218,7 @@ export const processBatch = async (
 
             await saveWeeklyAnalytics(weeklyAnalytics);
             weeklyDynamoSaveSucceeded = true;
+            savedWeeklyAnalytics = weeklyAnalytics;
             logger.info(
               `✅ User ${user.userId} analytics completed and stored:`,
               {
@@ -232,6 +236,35 @@ export const processBatch = async (
               `⚠️ User ${user.userId} analytics completed (S3 only - DynamoDB failed):`,
               logData,
             );
+          }
+
+          // Send weekly report notification email. Opt-in default: missing
+          // preference is treated as enabled. Failures here must never derail
+          // the batch -- the report itself is already saved to DynamoDB.
+          if (weeklyDynamoSaveSucceeded && savedWeeklyAnalytics) {
+            try {
+              const emailEnabled =
+                user.preferences?.emailNotifications?.weeklyReports !== false;
+              if (emailEnabled && user.email) {
+                const mostRecentCoach = await getMostRecentCoachForUser(
+                  user.userId,
+                );
+                await sendWeeklyReportEmail(
+                  user,
+                  savedWeeklyAnalytics,
+                  mostRecentCoach?.coach_id ?? null,
+                );
+              } else {
+                logger.info(
+                  `✉️  Skipping weekly report email for user ${user.userId} (preference disabled or missing email)`,
+                );
+              }
+            } catch (emailError) {
+              logger.warn(
+                `⚠️ Failed to send weekly report email for user ${user.userId}:`,
+                emailError,
+              );
+            }
           }
 
           // Fan out program insights regeneration. Kept outside the DynamoDB

@@ -189,6 +189,24 @@ export async function queryCoachConfigs(
 }
 
 /**
+ * Return the user's most recently updated active coach, or null if they have
+ * none. Used to pick a coachId for deep-links (e.g., in notification emails)
+ * when the caller doesn't already know which coach context is appropriate.
+ */
+export async function getMostRecentCoachForUser(
+  userId: string,
+): Promise<CoachConfigSummary | null> {
+  const coaches = await queryCoachConfigs(userId);
+  if (coaches.length === 0) return null;
+
+  return coaches.reduce((latest, current) =>
+    (current.updatedAt?.getTime() ?? 0) > (latest.updatedAt?.getTime() ?? 0)
+      ? current
+      : latest,
+  );
+}
+
+/**
  * Count coach configs for a user
  */
 export async function queryCoachConfigsCount(
