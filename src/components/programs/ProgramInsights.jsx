@@ -137,18 +137,6 @@ export default function ProgramInsights({
       );
     }
 
-    if (!insights) {
-      return (
-        <div className={containerPatterns.nestedContent}>
-          <p className="font-body text-sm text-synthwave-text-secondary">
-            Insights will appear after your next workout. Each session you log
-            (whether from your program, the command palette, or coach chat)
-            sharpens this view of how you're tracking against your goals.
-          </p>
-        </div>
-      );
-    }
-
     const {
       adherenceTrend,
       goalProgress = [],
