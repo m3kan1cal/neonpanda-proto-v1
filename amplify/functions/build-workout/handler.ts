@@ -144,11 +144,12 @@ export const handler = async (event: BuildWorkoutEvent) => {
         });
       } else {
         // Failure path. Revert the optimistic "completed" status when no
-        // workout was produced — pure extraction/validation failures, the
-        // exception path below, and the duplicate-skip path where relink
-        // also failed (agent.ts withholds workoutId on that subcase).
+        // workout was produced — pure extraction/validation failures and
+        // the exception path below.
         //
-        // NOT covered: the "saved but linking failed after retries" case.
+        // NOT covered: the duplicate-skip path where relink also failed
+        // (the agent returns the existing workoutId, so this gate is not
+        // hit), and the "saved but linking failed after retries" case.
         // After retries inside linkWorkoutToTemplate succeed at handling
         // transient S3 issues, the residual failure modes (program/template
         // not found, S3 fundamentally unavailable) are rare enough that we
