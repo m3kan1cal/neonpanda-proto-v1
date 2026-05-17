@@ -301,6 +301,31 @@ export default function ProgramDashboard() {
     setProgram(updatedProgram);
   };
 
+  const handleSetCurrentDay = async (dayNumber) => {
+    if (!programAgentRef.current || !program) return;
+    if (dayNumber === program.currentDay) return;
+
+    try {
+      await programAgentRef.current.setCurrentDay(
+        program.programId,
+        dayNumber,
+      );
+
+      // Reload the program so the dashboard (and child components) re-render
+      // against the canonical server state. Mirrors handleCompleteRestDay.
+      const updatedProgram =
+        await programAgentRef.current.loadProgram(programId);
+      if (updatedProgram && updatedProgram.program) {
+        setProgram(updatedProgram.program);
+      }
+
+      toast.success(`Current day set to Day ${dayNumber}`);
+    } catch (error) {
+      logger.error("Error setting current day:", error);
+      toast.error(error?.message || "Failed to set current day");
+    }
+  };
+
   const handleCompleteRestDay = async (program) => {
     if (!programAgentRef.current || !program) {
       return;
@@ -550,6 +575,7 @@ export default function ProgramDashboard() {
             coachId={coachId}
             programId={programId}
             variant="mobile"
+            onSetCurrentDay={handleSetCurrentDay}
           />
           <PhaseTimeline program={program} />
           <ProgressOverview program={program} />
@@ -585,6 +611,7 @@ export default function ProgramDashboard() {
               coachId={coachId}
               programId={programId}
               variant="desktop"
+              onSetCurrentDay={handleSetCurrentDay}
             />
             <PhaseTimeline program={program} />
             <ProgramInsights
