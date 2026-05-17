@@ -231,6 +231,13 @@ export default function ProgramDashboard() {
         .loadProgramInsights(programId)
         .catch((insightsErr) => {
           logger.warn("Could not load program insights:", insightsErr);
+        })
+        .finally(() => {
+          // Defensive — the agent's _updateState should already have flipped
+          // this to false, but if the call rejected before the first
+          // _updateState landed (e.g. early throw, lost state event), the
+          // page would otherwise sit on the skeleton forever.
+          setIsLoadingProgramInsights(false);
         });
 
       const [allTemplatesData, todayData] = await Promise.all([
@@ -580,6 +587,11 @@ export default function ProgramDashboard() {
               variant="desktop"
             />
             <PhaseTimeline program={program} />
+            <ProgramInsights
+              insights={programInsights}
+              isLoading={isLoadingProgramInsights}
+              error={programInsightsError}
+            />
           </div>
 
           {/* Sidebar - 40% (2 of 5 columns) */}
@@ -593,11 +605,6 @@ export default function ProgramDashboard() {
             />
             <ProgressOverview program={program} />
             <PhaseBreakdown program={program} />
-            <ProgramInsights
-              insights={programInsights}
-              isLoading={isLoadingProgramInsights}
-              error={programInsightsError}
-            />
           </div>
         </div>
         <AppFooter />

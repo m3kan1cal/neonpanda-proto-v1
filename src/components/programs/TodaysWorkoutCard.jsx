@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { buttonPatterns } from "../../utils/ui/uiPatterns";
+import { buttonPatterns, containerPatterns } from "../../utils/ui/uiPatterns";
 import { pickPrimaryTemplate } from "../../utils/programs/templateRoles";
 import { WorkoutIconSmall } from "../themes/SynthwaveComponents";
 import { InlineError } from "../shared/ErrorStates";
@@ -79,7 +79,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
+        <div className={`${containerPatterns.nestedContent} text-center`}>
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -173,7 +173,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-6 text-center">
+        <div className={`${containerPatterns.nestedContent} text-center`}>
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -271,7 +271,7 @@ function TodaysWorkoutCard({
       </button>
 
       {/* Workout details */}
-      <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4 mb-4">
+      <div className={`${containerPatterns.nestedContent} mb-4`}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-body font-semibold text-base text-white mb-1">

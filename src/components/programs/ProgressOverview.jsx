@@ -1,4 +1,5 @@
 import React from "react";
+import { containerPatterns } from "../../utils/ui/uiPatterns";
 import { MetricsIcon } from "../themes/SynthwaveComponents";
 import CollapsibleSection from "./CollapsibleSection";
 
@@ -90,7 +91,7 @@ export default function ProgressOverview({ program }) {
         <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
           By The Numbers
         </h4>
-        <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+        <div className={containerPatterns.nestedContent}>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             {/* Current Phase - Full Width */}
             {currentPhase && (

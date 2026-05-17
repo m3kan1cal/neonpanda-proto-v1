@@ -48,7 +48,7 @@ export default function PhaseBreakdown({ program }) {
         <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
           Phase Intel
         </h4>
-        <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+        <div className={containerPatterns.nestedContent}>
           {/* Progress info */}
           <div className="mb-3">
             <div className="font-body text-sm text-synthwave-text-secondary mb-2">
@@ -123,7 +123,7 @@ export default function PhaseBreakdown({ program }) {
           </button>
           {isPhaseStrategyExpanded && (
             <div
-              className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
+              className={`${containerPatterns.nestedContent} animate-fadeIn`}
             >
               <div className="font-body text-sm text-synthwave-text-secondary">
                 {currentPhase.description}
@@ -159,7 +159,7 @@ export default function PhaseBreakdown({ program }) {
           </button>
           {isPhaseFocusExpanded && (
             <div
-              className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
+              className={`${containerPatterns.nestedContent} animate-fadeIn`}
             >
               <ul className="space-y-2">
                 {currentPhase.focusAreas.map((area, idx) => (
@@ -183,7 +183,7 @@ export default function PhaseBreakdown({ program }) {
           <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
             Phase Targets
           </h4>
-          <div className={containerPatterns.coachNotesSection}>
+          <div className={containerPatterns.nestedContent}>
             <ul className="space-y-2">
               {currentPhase.goals.map((goal, idx) => (
                 <li

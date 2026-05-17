@@ -42,7 +42,15 @@ function MobileSheetDragHandle({
   };
 
   const onPointerDown = (e) => {
-    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    // Accept touch, pen, and mouse. Mouse coverage matters for desktop-browser
+    // mobile preview (DevTools device mode / narrow viewport) so the handle
+    // isn't dead to the cursor when reviewing the mobile layout.
+    if (
+      e.pointerType !== "touch" &&
+      e.pointerType !== "pen" &&
+      e.pointerType !== "mouse"
+    )
+      return;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
