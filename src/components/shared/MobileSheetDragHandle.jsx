@@ -10,6 +10,13 @@ function MobileSheetDragHandle({
   sheetRef,
   requestClose,
   ariaLabel = "Drag down to close",
+  // Optional callbacks letting the drawer fade its backdrop and reveal the
+  // page underneath while the user is peeling the sheet down. All deltas are
+  // pixels of downward drag (always >= 0); the parent decides how to map
+  // those onto its own visual state.
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }) {
   const startY = useRef(null);
   const activeRef = useRef(false);
@@ -26,10 +33,17 @@ function MobileSheetDragHandle({
         el.style.transform = "";
         el.style.transition = "";
       }
+      // Intentionally skip `onDragEnd` here. `requestClose` is async on
+      // mobile (it walks back through synthetic history before the parent
+      // sees `isOpen` flip), so resetting parent drag state synchronously
+      // would snap the backdrop back to opaque and re-hide `#root` for a
+      // frame before the drawer actually closes. The parent runs its own
+      // cleanup when `isOpen` becomes false.
       requestClose();
       return;
     }
 
+    onDragEnd?.();
     if (el) {
       el.style.transition = "transform 200ms ease-out";
       el.style.transform = "";
@@ -59,6 +73,7 @@ function MobileSheetDragHandle({
     startY.current = e.clientY;
     activeRef.current = true;
     setDragging(true);
+    onDragStart?.();
     const el = sheetRef?.current;
     if (el) {
       el.style.transition = "none";
@@ -80,6 +95,7 @@ function MobileSheetDragHandle({
     const el = sheetRef?.current;
     if (!el) return;
     el.style.transform = delta > 0 ? `translateY(${delta}px)` : "";
+    onDragMove?.(Math.max(0, delta));
   };
 
   const onPointerUp = (e) => {
