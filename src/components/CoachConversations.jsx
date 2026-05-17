@@ -1099,7 +1099,7 @@ function CoachConversations() {
                 ref={messagesContainerRef}
                 className="flex-1 overflow-x-hidden px-2 sm:px-6 py-3 sm:py-6 space-y-8 synthwave-scrollbar-cyan"
                 style={{
-                  paddingBottom: "calc(var(--chat-input-height, 120px) + 4px)",
+                  paddingBottom: "calc(var(--chat-input-height, 120px) + 16px)",
                 }}
               >
                 {/* Empty State - Show tips when no messages */}
