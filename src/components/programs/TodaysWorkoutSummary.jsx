@@ -86,7 +86,7 @@ export default function TodaysWorkoutSummary({
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
-          <span className="shrink-0 mt-1 text-synthwave-neon-pink">
+          <span className="hidden sm:inline-block shrink-0 mt-1 text-synthwave-neon-pink">
             <WorkoutIconSmall />
           </span>
           <div>

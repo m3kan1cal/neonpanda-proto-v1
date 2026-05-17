@@ -1142,15 +1142,15 @@ General thoughts: `;
         />
 
         {/* Program Context */}
-        <div className="mb-4">
-          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3 mb-1 min-w-0">
+        <div className="mb-3 sm:mb-4">
+          <div className="flex flex-row items-start justify-between gap-3 sm:items-center sm:justify-start mb-1 min-w-0">
             <button
               onClick={() =>
                 navigate(
                   `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
                 )
               }
-              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left line-clamp-2 sm:line-clamp-none"
+              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left line-clamp-2 sm:line-clamp-none min-w-0 flex-1 sm:flex-initial"
               data-tooltip-id="program-name-link"
               data-tooltip-content="View training program"
             >
@@ -1182,44 +1182,59 @@ General thoughts: `;
                 </span>
               )}
           </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-sm pb-1 min-w-0">
-            <div className="font-body text-synthwave-text-secondary truncate min-w-0 flex-1 sm:flex-initial">
-              {(() => {
-                const trimmedPhaseName = (phaseName || "").trim();
-                const prefixMatch = trimmedPhaseName.match(
-                  /^(phase\s+\d+\s*:?)\s*(.*)$/i,
-                );
-                const mutedLabel = prefixMatch
-                  ? prefixMatch[1]
-                  : phaseNumber
-                    ? `Phase ${phaseNumber}:`
-                    : "Phase:";
-                const value = prefixMatch ? prefixMatch[2] : trimmedPhaseName;
-                return (
-                  <>
+          {(() => {
+            const trimmedPhaseName = (phaseName || "").trim();
+            const prefixMatch = trimmedPhaseName.match(
+              /^(phase\s+\d+\s*:?)\s*(.*)$/i,
+            );
+            const mutedLabel = prefixMatch
+              ? prefixMatch[1]
+              : phaseNumber
+                ? `Phase ${phaseNumber}:`
+                : "Phase:";
+            const value = prefixMatch ? prefixMatch[2] : trimmedPhaseName;
+            return (
+              <>
+                {/* Mobile: compact single-line "Phase X · Day Y of Z" */}
+                <div className="sm:hidden flex items-center gap-2 text-sm pb-1 min-w-0 font-body">
+                  <span className="text-synthwave-text-secondary truncate min-w-0">
                     <span className="text-synthwave-text-muted">
                       {mutedLabel}
                     </span>
                     {value && <> {value}</>}
-                  </>
-                );
-              })()}
-            </div>
-            <div className="font-body text-synthwave-text-muted shrink-0 whitespace-nowrap">
-              Day {workoutDayNumber} of {program.totalDays}
-            </div>
-            {!isRestDay && (
-              <span className="hidden sm:inline font-body text-synthwave-neon-cyan shrink-0">
-                {templates.length} Workout{templates.length > 1 ? "s" : ""}{" "}
-                Scheduled
-              </span>
-            )}
-            {isRestDay && (
-              <div className="hidden sm:block font-body text-synthwave-neon-cyan shrink-0">
-                Rest Day
-              </div>
-            )}
-          </div>
+                  </span>
+                  <span className="text-synthwave-text-muted shrink-0">·</span>
+                  <span className="text-synthwave-text-muted shrink-0 whitespace-nowrap">
+                    Day {workoutDayNumber} of {program.totalDays}
+                  </span>
+                </div>
+
+                {/* sm+: original multi-item flex layout */}
+                <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-sm pb-1 min-w-0">
+                  <div className="font-body text-synthwave-text-secondary truncate min-w-0 sm:flex-initial">
+                    <span className="text-synthwave-text-muted">
+                      {mutedLabel}
+                    </span>
+                    {value && <> {value}</>}
+                  </div>
+                  <div className="font-body text-synthwave-text-muted shrink-0 whitespace-nowrap">
+                    Day {workoutDayNumber} of {program.totalDays}
+                  </div>
+                  {!isRestDay && (
+                    <span className="font-body text-synthwave-neon-cyan shrink-0">
+                      {templates.length} Workout
+                      {templates.length > 1 ? "s" : ""} Scheduled
+                    </span>
+                  )}
+                  {isRestDay && (
+                    <div className="font-body text-synthwave-neon-cyan shrink-0">
+                      Rest Day
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* Workout Templates Grid */}
@@ -1349,7 +1364,7 @@ General thoughts: `;
                     >
                       <div className="flex-1">
                         <div className="flex items-start gap-3 mb-2">
-                          <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
+                          <span className="hidden sm:inline-block shrink-0 mt-1 text-synthwave-neon-cyan">
                             <WorkoutIconSmall />
                           </span>
                           <h3
@@ -1398,7 +1413,7 @@ General thoughts: `;
                         )}
 
                         {!isCollapsed && (
-                          <div className="flex items-center flex-wrap gap-4">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 sm:flex sm:items-center sm:flex-wrap sm:gap-4">
                             {template.estimatedDuration && (
                               <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
                                 <svg
