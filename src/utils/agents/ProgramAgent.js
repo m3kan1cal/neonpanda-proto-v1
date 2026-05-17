@@ -501,6 +501,94 @@ export class ProgramAgent {
   }
 
   /**
+   * Manually set the program's currentDay pointer. Used to re-anchor the
+   * training calendar when it drifts (e.g., workouts logged out of order).
+   * @param {string} programId - The program ID
+   * @param {number} newCurrentDay - The day number to set as current (1-indexed)
+   * @returns {Promise<Object>} - The API response
+   */
+  async setCurrentDay(programId, newCurrentDay) {
+    if (!this.userId || !this.coachId) {
+      logger.error(
+        "ProgramAgent.setCurrentDay: userId and coachId are required",
+      );
+      return;
+    }
+
+    if (!programId) {
+      logger.error("ProgramAgent.setCurrentDay: programId is required");
+      return;
+    }
+
+    const dayNum = Number(newCurrentDay);
+    if (!Number.isInteger(dayNum) || dayNum < 1) {
+      const err = new Error("newCurrentDay must be a positive integer");
+      logger.error("ProgramAgent.setCurrentDay:", err.message);
+      if (this.onError) this.onError(err);
+      throw err;
+    }
+
+    // Validate against totalDays from local state when available
+    const targetProgram =
+      this.programState.selectedProgram?.programId === programId
+        ? this.programState.selectedProgram
+        : this.programState.programs.find((p) => p.programId === programId);
+    const totalDays = targetProgram?.totalDays;
+    if (totalDays && dayNum > totalDays) {
+      const err = new Error(
+        `newCurrentDay (${dayNum}) exceeds totalDays (${totalDays})`,
+      );
+      logger.error("ProgramAgent.setCurrentDay:", err.message);
+      if (this.onError) this.onError(err);
+      throw err;
+    }
+
+    this._updateState({ isUpdating: true, error: null });
+
+    try {
+      const response = await updateProgram(
+        this.userId,
+        this.coachId,
+        programId,
+        { currentDay: dayNum },
+      );
+
+      const updatedProgram = response.program;
+
+      const programs = this.programState.programs.map((p) =>
+        p.programId === programId ? updatedProgram : p,
+      );
+      const activePrograms = programs.filter(
+        (p) => p.status === PROGRAM_STATUS.ACTIVE,
+      );
+      const activeProgram =
+        activePrograms.length > 0 ? activePrograms[0] : null;
+      const selectedProgram =
+        this.programState.selectedProgram?.programId === programId
+          ? updatedProgram
+          : this.programState.selectedProgram;
+
+      this._updateState({
+        programs,
+        activePrograms,
+        activeProgram,
+        selectedProgram,
+        isUpdating: false,
+      });
+
+      return response;
+    } catch (error) {
+      logger.error("ProgramAgent.setCurrentDay: Error:", error);
+      this._updateState({
+        error: error.message,
+        isUpdating: false,
+      });
+      if (this.onError) this.onError(error);
+      throw error;
+    }
+  }
+
+  /**
    * Log a workout from a template with automatic polling for linkedWorkoutId
    * @param {string} programId - The program ID
    * @param {string} templateId - The workout template ID

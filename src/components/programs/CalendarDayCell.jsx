@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { badgePatterns } from "../../utils/ui/uiPatterns";
+import { useLongPress } from "../../hooks/useLongPress";
 
 export default function CalendarDayCell({
   day,
@@ -9,10 +10,24 @@ export default function CalendarDayCell({
   coachId,
   isCurrentDay,
   phase,
+  onLongPress,
 }) {
   const navigate = useNavigate();
 
+  const longPressEnabled = typeof onLongPress === "function" && !isCurrentDay;
+  const longPress = useLongPress(
+    () => {
+      if (longPressEnabled) onLongPress(day.dayNumber);
+    },
+    { disabled: !longPressEnabled },
+  );
+
   const handleClick = () => {
+    // If a long-press just fired, swallow this click so we don't also navigate.
+    if (longPress.consumeClick()) return;
+
+    if (!day.workouts || day.workouts.length === 0) return;
+
     // If clicking on current day, navigate to "today" (no day parameter)
     // Otherwise, navigate to specific day
     if (isCurrentDay) {
@@ -59,27 +74,43 @@ export default function CalendarDayCell({
   const getStatusStyles = () => {
     // Mobile: 44px tap target (Apple HIG); desktop keeps the roomier 80px cell.
     const baseStyles =
-      "relative flex flex-col min-h-[44px] md:h-20 rounded-xl transition-all duration-200 overflow-hidden font-body border border-synthwave-neon-cyan/10";
+      "relative flex flex-col min-h-[44px] md:h-20 rounded-xl transition-all duration-200 overflow-hidden font-body border border-synthwave-neon-cyan/10 select-none";
+
+    // When long-press is enabled the cell should be interactive even without
+    // workouts (so users can re-anchor currentDay onto a rest day).
+    const interactive = hasWorkouts || longPressEnabled;
+    const cursorClass = interactive ? "cursor-pointer" : "cursor-default";
 
     switch (status) {
       case "completed":
-        return `${baseStyles} bg-synthwave-neon-pink/10 border-synthwave-neon-pink/40 cursor-pointer hover:bg-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/60 hover:shadow-lg hover:shadow-synthwave-neon-pink/20`;
+        return `${baseStyles} bg-synthwave-neon-pink/10 border-synthwave-neon-pink/40 ${cursorClass} hover:bg-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/60 hover:shadow-lg hover:shadow-synthwave-neon-pink/20`;
       case "skipped":
-        return `${baseStyles} bg-synthwave-neon-cyan/5 border-synthwave-neon-cyan/20 cursor-pointer hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/40`;
+        return `${baseStyles} bg-synthwave-neon-cyan/5 border-synthwave-neon-cyan/20 ${cursorClass} hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/40`;
       case "partial":
-        return `${baseStyles} bg-synthwave-neon-purple/10 border-synthwave-neon-purple/30 cursor-pointer hover:bg-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/50`;
+        return `${baseStyles} bg-synthwave-neon-purple/10 border-synthwave-neon-purple/30 ${cursorClass} hover:bg-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/50`;
       case "pending":
-        return `${baseStyles} bg-synthwave-bg-secondary/30 border-synthwave-neon-cyan/15 cursor-pointer hover:bg-synthwave-bg-secondary/50 hover:border-synthwave-neon-cyan/30`;
+        return `${baseStyles} bg-synthwave-bg-secondary/30 border-synthwave-neon-cyan/15 ${cursorClass} hover:bg-synthwave-bg-secondary/50 hover:border-synthwave-neon-cyan/30`;
       case "rest":
       default:
-        return `${baseStyles} border-synthwave-neon-cyan/10 bg-synthwave-bg-primary/20 cursor-default opacity-60`;
+        return `${baseStyles} border-synthwave-neon-cyan/10 bg-synthwave-bg-primary/20 ${cursorClass} ${longPressEnabled ? "opacity-70 hover:opacity-90" : "opacity-60"}`;
     }
   };
 
+  // iOS Safari shows a callout / magnifier on long touch; suppress when wired
+  // for long-press. Browser default for desktop is unaffected.
+  const longPressStyle = longPressEnabled
+    ? { WebkitTouchCallout: "none" }
+    : undefined;
+  const pressingClass = longPress.isPressing
+    ? " scale-95 ring-2 ring-synthwave-neon-cyan/60"
+    : "";
+
   return (
     <div
-      onClick={hasWorkouts ? handleClick : undefined}
-      className={getStatusStyles()}
+      onClick={hasWorkouts || longPressEnabled ? handleClick : undefined}
+      className={getStatusStyles() + pressingClass}
+      style={longPressStyle}
+      {...longPress.handlers}
     >
       {/* Current day ring indicator */}
       {isCurrentDay && (
