@@ -14,7 +14,7 @@
  *
  * Usage:
  *   node scripts/relink-orphaned-templates.js \
- *     --user-id=USER_ID --coach-id=COACH_ID --program-id=PROGRAM_ID \
+ *     --user-id=USER_ID --program-id=PROGRAM_ID \
  *     --table=NAME --bucket=NAME [--region=us-west-2] [--apply]
  *
  * Defaults to dry-run. Pass --apply to commit changes.
@@ -41,7 +41,6 @@ function parseArgs() {
   const args = process.argv.slice(2);
   const options = {
     userId: null,
-    coachId: null,
     programId: null,
     tableName: process.env.DYNAMODB_TABLE_NAME || null,
     bucketName: process.env.APPS_BUCKET_NAME || null,
@@ -52,8 +51,6 @@ function parseArgs() {
   for (const arg of args) {
     if (arg.startsWith("--user-id=")) {
       options.userId = arg.split("=")[1];
-    } else if (arg.startsWith("--coach-id=")) {
-      options.coachId = arg.split("=")[1];
     } else if (arg.startsWith("--program-id=")) {
       options.programId = arg.split("=")[1];
     } else if (arg.startsWith("--table=")) {
@@ -317,7 +314,6 @@ async function revertTemplate(
 async function main() {
   const opts = parseArgs();
   requireArg(opts.userId, "user-id");
-  requireArg(opts.coachId, "coach-id");
   requireArg(opts.programId, "program-id");
   requireArg(opts.tableName, "table");
   requireArg(opts.bucketName, "bucket");
