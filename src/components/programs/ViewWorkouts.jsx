@@ -503,7 +503,9 @@ General thoughts: `;
     }
     const nextDay = (completedDayNumber ?? 0) + 1;
     const totalDays = program?.totalDays;
-    if (totalDays && nextDay > totalDays) {
+    // Treat missing totalDays the same as "past end" — fall back to the
+    // dashboard rather than navigating to a day page that may not exist.
+    if (!totalDays || nextDay > totalDays) {
       navigate(
         `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
       );
