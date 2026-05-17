@@ -2,6 +2,12 @@ import { useCallback, useRef, useState } from "react";
 
 const DEFAULT_LONG_PRESS_MS = 600;
 const MOVE_CANCEL_THRESHOLD_PX = 10;
+// After a touch ends, browsers synthesize a compatibility mouse sequence
+// (mousedown → mouseup → click) on the target. Ignore mouse-side handlers
+// inside this window so they can't (a) start a duplicate long-press timer
+// or (b) clobber a suppression flag set by the touch long-press before the
+// trailing synth click consumes it.
+const GHOST_MOUSE_WINDOW_MS = 500;
 
 /**
  * Cross-platform long-press hook. Returns a handler bag to spread on the
@@ -24,6 +30,10 @@ export function useLongPress(onLongPress, options = {}) {
   const timerRef = useRef(null);
   const startPosRef = useRef(null);
   const suppressClickRef = useRef(false);
+  const lastTouchEndAtRef = useRef(0);
+
+  const isGhostMouse = () =>
+    Date.now() - lastTouchEndAtRef.current < GHOST_MOUSE_WINDOW_MS;
 
   const clear = useCallback(() => {
     if (timerRef.current) {
@@ -36,12 +46,6 @@ export function useLongPress(onLongPress, options = {}) {
 
   const start = useCallback(
     (clientX, clientY) => {
-      // Reset any stale suppression from a prior press whose trailing click
-      // never arrived (e.g., mouseleave or touch-scroll cancel after the
-      // long-press timer fired). Every real click is preceded by a
-      // mousedown/touchstart that flows through here, and the legitimate
-      // post-long-press click fires before any next press, so this is safe.
-      suppressClickRef.current = false;
       if (disabled) return;
       startPosRef.current = { x: clientX, y: clientY };
       setIsPressing(true);
@@ -58,17 +62,24 @@ export function useLongPress(onLongPress, options = {}) {
   const onMouseDown = useCallback(
     (event) => {
       if (event.button !== 0) return;
+      if (isGhostMouse()) return;
       start(event.clientX, event.clientY);
     },
     [start],
   );
 
   const onMouseUp = useCallback(() => {
+    if (isGhostMouse()) return;
     clear();
   }, [clear]);
 
   const onMouseLeave = useCallback(() => {
+    if (isGhostMouse()) return;
     clear();
+    // No `click` event will follow when the cursor leaves the element, so
+    // consume any pending suppression here — otherwise the next real click
+    // on this cell would be silently swallowed.
+    suppressClickRef.current = false;
   }, [clear]);
 
   const onTouchStart = useCallback(
@@ -91,17 +102,26 @@ export function useLongPress(onLongPress, options = {}) {
         MOVE_CANCEL_THRESHOLD_PX * MOVE_CANCEL_THRESHOLD_PX
       ) {
         clear();
+        // Treated as a scroll gesture — browser won't fire the trailing
+        // click, so drop any pending suppression to avoid swallowing the
+        // next real tap on this cell.
+        suppressClickRef.current = false;
       }
     },
     [clear],
   );
 
   const onTouchEnd = useCallback(() => {
+    lastTouchEndAtRef.current = Date.now();
     clear();
   }, [clear]);
 
   const onTouchCancel = useCallback(() => {
+    lastTouchEndAtRef.current = Date.now();
     clear();
+    // Cancelled touches don't produce a trailing click; clear suppression
+    // so subsequent interactions aren't affected.
+    suppressClickRef.current = false;
   }, [clear]);
 
   // Prevent the browser's native context menu (e.g., Android Chrome long-press
