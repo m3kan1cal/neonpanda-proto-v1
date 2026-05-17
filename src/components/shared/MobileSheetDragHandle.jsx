@@ -27,17 +27,23 @@ function MobileSheetDragHandle({
     activeRef.current = false;
     startY.current = null;
     setDragging(false);
-    onDragEnd?.();
 
     if (delta > 64) {
       if (el) {
         el.style.transform = "";
         el.style.transition = "";
       }
+      // Intentionally skip `onDragEnd` here. `requestClose` is async on
+      // mobile (it walks back through synthetic history before the parent
+      // sees `isOpen` flip), so resetting parent drag state synchronously
+      // would snap the backdrop back to opaque and re-hide `#root` for a
+      // frame before the drawer actually closes. The parent runs its own
+      // cleanup when `isOpen` becomes false.
       requestClose();
       return;
     }
 
+    onDragEnd?.();
     if (el) {
       el.style.transition = "transform 200ms ease-out";
       el.style.transform = "";

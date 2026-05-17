@@ -491,6 +491,17 @@ export default function ContextualChatDrawer({
     setMobileDragDelta(0);
   }, []);
 
+  // When the drawer closes (drag past threshold dismisses via async
+  // history.back, parent toggles isOpen, etc.), make sure we drop any
+  // lingering drag state — the drag handle deliberately does NOT fire
+  // `onDragEnd` in the dismissal path so the backdrop / #root visibility
+  // don't flash before the close actually completes.
+  useEffect(() => {
+    if (isOpen) return;
+    setIsMobileDragging(false);
+    setMobileDragDelta(0);
+  }, [isOpen]);
+
   // Map the live drag delta onto a 0..1 backdrop opacity. 200px of drag
   // takes the backstop to fully transparent — by then the sheet itself
   // covers most of the screen anyway, so the page underneath is visible
