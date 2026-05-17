@@ -1940,7 +1940,7 @@ function PanelContent({
             >
               <OpenFullPageIcon />
             </button>
-            {isTraining && (
+            {isTraining && !mobileTrainingSheetChrome && (
               <Link
                 to={viewAllUrl}
                 data-tooltip-id={tipViewAllId}
@@ -1953,15 +1953,6 @@ function PanelContent({
                   <ChatIconSmall />
                 </span>
               </Link>
-            )}
-            {mobileTrainingSheetChrome && (
-              <button
-                type="button"
-                onClick={exit}
-                className="shrink-0 ml-1 px-2 py-1 rounded-full font-body font-semibold text-sm text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
-              >
-                Done
-              </button>
             )}
           </div>
           <Tooltip

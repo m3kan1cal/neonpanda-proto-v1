@@ -480,7 +480,7 @@ function ViewReports() {
               Monthly Report
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Confidence:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
@@ -490,7 +490,7 @@ function ViewReports() {
                   : "Low"}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Generated:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {createdAt}
@@ -646,7 +646,7 @@ function ViewReports() {
               {weekStart} - {weekEnd}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Confidence:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
@@ -656,7 +656,7 @@ function ViewReports() {
                   : "Low"}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Generated:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {createdAt}
