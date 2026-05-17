@@ -135,7 +135,7 @@ const DEFAULT_INLINE_CONVERSATION_TAG = INLINE_TRAINING_GROUNDS_TAG;
 const defaultInlineSessionKey = (userId, coachId) =>
   getTrainingGroundsInlineSessionKey(userId, coachId);
 
-/** @typedef {"workoutEdit" | "trainingGroundsInlineChat" | "coachCreatorSession" | "programDesignerSession"} ContextualChatDrawerVariant */
+/** @typedef {"workoutEdit" | "inlineChat" | "coachCreatorSession" | "programDesignerSession"} ContextualChatDrawerVariant */
 
 function OpenFullPageIcon({ className = "w-4 h-4" }) {
   return (
@@ -314,7 +314,7 @@ function TrainingGroundsConversationPicker({
  * @param {string} coachId - The coach ID for the conversation
  * @param {Object} coachData - Coach info ({ name, avatar, etc. })
  * @param {Function} onEntityUpdated - Callback to refresh parent after a successful edit
- * @param {string} [newConversationTitle] - Required for `trainingGroundsInlineChat` (caller-owned title for new threads). If omitted, falls back to "New Chat" with a dev warning.
+ * @param {string} [newConversationTitle] - Required for `inlineChat` (caller-owned title for new threads). If omitted, falls back to "New Chat" with a dev warning.
  * @param {{ surface: "program_dashboard", programId: string }
  *        | { surface: "training_grounds" }
  *        | null} [streamClientContext] - Optional per-turn API context (telemetry / priming)
@@ -385,7 +385,7 @@ export default function ContextualChatDrawer({
   // session guard key so the early-return doesn't short-circuit.
   const [sessionResetTick, setSessionResetTick] = useState(0);
 
-  const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+  const isInlineChat = variant === "inlineChat";
   const isCoachCreatorSession = variant === "coachCreatorSession";
   const isProgramDesignerSession = variant === "programDesignerSession";
   const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
@@ -433,7 +433,7 @@ export default function ContextualChatDrawer({
   }, [inlineSessionKey, userId, coachId]);
 
   const inlineNewConversationTitle = useMemo(() => {
-    if (!isTrainingInlineChat) {
+    if (!isInlineChat) {
       return newConversationTitle;
     }
     if (
@@ -443,10 +443,10 @@ export default function ContextualChatDrawer({
       return newConversationTitle.trim();
     }
     logger.warn(
-      "ContextualChatDrawer: newConversationTitle is required for trainingGroundsInlineChat; using neutral fallback",
+      "ContextualChatDrawer: newConversationTitle is required for inlineChat; using neutral fallback",
     );
     return "New Chat";
-  }, [isTrainingInlineChat, newConversationTitle]);
+  }, [isInlineChat, newConversationTitle]);
 
   /** Keeps the latest onClose without re-subscribing history effects when parents pass inline arrows. */
   const onCloseRef = useRef(onClose);
@@ -521,7 +521,7 @@ export default function ContextualChatDrawer({
   );
 
   const refreshTrainingPicker = useCallback(async () => {
-    if (!userId || !coachId || !isTrainingInlineChat) return;
+    if (!userId || !coachId || !isInlineChat) return;
     setIsLoadingTrainingPicker(true);
     try {
       const { conversations = [] } = await getCoachConversations(
@@ -548,15 +548,15 @@ export default function ContextualChatDrawer({
     } finally {
       setIsLoadingTrainingPicker(false);
     }
-  }, [userId, coachId, isTrainingInlineChat]);
+  }, [userId, coachId, isInlineChat]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Training Grounds: conversation picker list
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isOpen || !isTrainingInlineChat || !userId || !coachId) return;
+    if (!isOpen || !isInlineChat || !userId || !coachId) return;
     refreshTrainingPicker();
-  }, [isOpen, userId, coachId, isTrainingInlineChat, refreshTrainingPicker]);
+  }, [isOpen, userId, coachId, isInlineChat, refreshTrainingPicker]);
 
   // Mobile drawer history entry so Android back closes the drawer first.
   // Applies to every variant on mobile — drag-down and hardware-back gestures
@@ -689,7 +689,7 @@ export default function ContextualChatDrawer({
   // Agent lifecycle — Training Grounds inline chat variant
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isTrainingInlineChat) return;
+    if (!isInlineChat) return;
     if (!isOpen || !userId || !coachId) return;
 
     let cancelled = false;
@@ -808,7 +808,7 @@ export default function ContextualChatDrawer({
     isOpen,
     userId,
     coachId,
-    isTrainingInlineChat,
+    isInlineChat,
     inlineNewConversationTitle,
     effectiveInlineTag,
     effectiveInlineSessionKey,
@@ -1237,14 +1237,14 @@ export default function ContextualChatDrawer({
             imageS3Keys,
             editContext,
             documentS3Keys,
-            isTrainingInlineChat ? streamClientContext : null,
+            isInlineChat ? streamClientContext : null,
           );
         }
       } catch (err) {
         logger.error("ContextualChatDrawer: sendMessageStream failed:", err);
       }
     },
-    [editContext, isTrainingInlineChat, streamClientContext, isSessionVariant],
+    [editContext, isInlineChat, streamClientContext, isSessionVariant],
   );
 
   const persistDrawerWidth = useCallback((w) => {
@@ -1339,7 +1339,7 @@ export default function ContextualChatDrawer({
 
   const currentConversationId = agentState?.conversation?.conversationId || "";
   const trainingPickerEffective = useMemo(() => {
-    if (!isTrainingInlineChat) return [];
+    if (!isInlineChat) return [];
     const ids = new Set(
       trainingPickerOptions.map((o) => o.conversationId).filter(Boolean),
     );
@@ -1352,7 +1352,7 @@ export default function ContextualChatDrawer({
     }
     return out;
   }, [
-    isTrainingInlineChat,
+    isInlineChat,
     trainingPickerOptions,
     currentConversationId,
     agentState?.conversation?.title,
@@ -1380,7 +1380,7 @@ export default function ContextualChatDrawer({
     ? "Create a new AI coach"
     : isProgramDesignerSession
       ? "Design a new training program"
-      : isTrainingInlineChat
+      : isInlineChat
         ? `Chat with ${entityLabel || "coach"}`
         : `Edit ${entityLabel || entityType} with AI coach`;
 
@@ -1781,7 +1781,7 @@ function PanelContent({
   const tipNewChatId = useId();
   const tipOpenFullId = useId();
   const tipViewAllId = useId();
-  const isTraining = variant === "trainingGroundsInlineChat";
+  const isInlineChat = variant === "inlineChat";
   const isCoachCreatorSession = variant === "coachCreatorSession";
   const isProgramDesignerSession = variant === "programDesignerSession";
   const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
@@ -1810,7 +1810,7 @@ function PanelContent({
       ? `/training-grounds/manage-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
       : "#";
 
-  const inputPlaceholder = isTraining
+  const inputPlaceholder = isInlineChat
     ? "Message your coach…"
     : isCoachCreatorSession
       ? "Tell me about your fitness goals…"
@@ -1824,11 +1824,11 @@ function PanelContent({
       : "Starting edit session…";
 
   const showMessageList = !(
-    (isTraining || isSessionVariant) &&
+    (isInlineChat || isSessionVariant) &&
     isInitializing
   );
   const suppressTrainingOverlay =
-    (isTraining || isSessionVariant) && isInitializing;
+    (isInlineChat || isSessionVariant) && isInitializing;
 
   return (
     <>
@@ -1843,7 +1843,7 @@ function PanelContent({
           - Desktop: always shown (any variant)
           - Mobile workoutEdit: shown (no selector row to consolidate into)
           - Mobile training/session: hidden — consolidated into the selector row below */}
-      {(!mobileTrainingSheetChrome || !(isTraining || isSessionVariant)) && (
+      {(!mobileTrainingSheetChrome || !(isInlineChat || isSessionVariant)) && (
         <div className={contextualDrawerPatterns.header}>
           {mobileTrainingSheetChrome ? (
             <>
@@ -1864,7 +1864,7 @@ function PanelContent({
                   className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
                 >
                   {entityLabel ||
-                    (isTraining
+                    (isInlineChat
                       ? "Training Grounds"
                       : isCoachCreatorSession
                         ? "New Coach"
@@ -1908,7 +1908,7 @@ function PanelContent({
                   className={`${contextualDrawerPatterns.headerLabel} text-base`}
                 >
                   {entityLabel ||
-                    (isTraining
+                    (isInlineChat
                       ? "Training Grounds"
                       : isCoachCreatorSession
                         ? "New Coach"
@@ -1931,7 +1931,7 @@ function PanelContent({
                 className={contextualDrawerPatterns.closeButton}
                 onClick={onClose}
                 aria-label={
-                  isTraining
+                  isInlineChat
                     ? "Close chat"
                     : isSessionVariant
                       ? "Close session"
@@ -1945,12 +1945,12 @@ function PanelContent({
         </div>
       )}
 
-      {(isTraining || isSessionVariant) && (
+      {(isInlineChat || isSessionVariant) && (
         <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/20">
           {mobileTrainingSheetChrome && (
             <span id={headingId} className="sr-only">
               {entityLabel ||
-                (isTraining
+                (isInlineChat
                   ? "Training Grounds"
                   : isCoachCreatorSession
                     ? "New Coach"
@@ -2018,7 +2018,7 @@ function PanelContent({
             >
               <OpenFullPageIcon />
             </button>
-            {isTraining && !mobileTrainingSheetChrome && (
+            {isInlineChat && !mobileTrainingSheetChrome && (
               <Link
                 to={viewAllUrl}
                 data-tooltip-id={tipViewAllId}
@@ -2063,12 +2063,12 @@ function PanelContent({
       >
         {/* Skeleton: training/session whenever loading; workout edit on first load with no messages yet */}
         {isInitializing &&
-          (isTraining || isSessionVariant || messages.length === 0) && (
+          (isInlineChat || isSessionVariant || messages.length === 0) && (
             <DrawerSkeleton />
           )}
 
         {/* Empty state — workout edit / session variants */}
-        {!isTraining &&
+        {!isInlineChat &&
           messages.length === 0 &&
           !isStreaming &&
           !isInitializing && (
@@ -2080,7 +2080,7 @@ function PanelContent({
           )}
 
         {/* Empty state — training drawer: curated tips */}
-        {isTraining &&
+        {isInlineChat &&
           messages.length === 0 &&
           !isStreaming &&
           !isInitializing && (

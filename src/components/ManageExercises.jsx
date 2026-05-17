@@ -1003,7 +1003,7 @@ function ManageExercises() {
             tooltip="Chat with coach"
           />
           <ContextualChatDrawer
-            variant="trainingGroundsInlineChat"
+            variant="inlineChat"
             inlineConversationTag={inlineConversationTag}
             inlineSessionKey={inlineSessionKey}
             isOpen={isInlineChatDrawerOpen}

@@ -4,7 +4,7 @@ import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
 
 /**
  * Shared state machine for the contextual chat drawer used by the inline
- * `trainingGroundsInlineChat` variant. Centralizes the open/closed state, the
+ * `inlineChat` variant. Centralizes the open/closed state, the
  * NavigationContext sync (so the mobile chrome hides while the drawer is
  * open), and the user avatar props every caller passes through to
  * ContextualChatDrawer. Per-surface bits (tag, session key, streamClientContext)
