@@ -182,7 +182,7 @@ export default function ProgramOverview({
           <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
             Program Intel
           </h4>
-          <div className="rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 p-4">
+          <div className={containerPatterns.nestedContent}>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               {/* Coach - Full Width */}
               {program.coachNames && program.coachNames.length > 0 && (
@@ -254,7 +254,7 @@ export default function ProgramOverview({
             <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
               The Game Plan
             </h4>
-            <div className={containerPatterns.coachNotesSection}>
+            <div className={containerPatterns.nestedContent}>
               <div className="font-body text-sm text-synthwave-text-secondary">
                 {program.description}
               </div>
@@ -268,7 +268,7 @@ export default function ProgramOverview({
             <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
               Your Targets
             </h4>
-            <div className={containerPatterns.coachNotesSection}>
+            <div className={containerPatterns.nestedContent}>
               <div className="font-body text-sm text-synthwave-text-secondary">
                 {program.goals}
               </div>
@@ -320,7 +320,7 @@ export default function ProgramOverview({
               </button>
               {isTrainingFocusExpanded && (
                 <div
-                  className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
+                  className={`${containerPatterns.nestedContent} animate-fadeIn`}
                 >
                   <ul className="space-y-2">
                     {allFocusAreas.map((area, i) => (
@@ -366,7 +366,7 @@ export default function ProgramOverview({
           </button>
           {isTimelineExpanded && (
             <div
-              className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
+              className={`${containerPatterns.nestedContent} animate-fadeIn`}
             >
               <div className="space-y-1">
                 {/* First row: Created and Started */}
