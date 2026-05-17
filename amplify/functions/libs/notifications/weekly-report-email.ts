@@ -60,6 +60,20 @@ function firstSentence(text: string, maxChars = 180): string | null {
   return `${candidate.slice(0, maxChars - 1).trimEnd()}…`;
 }
 
+/**
+ * Escape HTML-significant characters so LLM-generated prose (which can
+ * legitimately contain `<`, `>`, or `&` — e.g. "volume dropped <5%") survives
+ * interpolation into the email body intact.
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function buildReportUrl(
   userId: string,
   weekId: string,
@@ -112,7 +126,7 @@ export async function sendWeeklyReportEmail(
       : `<p style="margin: 0;">Your weekly summary is ready inside.</p>`;
 
   const narrativeHtml = narrative
-    ? `<p style="font-style: italic; color: #555;">${narrative}</p>`
+    ? `<p style="font-style: italic; color: #555;">${escapeHtml(narrative)}</p>`
     : "";
 
   const htmlBody = `
