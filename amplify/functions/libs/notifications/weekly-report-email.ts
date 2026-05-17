@@ -224,7 +224,7 @@ export async function sendWeeklyReportEmail(
         <img src="https://neonpanda.ai/images/logo-dark-sm.webp" alt="NeonPanda Logo">
       </div>
 
-      <h1>Hey ${firstName}! 📊</h1>
+      <h1>Hey ${escapeHtml(firstName)}! 📊</h1>
 
       <p>Your weekly training report for <strong>${weekRange}</strong> is ready. Your coach pulled it together from everything you logged this week.</p>
 
