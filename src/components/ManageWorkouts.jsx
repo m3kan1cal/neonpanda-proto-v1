@@ -674,7 +674,7 @@ function ManageWorkouts() {
               {dateInfo.date} · {dateInfo.time}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:items-center sm:gap-4">
+          <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-4">
             <div className="flex items-center gap-1.5 font-body text-sm">
               <span className="text-synthwave-text-muted">Duration:</span>
               <span className="text-synthwave-neon-cyan font-medium">

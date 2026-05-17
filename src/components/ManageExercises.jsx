@@ -385,7 +385,7 @@ function ManageExercises() {
             </span>
           </div>
           {/* Session Count */}
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Sessions:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {exercise.count}

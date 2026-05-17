@@ -632,7 +632,7 @@ function ManageMemories() {
             </span>
           </div>
           {/* Usage count */}
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Used:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {memory.metadata?.usageCount || 0}x
@@ -641,7 +641,7 @@ function ManageMemories() {
           {/* Last used */}
           {memory.metadata?.lastUsed &&
             (memory.metadata?.usageCount || 0) > 0 && (
-              <div className="flex items-center gap-1.5 font-body text-sm">
+              <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
                 <span className="text-synthwave-text-muted">Last Used:</span>
                 <span className="text-synthwave-neon-cyan font-medium">
                   {(
