@@ -36,6 +36,12 @@ export function useLongPress(onLongPress, options = {}) {
 
   const start = useCallback(
     (clientX, clientY) => {
+      // Reset any stale suppression from a prior press whose trailing click
+      // never arrived (e.g., mouseleave or touch-scroll cancel after the
+      // long-press timer fired). Every real click is preceded by a
+      // mousedown/touchstart that flows through here, and the legitimate
+      // post-long-press click fires before any next press, so this is safe.
+      suppressClickRef.current = false;
       if (disabled) return;
       startPosRef.current = { x: clientX, y: clientY };
       setIsPressing(true);
