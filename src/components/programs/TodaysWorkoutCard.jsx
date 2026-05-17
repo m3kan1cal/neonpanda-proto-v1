@@ -79,7 +79,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className={`${containerPatterns.nestedContent} text-center`}>
+        <div className={`${containerPatterns.nestedContent} md:p-6 text-center`}>
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
@@ -173,7 +173,7 @@ function TodaysWorkoutCard({
         )}
 
         {/* Rest day message */}
-        <div className={`${containerPatterns.nestedContent} text-center`}>
+        <div className={`${containerPatterns.nestedContent} md:p-6 text-center`}>
           <div className="flex justify-center mb-3">
             <div className="text-synthwave-neon-cyan opacity-50">
               <svg
