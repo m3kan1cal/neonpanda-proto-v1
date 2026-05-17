@@ -120,7 +120,7 @@ export const linkWorkoutToTemplate = async (
   logger.info("🔗 Updating template linkedWorkoutId in S3..");
 
   const maxAttempts = 3;
-  const backoffMs = [250, 500, 1000];
+  const backoffMs = [250, 500];
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
