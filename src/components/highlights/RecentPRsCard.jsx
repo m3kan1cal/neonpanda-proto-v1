@@ -114,7 +114,7 @@ export default function RecentPRsCard({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-start space-x-3">
-          <span className="text-synthwave-neon-pink shrink-0 mt-1.5">
+          <span className="hidden md:inline-block text-synthwave-neon-pink shrink-0 mt-1.5">
             <TrophySolidIcon />
           </span>
           <h3 className="font-header font-bold text-white text-lg uppercase">

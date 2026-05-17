@@ -5,6 +5,7 @@ import {
   listItemPatterns,
 } from "../../utils/ui/uiPatterns";
 import { WeightPlateIconTiny } from "../themes/SynthwaveComponents";
+import CardSectionHeader from "../shared/CardSectionHeader";
 import { formatRelativeTime } from "../../utils/dateUtils";
 
 // ---------------------------------------------------------------------------
@@ -58,14 +59,14 @@ export default function TopExercisesCard({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <span className="text-synthwave-neon-cyan shrink-0 mt-1.5">
-          <WeightPlateIconTiny className="w-5 h-5" />
-        </span>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Top Exercises
-        </h3>
-      </div>
+      <CardSectionHeader
+        title="Top Exercises"
+        icon={
+          <span className="text-synthwave-neon-cyan">
+            <WeightPlateIconTiny className="w-5 h-5" />
+          </span>
+        }
+      />
 
       {/* Exercise list -- 2-column grid */}
       <div className="grid grid-cols-2 gap-3">

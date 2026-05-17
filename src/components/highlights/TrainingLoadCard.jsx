@@ -3,6 +3,7 @@ import { containerPatterns } from "../../utils/ui/uiPatterns";
 import Sparkline from "../analytics/Sparkline";
 import { chartColors } from "../analytics/chartTheme";
 import { BarChartUpIcon } from "../themes/SynthwaveComponents";
+import CardSectionHeader from "../shared/CardSectionHeader";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -104,14 +105,14 @@ export default function TrainingLoadCard({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <span className="shrink-0 mt-1.5 text-synthwave-neon-purple">
-          <BarChartUpIcon className="w-5 h-5" />
-        </span>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Training Volume
-        </h3>
-      </div>
+      <CardSectionHeader
+        title="Training Volume"
+        icon={
+          <span className="text-synthwave-neon-purple">
+            <BarChartUpIcon className="w-5 h-5" />
+          </span>
+        }
+      />
 
       {!hasData ? (
         <p className="font-body text-sm text-synthwave-text-muted">
