@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { containerPatterns } from "../../utils/ui/uiPatterns";
 import { LightningIconSmall } from "../themes/SynthwaveComponents";
 import CollapsibleSection from "./CollapsibleSection";
+import AiGeneratedBadge from "../shared/AiGeneratedBadge";
 
 /**
  * ProgramInsights — sidebar card that surfaces the AI-generated synthesis of
@@ -304,11 +305,13 @@ export default function ProgramInsights({
         )}
 
         {/* Footer: generation metadata */}
-        {generatedAt && (
-          <div className="font-body text-xs text-synthwave-text-secondary/70 text-right">
-            Updated {formatRelativeTime(generatedAt)}
-          </div>
-        )}
+        <AiGeneratedBadge
+          description={
+            generatedAt
+              ? `Refreshed ${formatRelativeTime(generatedAt)} — updates after each workout you log`
+              : "Updates after each workout you log"
+          }
+        />
       </div>
     );
   })();
