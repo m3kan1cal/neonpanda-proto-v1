@@ -47,6 +47,11 @@ interface CoachConversationTitleEvent {
   aiResponse: string;
   tags?: string[];
   surfaceContext?: string;
+  // Set by title-trigger when the conversation originated from a contextual
+  // chat drawer. Those conversations are created with non-default placeholder
+  // titles (e.g., "Manage Workouts", "Day 5") that must still be overwritten
+  // by AI title generation on the first user-AI exchange.
+  allowPlaceholderOverwrite?: boolean;
 }
 
 interface CoachCreatorSessionTitleEvent {
@@ -112,7 +117,15 @@ export const handler = async (event: BuildConversationTitleEvent) => {
       return createOkResponse({ success: false, reason: "entity_not_found" });
     }
 
-    if (!isDefaultTitle(before.title)) {
+    // Inline-drawer conversations are created with non-default placeholder
+    // titles ("Manage Workouts", "Day 5", etc.). The trigger sets
+    // allowPlaceholderOverwrite when those tags are present so we bypass
+    // the default-title guard for the initial AI title write.
+    const allowPlaceholderOverwrite =
+      event.entityType === "coachConversation" &&
+      event.allowPlaceholderOverwrite === true;
+
+    if (!allowPlaceholderOverwrite && !isDefaultTitle(before.title)) {
       logger.info("⏭️ Skipping title generation — non-default title already set", {
         entityType: event.entityType,
         currentTitle: before.title,
@@ -166,9 +179,16 @@ export const handler = async (event: BuildConversationTitleEvent) => {
     }
 
     // Final guard: don't overwrite an entity that was renamed during the
-    // ~1-2 second AI call window.
+    // ~1-2 second AI call window. Disabled for inline-drawer conversations
+    // where the placeholder title is system-assigned; the outer
+    // currentMessageCount === 2 gate at the trigger ensures this can only
+    // fire once per conversation, so a later manual rename can't be clobbered.
     const after = await loadCurrentTitle(event);
-    if (after.found && !isDefaultTitle(after.title)) {
+    if (
+      after.found &&
+      !allowPlaceholderOverwrite &&
+      !isDefaultTitle(after.title)
+    ) {
       logger.info(
         "⏭️ Skipping write — title was set by another writer during AI call",
         { entityType: event.entityType, titleAfterAi: after.title },
