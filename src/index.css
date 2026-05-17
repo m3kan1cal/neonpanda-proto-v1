@@ -475,6 +475,12 @@ body.mobile-drawer-open #root {
 body.mobile-drawer-open [data-mobile-drawer-overlay] {
   visibility: visible;
 }
+/* While the user is drag-closing the mobile sheet, reveal the underlying
+   page so the gesture feels like peeling a sheet away. The mobile backdrop
+   opacity is animated by the drawer in lockstep with the drag delta. */
+body.mobile-drawer-open.mobile-drawer-dragging #root {
+  visibility: visible;
+}
 
 /* Additional fallback for any remaining white space */
 * {

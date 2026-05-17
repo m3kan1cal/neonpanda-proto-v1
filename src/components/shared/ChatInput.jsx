@@ -987,12 +987,12 @@ function ChatInput({
                   setInputMessage(text);
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={
-                  window.innerWidth < 768 ? "Talk to me..." : placeholder
-                }
+                placeholder={placeholder}
                 disabled={isTyping}
                 mode="rich"
-                className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
+                className={`${inputPatterns.chatInput} ${
+                  compact ? "!text-sm" : ""
+                } ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
                 minHeight={
                   !compact &&
                   typeof window !== "undefined" &&

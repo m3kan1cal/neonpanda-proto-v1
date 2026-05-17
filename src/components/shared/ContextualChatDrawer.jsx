@@ -361,6 +361,13 @@ export default function ContextualChatDrawer({
   const [isInitializing, setIsInitializing] = useState(false);
   const [drawerWidth, setDrawerWidth] = useState(readInitialDrawerWidth);
   const [isResizing, setIsResizing] = useState(false);
+  // Mobile drag-to-close state. `mobileDragDelta` is the live downward drag
+  // distance in px (0 when not dragging). It drives the mobile backdrop's
+  // opacity so the underlying page peeks through as the sheet peels away,
+  // and pairs with a body class that overrides `#root { visibility: hidden }`
+  // for the duration of the gesture.
+  const [isMobileDragging, setIsMobileDragging] = useState(false);
+  const [mobileDragDelta, setMobileDragDelta] = useState(0);
 
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
@@ -454,38 +461,89 @@ export default function ContextualChatDrawer({
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  // Mobile drag-to-close glue. While the user is dragging the sheet down,
+  // we want the underlying page to be visible (so the gesture feels like
+  // peeling a sheet) and the opaque mobile backstop to fade out. The body
+  // class is paired with a CSS rule in index.css that re-enables `#root`
+  // visibility only when both `mobile-drawer-open` and
+  // `mobile-drawer-dragging` are present.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const body = document.body;
+    if (isMobileDragging) {
+      body.classList.add("mobile-drawer-dragging");
+      return () => {
+        body.classList.remove("mobile-drawer-dragging");
+      };
+    }
+    return undefined;
+  }, [isMobileDragging]);
+
+  const handleMobileDragStart = useCallback(() => {
+    setIsMobileDragging(true);
+    setMobileDragDelta(0);
+  }, []);
+  const handleMobileDragMove = useCallback((delta) => {
+    setMobileDragDelta(delta);
+  }, []);
+  const handleMobileDragEnd = useCallback(() => {
+    setIsMobileDragging(false);
+    setMobileDragDelta(0);
+  }, []);
+
+  // Map the live drag delta onto a 0..1 backdrop opacity. 200px of drag
+  // takes the backstop to fully transparent — by then the sheet itself
+  // covers most of the screen anyway, so the page underneath is visible
+  // through what remains.
+  const mobileBackdropOpacity = isMobileDragging
+    ? Math.max(0, 1 - mobileDragDelta / 200)
+    : 1;
+
   // Mobile body scroll-lock + hide page content while the drawer is open.
   // iOS Safari's keyboard `overlays-content` mode keeps the page DOM painted
   // under the translucent IME bar; locking the body and hiding `#root` via a
   // body class (paired with `[data-mobile-drawer-overlay]` overrides in
   // index.css) removes the bleed-through and prevents Safari from
-  // auto-scrolling the page beneath our fixed panel. Desktop bails on the
-  // matchMedia check, so it's a no-op there.
+  // auto-scrolling the page beneath our fixed panel.
+  //
+  // The lock must react to viewport changes too: if the user resizes from
+  // <lg into desktop while the drawer is open, the body class would otherwise
+  // stay applied — `#root { visibility: hidden }` then hides the desktop
+  // panel as well, leaving only the bare body background painted. We attach a
+  // matchMedia listener and lock/unlock as the viewport crosses the breakpoint.
   useEffect(() => {
     if (!isOpen) return;
     if (typeof window === "undefined") return;
-    if (!window.matchMedia("(max-width: 1023px)").matches) return;
 
-    const scrollY = window.scrollY;
-    const body = document.body;
-    const prev = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      overflow: body.style.overflow,
-      width: body.style.width,
+    const mq = window.matchMedia("(max-width: 1023px)");
+    let locked = null; // null when unlocked; otherwise { prev, scrollY }
+
+    const lock = () => {
+      if (locked) return;
+      const scrollY = window.scrollY;
+      const body = document.body;
+      const prev = {
+        position: body.style.position,
+        top: body.style.top,
+        left: body.style.left,
+        right: body.style.right,
+        overflow: body.style.overflow,
+        width: body.style.width,
+      };
+      body.style.position = "fixed";
+      body.style.top = `-${scrollY}px`;
+      body.style.left = "0";
+      body.style.right = "0";
+      body.style.width = "100%";
+      body.style.overflow = "hidden";
+      body.classList.add("mobile-drawer-open");
+      locked = { prev, scrollY };
     };
 
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
-    body.style.overflow = "hidden";
-    body.classList.add("mobile-drawer-open");
-
-    return () => {
+    const unlock = () => {
+      if (!locked) return;
+      const body = document.body;
+      const { prev, scrollY } = locked;
       body.style.position = prev.position;
       body.style.top = prev.top;
       body.style.left = prev.left;
@@ -494,6 +552,16 @@ export default function ContextualChatDrawer({
       body.style.overflow = prev.overflow;
       body.classList.remove("mobile-drawer-open");
       window.scrollTo(0, scrollY);
+      locked = null;
+    };
+
+    if (mq.matches) lock();
+    const onChange = (e) => (e.matches ? lock() : unlock());
+    mq.addEventListener("change", onChange);
+
+    return () => {
+      mq.removeEventListener("change", onChange);
+      unlock();
     };
   }, [isOpen]);
 
@@ -1531,10 +1599,13 @@ export default function ContextualChatDrawer({
       <div
         aria-hidden="true"
         data-mobile-drawer-overlay=""
-        className={[
-          contextualDrawerPatterns.panelMobileBackdrop,
-          isOpen ? "opacity-100" : "opacity-0",
-        ].join(" ")}
+        className={contextualDrawerPatterns.panelMobileBackdrop}
+        style={{
+          opacity: isOpen ? mobileBackdropOpacity : 0,
+          // Snap with the sheet during drag (no transition); restore the
+          // class-defined fade as soon as the drag ends.
+          ...(isMobileDragging ? { transition: "none" } : null),
+        }}
       />
 
       {/* Mobile: full-screen takeover */}
@@ -1575,6 +1646,9 @@ export default function ContextualChatDrawer({
           userId={userId}
           isExpanded={isDrawerExpanded}
           onToggleExpand={handleToggleExpand}
+          onMobileDragStart={handleMobileDragStart}
+          onMobileDragMove={handleMobileDragMove}
+          onMobileDragEnd={handleMobileDragEnd}
           {...panelExtras}
         />
       </div>
@@ -1778,6 +1852,9 @@ function PanelContent({
   sessionProgress = null,
   conversationSize = null,
   onSessionDone,
+  onMobileDragStart,
+  onMobileDragMove,
+  onMobileDragEnd,
 }) {
   const trainingSelectId = useId();
   const tipNewChatId = useId();
@@ -1813,7 +1890,7 @@ function PanelContent({
       : "#";
 
   const inputPlaceholder = isInlineChat
-    ? "Message your coach…"
+    ? "Talk to me…"
     : isCoachCreatorSession
       ? "Tell me about your fitness goals…"
       : isProgramDesignerSession
@@ -1838,6 +1915,9 @@ function PanelContent({
         <MobileSheetDragHandle
           sheetRef={mobileSheetRef}
           requestClose={exit}
+          onDragStart={onMobileDragStart}
+          onDragMove={onMobileDragMove}
+          onDragEnd={onMobileDragEnd}
         />
       )}
 
