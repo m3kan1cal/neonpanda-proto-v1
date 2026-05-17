@@ -251,12 +251,15 @@
   font-family: var(--font-body);
 }
 
-/* Contextual drawer — compact placeholder text (desktop only;
-   on mobile we keep 16px so iOS browsers do not auto-zoom the input). */
-@media (min-width: 768px) {
-  .contextual-drawer-input .tiptap-content p.is-editor-empty:first-child::before {
-    font-size: 0.8rem;
-  }
+/* Contextual drawer — compact placeholder text at all viewport sizes.
+   The iOS auto-zoom rule (below) pins .tiptap-content p to 16px on mobile
+   to prevent layout zoom when the user focuses the editor, but that rule
+   targets the editable element itself. The ::before pseudo-element used by
+   the Tiptap Placeholder extension does not trigger auto-zoom, so it is safe
+   to set a smaller font-size here even below 768px. Using text-sm (0.875rem)
+   gives a consistent placeholder size across all widths. */
+.contextual-drawer-input .tiptap-content p.is-editor-empty:first-child::before {
+  font-size: 0.875rem;
 }
 
 /* Suppress mobile tap-highlight flash on toolbar buttons */
