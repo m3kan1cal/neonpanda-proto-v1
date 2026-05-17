@@ -1670,7 +1670,7 @@ function TrainingGroundsV2() {
             tooltip="Chat with coach"
           />
           <ContextualChatDrawer
-            variant="trainingGroundsInlineChat"
+            variant="inlineChat"
             inlineConversationTag={INLINE_TRAINING_GROUNDS_TAG}
             inlineSessionKey={getTrainingGroundsInlineSessionKey(
               userId,
