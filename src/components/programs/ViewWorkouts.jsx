@@ -1,13 +1,7 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../../hooks/useInlineChatDrawer";
 import { AccessDenied } from "../shared/AccessDenied";
 import {
   buttonPatterns,
@@ -86,11 +80,17 @@ function ViewWorkouts() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { success: showSuccess, error: showError } = useToast();
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
-  // Get global CommandPalette + inline coach drawer state from NavigationContext
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  // Get global CommandPalette state from NavigationContext
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // State
   const [program, setProgram] = useState(null);
@@ -99,19 +99,6 @@ function ViewWorkouts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingWorkoutId, setProcessingWorkoutId] = useState(null);
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-
-  // Mirror drawer-open state to the global flag so App.jsx hides mobile
-  // chrome (bottom nav, status chrome) while the drawer is up — same
-  // pattern used by Training Grounds and Program Dashboard.
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
   // templateId -> "polling" | "timeout"; mirrored from ProgramAgent state so
   // the UI can render an actionable "Refresh to check" button when the
   // build-workout Lambda runs longer than the polling budget.
@@ -499,11 +486,47 @@ General thoughts: `;
     clearImages();
   };
 
+  // Navigate the user forward after the last workout of a day is
+  // submitted or skipped. Shared between the submit and skip handlers
+  // so the advancement rule stays in one place:
+  //   today view → dashboard (handles next-day or program-completed
+  //                gracefully without a failed template reload).
+  //   ?day=N view → ?day=N+1, or dashboard if past totalDays. Rest
+  //                 days on N+1 are handled by ViewWorkouts' own
+  //                 rest-day UI path (null templates → rest-day view).
+  const advanceAfterDayComplete = (completedDayNumber) => {
+    if (isViewingToday) {
+      navigate(
+        `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+      );
+      return;
+    }
+    const nextDay = (completedDayNumber ?? 0) + 1;
+    const totalDays = program?.totalDays;
+    // Treat missing totalDays the same as "past end" — fall back to the
+    // dashboard rather than navigating to a day page that may not exist.
+    if (!totalDays || nextDay > totalDays) {
+      navigate(
+        `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+      );
+    } else {
+      navigate(
+        `/training-grounds/programs/workouts?userId=${userId}&coachId=${coachId}&programId=${programId}&day=${nextDay}`,
+      );
+    }
+  };
+
   // Submit the workout - actually logs it
   const handleSubmitWorkout = async (template) => {
     if (processingWorkoutId || !programAgentRef.current) return;
 
     setProcessingWorkoutId(template.templateId);
+    // Drop any prior "seen-timeout" marker and clear residual pollingStatus
+    // for this template so a fresh submission (after a previous timeout) can
+    // re-toast on a subsequent failure and so the inline button doesn't
+    // render a stale "timeout" state during the new attempt.
+    seenTimeoutsRef.current.delete(template.templateId);
+    programAgentRef.current.clearPollingStatus(template.templateId);
     try {
       logger.info("📝 Submitting workout:", {
         templateId: template.templateId,
@@ -593,18 +616,12 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts are complete/skipped, navigate to the
-          // program dashboard after the celebration ends. The dashboard handles both
-          // mid-program day completion (shows next day) and program completion
-          // (shows completed status) gracefully — avoiding a failed template reload
-          // on a just-completed program.
-          if (isViewingToday) {
-            setTimeout(() => {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-            }, 3500);
-          }
+          // Advance the user forward after the celebration window so
+          // they're not stranded on the just-finished day.
+          setTimeout(
+            () => advanceAfterDayComplete(workoutData.dayNumber),
+            3500,
+          );
         }
       }
     } catch (err) {
@@ -698,18 +715,11 @@ General thoughts: `;
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
 
-          // If viewing today and all workouts are complete/skipped, navigate to the
-          // program dashboard after the celebration ends. The dashboard handles both
-          // mid-program day completion (shows next day) and program completion
-          // (shows completed status) gracefully — avoiding a failed template reload
-          // on a just-completed program.
-          if (isViewingToday) {
-            setTimeout(() => {
-              navigate(
-                `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
-              );
-            }, 3500);
-          }
+          // Shared advancement helper — same rule as the submit path.
+          setTimeout(
+            () => advanceAfterDayComplete(workoutData.dayNumber),
+            3500,
+          );
         }
       }
     } catch (err) {
@@ -956,14 +966,14 @@ General thoughts: `;
 
                 {/* Prescribed Workout Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
-                  <div className="px-6 pb-6 space-y-2">
+                  <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-2">
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-5/6"></div>
@@ -973,14 +983,14 @@ General thoughts: `;
 
                 {/* Coach Notes Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
-                  <div className="px-6 pb-6 space-y-2">
+                  <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-2">
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-full"></div>
                     <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-4/5"></div>
                   </div>
@@ -988,14 +998,14 @@ General thoughts: `;
 
                 {/* The Setup Sub-Card */}
                 <div className={containerPatterns.cardMedium}>
-                  <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+                  <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
                   </div>
-                  <div className="px-6 pb-6 space-y-4">
+                  <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-4">
                     <div>
                       <div className="h-3 bg-synthwave-text-muted/20 animate-pulse w-40 mb-2"></div>
                       <div className="flex flex-wrap gap-2">
@@ -1132,15 +1142,15 @@ General thoughts: `;
         />
 
         {/* Program Context */}
-        <div className="mb-4">
-          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3 mb-1 min-w-0">
+        <div className="mb-3 sm:mb-4">
+          <div className="flex flex-row items-start justify-between gap-3 sm:items-center sm:justify-start mb-1 min-w-0">
             <button
               onClick={() =>
                 navigate(
                   `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
                 )
               }
-              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left line-clamp-2 sm:line-clamp-none"
+              className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer text-left line-clamp-2 sm:line-clamp-none min-w-0 flex-1 sm:flex-initial"
               data-tooltip-id="program-name-link"
               data-tooltip-content="View training program"
             >
@@ -1172,44 +1182,59 @@ General thoughts: `;
                 </span>
               )}
           </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-sm pb-1 min-w-0">
-            <div className="font-body text-synthwave-text-secondary truncate min-w-0 flex-1 sm:flex-initial">
-              {(() => {
-                const trimmedPhaseName = (phaseName || "").trim();
-                const prefixMatch = trimmedPhaseName.match(
-                  /^(phase\s+\d+\s*:?)\s*(.*)$/i,
-                );
-                const mutedLabel = prefixMatch
-                  ? prefixMatch[1]
-                  : phaseNumber
-                    ? `Phase ${phaseNumber}:`
-                    : "Phase:";
-                const value = prefixMatch ? prefixMatch[2] : trimmedPhaseName;
-                return (
-                  <>
+          {(() => {
+            const trimmedPhaseName = (phaseName || "").trim();
+            const prefixMatch = trimmedPhaseName.match(
+              /^(phase\s+\d+\s*:?)\s*(.*)$/i,
+            );
+            const mutedLabel = prefixMatch
+              ? prefixMatch[1]
+              : phaseNumber
+                ? `Phase ${phaseNumber}:`
+                : "Phase:";
+            const value = prefixMatch ? prefixMatch[2] : trimmedPhaseName;
+            return (
+              <>
+                {/* Mobile: compact single-line "Phase X · Day Y of Z" */}
+                <div className="sm:hidden flex items-center gap-2 text-sm pb-1 min-w-0 font-body">
+                  <span className="text-synthwave-text-secondary truncate min-w-0">
                     <span className="text-synthwave-text-muted">
                       {mutedLabel}
                     </span>
                     {value && <> {value}</>}
-                  </>
-                );
-              })()}
-            </div>
-            <div className="font-body text-synthwave-text-muted shrink-0 whitespace-nowrap">
-              Day {workoutDayNumber} of {program.totalDays}
-            </div>
-            {!isRestDay && (
-              <span className="hidden sm:inline font-body text-synthwave-neon-cyan shrink-0">
-                {templates.length} Workout{templates.length > 1 ? "s" : ""}{" "}
-                Scheduled
-              </span>
-            )}
-            {isRestDay && (
-              <div className="hidden sm:block font-body text-synthwave-neon-cyan shrink-0">
-                Rest Day
-              </div>
-            )}
-          </div>
+                  </span>
+                  <span className="text-synthwave-text-muted shrink-0">·</span>
+                  <span className="text-synthwave-text-muted shrink-0 whitespace-nowrap">
+                    Day {workoutDayNumber} of {program.totalDays}
+                  </span>
+                </div>
+
+                {/* sm+: original multi-item flex layout */}
+                <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-sm pb-1 min-w-0">
+                  <div className="font-body text-synthwave-text-secondary truncate min-w-0 sm:flex-initial">
+                    <span className="text-synthwave-text-muted">
+                      {mutedLabel}
+                    </span>
+                    {value && <> {value}</>}
+                  </div>
+                  <div className="font-body text-synthwave-text-muted shrink-0 whitespace-nowrap">
+                    Day {workoutDayNumber} of {program.totalDays}
+                  </div>
+                  {!isRestDay && (
+                    <span className="font-body text-synthwave-neon-cyan shrink-0">
+                      {templates.length} Workout
+                      {templates.length > 1 ? "s" : ""} Scheduled
+                    </span>
+                  )}
+                  {isRestDay && (
+                    <div className="font-body text-synthwave-neon-cyan shrink-0">
+                      Rest Day
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* Workout Templates Grid */}
@@ -1334,12 +1359,12 @@ General thoughts: `;
                     }`}
                   >
                     <div
-                      className="flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300"
+                      className="flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300"
                       onClick={() => toggleCardCollapse(template.templateId)}
                     >
                       <div className="flex-1">
                         <div className="flex items-start gap-3 mb-2">
-                          <span className="shrink-0 mt-1 text-synthwave-neon-cyan">
+                          <span className="hidden sm:inline-block shrink-0 mt-1 text-synthwave-neon-cyan">
                             <WorkoutIconSmall />
                           </span>
                           <h3
@@ -1388,7 +1413,7 @@ General thoughts: `;
                         )}
 
                         {!isCollapsed && (
-                          <div className="flex items-center flex-wrap gap-4">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 sm:flex sm:items-center sm:flex-wrap sm:gap-4">
                             {template.estimatedDuration && (
                               <div className="flex items-center gap-1 text-synthwave-text-secondary font-body text-sm">
                                 <svg
@@ -1577,7 +1602,7 @@ General thoughts: `;
                               attachPhotoCount={selectedImages.length}
                               variant="pink"
                               className="tiptap-editor-pink w-full rounded-t-xl text-sm"
-                              contentClassName="px-4 py-3"
+                              contentClassName="px-4 py-3 text-synthwave-text-secondary"
                               placeholder="Edit to record what you actually did..."
                               mode="rich"
                               showToolbar={true}
@@ -1968,9 +1993,20 @@ General thoughts: `;
                             </button>
                           ) : pollingStatus[template.templateId] ===
                             "timeout" ? (
-                            // Polling exhausted before the build-workout Lambda
-                            // wrote linkedWorkoutId. Let the user trigger a
-                            // manual refresh instead of staring at an inert spinner.
+                            // Polling exhausted before build-workout wrote
+                            // linkedWorkoutId. Re-fetch on demand: if the
+                            // Lambda eventually finished and wrote the link,
+                            // we clear the timeout state and the View Workout
+                            // button takes over. We deliberately do NOT
+                            // resubmit through log-workout-template here —
+                            // that endpoint 400s on already-completed
+                            // templates, so a resubmit would always fail and
+                            // strand the UI on the disabled spinner. The
+                            // genuine "build-workout failed" case is handled
+                            // upstream now: tools.ts returns success: false
+                            // → handler reverts → polling sees status:
+                            // "pending" and stops with reason "reverted",
+                            // never reaching this timeout branch.
                             <button
                               onClick={async () => {
                                 const refreshOptions = {};
@@ -1985,15 +2021,6 @@ General thoughts: `;
                                       programId,
                                       refreshOptions,
                                     );
-                                  // Only clear the timeout state when the
-                                  // refreshed template actually has a
-                                  // linkedWorkoutId — i.e. build-workout
-                                  // finished. If the workout is still
-                                  // building, leave pollingStatus as
-                                  // "timeout" so the button stays visible
-                                  // for another retry; otherwise the render
-                                  // falls through to the disabled
-                                  // "Processing..." spinner with no recovery.
                                   const refreshedTemplates =
                                     result?.templates ||
                                     result?.todaysWorkoutTemplates?.templates;
@@ -2014,10 +2041,7 @@ General thoughts: `;
                                     );
                                   }
                                 } catch (err) {
-                                  logger.error(
-                                    "Manual refresh failed:",
-                                    err,
-                                  );
+                                  logger.error("Manual refresh failed:", err);
                                   showError(
                                     err.message ||
                                       "Failed to refresh workout status",
@@ -2148,7 +2172,7 @@ General thoughts: `;
             tooltip="Chat with coach"
           />
           <ContextualChatDrawer
-            variant="trainingGroundsInlineChat"
+            variant="inlineChat"
             inlineConversationTag={inlineConversationTag}
             inlineSessionKey={inlineSessionKey}
             isOpen={isInlineChatDrawerOpen}
@@ -2456,20 +2480,20 @@ function CollapsibleSubCard({
       <button
         type="button"
         onClick={onToggle}
-        className={`w-full flex items-center justify-between px-6 ${
-          isCollapsed ? "py-5" : "pt-5 pb-2"
+        className={`w-full flex items-center justify-between px-4 md:px-6 ${
+          isCollapsed ? "py-4 md:py-5" : "pt-4 pb-2 md:pt-5"
         } hover:bg-synthwave-bg-card/40 transition-colors cursor-pointer`}
       >
         <div className="flex items-start gap-3">
           {Icon ? (
             <span
-              className={`shrink-0 mt-1 text-synthwave-neon-${iconColor}`}
+              className={`hidden md:inline-block shrink-0 mt-1 text-synthwave-neon-${iconColor}`}
             >
               <Icon />
             </span>
           ) : (
             <div
-              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
+              className={`hidden md:block ${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} shrink-0 mt-2`}
             />
           )}
           <h4 className="font-header font-bold text-white text-lg uppercase">
@@ -2496,7 +2520,7 @@ function CollapsibleSubCard({
         </div>
       </button>
       {!isCollapsed && (
-        <div className={`px-6 pb-6 animate-fadeIn ${bodyClassName}`}>
+        <div className={`px-4 pb-4 md:px-6 md:pb-6 animate-fadeIn ${bodyClassName}`}>
           {children}
         </div>
       )}

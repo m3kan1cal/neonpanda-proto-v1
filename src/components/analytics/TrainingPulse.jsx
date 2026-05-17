@@ -14,7 +14,7 @@ import {
   tooltipPatterns,
 } from "../../utils/ui/uiPatterns";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../../hooks/useInlineChatDrawer";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { BarChartIcon } from "../themes/SynthwaveComponents";
 import { CenteredErrorState } from "../shared/ErrorStates";
@@ -56,10 +56,21 @@ export default function Analytics() {
   const coachId = searchParams.get("coachId");
   const { isValid: isAuthorized, isValidating: isAuthLoading } =
     useAuthorizeUser(userId);
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
 
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  const { setIsCommandPaletteOpen } = useNavigationContext();
+
+  // Inline coach chat drawer state + user avatar props. One home thread per
+  // (userId, coachId); the active timeRange and any selected exercise are
+  // forwarded as runtime context each turn so the agent always sees the lens
+  // the user is currently looking at.
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
   const handleCoachCardClick = () => {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
@@ -67,19 +78,6 @@ export default function Analytics() {
 
   // Time range state
   const [timeRange, setTimeRange] = useState("8w");
-
-  // Inline coach chat drawer state. Mirrors ProgramDashboard / ViewWorkouts
-  // wiring — one home thread per (userId, coachId); the active timeRange and
-  // any selected exercise are forwarded as runtime context each turn so the
-  // agent always sees the lens the user is currently looking at.
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   // Coach data
   const coachAgentRef = useRef(null);
@@ -475,7 +473,7 @@ export default function Analytics() {
             tooltip="Chat with coach"
           />
           <ContextualChatDrawer
-            variant="trainingGroundsInlineChat"
+            variant="inlineChat"
             inlineConversationTag={inlineConversationTag}
             inlineSessionKey={inlineSessionKey}
             isOpen={isInlineChatDrawerOpen}

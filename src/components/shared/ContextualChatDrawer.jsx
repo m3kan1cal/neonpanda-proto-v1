@@ -31,6 +31,7 @@ import ChatInput from "./ChatInput";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import ImageWithPresignedUrl from "./ImageWithPresignedUrl";
 import DocumentThumbnail from "./DocumentThumbnail";
+import MobileSheetDragHandle from "./MobileSheetDragHandle";
 import {
   ContextualUpdateIndicator,
   MessageContentWithToolCalls,
@@ -48,6 +49,7 @@ import {
 } from "../../utils/ui/uiPatterns";
 import CoachConversationEmptyTips from "./CoachConversationEmptyTips";
 import UserAvatar from "./UserAvatar";
+import CopyButton from "./CopyButton";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
 import {
   INLINE_TRAINING_GROUNDS_TAG,
@@ -133,7 +135,7 @@ const DEFAULT_INLINE_CONVERSATION_TAG = INLINE_TRAINING_GROUNDS_TAG;
 const defaultInlineSessionKey = (userId, coachId) =>
   getTrainingGroundsInlineSessionKey(userId, coachId);
 
-/** @typedef {"workoutEdit" | "trainingGroundsInlineChat" | "coachCreatorSession" | "programDesignerSession"} ContextualChatDrawerVariant */
+/** @typedef {"workoutEdit" | "inlineChat" | "coachCreatorSession" | "programDesignerSession"} ContextualChatDrawerVariant */
 
 function OpenFullPageIcon({ className = "w-4 h-4" }) {
   return (
@@ -312,7 +314,7 @@ function TrainingGroundsConversationPicker({
  * @param {string} coachId - The coach ID for the conversation
  * @param {Object} coachData - Coach info ({ name, avatar, etc. })
  * @param {Function} onEntityUpdated - Callback to refresh parent after a successful edit
- * @param {string} [newConversationTitle] - Required for `trainingGroundsInlineChat` (caller-owned title for new threads). If omitted, falls back to "New Chat" with a dev warning.
+ * @param {string} [newConversationTitle] - Required for `inlineChat` (caller-owned title for new threads). If omitted, falls back to "New Chat" with a dev warning.
  * @param {{ surface: "program_dashboard", programId: string }
  *        | { surface: "training_grounds" }
  *        | null} [streamClientContext] - Optional per-turn API context (telemetry / priming)
@@ -359,6 +361,13 @@ export default function ContextualChatDrawer({
   const [isInitializing, setIsInitializing] = useState(false);
   const [drawerWidth, setDrawerWidth] = useState(readInitialDrawerWidth);
   const [isResizing, setIsResizing] = useState(false);
+  // Mobile drag-to-close state. `mobileDragDelta` is the live downward drag
+  // distance in px (0 when not dragging). It drives the mobile backdrop's
+  // opacity so the underlying page peeks through as the sheet peels away,
+  // and pairs with a body class that overrides `#root { visibility: hidden }`
+  // for the duration of the gesture.
+  const [isMobileDragging, setIsMobileDragging] = useState(false);
+  const [mobileDragDelta, setMobileDragDelta] = useState(0);
 
   const agentRef = useRef(null);
   const desktopMessageAreaRef = useRef(null);
@@ -383,7 +392,7 @@ export default function ContextualChatDrawer({
   // session guard key so the early-return doesn't short-circuit.
   const [sessionResetTick, setSessionResetTick] = useState(0);
 
-  const isTrainingInlineChat = variant === "trainingGroundsInlineChat";
+  const isInlineChat = variant === "inlineChat";
   const isCoachCreatorSession = variant === "coachCreatorSession";
   const isProgramDesignerSession = variant === "programDesignerSession";
   const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
@@ -431,7 +440,7 @@ export default function ContextualChatDrawer({
   }, [inlineSessionKey, userId, coachId]);
 
   const inlineNewConversationTitle = useMemo(() => {
-    if (!isTrainingInlineChat) {
+    if (!isInlineChat) {
       return newConversationTitle;
     }
     if (
@@ -441,16 +450,131 @@ export default function ContextualChatDrawer({
       return newConversationTitle.trim();
     }
     logger.warn(
-      "ContextualChatDrawer: newConversationTitle is required for trainingGroundsInlineChat; using neutral fallback",
+      "ContextualChatDrawer: newConversationTitle is required for inlineChat; using neutral fallback",
     );
     return "New Chat";
-  }, [isTrainingInlineChat, newConversationTitle]);
+  }, [isInlineChat, newConversationTitle]);
 
   /** Keeps the latest onClose without re-subscribing history effects when parents pass inline arrows. */
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  // Mobile drag-to-close glue. While the user is dragging the sheet down,
+  // we want the underlying page to be visible (so the gesture feels like
+  // peeling a sheet) and the opaque mobile backstop to fade out. The body
+  // class is paired with a CSS rule in index.css that re-enables `#root`
+  // visibility only when both `mobile-drawer-open` and
+  // `mobile-drawer-dragging` are present.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const body = document.body;
+    if (isMobileDragging) {
+      body.classList.add("mobile-drawer-dragging");
+      return () => {
+        body.classList.remove("mobile-drawer-dragging");
+      };
+    }
+    return undefined;
+  }, [isMobileDragging]);
+
+  const handleMobileDragStart = useCallback(() => {
+    setIsMobileDragging(true);
+    setMobileDragDelta(0);
+  }, []);
+  const handleMobileDragMove = useCallback((delta) => {
+    setMobileDragDelta(delta);
+  }, []);
+  const handleMobileDragEnd = useCallback(() => {
+    setIsMobileDragging(false);
+    setMobileDragDelta(0);
+  }, []);
+
+  // When the drawer closes (drag past threshold dismisses via async
+  // history.back, parent toggles isOpen, etc.), make sure we drop any
+  // lingering drag state — the drag handle deliberately does NOT fire
+  // `onDragEnd` in the dismissal path so the backdrop / #root visibility
+  // don't flash before the close actually completes.
+  useEffect(() => {
+    if (isOpen) return;
+    setIsMobileDragging(false);
+    setMobileDragDelta(0);
+  }, [isOpen]);
+
+  // Map the live drag delta onto a 0..1 backdrop opacity. 200px of drag
+  // takes the backstop to fully transparent — by then the sheet itself
+  // covers most of the screen anyway, so the page underneath is visible
+  // through what remains.
+  const mobileBackdropOpacity = isMobileDragging
+    ? Math.max(0, 1 - mobileDragDelta / 200)
+    : 1;
+
+  // Mobile body scroll-lock + hide page content while the drawer is open.
+  // iOS Safari's keyboard `overlays-content` mode keeps the page DOM painted
+  // under the translucent IME bar; locking the body and hiding `#root` via a
+  // body class (paired with `[data-mobile-drawer-overlay]` overrides in
+  // index.css) removes the bleed-through and prevents Safari from
+  // auto-scrolling the page beneath our fixed panel.
+  //
+  // The lock must react to viewport changes too: if the user resizes from
+  // <lg into desktop while the drawer is open, the body class would otherwise
+  // stay applied — `#root { visibility: hidden }` then hides the desktop
+  // panel as well, leaving only the bare body background painted. We attach a
+  // matchMedia listener and lock/unlock as the viewport crosses the breakpoint.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (typeof window === "undefined") return;
+
+    const mq = window.matchMedia("(max-width: 1023px)");
+    let locked = null; // null when unlocked; otherwise { prev, scrollY }
+
+    const lock = () => {
+      if (locked) return;
+      const scrollY = window.scrollY;
+      const body = document.body;
+      const prev = {
+        position: body.style.position,
+        top: body.style.top,
+        left: body.style.left,
+        right: body.style.right,
+        overflow: body.style.overflow,
+        width: body.style.width,
+      };
+      body.style.position = "fixed";
+      body.style.top = `-${scrollY}px`;
+      body.style.left = "0";
+      body.style.right = "0";
+      body.style.width = "100%";
+      body.style.overflow = "hidden";
+      body.classList.add("mobile-drawer-open");
+      locked = { prev, scrollY };
+    };
+
+    const unlock = () => {
+      if (!locked) return;
+      const body = document.body;
+      const { prev, scrollY } = locked;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      body.classList.remove("mobile-drawer-open");
+      window.scrollTo(0, scrollY);
+      locked = null;
+    };
+
+    if (mq.matches) lock();
+    const onChange = (e) => (e.matches ? lock() : unlock());
+    mq.addEventListener("change", onChange);
+
+    return () => {
+      mq.removeEventListener("change", onChange);
+      unlock();
+    };
+  }, [isOpen]);
 
   const requestClose = useCallback(() => {
     // Synthetic-history pop applies on every mobile open of any variant —
@@ -476,7 +600,7 @@ export default function ContextualChatDrawer({
   );
 
   const refreshTrainingPicker = useCallback(async () => {
-    if (!userId || !coachId || !isTrainingInlineChat) return;
+    if (!userId || !coachId || !isInlineChat) return;
     setIsLoadingTrainingPicker(true);
     try {
       const { conversations = [] } = await getCoachConversations(
@@ -503,15 +627,15 @@ export default function ContextualChatDrawer({
     } finally {
       setIsLoadingTrainingPicker(false);
     }
-  }, [userId, coachId, isTrainingInlineChat]);
+  }, [userId, coachId, isInlineChat]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Training Grounds: conversation picker list
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isOpen || !isTrainingInlineChat || !userId || !coachId) return;
+    if (!isOpen || !isInlineChat || !userId || !coachId) return;
     refreshTrainingPicker();
-  }, [isOpen, userId, coachId, isTrainingInlineChat, refreshTrainingPicker]);
+  }, [isOpen, userId, coachId, isInlineChat, refreshTrainingPicker]);
 
   // Mobile drawer history entry so Android back closes the drawer first.
   // Applies to every variant on mobile — drag-down and hardware-back gestures
@@ -644,7 +768,7 @@ export default function ContextualChatDrawer({
   // Agent lifecycle — Training Grounds inline chat variant
   // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isTrainingInlineChat) return;
+    if (!isInlineChat) return;
     if (!isOpen || !userId || !coachId) return;
 
     let cancelled = false;
@@ -763,7 +887,7 @@ export default function ContextualChatDrawer({
     isOpen,
     userId,
     coachId,
-    isTrainingInlineChat,
+    isInlineChat,
     inlineNewConversationTitle,
     effectiveInlineTag,
     effectiveInlineSessionKey,
@@ -1192,14 +1316,14 @@ export default function ContextualChatDrawer({
             imageS3Keys,
             editContext,
             documentS3Keys,
-            isTrainingInlineChat ? streamClientContext : null,
+            isInlineChat ? streamClientContext : null,
           );
         }
       } catch (err) {
         logger.error("ContextualChatDrawer: sendMessageStream failed:", err);
       }
     },
-    [editContext, isTrainingInlineChat, streamClientContext, isSessionVariant],
+    [editContext, isInlineChat, streamClientContext, isSessionVariant],
   );
 
   const persistDrawerWidth = useCallback((w) => {
@@ -1294,7 +1418,7 @@ export default function ContextualChatDrawer({
 
   const currentConversationId = agentState?.conversation?.conversationId || "";
   const trainingPickerEffective = useMemo(() => {
-    if (!isTrainingInlineChat) return [];
+    if (!isInlineChat) return [];
     const ids = new Set(
       trainingPickerOptions.map((o) => o.conversationId).filter(Boolean),
     );
@@ -1307,7 +1431,7 @@ export default function ContextualChatDrawer({
     }
     return out;
   }, [
-    isTrainingInlineChat,
+    isInlineChat,
     trainingPickerOptions,
     currentConversationId,
     agentState?.conversation?.title,
@@ -1335,7 +1459,7 @@ export default function ContextualChatDrawer({
     ? "Create a new AI coach"
     : isProgramDesignerSession
       ? "Design a new training program"
-      : isTrainingInlineChat
+      : isInlineChat
         ? `Chat with ${entityLabel || "coach"}`
         : `Edit ${entityLabel || entityType} with AI coach`;
 
@@ -1407,6 +1531,7 @@ export default function ContextualChatDrawer({
     isSessionComplete: isSessionVariant && !!agentState?.isComplete,
     sessionProgress:
       isSessionVariant && agentState?.progress ? agentState.progress : null,
+    conversationSize: agentState?.conversationSize ?? null,
     // The completion-banner "Done" button just closes the drawer. The
     // `onSessionComplete` callback already fired automatically when the agent
     // reported completion (see effect above), so the parent has already
@@ -1476,6 +1601,24 @@ export default function ContextualChatDrawer({
         />
       </div>
 
+      {/* Mobile: opaque backstop that always covers the full pre-keyboard
+          viewport (h-[100lvh]) so page content can't bleed through the gap
+          between the chat input and the on-screen keyboard.
+          Tagged `data-mobile-drawer-overlay` so the global rule in
+          index.css keeps it visible while `body.mobile-drawer-open` hides
+          everything inside `#root`. */}
+      <div
+        aria-hidden="true"
+        data-mobile-drawer-overlay=""
+        className={contextualDrawerPatterns.panelMobileBackdrop}
+        style={{
+          opacity: isOpen ? mobileBackdropOpacity : 0,
+          // Snap with the sheet during drag (no transition); restore the
+          // class-defined fade as soon as the drag ends.
+          ...(isMobileDragging ? { transition: "none" } : null),
+        }}
+      />
+
       {/* Mobile: full-screen takeover */}
       <div
         ref={mobileSheetRef}
@@ -1483,6 +1626,7 @@ export default function ContextualChatDrawer({
         aria-modal="true"
         aria-labelledby={`${headingId}-mobile`}
         aria-label={dialogAriaLabel}
+        data-mobile-drawer-overlay=""
         className={[
           `flex lg:hidden ${contextualDrawerPatterns.panelMobile}`,
           isOpen ? "translate-y-0" : "translate-y-full",
@@ -1513,6 +1657,9 @@ export default function ContextualChatDrawer({
           userId={userId}
           isExpanded={isDrawerExpanded}
           onToggleExpand={handleToggleExpand}
+          onMobileDragStart={handleMobileDragStart}
+          onMobileDragMove={handleMobileDragMove}
+          onMobileDragEnd={handleMobileDragEnd}
           {...panelExtras}
         />
       </div>
@@ -1676,99 +1823,6 @@ function DrawerResizeHandle({
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Mobile sheet drag handle — swipe down to close.
-// Uses Pointer Events with setPointerCapture (mirrors DrawerResizeHandle) so the
-// gesture survives even if the finger drifts off the handle. Drag-to-follow:
-// we mutate the sheet's transform directly so the panel tracks the finger;
-// on release we snap back or dismiss at a 64px threshold.
-// ──────────────────────────────────────────────────────────────────────────────
-function MobileTrainingDragHandle({ sheetRef, requestClose }) {
-  const startY = useRef(null);
-  const activeRef = useRef(false);
-  const [dragging, setDragging] = useState(false);
-
-  const finishDrag = (delta) => {
-    const el = sheetRef?.current;
-    activeRef.current = false;
-    startY.current = null;
-    setDragging(false);
-
-    if (delta > 64) {
-      if (el) {
-        el.style.transform = "";
-        el.style.transition = "";
-      }
-      requestClose();
-      return;
-    }
-
-    if (el) {
-      el.style.transition = "transform 200ms ease-out";
-      el.style.transform = "";
-      const clear = () => {
-        el.style.transition = "";
-        el.removeEventListener("transitionend", clear);
-      };
-      el.addEventListener("transitionend", clear);
-    }
-  };
-
-  const onPointerDown = (e) => {
-    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // Capture can fail in rare browser states; the handler still works without it.
-    }
-    startY.current = e.clientY;
-    activeRef.current = true;
-    setDragging(true);
-    const el = sheetRef?.current;
-    if (el) el.style.transition = "none";
-  };
-
-  const onPointerMove = (e) => {
-    if (!activeRef.current || startY.current == null) return;
-    const delta = e.clientY - startY.current;
-    const el = sheetRef?.current;
-    if (!el) return;
-    el.style.transform = delta > 0 ? `translateY(${delta}px)` : "";
-  };
-
-  const onPointerUp = (e) => {
-    if (!activeRef.current || startY.current == null) return;
-    finishDrag(e.clientY - startY.current);
-  };
-
-  const onPointerCancel = () => {
-    if (!activeRef.current) return;
-    finishDrag(0);
-  };
-
-  return (
-    <div
-      role="button"
-      aria-label="Drag down to close"
-      tabIndex={0}
-      className="relative flex justify-center pt-2.5 pb-2 shrink-0 touch-none select-none cursor-grab active:cursor-grabbing before:absolute before:inset-x-0 before:-top-4 before:h-6 before:content-[''] after:absolute after:inset-x-0 after:-bottom-3 after:h-3 after:content-['']"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-    >
-      <div
-        className={`h-1.5 rounded-full transition-all duration-150 ${
-          dragging
-            ? "w-16 bg-synthwave-neon-cyan/80 shadow-[0_0_8px_rgba(34,211,238,0.55)]"
-            : "w-12 bg-synthwave-text-muted/70"
-        }`}
-        aria-hidden
-      />
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
 // Inner panel content (shared between desktop/mobile renders)
 // ──────────────────────────────────────────────────────────────────────────────
 function PanelContent({
@@ -1807,24 +1861,47 @@ function PanelContent({
   streamBusy = false,
   isSessionComplete = false,
   sessionProgress = null,
+  conversationSize = null,
   onSessionDone,
+  onMobileDragStart,
+  onMobileDragMove,
+  onMobileDragEnd,
 }) {
   const trainingSelectId = useId();
   const tipNewChatId = useId();
   const tipOpenFullId = useId();
   const tipViewAllId = useId();
-  const isTraining = variant === "trainingGroundsInlineChat";
+  const isInlineChat = variant === "inlineChat";
   const isCoachCreatorSession = variant === "coachCreatorSession";
   const isProgramDesignerSession = variant === "programDesignerSession";
   const isSessionVariant = isCoachCreatorSession || isProgramDesignerSession;
   const exit = requestClose ?? onClose;
+
+  // Per-panel chat-input height measurement. Each <PanelContent> renders its
+  // own <ChatInput compact />; the drawer mounts two of them (one hidden by
+  // `display: none` for the inactive breakpoint). A shared CSS variable
+  // resolved via document.querySelector picks the first DOM match — the
+  // hidden one — and yields a 0px height, leaving the tail of the last
+  // message stuck behind the input. Owning the measurement locally fixes it.
+  const chatInputContainerRef = useRef(null);
+  const [chatInputHeight, setChatInputHeight] = useState(110);
+  useEffect(() => {
+    const el = chatInputContainerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const next = Math.round(entries[0]?.contentRect?.height ?? el.offsetHeight);
+      if (next > 0) setChatInputHeight(next);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const viewAllUrl =
     userId && coachId
       ? `/training-grounds/manage-conversations?userId=${encodeURIComponent(userId)}&coachId=${encodeURIComponent(coachId)}`
       : "#";
 
-  const inputPlaceholder = isTraining
-    ? "Message your coach…"
+  const inputPlaceholder = isInlineChat
+    ? "Talk to me…"
     : isCoachCreatorSession
       ? "Tell me about your fitness goals…"
       : isProgramDesignerSession
@@ -1837,121 +1914,144 @@ function PanelContent({
       : "Starting edit session…";
 
   const showMessageList = !(
-    (isTraining || isSessionVariant) &&
+    (isInlineChat || isSessionVariant) &&
     isInitializing
   );
   const suppressTrainingOverlay =
-    (isTraining || isSessionVariant) && isInitializing;
+    (isInlineChat || isSessionVariant) && isInitializing;
 
   return (
     <>
       {mobileTrainingSheetChrome && (
-        <MobileTrainingDragHandle
+        <MobileSheetDragHandle
           sheetRef={mobileSheetRef}
           requestClose={exit}
+          onDragStart={onMobileDragStart}
+          onDragMove={onMobileDragMove}
+          onDragEnd={onMobileDragEnd}
         />
       )}
 
-      {/* Header */}
-      <div className={contextualDrawerPatterns.header}>
-        {mobileTrainingSheetChrome ? (
-          <>
-            <button
-              type="button"
-              className={`${contextualDrawerPatterns.closeButton} shrink-0 -ml-1`}
-              onClick={exit}
-              aria-label="Back"
-            >
-              <span className="inline-flex w-5 h-5 items-center justify-center [&_svg]:!w-5 [&_svg]:!h-5">
-                <ChevronLeftIcon />
-              </span>
-            </button>
-            <div className="flex-1 min-w-0 flex items-center gap-2">
-              <div
-                id={headingId}
-                className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
+      {/* Header
+          - Desktop: always shown (any variant)
+          - Mobile workoutEdit: shown (no selector row to consolidate into)
+          - Mobile training/session: hidden — consolidated into the selector row below */}
+      {(!mobileTrainingSheetChrome || !(isInlineChat || isSessionVariant)) && (
+        <div className={contextualDrawerPatterns.header}>
+          {mobileTrainingSheetChrome ? (
+            <>
+              {/* Mobile workoutEdit chrome: back arrow + entity label + BETA + Done */}
+              <button
+                type="button"
+                className={`${contextualDrawerPatterns.closeButton} shrink-0 -ml-1`}
+                onClick={exit}
+                aria-label="Back"
               >
-                {entityLabel ||
-                  (isTraining
-                    ? "Training Grounds"
-                    : isCoachCreatorSession
-                      ? "New Coach"
-                      : isProgramDesignerSession
-                        ? "New Program"
-                        : `Editing ${entityType}`)}
+                <span className="inline-flex w-5 h-5 items-center justify-center [&_svg]:!w-5 [&_svg]:!h-5">
+                  <ChevronLeftIcon />
+                </span>
+              </button>
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <div
+                  id={headingId}
+                  className={`${contextualDrawerPatterns.headerLabel} text-base min-w-0 truncate`}
+                >
+                  {entityLabel ||
+                    (isInlineChat
+                      ? "Training Grounds"
+                      : isCoachCreatorSession
+                        ? "New Coach"
+                        : isProgramDesignerSession
+                          ? "New Program"
+                          : `Editing ${entityType}`)}
+                </div>
+                <span className={`${badgePatterns.betaSmall} text-xs shrink-0`}>
+                  Beta
+                </span>
               </div>
-              <span className={`${badgePatterns.betaSmall} text-xs shrink-0`}>
+              <button
+                type="button"
+                onClick={exit}
+                className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
+              >
+                Done
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Expand/collapse button — desktop only */}
+              <button
+                type="button"
+                className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
+                onClick={onToggleExpand}
+                aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
+              >
+                <DrawerResizeIcon isExpanded={isExpanded} />
+              </button>
+
+              {/* Section header icon */}
+              <span className="shrink-0 text-synthwave-neon-pink">
+                <ChatIconSmall className="w-4 h-4" />
+              </span>
+
+              {/* Entity label */}
+              <div className="flex-1 min-w-0">
+                <div
+                  id={headingId}
+                  className={`${contextualDrawerPatterns.headerLabel} text-base`}
+                >
+                  {entityLabel ||
+                    (isInlineChat
+                      ? "Training Grounds"
+                      : isCoachCreatorSession
+                        ? "New Coach"
+                        : isProgramDesignerSession
+                          ? "New Program"
+                          : `Editing ${entityType}`)}
+                </div>
+              </div>
+
+              {/* Beta badge */}
+              <span
+                className={`${badgePatterns.betaSmall} text-[10px] shrink-0`}
+              >
                 Beta
               </span>
-            </div>
-            <button
-              type="button"
-              onClick={exit}
-              className="shrink-0 px-2 py-1.5 rounded-full font-body font-semibold text-base text-synthwave-neon-cyan transition-all duration-200 hover:bg-synthwave-neon-cyan/10 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 active:scale-[0.97] active:shadow-neon-cyan touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer"
-            >
-              Done
-            </button>
-          </>
-        ) : (
-          <>
-            {/* Expand/collapse button — desktop only (mobile is always full-screen) */}
-            <button
-              type="button"
-              className={`${contextualDrawerPatterns.closeButton} hidden lg:flex shrink-0`}
-              onClick={onToggleExpand}
-              aria-label={isExpanded ? "Collapse drawer" : "Expand drawer"}
-            >
-              <DrawerResizeIcon isExpanded={isExpanded} />
-            </button>
 
-            {/* Section header icon */}
-            <span className="shrink-0 text-synthwave-neon-pink">
-              <ChatIconSmall className="w-4 h-4" />
-            </span>
-
-            {/* Entity label */}
-            <div className="flex-1 min-w-0">
-              <div
-                id={headingId}
-                className={`${contextualDrawerPatterns.headerLabel} text-base`}
+              {/* Close button */}
+              <button
+                type="button"
+                className={contextualDrawerPatterns.closeButton}
+                onClick={onClose}
+                aria-label={
+                  isInlineChat
+                    ? "Close chat"
+                    : isSessionVariant
+                      ? "Close session"
+                      : "Close edit session"
+                }
               >
-                {entityLabel ||
-                  (isTraining
-                    ? "Training Grounds"
-                    : isCoachCreatorSession
-                      ? "New Coach"
-                      : isProgramDesignerSession
-                        ? "New Program"
-                        : `Editing ${entityType}`)}
-              </div>
-            </div>
+                <CloseIcon />
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
-            {/* Beta badge */}
-            <span className={`${badgePatterns.betaSmall} text-[10px] shrink-0`}>
-              Beta
-            </span>
-
-            {/* Close button */}
-            <button
-              type="button"
-              className={contextualDrawerPatterns.closeButton}
-              onClick={onClose}
-              aria-label={
-                isTraining
-                  ? "Close chat"
-                  : isSessionVariant
-                    ? "Close session"
-                    : "Close edit session"
-              }
-            >
-              <CloseIcon />
-            </button>
-          </>
-        )}
-      </div>
-
-      {(isTraining || isSessionVariant) && (
+      {(isInlineChat || isSessionVariant) && (
         <div className="flex flex-row gap-2 items-center px-3 py-2.5 border-b border-synthwave-neon-cyan/15 shrink-0 bg-synthwave-bg-primary/20">
+          {mobileTrainingSheetChrome && (
+            <span id={headingId} className="sr-only">
+              {entityLabel ||
+                (isInlineChat
+                  ? "Training Grounds"
+                  : isCoachCreatorSession
+                    ? "New Coach"
+                    : isProgramDesignerSession
+                      ? "New Program"
+                      : `Editing ${entityType}`)}
+            </span>
+          )}
           <span id={trainingSelectId} className="sr-only">
             {isSessionVariant ? "Session" : "Conversation"}
           </span>
@@ -2011,7 +2111,7 @@ function PanelContent({
             >
               <OpenFullPageIcon />
             </button>
-            {isTraining && (
+            {isInlineChat && !mobileTrainingSheetChrome && (
               <Link
                 to={viewAllUrl}
                 data-tooltip-id={tipViewAllId}
@@ -2047,18 +2147,21 @@ function PanelContent({
       {/* Message area */}
       <div
         ref={messageAreaRef}
-        className={contextualDrawerPatterns.messageArea}
+        className={`${contextualDrawerPatterns.messageArea} @container`}
+        style={{
+          paddingBottom: `${chatInputHeight + 32}px`,
+        }}
         aria-live="polite"
         aria-label="Conversation messages"
       >
         {/* Skeleton: training/session whenever loading; workout edit on first load with no messages yet */}
         {isInitializing &&
-          (isTraining || isSessionVariant || messages.length === 0) && (
+          (isInlineChat || isSessionVariant || messages.length === 0) && (
             <DrawerSkeleton />
           )}
 
         {/* Empty state — workout edit / session variants */}
-        {!isTraining &&
+        {!isInlineChat &&
           messages.length === 0 &&
           !isStreaming &&
           !isInitializing && (
@@ -2070,7 +2173,7 @@ function PanelContent({
           )}
 
         {/* Empty state — training drawer: curated tips */}
-        {isTraining &&
+        {isInlineChat &&
           messages.length === 0 &&
           !isStreaming &&
           !isInitializing && (
@@ -2080,17 +2183,21 @@ function PanelContent({
           )}
 
         {showMessageList &&
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id || message.messageId}
-              message={message}
-              coachInitial={coachInitial}
-              userInitial={userInitial}
-              userEmail={userEmail}
-              userDisplayName={userDisplayName}
-              userId={userId}
-            />
-          ))}
+          messages.map((message, index) => {
+            const isLast = index === messages.length - 1;
+            return (
+              <MessageBubble
+                key={message.id || message.messageId}
+                message={message}
+                coachInitial={coachInitial}
+                userInitial={userInitial}
+                userEmail={userEmail}
+                userDisplayName={userDisplayName}
+                userId={userId}
+                isStreaming={isLast && isStreaming}
+              />
+            );
+          })}
 
         {/* Contextual update indicator (tool-use feedback) */}
         {contextualUpdate && !suppressTrainingOverlay && (
@@ -2137,7 +2244,9 @@ function PanelContent({
               editorMinHeight="44px"
               editorMaxHeight="120px"
               compact={true}
+              containerRef={chatInputContainerRef}
               progressData={sessionProgress}
+              conversationSize={conversationSize}
             />
           </div>
         </div>
@@ -2290,6 +2399,7 @@ function MessageBubble({
   userEmail,
   userDisplayName,
   userId,
+  isStreaming = false,
 }) {
   const isUser = message.type === "user" || message.role === "user";
   const content =
@@ -2350,7 +2460,7 @@ function MessageBubble({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5 group min-w-0 w-full @[640px]:max-w-[85%]">
       {/* Interleaves text segments with Claude-Code-style tool-call blocks
           based on each tool call's `contentOffset`. Falls back to a single
           text bubble when there are no tool calls. Each text segment is
@@ -2376,6 +2486,7 @@ function MessageBubble({
             {formatDrawerTime(message.timestamp)}
           </span>
         )}
+        {!isStreaming && content && <CopyButton text={content} size="sm" />}
       </div>
     </div>
   );

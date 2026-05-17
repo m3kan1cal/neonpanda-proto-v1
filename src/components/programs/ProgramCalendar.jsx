@@ -11,6 +11,7 @@ export default function ProgramCalendar({
   coachId,
   programId,
   variant = "default",
+  onSetCurrentDay,
 }) {
   const [showAllWeeks, setShowAllWeeks] = useState(false);
 
@@ -189,6 +190,12 @@ export default function ProgramCalendar({
         </div>
       </div>
 
+      {onSetCurrentDay && (
+        <div className="text-xs text-synthwave-text-muted font-body italic mb-3">
+          Tip: hold a day to set it as today.
+        </div>
+      )}
+
       {/* Weeks grid */}
       <div className="space-y-4">
         {visibleWeeks.map(({ week, weekIndex }) => {
@@ -225,6 +232,7 @@ export default function ProgramCalendar({
                     coachId={coachId}
                     isCurrentDay={day.dayNumber === program.currentDay}
                     phase={getPhaseForDay(day.dayNumber)}
+                    onLongPress={onSetCurrentDay}
                   />
                 ))}
               </div>

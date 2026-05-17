@@ -16,8 +16,8 @@ export default function CollapsibleSection({
   headerExtras,
   id,
   className = "",
-  headerClassName = "p-6",
-  bodyClassName = "px-6 pb-6",
+  headerClassName = "p-4 md:p-6",
+  bodyClassName = "px-4 pb-4 md:px-6 md:pb-6",
   children,
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
@@ -49,7 +49,7 @@ export default function CollapsibleSection({
       >
         <div className="flex items-start gap-3 flex-1 min-w-0">
           {Icon && (
-            <span className={`shrink-0 mt-1 ${iconColorClass} ${iconClassName}`}>
+            <span className={`hidden md:inline-block shrink-0 mt-1 ${iconColorClass} ${iconClassName}`}>
               <Icon className="w-5 h-5" />
             </span>
           )}

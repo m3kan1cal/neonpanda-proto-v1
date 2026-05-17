@@ -1281,7 +1281,7 @@ const WorkoutViewer = ({
           <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
             {/* Section Header - Collapsible */}
             <div
-              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+              className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
                 collapsedSections.has(1) ? "rounded-xl" : "rounded-t-xl"
               }`}
               onClick={() => toggleCollapse(1)}
@@ -1327,13 +1327,13 @@ const WorkoutViewer = ({
 
             {/* Content */}
             {!collapsedSections.has(1) && (
-              <div id="session-stats-content" className="px-6 pb-6 space-y-3">
+              <div id="session-stats-content" className="px-4 pb-4 md:px-6 md:pb-6 space-y-3">
                 {/* Subsection 1: Session Details */}
                 <div>
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Session Details
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                  <div className={containerPatterns.nestedContent}>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       {/* Completed Date - Full Width */}
                       <div className="col-span-2 flex items-center gap-1.5 font-body text-sm">
@@ -1438,7 +1438,7 @@ const WorkoutViewer = ({
                     </svg>
                   </button>
                   {!collapsedSubsections.has("workout-metrics") && (
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                    <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         {/* Duration */}
                         {workoutData.duration && (
@@ -2089,7 +2089,7 @@ const WorkoutViewer = ({
           >
             {/* Section Header - Collapsible */}
             <div
-              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+              className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
                 collapsedSections.has(8) ? "rounded-xl" : "rounded-t-xl"
               }`}
               onClick={() => toggleCollapse(8)}
@@ -2126,7 +2126,7 @@ const WorkoutViewer = ({
             {!collapsedSections.has(8) && (
               <div
                 id="subjective-feedback-content"
-                className="px-6 pb-6 space-y-4"
+                className="px-4 pb-4 md:px-6 md:pb-6 space-y-4"
               >
                 {workoutData.subjective_feedback ? (
                   <>
@@ -2141,7 +2141,7 @@ const WorkoutViewer = ({
                         <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                           Feedback Scores
                         </h4>
-                        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                        <div className={containerPatterns.nestedContent}>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
                             {workoutData.subjective_feedback.enjoyment && (
                               <div className="flex items-center gap-1.5 font-body text-sm">
@@ -2241,7 +2241,7 @@ const WorkoutViewer = ({
                           </svg>
                         </button>
                         {!collapsedSubsections.has("physical-notes") && (
-                          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 space-y-3 animate-fadeIn">
+                          <div className={`${containerPatterns.nestedContent} space-y-3 animate-fadeIn`}>
                             {workoutData.subjective_feedback.notes && (
                               <div className="text-synthwave-text-secondary font-body text-sm">
                                 {workoutData.subjective_feedback.notes}
@@ -2310,7 +2310,7 @@ const WorkoutViewer = ({
                     )}
                   </>
                 ) : (
-                  <div className={containerPatterns.coachNotesSection}>
+                  <div className={containerPatterns.nestedContent}>
                     <div className="font-body text-sm text-synthwave-text-secondary">
                       No subjective feedback recorded for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
@@ -2423,7 +2423,7 @@ const WorkoutViewer = ({
               className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}
             >
               <div
-                className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+                className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
                   collapsedSections.has("photos")
                     ? "rounded-xl"
                     : "rounded-t-xl"
@@ -2466,7 +2466,7 @@ const WorkoutViewer = ({
                 </svg>
               </div>
               {!collapsedSections.has("photos") && (
-                <div id="workout-photos-content" className="px-6 pb-6">
+                <div id="workout-photos-content" className="px-4 pb-4 md:px-6 md:pb-6">
                   <div className="flex flex-wrap gap-2">
                     {imageS3Keys.map((s3Key, i) => (
                       <ImageWithPresignedUrl
@@ -2491,7 +2491,7 @@ const WorkoutViewer = ({
           <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
             {/* Section Header - Collapsible */}
             <div
-              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+              className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
                 collapsedSections.has(2) ? "rounded-xl" : "rounded-t-xl"
               }`}
               onClick={() => toggleCollapse(2)}
@@ -2528,7 +2528,7 @@ const WorkoutViewer = ({
             {!collapsedSections.has(2) && (
               <div
                 id="personal-insights-content"
-                className="px-6 pb-6 space-y-4"
+                className="px-4 pb-4 md:px-6 md:pb-6 space-y-4"
               >
                 {/* Subsection: Personal Feedback */}
                 {(workoutData.performance_metrics?.intensity ||
@@ -2541,7 +2541,7 @@ const WorkoutViewer = ({
                     <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                       Personal Feedback
                     </h4>
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                    <div className={containerPatterns.nestedContent}>
                       {/* RPE and Intensity gradient bars */}
                       {(workoutData.performance_metrics?.intensity ||
                         workoutData.performance_metrics
@@ -2799,7 +2799,7 @@ const WorkoutViewer = ({
           >
             {/* Section Header - Collapsible */}
             <div
-              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+              className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
                 collapsedSections.has(3) ? "rounded-xl" : "rounded-t-xl"
               }`}
               onClick={() => toggleCollapse(3)}
@@ -2837,7 +2837,7 @@ const WorkoutViewer = ({
 
             {/* Content */}
             {!collapsedSections.has(3) && (
-              <div id="pr-achievements-content" className="px-6 pb-6">
+              <div id="pr-achievements-content" className="px-4 pb-4 md:px-6 md:pb-6">
                 {workoutData.pr_achievements &&
                 workoutData.pr_achievements.length > 0 ? (
                   <div className="space-y-3">
@@ -2846,7 +2846,7 @@ const WorkoutViewer = ({
                       return (
                         <div
                           key={index}
-                          className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4"
+                          className={containerPatterns.nestedContent}
                         >
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-body font-bold text-synthwave-neon-pink text-base capitalize">
@@ -2934,7 +2934,7 @@ const WorkoutViewer = ({
                     })}
                   </div>
                 ) : (
-                  <div className={containerPatterns.coachNotesSection}>
+                  <div className={containerPatterns.nestedContent}>
                     <div className="font-body text-sm text-synthwave-text-secondary">
                       No PR achievements recorded for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
@@ -2955,7 +2955,7 @@ const WorkoutViewer = ({
             className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}
           >
             <div
-              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+              className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
                 collapsedSections.has(9) ? "rounded-xl" : "rounded-t-xl"
               }`}
               onClick={() => toggleCollapse(9)}
@@ -2978,7 +2978,7 @@ const WorkoutViewer = ({
               </svg>
             </div>
             {!collapsedSections.has(9) && (
-              <div className="px-6 pb-6 space-y-4">
+              <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-4">
                 {workoutData.coach_notes ? (
                   <>
                     {/* Subsection 1: Programming Intent - Collapsible */}
@@ -3008,7 +3008,7 @@ const WorkoutViewer = ({
                           </svg>
                         </button>
                         {!collapsedSubsections.has("programming-intent") && (
-                          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                          <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                             <div className="text-synthwave-text-secondary font-body text-sm leading-relaxed">
                               {workoutData.coach_notes.programming_intent}
                             </div>
@@ -3052,7 +3052,7 @@ const WorkoutViewer = ({
                           {!collapsedSubsections.has(
                             "positive-observations",
                           ) && (
-                            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                            <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                               <ul className="space-y-2">
                                 {workoutData.coach_notes.positive_observations.map(
                                   (observation, index) => (
@@ -3110,7 +3110,7 @@ const WorkoutViewer = ({
                           {!collapsedSubsections.has(
                             "areas-for-improvement",
                           ) && (
-                            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                            <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                               <ul className="space-y-2">
                                 {workoutData.coach_notes.areas_for_improvement.map(
                                   (area, index) => (
@@ -3158,7 +3158,7 @@ const WorkoutViewer = ({
                           </svg>
                         </button>
                         {!collapsedSubsections.has("next-session-focus") && (
-                          <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                          <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                             <div className="text-synthwave-text-secondary font-body text-sm leading-relaxed">
                               {workoutData.coach_notes.next_session_focus}
                             </div>
@@ -3168,7 +3168,7 @@ const WorkoutViewer = ({
                     )}
                   </>
                 ) : (
-                  <div className={containerPatterns.coachNotesSection}>
+                  <div className={containerPatterns.nestedContent}>
                     <div className="font-body text-sm text-synthwave-text-secondary">
                       No coach notes available for this workout.{" "}
                       <span className="text-synthwave-neon-cyan">
@@ -3188,7 +3188,7 @@ const WorkoutViewer = ({
             className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}
           >
             <div
-              className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+              className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
                 collapsedSections.has(10) ? "rounded-xl" : "rounded-t-xl"
               }`}
               onClick={() => toggleCollapse(10)}
@@ -3211,13 +3211,13 @@ const WorkoutViewer = ({
               </svg>
             </div>
             {!collapsedSections.has(10) && (
-              <div className="px-6 pb-6 space-y-4">
+              <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-4">
                 {/* Subsection 1: Extraction Summary */}
                 <div>
                   <h4 className="font-body text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
                     Extraction Summary
                   </h4>
-                  <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+                  <div className={containerPatterns.nestedContent}>
                     <div className="text-synthwave-text-secondary font-body text-sm">
                       {workoutData.metadata?.extraction_notes || (
                         <>
@@ -3260,7 +3260,7 @@ const WorkoutViewer = ({
                     </svg>
                   </button>
                   {!collapsedSubsections.has("quality-metrics") && (
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                    <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
                         {/* Confidence */}
                         {workoutData.metadata?.data_confidence !==
@@ -3403,7 +3403,7 @@ const WorkoutViewer = ({
                         </svg>
                       </button>
                       {!collapsedSubsections.has("extraction-tips") && (
-                        <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                        <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                           <div className="flex items-start space-x-2">
                             <div className="flex-1">
                               <h5 className="text-synthwave-neon-cyan font-body font-bold text-sm mb-2">
@@ -3495,7 +3495,7 @@ const WorkoutViewer = ({
       {viewMode === "raw" && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden`}>
           <div
-            className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+            className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
               collapsedSections.has(11) ? "rounded-xl" : "rounded-t-xl"
             }`}
             onClick={() => toggleCollapse(11)}
@@ -3518,7 +3518,7 @@ const WorkoutViewer = ({
             </svg>
           </div>
           {!collapsedSections.has(11) && (
-            <div className="px-6 pb-6">
+            <div className="px-4 pb-4 md:px-6 md:pb-6">
               <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-xl p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(workout, null, 2)}
               </pre>

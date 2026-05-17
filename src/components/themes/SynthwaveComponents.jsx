@@ -1689,7 +1689,7 @@ export function SectionHeader({
   const colorClass = SECTION_HEADER_COLOR[color] || SECTION_HEADER_COLOR.pink;
   return (
     <div className={`flex items-start gap-3 ${className}`}>
-      <span className={`shrink-0 mt-1 ${colorClass}`}>
+      <span className={`hidden md:inline-block shrink-0 mt-1 ${colorClass}`}>
         <Icon className={iconClassName} />
       </span>
       <As className="font-header font-bold text-white text-lg uppercase">

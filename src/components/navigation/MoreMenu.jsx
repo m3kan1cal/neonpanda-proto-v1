@@ -1,11 +1,12 @@
 // MoreMenu.jsx - Mobile Slide-Up Menu for Overflow Navigation
 // Bottom sheet style menu for secondary navigation items
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { navigationPatterns } from "../../utils/ui/uiPatterns";
 import { logger } from "../../utils/logger";
+import MobileSheetDragHandle from "../shared/MobileSheetDragHandle";
 import {
   TrainingReportsIcon,
   TrainingPulseIcon,
@@ -26,6 +27,7 @@ const MoreMenu = () => {
   const location = useLocation();
   const context = useNavigationContext();
   const { isMoreMenuOpen, setIsMoreMenuOpen } = context;
+  const sheetRef = useRef(null);
 
   // Close menu on escape key
   useEffect(() => {
@@ -285,15 +287,17 @@ const MoreMenu = () => {
 
       {/* Slide-up menu */}
       <div
+        ref={sheetRef}
         className={navigationPatterns.moreMenu.container}
         role="dialog"
         aria-label="More navigation options"
         aria-modal="true"
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-2">
-          <div className={navigationPatterns.moreMenu.handleBar} />
-        </div>
+        {/* Drag handle — swipe down to close */}
+        <MobileSheetDragHandle
+          sheetRef={sheetRef}
+          requestClose={handleClose}
+        />
 
         {/* Menu header */}
         <div className={navigationPatterns.moreMenu.header}>

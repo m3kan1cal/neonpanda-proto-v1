@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import {
@@ -6,6 +6,13 @@ import {
   deactivateSharedProgram,
 } from "../../utils/apis/sharedProgramApi";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { useInlineChatDrawer } from "../../hooks/useInlineChatDrawer";
+import ContextualChatDrawer from "../shared/ContextualChatDrawer";
+import EntityChatFAB from "../shared/EntityChatFAB";
+import {
+  INLINE_MANAGE_SHARED_PROGRAMS_TAG,
+  getManageSharedProgramsInlineSessionKey,
+} from "../../constants/contextualChat";
 import { AccessDenied, LoadingScreen } from "../shared/AccessDenied";
 import { useToast } from "../../contexts/ToastContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
@@ -133,6 +140,30 @@ function ManageSharedPrograms() {
 
   // Navigation context for command palette
   const { setIsCommandPaletteOpen } = useNavigationContext();
+
+  // Inline coach chat drawer state + user avatar props
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
+
+  const inlineConversationTag = INLINE_MANAGE_SHARED_PROGRAMS_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getManageSharedProgramsInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Shared Programs";
+  const streamClientContext = useMemo(
+    () => ({ surface: "manage_shared_programs" }),
+    [],
+  );
 
   // Authorize user access
   const {
@@ -853,6 +884,33 @@ function ManageSharedPrograms() {
         place="bottom"
         className="max-w-xs"
       />
+
+      {/* Inline coach chat (mirrors Training Pulse / Training Grounds wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="inlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Shared Programs"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </>
   );
 }

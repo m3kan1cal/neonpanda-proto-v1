@@ -20,7 +20,7 @@ export const OlympicWeightliftingSection = ({
   return (
     <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
       <div
-        className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+        className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
           collapsedSections.has(sectionId) ? "rounded-xl" : "rounded-t-xl"
         }`}
         onClick={() => toggleCollapse(sectionId)}
@@ -44,7 +44,7 @@ export const OlympicWeightliftingSection = ({
         </svg>
       </div>
       {!collapsedSections.has(sectionId) && (
-        <div className="px-6 pb-6">
+        <div className="px-4 pb-4 md:px-6 md:pb-6">
           {olympicWeightliftingData?.lifts?.length > 0 ? (
             <div className="space-y-3">
               {olympicWeightliftingData.lifts.map((lift, liftIndex) => (
@@ -81,7 +81,7 @@ export const OlympicWeightliftingSection = ({
                     </svg>
                   </button>
                   {!collapsedSubsections.has(`oly-lift-${liftIndex}`) && (
-                    <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4 animate-fadeIn">
+                    <div className={`${containerPatterns.nestedContent} animate-fadeIn`}>
                       <div className="space-y-2">
                         {lift.sets?.map((set, setIndex) => (
                           <div key={setIndex} className="py-2">
@@ -138,7 +138,7 @@ export const OlympicWeightliftingSection = ({
               ))}
             </div>
           ) : (
-            <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-xl p-4">
+            <div className={containerPatterns.nestedContent}>
               <div className="text-synthwave-text-secondary font-body text-sm">
                 No Olympic Weightlifting data available. Include lifts, weights,
                 percentages, and attempts when logging.

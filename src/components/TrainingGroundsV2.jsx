@@ -9,7 +9,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { useAuth } from "../auth/contexts/AuthContext";
-import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../hooks/useInlineChatDrawer";
 import { useToast } from "../contexts/ToastContext";
 import {
   containerPatterns,
@@ -54,6 +54,7 @@ import {
 import CoachHeader from "./shared/CoachHeader";
 import PageHeader from "./shared/PageHeader";
 import PageHeaderSkeleton from "./shared/PageHeaderSkeleton";
+import CardSectionHeader from "./shared/CardSectionHeader";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import QuickStats from "./shared/QuickStats";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -146,18 +147,22 @@ function TrainingGroundsV2() {
     error: userIdError,
   } = useAuthorizeUser(userId);
   const { userProfile } = useAuth();
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
   const { success: showSuccess, error: showError } = useToast();
 
   // Derive unit system from user profile preferences (default: imperial)
   const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
-  // Global Command Palette + inline coach drawer (mobile shell visibility)
-  const {
-    setIsCommandPaletteOpen,
-    onCommandPaletteToggle,
-    setIsInlineCoachDrawerOpen,
-  } = useNavigationContext();
+  // Global Command Palette
+  const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
+    useNavigationContext();
 
   const coachAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
@@ -228,16 +233,6 @@ function TrainingGroundsV2() {
   // Component-local UI state
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   const streamClientContext = useMemo(
     () => ({ surface: "training_grounds" }),
@@ -930,23 +925,23 @@ function TrainingGroundsV2() {
 
   const renderConversationsCard = () => (
     <div className={`${containerPatterns.cardMedium} p-6`}>
-      <div className="flex items-start space-x-3 mb-4">
-        <svg
-          className="w-5 h-5 text-synthwave-neon-pink shrink-0 mt-1.5"
-          fill="currentColor"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <polygon points="19 9 19 11 18 11 18 12 16 12 16 11 15 11 15 9 16 9 16 8 18 8 18 9 19 9" />
-          <polygon points="14 9 14 11 13 11 13 12 11 12 11 11 10 11 10 9 11 9 11 8 13 8 13 9 14 9" />
-          <polygon points="9 9 9 11 8 11 8 12 6 12 6 11 5 11 5 9 6 9 6 8 8 8 8 9 9 9" />
-          <path d="m22,2v-1H2v1h-1v16h1v1h6v4h1v-1h1v-1h1v-1h2v-1h9v-1h1V2h-1Zm-1,15H3V3h18v14Z" />
-        </svg>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Recent Conversations
-        </h3>
-      </div>
+      <CardSectionHeader
+        title="Recent Conversations"
+        icon={
+          <svg
+            className="w-5 h-5 text-synthwave-neon-pink"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <polygon points="19 9 19 11 18 11 18 12 16 12 16 11 15 11 15 9 16 9 16 8 18 8 18 9 19 9" />
+            <polygon points="14 9 14 11 13 11 13 12 11 12 11 11 10 11 10 9 11 9 11 8 13 8 13 9 14 9" />
+            <polygon points="9 9 9 11 8 11 8 12 6 12 6 11 5 11 5 9 6 9 6 8 8 8 8 9 9 9" />
+            <path d="m22,2v-1H2v1h-1v16h1v1h6v4h1v-1h1v-1h1v-1h2v-1h9v-1h1V2h-1Zm-1,15H3V3h18v14Z" />
+          </svg>
+        }
+      />
       <div className="space-y-2">
         {conversationAgentState.isLoadingRecentItems ? (
           <div className="space-y-3">
@@ -1025,27 +1020,27 @@ function TrainingGroundsV2() {
 
   const renderWorkoutHistoryCard = () => (
     <div className={`${containerPatterns.cardMedium} p-6`}>
-      <div className="flex items-start space-x-3 mb-4">
-        <svg
-          className="w-5 h-5 text-synthwave-neon-pink shrink-0 mt-1.5"
-          fill="currentColor"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path d="M5.50093 6.50098H3.50047V9.50166H5.50093V6.50098Z" />
-          <path d="M3.50045 9.50195H1.5V15.5033H3.50045V9.50195Z" />
-          <path d="M5.50093 15.5029H3.50047V18.5036H5.50093V15.5029Z" />
-          <path d="M17.5036 18.5039V23.505H5.5009V18.5039H8.50158V20.5044H14.5029V18.5039H17.5036Z" />
-          <path d="M19.5041 15.5029H17.5036V18.5036H19.5041V15.5029Z" />
-          <path d="M23.505 11.5024V13.5029H21.5045V15.5033H19.5041V9.50195H21.5045V11.5024H23.505Z" />
-          <path d="M19.5041 6.50098H17.5036V9.50166H19.5041V6.50098Z" />
-          <path d="M17.5036 1.5V6.50114H14.5029V4.50068H12.5025V13.5027H10.502V4.50068H8.50158V6.50114H5.5009V1.5H17.5036Z" />
-        </svg>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Workout History
-        </h3>
-      </div>
+      <CardSectionHeader
+        title="Workout History"
+        icon={
+          <svg
+            className="w-5 h-5 text-synthwave-neon-pink"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M5.50093 6.50098H3.50047V9.50166H5.50093V6.50098Z" />
+            <path d="M3.50045 9.50195H1.5V15.5033H3.50045V9.50195Z" />
+            <path d="M5.50093 15.5029H3.50047V18.5036H5.50093V15.5029Z" />
+            <path d="M17.5036 18.5039V23.505H5.5009V18.5039H8.50158V20.5044H14.5029V18.5039H17.5036Z" />
+            <path d="M19.5041 15.5029H17.5036V18.5036H19.5041V15.5029Z" />
+            <path d="M23.505 11.5024V13.5029H21.5045V15.5033H19.5041V9.50195H21.5045V11.5024H23.505Z" />
+            <path d="M19.5041 6.50098H17.5036V9.50166H19.5041V6.50098Z" />
+            <path d="M17.5036 1.5V6.50114H14.5029V4.50068H12.5025V13.5027H10.502V4.50068H8.50158V6.50114H5.5009V1.5H17.5036Z" />
+          </svg>
+        }
+      />
       <div className="space-y-2">
         {workoutState.isLoadingRecentItems ? (
           <div className="space-y-3">
@@ -1171,33 +1166,33 @@ function TrainingGroundsV2() {
 
   const renderReportsCard = () => (
     <div className={`${containerPatterns.cardMedium} p-6`}>
-      <div className="flex items-start space-x-3 mb-4">
-        <svg
-          className="w-5 h-5 text-synthwave-neon-purple shrink-0 mt-1.5"
-          fill="currentColor"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <polygon points="10 11 11 11 11 21 10 21 10 22 8 22 8 21 7 21 7 11 8 11 8 10 10 10 10 11" />
-          <rect x="11" y="5" width="1" height="1" />
-          <rect x="12" y="6" width="1" height="1" />
-          <polygon points="16 8 17 8 17 10 16 10 16 11 14 11 14 10 13 10 13 8 14 8 14 7 16 7 16 8" />
-          <polygon points="16 15 17 15 17 21 16 21 16 22 14 22 14 21 13 21 13 15 14 15 14 14 16 14 16 15" />
-          <rect x="17" y="6" width="1" height="1" />
-          <rect x="18" y="5" width="1" height="1" />
-          <polygon points="23 2 23 4 22 4 22 5 20 5 20 4 19 4 19 2 20 2 20 1 22 1 22 2 23 2" />
-          <polygon points="22 11 23 11 23 21 22 21 22 22 20 22 20 21 19 21 19 11 20 11 20 10 22 10 22 11" />
-          <rect x="5" y="7" width="1" height="1" />
-          <polygon points="4 9 5 9 5 11 4 11 4 12 2 12 2 11 1 11 1 9 2 9 2 8 4 8 4 9" />
-          <polygon points="4 16 5 16 5 21 4 21 4 22 2 22 2 21 1 21 1 16 2 16 2 15 4 15 4 16" />
-          <rect x="6" y="6" width="1" height="1" />
-          <polygon points="8 4 7 4 7 2 8 2 8 1 10 1 10 2 11 2 11 4 10 4 10 5 8 5 8 4" />
-        </svg>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Reports & Insights
-        </h3>
-      </div>
+      <CardSectionHeader
+        title="Reports & Insights"
+        icon={
+          <svg
+            className="w-5 h-5 text-synthwave-neon-purple"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <polygon points="10 11 11 11 11 21 10 21 10 22 8 22 8 21 7 21 7 11 8 11 8 10 10 10 10 11" />
+            <rect x="11" y="5" width="1" height="1" />
+            <rect x="12" y="6" width="1" height="1" />
+            <polygon points="16 8 17 8 17 10 16 10 16 11 14 11 14 10 13 10 13 8 14 8 14 7 16 7 16 8" />
+            <polygon points="16 15 17 15 17 21 16 21 16 22 14 22 14 21 13 21 13 15 14 15 14 14 16 14 16 15" />
+            <rect x="17" y="6" width="1" height="1" />
+            <rect x="18" y="5" width="1" height="1" />
+            <polygon points="23 2 23 4 22 4 22 5 20 5 20 4 19 4 19 2 20 2 20 1 22 1 22 2 23 2" />
+            <polygon points="22 11 23 11 23 21 22 21 22 22 20 22 20 21 19 21 19 11 20 11 20 10 22 10 22 11" />
+            <rect x="5" y="7" width="1" height="1" />
+            <polygon points="4 9 5 9 5 11 4 11 4 12 2 12 2 11 1 11 1 9 2 9 2 8 4 8 4 9" />
+            <polygon points="4 16 5 16 5 21 4 21 4 22 2 22 2 21 1 21 1 16 2 16 2 15 4 15 4 16" />
+            <rect x="6" y="6" width="1" height="1" />
+            <polygon points="8 4 7 4 7 2 8 2 8 1 10 1 10 2 11 2 11 4 10 4 10 5 8 5 8 4" />
+          </svg>
+        }
+      />
       <div className="space-y-2">
         {reportsState.isLoadingRecentItems ? (
           <div className="space-y-3">
@@ -1549,20 +1544,20 @@ function TrainingGroundsV2() {
           <div className="md:hidden space-y-6 animate-fade-in-up">
             {/* Active Programs */}
             <div className={`${containerPatterns.cardMedium} p-6`}>
-              <div className="flex items-start space-x-3 mb-4">
-                <svg
-                  className="w-5 h-5 text-synthwave-neon-cyan shrink-0 mt-1.5"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
-                </svg>
-                <h3 className="font-header font-bold text-white text-lg uppercase">
-                  Active Programs
-                </h3>
-              </div>
+              <CardSectionHeader
+                title="Active Programs"
+                icon={
+                  <svg
+                    className="w-5 h-5 text-synthwave-neon-cyan"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
+                  </svg>
+                }
+              />
               <ProgramList
                 programs={programs}
                 isLoading={isLoadingPrograms}
@@ -1594,20 +1589,20 @@ function TrainingGroundsV2() {
               {renderReportsCard()}
 
               <div className={`${containerPatterns.cardMedium} p-6`}>
-                <div className="flex items-start space-x-3 mb-4">
-                  <svg
-                    className="w-5 h-5 text-synthwave-neon-cyan shrink-0 mt-1.5"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
-                  </svg>
-                  <h3 className="font-header font-bold text-white text-lg uppercase">
-                    Active Programs
-                  </h3>
-                </div>
+                <CardSectionHeader
+                  title="Active Programs"
+                  icon={
+                    <svg
+                      className="w-5 h-5 text-synthwave-neon-cyan"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="m22,2v-1H2v1h-1v20h1v1h20v-1h1V2h-1Zm-9,12v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Zm-9,6v-4h7v4h-7Zm7,2v4h-7v-4h7Zm-7-8v-4h7v4h-7Z" />
+                    </svg>
+                  }
+                />
                 <ProgramList
                   programs={programs}
                   isLoading={isLoadingPrograms}
@@ -1676,7 +1671,7 @@ function TrainingGroundsV2() {
             tooltip="Chat with coach"
           />
           <ContextualChatDrawer
-            variant="trainingGroundsInlineChat"
+            variant="inlineChat"
             inlineConversationTag={INLINE_TRAINING_GROUNDS_TAG}
             inlineSessionKey={getTrainingGroundsInlineSessionKey(
               userId,

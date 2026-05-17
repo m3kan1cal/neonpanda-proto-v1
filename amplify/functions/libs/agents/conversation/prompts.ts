@@ -132,6 +132,20 @@ export function buildConversationAgentPrompt(
      */
     programCalendarWindow?: ProgramCalendarWindow | null;
     /**
+     * Non-program-scoped UI surface the user opened the chat from. When set,
+     * a short framing block is appended to the dynamic prompt so the agent
+     * knows which page the user is looking at and steers tool selection
+     * accordingly. Program-scoped surfaces (`program_dashboard`,
+     * `view_workouts`) are handled separately via `sessionProgramContext` and
+     * should NOT be passed here.
+     */
+    inlineSurface?:
+      | "manage_workouts"
+      | "manage_exercises"
+      | "manage_memories"
+      | "manage_conversations"
+      | "manage_shared_programs";
+    /**
      * Single shared "now" instant used by every temporal computation in this
      * prompt build (and by anything else the caller derived from the same
      * instant, e.g. the program calendar window). Passing one shared value
@@ -512,6 +526,23 @@ ${surfaceFraming}
 
 - Program ID: ${safeId}
 - Program name: ${safeName}${sp.dayNumber != null ? `\n- Day in focus: ${sp.dayNumber}` : ""}`);
+  } else if (options.inlineSurface) {
+    const inlineSurfaceFraming: Record<NonNullable<typeof options.inlineSurface>, string> = {
+      manage_workouts:
+        "The user opened this chat from the **Manage Workouts** page — they're browsing their full workout history. Lean on `query_workouts` and `get_workout` for history and lookup questions, and on `query_exercise_history` when they ask about specific lifts or movements.",
+      manage_exercises:
+        "The user opened this chat from the **Manage Exercises** page — they're reviewing their exercise library and PRs. Lean on `query_exercise_history` for performance questions and to compare progress over time.",
+      manage_memories:
+        "The user opened this chat from the **Manage Memories** page — they're reviewing the long-term notes you keep about them. Be ready to discuss what's there, recall specific memories, or help them add or refine entries.",
+      manage_conversations:
+        "The user opened this chat from the **Manage Conversations** page — they're reviewing past chats with you. Help them locate, summarize, or follow up on prior threads.",
+      manage_shared_programs:
+        "The user opened this chat from the **Shared Programs** page — they're reviewing programs they've shared or that have been shared with them. Frame answers around program sharing, discovery, and comparison rather than their own active training plan.",
+    };
+
+    dynamicSections.push(`## SESSION UI CONTEXT
+
+${inlineSurfaceFraming[options.inlineSurface]}`);
   }
 
   // Section 6: Emotional Context (conditional — dynamic, changes each session)

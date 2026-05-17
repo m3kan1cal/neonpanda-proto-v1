@@ -1,7 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useInlineChatDrawer } from "../hooks/useInlineChatDrawer";
+import ContextualChatDrawer from "./shared/ContextualChatDrawer";
+import EntityChatFAB from "./shared/EntityChatFAB";
+import {
+  INLINE_MANAGE_WORKOUTS_TAG,
+  getManageWorkoutsInlineSessionKey,
+} from "../constants/contextualChat";
 import {
   containerPatterns,
   badgePatterns,
@@ -114,6 +121,30 @@ function ManageWorkouts() {
   // Global Command Palette state
   const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
     useNavigationContext();
+
+  // Inline coach chat drawer state + user avatar props
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
+
+  const inlineConversationTag = INLINE_MANAGE_WORKOUTS_TAG;
+  const inlineSessionKey = useMemo(
+    () =>
+      userId && coachId
+        ? getManageWorkoutsInlineSessionKey(userId, coachId)
+        : null,
+    [userId, coachId],
+  );
+  const newChatThreadTitle = "Manage Workouts";
+  const streamClientContext = useMemo(
+    () => ({ surface: "manage_workouts" }),
+    [],
+  );
 
   // Coach data state
   const [coachData, setCoachData] = useState(null);
@@ -643,7 +674,7 @@ function ManageWorkouts() {
               {dateInfo.date} · {dateInfo.time}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:items-center sm:gap-4">
+          <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-4">
             <div className="flex items-center gap-1.5 font-body text-sm">
               <span className="text-synthwave-text-muted">Duration:</span>
               <span className="text-synthwave-neon-cyan font-medium">
@@ -856,8 +887,9 @@ function ManageWorkouts() {
               >
                 <div className="text-center flex flex-col items-center">
                   <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
-                  <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
+                  <div className="h-7 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-1.5"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40"></div>
                 </div>
               </div>
               {/* Workout Card Skeletons */}
@@ -889,9 +921,9 @@ function ManageWorkouts() {
 
                   {/* Badge Row */}
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-16"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-12"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-20"></div>
                   </div>
                 </div>
               ))}
@@ -906,8 +938,9 @@ function ManageWorkouts() {
                 >
                   <div className="text-center flex flex-col items-center">
                     <div className="w-10 h-10 bg-synthwave-neon-pink/20 animate-pulse rounded-xl mb-2"></div>
-                    <div className="h-5 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56"></div>
+                    <div className="h-7 bg-synthwave-neon-pink/20 animate-pulse rounded-xl w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-56 mb-1.5"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 animate-pulse rounded-xl w-40"></div>
                   </div>
                 </div>
                 {/* Workout Card Skeletons */}
@@ -939,9 +972,9 @@ function ManageWorkouts() {
 
                     {/* Badge Row */}
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-12"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -977,9 +1010,9 @@ function ManageWorkouts() {
 
                     {/* Badge Row */}
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-16"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-12"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-12"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 animate-pulse rounded-full w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -1435,6 +1468,33 @@ function ManageWorkouts() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Inline coach chat (mirrors Training Pulse / Training Grounds wiring) */}
+      {coachData && (
+        <>
+          <EntityChatFAB
+            onClick={() => setIsInlineChatDrawerOpen(true)}
+            isOpen={isInlineChatDrawerOpen}
+            tooltip="Chat with coach"
+          />
+          <ContextualChatDrawer
+            variant="inlineChat"
+            inlineConversationTag={inlineConversationTag}
+            inlineSessionKey={inlineSessionKey}
+            isOpen={isInlineChatDrawerOpen}
+            onClose={closeInlineCoachDrawer}
+            entityLabel="Manage Workouts"
+            userId={userId}
+            coachId={coachId}
+            coachData={coachData}
+            userInitial={userInitial}
+            userEmail={userEmail}
+            userDisplayName={userDisplayName}
+            newConversationTitle={newChatThreadTitle}
+            streamClientContext={streamClientContext}
+          />
+        </>
+      )}
     </>
   );
 }

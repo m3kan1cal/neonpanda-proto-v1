@@ -386,3 +386,64 @@ describe("buildConversationAgentPrompt — view_workouts surface framing", () =>
     expect(dynamicPrompt).not.toMatch(/historical-performance questions/i);
   });
 });
+
+describe("buildConversationAgentPrompt — inlineSurface framing", () => {
+  const cases = [
+    {
+      surface: "manage_workouts" as const,
+      label: "Manage Workouts",
+      tool: "query_workouts",
+    },
+    {
+      surface: "manage_exercises" as const,
+      label: "Manage Exercises",
+      tool: "query_exercise_history",
+    },
+    {
+      surface: "manage_memories" as const,
+      label: "Manage Memories",
+    },
+    {
+      surface: "manage_conversations" as const,
+      label: "Manage Conversations",
+    },
+    {
+      surface: "manage_shared_programs" as const,
+      label: "Shared Programs",
+    },
+  ];
+
+  it.each(cases)(
+    "injects a SESSION UI CONTEXT block for inlineSurface=$surface",
+    ({ surface, label, tool }) => {
+      const { dynamicPrompt } = buildConversationAgentPrompt(
+        makeCoachConfig(),
+        {
+          userTimezone: "America/Los_Angeles",
+          inlineSurface: surface,
+        },
+      );
+
+      expect(dynamicPrompt).toContain("## SESSION UI CONTEXT");
+      expect(dynamicPrompt).toContain(`**${label}** page`);
+      if (tool) {
+        expect(dynamicPrompt).toContain(tool);
+      }
+    },
+  );
+
+  it("does not inject inline framing when sessionProgramContext is set", () => {
+    const { dynamicPrompt } = buildConversationAgentPrompt(makeCoachConfig(), {
+      userTimezone: "America/Los_Angeles",
+      inlineSurface: "manage_workouts",
+      sessionProgramContext: {
+        programId: "p_test",
+        programName: "Test Program",
+        surface: "program_dashboard",
+      },
+    });
+
+    expect(dynamicPrompt).not.toContain("**Manage Workouts** page");
+    expect(dynamicPrompt).toContain("**Program Dashboard**");
+  });
+});

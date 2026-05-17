@@ -31,7 +31,12 @@ export type ConversationClientContext =
       reportType: "weekly" | "monthly";
     }
   | { surface: "weekly_report"; weekId: string }
-  | { surface: "monthly_report"; monthId: string };
+  | { surface: "monthly_report"; monthId: string }
+  | { surface: "manage_workouts" }
+  | { surface: "manage_exercises" }
+  | { surface: "manage_memories" }
+  | { surface: "manage_conversations" }
+  | { surface: "manage_shared_programs" };
 
 /**
  * Parse and validate request body from streaming event.
@@ -91,6 +96,11 @@ const ALLOWED_CLIENT_CONTEXT_SURFACES = [
   "reports_list",
   "weekly_report",
   "monthly_report",
+  "manage_workouts",
+  "manage_exercises",
+  "manage_memories",
+  "manage_conversations",
+  "manage_shared_programs",
 ] as const;
 
 const TRAINING_PULSE_TIME_RANGES: readonly TrainingPulseTimeRange[] = [
@@ -141,6 +151,11 @@ export function validateConversationClientContext(
     "reports_list",
     "weekly_report",
     "monthly_report",
+    "manage_workouts",
+    "manage_exercises",
+    "manage_memories",
+    "manage_conversations",
+    "manage_shared_programs",
   ]);
   if (NON_PROGRAM_SURFACES.has(surface as string) && raw.programId !== undefined) {
     throw new Error(
@@ -150,6 +165,22 @@ export function validateConversationClientContext(
 
   if (surface === "training_grounds") {
     return { surface: "training_grounds" };
+  }
+
+  if (surface === "manage_workouts") {
+    return { surface: "manage_workouts" };
+  }
+  if (surface === "manage_exercises") {
+    return { surface: "manage_exercises" };
+  }
+  if (surface === "manage_memories") {
+    return { surface: "manage_memories" };
+  }
+  if (surface === "manage_conversations") {
+    return { surface: "manage_conversations" };
+  }
+  if (surface === "manage_shared_programs") {
+    return { surface: "manage_shared_programs" };
   }
 
   if (surface === "training_pulse") {

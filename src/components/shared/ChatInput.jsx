@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Tooltip } from "react-tooltip";
-import EmojiPicker from "emoji-picker-react";
 import {
   buttonPatterns,
   inputPatterns,
@@ -17,7 +16,6 @@ import {
   PlusIcon,
   CameraIcon,
   PaperclipIcon,
-  SmileIcon,
   MicIcon,
   XIcon,
   TrashIcon,
@@ -226,12 +224,12 @@ const QUICK_PROMPTS = {
 function ChatInputSkeleton() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-2 sm:py-6">
         <div className="w-full rounded-xl bg-synthwave-bg-primary/50 border border-synthwave-neon-pink/30">
-          <div className="px-4 pt-3 pb-2 min-h-[80px]">
+          <div className="px-4 pt-2 pb-1.5 md:pt-3 md:pb-2 min-h-[60px] md:min-h-[80px]">
             <div className="h-4 bg-synthwave-text-muted/15 rounded animate-pulse w-1/3"></div>
           </div>
-          <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
+          <div className="flex items-center justify-between pl-3 pr-2 py-1 md:py-1.5 border-t border-synthwave-neon-pink/10">
             <div className="w-7 h-7 bg-synthwave-text-muted/15 rounded-xl animate-pulse"></div>
             <div className="flex items-center gap-1">
               <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
@@ -318,6 +316,13 @@ function ChatInput({
 
   // Compact mode — tighter padding and smaller send button for narrow contexts (e.g. drawer)
   compact = false,
+
+  // Optional ref attached to the outer fixed container. When provided in
+  // compact mode, the parent owns height measurement and we skip publishing
+  // the shared `--drawer-chat-input-height` CSS variable — prevents two
+  // compact ChatInputs (drawer's hidden desktop panel + visible mobile panel)
+  // from racing on `document.querySelector` and writing 0px.
+  containerRef = null,
 }) {
   // Get context-appropriate prompts
   const currentPrompts = QUICK_PROMPTS[context] || QUICK_PROMPTS.default;
@@ -330,7 +335,6 @@ function ChatInput({
   const [showTipsModal, setShowTipsModal] = useState(false);
   const [showQuickActionsPopup, setShowQuickActionsPopup] = useState(false);
   const [showQuickPromptsSubmenu, setShowQuickPromptsSubmenu] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const isSendingMessage = useRef(false);
   const photoInputRef = useRef(null);
 
@@ -401,26 +405,6 @@ function ChatInput({
     setShowQuickPromptsSubmenu(false);
 
     // Focus the editor after a brief delay
-    setTimeout(() => {
-      if (editorRef.current) {
-        editorRef.current.focus();
-      }
-    }, 50);
-  };
-
-  // Handle emoji selection
-  const handleEmojiClick = (emojiData) => {
-    // Insert emoji into editor directly
-    if (editorRef.current?.editor) {
-      editorRef.current.editor.commands.insertContent(emojiData.emoji);
-      // Sync state from editor content
-      setInputMessage(editorRef.current.getText());
-    } else {
-      setInputMessage((prevMessage) => prevMessage + emojiData.emoji);
-    }
-    setShowEmojiPicker(false);
-
-    // Focus the editor after emoji selection
     setTimeout(() => {
       if (editorRef.current) {
         editorRef.current.focus();
@@ -528,7 +512,7 @@ function ChatInput({
     }
   }, [inputMessage, enableSlashCommands, availableSlashCommands.length]);
 
-  // Handle Escape key and outside clicks for quick actions popup and emoji picker
+  // Handle Escape key and outside clicks for quick actions popup
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === "Escape") {
@@ -536,8 +520,6 @@ function ChatInput({
           setShowQuickPromptsSubmenu(false);
         } else if (showQuickActionsPopup) {
           setShowQuickActionsPopup(false);
-        } else if (showEmojiPicker) {
-          setShowEmojiPicker(false);
         }
       }
     };
@@ -561,23 +543,9 @@ function ChatInput({
           setShowQuickPromptsSubmenu(false);
         }
       }
-
-      if (showEmojiPicker) {
-        // Check if the click is outside the emoji picker container
-        const emojiPickerContainer = document.querySelector(
-          "[data-emoji-picker-container]",
-        );
-
-        if (
-          emojiPickerContainer &&
-          !emojiPickerContainer.contains(event.target)
-        ) {
-          setShowEmojiPicker(false);
-        }
-      }
     };
 
-    if (showQuickActionsPopup || showQuickPromptsSubmenu || showEmojiPicker) {
+    if (showQuickActionsPopup || showQuickPromptsSubmenu) {
       document.addEventListener("keydown", handleEscapeKey);
       document.addEventListener("click", handleClickOutside, true); // Use capture phase
     }
@@ -586,7 +554,7 @@ function ChatInput({
       document.removeEventListener("keydown", handleEscapeKey);
       document.removeEventListener("click", handleClickOutside, true);
     };
-  }, [showQuickActionsPopup, showQuickPromptsSubmenu, showEmojiPicker]);
+  }, [showQuickActionsPopup, showQuickPromptsSubmenu]);
 
   // Debug log for progress changes
 
@@ -719,18 +687,26 @@ function ChatInput({
     ],
   );
 
-  // Update CSS custom property for chat input height
+  // Update CSS custom property for chat input height.
+  // Drawer (compact) publishes its own variable so it doesn't collide with the
+  // full-page surfaces when both might mount in the same document.
+  // When the caller supplies a `containerRef` in compact mode the parent owns
+  // measurement directly (per-panel ResizeObserver) — skip the shared CSS
+  // variable to avoid `document.querySelector` racing between hidden + visible
+  // panels and resolving to a 0-height element.
   React.useEffect(() => {
+    if (compact && containerRef) return;
+
+    const cssVar = compact ? "--drawer-chat-input-height" : "--chat-input-height";
+    const selector = compact
+      ? "[data-drawer-chat-input-container]"
+      : "[data-chat-input-container]";
+
     const updateChatInputHeight = () => {
-      const chatInputElement = document.querySelector(
-        "[data-chat-input-container]",
-      );
+      const chatInputElement = document.querySelector(selector);
       if (chatInputElement) {
         const height = chatInputElement.offsetHeight;
-        document.documentElement.style.setProperty(
-          "--chat-input-height",
-          `${height}px`,
-        );
+        document.documentElement.style.setProperty(cssVar, `${height}px`);
       }
     };
 
@@ -738,9 +714,7 @@ function ChatInput({
     updateChatInputHeight();
 
     // Use ResizeObserver to track height changes
-    const chatInputElement = document.querySelector(
-      "[data-chat-input-container]",
-    );
+    const chatInputElement = document.querySelector(selector);
     if (chatInputElement) {
       const resizeObserver = new ResizeObserver(updateChatInputHeight);
       resizeObserver.observe(chatInputElement);
@@ -750,6 +724,8 @@ function ChatInput({
       };
     }
   }, [
+    compact,
+    containerRef,
     inputMessage,
     isRecording,
     showTipsModal,
@@ -765,12 +741,15 @@ function ChatInput({
 
   return (
     <div
+      ref={containerRef}
       className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
-      data-chat-input-container
+      {...(compact
+        ? { "data-drawer-chat-input-container": "" }
+        : { "data-chat-input-container": "" })}
     >
       <div
         className={
-          compact ? "px-3 py-2" : "max-w-6xl mx-auto px-4 sm:px-8 py-3 sm:py-6"
+          compact ? "px-3 py-2" : "max-w-6xl mx-auto px-4 sm:px-8 py-2 sm:py-6"
         }
       >
         {/* Attachment Preview Grid — images and documents share one row */}
@@ -1008,20 +987,26 @@ function ChatInput({
                   setInputMessage(text);
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={
-                  window.innerWidth < 768 ? "Talk to me..." : placeholder
-                }
+                placeholder={placeholder}
                 disabled={isTyping}
                 mode="rich"
-                className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
-                minHeight={editorMinHeight}
+                className={`${inputPatterns.chatInput} ${
+                  compact ? "!text-sm" : ""
+                } ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
+                minHeight={
+                  !compact &&
+                  typeof window !== "undefined" &&
+                  window.innerWidth < 768
+                    ? "40px"
+                    : editorMinHeight
+                }
                 maxHeight={editorMaxHeight}
                 scrollOnWrapper={true}
                 onPaste={handlePaste}
               />
 
               {/* Button row: actions on left, controls on right */}
-              <div className="flex items-center justify-between pl-3 pr-2 py-1.5 border-t border-synthwave-neon-pink/10">
+              <div className="flex items-center justify-between pl-3 pr-2 py-1 md:py-1.5 border-t border-synthwave-neon-pink/10">
                 {/* Left: actions menu button */}
                 <div className="relative" data-quick-actions-container>
                   <button
@@ -1287,177 +1272,6 @@ function ChatInput({
                     </div>
                   )}
 
-                  {/* Emoji picker */}
-                  <div className="relative" data-emoji-picker-container>
-                    <button
-                      type="button"
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className={`p-1 rounded-xl text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 cursor-pointer ${
-                        showEmojiPicker
-                          ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                          : ""
-                      }`}
-                      data-tooltip-id="emoji-tooltip"
-                      data-tooltip-content="Emojis"
-                      data-tooltip-place="top"
-                    >
-                      <SmileIcon />
-                    </button>
-
-                    {/* Emoji Picker Popup */}
-                    {showEmojiPicker && (
-                      <div className="absolute bottom-14 right-0 z-50">
-                        <div
-                          className={`${containerPatterns.cardMediumOpaque} overflow-hidden emoji-picker-synthwave`}
-                        >
-                          <style>{`
-                            .emoji-picker-synthwave .epr-emoji-category-label {
-                              font-family: 'Rajdhani', sans-serif !important;
-                              font-size: 0.75rem !important;
-                              font-weight: 500 !important;
-                              color: #b4b4b4 !important;
-                              text-transform: uppercase !important;
-                              letter-spacing: 0.05em !important;
-                              background-color: transparent !important;
-                              padding: 8px 12px 4px 12px !important;
-                              margin: 0 !important;
-                            }
-
-                            .emoji-picker-synthwave .epr-search-container input {
-                              font-family: 'Rajdhani', sans-serif !important;
-                              font-size: 1rem !important;
-                              background-color: rgba(10, 10, 10, 0.5) !important;
-                              border: 2px solid rgba(255, 0, 128, 0.3) !important;
-                              border-radius: 8px !important;
-                              color: #ffffff !important;
-                              outline: none !important;
-                              box-shadow: none !important;
-                              transition: border-color 300ms !important;
-                              padding: 12px 16px 12px 36px !important;
-                              height: 48px !important;
-                            }
-
-                            .emoji-picker-synthwave .epr-search-container input:hover {
-                              border-color: rgba(255, 0, 128, 0.5) !important;
-                            }
-
-                            .emoji-picker-synthwave .epr-search-container input:focus {
-                              border-color: rgb(255, 0, 128) !important;
-                              background-color: rgba(10, 10, 10, 0.5) !important;
-                              outline: none !important;
-                              box-shadow: none !important;
-                            }
-
-                            .emoji-picker-synthwave .epr-search-container input::placeholder {
-                              color: #666666 !important;
-                            }
-
-                            /* Cyan scrollbar styling */
-                            .emoji-picker-synthwave ::-webkit-scrollbar {
-                              width: 6px !important;
-                            }
-
-                            .emoji-picker-synthwave ::-webkit-scrollbar-track {
-                              background: rgba(21, 23, 35, 0.5) !important;
-                            }
-
-                            .emoji-picker-synthwave ::-webkit-scrollbar-thumb {
-                              background: rgba(0, 255, 255, 0.3) !important;
-                              border-radius: 3px !important;
-                            }
-
-                            .emoji-picker-synthwave ::-webkit-scrollbar-thumb:hover {
-                              background: rgba(0, 255, 255, 0.5) !important;
-                            }
-                          `}</style>
-                          <EmojiPicker
-                            onEmojiClick={handleEmojiClick}
-                            theme="dark"
-                            searchPlaceHolder="Search emojis..."
-                            width={350}
-                            height={450}
-                            emojiStyle="native"
-                            previewConfig={{
-                              showPreview: false,
-                            }}
-                            skinTonesDisabled
-                            searchDisabled={false}
-                            categories={[
-                              {
-                                category: "suggested",
-                                name: "Recently Used",
-                              },
-                              {
-                                category: "activities",
-                                name: "Fitness & Activities",
-                              },
-                              {
-                                category: "smileys_people",
-                                name: "Smileys & People",
-                              },
-                              {
-                                category: "food_drink",
-                                name: "Food & Drink",
-                              },
-                              {
-                                category: "objects",
-                                name: "Objects",
-                              },
-                              {
-                                category: "animals_nature",
-                                name: "Animals & Nature",
-                              },
-                              {
-                                category: "travel_places",
-                                name: "Travel & Places",
-                              },
-                              {
-                                category: "symbols",
-                                name: "Symbols",
-                              },
-                              {
-                                category: "flags",
-                                name: "Flags",
-                              },
-                            ]}
-                            style={{
-                              "--epr-bg-color": "transparent",
-                              "--epr-category-label-bg-color": "transparent",
-                              "--epr-picker-border-color": "transparent",
-                              "--epr-search-input-bg-color":
-                                "rgba(10, 10, 10, 0.5)",
-                              "--epr-search-input-bg-color-active":
-                                "rgba(10, 10, 10, 0.7)",
-                              "--epr-search-input-border-color":
-                                "rgba(0, 255, 255, 0.2)",
-                              "--epr-search-input-border-color-active":
-                                "rgba(0, 255, 255, 0.5)",
-                              "--epr-hover-bg-color": "rgba(0, 255, 255, 0.15)",
-                              "--epr-focus-bg-color": "rgba(0, 255, 255, 0.2)",
-                              "--epr-text-color": "#b4b4b4",
-                              "--epr-search-input-text-color": "#f1f5f9",
-                              "--epr-search-input-placeholder-color": "#666666",
-                              "--epr-category-icon-active-color": "#00ffff",
-                              "--epr-skin-tone-picker-menu-color":
-                                "rgba(30, 30, 46, 0.95)",
-                              "--epr-emoji-size": "24px",
-                              "--epr-emoji-padding": "4px",
-                              "--epr-category-padding": "8px",
-                              "--epr-header-padding": "12px",
-                              "--epr-search-input-height": "40px",
-                              "--epr-search-input-padding": "12px",
-                              "--epr-category-label-height": "auto",
-                              fontSize: "0.75rem",
-                              fontFamily: "Rajdhani, sans-serif",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.05em",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Send/Voice button */}
                   {inputMessage.trim() ||
                   selectedImages.length > 0 ||
@@ -1507,7 +1321,6 @@ function ChatInput({
               </div>
             </div>
 
-            <Tooltip id="emoji-tooltip" {...tooltipPatterns.standard} />
             <Tooltip id="quick-actions-tooltip" {...tooltipPatterns.standard} />
             {(progressData || conversationSize) && (
               <Tooltip

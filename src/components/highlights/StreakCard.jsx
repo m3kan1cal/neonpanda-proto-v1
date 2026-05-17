@@ -1,6 +1,7 @@
 import React from "react";
 import { containerPatterns } from "../../utils/ui/uiPatterns";
 import { FireIconSmall } from "../themes/SynthwaveComponents";
+import CardSectionHeader from "../shared/CardSectionHeader";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -50,14 +51,14 @@ export default function StreakCard({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Header */}
-      <div className="flex items-start space-x-3 mb-4">
-        <span className="shrink-0 mt-1.5 text-synthwave-neon-pink">
-          <FireIconSmall />
-        </span>
-        <h3 className="font-header font-bold text-white text-lg uppercase">
-          Streak
-        </h3>
-      </div>
+      <CardSectionHeader
+        title="Streak"
+        icon={
+          <span className="text-synthwave-neon-pink">
+            <FireIconSmall />
+          </span>
+        }
+      />
 
       {/* Streak numbers: current and best */}
       <div className="flex items-baseline gap-6 mb-4">

@@ -301,7 +301,7 @@ export const inputPatterns = {
 
   // Chat input editor area - no border (border lives on chatInputWrapper), no padding reservations for buttons
   chatInput:
-    "w-full px-4 pt-3 pb-2 text-base md:text-sm text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
+    "w-full px-4 pt-2 pb-1.5 md:pt-3 md:pb-2 text-base md:text-sm text-synthwave-text-primary font-body outline-none ring-0 focus-within:outline-none focus-within:ring-0 placeholder-synthwave-text-muted synthwave-scrollbar box-border",
 
   // Command palette input field - same styling but without right padding
   commandInput:
@@ -600,6 +600,12 @@ export const containerPatterns = {
   // Coach notes section - Styled exactly like workout description container (matches TodaysWorkoutCard phase subcontainer)
   coachNotesSection:
     "rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 px-4 py-4",
+
+  // Nested content box inside a cardMedium section. Desktop: bordered, tinted box (matches the
+  // recurring inline pattern in WorkoutViewer.jsx). Mobile (< md): unstyled so text inherits the
+  // outer card's padding instead of double-nesting.
+  nestedContent:
+    "md:p-4 md:bg-synthwave-bg-primary/30 md:border md:border-synthwave-neon-cyan/20 md:rounded-xl",
 
   // Modern delete modal container - 2025 glassmorphism with red destructive theming
   deleteModal:
@@ -1294,6 +1300,14 @@ export const contextualDrawerPatterns = {
   panelMobile:
     "fixed inset-0 z-[70] flex flex-col bg-synthwave-gradient transition-transform duration-300 ease-out pt-[env(safe-area-inset-top)] overscroll-contain",
 
+  // Opaque backstop behind the mobile panel. Uses 100lvh so it spans the full
+  // pre-keyboard viewport height — when the on-screen keyboard opens and the
+  // layout viewport shrinks, the panel's `inset-0` shrinks with it, but this
+  // backdrop keeps painting behind/around the keyboard area so page content
+  // never bleeds through.
+  panelMobileBackdrop:
+    "fixed inset-0 h-[100lvh] z-[69] bg-synthwave-bg-primary transition-opacity duration-300 ease-out pointer-events-none lg:hidden",
+
   // Panel header — entity name, edit badge, close button
   header:
     "flex items-center gap-3 px-3 py-3 border-b border-synthwave-neon-cyan/15 bg-synthwave-bg-primary/20 shrink-0",
@@ -1302,18 +1316,18 @@ export const contextualDrawerPatterns = {
   headerLabel:
     "flex-1 min-w-0 font-header font-bold text-white uppercase truncate",
 
-  // Scrollable message area
+  // Scrollable message area. Bottom padding is applied inline by the consumer
+  // using `--drawer-chat-input-height` so the gap above the input tracks the
+  // input's actual height (same pattern as full-page chat surfaces).
   messageArea:
-    "flex-1 overflow-y-auto overscroll-contain px-6 pt-3 pb-64 space-y-4 custom-scrollbar-cyan",
+    "flex-1 overflow-y-auto overscroll-contain px-6 pt-3 space-y-4 custom-scrollbar-cyan",
 
   // Pinned input area at bottom
   inputArea:
     "shrink-0 border-t border-synthwave-neon-cyan/10 bg-synthwave-bg-card/80 text-sm",
 
-  // AI message — plain text style matching CoachConversations (no bubble)
-  // text-base brings the drawer to parity with the full-page CoachConversations
-  // chat font size so users don't perceive a noticeable drop-down when chatting
-  // inline. Markdown-rendered code/tables stay text-sm by intention (contrast).
+  // AI message — plain text style matching CoachConversations (no bubble).
+  // Markdown-rendered code/tables stay text-sm by intention (contrast).
   aiMessage:
     "font-ai text-base leading-relaxed text-synthwave-text-secondary break-words w-full min-w-0",
 

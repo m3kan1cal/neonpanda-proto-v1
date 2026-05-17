@@ -529,7 +529,7 @@ export const CyclingSection = ({
       {/* Section: Cycling Details */}
       <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
         <div
-          className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+          className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
             collapsedSections.has(detailsId) ? "rounded-xl" : "rounded-t-xl"
           }`}
           onClick={() => toggleCollapse(detailsId)}
@@ -552,7 +552,7 @@ export const CyclingSection = ({
           </svg>
         </div>
         {!collapsedSections.has(detailsId) && (
-          <div className="px-6 pb-6">
+          <div className="px-4 pb-4 md:px-6 md:pb-6">
             <CyclingDetails
               cyclingData={cyclingData}
               containerPatterns={containerPatterns}
@@ -565,7 +565,7 @@ export const CyclingSection = ({
       {cyclingData?.segments?.length > 0 && (
         <div className={`${containerPatterns.cardMedium} overflow-hidden mt-6`}>
           <div
-            className={`flex items-start justify-between p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
+            className={`flex items-start justify-between p-4 md:p-6 cursor-pointer hover:bg-synthwave-bg-card/40 transition-all duration-300 ${
               collapsedSections.has(segmentsId) ? "rounded-xl" : "rounded-t-xl"
             }`}
             onClick={() => toggleCollapse(segmentsId)}
@@ -588,7 +588,7 @@ export const CyclingSection = ({
             </svg>
           </div>
           {!collapsedSections.has(segmentsId) && (
-            <div className="px-6 pb-6">
+            <div className="px-4 pb-4 md:px-6 md:pb-6">
               <div className="space-y-3">
                 {cyclingData.segments.map((segment, index) => (
                   <CyclingSegmentDisplay

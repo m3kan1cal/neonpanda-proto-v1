@@ -829,7 +829,7 @@ function Settings() {
                         <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                         <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                       </div>
-                      <div className="h-12 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
+                      <div className="h-12 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
                     </div>
                   </div>
                 </div>
@@ -910,7 +910,7 @@ function Settings() {
                       <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                       <div className="h-48 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
                     </div>
-                    <div className="h-12 bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
+                    <div className="h-12 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
                   </div>
                 ) : (
                   <div className="space-y-6 pb-4">

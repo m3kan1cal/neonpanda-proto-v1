@@ -1,14 +1,8 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../hooks/useInlineChatDrawer";
 import { AccessDenied } from "./shared/AccessDenied";
 import ContextualChatDrawer from "./shared/ContextualChatDrawer";
 import EntityChatFAB from "./shared/EntityChatFAB";
@@ -103,27 +97,23 @@ function ViewReports() {
     error: userIdError,
   } = useAuthorizeUser(userId);
 
-  // Command palette state
   // Global Command Palette state
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Coach data state (for FloatingMenuManager)
   const [coachData, setCoachData] = useState(null);
 
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
-
-  // Inline coach chat drawer state. One home thread per (userId, coachId);
-  // active tab (weekly | monthly) is forwarded as runtime context so the
-  // agent always knows which list the user is browsing.
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
+  // Inline coach chat drawer state + user avatar props. One home thread per
+  // (userId, coachId); active tab (weekly | monthly) is forwarded as runtime
+  // context so the agent always knows which list the user is browsing.
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
   const reportAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -490,7 +480,7 @@ function ViewReports() {
               Monthly Report
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Confidence:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
@@ -500,7 +490,7 @@ function ViewReports() {
                   : "Low"}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Generated:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {createdAt}
@@ -656,7 +646,7 @@ function ViewReports() {
               {weekStart} - {weekEnd}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Confidence:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
@@ -666,7 +656,7 @@ function ViewReports() {
                   : "Low"}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 font-body text-sm">
+          <div className="hidden sm:flex items-center gap-1.5 font-body text-sm">
             <span className="text-synthwave-text-muted">Generated:</span>
             <span className="text-synthwave-neon-cyan font-medium">
               {createdAt}
@@ -1256,7 +1246,7 @@ function ViewReports() {
             tooltip="Chat with coach"
           />
           <ContextualChatDrawer
-            variant="trainingGroundsInlineChat"
+            variant="inlineChat"
             inlineConversationTag={inlineConversationTag}
             inlineSessionKey={inlineSessionKey}
             isOpen={isInlineChatDrawerOpen}

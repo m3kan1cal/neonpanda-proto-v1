@@ -10,7 +10,7 @@ import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import { CoachAgent } from "../../utils/agents/CoachAgent";
 import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
-import { useUserAvatarProps } from "../../auth/hooks/useUserAvatarProps";
+import { useInlineChatDrawer } from "../../hooks/useInlineChatDrawer";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import PageHeader from "../shared/PageHeader";
 import PageHeaderSkeleton from "../shared/PageHeaderSkeleton";
@@ -63,7 +63,14 @@ export default function ProgramDashboard() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const { userInitial, userEmail, userDisplayName } = useUserAvatarProps();
+  const {
+    isOpen: isInlineChatDrawerOpen,
+    setIsOpen: setIsInlineChatDrawerOpen,
+    close: closeInlineCoachDrawer,
+    userInitial,
+    userEmail,
+    userDisplayName,
+  } = useInlineChatDrawer();
 
   const [program, setProgram] = useState(null);
   const [programDetails, setProgramDetails] = useState(null);
@@ -77,7 +84,6 @@ export default function ProgramDashboard() {
   const [error, setError] = useState(null);
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [isInlineChatDrawerOpen, setIsInlineChatDrawerOpen] = useState(false);
   const [conversationAgentState, setConversationAgentState] = useState({
     totalMessages: 0,
     isLoadingConversationCount: false,
@@ -86,18 +92,8 @@ export default function ProgramDashboard() {
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
-  const { setIsCommandPaletteOpen, setIsInlineCoachDrawerOpen } =
-    useNavigationContext();
+  const { setIsCommandPaletteOpen } = useNavigationContext();
   const toast = useToast();
-
-  const closeInlineCoachDrawer = useCallback(() => {
-    setIsInlineChatDrawerOpen(false);
-  }, []);
-
-  useEffect(() => {
-    setIsInlineCoachDrawerOpen(isInlineChatDrawerOpen);
-    return () => setIsInlineCoachDrawerOpen(false);
-  }, [isInlineChatDrawerOpen, setIsInlineCoachDrawerOpen]);
 
   const {
     isPromptOpen: showUpgradePrompt,
@@ -235,6 +231,13 @@ export default function ProgramDashboard() {
         .loadProgramInsights(programId)
         .catch((insightsErr) => {
           logger.warn("Could not load program insights:", insightsErr);
+        })
+        .finally(() => {
+          // Defensive — the agent's _updateState should already have flipped
+          // this to false, but if the call rejected before the first
+          // _updateState landed (e.g. early throw, lost state event), the
+          // page would otherwise sit on the skeleton forever.
+          setIsLoadingProgramInsights(false);
         });
 
       const [allTemplatesData, todayData] = await Promise.all([
@@ -296,6 +299,31 @@ export default function ProgramDashboard() {
   const handleProgramUpdate = (updatedProgram) => {
     // Just update the program state without reloading everything
     setProgram(updatedProgram);
+  };
+
+  const handleSetCurrentDay = async (dayNumber) => {
+    if (!programAgentRef.current || !program) return;
+    if (dayNumber === program.currentDay) return;
+
+    try {
+      await programAgentRef.current.setCurrentDay(
+        program.programId,
+        dayNumber,
+      );
+
+      // Reload the program so the dashboard (and child components) re-render
+      // against the canonical server state. Mirrors handleCompleteRestDay.
+      const updatedProgram =
+        await programAgentRef.current.loadProgram(programId);
+      if (updatedProgram && updatedProgram.program) {
+        setProgram(updatedProgram.program);
+      }
+
+      toast.success(`Current day set to Day ${dayNumber}`);
+    } catch (error) {
+      logger.error("Error setting current day:", error);
+      toast.error(error?.message || "Failed to set current day");
+    }
   };
 
   const handleCompleteRestDay = async (program) => {
@@ -547,6 +575,7 @@ export default function ProgramDashboard() {
             coachId={coachId}
             programId={programId}
             variant="mobile"
+            onSetCurrentDay={handleSetCurrentDay}
           />
           <PhaseTimeline program={program} />
           <ProgressOverview program={program} />
@@ -582,8 +611,14 @@ export default function ProgramDashboard() {
               coachId={coachId}
               programId={programId}
               variant="desktop"
+              onSetCurrentDay={handleSetCurrentDay}
             />
             <PhaseTimeline program={program} />
+            <ProgramInsights
+              insights={programInsights}
+              isLoading={isLoadingProgramInsights}
+              error={programInsightsError}
+            />
           </div>
 
           {/* Sidebar - 40% (2 of 5 columns) */}
@@ -597,11 +632,6 @@ export default function ProgramDashboard() {
             />
             <ProgressOverview program={program} />
             <PhaseBreakdown program={program} />
-            <ProgramInsights
-              insights={programInsights}
-              isLoading={isLoadingProgramInsights}
-              error={programInsightsError}
-            />
           </div>
         </div>
         <AppFooter />
@@ -648,7 +678,7 @@ export default function ProgramDashboard() {
             tooltip="Chat with coach"
           />
           <ContextualChatDrawer
-            variant="trainingGroundsInlineChat"
+            variant="inlineChat"
             inlineConversationTag={inlineConversationTag}
             inlineSessionKey={inlineSessionKey}
             isOpen={isInlineChatDrawerOpen}

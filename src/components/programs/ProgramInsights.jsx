@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { containerPatterns } from "../../utils/ui/uiPatterns";
 import { LightningIconSmall } from "../themes/SynthwaveComponents";
 import CollapsibleSection from "./CollapsibleSection";
+import AiGeneratedBadge from "../shared/AiGeneratedBadge";
 
 /**
  * ProgramInsights — sidebar card that surfaces the AI-generated synthesis of
@@ -47,7 +48,7 @@ const formatRelativeTime = (iso) => {
 };
 
 const TextBlock = ({ children }) => (
-  <div className={containerPatterns.coachNotesSection}>
+  <div className={containerPatterns.nestedContent}>
     <p className="font-body text-sm text-synthwave-text-secondary leading-relaxed">
       {children}
     </p>
@@ -98,6 +99,22 @@ export default function ProgramInsights({
   // Render container — preserved across all states so the dashboard layout
   // doesn't jump as data resolves.
   const body = (() => {
+    // Empty state takes priority over a stale loading flag. If the agent
+    // resolved with `insights: null` (legitimate "no insights yet" payload),
+    // we show the empty state immediately instead of waiting for a
+    // potentially-missed `isLoadingProgramInsights: false` event.
+    if (!insights && !error && !isLoading) {
+      return (
+        <div className={containerPatterns.nestedContent}>
+          <p className="font-body text-sm text-synthwave-text-secondary">
+            Insights will appear after your next workout. Each session you log
+            (whether from your program, the command palette, or coach chat)
+            sharpens this view of how you're tracking against your goals.
+          </p>
+        </div>
+      );
+    }
+
     if (isLoading) {
       return (
         <div className="space-y-3" aria-busy="true" aria-live="polite">
@@ -111,22 +128,10 @@ export default function ProgramInsights({
 
     if (error) {
       return (
-        <div className={containerPatterns.coachNotesSection}>
+        <div className={containerPatterns.nestedContent}>
           <p className="font-body text-sm text-synthwave-neon-pink">
             Couldn't load program insights right now. Other dashboard sections
             are unaffected — try refreshing in a moment.
-          </p>
-        </div>
-      );
-    }
-
-    if (!insights) {
-      return (
-        <div className={containerPatterns.coachNotesSection}>
-          <p className="font-body text-sm text-synthwave-text-secondary">
-            Insights will appear after your next workout. Each session you log
-            (whether from your program, the command palette, or coach chat)
-            sharpens this view of how you're tracking against your goals.
           </p>
         </div>
       );
@@ -168,7 +173,7 @@ export default function ProgramInsights({
             isOpen={showGoals}
             onToggle={() => setShowGoals((v) => !v)}
           >
-            <div className={containerPatterns.coachNotesSection}>
+            <div className={containerPatterns.nestedContent}>
               <ul className="space-y-3">
                 {goalProgress.map((g, idx) => (
                   <li key={idx} className="font-body text-sm">
@@ -197,7 +202,7 @@ export default function ProgramInsights({
             isOpen={showPhase}
             onToggle={() => setShowPhase((v) => !v)}
           >
-            <div className={containerPatterns.coachNotesSection}>
+            <div className={containerPatterns.nestedContent}>
               <div className="flex items-center justify-between gap-3 mb-2">
                 <span className="text-white font-medium font-body text-sm">
                   {phaseProgress.currentPhase}
@@ -224,7 +229,7 @@ export default function ProgramInsights({
             isOpen={showRisks}
             onToggle={() => setShowRisks((v) => !v)}
           >
-            <div className={containerPatterns.coachNotesSection}>
+            <div className={containerPatterns.nestedContent}>
               <ul className="space-y-4">
                 {riskFlags.map((r, idx) => (
                   <li key={idx} className="font-body text-sm">
@@ -288,11 +293,13 @@ export default function ProgramInsights({
         )}
 
         {/* Footer: generation metadata */}
-        {generatedAt && (
-          <div className="font-body text-xs text-synthwave-text-secondary/70 text-right">
-            Updated {formatRelativeTime(generatedAt)}
-          </div>
-        )}
+        <AiGeneratedBadge
+          description={
+            generatedAt
+              ? `Refreshed ${formatRelativeTime(generatedAt)} — updates after each workout you log`
+              : "Updates after each workout you log"
+          }
+        />
       </div>
     );
   })();
