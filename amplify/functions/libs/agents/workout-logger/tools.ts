@@ -1273,12 +1273,17 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
     // Idempotency check: prefer templateId (precise) when this came from a
     // program template; otherwise fall back to conversationId + date.
+    // Pass `workoutIndex` through so multi-workout sibling saves
+    // (workoutIndex > 0) don't get rejected as duplicates of an earlier
+    // sibling that happens to share the same UTC date — see
+    // `data-utils.ts checkDuplicateWorkout` for the multi-workout branch.
     const completedAtDateOnly = completedAtDate.toISOString().split("T")[0];
     const duplicate = await checkDuplicateWorkout(
       context.userId,
       context.conversationId,
       completedAtDate,
       context.templateContext?.templateId,
+      workoutIndex,
     );
     if (duplicate && duplicate.workoutId !== workout.workoutId) {
       logger.warn(
