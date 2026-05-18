@@ -199,3 +199,43 @@ Revert the `data-utils.ts` and `tools.ts` changes; the test additions are harmle
 - **Image format extension-vs-magic-bytes mismatch** — `getImageFormat` in `amplify/functions/libs/streaming/multimodal-helpers.ts:59-69` still trusts the file extension. The `IMG_9431.jpg → IMG_9431.png` fixture rename worked around it for the test, but a user uploading an iOS screenshot saved with the wrong extension would still hit a Bedrock rejection. Not blocking; worth a separate ticket.
 
 - **Multi-workout post-save fan-out** — when both sibling saves succeed, two `build-exercise` and two `build-workout-analysis` Lambdas fire (one per sibling). That's correct, but worth confirming downstream consumers handle parallel arrivals for the same `conversationId` cleanly. Spot-check on first production multi-workout traffic.
+
+---
+
+## 7. Follow-up Fix: Workout-Level Qualitative Promotion (2026-05-18)
+
+**Problem.** The 2026-05-18 sandbox re-run (post multi-workout dedup fix) revealed a separate validator logic gap in the `crossfit-chipper-with-image` test. The flow:
+
+1. `classifyWorkoutCharacteristics` runs first and reports the *discipline* as quantitative (CrossFit defaults that way).
+2. `determineBlockingFlags` builds the strict-block list, which includes `no_performance_data`. The extracted workout (image-only chipper with WHOOP data but no precise sets/reps) trips that flag.
+3. `validateExerciseStructure` then runs and recognizes *this specific instance* as workout-level qualitative — `validateQualitativeWorkout` affirms it's valid.
+4. **Bug:** that workout-level signal is just logged. `no_performance_data` stays in the blocking flags, the workout is rejected with `"No performance data found for strength/power workout"`, even though the qualitative validator already approved it.
+
+This was not a regression from the multi-workout work — it's a pre-existing gap, exposed by model output variance for sparse image-only inputs.
+
+**Fix.** In `validateWorkoutCompletenessTool.execute` (`amplify/functions/libs/agents/workout-logger/tools.ts`), after `validateExerciseStructure` returns:
+
+- If `exerciseValidation.isQualitative === true`, filter `no_performance_data` out of `detectedBlockingFlags` and recompute `hasBlockingFlag`.
+- Pass `effectiveIsQualitative = isQualitativeDiscipline || !!exerciseValidation.isQualitative` to `buildBlockingReason` so reason copy stays coherent on remaining flags.
+- Only `no_performance_data` is stripped. Intent-based flags (`planning_inquiry`, `advice_seeking`, `future_planning`) must continue to block regardless of qualitative classification — they reflect user intent, not data shape.
+
+**Risk.** Low. The promotion only relaxes a flag that `validateQualitativeWorkout` has *already* affirmed is valid (`validation-helpers.ts:366-384`) — we're propagating a signal that was being dropped, not bypassing validation.
+
+**Tests.** Five new orchestration-level tests in `amplify/functions/libs/agents/workout-logger/tools.test.ts`:
+
+1. Quantitative discipline + workout-level qualitative → `no_performance_data` cleared, save proceeds.
+2. Quantitative discipline + workout-level NOT qualitative → flag remains, save blocked (unchanged).
+3. Quantitative discipline + workout-level qualitative + `planning_inquiry` present → `planning_inquiry` still blocks.
+4. Qualitative discipline (no-op path) → promotion does nothing.
+5. Defensive: `exerciseValidation.isQualitative === undefined` is treated as false.
+
+**Integration validation.** Re-run the same three-test sandbox set after deploy:
+
+```bash
+npx tsx test/integration/test-build-workout.ts \
+  --test=multi-workout-two-sessions,multi-workout-strength-and-cardio,crossfit-chipper-with-image \
+  --output=test/fixtures/test-workouts-$(date +%Y%m%d) \
+  --verbose
+```
+
+Expected: 3 / 3 pass. `crossfit-chipper-with-image` saves successfully with `validationFlags` containing `no_performance_data` but `blockingFlags` empty (or at least without `no_performance_data`).
