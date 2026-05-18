@@ -116,18 +116,18 @@ function TodaysWorkoutRow({
           hasWorkout: hasTemplates,
         } = entry;
 
-        // ----- Rest day card (muted border variant) -----
+        // ----- Rest day card (Neon Glass) -----
         if (!hasTemplates) {
           return (
             <div
               key={program.programId}
-              className={containerPatterns.neonGlassMuted}
+              className={containerPatterns.neonGlassWrapper}
             >
-              <div className={containerPatterns.neonGlassMutedInner}>
+              <div className={containerPatterns.neonGlassInner}>
                 {/* Program label */}
                 <div className="flex items-center gap-2">
                   <svg
-                    className="w-3.5 h-3.5 text-synthwave-text-muted/40 shrink-0"
+                    className="w-3.5 h-3.5 text-synthwave-neon-cyan shrink-0 drop-shadow-[0_0_6px_#00ffff]"
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -142,18 +142,18 @@ function TodaysWorkoutRow({
                     <path d="M19.5041 6.50098H17.5036V9.50166H19.5041V6.50098Z" />
                     <path d="M17.5036 1.5V6.50114H14.5029V4.50068H12.5025V13.5027H10.502V4.50068H8.50158V6.50114H5.5009V1.5H17.5036Z" />
                   </svg>
-                  <span className={typographyPatterns.programLabelMuted}>
+                  <span className={typographyPatterns.programLabel}>
                     {program.name}
                   </span>
                 </div>
 
                 {/* Rest day message */}
-                <div className="font-header font-bold text-white text-xl leading-tight uppercase">
+                <div className="font-header font-bold text-white text-lg leading-tight uppercase">
                   Rest Day
                 </div>
 
                 {/* Meta row */}
-                <div className="flex gap-3 font-body text-xs text-synthwave-text-secondary">
+                <div className="flex gap-3 font-body text-xs text-white/50 mb-1.5">
                   <span>
                     Day {program.currentDay || 1} of {program.totalDays}
                   </span>
@@ -171,7 +171,7 @@ function TodaysWorkoutRow({
                       onCompleteRestDay(program);
                     }}
                     disabled={isCompletingRestDay}
-                    className="w-full py-3.5 border border-synthwave-neon-cyan/30 rounded-xl bg-transparent text-synthwave-neon-cyan font-body font-bold text-sm tracking-[1.5px] uppercase cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`${buttonPatterns.secondaryMedium} w-full disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {isCompletingRestDay
                       ? "Completing..."
