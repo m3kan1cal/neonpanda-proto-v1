@@ -502,6 +502,36 @@ function AppContent() {
             navigate(
               `/training-grounds/manage-exercises?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
             );
+          } else if (type === "coaches") {
+            navigate(`/coaches?userId=${data.userId || userId}`);
+          } else if (type === "training-grounds") {
+            navigate(
+              `/training-grounds?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
+            );
+          } else if (type === "programs") {
+            navigate(
+              `/training-grounds/programs?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
+            );
+          } else if (type === "workouts") {
+            navigate(
+              `/training-grounds/manage-workouts?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
+            );
+          } else if (type === "conversations") {
+            navigate(
+              `/training-grounds/manage-conversations?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
+            );
+          } else if (type === "memories") {
+            navigate(
+              `/training-grounds/manage-memories?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
+            );
+          } else if (type === "training-reports") {
+            navigate(
+              `/training-grounds/reports?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
+            );
+          } else if (type === "training-pulse") {
+            navigate(
+              `/training-grounds/training-pulse?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
+            );
           }
         }}
       />
