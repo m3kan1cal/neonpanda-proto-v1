@@ -629,7 +629,10 @@ const CommandPalette = ({
 
               {!agentState.isExecuting && !agentState.executionResult && (
                 <div className="text-synthwave-text-muted font-body text-sm px-3">
-                  Press Enter to start a fresh conversation
+                  Press Enter to{" "}
+                  {displayState.command.category === "navigation"
+                    ? "navigate"
+                    : "start a fresh conversation"}
                 </div>
               )}
             </div>
