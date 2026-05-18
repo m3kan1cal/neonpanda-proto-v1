@@ -121,7 +121,7 @@ function TodaysWorkoutRow({
           return (
             <div
               key={program.programId}
-              className={containerPatterns.neonGlassWrapper}
+              className="rounded-xl p-[1px] bg-gradient-to-r from-synthwave-neon-cyan/30 via-synthwave-neon-purple/30 to-synthwave-neon-pink/30 transition-all duration-300"
             >
               <div className={containerPatterns.neonGlassInner}>
                 {/* Program label */}
