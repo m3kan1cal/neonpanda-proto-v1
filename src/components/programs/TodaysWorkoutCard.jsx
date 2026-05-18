@@ -256,7 +256,7 @@ function TodaysWorkoutCard({
         onClick={handleViewWorkout}
         className="text-left mb-4 block w-full"
       >
-        <div className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors mb-2 font-semibold">
+        <div className="font-body text-lg text-white hover:text-synthwave-neon-cyan transition-colors mb-2 font-semibold cursor-pointer">
           {program.name}
         </div>
         {phaseName && (
