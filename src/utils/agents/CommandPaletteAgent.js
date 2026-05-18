@@ -590,7 +590,12 @@ export class CommandPaletteAgent {
       throw new Error("User not authenticated");
     }
 
-    const coachId = options.coachId || this.coachId || null;
+    // Use only options.coachId (the live value passed in at execute time).
+    // this.coachId is captured at construction and never refreshed (the
+    // CommandPalette useEffect deps omit coachId and there's no setCoachId),
+    // so it can be stale. Matches the guard pattern used by
+    // _executeViewExercises / _executeDesignProgram / _executeStartConversation.
+    const coachId = options.coachId;
     if (requireCoach && !coachId) {
       throw new Error(
         "Please select a coach first. Navigate to a coach page and try again.",
