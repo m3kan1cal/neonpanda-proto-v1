@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { buttonPatterns } from "../../utils/ui/uiPatterns";
-import { CalendarIcon } from "../themes/SynthwaveComponents";
+import { CalendarIcon, LightbulbIcon } from "../themes/SynthwaveComponents";
 import CalendarDayCell from "./CalendarDayCell";
 import CollapsibleSection from "./CollapsibleSection";
 
@@ -191,8 +191,12 @@ export default function ProgramCalendar({
       </div>
 
       {onSetCurrentDay && (
-        <div className="text-xs text-synthwave-text-muted font-body italic mb-3">
-          Tip: hold a day to set it as today.
+        <div className="flex items-center gap-1.5 text-xs text-synthwave-text-muted font-body mb-3">
+          <LightbulbIcon className="w-3.5 h-3.5 text-synthwave-neon-cyan shrink-0" />
+          <span>
+            <span className="text-synthwave-neon-cyan font-semibold">Tip:</span>{" "}
+            hold a day to set it as today.
+          </span>
         </div>
       )}
 
