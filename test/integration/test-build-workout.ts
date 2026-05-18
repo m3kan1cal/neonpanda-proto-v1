@@ -67,7 +67,7 @@ import type {
 // Configuration
 const DEFAULT_REGION = "us-west-2";
 const DEFAULT_FUNCTION =
-  "amplify-neonpandaprotov1--buildworkoutlambda23D1E4-EyMhp5RrlgG2";
+  "amplify-neonpandaprotov1--buildworkoutlambda23D1E4-DVxUcFwgQs3l";
 const LOG_WAIT_TIME = 20000; // Wait 20s for logs to propagate (agents can take 60-90s)
 const DYNAMODB_TABLE_NAME =
   process.env.DYNAMODB_TABLE_NAME || "NeonPandaProtoV1-DataTable-Sandbox";
@@ -1455,7 +1455,7 @@ Duration: About 45 minutes total (25min strength, 15min conditioning, 5min trans
       coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
       conversationId: "conv_1764512884381_4amplrhdd",
       userMessage: "Just finished this workout from the board!",
-      imageS3Keys: ["user-uploads/63gocaz-j-AYRsb0094ik/IMG_9431.jpg"],
+      imageS3Keys: ["user-uploads/63gocaz-j-AYRsb0094ik/IMG_9431.png"],
       coachConfig: BASE_COACH_CONFIG,
       isSlashCommand: false,
       messageTimestamp: new Date().toISOString(),

@@ -54,14 +54,26 @@ export function adaptLegacyTool<TContext extends AgentContext>(
       input: unknown,
       ctx: ToolExecutionContext<TContext>,
     ): Promise<ToolResult<unknown>> => {
-      // Inject `getToolResult(key)` into the v1 context so legacy tools
-      // (coach-creator, program-designer, workout-logger) that read prior
-      // tool outputs continue to work unchanged. Reads from the v2 result
-      // store with semantic-alias resolution.
+      // Inject `getToolResult(key, index?)` into the v1 context so legacy
+      // tools (coach-creator, program-designer, workout-logger) that read
+      // prior tool outputs continue to work unchanged. Reads from the v2
+      // result store with semantic-alias resolution.
+      //
+      // The optional `index` argument is forwarded for positional reads —
+      // workout-logger's multi-workout flow stores each extraction /
+      // validation / save at a positional slot via `getStoreLocation` and
+      // later reads back by `workoutIndex`. Dropping the second argument
+      // here silently returns the latest entry across the board, which
+      // caused two saves in a multi-workout flow to overwrite each other
+      // with the second workout's data (see test fixture
+      // `multi-workout-two-sessions_result.json`).
       const augmentedContext = {
         ...ctx.agentContext,
-        getToolResult: <T = unknown>(key: string): T | undefined =>
-          ctx.resultStore.get<T>(key),
+        getToolResult: <T = unknown>(
+          key: string,
+          index?: number,
+        ): T | undefined =>
+          ctx.resultStore.get<T>(key, index ?? -1),
       };
       try {
         const data = await legacy.execute(input, augmentedContext as TContext);
