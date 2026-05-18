@@ -95,15 +95,29 @@ export class CoachCreatorAgentV2 {
           parallelSafe: true,
           timeoutMs: 60_000,
         }),
-        adaptLegacyTool(generateCoachPromptsTool, { timeoutMs: 60_000 }),
+        // generate_coach_prompts measured 50–56s in production (one Sonnet
+        // call producing 7 prompts, ~5K output tokens). 60s left only
+        // 4–10s of headroom against p99 Bedrock latency — bumped to 120s
+        // so a slow Bedrock turn doesn't spuriously trip the scheduler
+        // timeout and fail the whole workflow.
+        adaptLegacyTool(generateCoachPromptsTool, { timeoutMs: 120_000 }),
         adaptLegacyTool(assembleCoachConfigTool, { timeoutMs: 60_000 }),
         adaptLegacyTool(validateCoachConfigTool, { timeoutMs: 60_000 }),
-        adaptLegacyTool(normalizeCoachConfigTool, { timeoutMs: 60_000 }),
+        // normalize_coach_config issues up to 7 Nova-Lite calls when
+        // validation flags fixes. Measured 24s in the worst observed run;
+        // 90s gives headroom for fan-out + per-call variance.
+        adaptLegacyTool(normalizeCoachConfigTool, { timeoutMs: 90_000 }),
         // save tool writes to DDB + Pinecone; 60s gives safe headroom over
         // the 25s default if Pinecone is slow.
         adaptLegacyTool(saveCoachConfigToDatabaseTool, { timeoutMs: 60_000 }),
       ],
       resultStoreAliases: STORAGE_KEY_MAP,
+      // save_coach_config_to_database is the workflow's terminal action;
+      // we read the saved record straight out of the result store in
+      // buildResultFromToolData, so the otherwise-required post-tool
+      // model acknowledgement turn is pure overhead (~10s and a full
+      // Sonnet round-trip per coach creation). Short-circuit it.
+      terminalTools: ["save_coach_config_to_database"],
       maxIterations: 20,
       policy: {
         blocking: (toolId, _input, store) => {

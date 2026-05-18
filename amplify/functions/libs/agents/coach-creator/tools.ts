@@ -937,10 +937,26 @@ Returns: normalizedConfig, issuesFixed, normalizationSummary`,
           }
         }
 
-        logger.info(`Fixing ${promptsToFix.length} prompts with AI...`);
+        logger.info(
+          `Fixing ${promptsToFix.length} prompts with AI (parallel)...`,
+        );
 
-        // Fix each prompt using AI
-        for (const { key, prompt, issues } of promptsToFix) {
+        // Per-prompt fix result. Captured so we can apply mutations to
+        // `normalizedConfig` / `issuesFixed` / `fixes` deterministically
+        // after Promise.all resolves — fan-out to Bedrock in parallel but
+        // keep the application order stable for reproducible logs and
+        // identical output regardless of which Bedrock response lands
+        // first.
+        type PromptFixOutcome =
+          | { key: string; status: "fixed"; fixedPrompt: string; changesMade: string[] }
+          | { key: string; status: "invalid" }
+          | { key: string; status: "error"; error: unknown };
+
+        const fixOnePrompt = async (
+          key: string,
+          prompt: string,
+          issues: string[],
+        ): Promise<PromptFixOutcome> => {
           const aiNormalizationPrompt = `Fix this coach prompt to improve quality and resolve identified issues.
 
 ORIGINAL PROMPT:
@@ -970,59 +986,106 @@ Return JSON:
   "changes_made": ["specific change 1", "specific change 2"]
 }`;
 
-          // callBedrockApi with tools option already extracts tool result
-          // and returns BedrockToolUseResult { toolName, input, stopReason }
-          const response = (await callBedrockApi(
-            aiNormalizationPrompt,
-            `Normalize ${key}`,
-            MODEL_IDS.UTILITY_MODEL_FULL, // Small schema {fixed_prompt, changes_made}, output consumed programmatically
-            {
-              temperature: TEMPERATURE_PRESETS.BALANCED,
-              tools: PROMPT_REPAIR_SCHEMA,
-              expectedToolName: PROMPT_REPAIR_SCHEMA.name,
-            },
-          )) as BedrockToolUseResult;
-
-          // callBedrockApi already extracted the tool result, so just access .input
-          const result = response.input;
-
-          // Store debug data for AI normalization (prompt + response)
           try {
-            await storeDebugDataInS3(
-              JSON.stringify(
-                {
-                  promptKey: key,
-                  originalPrompt: prompt.substring(0, 500),
-                  issues,
-                  aiPrompt: aiNormalizationPrompt.substring(0, 1000),
-                  aiResponse: result,
-                  timestamp: new Date().toISOString(),
-                },
-                null,
-                2,
-              ),
+            const response = (await callBedrockApi(
+              aiNormalizationPrompt,
+              `Normalize ${key}`,
+              MODEL_IDS.UTILITY_MODEL_FULL,
               {
-                type: "ai-normalization",
-                promptKey: key,
-                userId: context.userId,
-                sessionId: context.sessionId,
+                temperature: TEMPERATURE_PRESETS.BALANCED,
+                tools: PROMPT_REPAIR_SCHEMA,
+                expectedToolName: PROMPT_REPAIR_SCHEMA.name,
               },
-              "coach-config",
-            );
-          } catch (err) {
-            logger.warn("⚠️ Failed to store AI normalization debug data:", err);
-          }
+            )) as BedrockToolUseResult;
 
-          if (result.fixed_prompt && result.fixed_prompt.length > 50) {
-            normalizedConfig.generated_prompts[key] = result.fixed_prompt;
+            const result = response.input;
+
+            // Best-effort debug capture. Per-prompt try/catch so one S3
+            // write failing doesn't stop the others or fail the fix.
+            try {
+              await storeDebugDataInS3(
+                JSON.stringify(
+                  {
+                    promptKey: key,
+                    originalPrompt: prompt.substring(0, 500),
+                    issues,
+                    aiPrompt: aiNormalizationPrompt.substring(0, 1000),
+                    aiResponse: result,
+                    timestamp: new Date().toISOString(),
+                  },
+                  null,
+                  2,
+                ),
+                {
+                  type: "ai-normalization",
+                  promptKey: key,
+                  userId: context.userId,
+                  sessionId: context.sessionId,
+                },
+                "coach-config",
+              );
+            } catch (err) {
+              logger.warn(
+                "⚠️ Failed to store AI normalization debug data:",
+                err,
+              );
+            }
+
+            if (result.fixed_prompt && result.fixed_prompt.length > 50) {
+              return {
+                key,
+                status: "fixed",
+                fixedPrompt: result.fixed_prompt,
+                changesMade: Array.isArray(result.changes_made)
+                  ? result.changes_made
+                  : [],
+              };
+            }
+            return { key, status: "invalid" };
+          } catch (error) {
+            // Catch per-prompt so one Bedrock failure doesn't sink the
+            // whole batch — matches the prior sequential behaviour where
+            // the outer try/catch only fired on the first error. Caller
+            // sees a logged warning and skips applying the fix.
+            return { key, status: "error", error };
+          }
+        };
+
+        // Fan out: all per-prompt Bedrock calls in parallel. Nova-Lite
+        // tolerates the modest concurrency (max 7 prompts in practice).
+        // Pre-fix this loop ran serially and dominated the
+        // normalize_coach_config tool latency (~24s for 7 prompts);
+        // parallel fan-out brings it down to roughly one call's worth of
+        // wall time (~3-4s).
+        const outcomes = await Promise.all(
+          promptsToFix.map(({ key, prompt, issues }) =>
+            fixOnePrompt(key, prompt, issues),
+          ),
+        );
+
+        // Apply mutations in original promptsToFix order so logs and the
+        // resulting `fixes`/`issuesFixed` are deterministic regardless of
+        // which Bedrock response landed first.
+        for (const outcome of outcomes) {
+          if (outcome.status === "fixed") {
+            normalizedConfig.generated_prompts[outcome.key] = outcome.fixedPrompt;
             issuesFixed++;
             fixes.push(
-              `AI fixed ${key}: ${result.changes_made?.join(", ") || "quality improvements"}`,
+              `AI fixed ${outcome.key}: ${
+                outcome.changesMade.length > 0
+                  ? outcome.changesMade.join(", ")
+                  : "quality improvements"
+              }`,
             );
-            logger.info(`✅ AI normalized ${key}`);
+            logger.info(`✅ AI normalized ${outcome.key}`);
+          } else if (outcome.status === "invalid") {
+            logger.warn(
+              `⚠️ AI normalization for ${outcome.key} produced invalid result`,
+            );
           } else {
             logger.warn(
-              `⚠️ AI normalization for ${key} produced invalid result`,
+              `⚠️ AI normalization for ${outcome.key} failed (non-critical):`,
+              outcome.error,
             );
           }
         }
