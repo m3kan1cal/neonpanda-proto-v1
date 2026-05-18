@@ -263,13 +263,19 @@ const lambdaClient = new LambdaClient({
 const PINECONE_INDEX_NAME = "coach-creator-proto-v1-dev";
 const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 
-// Debug: Log Pinecone configuration at module load
-logger.info("🔧 PINECONE_API_KEY validation:", {
-  exists: !!PINECONE_API_KEY,
-  length: PINECONE_API_KEY?.length,
-  isPlaceholder: PINECONE_API_KEY === "pcsk_replace_me",
-  prefix: PINECONE_API_KEY?.substring(0, 12),
-});
+// Debug: Log Pinecone configuration at module load — only inside the
+// Lambda runtime. Test runners and local scripts import this module
+// transitively (via dynamodb/operations, etc.) without needing Pinecone,
+// and the "exists: false" line was confusing operators into thinking the
+// Lambda was misconfigured when it was just the local process logging.
+if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  logger.info("🔧 PINECONE_API_KEY validation:", {
+    exists: !!PINECONE_API_KEY,
+    length: PINECONE_API_KEY?.length,
+    isPlaceholder: PINECONE_API_KEY === "pcsk_replace_me",
+    prefix: PINECONE_API_KEY?.substring(0, 12),
+  });
+}
 
 // Common CORS headers
 export const CORS_HEADERS = {

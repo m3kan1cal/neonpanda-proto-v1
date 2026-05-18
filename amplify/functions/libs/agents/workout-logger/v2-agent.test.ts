@@ -800,6 +800,125 @@ describe("WorkoutLoggerAgentV2", () => {
     });
   });
 
+  it("multi-workout: each save reads its own extraction via getToolResult(key, workoutIndex)", async () => {
+    // Regression for the v2 `legacy-adapter` bug that silently dropped the
+    // `index` argument from the injected `getToolResult`. With the bug,
+    // both saves in a multi-workout flow read the *latest* extraction and
+    // ended up writing the same `workout_id` to DynamoDB — the first
+    // workout was overwritten on disk. See test fixture
+    // `multi-workout-two-sessions_result.json` for the exact failure
+    // shape.
+    //
+    // This test mimics production faithfully: the save mock looks the
+    // extraction up by `input.workoutIndex`, exactly like the real
+    // `saveWorkoutToDatabaseTool.execute` does
+    // (workout-logger/tools.ts:1166-1175). If the adapter ever stops
+    // forwarding the index, both saves will see the same extraction and
+    // this test will fail loudly.
+    let extractCount = 0;
+    (detectDisciplineTool.execute as any).mockResolvedValue({
+      discipline: "crossfit",
+    });
+    (extractWorkoutDataTool.execute as any).mockImplementation(async () => {
+      const idx = extractCount++;
+      return {
+        workoutData: {
+          workout_id: `workout_${idx}`,
+          discipline: idx === 0 ? "circuit_training" : "running",
+          workout_name: `Workout-${idx}`,
+        },
+        generationMethod: "tool",
+      };
+    });
+    (validateWorkoutCompletenessTool.execute as any).mockResolvedValue({
+      isValid: true,
+      shouldSave: true,
+      shouldNormalize: false,
+      confidence: 0.9,
+      completeness: 1,
+      blockingFlags: [],
+    });
+    (generateWorkoutSummaryTool.execute as any).mockResolvedValue({
+      summary: "ok",
+    });
+
+    // Save mock reads its own extraction back, exactly like the real tool.
+    // This is the assertion-driver: if `getToolResult(key, index)` ignores
+    // the index, both saves see workout_1 and the test fails.
+    const seenWorkoutIds: string[] = [];
+    (saveWorkoutToDatabaseTool.execute as any).mockImplementation(
+      async (input: any, ctx: any) => {
+        const extraction = ctx.getToolResult?.(
+          "extraction",
+          input.workoutIndex,
+        );
+        const workoutId = extraction?.workoutData?.workout_id;
+        seenWorkoutIds.push(workoutId);
+        return { workoutId, success: true, pineconeStored: true };
+      },
+    );
+
+    const agent = new WorkoutLoggerAgentV2(baseContext);
+    wireRuntime([
+      turn(
+        [
+          toolUseBlock("u1", "detect_discipline", {}),
+          toolUseBlock("u2", "detect_discipline", {}),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u3", "extract_workout_data", {}),
+          toolUseBlock("u4", "extract_workout_data", {}),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u5", "validate_workout_completeness", {
+            workoutIndex: 0,
+          }),
+          toolUseBlock("u6", "validate_workout_completeness", {
+            workoutIndex: 1,
+          }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u7", "generate_workout_summary", { workoutIndex: 0 }),
+          toolUseBlock("u8", "generate_workout_summary", { workoutIndex: 1 }),
+        ],
+        "tool_use",
+      ),
+      turn(
+        [
+          toolUseBlock("u9", "save_workout_to_database", { workoutIndex: 0 }),
+          toolUseBlock("u10", "save_workout_to_database", { workoutIndex: 1 }),
+        ],
+        "tool_use",
+      ),
+      turn([{ text: "Logged both." }], "end_turn"),
+    ]);
+
+    const result = await agent.logWorkout("Did two workouts back to back");
+
+    // Each save must see its own extraction — no overwrite, no collision.
+    expect(seenWorkoutIds).toEqual(["workout_0", "workout_1"]);
+    expect(new Set(seenWorkoutIds).size).toBe(2);
+    expect(result.success).toBe(true);
+    expect(result.allWorkouts).toHaveLength(2);
+    expect(result.allWorkouts!.map((w) => w.workoutId)).toEqual([
+      "workout_0",
+      "workout_1",
+    ]);
+    expect(result.allWorkouts!.map((w) => w.discipline)).toEqual([
+      "circuit_training",
+      "running",
+    ]);
+  });
+
   it("regex fallback ignores workoutId mentioned in an earlier tool_use preamble (Bugbot ec6c75b5)", async () => {
     // Partial workflow: detect + extract + validate succeed, but the
     // model never calls save. The regex fallback in buildResultFromToolData

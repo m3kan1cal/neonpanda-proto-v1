@@ -90,4 +90,48 @@ describe("adaptLegacyTool", () => {
     await v2.execute({}, ctx);
     expect(captured).toHaveBeenCalledWith({ sessionId: "abc" });
   });
+
+  it("forwards the optional `index` arg to getToolResult for positional reads", async () => {
+    // Regression: workout-logger's multi-workout flow stores each
+    // extraction at a positional slot via `getStoreLocation` and reads
+    // them back with `getToolResult("extraction", workoutIndex)`. An
+    // earlier version of the adapter only accepted a single `key`
+    // argument and silently dropped the index — every call returned the
+    // latest entry, so two saves in one Bedrock turn both saw the same
+    // (second) extraction and overwrote the same DynamoDB record.
+    // Validated against `multi-workout-two-sessions` test fixture.
+    const captured = vi.fn();
+    const reader: LegacyTool<Ctx> = {
+      id: "reader",
+      description: "...",
+      inputSchema: { type: "object", properties: {} },
+      execute: async (_input, ctx) => {
+        const getToolResult = (ctx as any).getToolResult as (
+          k: string,
+          i?: number,
+        ) => unknown;
+        captured({
+          atZero: getToolResult("extraction", 0),
+          atOne: getToolResult("extraction", 1),
+          atTwo: getToolResult("extraction", 2),
+          latest: getToolResult("extraction"),
+        });
+        return { ok: true };
+      },
+    };
+    const v2 = adaptLegacyTool(reader);
+    const ctx = makeCtx();
+    ctx.resultStore.put("extraction", { workout_id: "w0" }, { index: 0 });
+    ctx.resultStore.put("extraction", { workout_id: "w1" }, { index: 1 });
+    ctx.resultStore.put("extraction", { workout_id: "w2" }, { index: 2 });
+
+    await v2.execute({}, ctx);
+
+    expect(captured).toHaveBeenCalledWith({
+      atZero: { workout_id: "w0" },
+      atOne: { workout_id: "w1" },
+      atTwo: { workout_id: "w2" },
+      latest: { workout_id: "w2" },
+    });
+  });
 });

@@ -486,6 +486,34 @@ export class WorkoutLoggerAgentV2 {
             saved: true,
           };
         });
+
+        // Fail-loud guard against the v2 multi-workout cross-talk bug
+        // (see `test/fixtures/test-workouts-20260517/cloudwatch-buildworkout.txt`).
+        // Distinct save-tool invocations must produce distinct
+        // `workout_id`s. If two saves report the same id we know one
+        // workout overwrote another in DynamoDB and the caller's
+        // `allWorkouts` array is lying about what's persisted. Surface
+        // this as an explicit failure instead of returning a misleading
+        // success — silent data loss is the worst possible outcome here.
+        const ids = primaryResult.allWorkouts.map((w) => w.workoutId);
+        const uniqueIds = new Set(ids);
+        if (uniqueIds.size !== ids.length) {
+          logger.error(
+            "🚨 Multi-workout integrity check failed: duplicate workoutIds across saves",
+            {
+              ids,
+              uniqueCount: uniqueIds.size,
+              note: "Two saves wrote to the same DynamoDB record — one workout was overwritten. Likely cause: extraction lookup by workoutIndex is returning the wrong slot.",
+            },
+          );
+          return {
+            success: false,
+            skipped: false,
+            reason:
+              "Multi-workout save integrity check failed: two workouts resolved to the same workout_id. One workout would have overwritten the other in storage. This is an infrastructure bug — please retry the request.",
+          };
+        }
+
         logger.info("📋 Multi-workout aggregation:", {
           totalSaves: allSaves.length,
           totalExtractions: allExtractions.length,

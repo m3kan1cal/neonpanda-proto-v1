@@ -771,7 +771,11 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     }
 
     // Determine blocking validation flags
-    const { hasBlockingFlag, detectedBlockingFlags } = determineBlockingFlags(
+    // NOTE: both bindings are `let` because the workout-level qualitative
+    // signal (resolved later via validateExerciseStructure) can promote a
+    // strict/quantitative classification into a permissive one for *this
+    // specific workout instance*, requiring us to recompute the flags.
+    let { hasBlockingFlag, detectedBlockingFlags } = determineBlockingFlags(
       workoutData,
       isSlashCommand,
       isQualitativeDiscipline,
@@ -835,7 +839,24 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       };
     }
 
-    // If validation succeeded via qualitative path, log it
+    // If validation succeeded via qualitative path, log it and promote the
+    // workout-level qualitative signal into the blocking-flag decision.
+    //
+    // BUG FIX (validator logic gap): `determineBlockingFlags` above runs with
+    // the *discipline-level* qualitative classification (e.g., CrossFit is
+    // typically quantitative -> `no_performance_data` is in the strict-block
+    // list). But `validateExerciseStructure` can subsequently determine that
+    // *this specific instance* is qualitative/activity-based (e.g., a CrossFit
+    // chipper logged from WHOOP-only data with no precise sets/reps). When
+    // that happens, `validateQualitativeWorkout` has already affirmed the
+    // workout is valid -> `no_performance_data` must not block the save.
+    //
+    // We only strip `no_performance_data`. Other strict flags
+    // (`planning_inquiry`, `advice_seeking`, `future_planning`) remain
+    // blocking because they are about user intent, not data shape.
+    const effectiveIsQualitative =
+      isQualitativeDiscipline || !!exerciseValidation.isQualitative;
+
     if (exerciseValidation.isQualitative) {
       logger.info("✅ Workout validated as qualitative/activity-based:", {
         discipline: workoutData.discipline,
@@ -843,6 +864,22 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
         method: exerciseValidation.method,
         reason: exerciseValidation.aiReasoning,
       });
+
+      if (detectedBlockingFlags.includes("no_performance_data")) {
+        const before = [...detectedBlockingFlags];
+        detectedBlockingFlags = detectedBlockingFlags.filter(
+          (f) => f !== "no_performance_data",
+        );
+        hasBlockingFlag = detectedBlockingFlags.length > 0;
+        logger.info(
+          "🔓 Cleared no_performance_data flag for workout-level qualitative workout:",
+          {
+            before,
+            after: detectedBlockingFlags,
+            discipline: workoutData.discipline,
+          },
+        );
+      }
     }
 
     // Validate schema structure (data matches expected schema fields)
@@ -873,11 +910,14 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       shouldNormalizeWorkout(workoutData, confidence, completeness);
 
     // Build validation result
+    // Use `effectiveIsQualitative` so reason copy stays consistent if a
+    // workout-level qualitative classification cleared `no_performance_data`
+    // above but other strict flags remain.
     const reason = hasBlockingFlag
       ? buildBlockingReason(
           detectedBlockingFlags,
           isSlashCommand,
-          isQualitativeDiscipline,
+          effectiveIsQualitative,
         )
       : undefined;
 
@@ -1273,12 +1313,17 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
     // Idempotency check: prefer templateId (precise) when this came from a
     // program template; otherwise fall back to conversationId + date.
+    // Pass `workoutIndex` through so multi-workout sibling saves
+    // (workoutIndex > 0) don't get rejected as duplicates of an earlier
+    // sibling that happens to share the same UTC date — see
+    // `data-utils.ts checkDuplicateWorkout` for the multi-workout branch.
     const completedAtDateOnly = completedAtDate.toISOString().split("T")[0];
     const duplicate = await checkDuplicateWorkout(
       context.userId,
       context.conversationId,
       completedAtDate,
       context.templateContext?.templateId,
+      workoutIndex,
     );
     if (duplicate && duplicate.workoutId !== workout.workoutId) {
       logger.warn(
