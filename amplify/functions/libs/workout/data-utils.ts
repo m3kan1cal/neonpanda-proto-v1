@@ -20,6 +20,18 @@ import {
  *      `userId + conversationId + completedAt date`. This is coarser but is
  *      the only signal available when there is no template.
  *
+ * Multi-workout sibling saves: when the model logs multiple workouts in a
+ * single conversation turn (e.g. "morning squats + evening 5K") it emits a
+ * `workoutIndex` on each save call (0, 1, 2, ...). For sibling saves
+ * (`workoutIndex > 0`) the model has explicitly declared "this is a NEW
+ * distinct workout, not a duplicate of an earlier one". In that case the
+ * conversationId-fallback dedup is short-circuited so siblings sharing the
+ * same UTC date aren't rejected as duplicates of each other.
+ *
+ * The template-scoped check (Strategy 1) is unaffected — template links are
+ * precise and a duplicate template hit is still a true duplicate regardless
+ * of workoutIndex.
+ *
  * Returns the duplicate workout if found, undefined otherwise.
  * Swallows errors so callers can treat dedup as non-blocking.
  */
@@ -28,12 +40,24 @@ export async function checkDuplicateWorkout(
   conversationId: string,
   completedAtDate: string | Date,
   templateId?: string,
+  workoutIndex?: number,
 ): Promise<any | undefined> {
   try {
-    // Strategy 1: template-scoped dedup (precise)
+    // Strategy 1: template-scoped dedup (precise) — unaffected by
+    // multi-workout sibling intent.
     if (templateId) {
       const templateWorkouts = await queryWorkoutsByTemplate(templateId);
       return templateWorkouts.find((w) => w.userId === userId);
+    }
+
+    // Multi-workout sibling save: the model has explicitly told us this is
+    // the Nth distinct workout (N > 0) emitted in the same conversation
+    // turn. Skip the conversationId-fallback dedup so the earlier sibling
+    // doesn't masquerade as a duplicate. See
+    // `test/fixtures/test-workouts-20260518/cloudwatch-buildworkout.txt`
+    // for the failure that motivated this branch.
+    if (typeof workoutIndex === "number" && workoutIndex > 0) {
+      return undefined;
     }
 
     // Strategy 2: conversation + date dedup (free-text fallback)

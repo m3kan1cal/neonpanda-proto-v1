@@ -117,6 +117,15 @@ export interface AgentConfigV2<TContext extends AgentContext> {
   /** Pluggable runtime — `SyncRuntime` for sync, `StreamingRuntime`
    *  (Phase 2) when running through `Agent.runStream()`. */
   runtime: RuntimeAdapter<TContext>;
+  /** Tool IDs that, when executed successfully, end the run immediately
+   *  without another model round-trip. Use for workflows whose terminal
+   *  action (e.g. `save_coach_config_to_database`) produces a result the
+   *  caller already reads from the result store — the post-tool model
+   *  acknowledgement turn is pure overhead (typically ~10s and one full
+   *  Bedrock call). The run reports `stopReason: "end_turn"` so callers
+   *  treat it as a normal completion. If multiple tools in a single
+   *  batch succeed and any is terminal, the run still ends. */
+  terminalTools?: string[];
   /** Optional correlation fields (userId, conversationId, etc.) propagated
    *  via AsyncLocalStorage. The agent always overrides `agentRunId` and
    *  `iteration` itself. */
@@ -290,7 +299,21 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       }
 
       if (turn.stopReason === "tool_use") {
-        await this.dispatchTools(turn.assistantContent);
+        const terminalHit = await this.dispatchTools(turn.assistantContent);
+        if (terminalHit) {
+          // A configured terminal tool succeeded — skip the otherwise
+          // wasted model acknowledgement turn and treat this as a clean
+          // completion. The caller's downstream code typically reads the
+          // tool result out of the resultStore directly, so the model's
+          // post-tool text adds no signal but does add ~10s of latency
+          // and another full Bedrock round-trip.
+          logger.info("agent.run.terminal_tool_short_circuit", {
+            runId: this.runId,
+            toolName: terminalHit,
+            iteration: this.currentIteration,
+          });
+          return "end_turn";
+        }
         continue;
       }
       return turn.stopReason;
@@ -366,9 +389,16 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     this.history.push({ role: "assistant", content });
   }
 
-  protected async dispatchTools(assistantContent: any[]): Promise<void> {
+  /**
+   * Executes all tool calls from one assistant turn. Returns the name of
+   * the first successful terminal tool (per `config.terminalTools`) so the
+   * caller can short-circuit the run loop, or `null` otherwise.
+   */
+  protected async dispatchTools(
+    assistantContent: any[],
+  ): Promise<string | null> {
     const uses = this.extractToolUses(assistantContent);
-    if (uses.length === 0) return;
+    if (uses.length === 0) return null;
 
     const policy = this.config.policy;
     // Match the scheduler's BlockingFn signature `(toolId, toolInput, ctx)`
@@ -396,13 +426,27 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     const toolResultBlocks = scheduled.map((s) => this.toResultBlock(s));
     this.history.push({ role: "user", content: toolResultBlocks });
 
+    let terminalHit: string | null = null;
     for (const s of scheduled) {
       this.recordToolCall(s, uses);
       // resultStore writes happen inside the scheduler so blocking
       // callbacks for later tools in the same tool_use turn observe
       // earlier tools' results (defense-in-depth on validate+save).
       this.toolsUsed.push(s.toolName);
+      if (
+        terminalHit === null &&
+        s.result.ok &&
+        this.isTerminalTool(s.toolName)
+      ) {
+        terminalHit = s.toolName;
+      }
     }
+    return terminalHit;
+  }
+
+  protected isTerminalTool(toolName: string): boolean {
+    const list = this.config.terminalTools;
+    return !!list && list.includes(toolName);
   }
 
   protected recordToolCall(
@@ -654,7 +698,15 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       }
 
       if (turn.stopReason === "tool_use") {
-        yield* this.streamDispatchTools(turn.assistantContent);
+        const terminalHit = yield* this.streamDispatchTools(turn.assistantContent);
+        if (terminalHit) {
+          logger.info("agent.runStream.terminal_tool_short_circuit", {
+            runId: this.runId,
+            toolName: terminalHit,
+            iteration: this.currentIteration,
+          });
+          return "end_turn";
+        }
         continue;
       }
       return turn.stopReason;
@@ -684,9 +736,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
   protected async *streamDispatchTools(
     assistantContent: any[],
-  ): AsyncGenerator<AgentEvent, void, void> {
+  ): AsyncGenerator<AgentEvent, string | null, void> {
     const uses = this.extractToolUses(assistantContent);
-    if (uses.length === 0) return;
+    if (uses.length === 0) return null;
 
     // Emit running records up front so the UI can render placeholder blocks
     // while the scheduler executes.
@@ -737,6 +789,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     const toolResultBlocks = scheduled.map((s) => this.toResultBlock(s));
     this.history.push({ role: "user", content: toolResultBlocks });
 
+    let terminalHit: string | null = null;
     for (const s of scheduled) {
       const running = runningRecords.find((r) => r.toolUseId === s.toolUseId);
       if (running) {
@@ -756,7 +809,15 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       // callbacks for later tools in the same tool_use turn observe
       // earlier tools' results (defense-in-depth on validate+save).
       this.toolsUsed.push(s.toolName);
+      if (
+        terminalHit === null &&
+        s.result.ok &&
+        this.isTerminalTool(s.toolName)
+      ) {
+        terminalHit = s.toolName;
+      }
     }
+    return terminalHit;
   }
 
   /**

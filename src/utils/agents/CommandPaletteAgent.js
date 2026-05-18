@@ -164,6 +164,78 @@ export class CommandPaletteAgent {
           result = await this._executeViewSharedPrograms(options);
           break;
 
+        case "coaches":
+          result = await this._executeNavigateTo({
+            navigationType: "coaches",
+            message: "Opening coaches...",
+            requireCoach: false,
+            options,
+          });
+          break;
+
+        case "training-grounds":
+          result = await this._executeNavigateTo({
+            navigationType: "training-grounds",
+            message: "Opening training grounds...",
+            requireCoach: true,
+            options,
+          });
+          break;
+
+        case "programs":
+          result = await this._executeNavigateTo({
+            navigationType: "programs",
+            message: "Opening training programs...",
+            requireCoach: true,
+            options,
+          });
+          break;
+
+        case "workouts":
+          result = await this._executeNavigateTo({
+            navigationType: "workouts",
+            message: "Opening workouts...",
+            requireCoach: true,
+            options,
+          });
+          break;
+
+        case "conversations":
+          result = await this._executeNavigateTo({
+            navigationType: "conversations",
+            message: "Opening conversations...",
+            requireCoach: true,
+            options,
+          });
+          break;
+
+        case "memories":
+          result = await this._executeNavigateTo({
+            navigationType: "memories",
+            message: "Opening memories...",
+            requireCoach: true,
+            options,
+          });
+          break;
+
+        case "training-reports":
+          result = await this._executeNavigateTo({
+            navigationType: "training-reports",
+            message: "Opening training reports...",
+            requireCoach: true,
+            options,
+          });
+          break;
+
+        case "training-pulse":
+          result = await this._executeNavigateTo({
+            navigationType: "training-pulse",
+            message: "Opening training pulse...",
+            requireCoach: true,
+            options,
+          });
+          break;
+
         default:
           throw new Error(
             `Command "${command.trigger}" is not yet implemented.`,
@@ -496,6 +568,47 @@ export class CommandPaletteAgent {
         type: "shared-programs",
         userId: this.userId,
         coachId: this.coachId, // Include coachId to preserve coach context
+      },
+    };
+  }
+
+  /**
+   * Generic navigation helper for /coaches, /training-grounds, /programs,
+   * /workouts, /conversations, /memories, /training-reports, /training-pulse.
+   *
+   * All of these are pure navigation — no API call, no side effects — so we
+   * just package up the navigationData and let App.jsx's onNavigation handler
+   * map the type to the actual route.
+   */
+  async _executeNavigateTo({
+    navigationType,
+    message,
+    requireCoach = true,
+    options = {},
+  }) {
+    if (!this.userId) {
+      throw new Error("User not authenticated");
+    }
+
+    // Use only options.coachId (the live value passed in at execute time).
+    // this.coachId is captured at construction and never refreshed (the
+    // CommandPalette useEffect deps omit coachId and there's no setCoachId),
+    // so it can be stale. Matches the guard pattern used by
+    // _executeViewExercises / _executeDesignProgram / _executeStartConversation.
+    const coachId = options.coachId;
+    if (requireCoach && !coachId) {
+      throw new Error(
+        "Please select a coach first. Navigate to a coach page and try again.",
+      );
+    }
+
+    return {
+      message,
+      details: { coachId },
+      navigationData: {
+        type: navigationType,
+        userId: this.userId,
+        coachId,
       },
     };
   }

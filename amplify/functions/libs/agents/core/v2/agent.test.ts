@@ -406,4 +406,73 @@ describe("Agent v2", () => {
     expect(stored.ok).toBe(false);
     expect(stored.message).toBe("boom");
   });
+
+  it("short-circuits the run loop after a successful terminal tool", async () => {
+    // Locks in the early-termination behaviour added so domain agents
+    // (e.g. coach-creator) can skip the post-save model acknowledgement
+    // turn. Pre-fix this required an extra Bedrock round-trip per coach
+    // creation (~10s and a full Sonnet call) whose output the handler
+    // immediately discarded in favour of the result-store entry.
+    const save = defineTool<TestCtx, z.ZodObject<{}>>({
+      id: "save",
+      description: "...",
+      input: z.object({}),
+      execute: async () => ({ ok: true, data: { savedId: "abc" } }),
+    });
+    // Queue a follow-up turn that should NEVER be consumed — if the
+    // short-circuit regresses, the agent will run it and the test will
+    // observe iterations=2 and toolsUsed length=1 but finalResponseText
+    // would be "post-save acknowledgement" instead of "".
+    const runtime = new MockRuntime([
+      toolUseTurn([{ toolUseId: "u1", name: "save", input: {} }]),
+      textTurn("post-save acknowledgement"),
+    ]);
+    const agent = new Agent<TestCtx>(
+      baseConfig({
+        tools: [save],
+        runtime,
+        terminalTools: ["save"],
+      }),
+    );
+    const result = await agent.run({ userMessage: "go" });
+    expect(result.status).toBe("ok");
+    expect(result.iterations).toBe(1);
+    expect(result.toolsUsed).toEqual(["save"]);
+    expect(result.finalResponseText).toBe("");
+    // The queued second turn must remain unconsumed.
+    expect((runtime as MockRuntime).turns).toHaveLength(1);
+    expect(agent.getResultStore().get("save")).toEqual({ savedId: "abc" });
+  });
+
+  it("does NOT short-circuit when the terminal tool failed", async () => {
+    // Defense-in-depth: the short-circuit must only fire on successful
+    // terminal tool results. A failed save should let the model see the
+    // error and decide what to do next (typically retry or end).
+    const save = defineTool<TestCtx, z.ZodObject<{}>>({
+      id: "save",
+      description: "...",
+      input: z.object({}),
+      execute: async () => ({
+        ok: false,
+        code: "permanent",
+        message: "ddb threw",
+        retryable: false,
+      }),
+    });
+    const runtime = new MockRuntime([
+      toolUseTurn([{ toolUseId: "u1", name: "save", input: {} }]),
+      textTurn("acknowledging the failure"),
+    ]);
+    const agent = new Agent<TestCtx>(
+      baseConfig({
+        tools: [save],
+        runtime,
+        terminalTools: ["save"],
+      }),
+    );
+    const result = await agent.run({ userMessage: "go" });
+    expect(result.iterations).toBe(2);
+    expect(result.toolCalls[0].status).toBe("error");
+    expect(result.finalResponseText).toBe("acknowledging the failure");
+  });
 });

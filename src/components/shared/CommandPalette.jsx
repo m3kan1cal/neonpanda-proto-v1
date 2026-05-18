@@ -98,6 +98,78 @@ const CommandPalette = ({
       icon: "🔗",
       requiresInput: false,
     },
+    {
+      id: "coaches",
+      trigger: "/coaches",
+      description: "View your coaches",
+      example: "/coaches",
+      category: "navigation",
+      icon: "🧠",
+      requiresInput: false,
+    },
+    {
+      id: "training-grounds",
+      trigger: "/training-grounds",
+      description: "Go to your training grounds",
+      example: "/training-grounds",
+      category: "navigation",
+      icon: "🏟️",
+      requiresInput: false,
+    },
+    {
+      id: "programs",
+      trigger: "/programs",
+      description: "Manage your training programs",
+      example: "/programs",
+      category: "navigation",
+      icon: "📅",
+      requiresInput: false,
+    },
+    {
+      id: "workouts",
+      trigger: "/workouts",
+      description: "View your workout history",
+      example: "/workouts",
+      category: "navigation",
+      icon: "📊",
+      requiresInput: false,
+    },
+    {
+      id: "conversations",
+      trigger: "/conversations",
+      description: "Browse your conversation history",
+      example: "/conversations",
+      category: "navigation",
+      icon: "🗨️",
+      requiresInput: false,
+    },
+    {
+      id: "memories",
+      trigger: "/memories",
+      description: "Browse your saved memories",
+      example: "/memories",
+      category: "navigation",
+      icon: "📝",
+      requiresInput: false,
+    },
+    {
+      id: "training-reports",
+      trigger: "/training-reports",
+      description: "View your weekly training reports",
+      example: "/training-reports",
+      category: "navigation",
+      icon: "📈",
+      requiresInput: false,
+    },
+    {
+      id: "training-pulse",
+      trigger: "/training-pulse",
+      description: "View your training pulse and analytics",
+      example: "/training-pulse",
+      category: "navigation",
+      icon: "⚡",
+      requiresInput: false,
+    },
   ];
 
   // Determine what to show based on input state
@@ -486,7 +558,7 @@ const CommandPalette = ({
                       }
                     }}
                   >
-                    <div className="font-body text-base text-synthwave-neon-pink shrink-0">
+                    <div className="font-mono text-sm text-synthwave-neon-pink shrink-0">
                       {command.trigger}
                     </div>
                     <div className="font-body text-sm text-synthwave-text-muted text-right ml-auto truncate">
@@ -507,7 +579,7 @@ const CommandPalette = ({
             <div className="space-y-3">
               {/* Command Info */}
               <div className="flex items-start space-x-3 py-2 px-3 rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
-                <div className="font-body text-base text-synthwave-neon-pink">
+                <div className="font-mono text-sm text-synthwave-neon-pink">
                   {displayState.command.trigger}
                 </div>
                 <div className="flex-1">
@@ -545,7 +617,7 @@ const CommandPalette = ({
             </div>
             <div className="space-y-3">
               <div className="flex items-start space-x-3 py-2 px-3 rounded-xl bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
-                <div className="font-body text-base text-synthwave-neon-pink">
+                <div className="font-mono text-sm text-synthwave-neon-pink">
                   {displayState.command.trigger}
                 </div>
                 <div className="flex-1">
@@ -557,7 +629,10 @@ const CommandPalette = ({
 
               {!agentState.isExecuting && !agentState.executionResult && (
                 <div className="text-synthwave-text-muted font-body text-sm px-3">
-                  Press Enter to start a fresh conversation
+                  Press Enter to{" "}
+                  {displayState.command.category === "navigation"
+                    ? "navigate"
+                    : "start a fresh conversation"}
                 </div>
               )}
             </div>
