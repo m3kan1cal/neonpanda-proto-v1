@@ -1281,7 +1281,7 @@ General thoughts: `;
 
               {/* Rest Day Description */}
               <div
-                className={`${containerPatterns.workoutDescriptionEditable} text-sm mb-4`}
+                className={`${containerPatterns.nestedContent} text-sm mb-4`}
               >
                 <p className="font-body text-sm text-synthwave-text-secondary">
                   No workouts scheduled for{" "}
@@ -1293,7 +1293,7 @@ General thoughts: `;
               </div>
 
               {/* Coach Notes - Enhanced Glassmorphism */}
-              <div className={`${containerPatterns.coachNotesSection} mb-4`}>
+              <div className={`${containerPatterns.nestedContent} mb-4`}>
                 <div className="font-body text-sm text-synthwave-neon-cyan uppercase font-semibold mb-2">
                   Recovery Tips
                 </div>
@@ -1519,7 +1519,7 @@ General thoughts: `;
                           }
                         >
                           <div
-                            className={containerPatterns.workoutDescriptionEditable}
+                            className={`${containerPatterns.nestedContent} font-body text-base text-synthwave-text-secondary leading-relaxed whitespace-pre-line`}
                           >
                             {template.description}
                           </div>
@@ -1769,7 +1769,7 @@ General thoughts: `;
                           }
                         >
                           <div
-                            className={`${containerPatterns.coachNotesSection} font-body text-base text-synthwave-text-secondary leading-relaxed`}
+                            className={`${containerPatterns.nestedContent} font-body text-base text-synthwave-text-secondary leading-relaxed`}
                           >
                             <MarkdownRenderer content={template.notes} />
                           </div>
