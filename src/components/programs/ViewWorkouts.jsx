@@ -943,7 +943,7 @@ General thoughts: `;
                     <div className="flex-1">
                       {/* Title row with status dot */}
                       <div className="flex items-start gap-3 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-2 animate-pulse" />
+                        <div className="hidden sm:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-2 animate-pulse" />
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-72 max-w-full"></div>
                       </div>
                       {/* Badge row */}
@@ -968,7 +968,7 @@ General thoughts: `;
                 <div className={containerPatterns.cardMedium}>
                   <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="hidden md:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
@@ -985,7 +985,7 @@ General thoughts: `;
                 <div className={containerPatterns.cardMedium}>
                   <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="hidden md:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
@@ -1000,7 +1000,7 @@ General thoughts: `;
                 <div className={containerPatterns.cardMedium}>
                   <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="hidden md:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
@@ -1281,7 +1281,7 @@ General thoughts: `;
 
               {/* Rest Day Description */}
               <div
-                className={`${containerPatterns.workoutDescriptionEditable} text-sm mb-4`}
+                className={`${containerPatterns.nestedContent} text-sm mb-4`}
               >
                 <p className="font-body text-sm text-synthwave-text-secondary">
                   No workouts scheduled for{" "}
@@ -1293,7 +1293,7 @@ General thoughts: `;
               </div>
 
               {/* Coach Notes - Enhanced Glassmorphism */}
-              <div className={`${containerPatterns.coachNotesSection} mb-4`}>
+              <div className={`${containerPatterns.nestedContent} mb-4`}>
                 <div className="font-body text-sm text-synthwave-neon-cyan uppercase font-semibold mb-2">
                   Recovery Tips
                 </div>
@@ -1519,7 +1519,7 @@ General thoughts: `;
                           }
                         >
                           <div
-                            className={containerPatterns.workoutDescriptionEditable}
+                            className={`${containerPatterns.nestedContent} font-body text-base text-synthwave-text-secondary leading-relaxed whitespace-pre-line`}
                           >
                             {template.description}
                           </div>
@@ -1769,7 +1769,7 @@ General thoughts: `;
                           }
                         >
                           <div
-                            className={`${containerPatterns.coachNotesSection} font-body text-base text-synthwave-text-secondary leading-relaxed`}
+                            className={`${containerPatterns.nestedContent} font-body text-base text-synthwave-text-secondary leading-relaxed`}
                           >
                             <MarkdownRenderer content={template.notes} />
                           </div>
