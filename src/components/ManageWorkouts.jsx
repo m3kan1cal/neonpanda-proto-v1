@@ -900,7 +900,7 @@ function ManageWorkouts() {
                 >
                   {/* Header with pink dot */}
                   <div className="flex items-start gap-3 mb-2">
-                    <span className="shrink-0 mt-1 text-synthwave-neon-pink/30 animate-pulse">
+                    <span className="hidden md:inline-block shrink-0 mt-1 text-synthwave-neon-pink/30 animate-pulse">
                       <WorkoutIconSmall />
                     </span>
                     <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
