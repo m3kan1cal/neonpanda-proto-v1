@@ -253,7 +253,7 @@ export default function ProgramCalendar({
                 <span className="text-synthwave-neon-cyan font-semibold">
                   Tip:
                 </span>{" "}
-                hold a day to set it as today.
+                hold to set current day.
               </span>
             </div>
           )}
