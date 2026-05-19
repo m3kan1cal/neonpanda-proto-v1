@@ -943,7 +943,7 @@ General thoughts: `;
                     <div className="flex-1">
                       {/* Title row with status dot */}
                       <div className="flex items-start gap-3 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-2 animate-pulse" />
+                        <div className="hidden sm:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-2 animate-pulse" />
                         <div className="h-6 bg-synthwave-text-muted/20 animate-pulse w-72 max-w-full"></div>
                       </div>
                       {/* Badge row */}
@@ -968,7 +968,7 @@ General thoughts: `;
                 <div className={containerPatterns.cardMedium}>
                   <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="hidden md:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-48"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
@@ -985,7 +985,7 @@ General thoughts: `;
                 <div className={containerPatterns.cardMedium}>
                   <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="hidden md:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-32"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
@@ -1000,7 +1000,7 @@ General thoughts: `;
                 <div className={containerPatterns.cardMedium}>
                   <div className="px-4 pt-4 pb-2 md:px-6 md:pt-5 flex items-center justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
+                      <div className="hidden md:block w-3 h-3 rounded-full bg-synthwave-text-muted/20 shrink-0 mt-1.5 animate-pulse" />
                       <div className="h-5 bg-synthwave-text-muted/20 animate-pulse w-28"></div>
                     </div>
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 animate-pulse rounded-lg"></div>
