@@ -259,7 +259,9 @@ export default function ProgramCalendar({
           )}
           {!showAllWeeks && weeks.length > visibleWeeks.length && (
             <div className="ml-auto">
-              Viewing {visibleWeeks.length} of {weeks.length} weeks
+              Weeks {visibleWeeks[0].weekIndex + 1}–
+              {visibleWeeks[visibleWeeks.length - 1].weekIndex + 1} of{" "}
+              {weeks.length}
             </div>
           )}
         </div>
