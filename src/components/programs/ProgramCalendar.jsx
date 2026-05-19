@@ -237,7 +237,9 @@ export default function ProgramCalendar({
 
       {/* Bottom row: long-press tip on the left, visible-weeks count on the right */}
       {(onSetCurrentDay ||
-        (!showAllWeeks && weeks.length > visibleWeeks.length)) && (
+        (!showAllWeeks &&
+          visibleWeeks.length > 0 &&
+          weeks.length > visibleWeeks.length)) && (
         <div className="flex items-center gap-3 mt-6 font-body text-xs text-synthwave-text-muted">
           {onSetCurrentDay && (
             <div className="flex items-center gap-1.5">
@@ -257,13 +259,15 @@ export default function ProgramCalendar({
               </span>
             </div>
           )}
-          {!showAllWeeks && weeks.length > visibleWeeks.length && (
-            <div className="ml-auto">
-              Weeks {visibleWeeks[0].weekIndex + 1}–
-              {visibleWeeks[visibleWeeks.length - 1].weekIndex + 1} of{" "}
-              {weeks.length}
-            </div>
-          )}
+          {!showAllWeeks &&
+            visibleWeeks.length > 0 &&
+            weeks.length > visibleWeeks.length && (
+              <div className="ml-auto">
+                Weeks {visibleWeeks[0].weekIndex + 1}–
+                {visibleWeeks[visibleWeeks.length - 1].weekIndex + 1} of{" "}
+                {weeks.length}
+              </div>
+            )}
         </div>
       )}
     </CollapsibleSection>
