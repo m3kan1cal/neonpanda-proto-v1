@@ -190,23 +190,6 @@ export default function ProgramCalendar({
         </div>
       </div>
 
-      {onSetCurrentDay && (
-        <div className="flex items-center gap-1.5 text-xs text-synthwave-text-muted font-body mb-3">
-          <svg
-            className="w-3.5 h-3.5 text-synthwave-neon-cyan shrink-0"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.371.847a.75.75 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z" />
-          </svg>
-          <span>
-            <span className="text-synthwave-neon-cyan font-semibold">Tip:</span>{" "}
-            hold a day to set it as today.
-          </span>
-        </div>
-      )}
-
       {/* Weeks grid */}
       <div className="space-y-4">
         {visibleWeeks.map(({ week, weekIndex }) => {
@@ -252,10 +235,33 @@ export default function ProgramCalendar({
         })}
       </div>
 
-      {/* Show count if not showing all */}
-      {!showAllWeeks && weeks.length > visibleWeeks.length && (
-        <div className="text-center mt-6 font-body text-xs text-synthwave-text-muted">
-          Viewing {visibleWeeks.length} of {weeks.length} weeks
+      {/* Bottom row: long-press tip on the left, visible-weeks count on the right */}
+      {(onSetCurrentDay ||
+        (!showAllWeeks && weeks.length > visibleWeeks.length)) && (
+        <div className="flex items-center gap-3 mt-6 font-body text-xs text-synthwave-text-muted">
+          {onSetCurrentDay && (
+            <div className="flex items-center gap-1.5">
+              <svg
+                className="w-3.5 h-3.5 text-synthwave-text-primary shrink-0"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.371.847a.75.75 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z" />
+              </svg>
+              <span>
+                <span className="text-synthwave-neon-cyan font-semibold">
+                  Tip:
+                </span>{" "}
+                hold a day to set it as today.
+              </span>
+            </div>
+          )}
+          {!showAllWeeks && weeks.length > visibleWeeks.length && (
+            <div className="ml-auto">
+              Viewing {visibleWeeks.length} of {weeks.length} weeks
+            </div>
+          )}
         </div>
       )}
     </CollapsibleSection>
